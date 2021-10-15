@@ -66,7 +66,19 @@ def acrobot_distance_function(s1, s2):
 
 	return math.sqrt(cost);
 
-planner_spec.distance_function = prx.distance_function.set_df(acrobot_distance_function);
+print_once_ss = True
+def sample_state_custom(s):
+	global print_once_ss
+	if print_once_ss:
+		print("Printing from python sample_state...")
+		print_once_ss = False
+	s[0] = random.uniform(0, 2.0 * 3.14159)
+	s[1] = random.uniform(-3.14159, 3.14159)
+	s[2] = random.uniform(-6, 6)
+	s[3] = random.uniform(-6, 6)
+
+planner_spec.distance_function = prx.distance_function.wrap(acrobot_distance_function);
+planner_spec.sample_state = prx.sample_state.wrap(sample_state_custom);
 
 planner_spec.min_control_steps = 1
 planner_spec.max_control_steps = 50

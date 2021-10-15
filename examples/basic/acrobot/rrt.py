@@ -44,8 +44,12 @@ planner_spec = prx.rrt_specification(context.system_group,context.collision_grou
 
 X_aux1 = context.system_group.get_state_space().make_point()
 X_aux2 = context.system_group.get_state_space().make_point()
-
+print_once_df = True
 def acrobot_distance_function(s1, s2):
+	global print_once_df
+	if print_once_df:
+		print("Printing from python distance_function...")
+		print_once_df = False
 	cost = 0	
 	s1a0 = s1[0] + prx.PRX_PI
 	s1a1 = s1[1] + prx.PRX_PI
@@ -66,7 +70,8 @@ def acrobot_distance_function(s1, s2):
 
 	return math.sqrt(cost);
 
-planner_spec.distance_function = prx.distance_function.set_df(acrobot_distance_function);
+# planner_spec.distance_function = prx.distance_function.set_df(acrobot_distance_function);
+planner_spec.distance_function = prx.distance_function.wrap(acrobot_distance_function)
 
 planner_spec.min_control_steps = 1
 planner_spec.max_control_steps = 50

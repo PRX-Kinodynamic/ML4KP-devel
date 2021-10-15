@@ -50,10 +50,19 @@ struct distance_function_wrapper : prx::distance_function_t, wrapper<prx::distan
 //     self = 
 // }
 // spam& self, boost::python::object object
+// void set_distance_function(object self, PyObject* f)
+void set_distance_function(object self, PyObject* f)
+{
+    prx::distance_function_t df = extract<prx::distance_function_t>(self.attr("distance_function"));
+    df = [f](const prx::space_point_t& s1, const prx::space_point_t& s2)
+    {
+        return call<double>(f, s1, s2);
+    };
+    // self = df;
+}
 
 prx::distance_function_t get_df(PyObject* x)
 {
-
     std::function<double (const prx::space_point_t&, const prx::space_point_t&)> new_df = [x](const prx::space_point_t& s1, const prx::space_point_t& s2)
     {
         return call<double>(x, s1, s2);
@@ -95,7 +104,8 @@ void pyprx_utilities_spaces_space()
         .def("__call__", &prx::distance_function_t::operator() )
         .def("default", make_function(&init_distance_function, default_call_policies())).staticmethod("default")
         .def("set_df", &get_df).staticmethod("set_df")
-        .def("__setattr__", &get_df)
+        .def("wrap", &get_df).staticmethod("wrap")
+        // .def("__setattr__", &set_distance_function).staticmethod("__setattr__")
         ;
 
 

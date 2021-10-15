@@ -18,6 +18,7 @@ namespace prx
 		planner_specification_t(){}
 		virtual ~planner_specification_t(){}
 	};
+	
 	class planner_query_t
 	{
 	public:

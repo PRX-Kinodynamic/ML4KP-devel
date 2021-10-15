@@ -60,6 +60,10 @@ std::shared_ptr<T> init_as_ptr(Targs... Fargs)
 /*
  * High order functions!
  * Lipsy functions: take functions, create functions and return functions
+ * 
+ * T - Type of the function to create
+ * R - What the function will return when called (could be void)
+ * Targs - The arguments that the function takes
  */
 template<typename T, typename R, typename... Targs>
 T create_function(PyObject* x)
