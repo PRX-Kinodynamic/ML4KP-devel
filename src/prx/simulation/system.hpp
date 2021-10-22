@@ -78,6 +78,7 @@ namespace prx
 
 		space_t* state_space;
 		space_t* input_control_space;
+		space_t* parameter_space;
 	protected:
 
 		std::weak_ptr<system_t> parent_system;
@@ -94,6 +95,7 @@ namespace prx
 
 		std::vector<double*> state_memory;
 		std::vector<double*> control_memory;
+		std::vector<double*> parameter_memory;
 
 	private:
 		system_t(){}
