@@ -5,7 +5,8 @@
 
 namespace prx
 {
-	system_group_t::system_group_t(const std::vector<system_ptr_t>& sys_group)
+	// system_group_t::system_group_t(const std::vector<system_ptr_t>& sys_group)
+	system_group_t::system_group_t(const std::vector<system_ptr_t>& sys_group, plant_type p_type)
 	{
 		group = sys_group;
 		//construct the state and control spaces after checking for overlap
@@ -43,6 +44,10 @@ namespace prx
 		}
 		state_space = new space_t(state_spaces);
 		control_space = new space_t(control_spaces);
+
+		
+		sim = std::make_shared<simulator_t>(p_type, group);
+		// sim -> set_group(group);
 	}
 
 	system_group_t::~system_group_t()
@@ -108,9 +113,12 @@ namespace prx
 		for(auto s : group)
 		{
 			s->compute_control();
-
-			s->propagate(simulation_step, step);
 		}
+		// for(auto s : group)
+		// {
+			// s->propagate(simulation_step, step);
+		// }
+		sim -> step_simulation(step);
 	}
 
 	void system_group_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times, std::vector<double>& ctrls)
