@@ -1,4 +1,4 @@
-planner: "AORRT"
+planner: "RRT"
 
 random_seed: 231192
 simulation_step: 0.1

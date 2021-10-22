@@ -44,7 +44,7 @@ target_link_libraries(${PROJECT_NAME}_bullet_sim
 	BulletFileLoader BulletWorldImporter BulletSoftBody 
 	BulletDynamics BulletCollision BulletInverseDynamicsUtils 
 	BulletInverseDynamics LinearMath OpenGLWindow gwen BussIK
-	Bullet3Common
+	Bullet3Common 
 	)
 
 target_link_libraries(${PROJECT_NAME}_bullet_sim pthread ${CMAKE_DL_LIBS})

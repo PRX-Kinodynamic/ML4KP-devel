@@ -14,6 +14,7 @@
 #include <assert.h>
 #define ASSERT_EQ(a, b) assert((a) == (b));
 // #include "MinitaurSetup.h"
+#include "prx/utilities/defs.hpp"
 
 // #include ""
 
@@ -49,7 +50,7 @@ int main(int argc, char* argv[])
 	sim->setGravity(btVector3(0, 0, -9.8));
 
 	// int minitaurUid = sim->loadURDF("/Users/Gary/pracsys/bullet3/build_cmake/data/cube.urdf");
-	int minitaurUid = sim->loadURDF("/Users/Gary/Downloads/RUmnibot.urdf");
+	int minitaurUid = sim->loadURDF(prx::models_path + "/Rumnibot/RUmnibot.urdf");
 	//b3BodyInfo bodyInfo;
 	//sim->getBodyInfo(blockId,&bodyInfo);
 
