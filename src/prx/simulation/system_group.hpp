@@ -1,17 +1,19 @@
 #pragma once
 
 #include "prx/utilities/defs.hpp"
-#include "prx/simulation/collision_checking/collision_checker.hpp"
 #include "prx/simulation/system.hpp"
-#include "prx/simulation/playback/trajectory.hpp"
+#include "prx/simulation/simulator.hpp"
 #include "prx/simulation/playback/plan.hpp"
+#include "prx/simulation/playback/trajectory.hpp"
+#include "prx/simulation/collision_checking/collision_checker.hpp"
 
 namespace prx
 {
 	class system_group_t
 	{
 	public:
-		system_group_t(const std::vector<system_ptr_t>& sys_group);
+		// system_group_t(const std::vector<system_ptr_t>& sys_group);
+		system_group_t(const std::vector<system_ptr_t>& sys_group, plant_type p_type = plant_type::ANALYTICAL);
 		~system_group_t();
 
 		void propagate(space_point_t start_state, const plan_t& plan, space_point_t result);
@@ -34,5 +36,7 @@ namespace prx
 		std::vector<system_ptr_t> group;
 		space_t* state_space;
 		space_t* control_space;
+		std::shared_ptr<simulator_t> sim;
+
 	};
 }

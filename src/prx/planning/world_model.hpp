@@ -4,6 +4,8 @@
 #include "prx/simulation/collision_checking/collision_checker.hpp"
 
 #include <unordered_map>
+#define system_group first   
+#define collision_group second
 
 namespace prx
 {
