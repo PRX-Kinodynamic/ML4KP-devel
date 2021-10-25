@@ -87,7 +87,7 @@ namespace prx
 // 		  bool invalid = true;
 		  for(int i=0; i<bullet_plants.size(); i++)
 		  {       
-		    bool invalid = bullet_plants[i]->isCollision();
+		    bool invalid = bullet_plants[i]->is_collision();
 		    if(invalid)
 		      return true;
 		  }	

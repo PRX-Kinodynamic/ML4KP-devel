@@ -3,8 +3,6 @@
 
 namespace prx
 {
-
-
   racecar_t::racecar_t(const std::string& path): bullet_t(path){
     std::cout<<"in other constructor"<<std::endl;
     std::vector<double> start_state = {0,0,0.2,0,0,0};
@@ -23,7 +21,7 @@ namespace prx
 
         simulation_step = 0.01;
         sim->setTimeStep(simulation_step);
-
+        sim->loadURDF("/Users/Gary/pracsys/bullet3/build_cmake/data/plane.urdf");
         std::cout << "Loading file " << robot_model_path << std::endl;
         b3RobotSimulatorLoadUrdfFileArgs* loadURDArgs = new b3RobotSimulatorLoadUrdfFileArgs();
 
@@ -130,7 +128,7 @@ namespace prx
         constraintInfo->setMaxAppliedForce(10000);
         sim->changeConstraint(constraintId,constraintInfo);
 
-  /*
+  
         for (int i =0; i < 100; i++)
         {
             sim->stepSimulation();
@@ -155,12 +153,17 @@ namespace prx
 
         add_exclusion(0,-1,1,-1);  //exclude collisions with plane
         //add_exclusion(0,-1,2,-1);  //exclude collisions with plane
-	*/
+	
         std::cout << "Escaping constructor" << std::endl;
-   }
+    }
+    
     racecar_t::~racecar_t()
     {}
 
+    int racecar_t::get_state_id()
+    {
+        return state_space->at(3);
+    }
 
     void racecar_t::setup(){
       //set control to be -=0

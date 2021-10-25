@@ -116,6 +116,11 @@ namespace prx
 		
     }
 
+    int segway_t::get_state_id()
+    {
+        return state_space->at(12);
+    }
+
     void segway_t::compute_control()
     {
         space_point_t sampled_control = input_control_space->make_point();
@@ -160,13 +165,15 @@ namespace prx
     }
 
 
-  void segway_t::set_control(std::vector<double> control){
+  	void segway_t::set_control(std::vector<double> control)
+  	{
     //input_control_space->copy_to_point(control);
-	auto control_type = CONTROL_MODE_TORQUE;
-	if(first_order){
-	  control_type = CONTROL_MODE_VELOCITY;
-	}
-	b3RobotSimulatorJointMotorArgs controlArgs(control_type);
+		auto control_type = CONTROL_MODE_TORQUE;
+		if(first_order)
+		{
+		  control_type = CONTROL_MODE_VELOCITY;
+		}
+		b3RobotSimulatorJointMotorArgs controlArgs(control_type);
 	
         controlArgs.m_maxTorqueValue = maxForce;
 

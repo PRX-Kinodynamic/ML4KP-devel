@@ -7,7 +7,8 @@ namespace prx
     {
         simulation_step = 0.01;
         sim->setTimeStep(simulation_step);
-
+        sim->loadURDF("/Users/Gary/pracsys/bullet3/build_cmake/data/plane.urdf");
+        
         std::cout << "Loading file " << robot_model_path << std::endl;
         b3RobotSimulatorLoadUrdfFileArgs* loadURDArgs = new b3RobotSimulatorLoadUrdfFileArgs();
         btVector3 basePosition;
@@ -51,6 +52,11 @@ namespace prx
 
     husky_t::~husky_t()
     {}
+
+    int husky_t::get_state_id()
+    {
+        return state_space->at(3);
+    }
 
     void husky_t::compute_control()
     {

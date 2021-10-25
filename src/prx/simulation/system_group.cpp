@@ -46,8 +46,8 @@ namespace prx
 		control_space = new space_t(control_spaces);
 
 		
-		sim = std::make_shared<simulator_t>(p_type, group);
-		// sim -> set_group(group);
+		sim = std::make_shared<simulator_t>();
+		sim -> set_group(group);
 	}
 
 	system_group_t::~system_group_t()

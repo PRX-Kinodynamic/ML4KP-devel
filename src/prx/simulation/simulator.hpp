@@ -9,8 +9,10 @@ namespace prx
 	{
 	public:
 		// simulator_t(plant_type plants_type);
-		simulator_t(plant_type plants_type, const std::vector<system_ptr_t>& sys_group);
+		simulator_t();
 		~simulator_t();
+
+		void set_group(const std::vector<system_ptr_t>& sys_group);
 
 		virtual void step_simulation(propagate_step step);
 

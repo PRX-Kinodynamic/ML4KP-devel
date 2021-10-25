@@ -17,6 +17,8 @@ namespace prx
 
 		virtual void compute_control() override final;
 
+        virtual int get_state_id() override;
+        
         protected:
         void shared_constructor(const std::string& path, std::vector<double> start_state);
 

@@ -16,38 +16,37 @@ namespace prx
 		
 		// Can also use other physics servers like DIRECT, SHARED_MEMORY, UDP etc.
 		//sim->connect(eCONNECT_GUI);
-		while(!sim->isConnected())
-		{
-		  	std::cout<<"waiting for connection"<<std::endl;
-		  	sim->connect(eCONNECT_GUI);
-		  	// sim->connect(eCONNECT_DIRECT);
-		}
-		// If connecting to an existing physics server, make sure to uncomment the following line.
-		// sim->syncBodies();
-		sim->configureDebugVisualizer(COV_ENABLE_GUI,0);
-		sim->configureDebugVisualizer(COV_ENABLE_MOUSE_PICKING,0);
-		sim->setTimeOut(10);
+		// while(!sim->isConnected())
+		// {
+		//   	std::cout<<"waiting for connection"<<std::endl;
+		//   	sim->connect(eCONNECT_GUI);
+		//   	// sim->connect(eCONNECT_DIRECT);
+		// }
+		// // If connecting to an existing physics server, make sure to uncomment the following line.
+		// // sim->syncBodies();
+		// sim->configureDebugVisualizer(COV_ENABLE_GUI, 0);
+		// sim->configureDebugVisualizer(COV_ENABLE_MOUSE_PICKING,0);
+		// sim->setTimeOut(10);
 	       
-		sim->setTimeStep(simulation_step);
-		physicsArgs.m_deterministicOverlappingPairs = 1;
-		sim->setPhysicsEngineParameter(physicsArgs);
+		// sim->setTimeStep(simulation_step);
+		// physicsArgs.m_deterministicOverlappingPairs = 1;
+		// sim->setPhysicsEngineParameter(physicsArgs);
 
-		sim->setGravity(btVector3(0,0,-9.8));
+		// sim->setGravity(btVector3(0,0,-9.8));
 
-		lineArgs->m_lineWidth = 2.0;
-		lineArgs->m_colorRGB[1] = lineArgs->m_colorRGB[2] = 0;	
+		// lineArgs->m_lineWidth = 2.0;
+		// lineArgs->m_colorRGB[1] = lineArgs->m_colorRGB[2] = 0;	
 	}
 
 
 	bullet_t::~bullet_t()
 	{
-		std::cout << "Disconnecting simulation..." << std::endl;
-		//purge_saved_states();
-		sim->disconnect();		
-		std::cout << "Deleting simulation..." << std::endl;
-		delete sim;
+		// std::cout << "Disconnecting simulation..." << std::endl;
+		// //purge_saved_states();
+		// sim->disconnect();		
+		// std::cout << "Deleting simulation..." << std::endl;
+		// delete sim;
 	}	
-	
 	
     void bullet_t::setup()
     {
@@ -112,11 +111,14 @@ namespace prx
 	{
 		prx_assert(current_state != nullptr, "current_state not initialized!");
 	  sim->setTimeStep(simulation_step);
-	  if(!isCollision())
+	  if(!is_collision())
 	  {
 	    state_space->copy_to_point(current_state);
+    	std::cout << "current_state: " << current_state << std::endl;
+
 	    update_to_bullet(current_state);
-	    if(!isCollision())
+    	std::cout << "current_state: " << current_state << std::endl;
+	    if(!is_collision())
 	    {
 	      sim->stepSimulation();
 	    }
@@ -126,7 +128,7 @@ namespace prx
 
 	void bullet_t::propagate(const double simulation_step, const propagate_step step)
 	{
-    	        sim->setTimeStep(simulation_step);
+    	// sim->setTimeStep(simulation_step);
 		space_point_t current_state = state_space->make_point();
 		state_space->copy_to_point(current_state);
 
@@ -135,7 +137,7 @@ namespace prx
 			update_to_bullet(current_state);
 		}
 
-		if(!isCollision())
+		if(!is_collision())
 		{
 		  sim->stepSimulation();
 		  bool save_sim_state = (step == propagate_step::FINAL_STEP);
@@ -154,7 +156,7 @@ namespace prx
 
   	void bullet_t::purge_saved_states()
 	{
-		std::cout << "Purging all non iniital states..." << std::endl;
+		std::cout << "Purging all non inital states..." << std::endl;
 		for (int i = 1; i < lastSavedId; i++)
 		{
 			sim->removeStateFromMemory(i);
@@ -179,12 +181,13 @@ namespace prx
 
 	void bullet_t::update_configuration()
 	{
-	    space_point_t current_state = state_space->make_point();
-	    state_space->copy_to_point(current_state);
+	    space_point_t c_state = state_space->make_point();
+	    state_space->copy_to_point(c_state);
 	    std::vector<double> current_state_vec;
-	    state_space->copy_vector_from_point(current_state_vec,current_state);
+	    state_space->copy_vector_from_point(current_state_vec,c_state);
 	    sim->restoreStateFromMemory(current_state_vec.back());		
 	}
+
 	void bullet_t::compute_derivative()
 	{
 
@@ -215,64 +218,55 @@ namespace prx
 	  	m_CD_exclusion_list.push_back(exclusion);
   }
   
-  bool bullet_t::b_exclude(std::pair<std::pair<int, int>, std::pair<int, int> > excluded_pair, const b3ContactPointData &contact)
+  	bool bullet_t::b_exclude(std::pair<std::pair<int, int>, std::pair<int, int> > excluded_pair, const b3ContactPointData &contact)
 	{
-	  if(excluded_pair.first.first == contact.m_bodyUniqueIdA &&(excluded_pair.first.second == contact.m_linkIndexA || excluded_pair.first.second == -1))
-		  {
+	  	if(excluded_pair.first.first == contact.m_bodyUniqueIdA &&(excluded_pair.first.second == contact.m_linkIndexA || excluded_pair.first.second == -1))
+		{
 		    if(excluded_pair.second.first == contact.m_bodyUniqueIdB &&(excluded_pair.second.second == contact.m_linkIndexB || excluded_pair.second.second == -1))
 			{
 	      		return true;
 			}
 	  	}
 	  	if(excluded_pair.second.first == contact.m_bodyUniqueIdA &&(excluded_pair.second.second == contact.m_linkIndexA || excluded_pair.second.second == -1))
-		  {
+		{
 		    if(excluded_pair.first.first == contact.m_bodyUniqueIdB &&(excluded_pair.first.second == contact.m_linkIndexB || excluded_pair.first.second == -1))
-		      {
+		    {
 	      		return true;
-		      }
+		    }
 	  	}
 	  	return false;
     }
 
-   bool bullet_t::b_exclude_contact(const b3ContactPointData &contact)
+   	bool bullet_t::b_exclude_contact(const b3ContactPointData &contact)
 	{
-	  	for(int i=0; i<m_CD_exclusion_list.size(); i++)
+	  	for(int i=0; i < m_CD_exclusion_list.size(); i++)
 		{		  
-		  if(b_exclude(m_CD_exclusion_list[i], contact))
-		    return true; 
+			if(b_exclude(m_CD_exclusion_list[i], contact))
+			{
+		    	return true; 
+			}
 	  	}  
 	  	return false;
 	}
 
   
-  bool bullet_t::isCollision(bool b_include_bounding_box)
+  	bool bullet_t::is_collision(bool b_include_bounding_box)
 	{
-	    const space_point_t s;
-	  b3RobotSimulatorGetContactPointsArgs args;
-	  b3ContactInformation *contactInfo = new b3ContactInformation();	  
-	  sim->getContactPoints(args, contactInfo);
-	  for(int i=0; i<contactInfo->m_numContactPoints; i++){	    
-	    bool b_excluded = b_exclude_contact(contactInfo->m_contactPointData[i]);
-	    if(!b_excluded){
-	      return true;
-	    }
-	  }
-	  return false;
+	    // const space_point_t s;
+	  	b3RobotSimulatorGetContactPointsArgs args;
+	  	b3ContactInformation *contactInfo = new b3ContactInformation();	  
+	  	sim->getContactPoints(args, contactInfo);
+	  	for(int i=0; i<contactInfo->m_numContactPoints; i++)
+	  	{  
+	    	bool b_excluded = b_exclude_contact(contactInfo->m_contactPointData[i]);
+	    	if(!b_excluded)
+	    	{
+	      		return true;
+	    	}
+	  	}
+	  	return false;
 	}
   
-  void bullet_t::execute_traj(trajectory_t traj){
-		btVector3 targetPos;
-		targetPos[0] = targetPos[1] = targetPos[2] = 0;
-		sim->resetDebugVisualizerCamera(15.0,-90.4,180.1,targetPos);	
-    sim->restoreStateFromMemory(0);
-    for(int i=0; i<traj.size(); i++){
-      usleep(8000);
-      space_point_t point = traj[(unsigned)i];
-      int inpt;
-      sim->restoreStateFromMemory(point->at(state_bounds_l.size()-1));
-      
-    }
-  }
 
 
   void bullet_t::setBasePositionAndRotation(btVector3 basePosition, btVector3 baseRotation){

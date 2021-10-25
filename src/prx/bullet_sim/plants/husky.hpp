@@ -13,6 +13,8 @@ namespace prx
 
 		virtual void compute_control() override final;
 
+        virtual int get_state_id() override;
+        
         protected:
         const std::string robot_model_path = bullet_path + "/data/husky/husky.urdf";
 

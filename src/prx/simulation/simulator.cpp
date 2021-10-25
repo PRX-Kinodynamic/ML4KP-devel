@@ -2,14 +2,19 @@
 
 namespace prx
 {
-	simulator_t::simulator_t(plant_type plants_type, const std::vector<system_ptr_t>& sys_group)
+	simulator_t::simulator_t()
 	{
-		sim_type = plants_type;
-		group = sys_group;
+		sim_type = plant_type::ANALYTICAL;
+		// group = sys_group;
 	}
 
 	simulator_t::~simulator_t()
 	{
+	}
+
+	void simulator_t::set_group(const std::vector<system_ptr_t>& sys_group)
+	{
+		group = sys_group;
 	}
 
 	void simulator_t::step_simulation(propagate_step step)

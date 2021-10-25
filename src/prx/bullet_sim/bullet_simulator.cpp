@@ -3,10 +3,12 @@
 namespace prx
 {
 
-	bullet_simulator_t::bullet_simulator_t(plant_type plants_type, const std::vector<system_ptr_t>& sys_group) 
-		: simulator_t(plants_type, sys_group)
+	bullet_simulator_t::bullet_simulator_t() 
+		: simulator_t()
 	{
-		sim = new b3RobotSimulatorClientAPI();
+		sim_type = plant_type::BULLET; 
+
+		sim = std::make_shared<b3RobotSimulatorClientAPI>();
 		lineArgs = new b3RobotSimulatorAddUserDebugLineArgs;
 
 		while(!sim->isConnected())
@@ -29,6 +31,9 @@ namespace prx
 
 		lineArgs->m_lineWidth = 2.0;
 		lineArgs->m_colorRGB[1] = lineArgs->m_colorRGB[2] = 0;	
+	  	
+		contactInfo = new b3ContactInformation();	  
+
 	}
 
 	bullet_simulator_t::~bullet_simulator_t()
@@ -37,7 +42,45 @@ namespace prx
 		//purge_saved_states();
 		sim->disconnect();		
 		std::cout << "Deleting simulation..." << std::endl;
-		delete sim;
+		// delete sim;
+	}
+
+	void bullet_simulator_t::initialize_simulation()
+	{
+		for (auto f : urdf_paths)
+		{
+			sim -> loadURDF(f);
+		}
+
+		for (auto s : group)
+		{
+			auto sb = std::dynamic_pointer_cast<bullet_t>(s);
+    		PRX_DEBUG_PRINT
+			sb -> initialize(sim);
+    		PRX_DEBUG_PRINT
+			// sb -> update_from_bullet(true);
+		}
+	}
+
+	void bullet_simulator_t::add_urdf(std::string urdf_path)
+	{
+		urdf_paths.push_back(urdf_path);
+	}
+
+	void bullet_simulator_t::get_euler_from_quaternion(btVector3& rpy2, const btQuaternion& quat)
+	{
+		btScalar roll, pitch, yaw;
+		quat.getEulerZYX(yaw, pitch, roll);
+		rpy2.setValue(yaw, pitch, roll);
+		// btVector3 rpy2 = btVector3(roll, pitch, yaw);
+		// return rpy2;
+	}
+
+	void bullet_simulator_t::get_quaternion_from_euler(btQuaternion& quat, const btVector3& rollPitchYaw)
+	{
+		// btQuaternion q;
+		quat.setEulerZYX(rollPitchYaw[2], rollPitchYaw[1], rollPitchYaw[0]);
+		// return q;
 	}
 
 	void bullet_simulator_t::print_trajectories(const std::vector<trajectory_t> trajs)
@@ -94,15 +137,69 @@ namespace prx
 		sim->addUserDebugText("GOAL",pos,*textArgs);
 	}
 
+	// bool bullet_simulator_t::is_collision(bullet_ptr_t sys, bool b_include_bounding_box)
+	// {
+	//   	b3RobotSimulatorGetContactPointsArgs args;
+	//   	sim->getContactPoints(args, contactInfo);
+	//   	for(int i=0; i<contactInfo->m_numContactPoints; i++)
+	//   	{  
+	//     	bool b_excluded = sys -> b_exclude_contact(contactInfo->m_contactPointData[i]);
+	//     	if(!b_excluded)
+	//     	{
+	//       		return true;
+	//     	}
+	//   	}
+	//   	return false;
+	// }
+
 	void bullet_simulator_t::step_simulation(propagate_step step)
 	{	
 		for(auto s : group)
 		{
-			s -> propagate(simulation_step, step);
+			auto sb = std::dynamic_pointer_cast<bullet_t>(s);
+    		PRX_DEBUG_PRINT
+			if (step == propagate_step::FIRST_STEP)
+			{	
+    		PRX_DEBUG_PRINT
+				// update_to_bullet(current_state);
+				// std::vector<double> current_state_vec;
+				// s -> state_space -> copy_to_vector(current_state_vec);
+				std::cout << "state id: " << sb -> get_state_id() << std::endl;
+				sim -> restoreStateFromMemory(sb -> get_state_id());
+				// sim -> restoreStateFromMemory(sim->saveStateToMemory()-1);
+				// sim -> restoreStateFromMemory(0);
+
+
+			}
+
+    		PRX_DEBUG_PRINT
+			// if(!is_collision(sb))
+			if(! sb -> is_collision())
+			{
+    		PRX_DEBUG_PRINT
+			  sim -> stepSimulation();
+			  bool save_sim_state = (step == propagate_step::FINAL_STEP);
+    		PRX_DEBUG_PRINT
+			  sb -> update_from_bullet(save_sim_state);
+			}
+    		PRX_DEBUG_PRINT
 		}
-	    sim->stepSimulation();
 
 		// s -> propagate(simulation_step, step);
 	}
 	
+	void bullet_simulator_t::execute_traj(bullet_ptr_t sys, trajectory_t traj)
+  	{
+		btVector3 targetPos;
+		targetPos[0] = targetPos[1] = targetPos[2] = 0;
+		sim -> resetDebugVisualizerCamera(15.0,-90.4,180.1,targetPos);	
+    	sim -> restoreStateFromMemory(0);
+    	for(int i=0; i<traj.size(); i++)
+    	{
+      		usleep(8000);
+      		space_point_t point = traj[(unsigned)i];
+      		int inpt;
+      		sim -> restoreStateFromMemory(sys -> get_state_id());
+    	}
+	}
 }

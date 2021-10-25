@@ -229,6 +229,25 @@ namespace prx
 		}
 
 	}
+
+	void space_t::copy_to_vector(std::vector<double>& destination) const
+	{
+		destination.clear();
+		for(unsigned i=0;i<dimension;++i)
+		{
+			destination.push_back(*addresses[i]);
+		}
+	}
+
+	void space_t::copy_from_vector(const std::vector<double>& source)
+	{
+		prx_assert(dimension==source.size(),"Point and vector have different sizes: " << dimension << " and " << source.size());
+		for(unsigned i=0;i<dimension;++i)
+		{
+			*addresses[i] = source[i];
+		}
+	}
+
 	void space_t::copy_point_from_vector(const space_point_t& destination, const std::vector<double>& source) const
 	{
 		prx_assert(destination->parent->space_name==space_name,"Point and space have different names: "<<destination->parent->space_name<<" and "<<space_name);
@@ -244,18 +263,9 @@ namespace prx
 	{
 		prx_assert(source->parent->space_name==space_name,"Point and space have different names: "<<source->parent->space_name<<" and "<<space_name);
 		//prx_assert(source->parent->dimension==destination.size(),"Point and vector have different sizes: "<<source->parent->dimension<<" and "<<destination.size());
-			// printf("%s:%d\n",__PRETTY_FUNCTION__, __LINE__ );
-			// printf("source dim: %d\n", source->parent->dimension);
-			// printf("dest dim: %d\n", destination.size());
 		for(unsigned i=0;i<dimension;++i)
 		{
-			// printf("%.4f\n",source -> memory[i]);
-			//destination[i]=source->memory[i];
 			destination.push_back(source->memory[i]);
-			// source->memory[i];
-			// printf("...!\n");
-			// destination.push_back(15);
-			// printf("Done!\n");
 		}
 	}
 	void space_t::enforce_bounds(const space_point_t& point) const

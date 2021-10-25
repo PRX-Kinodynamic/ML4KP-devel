@@ -6,6 +6,7 @@
 #include "prx/bullet_sim/bullet_defs.hpp"
 
 #include "prx/simulation/plant.hpp"
+// #include "prx/bullet_sim/bullet_simulator.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 
@@ -22,6 +23,9 @@
 
 namespace prx
 {
+	class bullet_t;
+	typedef std::shared_ptr<bullet_t> bullet_ptr_t;
+
 	class bullet_t : public plant_t
 	{
 	public:
@@ -30,7 +34,12 @@ namespace prx
 		
 		void setup();
 
-		b3RobotSimulatorClientAPI* sim = new b3RobotSimulatorClientAPI();
+		virtual void initialize(std::shared_ptr<b3RobotSimulatorClientAPI> sim)
+		{
+			prx_throw(__PRETTY_FUNCTION__ << ": Not implemented!");
+		}
+
+		// b3RobotSimulatorClientAPI* sim = new b3RobotSimulatorClientAPI();
 
 	    btVector3 getEulerFromQuaternion(btQuaternion q);
 
@@ -48,7 +57,7 @@ namespace prx
 
 		virtual void update_configuration() override final;
 
-	  virtual void print_trajectories(const std::vector<trajectory_t> trajs);
+		virtual void print_trajectories(const std::vector<trajectory_t> trajs);
 
 		virtual void visualize_trajectories(const std::vector<trajectory_t> trajs);
 
@@ -56,27 +65,39 @@ namespace prx
 
 		virtual void purge_saved_states();
 
-	  void execute_traj(trajectory_t traj);
+		/**
+		 * @brief      Gets the state identifier - Within Bullet, each saved state has an unique id.
+		 *
+		 * @return     The state identifier.
+		 */
+		virtual int get_state_id() = 0;
 
+        virtual void update_from_bullet(const bool save_sim_state)
+        {
+        	prx_throw("Not implemented");
+        }
+
+	  	void execute_traj(trajectory_t traj);
 
 		void add_exclusion(int bID1, int lID1, int bID2, int lID2);
 
-		bool isCollision(bool b_include_bounding_box=true);
+		bool is_collision(bool b_include_bounding_box=true);
 
 		bool b_exclude(std::pair<std::pair<int, int>, std::pair<int, int> > excluded_pair, const b3ContactPointData &contact);
 
 		bool b_exclude_contact(const b3ContactPointData &contact);
 
-	  void setBasePositionAndRotation(btVector3 basePosition, btVector3 baseRotation);
+		void setBasePositionAndRotation(btVector3 basePosition, btVector3 baseRotation);
 
-	  std::vector<double> state_bounds_l, state_bounds_u, control_bounds_l, control_bounds_u;
+		std::vector<double> state_bounds_l, state_bounds_u, control_bounds_l, control_bounds_u;
 
-	  int plane_id, uniqueId,count;
+		int plane_id, uniqueId,count;
 
 		b3RobotSimulatorAddUserDebugLineArgs* lineArgs = new b3RobotSimulatorAddUserDebugLineArgs;
 
 	protected:
 		std::vector<double> state_vec, control_vec;
+		std::shared_ptr<b3RobotSimulatorClientAPI> sim;
 
 		b3RobotSimulatorSetPhysicsEngineParameters physicsArgs;
 
@@ -86,12 +107,15 @@ namespace prx
 
 		virtual void compute_derivative() override final;
 
+		std::string control_topo;
+		std::string state_topo;
+
+		space_point_t current_state;
 
 
-	  std::string control_topo;
-	  std::string state_topo;
+		// friend bullet_simulator;
 
-	  space_point_t current_state;
+
 	};
 }
 #endif

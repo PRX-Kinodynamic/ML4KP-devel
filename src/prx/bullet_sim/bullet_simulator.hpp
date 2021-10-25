@@ -3,6 +3,7 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/simulation/simulator.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
+#include "prx/bullet_sim/plants/bullet_plant.hpp"
 
 #include "SharedMemory/b3RobotSimulatorClientAPI_InternalData.h"
 #include "RobotSimulator/b3RobotSimulatorClientAPI.h"
@@ -21,8 +22,12 @@ namespace prx
 	class bullet_simulator_t : public simulator_t
 	{
 	public:
-		bullet_simulator_t(plant_type plants_type, const std::vector<system_ptr_t>& sys_group);
+		bullet_simulator_t();
 		~bullet_simulator_t();
+
+		void initialize_simulation();
+
+		void add_urdf(std::string urdf_path);
 
 		void visualize_trajectories(const std::vector<trajectory_t> trajs);
 
@@ -32,11 +37,26 @@ namespace prx
 
 		virtual void step_simulation(propagate_step step) override final;
 
+		bool is_collision(bullet_ptr_t sys, bool b_include_bounding_box = true);
+
+		static
+		void get_euler_from_quaternion(btVector3& rpy2, const btQuaternion& quat);
+
+		static
+	    void get_quaternion_from_euler(btQuaternion& quat, const btVector3& rollPitchYaw);
+	  	
+		void execute_traj(bullet_ptr_t sys, trajectory_t traj);
+
+		std::shared_ptr<b3RobotSimulatorClientAPI> sim;
 	private:
-		b3RobotSimulatorClientAPI* sim;
 		b3RobotSimulatorSetPhysicsEngineParameters physicsArgs;
 		b3RobotSimulatorAddUserDebugLineArgs* lineArgs;
+		
+		std::vector<double> pt_vec_aux;	
+		
+		b3ContactInformation *contactInfo;	
 
+		std::vector<std::string> urdf_paths;
 		// plant_type sim_type;
 		// std::vector<system_ptr_t> group;
 	};
