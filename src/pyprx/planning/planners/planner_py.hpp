@@ -23,11 +23,15 @@ PRX_GETTER(planner_query_t, start_state)
 PRX_SETTER(planner_query_t, goal_state)
 PRX_GETTER(planner_query_t, goal_state)
 
-PRX_SETTER(planner_query_t, goal_region_radius)
-PRX_GETTER(planner_query_t, goal_region_radius)
+// PRX_SETTER(planner_query_t, goal_region_radius)
+// PRX_GETTER(planner_query_t, goal_region_radius)
 
 PRX_SETTER(planner_query_t, get_visualization)
 PRX_GETTER(planner_query_t, get_visualization)
+
+PRX_SETTER(planner_query_t, goal_check)
+PRX_GETTER(planner_query_t, goal_check)
+
 
 struct planner_wrapper : prx::planner_t, wrapper<prx::planner_t>
 {
@@ -77,7 +81,7 @@ void pyprx_planning_planners_planner_py()
 		.def("__init__", make_constructor(&init_as_ptr<prx::planner_query_t,prx::space_t*, prx::space_t*>, default_call_policies(),(arg("state_space"), arg("control_space"))))
 		.add_property("start_state", &get_planner_query_t_start_state<prx::space_point_t>, &set_planner_query_t_start_state<prx::space_point_t>)
 		.add_property("goal_state", &get_planner_query_t_goal_state<prx::space_point_t>, &set_planner_query_t_goal_state<prx::space_point_t>)
-		.add_property("goal_region_radius", &get_planner_query_t_goal_region_radius<double>, &set_planner_query_t_goal_region_radius<double>)
+		.add_property("goal_check", &get_planner_query_t_goal_check<prx::goal_check_t>, &set_planner_query_t_goal_check<prx::goal_check_t>)
 		.add_property("get_visualization", &get_planner_query_t_get_visualization<bool>, &set_planner_query_t_get_visualization<bool>)
 		.add_property("solution_traj", &get_planner_query_t_solution_traj<prx::trajectory_t>, &set_planner_query_t_solution_traj<prx::trajectory_t>)
 		.add_property("solution_plan", &get_planner_query_t_solution_plan<prx::plan_t>, &set_planner_query_t_solution_plan<prx::plan_t>)
@@ -86,6 +90,12 @@ void pyprx_planning_planners_planner_py()
 		;
 	class_<prx::planner_specification_t, std::shared_ptr<prx::planner_specification_t>, boost::noncopyable>("planner_specification", init<>())
 		;
+
+	class_<prx::goal_check_t>("goal_check")
+        .def("__call__", &prx::goal_check_t::operator() )
+        .def("wrap", &create_function<prx::goal_check_t, bool, prx::space_point_t&>).staticmethod("wrap")
+        ;
+
 	class_<planner_wrapper, boost::noncopyable>("planner", no_init)
 	// class_<std::shared_ptr<planner_wrapper>>("planner", no_init)
 		.def("__init__", make_constructor(&init_as_ptr<planner_wrapper, std::string>, default_call_policies(),(arg("new_name"))))

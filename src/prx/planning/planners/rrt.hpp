@@ -128,9 +128,11 @@ namespace prx
 		{
 			clear_outputs();
 
+			// goal_region_radius = 0.5;
+
 			goal_check = [&](space_point_t s)
 			{
-				return space_t::euclidean_2d(s, goal_state) < goal_region_radius;
+				return default_goal_check(s, goal_state, goal_region_radius);
 			};
 
 		}
