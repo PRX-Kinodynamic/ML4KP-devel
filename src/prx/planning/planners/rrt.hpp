@@ -128,7 +128,7 @@ namespace prx
 		{
 			clear_outputs();
 
-			// goal_region_radius = 0.5;
+			goal_region_radius = 0.5;
 
 			goal_check = [&](space_point_t s)
 			{
