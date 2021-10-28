@@ -64,25 +64,9 @@ int main(int argc, char* argv[])
 
     	// plant -> propagate(simulation_step, propagate_step::FIRST_STEP);
     	plan_t plan(cs);
-  //   	for (int i = 0; i < 100; ++i)
-  //   	{
-  //   		plan.copy_onto_back(ctrl, 0.1);
-		// // void copy_onto_back(space_point_t control, double time);
-
-  //   	}
-    		PRX_DEBUG_PRINT
-  //   	sg -> propagate(start_state, plan, traj);
-  //   		PRX_DEBUG_PRINT
-  //   	for (auto s : traj)
-  //   	{
-  //   		std::cout << "x: " << s << std::endl;
-  //   	}
-  //   	std::cout << "u: " << ctrl << std::endl;
-		// sim->setTimeStep(simulation_step);
 
 		plant -> update_from_bullet(true);
 		plant -> compute_control();
-    		PRX_DEBUG_PRINT
 	    std::vector<double> current_state_vec;
 
 		// bsim.step_simulation(propagate_step::FIRST_STEP);
@@ -91,37 +75,6 @@ int main(int argc, char* argv[])
 		for (int i = 0; i < 100; ++i)
     	{
 			bsim.step_simulation(propagate_step::MIDDLE_STEP);
-
-	    	// plant -> update_from_bullet(state, false);
-    		// std::cout << "state: " << state << std::endl;
-    		// ss -> copy_to_point(state);
-    		// PRX_DEBUG_PRINT
-	    	// plant -> update_to_bullet(state);
-			// state_space->copy_vector_from_point(current_state_vec, state);
-    		// PRX_DEBUG_PRINT
-			// sim->restoreStateFromMemory(state -> at(12));
-    		// PRX_DEBUG_PRINT
-	      	// sim -> stepSimulation();
-    		// PRX_DEBUG_PRINT
-	    	// plant -> update_from_bullet(state, true);
-    		// PRX_DEBUG_PRINT
-
-    		// PRX_DEBUG_PRINT
-    		// // plant -> update_to_bullet(state);
-    		// PRX_DEBUG_PRINT
-    		// // plant -> update_configuration();
-    		// PRX_DEBUG_PRINT
-    	    // traj.copy_onto_back(ss);
-    	 //    PRX_DEBUG_PRINT
-    	    // sg -> propagate()
-    	    // if (i == 0)
-    	    // 	plant -> propagate(simulation_step, propagate_step::FIRST_STEP);
-    	    // else if (i == 99)
-    	    // 	plant -> propagate(simulation_step, propagate_step::FINAL_STEP);
-    	    // else
-    	    // 	plant -> propagate(simulation_step, propagate_step::MIDDLE_STEP);
-    	    // plant -> propagate(simulation_step);
-    		// PRX_DEBUG_PRINT
     	}
 		bsim.step_simulation(propagate_step::FINAL_STEP);
 
