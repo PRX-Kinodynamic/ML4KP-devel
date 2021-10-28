@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
 		// bsim.step_simulation(propagate_step::FIRST_STEP);
 	// enum propagate_step { FIRST_STEP, MIDDLE_STEP, FINAL_STEP };
 
-		for (int i = 0; i < 10000; ++i)
+		for (int i = 0; i < 100; ++i)
     	{
 			bsim.step_simulation(propagate_step::MIDDLE_STEP);
 

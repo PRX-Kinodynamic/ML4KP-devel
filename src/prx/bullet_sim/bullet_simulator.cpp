@@ -172,7 +172,6 @@ namespace prx
 
 			}
 
-    		PRX_DEBUG_PRINT
 			// if(!is_collision(sb))
 			if(! sb -> is_collision())
 			{
