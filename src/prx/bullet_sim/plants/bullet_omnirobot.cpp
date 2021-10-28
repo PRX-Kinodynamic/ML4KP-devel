@@ -137,12 +137,10 @@ namespace prx
 
     void bullet_omnirobot_t::compute_control()
     {
-            PRX_DEBUG_PRINT
 
         input_control_space -> sample(sampled_control);
             std::cout << "sampled_control: " << sampled_control << std::endl;
         input_control_space -> copy_from_point(sampled_control);
-            PRX_DEBUG_PRINT
 
         // std::cout << "ctrl: " << sampled_control << std::endl;
         auto control_type = CONTROL_MODE_TORQUE;
@@ -152,13 +150,10 @@ namespace prx
         }
         b3RobotSimulatorJointMotorArgs controlArgs(control_type);
   
-            PRX_DEBUG_PRINT
         controlArgs.m_maxTorqueValue = maxForce;
-            PRX_DEBUG_PRINT
 
         for (int i = 0; i < wheelJoints.size(); i++)
         {
-            PRX_DEBUG_PRINT
             if(first_order)
             {
                 controlArgs.m_targetVelocity = sampled_control -> at(i);
@@ -167,26 +162,21 @@ namespace prx
             {
                 controlArgs.m_maxTorqueValue = sampled_control -> at(i);
             }
-            PRX_DEBUG_PRINT
-            std::cout << "uniqueId: " << uniqueId << " wheelJoints[" << i << "]: " << wheelJoints[i] << std::endl;
+            // std::cout << "uniqueId: " << uniqueId << " wheelJoints[" << i << "]: " << wheelJoints[i] << std::endl;
             sim -> setJointMotorControl(uniqueId, wheelJoints[i], controlArgs);
-            PRX_DEBUG_PRINT
         }
         
     }
     
     void bullet_omnirobot_t::update_from_bullet(const bool save_sim_state)
     {
-            PRX_DEBUG_PRINT
         current_state_vec.clear();
         btVector3 basePosition, baseRotation;
         btQuaternion baseOrientation;
 
-            PRX_DEBUG_PRINT
         sim->getBasePositionAndOrientation(uniqueId,basePosition,baseOrientation);
         baseRotation = getEulerFromQuaternion(baseOrientation);
 
-            PRX_DEBUG_PRINT
         current_state_vec.push_back(basePosition[0]);
         current_state_vec.push_back(basePosition[1]);
         current_state_vec.push_back(basePosition[2]);
@@ -195,25 +185,22 @@ namespace prx
         current_state_vec.push_back(baseRotation[1]);
         current_state_vec.push_back(baseRotation[2]);
     
-            PRX_DEBUG_PRINT
         btVector3 baseVel, baseAngVel;
         sim->getBaseVelocity(uniqueId,baseVel,baseAngVel);
         current_state_vec.insert(current_state_vec.end(),{baseVel[0],baseVel[1],baseVel[2],baseAngVel[0],baseAngVel[1],baseAngVel[2]});  
   
         int sid = state_space->at(12);
        
-            PRX_DEBUG_PRINT
         if (save_sim_state)
         {
             sid = sim->saveStateToMemory();
             std::cout << "sid updated!" << std::endl;
+            std::cout << "sid: " << sid << std::endl;
         } 
-        std::cout << "sid: " << sid << std::endl;
         current_state_vec.push_back(sid);
         // lastSavedId = std::max(lastSavedId, sid);
         state_space -> copy_from_vector(current_state_vec);
         // state_space->copy_point_from_vector(current_state,current_state_vec);
-            PRX_DEBUG_PRINT
         // state_space->copy_from_point(current_state);
         // space_point_t result = state_space->make_point();
         // state_space->copy_to_point(result);
