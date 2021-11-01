@@ -213,4 +213,10 @@ namespace prx
 		return R * R / 300.0;
 	}
 
+	bool default_goal_check(const space_point_t& p, const space_point_t& goal, const double rad)
+	{
+		prx_assert(rad > 0, "default_goal_check: radius has to be grater than zero!")
+		return space_t::euclidean_2d(p, goal) < rad;
+	}
+
 }
