@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     		PRX_DEBUG_PRINT
 		auto sim = bsim.sim;
     		PRX_DEBUG_PRINT
-    	bsim.add_urdf("/Users/Gary/pracsys/bullet3/build_cmake/data/plane.urdf");
+    	bsim.add_urdf("/Users/Gary/pracsys/bullet3/data/plane.urdf");
 		bsim.set_group({plant});
 		bsim.initialize_simulation();
 		// sim -> loadURDF("/Users/Gary/pracsys/bullet3/build_cmake/data/plane.urdf");

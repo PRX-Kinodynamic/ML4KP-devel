@@ -14,6 +14,8 @@
 		message("Using custom Bullet")
 		set(BULLET_INCLUDE_DIR "$ENV{BULLET_PHYSICS_PATH}/include/bullet" CACHE PATH "Bullet include directory")
 		set(BULLET_LIBRARY_DIR "$ENV{BULLET_PHYSICS_PATH}/lib" CACHE PATH "Bullet lib directory")
+		message(STATUS"Bullet include directory: ${BULLET_INCLUDE_DIR}")
+		message(STATUS"Bullet library directory: ${BULLET_LIBRARY_DIR}")
 	else()
 		message("[${CMAKE_PROJECT_NAME}] Bullet NOT FOUND and 'BULLET_PHYSICS_PATH' not set. See README on how to properly setup Bullet.")
 		return()
