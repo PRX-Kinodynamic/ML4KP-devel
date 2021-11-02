@@ -58,7 +58,7 @@ namespace prx
 	{
 		integrator -> integrate(simulation_step);
 
-        _theta1 = norm_angle_pi(_theta1, 0, 2*M_PI);
+        _theta1 = norm_angle_pi(_theta1, 0, 2.*M_PI);
         _theta2 = norm_angle_pi(_theta2, -M_PI, M_PI);
         state_space -> enforce_bounds();
 	}
