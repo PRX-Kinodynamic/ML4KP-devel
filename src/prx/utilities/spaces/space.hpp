@@ -234,6 +234,28 @@ namespace prx
 
 		bool equal_points(const space_point_t& point1,const space_point_t& point2);
 
+		/**
+		 * @brief      Copy current state to a Eigen::VectorXd.
+		 *
+		 * @param[in]  Vector to copy the current space memory to.
+		 */
+		void copy_to_vector(Eigen::VectorXd& _v) const;
+
+		/**
+		 * @brief      Copy from a Eigen::VectorXd.
+		 *
+		 * @param[in]  Vector to copy from.
+		 */
+		void copy_from_vector(const Eigen::VectorXd& _v);
+
+		/**
+		 * @brief      Copy from a std::vector<double>
+		 *
+		 * @param[in]  Vector to copy from.
+		 */
+		void copy_from_vector(const std::vector<double>& source) const;
+
+
 		void copy_to_point(const space_point_t& point) const;
 		void copy_from_point(const space_point_t& point) const;
 		void copy_point(const space_point_t& destination,const space_point_t& source) const;
@@ -351,6 +373,18 @@ namespace prx
 			return std::pow(std::accumulate(zipped.begin(), zipped.end(), 0.0, fn), 1.0/p);
 		}
 
+		/**
+		 * @brief      Compute the euclidean distance between two points using dimensions
+		 *             [i_{begin}, i_{end}). \sqrt{ (p1[i_{begin}] - p2[i_{begin}])^2 }
+		 *             
+		 *
+		 * @param[in]  p1     First point
+		 * @param[in]  p2     Second point
+		 * @param[in]  i_begin  Start dimention, default is 0. 
+		 * @param[in]  i_end    Stopping dimension, default is 2.
+		 *
+		 * @return     { description_of_the_return_value }
+		 */
 		static double euclidean_2d(const space_point_t& p1, const space_point_t& p2, int start = 0, int end = 2)
 		{
 			// int i = start;

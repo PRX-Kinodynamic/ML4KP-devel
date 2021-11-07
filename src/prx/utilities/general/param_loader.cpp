@@ -104,75 +104,44 @@ namespace prx
 
 	void param_loader::add_opts(int argc, char* argv[])
 	{
-		const std::regex opt_regex_norm("--\\w+=[\\.\\w]+");
-		const std::regex opt_regex_bool("--\\w+");
-		const std::regex opt_regex_file("--\\w+=!file ([\\.\\w]+/?)+.yaml");
-		const std::regex opt_regex_vect("--\\w+=\\[(.)+\\]");
+		
+		// Regular case: "--/some/param/name=value" 
+		const std::regex opt_regex_mult("--((\\/)?\\w)+=(.)+");
+		// Bool can be without value: "--/some/bool/param"
+		const std::regex opt_regex_bool("--((\\/)?\\w)+=?");
+		// Special case for the executable: "./executable_name"
+		const std::regex opt_regex_exec("\\.\\/\\w+");
 
-		YAML::Node n;
-
-		// i = 0 is the executable... usually
-		// Should we save the executable's name?
     	for (int i = 0; i < argc; ++i)
     	{
     	    std::string opt(argv[i]);
-    	        std::cout << opt << std::endl;
-    	    if (std::regex_match(opt, opt_regex_norm) )
-    	    {
-    	        auto pos = opt.find("=");
-    	        std::cout << opt << std::endl;
-    	        n[opt.substr(2,pos-2)] = opt.substr(pos+1);
 
-    	    }
-    	    else if (std::regex_match(opt, opt_regex_bool))
+    	    if (std::regex_match(opt, opt_regex_exec))
     	    {
-    	        auto p = find(opt.substr(2), params);
-    	        // if (p.IsNull())
-    	        // {
-    	        	n[opt.substr(2)] = "true";
-    	        // }
-    	        // else
-    	        // {
-    	        // 	p = "true";
-    	        // }
+    	    	(*this)["executable"] = opt.substr(2);
     	    }
-    	    else if (std::regex_match(opt, opt_regex_file))
-    	    {
-    	    	YAML::Node file_n;
+    		else if (std::regex_match(opt, opt_regex_mult))
+    		{
+    			std::cout << "multi opt: " << opt << std::endl;
 
+    	    	(*this)[opt.substr(2, opt.find("=") - 2)] = YAML::Load(opt.substr(opt.find("=")+1));
+    		}
+    		else if (std::regex_match(opt, opt_regex_bool)) 
+    		{
+    			std::cout << "bool opt: " << opt << std::endl;
     	    	auto pos_eq = opt.find("=");
-    	    	auto pos_fi = opt.find("!file");
-    	     //    auto p = find(opt.substr(2,pos-2), params);
-    	    	// if (p.IsNull())
-    	     //    {
-    	        	file_n = opt.substr(pos_fi+6);
-    	    	file_n.SetTag("!file");
-    	        // }
-    	        // else
-    	        // {
-    	        	// p = opt.substr(pos+1);
-    	        // }
-				n[opt.substr(2,pos_eq-2)] = expand_file(file_n);
-    	        // 
-    	    }
-    	    else if (std::regex_match(opt, opt_regex_vect))
-    	    {
-    	    	auto pos = opt.find("=");
-    	        std::cout << opt << std::endl;
-    	        n[opt.substr(2,pos-2)] = YAML::Load(opt.substr(pos+1));
-    	    }
-    	    else
-    	    {
-    	    	prx_warn("Error adding: " << opt.substr(2) );
-    	    }
+    	    	if (pos_eq != std::string::npos)
+    	    	{
+    	    		// opt = opt.substr(2, pos_eq - 2);
+    	    		pos_eq = pos_eq - 2;
+    	    	}
+    			(*this)[opt.substr(2, pos_eq)] = YAML::Load("true");
+    		}
+    		else
+    		{
+    	    	prx_warn("param_loader - Error reading param: " << opt);
+    		}
     	}
-		// std::cout << "-------" << std::endl;
-    	// print(n);
-    	// params = std::move(expand_file(n));
-		this -> merge(std::move(n));
-		// std::cout << "-------" << std::endl;
-    	// print(params);
-		// std::cout << "-------" << std::endl;
 
 	}
 

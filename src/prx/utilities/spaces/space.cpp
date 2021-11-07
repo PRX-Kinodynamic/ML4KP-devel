@@ -198,6 +198,25 @@ namespace prx
 	// 	}
 	// }
 
+	void space_t::copy_to_vector(Eigen::VectorXd& _v) const
+	{
+		prx_assert(_v.size() == dimension, "Vector and space must have the same dimensions.");
+		for(unsigned i=0;i<dimension;++i)
+		{
+			_v[i] = *addresses[i];
+		}
+	}
+
+	void space_t::copy_from_vector(const Eigen::VectorXd& _v)
+	{
+		prx_assert(_v.size() == dimension, "Vector and space must have the same dimensions.");
+		for(unsigned i=0;i<dimension;++i)
+		{
+			// _v[i]=*addresses[i];
+			*addresses[i] = _v[i];
+		}
+	}
+
 
 	void space_t::copy_to_point(const space_point_t& point) const
 	{
