@@ -1,0 +1,15 @@
+name: "pendulum"
+path: "pendulum"
+
+# Assume empty environment... Doesn't make sense otherwise
+start_state: [0.0, 0.0]
+goal_state:  [3.14159, 0.0]
+
+min_steps: 1
+max_steps: 50
+
+state_space_lower_bound: [0, -6]
+state_space_upper_bound: [6.28318, 6]
+
+
+vis_body: "ball"

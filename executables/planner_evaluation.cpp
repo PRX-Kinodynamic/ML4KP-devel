@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 		context.first->get_state_space()->copy_point_from_vector(planner_wrapper->planner_query->start_state,start_vec);
 		planner_wrapper->planner_query->goal_state = context.first->get_state_space()->make_point();
 		context.first->get_state_space()->copy_point_from_vector(planner_wrapper->planner_query->goal_state,goal_vec);
-		planner_wrapper->planner_query->goal_region_radius = params["goal_region_radius"].as<double>();
+		// planner_wrapper->planner_query->goal_region_radius = params["goal_region_radius"].as<double>();
 		planner_wrapper->planner_query->get_visualization = get_visualization;
 
 		condition_check_t checker("iterations",  planner_iterations/stats_iterations);
