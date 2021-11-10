@@ -29,13 +29,14 @@ namespace prx
 
 			void init_cov(int N)
 			{
-				cov = Eigen::Matrix<double, N, N, Eigen::DontAlign>;
+				cov = Eigen::MatrixXd::Identity(N,N);
 			}
 			virtual ~rrbt_node_t(){}
+
 			double sigma;
 			Eigen::MatrixXd cov;
 
-	}
+	};
 
 	class rrbt_specification_t : public rrt_specification_t
 	{
@@ -69,7 +70,7 @@ namespace prx
 
 	};
 
-	class rrbt_star_t : public rrt_t
+	class rrbt_t : public rrt_t
 	{
 	public:
 		rrbt_t(const std::string& new_name);
@@ -86,7 +87,7 @@ namespace prx
 		virtual void _fulfill_query() override;
 		virtual void _reset() override;
 
-		void propagateBelief(Eigen::MatrixXd &P1, space_point_t &qNear, space_point_t &qNew, double &sigma, Eigen::MatrixXd &P2);
+		void propagate_belief(Eigen::MatrixXd &P1, space_point_t &qNear, space_point_t &qNew, double &sigma, Eigen::MatrixXd &P2);
 
 
 		// virtual void bnb(node_index_t v, double cost_bound, bool delete_flag = false);
@@ -100,14 +101,14 @@ namespace prx
 
 		space_point_t dx; // Used for belief prop
 
-		Eigen::MatrixXd H;// H(1, DIM);
+		Eigen::VectorXd H;// H(1, DIM);
 
 		Eigen::MatrixXd I; // = Eigen::MatrixXd::Identity(DIM, DIM);
 		Eigen::MatrixXd A; // = I;
 		Eigen::MatrixXd B; // = I;
 		Eigen::MatrixXd G; // = I;
 
-		Eigen::MatrixXd GQG = G * Q * G.transpose();
+		Eigen::MatrixXd GQG;// = G * Q * G.transpose();
 		Eigen::MatrixXd P_prd; //, P2;
 
 		float processNoise = 0.028;

@@ -24,7 +24,7 @@ namespace prx
 		dx = state_space->make_point();
 
 		double ss_dim = state_space -> get_dimension();
-		Eigen::MatrixXd H(1, ss_dim );
+		H = Eigen::VectorXd::Zero( ss_dim );
 
 		I = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
 		A = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
@@ -96,9 +96,6 @@ namespace prx
 				iteration_count++;
 				continue;
 			} 
-			// expand(closest_node->point,plans,trajs,rrt_spec->blossom_number,false);
-			// plan_t plan(*plans.front());
-			// trajectory_t traj(*trajs.front());
 			edge_cost = cost_function(traj,plan);
 
 			new_cost = closest_node -> cost_to_come + edge_cost;
@@ -199,9 +196,9 @@ namespace prx
 		}
 	}
 
-	void propagate_belief(Eigen::MatrixXd &P1, space_point_t &q_near, space_point_t &q_new, double &sigma, Eigen::MatrixXd &P2)
+	void rrbt_t::propagate_belief(Eigen::MatrixXd &P1, space_point_t &q_near, space_point_t &q_new, double &sigma, Eigen::MatrixXd &P2)
 	{
-		space_t::substract(dx, q_near, q_new);
+		space_t::subtract(dx, q_near, q_new);
 		r = space_t::l2_norm(q_near, q_new);
 		// r = sqrt(pow(dx1, 2) + pow(dy1, 2) + pow(dz1, 2));
 
