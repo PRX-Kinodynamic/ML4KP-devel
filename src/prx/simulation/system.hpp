@@ -76,6 +76,18 @@ namespace prx
 			return system_type;
 		}
 
+        friend std::ostream& operator<< (std::ostream& os, const system_t& obj) 
+		{
+			os << "state_space: " << *obj.state_space << "\tcontrol_space: " << *obj.input_control_space << std::endl;
+			return os;
+		}
+
+		friend std::ostream& operator<< (std::ostream& os, const system_ptr_t& obj) 
+		{
+			os << "state_space: " << *(obj -> state_space) << "\tcontrol_space: " << *(obj -> input_control_space) << std::endl;
+			return os;
+		}
+
 		space_t* state_space;
 		space_t* input_control_space;
 	protected:

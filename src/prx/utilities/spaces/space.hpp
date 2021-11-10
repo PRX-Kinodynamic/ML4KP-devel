@@ -297,6 +297,12 @@ namespace prx
 
 		std::string print_memory(unsigned prec = 25) const;
 
+		friend std::ostream& operator<< (std::ostream& os, const space_t& obj) 
+        {
+        	os << obj.print_memory(3);
+        	return os;
+        }
+
 		static double l1_norm(const space_point_t& p1)
 		{	
 			auto fn = [&](double accum, double e)
