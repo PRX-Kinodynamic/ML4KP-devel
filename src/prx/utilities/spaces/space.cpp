@@ -207,7 +207,7 @@ namespace prx
 		}
 	}
 
-	void space_t::copy_from_vector(const Eigen::VectorXd& _v)
+	void space_t::copy_from_vector(const Eigen::VectorXd& _v) const
 	{
 		prx_assert(_v.size() == dimension, "Vector and space must have the same dimensions.");
 		for(unsigned i=0;i<dimension;++i)
@@ -287,14 +287,18 @@ namespace prx
 			{
         		p = norm_angle_pi(p, *lower_bounds[i], *upper_bounds[i]);
 			}
-			if(p<*lower_bounds[i])
+			else
 			{
-				p=*lower_bounds[i];
+				p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
 			}
-			if(p>*upper_bounds[i])
-			{
-				p=*upper_bounds[i];
-			}
+			// if(p<*lower_bounds[i])
+			// {
+			// 	p=*lower_bounds[i];
+			// }
+			// if(p>*upper_bounds[i])
+			// {
+			// 	p=*upper_bounds[i];
+			// }
 		}
 	}
 	void space_t::enforce_bounds() const
@@ -306,14 +310,18 @@ namespace prx
 			{
 				p = norm_angle_pi(p);
 			}
-			if(p<*lower_bounds[i])
+			else
 			{
-				p=*lower_bounds[i];
+				p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
 			}
-			if(p>*upper_bounds[i])
-			{
-				p=*upper_bounds[i];
-			}
+			// if(p<*lower_bounds[i])
+			// {
+			// 	p=*lower_bounds[i];
+			// }
+			// if(p>*upper_bounds[i])
+			// {
+			// 	p=*upper_bounds[i];
+			// }
 		}
 	}
 	bool space_t::satisfies_bounds(const space_point_t& point) const
@@ -426,7 +434,7 @@ namespace prx
 					else
 						result->memory[i] = point1->memory[i] + t*(2*PRX_PI - point1->memory[i]+point2->memory[i]);
 				}
-				result->memory[i] = norm_angle_pi(result->memory[i]);
+				result->memory[i] = norm_angle_pi(result->memory[i], *lower_bounds[i], *upper_bounds[i]);
 			}
 			else if(topology[i]==topology_t::DISCRETE)
 			{
