@@ -1,6 +1,6 @@
 #pragma once
 
-#include "prx/utilities/general/transforms.hpp"
+#include "prx/utilities/defs.hpp"
 
 #include <map>
 #include <string>
@@ -23,7 +23,31 @@ namespace prx
 			std::cout << env_var << " environmental variable not set." << std::endl;
 			exit(1);
 		}
-		return std::string(path);
+
+		auto p_str = std::string(path);
+		return (p_str + (p_str.back()=='/'?"":"/"));
+	}
+
+	template<typename T>
+	static inline
+	bool are_approx_equal(T n1, T n2, double tolerance = PRX_EPSILON)
+	{
+		return std::fabs(n1 - n2) <= tolerance;
+	}
+
+	// TODO: Make this for any sequence container
+	template <typename T>
+	static inline
+	bool are_approx_equal(std::vector<T> c1, std::vector<T> c2, double tolerance = PRX_EPSILON)
+	{
+		prx_assert(c1.size() == c2.size(), "Containers must have the same size.");
+		
+		for (int i = 0; i < c1.size(); ++i)
+		{
+			if ( !are_approx_equal(c1[i], c2[i], tolerance) )
+				return false;
+		}
+		return true;
 	}
 
 	const std::string lib_path = lib_path_safe("DIRTMP_PATH");
@@ -38,7 +62,8 @@ namespace prx
 	static inline
 	double norm_angle_pi( double angle, double min_angle = -PRX_PI, double max_angle = PRX_PI )
 	{
-		prx_warn_cond(std::fabs(angle) < 100 * max_angle, "Angle might be too high: " << std::to_string(angle))
+		// prx_warn_cond(std::fabs(angle) < 100 * max_angle, "Angle might be too high: " << std::to_string(angle));
+
 		while( angle > max_angle )
 			angle -= 2.0 * PRX_PI;
 		while( angle < min_angle )
