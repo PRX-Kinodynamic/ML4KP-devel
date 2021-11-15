@@ -33,21 +33,21 @@ auto tvfo_vel_fn = [](prx::system_ptr_t sys_ptr)
 {
     auto tv_fo = std::dynamic_pointer_cast<prx::treaded_vehicle_first_order_t>(sys_ptr);
     if (!tv_fo) return std::numeric_limits<double>::infinity();
-	prx::space_point_t bk_state = tv_fo -> state_space -> make_point();
+	prx::space_point_t bk_state = tv_fo -> get_state_space() -> make_point();
     prx::space_point_t bk_deriv = tv_fo -> derivative_space -> make_point();
 
-    tv_fo -> state_space -> copy_to_point(bk_state);
+    tv_fo -> get_state_space() -> copy_to_point(bk_state);
     tv_fo -> derivative_space -> copy_to_point(bk_deriv);
 
-    tv_fo -> state_space -> at(0) = tv_fo -> state_space -> at(1) = tv_fo -> state_space -> at(2) = 0;
-    tv_fo -> input_control_space -> at(0) = tv_fo -> input_control_space -> get_bounds()[0].second;
-    tv_fo -> input_control_space -> at(1) = tv_fo -> input_control_space -> get_bounds()[1].second;
+    tv_fo -> get_state_space() -> at(0) = tv_fo -> get_state_space() -> at(1) = tv_fo -> get_state_space() -> at(2) = 0;
+    tv_fo -> get_control_space() -> at(0) = tv_fo -> get_control_space() -> get_bounds()[0].second;
+    tv_fo -> get_control_space() -> at(1) = tv_fo -> get_control_space() -> get_bounds()[1].second;
             
     tv_fo -> compute_derivative();
     double vel = sqrt(std::pow(tv_fo -> derivative_space -> at(0), 2) + std::pow(tv_fo -> derivative_space -> at(1), 2));
 
 	// Copy back the original values
-	tv_fo -> state_space -> copy_from_point(bk_state);
+	tv_fo -> get_state_space() -> copy_from_point(bk_state);
 	tv_fo -> derivative_space -> copy_from_point(bk_deriv);
 	return vel;
 };

@@ -88,9 +88,9 @@ namespace prx
 			return os;
 		}
 
+	protected:
 		space_t* state_space;
 		space_t* input_control_space;
-	protected:
 
 		std::weak_ptr<system_t> parent_system;
 

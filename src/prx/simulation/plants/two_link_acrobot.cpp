@@ -70,19 +70,21 @@ namespace prx
 		auto body = configurations["rod2"];
 		body->setIdentity();
 		body->linear() = (quaternion_t(cos((_theta1 - PRX_PI / 2) / 2.0), 0, 0, sin((_theta1 - PRX_PI / 2) / 2.0)).toRotationMatrix());
-		body->translation() = (vector_t((length / 2.0) * cos(_theta1 - PRX_PI / 2), (length / 2.0) * sin(_theta1 - PRX_PI / 2), 1.5));
+		body->translation() = (vector_t((length / 2.0) * cos(_theta1 - PRX_PI / 2), 
+										(length / 2.0) * sin(_theta1 - PRX_PI / 2),
+										 1.5));
 
 		body = configurations["rod1"];
 		body->setIdentity();
 		body->linear() = (quaternion_t(cos((_theta1 + _theta2 - PRX_PI / 2) / 2.0),0, 0, sin((_theta1 + _theta2 - PRX_PI / 2) / 2.0)).toRotationMatrix());
 		body->translation() = (vector_t((length) * cos(_theta1 - PRX_PI / 2)+(length / 2.0) * cos(_theta1 + _theta2 - PRX_PI / 2),
-                                           (length) * sin(_theta1 - PRX_PI / 2)+(length / 2.0) * sin(_theta1 + _theta2 - PRX_PI / 2),
+                                        (length) * sin(_theta1 - PRX_PI / 2)+(length / 2.0) * sin(_theta1 + _theta2 - PRX_PI / 2),
                                            1.5));
 
 		body = configurations["ball"];
 		body->setIdentity();
 		body->translation() = (vector_t((length) * cos(_theta1 - PRX_PI / 2)+(length) * cos(_theta1 + _theta2 - PRX_PI / 2),
-                                           (length) * sin(_theta1 - PRX_PI / 2)+(length) * sin(_theta1 + _theta2 - PRX_PI / 2),
+                                        (length) * sin(_theta1 - PRX_PI / 2)+(length) * sin(_theta1 + _theta2 - PRX_PI / 2),
                                            1.5));
 	}
 

@@ -47,5 +47,5 @@ namespace prx
 }
 
 PRX_REGISTER_SYSTEM(ackermann_FO, Ackermann_FO)
-PRX_REGISTER_VELOCITY_FN(Ackermann_FO, [](system_ptr_t s){return s -> input_control_space -> get_bounds()[1].second;})
+PRX_REGISTER_VELOCITY_FN(Ackermann_FO, [](system_ptr_t s){return s -> get_control_space() -> get_bounds()[1].second;})
 
