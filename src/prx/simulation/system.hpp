@@ -42,6 +42,10 @@ namespace prx
 		{
 			return input_control_space;
 		}
+		inline const space_t* get_parameter_space() const
+		{
+			return parameter_space;
+		}
 
 		virtual void add_system(system_ptr_t& )=0;
 
@@ -78,19 +82,20 @@ namespace prx
 
         friend std::ostream& operator<< (std::ostream& os, const system_t& obj) 
 		{
-			os << "state_space: " << *obj.state_space << "\tcontrol_space: " << *obj.input_control_space << std::endl;
+			os << "state_space: " << *obj.state_space << "\tcontrol_space: " << *obj.input_control_space;
 			return os;
 		}
 
 		friend std::ostream& operator<< (std::ostream& os, const system_ptr_t& obj) 
 		{
-			os << "state_space: " << *(obj -> state_space) << "\tcontrol_space: " << *(obj -> input_control_space) << std::endl;
+			os << "state_space: " << *(obj -> state_space) << "\tcontrol_space: " << *(obj -> input_control_space);
 			return os;
 		}
 
 	protected:
 		space_t* state_space;
 		space_t* input_control_space;
+		space_t* parameter_space;
 
 		std::weak_ptr<system_t> parent_system;
 
@@ -106,6 +111,7 @@ namespace prx
 
 		std::vector<double*> state_memory;
 		std::vector<double*> control_memory;
+		std::vector<double*> parameter_memory;
 
 	private:
 		system_t(){}
