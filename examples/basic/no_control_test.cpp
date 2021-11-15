@@ -19,8 +19,6 @@ int main(int argc, char* argv[])
     std::vector<std::shared_ptr<movable_object_t>> obstacle_list = obstacles.second;
     std::vector<std::string> obstacle_names = obstacles.first;
 
-PRX_DEBUG_PRINT
-    params.print();
     std::string plant_name = params["/plant/name"].as<>();
     std::string plant_path = params["/plant/path"].as<>();
     auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
@@ -43,6 +41,7 @@ PRX_DEBUG_PRINT
 
 PRX_DEBUG_PRINT
     ss -> copy_point_from_vector(start_state, params["/plant/start_state"].as<std::vector<double>>());
+    ss -> copy_from_point(start_state);
 PRX_DEBUG_PRINT
 
     trajectory_t solution_traj(ss);
@@ -54,6 +53,7 @@ PRX_DEBUG_PRINT
     {
         cs -> enforce_bounds();
         plant -> propagate(simulation_step);
+        std::cout << "[pendulum] " << plant << std::endl;
         solution_traj.copy_onto_back(ss);
 
     }

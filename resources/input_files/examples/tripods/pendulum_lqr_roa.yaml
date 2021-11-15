@@ -6,8 +6,12 @@ plant: !file "plants/pendulum.yaml"
 # plant: !file "plants/acrobot.yaml"
 
 visualize: true
+trajs_to_file: false
 
-checker_type: sim_time
-checker_value: 3
+checker_type: iterations
+checker_value: 500
 
-goal_region_radius: 0.5
+goal_region_radius: 0.1
+
+roa_file: "out/pendulum_roa.txt"
+trajs_file: "out/pendulum_trajs.txt"

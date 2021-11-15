@@ -246,7 +246,7 @@ namespace prx
 		 *
 		 * @param[in]  Vector to copy from.
 		 */
-		void copy_from_vector(const Eigen::VectorXd& _v);
+		void copy_from_vector(const Eigen::VectorXd& _v) const;
 
 		/**
 		 * @brief      Copy from a std::vector<double>
@@ -287,6 +287,11 @@ namespace prx
 		}
 
 		std::vector<std::pair<double,double>> get_bounds() const;
+
+		std::vector<double> get_upper_bounds() const;
+		
+		std::vector<double> get_lower_bounds() const;
+		
 
 		void integrate(const space_point_t& point,const space_t* derivative,double delta_t);
 		void integrate(const space_t* derivative,double delta_t);

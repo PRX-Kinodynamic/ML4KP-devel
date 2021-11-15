@@ -359,6 +359,26 @@ namespace prx
 		return bounds;
 	}
 
+	std::vector<double> space_t::get_upper_bounds() const
+	{
+		std::vector<double> ub;
+		for(unsigned i=0;i<dimension;i++)
+		{
+			ub.push_back(*upper_bounds[i]);
+		}
+		return ub;
+	}
+		
+	std::vector<double> space_t::get_lower_bounds() const
+	{
+		std::vector<double> ub;
+		for(unsigned i=0;i<dimension;i++)
+		{
+			ub.push_back(*lower_bounds[i]);
+		}
+		return ub;
+	}
+
 	void space_t::integrate(const space_point_t& point,const space_t* derivative,double delta_t)
 	{
 		prx_assert(derivative->get_dimension()==dimension,"");
