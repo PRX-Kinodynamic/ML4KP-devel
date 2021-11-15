@@ -15,7 +15,7 @@ namespace prx
 	// local_goal
 	class set_points_t
 	{
-	public:
+		public:
 		set_points_t(const space_t* _space)
 		{
 			space = _space;
@@ -37,14 +37,14 @@ namespace prx
 			return set_points[index];
 
 		}
-	private:
-		std::vector<space_point_t> set_points;
-		const space_t* space;
+		private:
+			std::vector<space_point_t> set_points;
+			const space_t* space;
 	};
 
 	class controller_t
 	{
-	public:
+		public:
 		controller_t(system_ptr_t _plant, std::string _name = "base_controller") : set_points(_plant -> get_state_space())
 		{
 			plant = _plant;
@@ -94,7 +94,7 @@ namespace prx
 
 
 
-	protected:
+		protected:
 		
 		system_ptr_t plant;
 		std::string name;
