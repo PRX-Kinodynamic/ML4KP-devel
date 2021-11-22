@@ -14,4 +14,5 @@ checker_value: 500
 goal_region_radius: 0.1
 
 roa_file: "out/pendulum_roa.txt"
+py_roa_file: "out/pendulum_roa_py.txt"
 trajs_file: "out/pendulum_trajs.txt"

@@ -77,8 +77,8 @@ int main(int argc, char* argv[])
     std::ofstream fout_trajs;
     std::ofstream fout_roa;
 
-    std::string trajs_file_name = lib_path + params["roa_file"].as<>();
-    fout_roa.open(trajs_file_name.c_str());
+    std::string roa_file_name = lib_path + params["roa_file"].as<>();
+    fout_roa.open(roa_file_name.c_str());
 
     bool save_trajs_to_file = params["trajs_to_file"].as<bool>();
     if (save_trajs_to_file)
