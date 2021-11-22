@@ -359,7 +359,7 @@ namespace prx
 			return std::sqrt(std::accumulate(zipped.begin(), zipped.end(), 0.0, fn));
 		}
 
-		static double lp_norm(const space_point_t& p1, double p)
+		static double lp_norm(const space_point_t& p1, const double p)
 		{
 			auto fn = [&](double accum, double e)
 			{

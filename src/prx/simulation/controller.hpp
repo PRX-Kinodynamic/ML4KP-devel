@@ -45,6 +45,7 @@ namespace prx
 	class controller_t
 	{
 		public:
+		controller_t(const controller_t& other) = default;
 		controller_t(system_ptr_t _plant, std::string _name = "base_controller") : set_points(_plant -> get_state_space())
 		{
 			plant = _plant;

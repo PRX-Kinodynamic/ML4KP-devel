@@ -86,6 +86,7 @@ namespace prx
 
 		void resize(unsigned num_size);
 
+		void copy(const trajectory_t& t);
 		trajectory_t& operator=(const trajectory_t& t);
 		trajectory_t& operator+=(const trajectory_t& t);
 		bool operator==(const trajectory_t& t);

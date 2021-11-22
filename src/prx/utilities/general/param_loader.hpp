@@ -22,19 +22,22 @@ namespace prx
 		param_loader();
 		param_loader(std::string file_name);
 		param_loader(int argc, char* argv[]);
+		param_loader(std::vector<std::string> argv);
 		param_loader(std::string file_name, int argc, char* argv[]);
-		param_loader(const param_loader& pl);
+		param_loader(std::string file_name, std::vector<std::string> argv);
+		param_loader(const param_loader& other);
 
 		void add_file(std::string file_name);
 
 		void add_opts(int argc, char* argv[]);
+		void add_opts(std::vector<std::string> argv);
 
 		inline const std::string get_input_path() const
 		{
 			return pl_input_path;
 		}
 
-		inline const void set_input_path(const std::string& new_path)
+		inline void set_input_path(const std::string& new_path)
 		{
 			pl_input_path = new_path;
 			if (pl_input_path.back() != '/')
@@ -51,7 +54,6 @@ namespace prx
 
 		template<typename T>
 		void set(T val){params = val;}
-		void print_variables();
 
 		void print();
 

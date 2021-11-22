@@ -47,22 +47,16 @@ namespace prx
 
 	void lti_t::discretize()
 	{
-PRX_DEBUG_PRINT
 		double n = lti_stt_space -> get_dimension();
 		double p = lti_ctr_space -> get_dimension();
 
-PRX_DEBUG_PRINT
 		Eigen::MatrixXd AB;
-PRX_DEBUG_PRINT
 		AB = Eigen::MatrixXd::Zero(n+p, n+p);
-PRX_DEBUG_PRINT
 		AB.block(0,0,n,n) = A;
-PRX_DEBUG_PRINT
 		AB.block(0,n,n,p) = B;
 		AB *= simulation_step;
-PRX_DEBUG_PRINT
 		Eigen::MatrixXd AB_res = AB.exp();
-		std::cout << "e^AB: " << AB_res << std::endl;
+		// std::cout << "e^AB: " << AB_res << std::endl;
 		A = AB_res.block(0,0,n,n);
 		B = AB_res.block(0,n,n,p);
 	}

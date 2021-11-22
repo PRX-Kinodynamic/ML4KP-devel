@@ -111,8 +111,8 @@ namespace prx
 
         B << 0., 1. / inertia;
 
-        std::cout << "A: " << A << std::endl;
-    	std::cout << "B: " << B << std::endl;
+  //       std::cout << "A: " << A << std::endl;
+  //   	std::cout << "B: " << B << std::endl;
         if (normalize != 0)
         {
 
@@ -127,21 +127,21 @@ namespace prx
         	Tu_inv.diagonal() << (1.0 / cs_ub[0]);
         	// auto Tu = map(np.diag, self.normalization)
          //    Tx_inv, Tu_inv = map(np.diag, self.inv_norm)
-        	std::cout << "Tx: " << Tx.diagonal() << std::endl;
-    		std::cout << "Tu: " << Tu.diagonal() << std::endl;
+      //   	std::cout << "Tx: " << Tx.diagonal() << std::endl;
+    		// std::cout << "Tu: " << Tu.diagonal() << std::endl;
 
-        	std::cout << "Tx_inv: " << Tx_inv.diagonal() << std::endl;
-    		std::cout << "Tu_inv: " << Tu_inv.diagonal() << std::endl;
+      //   	std::cout << "Tx_inv: " << Tx_inv.diagonal() << std::endl;
+    		// std::cout << "Tu_inv: " << Tu_inv.diagonal() << std::endl;
 
             A = Tx_inv * A * Tx;
             B = Tx_inv * B * Tu;
 
         }
-        std::cout << "A: " << A << std::endl;
-    	std::cout << "B: " << B << std::endl;
-PRX_DEBUG_PRINT
-        // discretize();
-PRX_DEBUG_PRINT
+//         std::cout << "A: " << A << std::endl;
+//     	std::cout << "B: " << B << std::endl;
+// PRX_DEBUG_PRINT
+//         // discretize();
+// PRX_DEBUG_PRINT
 
         // if self.normalization is not None:
         //     Tx, Tu = map(np.diag, self.normalization)

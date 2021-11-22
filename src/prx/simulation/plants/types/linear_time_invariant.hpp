@@ -12,6 +12,7 @@ namespace prx
 	{
 		public:
 
+			lti_t(const lti_t& other) = default;
 			lti_t(std::string _path);
 
 			virtual ~lti_t();
@@ -34,11 +35,11 @@ namespace prx
 			 *
 			 * @return     True if successful.
 			 */
-			virtual bool linearize(space_point_t x0)
-			{
-				prx_throw("No implementation of lti_t::linearize(x0)!");
-				return false;
-			}
+			// virtual bool linearize(space_point_t x0)
+			// {
+			// 	prx_throw("No implementation of lti_t::linearize(x0)!");
+			// 	return false;
+			// }
 
 			/**
 			 * @brief      Check that dimentions match. Given p inputs, 
@@ -58,9 +59,10 @@ namespace prx
 			 *             The derivative (\dot{x}) is saved in the 
 			 *             state space while the ouput returned.
 			 *
-			 * @return     The output y(t).
+			 * @return     The output \dot{x}(t).
 			 */
 			void derivative();
+
 
 			/**
 			 * @brief      Compute the derivative and output.
@@ -95,6 +97,12 @@ namespace prx
 
 
 		protected:
+
+			virtual void compute_derivative() override
+			{
+				derivative();
+			}
+			
 			space_t* lti_stt_space;
 			space_t* lti_ctr_space;
 

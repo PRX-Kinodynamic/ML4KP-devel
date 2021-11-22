@@ -16,16 +16,28 @@ namespace prx
 	}
 
 	param_loader::param_loader(int argc, char* argv[])
+		: param_loader(std::vector<std::string>(argv, argv + argc))
+	{
+	}
+
+	param_loader::param_loader(std::vector<std::string> argv)
 	{
 		set_input_path(input_path);
-		add_opts(argc, argv);
+		// add_opts(argc, argv);
+		add_opts(argv);
 	}
 
 	param_loader::param_loader(std::string file_name, int argc, char* argv[])
+		: param_loader(file_name, std::vector<std::string>(argv, argv + argc))
+	{
+	}
+
+	param_loader::param_loader(std::string file_name, std::vector<std::string> argv)
 	{
 		set_input_path(input_path);
 		add_file(file_name);
-		add_opts(argc, argv);
+		// add_opts(argc, argv);
+		add_opts(argv);
 	}
 
 	param_loader::param_loader(const param_loader& pl)
@@ -55,8 +67,7 @@ namespace prx
 		{
 			if(params.IsNull())
 				prx_throw("Bad filename to param_loader '"<<pl_input_path<<file_name<<"'");
-		}
-		
+		}	
 	}
 
 	YAML::Node param_loader::expand_file(YAML::Node& node)
@@ -104,6 +115,11 @@ namespace prx
 
 	void param_loader::add_opts(int argc, char* argv[])
 	{
+		add_opts(std::vector<std::string>(argv, argv + argc));
+	}
+
+	void param_loader::add_opts(std::vector<std::string> argv)
+	{
 		
 		// Regular case: "--/some/param/name=value" 
 		const std::regex opt_regex_mult("--((\\/)?\\w)+=(.)+");
@@ -111,15 +127,22 @@ namespace prx
 		const std::regex opt_regex_bool("--((\\/)?\\w)+=?");
 		// Special case for the executable: "./executable_name"
 		const std::regex opt_regex_exec("\\.\\/\\w+");
+		const std::regex opt_regex_expy("(.)+\\.py");
 
+		auto argc = argv.size();
     	for (int i = 0; i < argc; ++i)
     	{
-    	    std::string opt(argv[i]);
+    	    std::string opt = argv[i];
 
     	    if (std::regex_match(opt, opt_regex_exec))
     	    {
     	    	(*this)["executable"] = opt.substr(2);
     	    }
+    		else if (std::regex_match(opt, opt_regex_expy))
+    		{
+    			// std::cout << "opt: " << opt << std::endl;
+    	    	(*this)["executable"] = opt;
+    		}
     		else if (std::regex_match(opt, opt_regex_mult))
     		{
     			std::cout << "multi opt: " << opt << std::endl;

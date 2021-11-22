@@ -9,15 +9,15 @@ namespace prx
 	class lqr_t : public controller_t
 	{
 		public:
-		template<class S>
-		lqr_t(std::shared_ptr<S> _plant, std::string _name) 
+		// template<class S>
+		lqr_t(std::shared_ptr<lti_t> _plant, std::string _name) 
 		: controller_t(_plant, _name)
 		{
 			lti = std::dynamic_pointer_cast<lti_t>(_plant);
 			prx_assert(lti != nullptr, "Plant is not an lti_t!");
 		}
-		template<class S>
-		lqr_t(std::shared_ptr<S> _plant, Eigen::MatrixXd _Q, Eigen::MatrixXd _R, std::string _name)
+		// template<class S>
+		lqr_t(std::shared_ptr<lti_t> _plant, Eigen::MatrixXd _Q, Eigen::MatrixXd _R, std::string _name)
 			: controller_t(_plant, _name)
 		{
 			lti = std::dynamic_pointer_cast<lti_t>(_plant);
