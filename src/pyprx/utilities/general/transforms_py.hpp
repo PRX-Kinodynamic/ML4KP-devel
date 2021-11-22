@@ -64,7 +64,8 @@ static prx::quaternion_t* fromAxisAngle(const prx::vector_t& axis, const Scalar&
 static prx::quaternion_t* fromAngleAxis(const Scalar& angle, const prx::vector_t& axis){ prx::quaternion_t* ret=new prx::quaternion_t(AngleAxisT(angle, axis)); ret->normalize(); return ret; }
 static prx::quaternion_t* fromTwoVectors(const prx::vector_t& u, const prx::vector_t& v){ prx::quaternion_t* q(new prx::quaternion_t); q->setFromTwoVectors(u,v); return q; }
 
-
+// template<typename T>
+// static std::string to_string()()
 // static 
 // static auto translation(Eigen::Transform<double, 3, Eigen::AffineCompact> Tr)
 //     {return Tr.translation();}
@@ -95,23 +96,26 @@ void pyprx_utilities_general_transforms()
         .def("__setitem__", &set_vector_item< prx::vector_t >)
         ;
 
-    class_< prx::matrix_t >("matrix", init< prx::matrix_t >() )
-        .def("__setitem__", &set_matrix_item< prx::matrix_t >)
-        .def("determinant",&prx::matrix_t::determinant,"Return matrix determinant.")
-        .def("trace",&prx::matrix_t::trace,"Return sum of diagonal elements.")
-        .def("transpose",&transpose<prx::matrix_t>,"Return transposed matrix.")
-        .def("diagonal",&diagonal<prx::matrix_t, prx::vector_t>,"Return diagonal as vector.")
+    class_< Eigen::MatrixXd >("matrix", init< Eigen::MatrixXd >() )
+        .def("__setitem__", &set_matrix_item< Eigen::MatrixXd >)
+        .def("determinant",&Eigen::MatrixXd::determinant,"Return matrix determinant.")
+        .def("trace",&Eigen::MatrixXd::trace,"Return sum of diagonal elements.")
+        .def("transpose",&transpose<Eigen::MatrixXd>,"Return transposed matrix.")
+        .def("diagonal",&diagonal<Eigen::MatrixXd, Eigen::VectorXd>,"Return diagonal as vector.")
         // // matrix*matrix product
-        .def("__mul__",&__mul__<prx::matrix_t>).def("__imul__",&__imul__<prx::matrix_t>)
+        .def("__mul__",&__mul__<Eigen::MatrixXd>).def("__imul__",&__imul__<Eigen::MatrixXd>)
         // // matrix*vector product
-        .def("__mul__",&__mul__vec<prx::matrix_t, prx::vector_t>).def("__rmul__",&__mul__vec<prx::matrix_t, prx::vector_t>)
-        .def("Zero",&Zero<prx::matrix_t>,(arg("rows"),arg("cols")),"Create zero matrix of given dimensions").staticmethod("Zero")
-        .def("Ones",&Zero<prx::matrix_t>,(arg("rows"),arg("cols")),"Create matrix of given dimensions where all elements are set to 1.").staticmethod("Ones")
-        .def("Random",&Zero<prx::matrix_t>,(arg("rows"),arg("cols")),"Create matrix with given dimensions where all elements are set to number between 0 and 1 (uniformly-distributed).").staticmethod("Random")
-        .def("Identity",&Zero<prx::matrix_t>,(arg("rank")),"Create identity matrix with given rank (square).").staticmethod("Identity")
+        .def("__mul__",&__mul__vec<Eigen::MatrixXd, Eigen::VectorXd>).def("__rmul__",&__mul__vec<Eigen::MatrixXd, Eigen::VectorXd>)
+        .def("Zero",    &Zero<Eigen::MatrixXd>,(arg("rows"),arg("cols")),"Create zero matrix of given dimensions").staticmethod("Zero")
+        .def("Ones",    &Ones<Eigen::MatrixXd>,(arg("rows"),arg("cols")),"Create matrix of given dimensions where all elements are set to 1.").staticmethod("Ones")
+        .def("Random",  &Random<Eigen::MatrixXd>,(arg("rows"),arg("cols")),"Create matrix with given dimensions where all elements are set to number between 0 and 1 (uniformly-distributed).").staticmethod("Random")
+        .def("Identity",&Identity<Eigen::MatrixXd>,(arg("rows"),arg("cols")),"Create identity matrix with given rows anc columns.").staticmethod("Identity")
         // .def("__setitem__",&prx::matrix_t::set_row).def("__getitem__",&prx::matrix_t::get_row)
         // .def("__setitem__",&prx::matrix_t::set_item< prx::matrix_t >).def("__getitem__",&prx::matrix_t::get_item< prx::matrix_t >)
-        // .def("__str__",&prx::matrix_t::__str__).def("__repr__",&prx::matrix_t::__str__)
+        // .def(str(self))
+        .def(self_ns::str(self_ns::self))
+        // .def("__str__",&Eigen::MatrixXd::operator<<)
+        // .def("__repr__",&prx::matrix_t::__str__)
         ;
 
     class_< prx::quaternion_t >("quaternion" )

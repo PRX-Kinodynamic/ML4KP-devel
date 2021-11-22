@@ -9,6 +9,12 @@ prx::space_point_t (prx::trajectory_t::*at_2)(double)  const  = &prx::trajectory
 void (prx::trajectory_t::*copy_onto_back_1)(prx::space_point_t)  = &prx::trajectory_t::copy_onto_back;
 void (prx::trajectory_t::*copy_onto_back_2)(const prx::space_t*) = &prx::trajectory_t::copy_onto_back;
 
+// void (prx::trajectory_t::*print_0)(3)  = &prx::trajectory_t::print;
+// void (prx::trajectory_t::*print_1)(unsigned) = &prx::trajectory_t::print;
+
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(trajectory_print_overloads, print, 0, 1)
+
+
 void pyprx_simulation_playback_trajectory_py()
 {
 
@@ -21,11 +27,18 @@ void pyprx_simulation_playback_trajectory_py()
 		.def("__iter__", iterator<prx::trajectory_t>())
 		.def("front", &prx::trajectory_t::front)
 		.def("back", &prx::trajectory_t::back)
+		.def("resize", &prx::trajectory_t::resize)
+		.def("copy", &prx::trajectory_t::copy)
+		.def("clear", &prx::trajectory_t::clear)
+		.def("print", &prx::trajectory_t::print, trajectory_print_overloads())
+		// .def<std::string (prx::trajectory_t::*)(unsigned)>("print", &prx::trajectory_t::print)
 		.def("copy_onto_back", copy_onto_back_1)
+		.def("copy_onto_back", copy_onto_back_2)
 		// .def("copy_onto_back", copy_onto_back_2)
 		.def(self += other<prx::trajectory_t>())
 		.def(self == other<prx::trajectory_t>())
 		.def(self != other<prx::trajectory_t>())
-
 		;
+
+
 }

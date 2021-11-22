@@ -9,6 +9,8 @@ using namespace boost::python;
 
 struct plant_wrap : prx::plant_t, wrapper<prx::plant_t>
 {
+    plant_wrap(const plant_t& _plant) : prx::plant_t(_plant){};
+
     plant_wrap(const std::string& path) : prx::plant_t(path){};
 
     void update_configuration()
@@ -37,7 +39,7 @@ void pyprx_simulation_plant()
 //    	    .def("propagate", &prx::plant_t::propagate)
 //    	;
     // class_<plant_wrap, bases<prx::system_t, prx::movable_object_t>, boost::noncopyable>("plant_t", init<std::string>())
-   	class_<plant_wrap, bases<prx::system_t>, boost::noncopyable>("plant_t", no_init)
+   	class_<plant_wrap, bases<prx::system_t>>("plant_t", no_init)
       // .def("__init__", make_constructor(&init_as_ptr<prx::plant_t, std::string>, default_call_policies()))
       .def("add_system", &prx::plant_t::add_system)
       .def("propagate", &prx::plant_t::propagate)

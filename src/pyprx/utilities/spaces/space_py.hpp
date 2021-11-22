@@ -72,6 +72,10 @@ prx::distance_function_t get_df(PyObject* x)
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(space_t_print_point_overloads, prx::space_t::print_point, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(space_t_print_memory_overloads, prx::space_t::print_memory, 0, 1)
+BOOST_PYTHON_FUNCTION_OVERLOADS(space_t_l1_norm_overloads, prx::space_t::l1_norm, 1, 2)
+BOOST_PYTHON_FUNCTION_OVERLOADS(space_t_l2_norm_overloads, prx::space_t::l2_norm, 1, 2)
+BOOST_PYTHON_FUNCTION_OVERLOADS(space_t_euclidean_2d_overloads, prx::space_t::euclidean_2d, 2, 4)
+// BOOST_PYTHON_FUNCTION_OVERLOADS(space_t_lp_norm_overloads, prx::space_t::lp_norm, 2, 3)
 
 
 void  (prx::space_t::*enforce_bounds0)() const = &prx::space_t::enforce_bounds;
@@ -80,12 +84,18 @@ void  (prx::space_t::*enforce_bounds1)(const prx::space_point_t&) const = &prx::
 void  (prx::space_t::*integrate_0)(const prx::space_point_t&, const prx::space_t*, double) = &prx::space_t::integrate;
 void  (prx::space_t::*integrate_1)(const prx::space_t*, double) = &prx::space_t::integrate;
 
+// double    (prx::space_t::*lp_norm_2)(const prx::space_point_t& p1, const double p)    = &prx::space_t::lp_norm;
+// static double (prx::space_t::*l1_norm_1)(const prx::space_point_t&) = &prx::space_t::l1_norm;
+// static double (prx::space_t::*l1_norm_2)(const prx::space_point_t&, const prx::space_point_t&) = &prx::space_t::l1_norm;
+
+
 void pyprx_utilities_spaces_space()
 {
 
    // typedef std::shared_ptr<space_snapshot_t> space_point_t;
     class_<prx::space_point_t>("space_point", no_init)
         .def("__len__", &get_dim_wrapper)
+        .def("get_dim", &get_dim_wrapper)
         .def("__getitem__", &space_point_get_item)
         .def("__setitem__", &space_point_set_item)
         // .def("assign", &list_assign<double>)
@@ -103,8 +113,10 @@ void pyprx_utilities_spaces_space()
     class_<prx::distance_function_t>("distance_function")
         .def("__call__", &prx::distance_function_t::operator() )
         .def("default", make_function(&init_distance_function, default_call_policies())).staticmethod("default")
-        .def("set_df", &get_df).staticmethod("set_df")
-        .def("wrap", &get_df).staticmethod("wrap")
+        // .def("set_df", &get_df).staticmethod("set_df")
+        .def("set_df", &create_function<prx::distance_function_t, double, prx::space_point_t, prx::space_point_t>).staticmethod("set_df")
+        .def("wrap", &create_function<prx::distance_function_t, double, prx::space_point_t, prx::space_point_t>).staticmethod("wrap")
+        // .def("wrap", &get_df).staticmethod("wrap")
         // .def("__setattr__", &set_distance_function).staticmethod("__setattr__")
         ;
 
@@ -141,6 +153,15 @@ void pyprx_utilities_spaces_space()
         .def("integrate", integrate_0)
         .def("integrate", integrate_1)
         .def("interpolate", &prx::space_t::interpolate)
+        .def("l1_norm", (double(*)(const prx::space_point_t& p1, const prx::space_point_t& p2))1, space_t_l1_norm_overloads()).staticmethod("l1_norm")
+        .def("l2_norm", (double(*)(const prx::space_point_t& p1, const prx::space_point_t& p2))1, space_t_l2_norm_overloads()).staticmethod("l2_norm")
+        .def("euclidean_2d", (double(*)(const prx::space_point_t& p1, const prx::space_point_t& p2, int start, int end))2, space_t_euclidean_2d_overloads()).staticmethod("euclidean_2d")
+        // .def("lp_norm", (double(*)(const prx::space_point_t& p1, const prx::space_point_t& p2, double p))2, space_t_lp_norm_overloads())
+        // .def("lp_norm", lp_norm_2)
+        // .def("l1_norm", (double (prx::space_t::*)(const prx::space_point_t&))&prx::space_t::l1_norm).staticmethod("l1_norm")
+        // .def("l1_norm", &prx::space_t::l1_norm, space_t_l1_norm_overloads(args("p1", "p2"), "l1 norm"))
+        // .def<double (prx::space_t::*)(const prx::space_point_t& p1)>("l1_norm", prx::space_t::l1_norm)//.staticmethod("l1_norm")
+        // .def("l1_norm", l1_norm_2).staticmethod("l1_norm")
         // .def("", &prx::space_t::)
         // .def("", &prx::space_t::)
         // .def("", &prx::space_t::)

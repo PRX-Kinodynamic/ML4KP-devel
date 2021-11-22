@@ -6,23 +6,6 @@
 
 using namespace boost::python;
 
-// template<class T>
-// py::list std_vector_to_py_list(const std::vector<T>& v)
-// {
-//     py::object get_iter = py::iterator<std::vector<T> >();
-//     py::object iter = get_iter(v);
-//     py::list l(iter);
-//     return l;
-// }
-
-// template< typename T >
-// inline
-// std::vector< T > to_std_vector( const py::object& iterable )
-// {
-//     return std::vector< T >( py::stl_input_iterator< T >( iterable ),
-//                              py::stl_input_iterator< T >( ) );
-// }
-
 void pyprx_planning_world_model_py()
 {
 	

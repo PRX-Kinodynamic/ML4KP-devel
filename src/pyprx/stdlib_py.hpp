@@ -1,6 +1,7 @@
 #include <iostream>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+// #include "prx/utilities/geometry/movable_object.hpp"
 
  
 using namespace boost::python;
@@ -42,6 +43,10 @@ void pyprx_stdlib_py()
         .def("__repr__", &to_str<double>) 
         // .def(str(self))
         ;
+    PRX_ITERABLE_WRAPPER(std::vector<std::string>, "vector_of_strings")
+    // class_<std::vector<std::string>>("vector_of_strings")
+        // .def(vector_indexing_suite<std::vector<std::string>>())
+        // ;
         
     iterable_converter()
         // Build-in type.
@@ -50,5 +55,7 @@ void pyprx_stdlib_py()
         .from_python<std::vector<double> >()
         // Each dimension needs to be convertable.
         .from_python<std::vector<std::string> >()
+        // .from_python<std::vector<std::shared_ptr<prx::movable_object_t>>>()
+
         ;
 }

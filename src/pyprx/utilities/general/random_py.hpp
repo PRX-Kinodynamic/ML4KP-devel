@@ -9,7 +9,7 @@ double uniform_random_2(double min, double max)
 	return prx::uniform_random(min, max);
 }
 
-void pyprx_utilities_general_random_py()
+void pyprx_utilities_general_random()
 {
 
 	def("init_random", &prx::init_random);

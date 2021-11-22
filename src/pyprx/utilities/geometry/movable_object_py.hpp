@@ -28,11 +28,14 @@ void pyprx_utilities_geometry_movable_object_py()
    	// class_<prx::movable_object_t, movable_object_wrapper>("movable_object", init<PyObject*, std::string>())
    	    // ;
    	// class_<prx::movable_object_t, std::shared_ptr<prx::movable_object_t>, boost::noncopyable >("movable_object", init<std::string>())
-   	class_<prx::movable_object_t, std::shared_ptr<prx::movable_object_t>, boost::noncopyable >("movable_object", init<std::string>())
+   	class_<prx::movable_object_t, std::shared_ptr<prx::movable_object_t> >("movable_object", init<std::string>())
+        // .def("__init__", make_constructor(&init_as_ptr<prx::movable_object_t,std::string>, default_call_policies(), (args("o_name")) ))
    		// .def("create_obstacle", &create_ptr<prx::movable_object_t, prx::movable_object_t>).staticmethod("create_obstacle")
    		// .def("create_obstacle", &create_ptr<prx::movable_object_t, prx::movable_object_t>)
     	;
+	// register_ptr_to_python< std::shared_ptr<prx::movable_object_t> >();
 
+    PRX_ITERABLE_WRAPPER(std::vector<std::shared_ptr<prx::movable_object_t>>, "vector_of_movable_object")
 	iterable_converter()
         .from_python<std::vector<std::shared_ptr<prx::movable_object_t>>>()
    	    ;

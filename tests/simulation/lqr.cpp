@@ -7,13 +7,17 @@
 
 BOOST_AUTO_TEST_CASE( lqr_test )
 {   
+PRX_DEBUG_PRINT
 	prx::simulation_step = 0.01;
     prx::init_random(112392);
 
+PRX_DEBUG_PRINT
     std::string plant_name = "pendulum";
     std::string plant_path = "pendulum";
+PRX_DEBUG_PRINT
     auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
 
+PRX_DEBUG_PRINT
     const auto ss = plant -> get_state_space();
     const auto cs = plant -> get_control_space();
     const auto ps = plant -> get_parameter_space();
@@ -23,14 +27,15 @@ BOOST_AUTO_TEST_CASE( lqr_test )
     double mass = 0.15;
     double normalize = 1;
     std::vector<double> v = {length,friction,mass,normalize};
-    // ps -> copy_from_vector(v);
-
+    ps -> copy_from_vector(v);
+    
     auto Q = Eigen::MatrixXd::Identity(2,2);
     auto R = Eigen::MatrixXd::Identity(1,1);
 	auto pendulum = std::dynamic_pointer_cast<prx::pendulum_t>(plant);
-	
+	PRX_DEBUG_PRINT
     pendulum -> linearize();
 
+PRX_DEBUG_PRINT
     prx::lqr_t lqr(pendulum, Q, R, "LQR");
     lqr.compute_K();
     Eigen::MatrixXd K = lqr.get_K();
@@ -38,6 +43,7 @@ BOOST_AUTO_TEST_CASE( lqr_test )
     std::cout << "B: " << pendulum -> get_B() << std::endl;
     std::cout << "K: " << K << std::endl;
 
+PRX_DEBUG_PRINT
     BOOST_CHECK(prx::are_approx_equal(K(0,0), 7.39050619, 1e-5));
     BOOST_CHECK(prx::are_approx_equal(K(0,1), 2.60611851, 1e-5));
 
