@@ -1,0 +1,6 @@
+#include "pyprx/simulation/plants/types/linear_time_invariant_py.hpp"
+
+void pyprx_simulation_plants_types()
+{
+	pyprx_simulation_plants_types_lti();
+}
