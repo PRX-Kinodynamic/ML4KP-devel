@@ -10,7 +10,7 @@ void pyprx_simulation_controllers_lqr()
 		.def("compute_controls", &prx::lqr_t::compute_controls)
 		.def("compute_K", &prx::lqr_t::compute_K)
 		.def("get_K", &prx::lqr_t::get_K)
-		// .def("", &prx::lqr_t::)
+		.def("set_goal", &prx::lqr_t::set_goal)
 		// .def("", &prx::lqr_t::)
 		// .def("", &prx::lqr_t::)
         ;
