@@ -1,11 +1,12 @@
 #pragma once
 
 #include "prx/simulation/plant.hpp"
+#include "prx/simulation/plants/types/linear_time_invariant.hpp"
 
 
 namespace prx
 {
-	class two_link_acrobot_t : public plant_t
+	class two_link_acrobot_t : public lti_t
 	{
 	public:
 		two_link_acrobot_t(const std::string& path);
@@ -15,11 +16,25 @@ namespace prx
 
 		virtual void update_configuration() override;
 
+		virtual bool linearize() override final;
+
+
 	protected:
 
 		virtual void compute_derivative() override final;
 
 		double _theta1,_theta2,_theta1dot,_theta2dot,_tau,_theta1dotdot,_theta2dotdot;
+
+        double mass = 1.0;
+        double g = 9.81;
+        double l1 = 1.0;
+        double l2 = 1.0;
+        double I1 = 0.2;
+        double I2 = 1.0;
+        double d1 = 1.0; // Damping
+        double d2 = 1.0; 
+
+        double viz_length = 20;
 
 	};
 }

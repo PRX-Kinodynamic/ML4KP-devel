@@ -15,6 +15,12 @@ namespace prx
 		{
 			lti = std::dynamic_pointer_cast<lti_t>(_plant);
 			prx_assert(lti != nullptr, "Plant is not an lti_t!");
+			int n = lti -> get_state_space() -> get_dimension();
+			int m = lti -> get_control_space() -> get_dimension();
+			X.resize(n);
+			U.resize(m);
+			X_goal.resize(n);
+			X_goal = Eigen::VectorXd::Zero(n);
 		}
 		// template<class S>
 		lqr_t(std::shared_ptr<lti_t> _plant, Eigen::MatrixXd _Q, Eigen::MatrixXd _R, std::string _name)
@@ -24,6 +30,13 @@ namespace prx
 			prx_assert(lti != nullptr, "Plant is not an lti_t!");
 			set_Q(_Q);
 			set_R(_R);
+			int n = lti -> get_state_space() -> get_dimension();
+			int m = lti -> get_control_space() -> get_dimension();
+			X.resize(n);
+			U.resize(m);
+
+			X_goal.resize(n);
+			X_goal = Eigen::VectorXd::Zero(n);
 		}
 		void set_Q(Eigen::MatrixXd _Q)
 		{
@@ -33,6 +46,11 @@ namespace prx
 		void set_R(Eigen::MatrixXd _R)
 		{
 			R = _R;
+		}
+
+		void set_goal(Eigen::VectorXd _goal)
+		{
+			X_goal = _goal;
 		}
 
 		virtual ~lqr_t();
@@ -53,6 +71,8 @@ namespace prx
 
 			Eigen::VectorXd X;
 			Eigen::VectorXd U;
+
+			Eigen::VectorXd X_goal;
 
 			std::shared_ptr<lti_t> lti;
 	};
