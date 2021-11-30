@@ -32,7 +32,7 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(controller_propagate_overloads, propagate
 void pyprx_simulation_controller()
 {
 
-	class_<controller_wrap>("controller", init<prx::system_ptr_t>())
+	class_<controller_wrap, boost::noncopyable>("controller", init<prx::system_ptr_t>())
 		.def(init<prx::system_ptr_t, std::string>())
         // .def("__init__", make_constructor(&init_as_ptr<system_wrap, std::string>, default_call_policies()))
 		// .def("__init__", make_constructor(&system_wrap, default_call_policies(), (arg("path")) ))

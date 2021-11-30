@@ -140,7 +140,7 @@ void pyprx_utilities_spaces_space()
 
    	class_<prx::space_t, std::shared_ptr<prx::space_t>>("space_t", init<std::string, std::vector<double*>, std::string>())
         .def("__init__", make_constructor(&init_as_ptr<prx::space_t,std::string,std::vector<double*>>, default_call_policies(), (args("topology"), args("addresses")) ))
-        .def("__init__", make_constructor(&init_as_ptr<prx::space_t,const std::vector<const prx::space_t*>>, default_call_policies(), (args("spaces")) ))
+        .def("__init__", make_constructor(&init_as_ptr<prx::space_t,const std::vector<const prx::space_t*>&>, default_call_policies(), (args("spaces")) ))
         .def("set_bounds", &prx::space_t::set_bounds)
         .def("make_point", &prx::space_t::make_point)
         .def("clone_point", &prx::space_t::clone_point)
