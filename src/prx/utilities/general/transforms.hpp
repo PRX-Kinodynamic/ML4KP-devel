@@ -28,9 +28,10 @@ namespace prx
 
 	using ref_matrixXd_t = Eigen::Ref<const Eigen::MatrixXd>;
 
-	template<typename Derived>
-	static inline
-	bool are_approx_equal(const Eigen::MatrixBase<Derived>& m1, const  Eigen::MatrixBase<Derived> m2, const double tolerance = 1e-7)
+	// template<typename Derived>
+	// static
+	inline
+	bool are_matrices_approx_equal(const ref_matrixXd_t m1, const ref_matrixXd_t m2, const double tolerance = 1e-7)
 	{
 		prx_assert(m1.rows() == m2.rows(), "Matrices must have equal dimensions!");
 		prx_assert(m1.cols() == m2.cols(), "Matrices must have equal dimensions!");
@@ -39,10 +40,11 @@ namespace prx
 		{
 			for (int j = 0; j < m1.cols(); ++j)
 			{
-				if ( ! ( std::fabs(m1 - m2) <= tolerance ) )
+				if ( ! ( std::fabs(m1(i,j) - m2(i,j)) <= tolerance ) )
 					return false;
 			}
 		}
 		return true;
 	}
+
 }

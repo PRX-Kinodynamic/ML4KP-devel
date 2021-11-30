@@ -262,6 +262,7 @@ namespace prx
 
 		void copy_point_from_vector(const space_point_t& destination, const std::vector<double>& source) const;
 		void copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const;
+		void copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, const space_point_t& source) const;
 
 		inline unsigned int get_dimension() const {return dimension;}
 
@@ -292,6 +293,7 @@ namespace prx
 		
 		std::vector<double> get_lower_bounds() const;
 		
+		void print_bounds() const;
 
 		void integrate(const space_point_t& point,const space_t* derivative,double delta_t);
 		void integrate(const space_t* derivative,double delta_t);

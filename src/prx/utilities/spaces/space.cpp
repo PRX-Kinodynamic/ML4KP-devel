@@ -272,21 +272,22 @@ namespace prx
 	void space_t::copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const
 	{
 		prx_assert(source->parent->space_name==space_name,"Point and space have different names: "<<source->parent->space_name<<" and "<<space_name);
-		//prx_assert(source->parent->dimension==destination.size(),"Point and vector have different sizes: "<<source->parent->dimension<<" and "<<destination.size());
-			// printf("%s:%d\n",__PRETTY_FUNCTION__, __LINE__ );
-			// printf("source dim: %d\n", source->parent->dimension);
-			// printf("dest dim: %d\n", destination.size());
 		for(unsigned i=0;i<dimension;++i)
 		{
-			// printf("%.4f\n",source -> memory[i]);
-			//destination[i]=source->memory[i];
 			destination.push_back(source->memory[i]);
-			// source->memory[i];
-			// printf("...!\n");
-			// destination.push_back(15);
-			// printf("Done!\n");
 		}
 	}
+	
+	void space_t::copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, const space_point_t& source) const
+	{
+		prx_assert(source->parent->space_name==space_name,"Point and space have different names: "<<source->parent->space_name<<" and "<<space_name);
+		prx_assert(destination.size() == dimension,"Vector and point have different sizes - Vector: "<< destination.size() <<", point:"<<dimension);
+		for(unsigned i=0;i<dimension;++i)
+		{
+			destination[i] = source->memory[i];
+		}
+	}
+
 	void space_t::enforce_bounds(const space_point_t& point) const
 	{
 		prx_assert(point->parent->space_name==space_name,"Point and space have different names: "<<point->parent->space_name<<" and "<<space_name);
@@ -318,7 +319,7 @@ namespace prx
 			double& p = (*addresses[i]);
 			if(topology[i]==topology_t::ROTATIONAL)
 			{
-				p = norm_angle_pi(p);
+				p = norm_angle_pi(p, *lower_bounds[i], *upper_bounds[i]);
 			}
 			else
 			{
@@ -395,6 +396,23 @@ namespace prx
 			ub.push_back(*lower_bounds[i]);
 		}
 		return ub;
+	}
+
+	void space_t::print_bounds() const
+	{
+		std::cout << "Bounds: ( ";
+		for (int i = 0; i < dimension; ++i)
+		{
+			if (i != 0) std::cout << ", ";
+			std::cout << *lower_bounds[i];
+		}
+		std::cout << " ), (";
+		for (int i = 0; i < dimension; ++i)
+		{
+			if (i != 0) std::cout << ", ";
+			std::cout << *upper_bounds[i];
+		}
+		std::cout << ")" << std::endl;
 	}
 
 	void space_t::integrate(const space_point_t& point,const space_t* derivative,double delta_t)
@@ -489,5 +507,4 @@ namespace prx
 
 		return out.str();
 	}
-
 }
