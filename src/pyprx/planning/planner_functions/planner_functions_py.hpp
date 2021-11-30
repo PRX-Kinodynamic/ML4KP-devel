@@ -26,7 +26,7 @@ void pyprx_planning_planner_functions_py()
     def("default_valid_state", &prx::default_valid_state);
     class_<prx::valid_state_t>("valid_state")
         .def("__call__", &prx::valid_state_t::operator())
-        .def("set_f", &create_function<prx::valid_state_t, bool, prx::space_point_t>).staticmethod("set_f")
+        // .def("set_f", &create_function<prx::valid_state_t, bool, prx::space_point_t>).staticmethod("set_f")
         .def("wrap", &create_function<prx::valid_state_t, bool, prx::space_point_t>).staticmethod("wrap")
         ;
 
