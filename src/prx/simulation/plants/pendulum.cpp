@@ -8,13 +8,13 @@ namespace prx
 	{
 		_theta1=_theta1dot=0;
 		state_memory = {&_theta1,&_theta1dot};
-		lti_stt_space = state_space = new space_t("RE",state_memory,"pendulum_state");
+		state_space = new space_t("RE",state_memory,"pendulum_state");
 		state_space->set_bounds({-PRX_PI,-2*PRX_PI},{PRX_PI,2*PRX_PI});
 		// state_space->set_bounds({-3.15,-3.15,-6,-6},{3.15,3.15,6,6});
 
 		_tau=0;
 		control_memory = {&_tau};
-		lti_ctr_space = input_control_space = new space_t("E",control_memory,"Torque");
+		input_control_space = new space_t("E",control_memory,"Torque");
 		input_control_space->set_bounds({-0.6371781908344007},{0.6371781908344007});
 
 		_theta1dotdot=0;
@@ -43,8 +43,6 @@ namespace prx
 
 		// set_integrator("rk4");
 		set_integrator(integrator_t::kRK4);
-
-
 		
 	}
 

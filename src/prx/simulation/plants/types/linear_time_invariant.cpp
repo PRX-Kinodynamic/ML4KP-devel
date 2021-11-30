@@ -14,10 +14,10 @@ namespace prx
 
 	bool lti_t::check()
 	{
-		prx_assert(lti_stt_space != nullptr, "lti_stt_space has not been set");
-		prx_assert(lti_ctr_space != nullptr, "lti_ctr_space has not been set");
-		double n = lti_stt_space -> get_dimension();
-		double p = lti_ctr_space -> get_dimension();
+		prx_assert(get_state_space() != nullptr, "lti_stt_space has not been set");
+		prx_assert(get_control_space() != nullptr, "lti_ctr_space has not been set");
+		double n = get_state_space() -> get_dimension();
+		double p = get_control_space() -> get_dimension();
 
 		prx_assert(A.rows() == n && A.cols() == n, "Matrix A has wrong dimensions");
 		prx_assert(B.rows() == n && B.cols() == p, "Matrix B has wrong dimensions");
@@ -30,12 +30,12 @@ namespace prx
 
 	void lti_t::derivative()
 	{
-		lti_stt_space -> copy_to_vector(x);
-		lti_ctr_space -> copy_to_vector(u);
+		get_state_space() -> copy_to_vector(x);
+		get_control_space() -> copy_to_vector(u);
 
 		xd = A * x + B * u;
 
-		lti_stt_space -> copy_from_vector(xd);
+		get_state_space() -> copy_from_vector(xd);
 
 	}
 
@@ -47,8 +47,8 @@ namespace prx
 
 	void lti_t::discretize()
 	{
-		double n = lti_stt_space -> get_dimension();
-		double p = lti_ctr_space -> get_dimension();
+		double n = get_state_space() -> get_dimension();
+		double p = get_control_space() -> get_dimension();
 
 		Eigen::MatrixXd AB;
 		AB = Eigen::MatrixXd::Zero(n+p, n+p);

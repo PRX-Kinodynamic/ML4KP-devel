@@ -80,14 +80,18 @@ namespace prx
 			 */
 			void discretize();
 
+			inline
 			space_t* get_state_space()
 			{
-				return lti_stt_space;
+				return state_space;
+				// return lti_stt_space;
 			}
 
+			inline
 			space_t* get_control_space()
 			{
-				return lti_ctr_space;
+				return input_control_space;
+				// return lti_ctr_space;
 			}
 
 			Eigen::MatrixXd get_A() const {return A;};
@@ -103,8 +107,8 @@ namespace prx
 				derivative();
 			}
 			
-			space_t* lti_stt_space;
-			space_t* lti_ctr_space;
+			// space_t* lti_stt_space;
+			// space_t* lti_ctr_space;
 
 			Eigen::VectorXd x;
 			Eigen::VectorXd u;
