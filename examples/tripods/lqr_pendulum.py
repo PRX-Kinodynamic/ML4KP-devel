@@ -13,7 +13,7 @@ if __name__ == "__main__":
 	# 	Simple example: python lqr_pendulum.py --checker_value=5  
 	# 	Complex (with vectors!): python lqr_pendulum.py --/plant/start_state=\[1,-1.0]
 	# 	More complex: python lqr_pendulum.py --checker_value=5  --/plant/start_state=\[1,-1.0]
-	params = prx.param_loader("examples/basic/no_control.yaml", sys.argv);
+	params = prx.param_loader("examples/intermediate/lqr.yaml", sys.argv);
 	print(params.get_input_path())
 	params.print()
 
@@ -47,8 +47,12 @@ if __name__ == "__main__":
 
 	lower_bounds = params["/plant/state_space_lower_bound"].as_float_vector()
 	upper_bounds = params["/plant/state_space_upper_bound"].as_float_vector()
-
 	ss.set_bounds(lower_bounds, upper_bounds)
+
+	cs_lb = params["/plant/control_space_lower_bound"].as_float_vector()
+	cs_up = params["/plant/control_space_upper_bound"].as_float_vector()
+	cs.set_bounds(cs_lb, cs_up);
+
 
 	start_state = ss.make_point()
 	goal_state  = ss.make_point()
@@ -78,8 +82,8 @@ if __name__ == "__main__":
 	# simulating a do{}while()
 	print("start_state:", start_state)
 	while True:
-		cs.enforce_bounds();
 		lqr.compute_controls();
+		cs.enforce_bounds();
 		plant.propagate(simulation_step);
 	# 	# std::cout << "[pendulum] " << plant << std::endl;
 		solution_traj.copy_onto_back(ss);

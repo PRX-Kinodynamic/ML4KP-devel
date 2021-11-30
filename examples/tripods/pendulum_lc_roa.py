@@ -1,6 +1,8 @@
 import sys
 import math
+import torch
 import random
+import numpy as np 
 import libpyDirtMP as prx
 
 
@@ -13,12 +15,16 @@ def state_increment(space_point, step_inc, lower_bounds, upper_bounds):
 	return False;
 
 if __name__ == "__main__":
-	params = prx.param_loader("examples/tripods/pendulum_lqr_roa.yaml", sys.argv);
-	print(params.get_input_path())
+	params = prx.param_loader("examples/tripods/lc_roa.yaml", sys.argv);
+	path_to_model = prx.lib_path + params["controller_path"].as_string()
+	controller = torch.jit.load(path_to_model)
+	controller.eval()
+
 	params.print()
 
 	prx.set_simulation_step(params["simulation_step"].as_float())
 	prx.init_random(params["random_seed"].as_int())
+	torch.manual_seed(params["random_seed"].as_int())
 
 	# Could be done directly from params, calling the getter to show that is there...
 	simulation_step = prx.get_simulation_step()
@@ -49,39 +55,22 @@ if __name__ == "__main__":
 	upper_bounds = params["/plant/state_space_upper_bound"].as_float_vector()
 	ss.set_bounds(lower_bounds, upper_bounds)
 
-	cs_lb = params["/plant/control_space_lower_bound"].as_float_vector()
-	cs_up = params["/plant/control_space_upper_bound"].as_float_vector()
-	cs.set_bounds(cs_lb, cs_up);
-	
 	start_state = ss.make_point()
 	goal_state  = ss.make_point()
+	current     = ss.make_point()
 
 	ss.copy_point_from_vector(start_state, params["/plant/start_state"].as_float_vector())
 	ss.copy_point_from_vector(goal_state, params["/plant/goal_state"].as_float_vector())
 	ss.copy_from_point(start_state)
 	
-
-
-	# solution_traj.copy_onto_back(ss)
-	# plant.__class__ = prx.pendulum
-	# print(repr(plant))
-	plant.linearize()
-
-	Q = prx.matrix.Identity(2,2)
-	R = prx.matrix.Identity(1,1)
-	print("Q:", Q)
-	print("R:", R)
-
-	lqr = prx.lqr(plant, Q, R, "LQR");
-	lqr.compute_K();
-	K = lqr.get_K();
-	print("K:", K)
-
 	roa_file_name = prx.lib_path + params["py_roa_file"].as_string();	
 	fout_roa = open(roa_file_name, "w")
 
 	traj_id = 0;
 	rad = params["goal_region_radius"].as_float();
+
+	ctrl_input = torch.zeros(1,4)
+
 	def distance_function(a, b):
 		return prx.space_t.euclidean_2d(a, b, 0, 2);
 	
@@ -89,12 +78,22 @@ if __name__ == "__main__":
 		checker = prx.condition_check(params["checker_type"].as_string(), params["checker_value"].as_int())
 		ss.copy_from_point(state)
 		solution_traj = prx.trajectory(ss)
-
+		ss.copy_point(current, state)
+		# current = state.to_list()
 		while True:
-			lqr.compute_controls()
+			ctrl_input[0,0] = current[0]
+			ctrl_input[0,1] = current[1]
+			ctrl_input[0,2] = goal_state[0]
+			ctrl_input[0,3] = goal_state[1]
+			with torch.no_grad():
+				controller_out = controller(ctrl_input)[0].cpu()
+			ctrl = np.array([-0.6371781908344007+ ((controller_out[0] + 1.)*0.6371781908344007)], dtype=np.float64)
+			cs.copy_from_vector(ctrl)
+
 			cs.enforce_bounds()
 			plant.propagate(simulation_step)
 			solution_traj.copy_onto_back(ss)
+			ss.copy_to_point(current);
 			if checker.check():
 				break
 
@@ -111,9 +110,9 @@ if __name__ == "__main__":
 	ss.copy_point_from_vector(pt, lower_bounds)
 
 	while True:
+		# print(pt)
 		compute_traj(pt)
 		traj_id += 1
-		# print(pt)
 		if not state_increment(pt, 0.01, lower_bounds, upper_bounds):
 			break
 

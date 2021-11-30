@@ -27,7 +27,7 @@ bool state_increment(space_point_t pt, double step_inc, std::vector<double> lowe
 
 int main(int argc, char* argv[])
 {
-    auto params = param_loader("examples/tripods/pendulum_lqr_roa.yaml", argc, argv);
+    auto params = param_loader("examples/tripods/lqr_roa.yaml", argc, argv);
 
 	simulation_step = params["simulation_step"].as<double>();
     init_random(params["random_seed"].as<int>());
@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
     prx_assert(plant != nullptr, "Plant is nullptr!");
 
     world_model_t<> world_model({plant},{obstacle_list});
-    world_model.create_context("dirt_context",{plant_name},{obstacle_names});
-    auto context = world_model.get_context("dirt_context");
+    world_model.create_context("context",{plant_name},{obstacle_names});
+    auto context = world_model.get_context("context");
 
     const auto ss = context.first -> get_state_space();
     const auto cs = context.first -> get_control_space();
@@ -51,6 +51,10 @@ int main(int argc, char* argv[])
     auto lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
     auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
     ss -> set_bounds(lower_bounds, upper_bounds);
+
+    auto cs_lb = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
+    auto cs_up = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
+    cs -> set_bounds(cs_lb, cs_up);
 
     auto start_state = ss -> make_point();
 	auto goal_state = ss -> make_point();
@@ -63,35 +67,49 @@ int main(int argc, char* argv[])
 
     trajectory_t solution_traj(ss);
 
-    auto pendulum = std::dynamic_pointer_cast<prx::pendulum_t>(plant);
-    pendulum -> linearize();
+    auto lti = std::dynamic_pointer_cast<prx::lti_t>(plant);
+    lti -> linearize();
 
+    int ss_dim = ss -> get_dimension();
+    int cs_dim = cs -> get_dimension();
 
-    auto Q = Eigen::MatrixXd::Identity(2,2);
-    auto R = Eigen::MatrixXd::Identity(1,1);
-    lqr_t lqr(pendulum, Q, R, "LQR");
+    ss -> print_bounds();
+    cs -> print_bounds();
+
+    Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
+    auto q_vec = params["/plant/lqr_Q"].as<std::vector<double>>();
+    for (int i = 0; i < ss_dim; ++i) Q(i,i) = q_vec[i];
+
+    // std::cout << "Q:\n" << Q << std::endl;
+    Eigen::MatrixXd R = Eigen::MatrixXd::Identity(cs_dim, cs_dim);
+
+    Eigen::VectorXd v_goal(ss_dim);
+    ss -> copy_vector_from_point(v_goal, goal_state);
+    lqr_t lqr(lti, Q, R, "LQR");
+    lqr.set_goal(v_goal);
     lqr.compute_K();
     Eigen::MatrixXd K = lqr.get_K();
-    std::cout << "K: " << K << std::endl;
+    // std::cout << "K: " << K << std::endl;
     
     std::ofstream fout_trajs;
     std::ofstream fout_roa;
 
-    std::string roa_file_name = lib_path + params["roa_file"].as<>();
+    std::string roa_file_name = lib_path + "out/lqr_" + plant_name + "_roa.txt";
+    std::cout << "saving roa to: " << roa_file_name << std::endl;
     fout_roa.open(roa_file_name.c_str());
 
     bool save_trajs_to_file = params["trajs_to_file"].as<bool>();
     if (save_trajs_to_file)
     {
-        std::string trajs_file_name = lib_path + params["trajs_file"].as<>();
+        std::string trajs_file_name = lib_path + "out/lqr_" + plant_name + "_roa_trajs.txt";
         fout_trajs.open(trajs_file_name.c_str());
     }
 
     int traj_id = 0;
     double rad = params["goal_region_radius"].as<double>();
-    auto df = [](space_point_t a, space_point_t b)
+    auto df = [&](space_point_t a, space_point_t b)
     {
-        return space_t::euclidean_2d(a, b, 0, 2);
+        return space_t::euclidean_2d(a, b, 0, ss_dim);
     };
 
     auto compute_traj = [&](space_point_t state)
@@ -101,7 +119,6 @@ int main(int argc, char* argv[])
         trajectory_t solution_traj(ss);
         do
         {
-            cs -> enforce_bounds();
             lqr.compute_controls();
             plant -> propagate(simulation_step);
             // std::cout << "[pendulum] " << plant << std::endl;
@@ -133,6 +150,7 @@ int main(int argc, char* argv[])
     space_point_t pt = ss -> make_point();
     ss -> copy_point_from_vector(pt, lower_bounds);
     std::cout << "first pt: " << pt << std::endl;
+    double step_inc = params["state_increment"].as<double>();
     do
     {
         // std::cout << "[" << traj_id << "]: " << pt << std::endl;
@@ -140,7 +158,7 @@ int main(int argc, char* argv[])
         compute_traj(pt);
         traj_id++;
     }
-    while (state_increment(pt, 0.01, lower_bounds, upper_bounds));
+    while (state_increment(pt, step_inc, lower_bounds, upper_bounds));
 
 
     if (save_trajs_to_file)
