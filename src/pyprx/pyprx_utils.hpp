@@ -154,3 +154,12 @@ struct iterable_converter
     data->convertible = storage;
   }
 };
+
+template<class T>
+boost::python::list returning_a_pylist(const T& v)
+{
+    boost::python::object get_iter = boost::python::iterator<T>();
+    boost::python::object iter = get_iter(v);
+    boost::python::list l(iter);
+    return l;
+}
