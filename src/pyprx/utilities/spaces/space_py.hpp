@@ -70,6 +70,16 @@ prx::distance_function_t get_df(PyObject* x)
     return new_df;
 }
 
+boost::python::list space_point_to_pylist(const prx::space_point_t& v)
+{
+    boost::python::list l;
+    for (int i = 0; i < v -> get_dim(); ++i)
+    {
+        l.append((*v)[i]);
+    }
+    return l;
+}
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(space_t_print_point_overloads, prx::space_t::print_point, 1, 2)
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(space_t_print_memory_overloads, prx::space_t::print_memory, 0, 1)
 BOOST_PYTHON_FUNCTION_OVERLOADS(space_t_l1_norm_overloads, prx::space_t::l1_norm, 1, 2)
@@ -83,6 +93,12 @@ void  (prx::space_t::*enforce_bounds1)(const prx::space_point_t&) const = &prx::
 
 void  (prx::space_t::*integrate_0)(const prx::space_point_t&, const prx::space_t*, double) = &prx::space_t::integrate;
 void  (prx::space_t::*integrate_1)(const prx::space_t*, double) = &prx::space_t::integrate;
+
+void  (prx::space_t::*copy_from_std_vector)(const Eigen::VectorXd& _v) const = &prx::space_t::copy_from_vector;
+void  (prx::space_t::*copy_from_eigen_vector)(const std::vector<double>& source) const = &prx::space_t::copy_from_vector;
+
+void  (prx::space_t::*copy_std_vector_from_point)(std::vector<double>& destination, const prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
+void  (prx::space_t::*copy_eigen_vector_from_point)(Eigen::Ref<Eigen::VectorXd> destination, const prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
 
 // double    (prx::space_t::*lp_norm_2)(const prx::space_point_t& p1, const double p)    = &prx::space_t::lp_norm;
 // static double (prx::space_t::*l1_norm_1)(const prx::space_point_t&) = &prx::space_t::l1_norm;
@@ -101,6 +117,7 @@ void pyprx_utilities_spaces_space()
         // .def("assign", &list_assign<double>)
         .def("__str__", &prx_to_str<prx::space_point_t>) 
         .def("__repr__", &prx_print<prx::space_point_t>) 
+        .def("to_list", &space_point_to_pylist)
         // .def(str(self))
         ;
     enum_<prx::space_t::topology_t>("topology")
@@ -134,10 +151,12 @@ void pyprx_utilities_spaces_space()
    	    .def("get_dimension", &prx::space_t::get_dimension)
         .def("copy_to_point", &prx::space_t::copy_to_point)
         .def("copy_from_point", &prx::space_t::copy_from_point)
-        // .def("copy_from_vector", &prx::space_t::copy_from_vector)
+        .def("copy_from_vector", copy_from_std_vector)
+        .def("copy_from_vector", copy_from_eigen_vector)
         .def("copy_point", &prx::space_t::copy_point)
         .def("copy_point_from_vector", &prx::space_t::copy_point_from_vector)
-        .def("copy_vector_from_point", &prx::space_t::copy_vector_from_point)
+        .def("copy_vector_from_point", copy_std_vector_from_point)
+        .def("copy_vector_from_point", copy_eigen_vector_from_point)
         .def("is_point_in_space", &prx::space_t::is_point_in_space)
         .def("split_point", &prx::space_t::split_point)
    	    .def("print_memory", &prx::space_t::print_memory, space_t_print_memory_overloads())
