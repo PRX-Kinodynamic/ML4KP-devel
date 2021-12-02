@@ -158,9 +158,6 @@ int main(int argc, char* argv[])
     };
 
         // state_space->set_bounds({-PRX_PI,-2*PRX_PI},{PRX_PI,2*PRX_PI});
-    space_point_t pt = ss -> make_point();
-    ss -> copy_point_from_vector(pt, lower_bounds);
-    std::cout << "first pt: " << pt << std::endl;
     double step_inc = params["state_increment"].as<double>();
 
     // auto bounds = ss -> get_bounds();
@@ -168,6 +165,10 @@ int main(int argc, char* argv[])
     auto starting_lower_bound = params["starting_lower_bound"].as<std::vector<double>>();
     auto ending_upper_bound = params["ending_upper_bound"].as<std::vector<double>>();
 
+    space_point_t pt = ss -> make_point();
+    ss -> copy_point_from_vector(pt, starting_lower_bound);
+    std::cout << "first pt: " << pt << std::endl;
+    
     // for (auto b : bounds)
     double l, u;
     for (auto b : prx::zip_iters(starting_lower_bound, ending_upper_bound))
