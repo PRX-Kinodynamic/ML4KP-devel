@@ -25,6 +25,7 @@ bool state_increment(space_point_t pt, double step_inc, std::vector<double> lowe
     return false;
 }
 
+
 int main(int argc, char* argv[])
 {
     auto params = param_loader("examples/tripods/lqr_roa.yaml", argc, argv);
@@ -94,9 +95,16 @@ int main(int argc, char* argv[])
     std::ofstream fout_trajs;
     std::ofstream fout_roa;
 
-    std::string roa_file_name = lib_path + "out/lqr_" + plant_name + "_roa.txt";
+    int file_id = params["file_id"].as<int>();
+    std::ostringstream ss_file_id;
+    ss_file_id << std::setw(5) << std::setfill('0') << file_id;
+    std::string roa_file_name = lib_path + "out/lqr_" + plant_name + "_" + ss_file_id.str() + "_roa.txt";
     std::cout << "saving roa to: " << roa_file_name << std::endl;
     fout_roa.open(roa_file_name.c_str());
+
+    std::cout << "goal: " << goal_state << std::endl;
+
+    params.print();
 
     bool save_trajs_to_file = params["trajs_to_file"].as<bool>();
     if (save_trajs_to_file)
@@ -111,28 +119,31 @@ int main(int argc, char* argv[])
     {
         return space_t::euclidean_2d(a, b, 0, ss_dim);
     };
+    
+    auto end_state = ss -> make_point();
 
     auto compute_traj = [&](space_point_t state)
     {
         condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());
         ss -> copy_from_point(state);
-        trajectory_t solution_traj(ss);
+        // trajectory_t solution_traj(ss);
         do
         {
             lqr.compute_controls();
             plant -> propagate(simulation_step);
             // std::cout << "[pendulum] " << plant << std::endl;
-            solution_traj.copy_onto_back(ss);
+            // solution_traj.copy_onto_back(ss);
         }
         while(!checker.check());
 
-        auto end_state = solution_traj.back();
+        ss -> copy_to_point(end_state);
+        // auto end_state = solution_traj.back();
         // std::cout << traj_id << " ";
         // std::cout << end_state << " ";
         // std::cout << df(end_state, goal_state) << std::endl;
 
-        fout_roa << traj_id << " ";
-        fout_roa << state << " ";
+        // fout_roa << traj_id << " ";
+        fout_roa << std::setprecision(3) << std::fixed << state << " ";
         fout_roa << (df(end_state, goal_state) <= rad?1:0) << std::endl;
         if (fout_trajs.is_open())
         {
@@ -151,14 +162,46 @@ int main(int argc, char* argv[])
     ss -> copy_point_from_vector(pt, lower_bounds);
     std::cout << "first pt: " << pt << std::endl;
     double step_inc = params["state_increment"].as<double>();
+
+    // auto bounds = ss -> get_bounds();
+    double total_states = 1;
+    auto starting_lower_bound = params["starting_lower_bound"].as<std::vector<double>>();
+    auto ending_upper_bound = params["ending_upper_bound"].as<std::vector<double>>();
+
+    // for (auto b : bounds)
+    double l, u;
+    for (auto b : prx::zip_iters(starting_lower_bound, ending_upper_bound))
+    {
+        std::tie(l,u) = prx::unzip(b);
+
+        total_states *= 1. + std::floor((u - l) / step_inc);
+    }
+    std::cout << "Total states: " << total_states << std::endl;
+
+    progress_bar_t bar(total_states, "");
+
+
+    double prev_last_dim = pt -> at(ss_dim-1);
     do
     {
         // std::cout << "[" << traj_id << "]: " << pt << std::endl;
+        if (pt -> at(ss_dim-1) != prev_last_dim)
+        {
+            file_id++;
+            fout_roa.close();
+            std::ostringstream ss_file_id;
+            ss_file_id << std::setw(5) << std::setfill('0') << file_id;
+            roa_file_name = lib_path + "out/lqr_" + plant_name + "_" + ss_file_id.str() + "_roa.txt";
+            fout_roa.open(roa_file_name.c_str());
+            prev_last_dim = pt -> at(ss_dim-1);
+        }
 
         compute_traj(pt);
+
+        bar.update(traj_id);
         traj_id++;
     }
-    while (state_increment(pt, step_inc, lower_bounds, upper_bounds));
+    while (state_increment(pt, step_inc, starting_lower_bound, ending_upper_bound));
 
 
     if (save_trajs_to_file)
@@ -168,7 +211,5 @@ int main(int argc, char* argv[])
     }
     fout_roa.close();
 
-    std::cout << "goal: " << goal_state << std::endl;
-
-    params.print();
+    
 }

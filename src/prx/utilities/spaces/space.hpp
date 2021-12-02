@@ -134,7 +134,7 @@ namespace prx
         {
         	for (auto e : obj.memory)
         	{
-        		os << std::setprecision(2) << std::fixed << e << " ";
+        		os << e << " ";
         	}
         	// os << std::endl;
         	return os;

@@ -5,6 +5,7 @@
 #include "prx/utilities/general/string_manip.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/utilities/general/zipped_iter.hpp"
+#include "prx/utilities/general/progress_bar.hpp"
 
 #define PRX_DEBUG_PRINT printf("%s: %d\n", __PRETTY_FUNCTION__, __LINE__ );
 #define PRX_DEBUG_ITERABLE(msg, v) std::cout << "[DBG " << msg << "] "; for(auto e : v){std::cout << e << " ";}std::cout << std::endl;
