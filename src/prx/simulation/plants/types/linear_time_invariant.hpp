@@ -61,7 +61,7 @@ namespace prx
 			 *
 			 * @return     The output \dot{x}(t).
 			 */
-			void derivative();
+			void linear_derivative();
 
 
 			/**
@@ -73,7 +73,7 @@ namespace prx
 			 *
 			 * @return     The output y(t).
 			 */
-			Eigen::VectorXd derivative_and_output();
+			Eigen::VectorXd linear_derivative_and_output();
 
 			/**
 			 * @brief      Zero-Order Hold method to discretize the system
@@ -104,7 +104,7 @@ namespace prx
 
 			virtual void compute_derivative() override
 			{
-				derivative();
+				linear_derivative();
 			}
 			
 			// space_t* lti_stt_space;

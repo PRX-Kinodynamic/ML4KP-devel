@@ -1,13 +1,14 @@
 #pragma once
 
 #include "prx/simulation/plant.hpp"
+#include "prx/simulation/plants/types/linear_time_variant.hpp"
 
 #include <Eigen/Dense>
 #include <Eigen/Core>
 
 namespace prx
 {
-	class ackermann_FO : public plant_t
+	class ackermann_FO : public ltv_t
 	{
 	public:
 		ackermann_FO(const std::string& path);

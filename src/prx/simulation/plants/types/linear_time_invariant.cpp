@@ -28,7 +28,7 @@ namespace prx
 		return true;
 	}
 
-	void lti_t::derivative()
+	void lti_t::linear_derivative()
 	{
 		get_state_space() -> copy_to_vector(x);
 		get_control_space() -> copy_to_vector(u);
@@ -39,9 +39,9 @@ namespace prx
 
 	}
 
-	Eigen::VectorXd lti_t::derivative_and_output()
+	Eigen::VectorXd lti_t::linear_derivative_and_output()
 	{
-		derivative();
+		linear_derivative();
 		return C * x + D * u;
 	}
 

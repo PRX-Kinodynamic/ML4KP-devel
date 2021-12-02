@@ -4,7 +4,7 @@
 namespace prx
 {
 
-	ackermann_FO::ackermann_FO(const std::string& path) : plant_t(path)
+	ackermann_FO::ackermann_FO(const std::string& path) : ltv_t(path)
 	{
 		x = y = theta = 0.0;
 		state_memory = {&x, &y, &theta};

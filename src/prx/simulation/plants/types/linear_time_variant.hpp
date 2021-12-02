@@ -26,37 +26,6 @@ namespace prx
          */
         virtual bool linearize(space_point_t xt, space_point_t ut);
 
-        /**
-         * @brief      Compute the derivative without computing y(t).
-         *                \dot{x}(t) = Ax(t) + Bu(t)
-         *             The derivative (\dot{x}) is saved in the 
-         *             state space while the ouput returned.
-         *
-         * @return     The output \dot{x}(t).
-         */
-        void linear_derivative();
-
-
-        /**
-         * @brief      Compute the derivative and output.
-         *                \dot{x}(t) = Ax(t) + Bu(t)
-         *                y(t) = Cx(t) + Du(t)
-         *             The derivative (\dot{x}) is saved in the 
-         *             state space while the ouput returned.
-         *
-         * @return     The output y(t).
-         */
-        Eigen::VectorXd linear_derivative_and_output();
-
-        space_t* get_state_space()
-        {
-          return ltv_stt_space;
-        }
-
-        space_t* get_control_space()
-        {
-          return ltv_ctr_space;
-        }
 
         Eigen::MatrixXd get_A() const {return A;};
         Eigen::MatrixXd get_B() const {return B;};
@@ -68,9 +37,6 @@ namespace prx
         {
             linear_derivative();
         }
-      
-        space_t* ltv_stt_space;
-        space_t* ltv_ctr_space;
 
         Eigen::VectorXd x;
         Eigen::VectorXd u;

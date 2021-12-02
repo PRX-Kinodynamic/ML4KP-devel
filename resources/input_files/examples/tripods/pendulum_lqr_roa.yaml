@@ -1,0 +1,29 @@
+random_seed: 231192
+simulation_step: 0.01
+
+environment: "environments/empty.yaml"
+plant: !file "plants/pendulum.yaml"
+# plant: !file "plants/acrobot.yaml"
+
+visualize: true
+trajs_to_file: false
+
+checker_type: iterations
+checker_value: 500
+# checker_value: 500
+
+# checker_type: sim_time
+# checker_value: 10
+
+goal_region_radius: 0.01
+state_increment: 0.1
+# state_increment: 0.025
+
+roa_file: "out/pendulum_roa.txt"
+py_roa_file: "out/pendulum_roa_py.txt"
+trajs_file: "out/pendulum_trajs.txt"
+
+starting_lower_bound: [0.0, -3.141592653589793, -6, -6.0]
+ending_upper_bound: [6.283185307179586, 3.141592653589793, 6, -5.0]
+# ending_upper_bound: [0.0, -3.141592653589793, -6, -5.0]
+file_id: 0

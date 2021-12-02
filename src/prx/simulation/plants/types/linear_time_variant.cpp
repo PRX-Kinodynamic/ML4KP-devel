@@ -6,12 +6,16 @@ namespace prx
 	{
 		
 	}
+	
+	ltv_t::~ltv_t()
+	{
+	}
 
     bool ltv_t::linearize(space_point_t xt, space_point_t ut)
     {
 
-    	unsigned ss_dim = ltv_stt_space -> get_dimension(); 
-    	unsigned cs_dim = ltv_ctr_space -> get_dimension(); 
+    	unsigned ss_dim = get_state_space() -> get_dimension(); 
+    	unsigned cs_dim = get_control_space() -> get_dimension(); 
     	if (A.size() == 0 || B.size() == 0) 
     	{
     		A.resize(ss_dim, ss_dim);
@@ -22,8 +26,8 @@ namespace prx
 			u_minus.resize(cs_dim);
     	}
 
-		ltv_stt_space -> copy_vector_from_point(x, xt);
-		ltv_ctr_space -> copy_from_point(ut);
+		get_state_space() -> copy_vector_from_point(x, xt);
+		get_control_space() -> copy_from_point(ut);
   		for (int i=0; i < ss_dim; i++) 
   		{
 			x_plus  = x;// + simulation_step;
@@ -31,18 +35,18 @@ namespace prx
 			x_plus[i] += simulation_step;
 			x_minus[i] -= simulation_step;
 
-			ltv_stt_space -> copy_from_vector(x_plus);
+			get_state_space() -> copy_from_vector(x_plus);
 			compute_derivative();
-			ltv_stt_space -> copy_to_vector(xd_plus);
-			ltv_stt_space -> copy_from_vector(x_minus);
+			get_state_space() -> copy_to_vector(xd_plus);
+			get_state_space() -> copy_from_vector(x_minus);
 			compute_derivative();
-			ltv_stt_space -> copy_to_vector(xd_minus);
+			get_state_space() -> copy_to_vector(xd_minus);
 
     		A.col(i) = ( xd_plus - xd_minus) / ( 2. * simulation_step );
 
 		}
-		ltv_stt_space -> copy_from_vector(x);
-		ltv_ctr_space -> copy_vector_from_point(u,ut);
+		get_state_space() -> copy_from_vector(x);
+		get_control_space() -> copy_vector_from_point(u,ut);
 
   		for (int i=0; i < cs_dim; i++) 
 		{
@@ -51,12 +55,12 @@ namespace prx
 			u_plus[i] += simulation_step;
 			u_minus[i] -= simulation_step;
 
-			ltv_ctr_space -> copy_from_vector(u_plus);
+			get_control_space() -> copy_from_vector(u_plus);
 			compute_derivative();
-			ltv_ctr_space -> copy_to_vector(ud_plus);
-			ltv_ctr_space -> copy_from_vector(u_minus);
+			get_control_space() -> copy_to_vector(ud_plus);
+			get_control_space() -> copy_from_vector(u_minus);
 			compute_derivative();
-			ltv_ctr_space -> copy_to_vector(ud_minus);
+			get_control_space() -> copy_to_vector(ud_minus);
 
     		B.col(i) = ( ud_plus - ud_minus) / ( 2. * simulation_step );
 		}

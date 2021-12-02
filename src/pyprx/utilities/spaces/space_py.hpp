@@ -98,7 +98,13 @@ void  (prx::space_t::*copy_from_std_vector)(const Eigen::VectorXd& _v) const = &
 void  (prx::space_t::*copy_from_eigen_vector)(const std::vector<double>& source) const = &prx::space_t::copy_from_vector;
 
 void  (prx::space_t::*copy_std_vector_from_point)(std::vector<double>& destination, const prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
-void  (prx::space_t::*copy_eigen_vector_from_point)(Eigen::Ref<Eigen::VectorXd> destination, const prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
+// void  (prx::space_t::*copy_eigen_vector_from_point)(Eigen::Ref<Eigen::VectorXd> destination, const prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
+
+void  copy_eigen_vector_from_point(prx::space_t* s, Eigen::VectorXd destination, const prx::space_point_t& source)
+{
+    s -> copy_vector_from_point(destination, source);
+
+} 
 
 // double    (prx::space_t::*lp_norm_2)(const prx::space_point_t& p1, const double p)    = &prx::space_t::lp_norm;
 // static double (prx::space_t::*l1_norm_1)(const prx::space_point_t&) = &prx::space_t::l1_norm;

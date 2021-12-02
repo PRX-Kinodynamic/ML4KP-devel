@@ -8,8 +8,8 @@
 #include <Eigen/Core>
 
 using namespace boost::python;
-typedef Eigen::Matrix<int,1,1>::Index Index;
-typedef Eigen::Matrix<int,1,1>::Scalar Scalar; 
+typedef Eigen::Matrix<ptrdiff_t,1,1>::Index Index;
+typedef Eigen::Matrix<double,1,1>::Scalar Scalar; 
 typedef Eigen::AngleAxis<double> AngleAxisT;
 // enum{Dim=VectorT::RowsAtCompileTime};
 // static bool dyn(){ return Dim==Eigen::Dynamic; }
@@ -60,6 +60,9 @@ static T Random(Index rows, Index cols){   return T::Random(rows,cols); }
 template<typename T>
 static T Identity(Index rows, Index cols){ return T::Identity(rows,cols); }
 
+template<typename T>
+static T Zero_1d(Index size){     return T::Zero(size); }
+
 static prx::quaternion_t* fromAxisAngle(const prx::vector_t& axis, const Scalar& angle){ prx::quaternion_t* ret=new prx::quaternion_t(AngleAxisT(angle, axis)); ret->normalize(); return ret; }
 static prx::quaternion_t* fromAngleAxis(const Scalar& angle, const prx::vector_t& axis){ prx::quaternion_t* ret=new prx::quaternion_t(AngleAxisT(angle, axis)); ret->normalize(); return ret; }
 static prx::quaternion_t* fromTwoVectors(const prx::vector_t& u, const prx::vector_t& v){ prx::quaternion_t* q(new prx::quaternion_t); q->setFromTwoVectors(u,v); return q; }
@@ -71,6 +74,7 @@ static prx::quaternion_t* fromTwoVectors(const prx::vector_t& u, const prx::vect
 //     {return Tr.translation();}
 static void translation(prx::transform_t& Tr, prx::vector_t v)
     {Tr.translation() = (v);}
+typedef const double& (Eigen::MatrixXd::*parop_signature)(ptrdiff_t,ptrdiff_t) const;
 
 void pyprx_utilities_general_transforms()
 {
@@ -91,13 +95,18 @@ void pyprx_utilities_general_transforms()
         .def("__setitem__", &set_matrix_item< prx::n_matrix_t<Eigen::Dynamic> >)
         ;
 
-    class_< prx::vector_t >("vector", init< prx::vector_t >() )
-        .def(init<double, double, double>())
+    class_< Eigen::VectorXd >("vector", init< Eigen::VectorXd >() )
+        // .def(init<double>())
         .def("__setitem__", &set_vector_item< prx::vector_t >)
+        .def("Zero",    &Zero_1d<Eigen::VectorXd>,(arg("size")),"Create zero vector of given dimensions").staticmethod("Zero")
+        .def("__str__", &prx_to_str<Eigen::VectorXd>) 
         ;
 
+
     class_< Eigen::MatrixXd >("matrix", init< Eigen::MatrixXd >() )
-        .def("__setitem__", &set_matrix_item< Eigen::MatrixXd >)
+        .def("__call__", static_cast<parop_signature>(&Eigen::MatrixXd::operator()), return_value_policy<copy_const_reference>())
+        // .def("__setitem__", &set_matrix_item< Eigen::MatrixXd >)
+        .def("__setitem__", &set_item< Eigen::MatrixXd >)
         .def("determinant",&Eigen::MatrixXd::determinant,"Return matrix determinant.")
         .def("trace",&Eigen::MatrixXd::trace,"Return sum of diagonal elements.")
         .def("transpose",&transpose<Eigen::MatrixXd>,"Return transposed matrix.")
@@ -114,6 +123,8 @@ void pyprx_utilities_general_transforms()
         // .def("__setitem__",&prx::matrix_t::set_item< prx::matrix_t >).def("__getitem__",&prx::matrix_t::get_item< prx::matrix_t >)
         // .def(str(self))
         .def(self_ns::str(self_ns::self))
+        .def("__str__", &prx_to_str<Eigen::MatrixXd>) 
+
         // .def("__str__",&Eigen::MatrixXd::operator<<)
         // .def("__repr__",&prx::matrix_t::__str__)
         ;
