@@ -33,6 +33,8 @@ template<typename T>
 static Scalar get_item(const T& a, tuple _idx){ Index idx[2]; Index mx[2]={a.rows(),a.cols()}; IDX2_CHECKED_TUPLE_INTS(_idx,mx,idx); return a(idx[0],idx[1]); }
 template<typename T>
 static void set_item(T& a, tuple _idx, const Scalar& value){ Index idx[2]; Index mx[2]={a.rows(),a.cols()}; IDX2_CHECKED_TUPLE_INTS(_idx,mx,idx); a(idx[0],idx[1])=value; }
+template<typename T>
+static void set_item_v(T& a, Index _idx, const Scalar& value){ a[_idx]=value; }
 
 template<typename T>
 static T transpose(const T& m){ return m.transpose(); }
@@ -97,7 +99,7 @@ void pyprx_utilities_general_transforms()
 
     class_< Eigen::VectorXd >("vector", init< Eigen::VectorXd >() )
         // .def(init<double>())
-        .def("__setitem__", &set_vector_item< prx::vector_t >)
+        .def("__setitem__", &set_item_v< Eigen::VectorXd >)
         .def("Zero",    &Zero_1d<Eigen::VectorXd>,(arg("size")),"Create zero vector of given dimensions").staticmethod("Zero")
         .def("__str__", &prx_to_str<Eigen::VectorXd>) 
         ;
