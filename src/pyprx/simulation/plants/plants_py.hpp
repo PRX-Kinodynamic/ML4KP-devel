@@ -2,6 +2,7 @@
 #include "pyprx/simulation/plants/two_dimensional_point_py.hpp"
 #include "pyprx/simulation/plants/types/types_py.hpp"
 #include "pyprx/simulation/plants/pendulum_py.hpp"
+#include "pyprx/simulation/plants/ackermann_py.hpp"
 
 void pyprx_simulation_plants()
 {
@@ -11,4 +12,5 @@ void pyprx_simulation_plants()
 	pyprx_simulation_plants_acrobot_py();
    	// pyprx_simulation_plants_acrobot();
    	pyprx_simulation_plants_pendulum();
+	pyprx_simulation_plants_ackermann_FO();
 }
