@@ -43,6 +43,9 @@ PRX_GETTER(rrt_specification_t, min_control_steps)
 PRX_SETTER(rrt_specification_t, max_control_steps)
 PRX_GETTER(rrt_specification_t, max_control_steps)
 
+PRX_SETTER(rrt_query_t, goal_region_radius)
+PRX_GETTER(rrt_query_t, goal_region_radius)
+
 PRX_SETTER(rrt_node_t, cost_to_come)
 PRX_GETTER(rrt_node_t, cost_to_come)
 
@@ -100,6 +103,7 @@ void pyprx_planning_planners_rrt_py()
 
 	class_<prx::rrt_query_t, std::shared_ptr<prx::rrt_query_t>, bases<prx::planner_query_t>>("rrt_query", no_init)
 		.def("__init__", make_constructor(&init_as_ptr<prx::rrt_query_t, prx::space_t*, prx::space_t*>, default_call_policies(),(arg("state_space"), arg("control_space"))))
+		.add_property("goal_region_radius", 	&get_rrt_query_t_goal_region_radius<double>, &set_rrt_query_t_goal_region_radius<double>)
 		;
 
 	class_<prx::rrt_t, std::shared_ptr<prx::rrt_t>, bases<prx::planner_t> >("rrt", no_init)

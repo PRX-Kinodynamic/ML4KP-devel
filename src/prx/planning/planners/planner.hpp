@@ -11,7 +11,11 @@ namespace prx
      * @brief <b>A class that specified the parameters of a planner.</b>
      * @authors Zakary Littlefield
      */
+    
+	// TODO: Don't like this being here and not in planner_functions... ideas?
 	typedef std::function<bool (space_point_t&)> goal_check_t;
+
+
 	class planner_specification_t
 	{
 	public:
@@ -37,7 +41,6 @@ namespace prx
 		space_point_t start_state;
 		space_point_t goal_state;
 		goal_check_t goal_check;
-		double goal_region_radius;
 		bool get_visualization;
 
 		//outputs
