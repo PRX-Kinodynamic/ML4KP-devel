@@ -98,6 +98,13 @@ namespace prx
 
         std::string print(unsigned precision=3) const;
 
+        friend std::ostream& operator<< (std::ostream& os, const trajectory_t& obj) 
+        {
+
+        	os << obj.print() << " ";
+        	// os << std::endl;
+        	return os;
+        }
 	protected:
 
 		space_point_t interpolate(double s) const;
