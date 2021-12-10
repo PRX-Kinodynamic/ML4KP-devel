@@ -40,5 +40,6 @@ void pyprx_simulation_playback_trajectory_py()
 		.def(self != other<prx::trajectory_t>())
 		;
 
-
+    PRX_ITERABLE_WRAPPER(std::vector<prx::trajectory_t>, "vector_of_trajectories")
+	
 }

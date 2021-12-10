@@ -102,7 +102,7 @@ checker = prx.condition_check("iterations", 50000)
 planner.resolve_query(checker)
 planner.fulfill_query();
 
-
+print("Total trajectories:", len(planner_query.tree_visualization))
 ### This part is only to visualize the solution
 if (planner_query.get_visualization):
 	vis_group = prx.three_js_group([acrobot], obstacles)

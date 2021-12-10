@@ -78,6 +78,13 @@ static void translation(prx::transform_t& Tr, prx::vector_t v)
     {Tr.translation() = (v);}
 typedef const double& (Eigen::MatrixXd::*parop_signature)(ptrdiff_t,ptrdiff_t) const;
 
+// Eigen::VectorXd init_vector_3D(object v, double x, double y, double z)
+// {
+//     return v( Eigen::Vector3d(x,y,z) );
+//     // v = Eigen::Vector3d(x,y,z);
+//     // return v;
+// }
+
 void pyprx_utilities_general_transforms()
 {
 
@@ -98,7 +105,9 @@ void pyprx_utilities_general_transforms()
         ;
 
     class_< Eigen::VectorXd >("vector", init< Eigen::VectorXd >() )
-        // .def(init<double>())
+        .def("__init__", make_constructor(&init_as_ptr<Eigen::Vector2d,double,double>, default_call_policies(), (args("x"), args("y")) ))
+        .def("__init__", make_constructor(&init_as_ptr<prx::vector_t,double,double,double>, default_call_policies(), (args("x"), args("y"), args("z")) ))
+        .def("__init__", make_constructor(&init_as_ptr<Eigen::Vector4d,double,double,double,double>, default_call_policies(), (args("x"), args("y"), args("z"), args("w")) ))
         .def("__setitem__", &set_item_v< Eigen::VectorXd >)
         .def("Zero",    &Zero_1d<Eigen::VectorXd>,(arg("size")),"Create zero vector of given dimensions").staticmethod("Zero")
         .def("__str__", &prx_to_str<Eigen::VectorXd>) 
@@ -107,6 +116,9 @@ void pyprx_utilities_general_transforms()
 
     class_< Eigen::MatrixXd >("matrix", init< Eigen::MatrixXd >() )
         .def("__call__", static_cast<parop_signature>(&Eigen::MatrixXd::operator()), return_value_policy<copy_const_reference>())
+        // .def("__init__", make_constructor(&init_as_ptr<Eigen::Matrix2d,double,double>, default_call_policies() ))
+        // .def("__init__", make_constructor(&init_as_ptr<Eigen::Matrix3d,double,double,double>, default_call_policies() ))
+        // .def("__init__", make_constructor(&init_as_ptr<Eigen::Matrix4d,double,double,double,double>, default_call_policies() ))
         // .def("__setitem__", &set_matrix_item< Eigen::MatrixXd >)
         .def("__setitem__", &set_item< Eigen::MatrixXd >)
         .def("determinant",&Eigen::MatrixXd::determinant,"Return matrix determinant.")
