@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
 		fout_roa.write(line)
 
-	ss.copy_point_from_vector(pt, lower_bounds)
+	ss.copy_point_from_vector(pt, starting_lower_bound)
 
 	prev_last_dim = pt[ss_dim-1];
 

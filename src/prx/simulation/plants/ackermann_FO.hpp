@@ -34,7 +34,7 @@ namespace prx
 		double V;
 
 		// Distance between front and back wheels
-		double L = 1.5; 
+		double L = 1; 
 
 		const double max_delta_deg = 60;
 		const double max_delta_rad = max_delta_deg * PRX_PI / 180.0;
