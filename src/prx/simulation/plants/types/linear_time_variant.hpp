@@ -27,8 +27,8 @@ namespace prx
         virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3);
 
 
-        Eigen::MatrixXd get_A() const {return A;};
-        Eigen::MatrixXd get_B() const {return B;};
+        // Eigen::MatrixXd get_A() const {return A;};
+        // Eigen::MatrixXd get_B() const {return B;};
 
 
         protected:
