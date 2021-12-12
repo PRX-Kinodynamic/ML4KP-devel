@@ -8,7 +8,6 @@
 #include "prx/visualization/three_js_group.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
-#include "prx/simulation/controllers/ackermann_FO_ctrl.hpp"
 
 using namespace prx;
 
@@ -69,40 +68,42 @@ int main(int argc, char* argv[])
 
     trajectory_t solution_traj(ss);
 
-
     int ss_dim = ss -> get_dimension();
     int cs_dim = cs -> get_dimension();
+    auto u_goal = cs -> make_point();
+
+    u_goal -> at(0) = 0;
+    u_goal -> at(1) = 1;
+
+    auto ltv = std::dynamic_pointer_cast<prx::ltv_t>(plant);
+    ltv -> linearize(goal_state, u_goal);
 
     ss -> print_bounds();
     cs -> print_bounds();
 
-    ackermann_FO_ctrl_t ctrl_1(plant);
-    ackermann_FO_ctrl_t ctrl_2(plant);
+    Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
+    auto q_vec = params["/plant/lqr_Q"].as<std::vector<double>>();
+    for (int i = 0; i < ss_dim; ++i) Q(i,i) = q_vec[i];
 
-    double k_rho_1   = +1.0 ; //params["k_rho"].as<double>();
-    double k_alpha_1 = +9.5 ; //params["k_alpha"].as<double>();
-    double k_beta_1  = -9.0 ; //params["k_beta"].as<double>();
+    // std::cout << "Q:\n" << Q << std::endl;
+    Eigen::MatrixXd R = Eigen::MatrixXd::Identity(cs_dim, cs_dim);
 
+    lqr_t lqr(ltv, Q, R, "LQR");
+    lqr.set_goal(goal_state);
+    lqr.compute_K();
+    Eigen::MatrixXd K = lqr.get_K();
+    // std::cout << "K: " << K << std::endl;
     
-    double k_rho_2   = +1.0 ;
-    double k_alpha_2 = +9.5 ;
-    double k_beta_2  = -9.5 ;
-    ctrl_1.set_gains(k_rho_1, k_alpha_1, k_beta_1);
-    ctrl_2.set_gains(k_rho_2, k_alpha_2, k_beta_2);
-
-    ctrl_1.set_goal(goal_state);
-    ctrl_2.set_goal(goal_state);
-
     std::ofstream fout_trajs;
     std::ofstream fout_roa;
 
-    int checker_value = params["checker_value"].as<int>();
     std::string out_dir = params["/plant/out_dir"].as<>();
+
+    int checker_value = params["checker_value"].as<int>();
     int file_id = params["file_id"].as<int>();
     std::ostringstream ss_file_id;
     ss_file_id << std::setw(5) << std::setfill('0') << file_id;
-    // std::string roa_file_name = lib_path + out_dir + "/lqr_" + plant_name + "_" + ss_file_id.str() + "_" + std::to_string(checker_value) + "_roa.txt";
-    std::string roa_file_name = lib_path + out_dir + "/hybA_" + plant_name + "_" + ss_file_id.str() + "_" + std::to_string(checker_value) + "_roa.txt";
+    std::string roa_file_name = lib_path + out_dir + "/lqr_" + plant_name + "_" + ss_file_id.str() + "_" + std::to_string(checker_value) + "_roa.txt";
     std::cout << "saving roa to: " << roa_file_name << std::endl;
     fout_roa.open(roa_file_name.c_str());
 
@@ -127,31 +128,19 @@ int main(int argc, char* argv[])
         // trajectory_t solution_traj(ss);
         do
         {
-            if (-1.9 <= end_state -> at(0) &&
-                -1.8 <= end_state -> at(1) && end_state -> at(1) <= 1.2)
-            {
-                ctrl_2.compute_controls();
-            }
-            else 
-            {
-                ctrl_1.compute_controls();
-            }
+            lqr.compute_controls();
             plant -> propagate(simulation_step);
-            ss -> copy_to_point(end_state);
-
-            // std::cout << "[Ackermann] " << plant << std::endl;
+            // std::cout << "[pendulum] " << plant << std::endl;
             // solution_traj.copy_onto_back(ss);
         }
         while(!checker.check());
 
-        // auto end_state = solution_traj.back();
-        // std::cout << traj_id << " ";
-        // std::cout << end_state << " ";
-        // std::cout << df(end_state, goal_state) << std::endl;
+        ss -> copy_to_point(end_state);
 
         // fout_roa << traj_id << " ";
         fout_roa << std::setprecision(3) << std::fixed << state << " ";
         fout_roa << (df(end_state, goal_state) <= rad?1:0) << std::endl;
+
     };
 
         // state_space->set_bounds({-PRX_PI,-2*PRX_PI},{PRX_PI,2*PRX_PI});
@@ -178,21 +167,21 @@ int main(int argc, char* argv[])
 
     progress_bar_t bar(total_states, "");
 
-    bool multi_file = params["multi_file"].as<bool>();
+
     double prev_last_dim = pt -> at(ss_dim-1);
     do
     {
         // std::cout << "[" << traj_id << "]: " << pt << std::endl;
-        if (multi_file && pt -> at(ss_dim-1) != prev_last_dim)
-        {
-            file_id++;
-            fout_roa.close();
-            std::ostringstream ss_file_id;
-            ss_file_id << std::setw(5) << std::setfill('0') << file_id;
-            roa_file_name = lib_path + out_dir + "/hybA_" + plant_name + "_" + ss_file_id.str() + "_roa.txt";
-            fout_roa.open(roa_file_name.c_str());
-            prev_last_dim = pt -> at(ss_dim-1);
-        }
+        // if (pt -> at(ss_dim-1) != prev_last_dim)
+        // {
+        //     file_id++;
+        //     fout_roa.close();
+        //     std::ostringstream ss_file_id;
+        //     ss_file_id << std::setw(5) << std::setfill('0') << file_id;
+        //     roa_file_name = lib_path + out_dir + "/lqr_" + plant_name + "_" + ss_file_id.str() + "_roa.txt";
+        //     fout_roa.open(roa_file_name.c_str());
+        //     prev_last_dim = pt -> at(ss_dim-1);
+        // }
 
         compute_traj(pt);
 
@@ -201,6 +190,8 @@ int main(int argc, char* argv[])
     }
     while (state_increment(pt, step_inc, starting_lower_bound, ending_upper_bound));
 
+
+    fout_roa.close();
 
     
 }

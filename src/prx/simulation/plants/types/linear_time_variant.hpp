@@ -24,7 +24,7 @@ namespace prx
          *
          * @return     True if successful.
          */
-        virtual bool linearize(space_point_t xt, space_point_t ut);
+        virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3);
 
 
         Eigen::MatrixXd get_A() const {return A;};
@@ -38,9 +38,6 @@ namespace prx
             linear_derivative();
         }
 
-        Eigen::VectorXd x;
-        Eigen::VectorXd u;
-
         Eigen::VectorXd x_plus;
         Eigen::VectorXd x_minus;
         Eigen::VectorXd xd_plus;
@@ -51,8 +48,7 @@ namespace prx
         Eigen::VectorXd ud_plus;
         Eigen::VectorXd ud_minus;
 
-        Eigen::MatrixXd A;
-        Eigen::MatrixXd B;
+        space_point_t mem_aux;
 
   };
 

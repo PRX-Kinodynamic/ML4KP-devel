@@ -94,6 +94,13 @@ namespace prx
 				// return lti_ctr_space;
 			}
 
+			inline
+			space_t* get_derivative_space()
+			{
+				return derivative_space;
+				// return lti_ctr_space;
+			}
+
 			Eigen::MatrixXd get_A() const {return A;};
 			Eigen::MatrixXd get_B() const {return B;};
 			Eigen::MatrixXd get_C() const {return C;};

@@ -2,7 +2,7 @@ name: "Ackermann_FO"
 path: "Ackermann_FO"
 
 # Assume simple_obstacle environment
-start_state: [0.0, -5.0, 0.0]
+start_state: [-2.0, -5.0, 0.0]
 goal_state:  [0.0, 0.0, 1.57]
 
 min_steps: 1
@@ -11,7 +11,7 @@ max_steps: 25
 state_space_lower_bound: [-100,-100,-3.141592653589793]
 state_space_upper_bound: [100,100,3.141592653589793]
 
-control_space_lower_bound: [-1.05,  0]
+control_space_lower_bound: [-1.05, 0]
 control_space_upper_bound: [+1.05, 30]
 
 vis_body: "body"
@@ -25,3 +25,5 @@ ending_upper_bound: [10,10,3.141592653589793]
 file_id: 0
 
 propagation_step: 0.1
+
+lqr_Q: [1,1,1]

@@ -162,8 +162,8 @@ int main(int argc, char* argv[])
 
     // auto bounds = ss -> get_bounds();
     double total_states = 1;
-    auto starting_lower_bound = params["starting_lower_bound"].as<std::vector<double>>();
-    auto ending_upper_bound = params["ending_upper_bound"].as<std::vector<double>>();
+    auto starting_lower_bound = params["/plant/starting_lower_bound"].as<std::vector<double>>();
+    auto ending_upper_bound = params["/plant/ending_upper_bound"].as<std::vector<double>>();
 
     space_point_t pt = ss -> make_point();
     ss -> copy_point_from_vector(pt, starting_lower_bound);
@@ -186,16 +186,16 @@ int main(int argc, char* argv[])
     do
     {
         // std::cout << "[" << traj_id << "]: " << pt << std::endl;
-        if (pt -> at(ss_dim-1) != prev_last_dim)
-        {
-            file_id++;
-            fout_roa.close();
-            std::ostringstream ss_file_id;
-            ss_file_id << std::setw(5) << std::setfill('0') << file_id;
-            roa_file_name = lib_path + "out/lqr_" + plant_name + "_" + ss_file_id.str() + "_roa.txt";
-            fout_roa.open(roa_file_name.c_str());
-            prev_last_dim = pt -> at(ss_dim-1);
-        }
+        // if (pt -> at(ss_dim-1) != prev_last_dim)
+        // {
+        //     file_id++;
+        //     fout_roa.close();
+        //     std::ostringstream ss_file_id;
+        //     ss_file_id << std::setw(5) << std::setfill('0') << file_id;
+        //     roa_file_name = lib_path + "out/lqr_" + plant_name + "_" + ss_file_id.str() + "_roa.txt";
+        //     fout_roa.open(roa_file_name.c_str());
+        //     prev_last_dim = pt -> at(ss_dim-1);
+        // }
 
         compute_traj(pt);
 

@@ -8,8 +8,8 @@ visualize: false
 
 checker_type: iterations
 checker_value: 500
+# checker_value: 5000
 # checker_value: 10000
-# checker_value: 500
 
 # checker_type: sim_time
 # checker_value: 10
