@@ -261,6 +261,7 @@ namespace prx
 		void copy_point(const space_point_t& destination,const space_point_t& source) const;
 
 		void copy_point_from_vector(const space_point_t& destination, const std::vector<double>& source) const;
+		void copy_point_from_vector(const space_point_t& destination, Eigen::Ref<Eigen::VectorXd> source) const;
 		void copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const;
 		void copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, const space_point_t& source) const;
 
@@ -285,6 +286,18 @@ namespace prx
 		inline double& operator[](unsigned index) const
 		{
 			return at(index);
+		}
+
+		inline double get_lower_bound(unsigned i) const
+		{
+			prx_assert(i < dimension, "Error: Trying to get bound for " << i << " that is higher than state dimension " << dimension << ".");
+			return *lower_bounds[i];
+		}
+
+		inline double get_upper_bound(unsigned i) const
+		{
+			prx_assert(i < dimension, "Error: Trying to get bound for " << i << " that is higher than state dimension " << dimension << ".");
+			return *upper_bounds[i];
 		}
 
 		std::vector<std::pair<double,double>> get_bounds() const;

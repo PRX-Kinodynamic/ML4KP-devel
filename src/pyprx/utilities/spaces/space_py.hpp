@@ -100,6 +100,9 @@ void  (prx::space_t::*copy_from_eigen_vector)(const std::vector<double>& source)
 void  (prx::space_t::*copy_std_vector_from_point)(std::vector<double>& destination, const prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
 // void  (prx::space_t::*copy_eigen_vector_from_point)(Eigen::Ref<Eigen::VectorXd> destination, const prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
 
+void  (prx::space_t::*copy_point_from_std_vector)(const prx::space_point_t& destination, const std::vector<double>& source) const = &prx::space_t::copy_point_from_vector;
+
+
 void  copy_eigen_vector_from_point(prx::space_t* s, Eigen::VectorXd destination, const prx::space_point_t& source)
 {
     s -> copy_vector_from_point(destination, source);
@@ -160,7 +163,7 @@ void pyprx_utilities_spaces_space()
         .def("copy_from_vector", copy_from_std_vector)
         .def("copy_from_vector", copy_from_eigen_vector)
         .def("copy_point", &prx::space_t::copy_point)
-        .def("copy_point_from_vector", &prx::space_t::copy_point_from_vector)
+        .def("copy_point_from_vector", copy_point_from_std_vector)
         .def("copy_vector_from_point", copy_std_vector_from_point)
         .def("copy_vector_from_point", copy_eigen_vector_from_point)
         .def("is_point_in_space", &prx::space_t::is_point_in_space)
@@ -181,7 +184,7 @@ void pyprx_utilities_spaces_space()
         .def("l1_norm", (double(*)(const prx::space_point_t& p1, const prx::space_point_t& p2))1, space_t_l1_norm_overloads()).staticmethod("l1_norm")
         .def("l2_norm", (double(*)(const prx::space_point_t& p1, const prx::space_point_t& p2))1, space_t_l2_norm_overloads()).staticmethod("l2_norm")
         .def("euclidean_2d", (double(*)(const prx::space_point_t& p1, const prx::space_point_t& p2, int start, int end))2, space_t_euclidean_2d_overloads()).staticmethod("euclidean_2d")
-        // .def("lp_norm", (double(*)(const prx::space_point_t& p1, const prx::space_point_t& p2, double p))2, space_t_lp_norm_overloads())
+        .def("print_bounds", &prx::space_t::print_bounds)
         // .def("lp_norm", lp_norm_2)
         // .def("l1_norm", (double (prx::space_t::*)(const prx::space_point_t&))&prx::space_t::l1_norm).staticmethod("l1_norm")
         // .def("l1_norm", &prx::space_t::l1_norm, space_t_l1_norm_overloads(args("p1", "p2"), "l1 norm"))

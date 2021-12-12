@@ -267,8 +267,19 @@ namespace prx
 			destination->memory[i]=source[i];
 		}
 		enforce_bounds(destination);
-
 	}
+
+	void space_t::copy_point_from_vector(const space_point_t& destination, Eigen::Ref<Eigen::VectorXd> source) const
+	{
+		prx_assert(destination->parent->dimension==source.size(),"Point and vector have different sizes: "<<destination->parent->dimension<<" and "<<source.size());
+		for(unsigned i=0;i<dimension;++i)
+		{
+			destination->memory[i]=source[i];
+		}
+		enforce_bounds(destination);
+	}
+
+
 	void space_t::copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const
 	{
 		prx_assert(source->parent->space_name==space_name,"Point and space have different names: "<<source->parent->space_name<<" and "<<space_name);

@@ -8,7 +8,7 @@ namespace prx
 	{
 		x = y = theta = 0.0;
 		state_memory = {&x, &y, &theta};
-		state_space = new space_t("EEE",state_memory,"ackermann_FO_ss");
+		state_space = new space_t("EER",state_memory,"ackermann_FO_ss");
 		state_space -> set_bounds(min_state_bound, max_state_bound);
 
 		gamma = V =0;
@@ -20,10 +20,13 @@ namespace prx
 		derivative_memory = {&x_dot, &y_dot, &theta_dot};
 		derivative_space = new space_t("EEE",derivative_memory,"ackermann_FO_ds");
 
-		const double length = 2;
+		parameter_memory = {&L};
+		parameter_space = new space_t("E", parameter_memory, "ackermann_FO_ps");
 
-		geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
-		geometries["body"] -> initialize_geometry({length,1,1});
+		const double length = L * 2.;
+
+		geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::CONE);
+		geometries["body"] -> initialize_geometry({0.5, length});
 		geometries["body"] -> generate_collision_geometry();
 		geometries["body"] -> set_visualization_color("0x00ff00");
 		configurations["body"] = std::make_shared<transform_t>();
@@ -59,5 +62,7 @@ namespace prx
         theta_dot = (V / L) * std::tan(gamma);
 
 	}
+
+	
 
 }

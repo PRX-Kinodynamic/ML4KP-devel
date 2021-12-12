@@ -23,7 +23,10 @@ struct controller_wrap : prx::controller_t, wrapper<prx::controller_t>
         this->get_override("propagate")(simulation_step, step);
 	}
 
-
+	void set_goal(prx::space_point_t g)
+    {
+        this->get_override("set_goal")(g);
+    }
 
 };
 
@@ -46,6 +49,7 @@ void pyprx_simulation_controller()
 	 	.def("set_plan", &prx::controller_t::set_plan)
 	 	.def("get_plan", &prx::controller_t::get_plan)
 	 	.def("init_plan", &prx::controller_t::init_plan)
+		.def("set_goal", &prx::controller_t::set_goal)
 
 	 	// .def("compute_control", pure_virtual(&prx::system_t::compute_control))
 	 	// .def("compute_stopping_maneuver", &prx::system_t::compute_stopping_maneuver)

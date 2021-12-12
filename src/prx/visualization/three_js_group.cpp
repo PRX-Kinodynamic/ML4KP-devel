@@ -285,6 +285,13 @@ namespace prx
 			{
 				js_string+="var geometry = new THREE.SphereGeometry( "+std::to_string(element->geom_params[0])+", 32, 32 );";
 			}
+			else if(element->geom_type==geometry_type_t::CONE)
+			{
+				js_string+="var geometry = new THREE.ConeGeometry( "+std::to_string(element->geom_params[0])+", "
+																   +std::to_string(element->geom_params[1])+" );";
+				js_string+="geometry.applyMatrix( new THREE.Matrix4().makeRotationZ(-Math.PI/2.) );";
+
+			}
 			else
 			{
 				prx_throw("Unknown geometry type in three_js_group");
