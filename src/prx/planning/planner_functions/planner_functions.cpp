@@ -37,7 +37,8 @@ namespace prx
 		};
 		valid_check = [state_space,cg](trajectory_t& traj)
 		{
-			return default_valid_trajectory(traj, state_space,cg);
+			return default_valid_trajectory(traj, default_valid_state);
+			// return default_valid_trajectory(traj, state_space,cg);
 		};
 		valid_stop_check = [sg, cg](	space_point_t start_state,
 							plan_t* stopping_plan,
@@ -81,12 +82,13 @@ namespace prx
 		control_space->sample(plan.back().control);
 	}
 
-	bool default_valid_trajectory(trajectory_t& traj, space_t* ss,std::shared_ptr<collision_group_t> cg)
+	// bool default_valid_trajectory(trajectory_t& traj, space_t* ss,std::shared_ptr<collision_group_t> cg)
+	bool default_valid_trajectory(trajectory_t& traj, valid_state_t vs)
 	{
    
 	  	for(auto&& s : traj)
 	    {
-	      	if (!default_valid_state(s,ss,cg))
+	      	if (!vs(s))
 			{
 		  		return false;
 			}
@@ -130,7 +132,10 @@ namespace prx
 		// std::cout << stopping_plan->print() << std::endl;
 		// Get trajectory
 		sg->propagate(start_state, *stopping_plan, *stopping_traj);
-		return default_valid_trajectory(*stopping_traj, ss, cg);
+		// Aravind: I'm not fixing this because we are not using this function right now.
+		return false;
+		// return default_valid_trajectory(*stopping_traj, ss, cg);
+		// return default_valid_trajectory(*stopping_traj, ss, cg);
 	}
 
 	bool default_valid_state(space_point_t& s,space_t* ss,std::shared_ptr<collision_group_t> cg)
