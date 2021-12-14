@@ -91,6 +91,11 @@ namespace prx
 			plan = std::make_shared<plan_t>(get_control_space());
 		}
 
+		virtual void set_goal(space_point_t _goal)
+		{
+			plant -> get_state_space() -> copy_point(goal, _goal);
+		}
+
 		set_points_t set_points;
 
 
@@ -100,6 +105,7 @@ namespace prx
 		system_ptr_t plant;
 		std::string name;
 
+		space_point_t goal;
 		std::shared_ptr<plan_t> plan; // Control sequence
 
 	};

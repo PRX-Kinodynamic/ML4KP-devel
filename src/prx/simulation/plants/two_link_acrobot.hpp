@@ -2,11 +2,12 @@
 
 #include "prx/simulation/plant.hpp"
 #include "prx/simulation/plants/types/linear_time_invariant.hpp"
+#include "prx/simulation/plants/types/linear_time_variant.hpp"
 
 
 namespace prx
 {
-	class two_link_acrobot_t : public lti_t
+	class two_link_acrobot_t : public ltv_t
 	{
 	public:
 		two_link_acrobot_t(const std::string& path);
@@ -17,6 +18,11 @@ namespace prx
 		virtual void update_configuration() override;
 
 		virtual bool linearize() override final;
+
+        bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) override
+        {
+        	return ltv_t::linearize(xt, ut, epsilon);
+        }
 
 
 	protected:

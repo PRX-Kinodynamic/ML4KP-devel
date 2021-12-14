@@ -13,6 +13,9 @@ namespace prx
 
         auto n = B.rows();
         auto m = B.cols();
+
+        // std::cout << "CARE B:" << B << std::endl;
+        // std::cout << "CARE Q:" << Q << std::endl;
         prx_assert(A.rows() == n && A.cols() == n, "Wrong matrix dimensions");
         prx_assert(Q.rows() == n && Q.cols() == n, "Wrong matrix dimensions");
         prx_assert(R_c.matrixL().rows() == m && R_c.matrixL().cols() == m, "Wrong matrix dimensions");

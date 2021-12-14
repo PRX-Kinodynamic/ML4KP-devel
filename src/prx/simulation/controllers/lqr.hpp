@@ -14,6 +14,7 @@ namespace prx
 		: controller_t(_plant, _name)
 		{
 			lti = std::dynamic_pointer_cast<lti_t>(_plant);
+			goal = lti -> get_state_space() -> make_point();
 			prx_assert(lti != nullptr, "Plant is not an lti_t!");
 			int n = lti -> get_state_space() -> get_dimension();
 			int m = lti -> get_control_space() -> get_dimension();
@@ -27,6 +28,7 @@ namespace prx
 			: controller_t(_plant, _name)
 		{
 			lti = std::dynamic_pointer_cast<lti_t>(_plant);
+			goal = lti -> get_state_space() -> make_point();
 			prx_assert(lti != nullptr, "Plant is not an lti_t!");
 			set_Q(_Q);
 			set_R(_R);
@@ -51,6 +53,13 @@ namespace prx
 		void set_goal(Eigen::VectorXd _goal)
 		{
 			X_goal = _goal;
+			lti -> get_state_space() -> copy_point_from_vector(goal, _goal);
+		}
+
+		void set_goal(space_point_t _goal) override
+		{
+			lti -> get_state_space() -> copy_vector_from_point(X_goal, _goal);
+			lti -> get_state_space() -> copy_point(goal, _goal);
 		}
 
 		virtual ~lqr_t();

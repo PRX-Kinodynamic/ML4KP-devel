@@ -76,6 +76,8 @@ void acrobot_check()
     std::cout << "Q: " << Q << std::endl;
     acrobot -> linearize();
 PRX_DEBUG_PRINT
+    std::cout << "A: " << acrobot -> get_A() << std::endl;
+    std::cout << "B: " << acrobot -> get_B() << std::endl;
     prx::lqr_t lqr(acrobot, Q, R, "LQR");
 PRX_DEBUG_PRINT
     lqr.compute_K();
@@ -83,8 +85,6 @@ PRX_DEBUG_PRINT
     Eigen::MatrixXd K = lqr.get_K();
 PRX_DEBUG_PRINT
     
-    std::cout << "A: " << acrobot -> get_A() << std::endl;
-    std::cout << "B: " << acrobot -> get_B() << std::endl;
     std::cout << "K: " << K << std::endl;
 
     Eigen::Matrix4d A_from_matlab;

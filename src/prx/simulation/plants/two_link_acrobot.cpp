@@ -4,7 +4,7 @@
 namespace prx
 {
 
-	two_link_acrobot_t::two_link_acrobot_t(const std::string& path) : lti_t(path)
+	two_link_acrobot_t::two_link_acrobot_t(const std::string& path) : ltv_t(path)
 	{
 		_theta1=_theta2=_theta1dot=_theta2dot=0;
 		state_memory = {&_theta1,&_theta2,&_theta1dot,&_theta2dot};
