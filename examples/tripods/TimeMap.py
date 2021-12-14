@@ -10,13 +10,15 @@ import numpy as np
 class TimeMap:
 
     def __init__(self, system_type, time_step, parameters="examples/tripods/ackermann_ha_roa.yaml"):
-        # """Create a time map for a given example (system_type);
-        # time_step * simulation_step = time in seconds;
-        # parameters = load the parameters of the system_type
-        # """
+        """Create a time map for a given example (system_type);
+        time_step * simulation_step = time in seconds;
+        parameters = load the parameters of the system_type
+        """
 
+        self.time_step = time_step
         params = prx.param_loader(parameters, sys.argv)
 
+        self.checker_type = params["checker_type"].as_string()
         self.simulation_step = params["simulation_step"].as_float()
         prx.set_simulation_step(self.simulation_step)
         prx.init_random(params["random_seed"].as_int())
@@ -54,9 +56,6 @@ class TimeMap:
         self.ss.copy_point_from_vector(start_state, params["/plant/start_state"].as_float_vector())
         self.ss.copy_point_from_vector(goal_state, params["/plant/goal_state"].as_float_vector())
         self.ss.copy_from_point(start_state)
-
-        self.checker = prx.condition_check(
-            params["checker_type"].as_string(), time_step)
 
         ss_dim = self.ss.get_dimension()
         cs_dim = self.cs.get_dimension()
@@ -107,6 +106,9 @@ class TimeMap:
     def ackermann_lqr(self, X):
         self.ss.copy_from_vector(X)
 
+        checker = prx.condition_check(
+            self.checker_type, self.time_step)
+
         while True:
             self.lqr.compute_controls()
 
@@ -115,7 +117,7 @@ class TimeMap:
 
             self.ss.copy_to_point(self.end_state)
 
-            if self.checker.check():
+            if checker.check():
                 break
 
         self.ss.copy_to_point(self.end_state)
@@ -123,6 +125,8 @@ class TimeMap:
 
     def ackermann_hyb(self, X):
         self.ss.copy_from_vector(X)
+        checker = prx.condition_check(
+            self.checker_type, self.time_step)
 
         while True:
 
@@ -136,7 +140,7 @@ class TimeMap:
             self.plant.propagate(self.simulation_step)
             self.ss.copy_to_point(self.end_state)
 
-            if self.checker.check():
+            if checker.check():
                 break
 
         self.ss.copy_to_point(self.end_state)
