@@ -70,7 +70,7 @@ make -j4
 By default, all options are on. To turn off any option, set it off while configuring:
 I.e. to turn off Tests:
 ```
-cmake -DBUILD_TESTS=OFF ..
+cmake -DBUILD_TESTS=OFF -DBUILD_FOR_BULLET=OFF -DBUILD_FOR_TORCH=OFF ..
 make -j4
 ```
 
