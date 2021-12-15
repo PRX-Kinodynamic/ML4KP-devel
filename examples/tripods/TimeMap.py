@@ -5,6 +5,7 @@ import random
 # On bash: ``export PYTHONPATH=$DIRTMP_PATH/lib/:$PYTHONPATH
 import libpyDirtMP as prx
 import numpy as np
+import torch
 
 
 class TimeMap:
@@ -49,13 +50,13 @@ class TimeMap:
         cs_up = params["/plant/control_space_upper_bound"].as_float_vector()
         self.cs.set_bounds(cs_lb, cs_up)
 
-        start_state = self.ss.make_point()
-        goal_state = self.ss.make_point()
+        self.start_state = self.ss.make_point()
+        self.goal_state_state = self.ss.make_point()
         self.end_state = self.ss.make_point()
 
-        self.ss.copy_point_from_vector(start_state, params["/plant/start_state"].as_float_vector())
-        self.ss.copy_point_from_vector(goal_state, params["/plant/goal_state"].as_float_vector())
-        self.ss.copy_from_point(start_state)
+        self.ss.copy_point_from_vector(self.start_state, params["/plant/start_state"].as_float_vector())
+        self.ss.copy_point_from_vector(self.goal_state_state, params["/plant/goal_state"].as_float_vector())
+        self.ss.copy_from_point(self.start_state)
 
         ss_dim = self.ss.get_dimension()
         cs_dim = self.cs.get_dimension()
@@ -100,9 +101,48 @@ class TimeMap:
             self.lqr.set_goal(goal_state)
             self.lqr.compute_K()
             print("jas")
+        
+        if system_type == "ackermann_lc":
+            controller_path = params["controller_path"].as_string()
+            self.controller = torch.load(controller_path)
+            self.controller.eval()
+            torch.manual_seed(params["random_seed"].as_int())
+            self.radius = params["goal_region_radius"].as_float()
 
         params.print()
 
+    def ackermann_lc(self,X):
+        self.ss.copy_from_vector(X)
+        self.ss.copy_to_point(self.start_state)
+        solution_traj = prx.trajectory(self.ss)
+
+        ctrl_input = torch.zeros(1,6)
+
+        duration_so_far = 0
+
+        while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(state,self.goal_state_state,0,3) > self.radius:
+            ctrl_input[0,0] = self.start_state[0]
+            ctrl_input[0,1] = self.start_state[1]
+            ctrl_input[0,2] = self.start_state[2]
+            ctrl_input[0,3] = self.goal_state[0]
+            ctrl_input[0,4] = self.goal_state[1]
+            ctrl_input[0,5] = self.goal_state[2]
+
+            with torch.no_grad():
+                ctrl_output = self.controller(ctrl_input)[0].cpu()
+            ctrl = np.array([np.array([-np.pi/3 + ((ctrl_output[0] + 1)*np.pi/3), (ctrl_output[1]+1)*15], dtype=np.float64)])
+            self.cs.copy_from_vector(ctrl)
+            self.cs.enforce_bounds()
+            self.plant.propagate(0.1)
+            self.ss.copy_to_point(self.start_state)
+            solution_traj.copy_onto_back(self.start_state)
+
+            duration_so_far += 0.1
+        
+        self.ss.copy_to_point(self.end_state)
+        return [self.end_state[0],self.end_state[1],self.end_state[1]]
+
+    
     def ackermann_lqr(self, X):
         self.ss.copy_from_vector(X)
 
