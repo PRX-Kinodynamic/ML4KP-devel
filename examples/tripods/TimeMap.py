@@ -130,7 +130,7 @@ class TimeMap:
             ctrl_input[0, 3] = self.goal_state[0]
             ctrl_input[0, 4] = self.goal_state[1]
             ctrl_input[0, 5] = self.goal_state[2]
-
+        
             with torch.no_grad():
                 ctrl_output = self.controller(ctrl_input)[0].cpu()
             # ctrl = np.array(
@@ -147,7 +147,7 @@ class TimeMap:
             duration_so_far += 0.1
 
         self.ss.copy_to_point(self.end_state)
-        return [self.end_state[0], self.end_state[1], self.end_state[1]]
+        return [self.end_state[0], self.end_state[1], self.end_state[2]]
 
     def ackermann_lqr(self, X):
         self.ss.copy_from_vector(X)
