@@ -25,4 +25,5 @@ vis_body: "ball"
 lqr_Q: [1,1,1,1]
 
 controller_path: "examples/tripods/lc/pendulum.pt"
+# controller_path: "examples/tripods/lc/pendulum_deterministic.pt"
 # controller_path: "examples/tripods/controllers/Pendulum.pt"

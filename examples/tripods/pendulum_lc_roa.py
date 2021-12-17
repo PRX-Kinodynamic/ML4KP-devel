@@ -14,7 +14,7 @@ def state_increment(space_point, step_inc, lower_bounds, upper_bounds):
         pt[i] = lower_bounds[i]
     return False;
 
-bn = 15
+bn = 1
 ctrl_input = None
 
 def init_ctrl_input(plant_name):
@@ -35,6 +35,7 @@ def get_control(plant_name, current, goal_state):
             ctrl_input[i,3] = goal_state[1]
         with torch.no_grad():
             controller_out = controller(ctrl_input).cpu()
+            # print("controller_out:", controller_out)
         ctrl_output_mean = 0
         for i in range(bn):
             ctrl_output_mean += 1.0*controller_out[i].item()#/bn
@@ -48,7 +49,7 @@ def get_control(plant_name, current, goal_state):
 if __name__ == "__main__":
     params = prx.param_loader("examples/tripods/lc_roa.yaml", sys.argv);
     path_to_model = prx.lib_path + params["/plant/controller_path"].as_string()
-    controller = torch.jit.load(path_to_model)
+    controller = torch.load(path_to_model)
     controller.eval()
 
     params.print()
@@ -96,7 +97,12 @@ if __name__ == "__main__":
     ss.copy_from_point(start_state)
     
     roa_file_name = prx.lib_path + "out/lc_" + plant_name + "_roa.txt"; 
+    print("ROA file:", roa_file_name)
     fout_roa = open(roa_file_name, "w")
+
+    trajs_file_name = prx.lib_path + "out/lc_" + plant_name + "_trajs.txt"; 
+    print("Trajs file:", trajs_file_name)
+    fout_trajs = open(trajs_file_name, "w")
 
     traj_id = 0;
     rad = params["goal_region_radius"].as_float();
@@ -109,8 +115,8 @@ if __name__ == "__main__":
     total_states = 1
     step_inc = params["state_increment"].as_float();
 
-    starting_lower_bound = params["starting_lower_bound"].as_float_vector();
-    ending_upper_bound = params["ending_upper_bound"].as_float_vector();
+    starting_lower_bound = params["/plant/starting_lower_bound"].as_float_vector();
+    ending_upper_bound = params["/plant/ending_upper_bound"].as_float_vector();
     pt = ss.make_point();
     ss.copy_point_from_vector(pt, starting_lower_bound);
     print("first pt:", pt );
@@ -119,14 +125,21 @@ if __name__ == "__main__":
         total_states *= 1. + math.floor((u - l) / step_inc);
     print("Total states:", total_states )
 
+    traj = prx.trajectory(ss)
+    next_theta = starting_lower_bound[0]
+    next_theta_dot = starting_lower_bound[1]
 
     def distance_function(a, b):
         return prx.space_t.euclidean_2d(a, b, 0, ss_dim);
     
     def compute_traj(state):
+        global next_theta, next_theta_dot, traj
         checker = prx.condition_check(params["checker_type"].as_string(), params["checker_value"].as_int())
         ss.copy_from_point(state)
         ss.copy_point(end_state, state)
+
+        traj.clear()
+        traj.copy_onto_back(ss)
         # current = state.to_list()
         while True:
             ctrl = get_control(plant_name, end_state, goal_state)
@@ -135,6 +148,8 @@ if __name__ == "__main__":
             cs.enforce_bounds()
             plant.propagate(simulation_step)
             ss.copy_to_point(end_state);
+            traj.copy_onto_back(ss)
+
             if checker.check():
                 break
 
@@ -147,6 +162,24 @@ if __name__ == "__main__":
 
         fout_roa.write(line)
 
+        if (next_theta <= state[0] and next_theta_dot <= state[1]):
+            sprev = traj[0][0]
+            for s in traj:
+                if math.fabs(sprev - s[0]) > 1:
+                    fout_trajs.write("\n")
+
+                fout_trajs.write(str(s) + "\n")
+                sprev = s[0]
+            fout_trajs.write("\n")
+            if next_theta + 0.3 > ending_upper_bound[0]:
+                next_theta_dot += 0.5
+                next_theta = starting_lower_bound[0]
+            else:
+                next_theta += 0.3
+            # print("Next:", next_theta, next_theta_dot, " state:", state)
+
+
+
     pt = ss.make_point()
     ss.copy_point_from_vector(pt, lower_bounds)
 
@@ -154,7 +187,7 @@ if __name__ == "__main__":
         # print(pt)
         compute_traj(pt)
         traj_id += 1
-        if not state_increment(pt, 0.01, lower_bounds, upper_bounds):
+        if not state_increment(pt, step_inc, lower_bounds, upper_bounds):
             break
-
+    fout_trajs.close()
     print("Finished!")
