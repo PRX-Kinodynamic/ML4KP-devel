@@ -112,7 +112,46 @@ class TimeMap:
             torch.manual_seed(params["random_seed"].as_int())
             self.radius = params["goal_region_radius"].as_float()
 
+        if system_type == "pendulum_lc":
+            controller_path = params["controller_path"].as_string()
+            controller_path = os.environ["DIRTMP_PATH"] + "/" + controller_path
+            self.controller = torch.load(controller_path)
+            self.controller.eval()
+            torch.manual_seed(params["random_seed"].as_int())
+            self.radius = params["goal_region_radius"].as_float()
+
         params.print()
+
+    def pendulum_lc(self, X):
+        self.ss.copy_from_vector(X)
+        self.ss.copy_to_point(self.start_state)
+
+        ctrl_input = torch.zeros(1, 4)
+
+        duration_so_far = 0
+
+        while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 2) > self.radius:
+            ctrl_input[0, 0] = self.start_state[0]
+            ctrl_input[0, 1] = self.start_state[1]
+            ctrl_input[0, 2] = self.goal_state[0]
+            ctrl_input[0, 3] = self.goal_state[1]
+
+            with torch.no_grad():
+                ctrl_output = self.controller(ctrl_input)[0].cpu()
+
+            # ctrl = [-0.6371781908344007 + ((ctrl_output + 1.)*0.6371781908344007)]
+            ctrl = np.array([-0.6371781908344007 + ((ctrl_output + 1.)
+                                                    * 0.6371781908344007)], dtype=np.float64)
+
+            self.cs.copy_from_vector(ctrl)
+            self.cs.enforce_bounds()
+            self.plant.propagate(0.1)
+            self.ss.copy_to_point(self.start_state)
+
+            duration_so_far += 0.1
+
+        self.ss.copy_to_point(self.end_state)
+        return [self.end_state[0], self.end_state[1]]
 
     def ackermann_lc(self, X):
         self.ss.copy_from_vector(X)
@@ -130,7 +169,7 @@ class TimeMap:
             ctrl_input[0, 3] = self.goal_state[0]
             ctrl_input[0, 4] = self.goal_state[1]
             ctrl_input[0, 5] = self.goal_state[2]
-        
+
             with torch.no_grad():
                 ctrl_output = self.controller(ctrl_input)[0].cpu()
             # ctrl = np.array(
