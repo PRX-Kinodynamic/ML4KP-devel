@@ -106,7 +106,7 @@ class TimeMap:
 
         if system_type == "ackermann_lc":
             controller_path = params["controller_path"].as_string()
-            controller_path = os.environ["DIRTMP_PATH"] + "/" + controller_path
+            controller_path = prx.lib_path + controller_path
             self.controller = torch.load(controller_path)
             self.controller.eval()
             torch.manual_seed(params["random_seed"].as_int())
@@ -114,7 +114,7 @@ class TimeMap:
 
         if system_type == "pendulum_lc":
             controller_path = params["controller_path"].as_string()
-            controller_path = os.environ["DIRTMP_PATH"] + "/" + controller_path
+            controller_path = prx.lib_path + controller_path
             self.controller = torch.load(controller_path)
             self.controller.eval()
             torch.manual_seed(params["random_seed"].as_int())
@@ -145,10 +145,10 @@ class TimeMap:
 
             self.cs.copy_from_vector(ctrl)
             self.cs.enforce_bounds()
-            self.plant.propagate(0.1)
+            self.plant.propagate(self.simulation_step)
             self.ss.copy_to_point(self.start_state)
 
-            duration_so_far += 0.1
+            duration_so_far += 0.01
 
         self.ss.copy_to_point(self.end_state)
         return [self.end_state[0], self.end_state[1]]
