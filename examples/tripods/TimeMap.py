@@ -129,7 +129,7 @@ class TimeMap:
         ctrl_input = torch.zeros(1, 4)
 
         duration_so_far = 0
-
+        sim_step = 0.01
         while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 2) > self.radius:
             ctrl_input[0, 0] = self.start_state[0]
             ctrl_input[0, 1] = self.start_state[1]
@@ -145,10 +145,10 @@ class TimeMap:
 
             self.cs.copy_from_vector(ctrl)
             self.cs.enforce_bounds()
-            self.plant.propagate(0.1)
+            self.plant.propagate(sim_step)
             self.ss.copy_to_point(self.start_state)
 
-            duration_so_far += 0.1
+            T += sim_step
 
         self.ss.copy_to_point(self.end_state)
         return [self.end_state[0], self.end_state[1]]
