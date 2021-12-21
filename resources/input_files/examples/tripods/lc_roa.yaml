@@ -2,11 +2,11 @@ random_seed: 231192
 simulation_step: 0.01
 
 environment: "environments/empty.yaml"
-# plant: !file "plants/pendulum.yaml"
+plant: !file "plants/pendulum.yaml"
 # plant: !file "plants/acrobot.yaml"
-plant: !file "plants/ackermann_FO.yaml"
+# plant: !file "plants/ackermann_FO.yaml"
 
-# controller_path: "examples/tripods/controllers/Pendulum.pt"
+controller_path: "examples/tripods/lc/pendulum.pt"
 
 
 trajs_to_file: false

@@ -82,8 +82,8 @@ class TimeMap:
             self.ctrl_1.set_gains(k_rho_1, k_alpha_1, k_beta_1)
             self.ctrl_2.set_gains(k_rho_2, k_alpha_2, k_beta_2)
 
-            self.ctrl_1.set_goal(goal_state)
-            self.ctrl_2.set_goal(goal_state)
+            self.ctrl_1.set_goal(self.goal_state)
+            self.ctrl_2.set_goal(self.goal_state)
 
         if system_type == 'ackermann_lqr':
             u_goal = self.cs.make_point()
@@ -106,7 +106,7 @@ class TimeMap:
 
         if system_type == "ackermann_lc":
             controller_path = params["controller_path"].as_string()
-            controller_path = os.environ["DIRTMP_PATH"] + "/" + controller_path
+            controller_path = prx.lib_path + controller_path
             self.controller = torch.load(controller_path)
             self.controller.eval()
             torch.manual_seed(params["random_seed"].as_int())
@@ -114,7 +114,7 @@ class TimeMap:
 
         if system_type == "pendulum_lc":
             controller_path = params["controller_path"].as_string()
-            controller_path = os.environ["DIRTMP_PATH"] + "/" + controller_path
+            controller_path = prx.lib_path + controller_path
             self.controller = torch.load(controller_path)
             self.controller.eval()
             torch.manual_seed(params["random_seed"].as_int())
@@ -129,7 +129,7 @@ class TimeMap:
         ctrl_input = torch.zeros(1, 4)
 
         duration_so_far = 0
-        sim_step = 0.01
+
         while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 2) > self.radius:
             ctrl_input[0, 0] = self.start_state[0]
             ctrl_input[0, 1] = self.start_state[1]
@@ -145,10 +145,10 @@ class TimeMap:
 
             self.cs.copy_from_vector(ctrl)
             self.cs.enforce_bounds()
-            self.plant.propagate(sim_step)
+            self.plant.propagate(self.simulation_step)
             self.ss.copy_to_point(self.start_state)
 
-            T += sim_step
+            duration_so_far += self.simulation_step
 
         self.ss.copy_to_point(self.end_state)
         return [self.end_state[0], self.end_state[1]]
@@ -156,7 +156,7 @@ class TimeMap:
     def ackermann_lc(self, X):
         self.ss.copy_from_vector(X)
         self.ss.copy_to_point(self.start_state)
-        solution_traj = prx.trajectory(self.ss)
+        # solution_traj = prx.trajectory(self.ss)
 
         ctrl_input = torch.zeros(1, 6)
 
@@ -181,7 +181,7 @@ class TimeMap:
             self.cs.enforce_bounds()
             self.plant.propagate(0.1)
             self.ss.copy_to_point(self.start_state)
-            solution_traj.copy_onto_back(self.start_state)
+            # solution_traj.copy_onto_back(self.start_state)
 
             duration_so_far += 0.1
 
