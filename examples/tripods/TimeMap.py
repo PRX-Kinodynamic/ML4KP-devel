@@ -82,8 +82,8 @@ class TimeMap:
             self.ctrl_1.set_gains(k_rho_1, k_alpha_1, k_beta_1)
             self.ctrl_2.set_gains(k_rho_2, k_alpha_2, k_beta_2)
 
-            self.ctrl_1.set_goal(goal_state)
-            self.ctrl_2.set_goal(goal_state)
+            self.ctrl_1.set_goal(self.goal_state)
+            self.ctrl_2.set_goal(self.goal_state)
 
         if system_type == 'ackermann_lqr':
             u_goal = self.cs.make_point()
@@ -156,7 +156,7 @@ class TimeMap:
     def ackermann_lc(self, X):
         self.ss.copy_from_vector(X)
         self.ss.copy_to_point(self.start_state)
-        solution_traj = prx.trajectory(self.ss)
+        # solution_traj = prx.trajectory(self.ss)
 
         ctrl_input = torch.zeros(1, 6)
 
@@ -181,7 +181,7 @@ class TimeMap:
             self.cs.enforce_bounds()
             self.plant.propagate(0.1)
             self.ss.copy_to_point(self.start_state)
-            solution_traj.copy_onto_back(self.start_state)
+            # solution_traj.copy_onto_back(self.start_state)
 
             duration_so_far += 0.1
 
