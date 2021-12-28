@@ -14,6 +14,8 @@ state_space_upper_bound: [6.283185307179586, 3.141592653589793, 6, 6]
 control_space_lower_bound: [-20]
 control_space_upper_bound: [20]
 
+starting_lower_bound: [0.0, -3.141592653589793, -6, -6]
+ending_upper_bound:   [6.283185307179586, 3.141592653589793, 6, 6]
 
 vis_body: "ball"
 

@@ -16,7 +16,7 @@ namespace prx
 		{
 			std::cout << "0%   10   20   30   40   50   60   70   80   90  100%" << std::endl;
 			std::cout << "[--------------------------------------------------]" << std::endl;
-			next_current = 2.0 * total / 100.0;
+			next_current = std::ceil(2.0 * total / 100.0);
 			// next_current = current_value;
 			// return;
 		}
@@ -35,7 +35,7 @@ namespace prx
 		}
 		std::cout << "]" << std::endl;
 
-		next_current += 2.0 * total / 100.0;
+		next_current += std::ceil(2.0 * total / 100.0);
 
 	}
 

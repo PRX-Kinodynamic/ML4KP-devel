@@ -46,8 +46,9 @@ namespace prx
 		params = std::move(pl.params);
 	}
 
-	param_loader::param_loader(YAML::Node input_params)
+	param_loader::param_loader(YAML::Node input_params, std::string _p_key)
 	{
+		p_key = _p_key;
 		params = std::move(input_params);
 	}
 
@@ -184,18 +185,26 @@ namespace prx
 		std::string::size_type subkey_pos = 0;// = key.find("/", subkey_init);
 
 		subkey_pos = key.find("/", subkey_init);
+		// if(!params[key.substr(subkey_init, subkey_pos - subkey_init)])
+		// {
+		// 	prx_throw("Tried to access element \""<<key<<"\" which isn't there.");
+		// }
+		// 
+		// YAML::Node new_node;// = params[key.substr(subkey_init, subkey_pos - subkey_init)];
 		auto new_node = params[key.substr(subkey_init, subkey_pos - subkey_init)];
+		// p_key = key.substr(subkey_init, subkey_pos - subkey_init);
 		if (subkey_pos == std::string::npos)
 		{
-			if(!new_node.IsDefined())
-			{
-				prx_throw("Tried to access element \""<<key<<"\" which isn't there.");
-			}
-	
-			return param_loader(new_node);
+			// if(!new_node.IsDefined())
+			// if(!params[key.substr(subkey_init, subkey_pos - subkey_init)])
+			// {
+			// 	prx_throw("Tried to access element \""<<key<<"\" which isn't there.");
+			// }
+			// new_node = 
+			return param_loader(new_node, key.substr(subkey_init, subkey_pos - subkey_init));
 		}
 		// Tail recursive!
-		return param_loader(new_node)[key.substr(subkey_pos)];
+		return param_loader(new_node, key.substr(subkey_init, subkey_pos - subkey_init))[key.substr(subkey_pos)];
 		
 
 	}
@@ -206,18 +215,24 @@ namespace prx
 		std::string::size_type subkey_pos = 0;// = key.find("/", subkey_init);
 		// YAML::Node new_node = params;
 
+		// if(!params[key.substr(subkey_init, subkey_pos - subkey_init)])
+		// {
+		// 	prx_throw("Tried to access element \""<<key<<"\" which isn't there.");
+		// }
 		// std::cout << "key: " << key << std::endl;
 		subkey_pos = key.find("/", subkey_init);
 		// std::cout << "\tsubkey: " << key.substr(subkey_init, subkey_pos - subkey_init) << " init: " << subkey_init << " pos: " << subkey_pos << std::endl;
 		auto new_node = params[key.substr(subkey_init, subkey_pos - subkey_init)];
+		
+		p_key = key.substr(subkey_init, subkey_pos - subkey_init);
 		if (subkey_pos == std::string::npos)
 		{	
-			return param_loader(new_node);
+			return param_loader(new_node, key.substr(subkey_init, subkey_pos - subkey_init));
 		}
 		else
 		{
 			// Tail recursive!
-			return param_loader(new_node)[key.substr(subkey_pos)];
+			return param_loader(new_node, key.substr(subkey_init, subkey_pos - subkey_init))[key.substr(subkey_pos)];
 		}
 		// while (subkey_pos != std::string::npos)
 		// {

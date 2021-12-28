@@ -65,15 +65,22 @@ namespace prx
 		template<typename T=std::string>
 		T as()
 		{
+			T val;
 			try
 			{
-				return params.as<T>();
+				val = params.as<T>();
 			}
 			catch(...)
 			{
-				std::cout << params << std::endl;
-				prx_throw_backtrace("Tried to convert to an incorrect type for: ");
+				if (!params.IsDefined())
+				{
+					// params.EnsureNodeExists();
+					prx_throw("Param loader - problem using " << p_key);
+				}
+				// std::cout << (params.IsDefined()?"true":"false") << std::endl;
+				// prx_throw_backtrace("Tried to convert to an incorrect type for: ");
 			}
+			return val;
 		}
 
 		template <typename T>
@@ -105,7 +112,7 @@ namespace prx
 
 	protected:
 
-		param_loader(YAML::Node input_params);
+		param_loader(YAML::Node input_params, std::string _p_key = "INVALID_KEY");
 
 		YAML::Node expand_file(YAML::Node& node);
 
@@ -114,6 +121,11 @@ namespace prx
 		void print(const YAML::Node& pl, std::string prepath = "");
 
 		YAML::Node params;
+
+		// Needed to check if the key has been defined. YAML implementation
+		// assumes that you check before calling as<>()... 
+		// Which produces verbose code and is not really intuitive.
+		std::string p_key;
 
 		void merge(const YAML::Node& other);
 
