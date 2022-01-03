@@ -1,160 +1,78 @@
-#define B3_USE_ROBOTSIM_GUI true
-
-#ifdef B3_USE_ROBOTSIM_GUI
-#include "RobotSimulator/b3RobotSimulatorClientAPI.h"
-#else
-#include "b3RobotSimulatorClientAPI_NoGUI.h"
-#endif
-#include "Bullet3Common/b3Logging.h"
-
+#include "prx/utilities/defs.hpp"
+#include "prx/bullet_sim/plants/husky.hpp"
+#include "prx/planning/world_model.hpp"
+#include "prx/planning/planners/rrt.hpp"
+#include "prx/bullet_sim/plants/plants.hpp"
+#include "prx/bullet_sim/collision_checking/collision_checker.hpp"
+#include "prx/bullet_sim/bullet_simulator.hpp"
 #include "Utils/b3Clock.h"
 
-#include <string.h>
-#include <stdio.h>
-#include <assert.h>
-#define ASSERT_EQ(a, b) assert((a) == (b));
-// #include "MinitaurSetup.h"
-#include "prx/utilities/defs.hpp"
-
-// #include ""
+using namespace prx;
 
 int main(int argc, char* argv[])
 {
-#ifdef B3_USE_ROBOTSIM_GUI
-	b3RobotSimulatorClientAPI* sim = new b3RobotSimulatorClientAPI();
-	bool isConnected = sim->connect(eCONNECT_GUI);
-#else
-	b3RobotSimulatorClientAPI_NoGUI* sim = new b3RobotSimulatorClientAPI_NoGUI();
-	bool isConnected = sim->connect(eCONNECT_DIRECT);
-#endif
-	if (!isConnected)
+	try
 	{
-		printf("Cannot connect\n");
-		return -1;
-	}
-	//Can also use eCONNECT_DIRECT,eCONNECT_SHARED_MEMORY,eCONNECT_UDP,eCONNECT_TCP, for example:
-	//sim->connect(eCONNECT_UDP, "localhost", 1234);
-	sim->configureDebugVisualizer(COV_ENABLE_GUI, 0);
-	//	sim->configureDebugVisualizer( COV_ENABLE_SHADOWS, 0);//COV_ENABLE_WIREFRAME
-	sim->setTimeOut(10);
-	//syncBodies is only needed when connecting to an existing physics server that has already some bodies
-	sim->syncBodies();
-	btScalar fixedTimeStep = 1. / 240.;
+    	auto params = param_loader("examples/bullet/display_robot.yaml", argc, argv);
 
-	sim->setTimeStep(fixedTimeStep);
+		simulation_step = params["simulation_step"].as<double>();
+		
+		// auto plant = std::dynamic_pointer_cast<bullet_omnirobot_t>(create_system<bullet_omnirobot_t>("racecar"));
+		std::string plant_name = params["/plant/name"].as<>();
+		auto system = system_factory_t::create_system(plant_name, plant_name);
+		auto plant = std::dynamic_pointer_cast<bullet_plant_t>(system);
+		prx_assert(plant != nullptr, "Plant is not a bullet_plant!");
 
-	btQuaternion q = sim->getQuaternionFromEuler(btVector3(0.1, 0.2, 0.3));
-	btVector3 rpy;
-	rpy = sim->getEulerFromQuaternion(q);
+		bullet_simulator_t bsim;
+		auto sim = bsim.sim;
+    	bsim.add_urdf("/Users/Gary/pracsys/bullet3/data/plane.urdf");
+		bsim.set_group({plant});
+		bsim.initialize_simulation();
 
-	sim->setGravity(btVector3(0, 0, -9.8));
+		int rotateCamera = 0;
+		btScalar fixedTimeStep = simulation_step;
 
-	// int minitaurUid = sim->loadURDF("/Users/Gary/pracsys/bullet3/build_cmake/data/cube.urdf");
-	int minitaurUid = sim->loadURDF(prx::models_path + "/Rumnibot/RUmnibot.urdf");
-	//b3BodyInfo bodyInfo;
-	//sim->getBodyInfo(blockId,&bodyInfo);
+		sim->setRealTimeSimulation(false);
 
-	sim->loadURDF("/Users/Gary/pracsys/bullet3/build_cmake/data/plane.urdf");
-	
-
-	// MinitaurSetup minitaur;
-	// int minitaurUid = minitaur.setupMinitaur(sim, btVector3(0, 0, .3));
-
-	//b3RobotSimulatorLoadUrdfFileArgs args;
-	//args.m_startPosition.setValue(2,0,1);
-	//int r2d2 = sim->loadURDF("r2d2.urdf",args);
-
-	b3RobotSimulatorLoadFileResults sdfResults;
-	// if (!sim->loadSDF("/Users/Gary/pracsys/bullet3/build_cmake/data/two_cubes.sdf",sdfResults))
-	// if (!sim->loadSDF("/Users/Gary/ITAM/ek-ssl/src/ekbot_sim/models/RUmnibot/RUmnibot.urdf",sdfResults))
-	// {
-			// b3Warning("Can't load SDF!\n");
-	// }
-
-	b3Clock clock;
-	double startTime = clock.getTimeInSeconds();
-	double simWallClockSeconds = 20.;
-#if 0
-	while (clock.getTimeInSeconds()-startTime < simWallClockSeconds)
-	{
-		sim->stepSimulation();
-	}
-#endif
-	sim->setRealTimeSimulation(false);
-	int vidLogId = -1;
-	int minitaurLogId = -1;
-	int rotateCamera = 0;
-
-	while (sim->canSubmitCommand())
-	{
-		b3KeyboardEventsData keyEvents;
-		sim->getKeyboardEvents(&keyEvents);
-		if (keyEvents.m_numKeyboardEvents)
+		while (sim->canSubmitCommand())
 		{
-			//printf("num key events = %d]\n", keyEvents.m_numKeyboardEvents);
-			//m_keyState is a flag combination of eButtonIsDown,eButtonTriggered, eButtonReleased
-			for (int i = 0; i < keyEvents.m_numKeyboardEvents; i++)
+			b3KeyboardEventsData keyEvents;
+			sim->getKeyboardEvents(&keyEvents);
+			if (keyEvents.m_numKeyboardEvents)
 			{
-				b3KeyboardEvent& e = keyEvents.m_keyboardEvents[i];
-
-				if (e.m_keyCode == '0')
+				for (int i = 0; i < keyEvents.m_numKeyboardEvents; i++)
 				{
-					if (e.m_keyState & eButtonTriggered)
-					{
-						if (vidLogId < 0)
-						{
-							vidLogId = sim->startStateLogging(STATE_LOGGING_VIDEO_MP4, "video.mp4");
-						}
-						else
-						{
-							sim->stopStateLogging(vidLogId);
-							vidLogId = -1;
-						}
-					}
-				}
+					b3KeyboardEvent& e = keyEvents.m_keyboardEvents[i];
 
-				if (e.m_keyCode == 'm')
-				{
-					if (minitaurLogId < 0 && e.m_keyState & eButtonTriggered)
+					if (e.m_keyCode == 'r' && e.m_keyState & eButtonTriggered)
 					{
-						minitaurLogId = sim->startStateLogging(STATE_LOGGING_MINITAUR, "simlog.bin");
+						rotateCamera = 1 - rotateCamera;
 					}
-					if (minitaurLogId >= 0 && e.m_keyState & eButtonReleased)
-					{
-						sim->stopStateLogging(minitaurLogId);
-						minitaurLogId = -1;
-					}
-				}
 
-				if (e.m_keyCode == 'r' && e.m_keyState & eButtonTriggered)
-				{
-					rotateCamera = 1 - rotateCamera;
 				}
-
-				//printf("keyEvent[%d].m_keyCode = %d, state = %d\n", i,keyEvents.m_keyboardEvents[i].m_keyCode,keyEvents.m_keyboardEvents[i].m_keyState);
 			}
-		}
-		sim->stepSimulation();
+			sim->stepSimulation();
 
-		if (rotateCamera)
-		{
-			static double yaw = 0;
-			double distance = 1;
-			yaw += 0.1;
-			btVector3 basePos;
-			btQuaternion baseOrn;
-			sim->getBasePositionAndOrientation(minitaurUid, basePos, baseOrn);
-			sim->resetDebugVisualizerCamera(distance, -20, yaw, basePos);
+			if (rotateCamera)
+			{
+				static double yaw = 0;
+				double distance = 1;
+				yaw += 0.1;
+				btVector3 basePos;
+				btQuaternion baseOrn;
+				// sim->getBasePositionAndOrientation(minitaurUid, basePos, baseOrn);
+				sim->resetDebugVisualizerCamera(distance, -20, yaw, basePos);
+			}
+			b3Clock::usleep(1000. * 1000. * fixedTimeStep);
 		}
-		b3Clock::usleep(1000. * 1000. * fixedTimeStep);
+
+		std::cout << "Vis done!" << std::endl;
+
 	}
-
-	printf("sim->disconnect\n");
-
-	sim->disconnect();
-
-	printf("delete sim\n");
-	delete sim;
-
-	printf("exit\n");
+	catch(const prx_assert_t& e)
+	{
+		std::cout<<e.get_message()<<std::endl;
+	}
+	std::cout<<"End of program"<<std::endl;
 }
+
