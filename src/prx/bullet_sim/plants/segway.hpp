@@ -3,7 +3,7 @@
 
 namespace prx
 {
-    class segway_t : public bullet_t
+    class segway_t : public bullet_plant_t
     {
     public:
         segway_t(const std::string& path);

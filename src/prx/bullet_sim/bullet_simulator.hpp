@@ -19,6 +19,9 @@
 
 namespace prx
 {
+	class bullet_plant_t;
+	typedef std::shared_ptr<bullet_plant_t> bullet_plant_ptr_t;
+
 	class bullet_simulator_t : public simulator_t
 	{
 	public:
@@ -37,7 +40,7 @@ namespace prx
 
 		virtual void step_simulation(propagate_step step) override final;
 
-		bool is_collision(bullet_ptr_t sys, bool b_include_bounding_box = true);
+		bool is_collision(bullet_plant_ptr_t sys, bool b_include_bounding_box = true);
 
 		static
 		void get_euler_from_quaternion(btVector3& rpy2, const btQuaternion& quat);
@@ -45,9 +48,10 @@ namespace prx
 		static
 	    void get_quaternion_from_euler(btQuaternion& quat, const btVector3& rollPitchYaw);
 	  	
-		void execute_traj(bullet_ptr_t sys, trajectory_t traj);
+		void execute_traj(bullet_plant_ptr_t sys, trajectory_t traj);
 
 		std::shared_ptr<b3RobotSimulatorClientAPI> sim;
+		// b3RobotSimulatorClientAPI* sim;
 	private:
 		b3RobotSimulatorSetPhysicsEngineParameters physicsArgs;
 		b3RobotSimulatorAddUserDebugLineArgs* lineArgs;

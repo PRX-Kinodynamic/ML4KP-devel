@@ -6,7 +6,7 @@
 
 namespace prx
 {
-    class bullet_multibody_t : public bullet_t
+    class bullet_multibody_t : public bullet_plant_t
     {
         public:
         bullet_multibody_t(const std::string& path);

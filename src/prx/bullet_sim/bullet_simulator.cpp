@@ -9,16 +9,18 @@ namespace prx
 		sim_type = plant_type::BULLET; 
 
 		sim = std::make_shared<b3RobotSimulatorClientAPI>();
+		// sim = new b3RobotSimulatorClientAPI();
 		lineArgs = new b3RobotSimulatorAddUserDebugLineArgs;
 
 		while(!sim->isConnected())
 		{
 		  	std::cout<<"waiting for connection"<<std::endl;
 		  	sim->connect(eCONNECT_GUI);
+		  	// sim -> connect(eCONNECT_SHARED_MEMORY);
 		  	// sim->connect(eCONNECT_DIRECT);
 		}
 		// If connecting to an existing physics server, make sure to uncomment the following line.
-		// sim->syncBodies();
+		sim->syncBodies();
 		sim->configureDebugVisualizer(COV_ENABLE_GUI, 0);
 		sim->configureDebugVisualizer(COV_ENABLE_MOUSE_PICKING,0);
 		sim->setTimeOut(10);
@@ -33,6 +35,8 @@ namespace prx
 		lineArgs->m_colorRGB[1] = lineArgs->m_colorRGB[2] = 0;	
 	  	
 		contactInfo = new b3ContactInformation();	  
+		
+		sim -> setRealTimeSimulation(false);
 
 	}
 
@@ -49,16 +53,15 @@ namespace prx
 	{
 		for (auto f : urdf_paths)
 		{
+			std::cout << "f: " << f << std::endl;
 			sim -> loadURDF(f);
 		}
 
 		for (auto s : group)
 		{
-			auto sb = std::dynamic_pointer_cast<bullet_t>(s);
-    		PRX_DEBUG_PRINT
+			auto sb = std::dynamic_pointer_cast<bullet_plant_t>(s);
 			sb -> initialize(sim);
-    		PRX_DEBUG_PRINT
-			// sb -> update_from_bullet(true);
+			sb -> update_from_bullet(true);
 		}
 	}
 
@@ -156,7 +159,7 @@ namespace prx
 	{	
 		for(auto s : group)
 		{
-			auto sb = std::dynamic_pointer_cast<bullet_t>(s);
+			auto sb = std::dynamic_pointer_cast<bullet_plant_t>(s);
     		// PRX_DEBUG_PRINT
 			if (step == propagate_step::FIRST_STEP)
 			{	
@@ -187,7 +190,7 @@ namespace prx
 		// s -> propagate(simulation_step, step);
 	}
 	
-	void bullet_simulator_t::execute_traj(bullet_ptr_t sys, trajectory_t traj)
+	void bullet_simulator_t::execute_traj(bullet_plant_ptr_t sys, trajectory_t traj)
   	{
 		btVector3 targetPos;
 		targetPos[0] = targetPos[1] = targetPos[2] = 0;

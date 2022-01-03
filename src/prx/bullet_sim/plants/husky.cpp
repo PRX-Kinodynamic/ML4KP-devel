@@ -1,9 +1,8 @@
-#ifndef BULLET_NOT_BUILT
 #include "prx/bullet_sim/plants/husky.hpp"
 
 namespace prx
 {
-    husky_t::husky_t(const std::string& path) : bullet_t(path)
+    husky_t::husky_t(const std::string& path) : bullet_plant_t(path)
     {
         simulation_step = 0.01;
         sim->setTimeStep(simulation_step);
@@ -34,7 +33,8 @@ namespace prx
 
         btQuaternion baseOrientation;
         sim->getBasePositionAndOrientation(uniqueId,basePosition,baseOrientation);
-        auto baseRotation = getEulerFromQuaternion(baseOrientation);
+        btVector3 baseRotation;
+        bullet_simulator_t::get_euler_from_quaternion(baseRotation, baseOrientation);
         sid = sim->saveStateToMemory();
 
         x = basePosition[0]; y = basePosition[1]; theta = baseRotation[2]; // start_z = basePosition[2];
@@ -92,4 +92,3 @@ namespace prx
 		state_space->copy_from_point(point);
     }
 }
-#endif

@@ -1,12 +1,10 @@
-#ifndef BULLET_NOT_BUILT
-
 #pragma once
 #include <unistd.h>
 
 #include "prx/bullet_sim/bullet_defs.hpp"
 
 #include "prx/simulation/plant.hpp"
-// #include "prx/bullet_sim/bullet_simulator.hpp"
+#include "prx/bullet_sim/bullet_simulator.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 
@@ -23,27 +21,22 @@
 
 namespace prx
 {
-	class bullet_t;
-	typedef std::shared_ptr<bullet_t> bullet_ptr_t;
+	class bullet_plant_t;
+	typedef std::shared_ptr<bullet_plant_t> bullet_ptr_t;
 
-	class bullet_t : public plant_t
+	class bullet_plant_t : public plant_t
 	{
 	public:
-		bullet_t(const std::string& path);
-		virtual ~bullet_t();
+		bullet_plant_t(const std::string& path);
+		virtual ~bullet_plant_t();
 		
-		void setup();
-
-		virtual void initialize(std::shared_ptr<b3RobotSimulatorClientAPI> sim)
-		{
-			prx_throw(__PRETTY_FUNCTION__ << ": Not implemented!");
-		}
+		virtual void initialize(std::shared_ptr<b3RobotSimulatorClientAPI> sim) = 0;
 
 		// b3RobotSimulatorClientAPI* sim = new b3RobotSimulatorClientAPI();
 
-	    btVector3 getEulerFromQuaternion(btQuaternion q);
+	    // btVector3 getEulerFromQuaternion(btQuaternion q);
 
-	    btQuaternion getQuaternionFromEuler(const btVector3& rollPitchYaw);
+	    // btQuaternion getQuaternionFromEuler(const btVector3& rollPitchYaw);
 	  
 		virtual void propagate(const double simulation_step) override final;
 
@@ -51,17 +44,17 @@ namespace prx
 
 		virtual void compute_control() override;
 
-		virtual void update_from_bullet(const space_point_t& point, const bool save_sim_state);
+		virtual void update_from_bullet(const space_point_t& point, const bool save_sim_state) = 0;
 
 		virtual void update_to_bullet(const space_point_t& point);
 
 		virtual void update_configuration() override final;
 
-		virtual void print_trajectories(const std::vector<trajectory_t> trajs);
+		// virtual void print_trajectories(const std::vector<trajectory_t> trajs);
 
-		virtual void visualize_trajectories(const std::vector<trajectory_t> trajs);
+		// virtual void visualize_trajectories(const std::vector<trajectory_t> trajs);
 
-		virtual void visualize_goal(const space_point_t goal, const double radius);
+		// virtual void visualize_goal(const space_point_t goal, const double radius);
 
 		virtual void purge_saved_states();
 
@@ -77,7 +70,7 @@ namespace prx
         	prx_throw("Not implemented");
         }
 
-	  	void execute_traj(trajectory_t traj);
+	  	// void execute_traj(trajectory_t traj);
 
 		void add_exclusion(int bID1, int lID1, int bID2, int lID2);
 
@@ -91,7 +84,7 @@ namespace prx
 
 		std::vector<double> state_bounds_l, state_bounds_u, control_bounds_l, control_bounds_u;
 
-		int plane_id, uniqueId,count;
+		int plane_id, uniqueId;
 
 		b3RobotSimulatorAddUserDebugLineArgs* lineArgs = new b3RobotSimulatorAddUserDebugLineArgs;
 
@@ -117,5 +110,6 @@ namespace prx
 
 
 	};
+
+	
 }
-#endif

@@ -15,7 +15,7 @@ namespace prx
 
 		bool in_collision() override;
 
-		std::vector<std::shared_ptr<bullet_t> > bullet_plants;
+		std::vector<std::shared_ptr<bullet_plant_t> > bullet_plants;
 		// bool use_bullet;
 
 	};

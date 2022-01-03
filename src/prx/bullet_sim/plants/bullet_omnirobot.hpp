@@ -4,7 +4,7 @@
 
 namespace prx
 {
-    class bullet_omnirobot_t : public bullet_t
+    class bullet_omnirobot_t : public bullet_plant_t
     {
         public:
         

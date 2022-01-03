@@ -3,7 +3,7 @@
 
 namespace prx
 {
-    class racecar_t : public bullet_t
+    class racecar_t : public bullet_plant_t
     {
         public:
         racecar_t(const std::string& path);

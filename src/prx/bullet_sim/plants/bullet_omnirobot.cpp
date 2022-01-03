@@ -1,12 +1,12 @@
-#ifndef BULLET_NOT_BUILT
 #include "prx/bullet_sim/plants/bullet_omnirobot.hpp"
 
 namespace prx
 {
-    bullet_omnirobot_t::bullet_omnirobot_t(const std::string& path) : bullet_t(path)
+    bullet_omnirobot_t::bullet_omnirobot_t(const std::string& path) 
+        : bullet_plant_t(path)
     {
         x = y = z = r = p = yaw = dx = dy = dz = dr = dp = dyaw = sid = 0;
-        z = 0.5;
+        z = 1;
         state_memory = {&x,&y,&z,&r,&p,&yaw,&dx,&dy,&dz,&dr,&dp,&dyaw,&sid};
         state_space = new space_t("EEERRREEEEEED",state_memory,"XYZRPYdxdydzdrdpdyaId");
             PRX_DEBUG_PRINT
@@ -33,11 +33,7 @@ namespace prx
 
     void bullet_omnirobot_t::initialize(std::shared_ptr<b3RobotSimulatorClientAPI> _sim)
     {
-      // std::vector<double> start_state = {0,0,0.5,0,0,0};
-      // shared_constructor(path,start_state);
         sim = _sim;
-        // std::cout << "Loading file " << robot_model_path << std::endl;
-        b3RobotSimulatorLoadUrdfFileArgs* loadURDArgs = new b3RobotSimulatorLoadUrdfFileArgs();
 
         btVector3 basePosition, baseRotation;
         btQuaternion baseOrientation;
@@ -49,16 +45,20 @@ namespace prx
         baseRotation[1] = state_space -> at(4);
         baseRotation[2] = state_space -> at(5);
         bullet_simulator_t::get_quaternion_from_euler(baseOrientation, baseRotation);
-        loadURDArgs -> m_startPosition = basePosition;
 
-        uniqueId = sim -> loadURDF(robot_model_path, *loadURDArgs);
+// std::cout << "basePosition: "; PRINT_BTVECTOR(basePosition)
+// std::cout << "baseOrientation: " ; PRINT_BTQUAT(baseOrientation)
+
+        b3RobotSimulatorLoadUrdfFileArgs loadURDArgs;
+        // std::cout << "robot_model_path: " << robot_model_path << std::endl;
+
+        uniqueId = sim -> loadURDF(robot_model_path, loadURDArgs);
 
         int numJoints = sim -> getNumJoints(uniqueId);
         b3JointInfo jointInfo;
         for (int i = 0; i < numJoints; i++)
         {
             sim -> getJointInfo(uniqueId,i,&jointInfo);
-            // std::cout << "Joint name: " << jointInfo.m_jointName << std::endl;
             std::string joint_name(jointInfo.m_jointName);
             if (joint_name == "base_ow_1_axis")
             {
@@ -76,11 +76,11 @@ namespace prx
             {
                 wheelJoints.push_back(i);
             }
-            auto control_type = CONTROL_MODE_TORQUE;
-            if(first_order)
-            {
-                control_type = CONTROL_MODE_VELOCITY;
-            }
+            // auto control_type = CONTROL_MODE_TORQUE;
+            // if(first_order)
+            // {
+                auto control_type = CONTROL_MODE_VELOCITY;
+            // }
             b3RobotSimulatorJointMotorArgs controlArgs(control_type);
 
             controlArgs.m_targetVelocity = 0;
@@ -88,19 +88,14 @@ namespace prx
             sim->setJointMotorControl(uniqueId,i,controlArgs);
         }
 
-        // btVector3 basePosition;
-        // btQuaternion baseOrientation;
         for (int i =0; i < 100; i++)
         {
             sim->stepSimulation();
         }
 
         add_exclusion(0,-1,1,-1); //exclude collisions with plane
-        // sim -> getBasePositionAndOrientation(uniqueId,basePosition,baseOrientation);
-        // auto baseRotation = 
-        // bullet_simulator::get_euler_from_quaternion(baseOrientation);
-        // btVector3 baseVel, baseAngVel;
-        // sim->getBaseVelocity(uniqueId, baseVel, baseAngVel);
+        sim -> getBasePositionAndOrientation(uniqueId,basePosition,baseOrientation);
+    
         state_space -> at(12) = sim->saveStateToMemory();
 
     }
@@ -175,7 +170,7 @@ namespace prx
         btQuaternion baseOrientation;
 
         sim->getBasePositionAndOrientation(uniqueId,basePosition,baseOrientation);
-        baseRotation = getEulerFromQuaternion(baseOrientation);
+        bullet_simulator_t::get_euler_from_quaternion(baseRotation, baseOrientation);
 
         current_state_vec.push_back(basePosition[0]);
         current_state_vec.push_back(basePosition[1]);
@@ -206,4 +201,3 @@ namespace prx
         // state_space->copy_to_point(result);
     }
 }
-#endif

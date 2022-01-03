@@ -3,7 +3,7 @@
 
 namespace prx
 {
-    class husky_t : public bullet_t
+    class husky_t : public bullet_plant_t
     {
         public:
         husky_t(const std::string& path);

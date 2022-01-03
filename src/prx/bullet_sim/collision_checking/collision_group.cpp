@@ -28,7 +28,7 @@ namespace prx
 			if(plant)
 			{
 			  // #ifndef BULLET_NOT_BUILT
-			  	auto plant_bullet = std::dynamic_pointer_cast<bullet_t>(sys);
+			  	auto plant_bullet = std::dynamic_pointer_cast<bullet_plant_t>(sys);
 			  	if (plant_bullet)
 			  	{
 					bullet_plants.push_back(plant_bullet);
