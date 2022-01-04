@@ -64,6 +64,11 @@ elseif (DEFINED ENV{BULLET_PHYSICS_PATH})
 	message("Using custom Bullet")
 	set(BULLET_INCLUDE_DIR "$ENV{BULLET_PHYSICS_PATH}/include/bullet" CACHE PATH "Bullet include directory")
 	set(BULLET_LIBRARY_DIR "$ENV{BULLET_PHYSICS_PATH}/lib" CACHE PATH "Bullet lib directory")
+
+	find_package (Threads REQUIRED)
+	LINK_LIBRARIES( pthread )
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+	#set(LIBS ${LIBS} m rt pthread)
 	message(STATUS "Bullet include directory: ${BULLET_INCLUDE_DIR}")
 	message(STATUS "Bullet library directory: ${BULLET_LIBRARY_DIR}")
 else()
@@ -87,16 +92,9 @@ target_compile_definitions(${PROJECT_NAME}_bullet_sim PUBLIC -DBULLET_PHYSICS_PA
 # target_include_directories(${PROJECT_NAME}_bullet_sim PUBLIC "/Users/Gary/pracsys/bullet3/examples/SharedMemory/")
 target_include_directories(${PROJECT_NAME}_bullet_sim PUBLIC ".")
 target_include_directories(${PROJECT_NAME}_bullet_sim PUBLIC ${BULLET_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME}_bullet_sim PUBLIC 
-	BulletRoboticsGUI BulletRobotics BulletExampleBrowserLib  
-	BulletFileLoader BulletWorldImporter BulletSoftBody
-	BulletDynamics BulletCollision BulletInverseDynamicsUtils 
-	BulletInverseDynamics LinearMath OpenGLWindow    
-	gwen 
-	BussIK
-	Bullet3Common 
-	clsocket
-	)
+
+
+
 
 if(APPLE)
 	FIND_LIBRARY(COCOA NAMES Cocoa)
@@ -116,7 +114,7 @@ else()
 	ADD_DEFINITIONS("-DGLEW_INIT_OPENGL11_FUNCTIONS=1")
 	# ADD_DEFINITIONS("-DGLEW_STATIC")
 	ADD_DEFINITIONS("-DGLEW_DYNAMIC_LOAD_ALL_GLX_FUNCTIONS=1")
-		LINK_LIBRARIES(  pthread ${DL} )
+
 endif()
 
 # # BulletSoftBody -> BulletDynamics -> BulletCollision -> LinearMath).
@@ -140,7 +138,6 @@ endif()
 # 	HACD
 # 	)
 
-target_link_libraries(${PROJECT_NAME}_bullet_sim PUBLIC ${CMAKE_DL_LIBS})
 
 if(APPLE)
 
@@ -158,6 +155,29 @@ if(APPLE)
 		)
 #         # LINK_LIBRARIES(${COCOA} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
 
+else()
+	
+	target_link_directories(${PROJECT_NAME}_bullet_sim PUBLIC
+	 	${BULLET_LIBRARY_DIR}
+	 	)
+	target_link_libraries(${PROJECT_NAME}_bullet_sim PUBLIC
+    		${CMAKE_THREAD_LIBS_INIT}
+    		rt
+		pthread 
+		dl
+		gwen
+		#${DL} 
+		)
 endif()
-	# target_link_libraries(${PROJECT_NAME}     
-	# 	pthread ${CMAKE_DL_LIBS})
+
+target_link_libraries(${PROJECT_NAME}_bullet_sim PUBLIC ${CMAKE_DL_LIBS})
+target_link_libraries(${PROJECT_NAME}_bullet_sim PUBLIC pthread
+	BulletRoboticsGUI BulletRobotics BulletExampleBrowserLib  
+	BulletFileLoader BulletWorldImporter BulletSoftBody
+	BulletDynamics BulletCollision BulletInverseDynamicsUtils 
+	BulletInverseDynamics LinearMath OpenGLWindow    
+	gwen 
+	BussIK
+	Bullet3Common 
+	clsocket
+	)
