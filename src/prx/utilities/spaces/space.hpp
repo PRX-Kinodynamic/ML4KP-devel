@@ -382,21 +382,32 @@ namespace prx
 			};
 
 			return std::pow(std::accumulate(p1 -> begin(), p1 -> end(), 0.0, fn), 1.0/p);
+
+			
 		}
 
 		static double lp_norm(const space_point_t& p1, const space_point_t& p2, const double p)
 		{
 			// int i = 0;
-			auto fn = [&p](double accum, std::tuple<space_snapshot_t::iterator, space_snapshot_t::iterator>& e)
-			{	
-				double e1, e2;
-				std::tie(e1, e2) = unzip(e);
-				// return accum + std::pow(e - (*p2)[i++], p);
-				return accum + std::pow(e1 - e2, p);
-			};
-			auto zipped = zip_iters(p1, p2);
+			// auto fn = [&p](double accum, std::tuple<space_snapshot_t::iterator, space_snapshot_t::iterator>& e)
+			// {	
+			// 	double e1, e2;
+			// 	std::tie(e1, e2) = unzip(e);
+			// 	return accum + std::pow(e1 - e2, p);
+			// };
+			// auto zipped = zip_iters(p1, p2);
 
-			return std::pow(std::accumulate(zipped.begin(), zipped.end(), 0.0, fn), 1.0/p);
+			// return std::pow(std::accumulate(zipped.begin(), zipped.end(), 0.0, fn), 1.0/p);
+
+			double e1, e2;
+			double accum = 0;
+			for (auto e : zip_iters(p1, p2) )
+			{
+				std::tie(e1, e2) = unzip(e);
+				accum += std::pow(e1 - e2, p);
+
+			}
+			return std::pow(accum, 1.0/p);
 		}
 
 		/**
