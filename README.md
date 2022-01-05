@@ -6,6 +6,8 @@ A library for integrating machine learning tools with state-of-the-art sampling-
 
 * Eigen
 * Yaml-Cpp
+* Boost
+* Boost-python
 ### _(Optional)_ Bullet Physics
 
 1. Add the ML4KP directory to `$DIRTMP_PATH`.

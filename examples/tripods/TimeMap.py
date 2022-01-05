@@ -54,6 +54,7 @@ class TimeMap:
         self.start_state = self.ss.make_point()
         self.goal_state = self.ss.make_point()
         self.end_state = self.ss.make_point()
+        self.ctrl_pt = self.cs.make_point()
 
         self.ss.copy_point_from_vector(
             self.start_state, params["/plant/start_state"].as_float_vector())
@@ -129,7 +130,7 @@ class TimeMap:
         ctrl_input = torch.zeros(1, 4)
 
         duration_so_far = 0
-
+        ctrl = [0]
         while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 2) > self.radius:
             ctrl_input[0, 0] = self.start_state[0]
             ctrl_input[0, 1] = self.start_state[1]
@@ -143,7 +144,8 @@ class TimeMap:
             ctrl = np.array([-0.6371781908344007 + ((ctrl_output + 1.)
                                                     * 0.6371781908344007)], dtype=np.float64)
 
-            self.cs.copy_from_vector(ctrl)
+            self.ctrl_pt[0] = ctrl[0]
+            self.cs.copy_from_point(ctrl_pt)
             self.cs.enforce_bounds()
             self.plant.propagate(self.simulation_step)
             self.ss.copy_to_point(self.start_state)
