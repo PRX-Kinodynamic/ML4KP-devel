@@ -4,6 +4,36 @@ import torch
 import random
 import numpy as np 
 import libpyDirtMP as prx
+#import tracemalloc
+#import os
+#from collections import Counter
+#import linecache
+
+# def display_top(snapshot, key_type='lineno', limit=10):
+#     snapshot = snapshot.filter_traces((
+#         tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+#         tracemalloc.Filter(False, "<unknown>"),
+#     ))
+#     top_stats = snapshot.statistics(key_type)
+
+#     print("Top %s lines" % limit)
+#     for index, stat in enumerate(top_stats[:limit], 1):
+#         frame = stat.traceback[0]
+#         # replace "/path/to/module/file.py" with "module/file.py"
+#         filename = os.sep.join(frame.filename.split(os.sep)[-2:])
+#         print("#%s: %s:%s: %.1f KiB"
+#               % (index, filename, frame.lineno, stat.size / 1024))
+#         line = linecache.getline(frame.filename, frame.lineno).strip()
+#         if line:
+#             print('    %s' % line)
+
+#     other = top_stats[limit:]
+#     if other:
+#         size = sum(stat.size for stat in other)
+#         print("%s other: %.1f KiB" % (len(other), size / 1024))
+#     total = sum(stat.size for stat in top_stats)
+#     print("Total allocated size: %.1f KiB" % (total / 1024))
+
 
 
 def state_increment(space_point, step_inc, lower_bounds, upper_bounds):
@@ -23,10 +53,12 @@ def init_ctrl_input(plant_name):
     if plant_name == "pendulum":
         ctrl_input = torch.zeros(bn,4)
 
-
+ctrl = None
+ctrl_output_mean = 0
 def get_control(plant_name, current, goal_state):
-    global ctrl_input, bn
-    ctrl = None
+    global ctrl_input, bn, ctrl,ctrl_output_mean
+    ctrl_output_mean = 0
+    # ctrl = None
     if plant_name == "pendulum":
         for i in range(bn):
             ctrl_input[i,0] = current[0]
@@ -36,7 +68,6 @@ def get_control(plant_name, current, goal_state):
         with torch.no_grad():
             controller_out = controller(ctrl_input).cpu()
             # print("controller_out:", controller_out)
-        ctrl_output_mean = 0
         for i in range(bn):
             ctrl_output_mean += 1.0*controller_out[i].item()#/bn
         ctrl_output_mean = ctrl_output_mean / bn
@@ -44,9 +75,10 @@ def get_control(plant_name, current, goal_state):
     else:
         print("get_control for plant:", plant_name, "not implemented!")
         exit(-1)
-    return ctrl
+    #return ctrl
 
 if __name__ == "__main__":
+    #tracemalloc.start()
     params = prx.param_loader("examples/tripods/lc_roa.yaml", sys.argv);
     path_to_model = prx.lib_path + params["/plant/controller_path"].as_string()
     controller = torch.load(path_to_model)
@@ -132,18 +164,21 @@ if __name__ == "__main__":
     def distance_function(a, b):
         return prx.space_t.euclidean_2d(a, b, 0, ss_dim);
     
+    checker = prx.condition_check(params["checker_type"].as_string(), params["checker_value"].as_int())
+    ctrl = [0]
+    ctrl_pt = cs.make_point()
     def compute_traj(state):
-        global next_theta, next_theta_dot, traj
-        checker = prx.condition_check(params["checker_type"].as_string(), params["checker_value"].as_int())
+        global next_theta, next_theta_dot, traj, checker
         ss.copy_from_point(state)
         ss.copy_point(end_state, state)
-
+        checker.reset()
         traj.clear()
         traj.copy_onto_back(ss)
         # current = state.to_list()
         while True:
-            ctrl = get_control(plant_name, end_state, goal_state)
-            cs.copy_from_vector(ctrl)
+            get_control(plant_name, end_state, goal_state)
+            ctrl_pt[0] = ctrl[0]
+            cs.copy_from_point(ctrl_pt)
 
             cs.enforce_bounds()
             plant.propagate(simulation_step)
@@ -176,7 +211,6 @@ if __name__ == "__main__":
                 next_theta = starting_lower_bound[0]
             else:
                 next_theta += 0.3
-            # print("Next:", next_theta, next_theta_dot, " state:", state)
 
 
 
@@ -190,4 +224,6 @@ if __name__ == "__main__":
         if not state_increment(pt, step_inc, lower_bounds, upper_bounds):
             break
     fout_trajs.close()
+    #snapshot = tracemalloc.take_snapshot()
+    #display_top(snapshot)
     print("Finished!")
