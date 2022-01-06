@@ -78,12 +78,12 @@ static void translation(prx::transform_t& Tr, prx::vector_t v)
     {Tr.translation() = (v);}
 typedef const double& (Eigen::MatrixXd::*parop_signature)(ptrdiff_t,ptrdiff_t) const;
 
-// Eigen::VectorXd init_vector_3D(object v, double x, double y, double z)
-// {
-//     return v( Eigen::Vector3d(x,y,z) );
-//     // v = Eigen::Vector3d(x,y,z);
-//     // return v;
-// }
+std::string transform_to_str(prx::transform_t obj)
+{
+    std::ostringstream iss;
+    iss << obj.matrix();
+  return iss.str();
+} 
 
 void pyprx_utilities_general_transforms()
 {
@@ -152,10 +152,11 @@ void pyprx_utilities_general_transforms()
         .def(init<prx::quaternion_t>((arg("other"))))
         ;
 
-    class_<prx::transform_t >("transform")
+    class_<prx::transform_t, std::shared_ptr<prx::transform_t>>("transform")
         // .def("__init__", make_constructor(&fromAxisAngle, default_call_policies(),(arg("axis"),  arg("angle"))))
         .def("setIdentity", &prx::transform_t::setIdentity)
         .def("translation", &translation)
+        .def("__str__", &transform_to_str) 
         ;
 
 
