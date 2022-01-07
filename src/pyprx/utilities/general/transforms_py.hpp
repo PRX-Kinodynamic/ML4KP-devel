@@ -35,6 +35,8 @@ template<typename T>
 static void set_item(T& a, tuple _idx, const Scalar& value){ Index idx[2]; Index mx[2]={a.rows(),a.cols()}; IDX2_CHECKED_TUPLE_INTS(_idx,mx,idx); a(idx[0],idx[1])=value; }
 template<typename T>
 static void set_item_v(T& a, Index _idx, const Scalar& value){ a[_idx]=value; }
+template<typename T>
+static Scalar get_item_v(const T& a, Index _idx){ return a[_idx]; }
 
 template<typename T>
 static T transpose(const T& m){ return m.transpose(); }
@@ -76,6 +78,8 @@ static prx::quaternion_t* fromTwoVectors(const prx::vector_t& u, const prx::vect
 //     {return Tr.translation();}
 static void translation(prx::transform_t& Tr, prx::vector_t v)
     {Tr.translation() = (v);}
+static auto get_translation(prx::transform_t& Tr)
+    {return Tr.translation();}
 typedef const double& (Eigen::MatrixXd::*parop_signature)(ptrdiff_t,ptrdiff_t) const;
 
 std::string transform_to_str(prx::transform_t obj)
@@ -139,9 +143,15 @@ void pyprx_utilities_general_transforms()
         .def(self_ns::str(self_ns::self))
         .def("__str__", &prx_to_str<Eigen::MatrixXd>) 
 
-        // .def("__str__",&Eigen::MatrixXd::operator<<)
-        // .def("__repr__",&prx::matrix_t::__str__)
         ;
+
+    class_< Eigen::Block<Eigen::Matrix<double, 3, 4, 0, 3, 4>, 3, 1, true >>("block_transform", no_init )
+        // .def("__str__", &prx_to_str<Eigen::Block<Eigen::MatrixXd>>)
+        .def("__setitem__", &set_item_v<Eigen::Block<Eigen::Matrix<double, 3, 4, 0, 3, 4>, 3, 1, true>>)
+        .def("__getitem__", &get_item_v<Eigen::Block<Eigen::Matrix<double, 3, 4, 0, 3, 4>, 3, 1, true>>)
+        .def("__str__", &prx_to_str<Eigen::Block<Eigen::Matrix<double, 3, 4, 0, 3, 4>, 3, 1, true>>)
+        ;
+
 
     class_< prx::quaternion_t >("quaternion" )
         .def("__init__", make_constructor(&fromAxisAngle, default_call_policies(),(arg("axis"),  arg("angle"))))
@@ -156,6 +166,7 @@ void pyprx_utilities_general_transforms()
         // .def("__init__", make_constructor(&fromAxisAngle, default_call_policies(),(arg("axis"),  arg("angle"))))
         .def("setIdentity", &prx::transform_t::setIdentity)
         .def("translation", &translation)
+        .def("translation", &get_translation)
         .def("__str__", &transform_to_str) 
         ;
 

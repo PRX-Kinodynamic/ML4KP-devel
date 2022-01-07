@@ -21,11 +21,6 @@ struct lti_wrap : prx::lti_t, wrapper<prx::lti_t>
         return this->get_override("check")();
     }
 
-    void update_configuration()
-    {
-        this->get_override("update_configuration")();
-    }
-
     void compute_derivative() 
     {
         this->get_override("compute_derivative")();
@@ -46,7 +41,7 @@ void pyprx_simulation_plants_types_lti()
       .def("discretize", &prx::lti_t::discretize)
       .def("get_state_space", &prx::lti_t::get_state_space, return_internal_reference<>())
       .def("get_control_space", &prx::lti_t::get_control_space, return_internal_reference<>())
-      .def("update_configuration", pure_virtual(&lti_wrap::update_configuration))
+      // .def("update_configuration", pure_virtual(&lti_wrap::update_configuration))
       .def("compute_derivative", pure_virtual(&lti_wrap::compute_derivative))
       .def("get_A", &prx::lti_t::get_A)
       .def("get_B", &prx::lti_t::get_B)

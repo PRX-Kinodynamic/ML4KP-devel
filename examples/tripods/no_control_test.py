@@ -2,7 +2,9 @@ import sys
 import math
 import random
 import libpyDirtMP as prx
-
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import numpy as np
 if __name__ == "__main__":
 	params = prx.param_loader("examples/basic/no_control.yaml", sys.argv);
 	print(params.get_input_path())
@@ -58,13 +60,67 @@ if __name__ == "__main__":
 		if checker.check():
 			break
 
-	vis_group = prx.three_js_group([plant], obstacle_list)
+	vec_geoms = plant.get_geometries()
+	vec_confs = plant.get_configurations()
+	print(vec_geoms[0].name)
+	print(vec_confs[0].name, vec_confs[0].transform)
+	# for g in vec_geoms:
+	# 	print("geoms:", g.name )
+	# for g in vec_confs:
+	# 	print("geoms:", g.name )
+	# for state in solution_traj:
+	# 	ss.copy_from_point(state)
+	# 	plant.update_configuration()
+	# 	confs = plant.get_configurations()
+	# 	for c in confs:
+	# 		if c.name == plant_name+"/ball":
+	# 			tr = c.transform.translation()
+	# 			print("state:", state, "conf:", tr[0], tr[1], tr[2])
 
-	body_name = params["/plant/name"].as_string() + "/" + params["/plant/vis_body"].as_string()
+	fig = plt.figure()
+	ax = fig.add_subplot(111, autoscale_on=False, xlim=(-25, 25), ylim=(-25, 25))
+	ax.grid()
 
-	vis_group.add_detailed_vis_infos(prx.info_geometry.FULL_LINE, solution_traj, body_name, ss, "0xFF0000")
+	line, = ax.plot([], [], 'o-', lw=2)
+	time_template = 'time = %.1fs'
+	time_text = ax.text(0.05, 0.9, '', transform=ax.transAxes)
 
-	vis_group.add_animation(solution_traj, ss, start_state)
 
-	vis_group.output_html("py_no_control.html")
+	def init():
+		line.set_data([], [])
+		time_text.set_text('')
+		return line, time_text
+
+
+	def animate(i):
+		ss.copy_from_point(solution_traj[i.item()])
+		plant.update_configuration()
+		confs = plant.get_configurations()
+		for c in confs:
+			if c.name == plant_name+"/ball":
+				tr = c.transform.translation()
+				thisx = [0, tr[0]]
+				thisy = [0, tr[1]]
+				# print("state:", state, "conf:", tr[0], tr[1], tr[2])
+		# thisx = [0, x1[i], x2[i]]
+		# thisy = [0, y1[i], y2[i]]
+
+		line.set_data(thisx, thisy)
+		time_text.set_text(time_template % (i*simulation_step))
+		return line, time_text
+
+	ani = animation.FuncAnimation(fig, animate, np.arange(1, len(solution_traj)),
+			interval=25, blit=True, init_func=init)
+
+	plt.show()
+
+	# vis_group = prx.three_js_group([plant], obstacle_list)
+
+	# body_name = params["/plant/name"].as_string() + "/" + params["/plant/vis_body"].as_string()
+
+	# vis_group.add_detailed_vis_infos(prx.info_geometry.FULL_LINE, solution_traj, body_name, ss, "0xFF0000")
+
+	# vis_group.add_animation(solution_traj, ss, start_state)
+
+	# vis_group.output_html("py_no_control.html")
 
