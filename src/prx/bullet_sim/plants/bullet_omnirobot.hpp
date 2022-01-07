@@ -31,7 +31,7 @@ namespace prx
         // bool sync_lr_wheels = true;
       
         protected:
-        const std::string robot_model_path = models_path + "/Rumnibot/RUmnibot.urdf";
+        const std::string robot_model_path = models_path + "/RUmnibot/RUmnibot.urdf";
       // const std::string robot_model_path = prx_filepath_check(models_path + "/Rumnibot/RUmnibot.urdf");
 
         std::vector<int> wheelJoints;// = {2,3,4,5};

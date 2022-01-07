@@ -25,7 +25,9 @@ int main(int argc, char* argv[])
 
 		bullet_simulator_t bsim;
 		auto sim = bsim.sim;
-    	bsim.add_urdf("/Users/Gary/pracsys/bullet3/data/plane.urdf");
+    	// bsim.add_urdf("/Users/Gary/pracsys/bullet3/data/plane.urdf");
+    	bsim.add_urdf(bullet_path + "/data/plane.urdf");
+    	
 		bsim.set_group({plant});
 		bsim.initialize_simulation();
 
