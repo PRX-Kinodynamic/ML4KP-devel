@@ -42,6 +42,11 @@ namespace prx
 					lower_bounds.push_back(new double(0));
 					upper_bounds.push_back(new double(std::numeric_limits<int>::max()));
 					break;
+				case 'I':
+					topology.push_back(topology_t::IDLE);
+					lower_bounds.push_back(new double(0));
+					upper_bounds.push_back(new double(std::numeric_limits<int>::max()));
+					break;
 				default:
 					prx_throw("Bad topology identifier '"<<c<<"' from topology string "<<topo);
 			}
@@ -369,6 +374,10 @@ namespace prx
 			{
 				*(addresses[i]) += delta_t * derivative->at(i);
 				*(addresses[i]) = round(*(addresses[i]));
+			}
+			else if(topology[i] == topology_t::IDLE)
+			{
+				continue;
 			}
 		}
 		enforce_bounds();
