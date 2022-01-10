@@ -166,17 +166,17 @@ class TimeMap:
 
         if self.lqr == None:
             self.plant.linearize()
-            self.Q = prx.matrix.Identity(2,2)
-            self.R = prx.matrix.Identity(1,1)
-            self.lqr = prx.lqr(self.plant, self.Q, self.R, "LQR");
-            self.lqr.compute_K();
-            self.K = self.lqr.get_K();
+            self.Q = prx.matrix.Identity(2, 2)
+            self.R = prx.matrix.Identity(1, 1)
+            self.lqr = prx.lqr(self.plant, self.Q, self.R, "LQR")
+            self.lqr.compute_K()
+            self.K = self.lqr.get_K()
 
         duration_so_far = 0
         while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 2) > self.radius:
-            self.lqr.compute_controls();
-            self.cs.enforce_bounds();
-            self.plant.propagate(self.simulation_step);
+            self.lqr.compute_controls()
+            self.cs.enforce_bounds()
+            self.plant.propagate(self.simulation_step)
             self.ss.copy_to_point(self.start_state)
 
             duration_so_far += self.simulation_step
@@ -184,6 +184,29 @@ class TimeMap:
         self.ss.copy_to_point(self.end_state)
         return [self.end_state[0], self.end_state[1]]
 
+    def pendulum_no_ctrl(self, X):
+        self.ss.copy_from_vector(X)
+        self.ss.copy_to_point(self.start_state)
+
+        # if self.lqr == None:
+        #     self.plant.linearize()
+        #     self.Q = prx.matrix.Identity(2,2)
+        #     self.R = prx.matrix.Identity(1,1)
+        #     self.lqr = prx.lqr(self.plant, self.Q, self.R, "LQR");
+        #     self.lqr.compute_K();
+        #     self.K = self.lqr.get_K();
+
+        duration_so_far = 0
+        while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 2) > self.radius:
+            # self.lqr.compute_controls();
+            self.cs.enforce_bounds()
+            self.plant.propagate(self.simulation_step)
+            self.ss.copy_to_point(self.start_state)
+
+            duration_so_far += self.simulation_step
+
+        self.ss.copy_to_point(self.end_state)
+        return [self.end_state[0], self.end_state[1]]
 
     def ackermann_lc(self, X):
         self.ss.copy_from_vector(X)
