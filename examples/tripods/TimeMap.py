@@ -4,9 +4,9 @@ import math
 import random
 # Remember to add libpyDirtMP to your PYTHONPATH
 # On bash: ``export PYTHONPATH=$DIRTMP_PATH/lib/:$PYTHONPATH
+import torch
 import libpyDirtMP as prx
 import numpy as np
-import torch
 
 
 class TimeMap:
@@ -19,7 +19,7 @@ class TimeMap:
 
         self.time_step = time_step
         params = prx.param_loader(parameters, sys.argv)
-
+        self.params = params
         self.Q = None
         self.R = None
         self.K = None
@@ -61,6 +61,9 @@ class TimeMap:
         self.end_state = self.ss.make_point()
         self.ctrl_pt = self.cs.make_point()
 
+        self.u_goal = self.cs.make_point()
+        for i in range(len(self.u_goal)): self.u_goal[i] = 0
+
         self.ss.copy_point_from_vector(
             self.start_state, params["/plant/start_state"].as_float_vector())
         self.ss.copy_point_from_vector(
@@ -72,6 +75,8 @@ class TimeMap:
 
         self.ss.print_bounds()
         self.cs.print_bounds()
+
+        self.radius = params["goal_region_radius"].as_float()
 
         if system_type == "ackermann_hyb":
             self.ctrl_1 = prx.ackermann_FO_ctrl(self.plant, "ackermann_FO_ctrl_1")
@@ -165,10 +170,11 @@ class TimeMap:
         self.ss.copy_to_point(self.start_state)
 
         if self.lqr == None:
-            self.plant.linearize()
+            self.plant.linearize(self.goal_state, self.u_goal)
             self.Q = prx.matrix.Identity(2, 2)
             self.R = prx.matrix.Identity(1, 1)
             self.lqr = prx.lqr(self.plant, self.Q, self.R, "LQR")
+            self.lqr.set_goal(self.goal_state)
             self.lqr.compute_K()
             self.K = self.lqr.get_K()
 
@@ -183,6 +189,37 @@ class TimeMap:
 
         self.ss.copy_to_point(self.end_state)
         return [self.end_state[0], self.end_state[1]]
+
+    def acrobot_lqr(self, X):
+        self.ss.copy_from_vector(X)
+        self.ss.copy_to_point(self.start_state)
+
+        if self.lqr == None:
+            self.plant.linearize()
+            self.Q = prx.matrix.Identity(4, 4)
+            self.Q[0, 0] = 10
+            self.Q[1, 1] = 10
+            self.Q[2, 2] = 1
+            self.Q[3, 3] = 1
+            self.R = prx.matrix.Identity(1, 1)
+            self.lqr = prx.lqr(self.plant, self.Q, self.R, "LQR")
+            self.lqr.set_goal(self.goal_state)
+            self.lqr.compute_K()
+            self.K = self.lqr.get_K()
+            self.radius = self.params["goal_region_radius"].as_float()
+
+
+        duration_so_far = 0
+        while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 4) > self.radius:
+            self.lqr.compute_controls()
+            self.cs.enforce_bounds()
+            self.plant.propagate(self.simulation_step)
+            self.ss.copy_to_point(self.start_state)
+
+            duration_so_far += self.simulation_step
+
+        self.ss.copy_to_point(self.end_state)
+        return self.end_state.to_list() # [self.end_state[0], self.end_state[1]]
 
     def pendulum_no_ctrl(self, X):
         self.ss.copy_from_vector(X)
@@ -207,6 +244,21 @@ class TimeMap:
 
         self.ss.copy_to_point(self.end_state)
         return [self.end_state[0], self.end_state[1]]
+
+    def acrobot_no_ctrl(self, X):
+        self.ss.copy_from_vector(X)
+        self.ss.copy_to_point(self.start_state)
+
+        duration_so_far = 0
+        while duration_so_far <= self.time_step :
+            self.cs.enforce_bounds()
+            self.plant.propagate(self.simulation_step)
+            self.ss.copy_to_point(self.start_state)
+
+            duration_so_far += self.simulation_step
+
+        self.ss.copy_to_point(self.end_state)
+        return self.end_state.to_list() # [self.end_state[0], self.end_state[1]]
 
     def ackermann_lc(self, X):
         self.ss.copy_from_vector(X)
@@ -285,3 +337,29 @@ class TimeMap:
 
         self.ss.copy_to_point(self.end_state)
         return [self.end_state[0], self.end_state[1], self.end_state[2]]
+
+if __name__ == "__main__":
+    # Adding this for convenient testing... 
+    # TODO: Check if there is a better way of doing this
+    
+
+    time = 10
+    TM = TimeMap("acrobot_lqr", time,
+                     "examples/tripods/lqr_roa.yaml")
+                    #  "examples/tripods/lc_roa.yaml")
+                    #  "examples/tripods/lqr.yaml")
+
+    start_state_vector = [1.0, 0.0]
+    # start_state_vector = [1.0, 1.0, 0, 0]
+
+    def g(X):
+        # return TM.pendulum_lc(X)
+        return TM.pendulum_lqr(X)
+        # return TM.acrobot_lqr(X)
+        # return TM.acrobot_no_ctrl(X)
+
+
+
+
+    print( "g:", g(start_state_vector) )
+    

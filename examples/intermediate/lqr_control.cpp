@@ -42,20 +42,27 @@ int main(int argc, char* argv[])
 
     auto start_state = ss -> make_point();
 	auto goal_state = ss -> make_point();
+    auto u_goal = cs -> make_point();
 
     ss -> copy_point_from_vector(start_state, params["/plant/start_state"].as<std::vector<double>>());
     ss -> copy_point_from_vector(goal_state, params["/plant/goal_state"].as<std::vector<double>>());
     ss -> copy_from_point(start_state);
     
+
     condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());
 
     trajectory_t solution_traj(ss);
 
-    auto lti = std::dynamic_pointer_cast<prx::lti_t>(plant);
-    lti -> linearize();
+    auto ltv = std::dynamic_pointer_cast<prx::ltv_t>(plant);
 
     int ss_dim = ss -> get_dimension();
     int cs_dim = cs -> get_dimension();
+    
+    cs -> copy_point_from_vector(u_goal, std::vector<double>(cs_dim, 0));
+    ltv -> linearize(goal_state, u_goal);
+    std::cout << "goal: " << goal_state << std::endl;
+    std::cout << "A: " << ltv -> get_A() << std::endl;
+    std::cout << "B: " << ltv -> get_B() << std::endl;
     // std::cout << "state_space dim: " << ss_dim << std::endl;
     // std::cout << "ctrl_space  dim: " << cs_dim << std::endl;
     
@@ -68,11 +75,11 @@ int main(int argc, char* argv[])
 
     Eigen::VectorXd v_goal(ss_dim);
     ss -> copy_vector_from_point(v_goal, goal_state);
-    lqr_t lqr(lti, Q, R, "LQR");
+    lqr_t lqr(ltv, Q, R, "LQR");
     lqr.set_goal(v_goal);
     lqr.compute_K();
     Eigen::MatrixXd K = lqr.get_K();
-    // std::cout << "K: " << K << std::endl;
+    std::cout << "K: " << K << std::endl;
     
     do
     {

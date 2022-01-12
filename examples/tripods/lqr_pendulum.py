@@ -75,7 +75,15 @@ if __name__ == "__main__":
 	print("Q:", Q)
 	print("R:", R)
 
+	ss_dim = ss.get_dimension()
+
+	v_goal = prx.vector.Zero(ss_dim);
+	for i in range(ss_dim):
+		v_goal[i] = goal_state[i]
 	lqr = prx.lqr(plant, Q, R, "LQR");
+	print("v_goal:", v_goal)
+	
+	lqr.set_goal(v_goal);
 	lqr.compute_K();
 	K = lqr.get_K();
 	print("K:", K)
