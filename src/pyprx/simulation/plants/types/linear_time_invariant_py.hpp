@@ -11,10 +11,10 @@ struct lti_wrap : prx::lti_t, wrapper<prx::lti_t>
 
     lti_wrap(const std::string& path) : prx::lti_t(path){};
 
-    bool linearize_0()
-    {
-        return this->get_override("linearize")();
-    }
+    // bool linearize_0()
+    // {
+    //     return this->get_override("linearize")();
+    // }
 
     bool check() 
     {
@@ -31,7 +31,7 @@ struct lti_wrap : prx::lti_t, wrapper<prx::lti_t>
 
 void pyprx_simulation_plants_types_lti()
 {
-   	class_<lti_wrap, std::shared_ptr<lti_wrap>, bases<prx::plant_t>, boost::noncopyable>("lti", no_init)
+   	class_<prx::lti_t, std::shared_ptr<prx::lti_t>, bases<prx::plant_t>, boost::noncopyable>("lti", no_init)
       // .def("__init__", make_constructor(&init_as_ptr<prx::lti_t, std::string>, default_call_policies(), (arg("path")) ))
       // .def("__init__", make_constructor(&init_as_ptr<prx::lti_t, const lti_t&>, default_call_policies(), (arg("other"))))
       .def("linearize", &prx::lti_t::linearize)

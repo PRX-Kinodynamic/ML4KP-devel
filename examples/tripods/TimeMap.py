@@ -16,9 +16,13 @@ class TimeMap:
         time_step * simulation_step = time in seconds;
         parameters = load the parameters of the system_type
         """
+        if isinstance(parameters, str):
+            params = prx.param_loader(parameters, sys.argv)
+        elif isinstance(parameters, prx.param_loader):
+            print("Instance of prx.param_loader")
+            params = parameters
 
         self.time_step = time_step
-        params = prx.param_loader(parameters, sys.argv)
         self.params = params
         self.Q = None
         self.R = None
@@ -47,6 +51,7 @@ class TimeMap:
 
         self.ss = context.system_group.get_state_space()
         self.cs = context.system_group.get_control_space()
+        self.ps = self.plant.get_parameter_space()
 
         lower_bounds = params["/plant/state_space_lower_bound"].as_float_vector()
         upper_bounds = params["/plant/state_space_upper_bound"].as_float_vector()
@@ -130,6 +135,8 @@ class TimeMap:
             self.controller.eval()
             torch.manual_seed(params["random_seed"].as_int())
             self.radius = params["goal_region_radius"].as_float()
+            
+            
 
         params.print()
 
@@ -177,6 +184,7 @@ class TimeMap:
             self.lqr.set_goal(self.goal_state)
             self.lqr.compute_K()
             self.K = self.lqr.get_K()
+            self.ps[1] = self.params["/plant/friction"].as_float()
 
         duration_so_far = 0
         while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 2) > self.radius:
@@ -207,7 +215,8 @@ class TimeMap:
             self.lqr.compute_K()
             self.K = self.lqr.get_K()
             self.radius = self.params["goal_region_radius"].as_float()
-
+            self.ps[0] = params["/plant/mass"].as_float()
+            self.ps[1] = params["/plant/g"].as_float()
 
         duration_so_far = 0
         while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 4) > self.radius:
@@ -344,18 +353,28 @@ if __name__ == "__main__":
     
 
     time = 10
-    TM = TimeMap("acrobot_lqr", time,
-                     "examples/tripods/lqr_roa.yaml")
+    yaml_file = "examples/tripods/lqr_roa.yaml"
+    params = prx.param_loader(yaml_file)
+    # params = prx.param_loader(yaml_file, sys.argv)
+
+    params["/plant/friction"] = 0.05
+    params["/plant/g"] = 9.81 # Earth
+    # params["/plant/g"] = 3.721 # Mars
+    # params["/plant/g"] = 24.79 # Jupiter
+    params["/plant/mass"] = 1 # Normal
+    # params["/plant/mass"] = 10 # Heavy
+    # TM = TimeMap("acrobot_lqr", time, yaml_file)
+    TM = TimeMap("acrobot_lqr", time, params)
                     #  "examples/tripods/lc_roa.yaml")
                     #  "examples/tripods/lqr.yaml")
 
-    start_state_vector = [1.0, 0.0]
-    # start_state_vector = [1.0, 1.0, 0, 0]
+    # start_state_vector = [3.14, 0.0]
+    start_state_vector = [0.0, 0.0, 0, 0]
 
     def g(X):
         # return TM.pendulum_lc(X)
-        return TM.pendulum_lqr(X)
-        # return TM.acrobot_lqr(X)
+        # return TM.pendulum_lqr(X)
+        return TM.acrobot_lqr(X)
         # return TM.acrobot_no_ctrl(X)
 
 

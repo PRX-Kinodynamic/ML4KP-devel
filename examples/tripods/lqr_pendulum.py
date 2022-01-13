@@ -44,6 +44,10 @@ if __name__ == "__main__":
 
 	ss = context.system_group.get_state_space()
 	cs = context.system_group.get_control_space()
+	ps = plant.get_parameter_space()
+
+	ps[1] = params["/plant/friction"].as_float()
+	# print(ps.print_memory())
 
 	lower_bounds = params["/plant/state_space_lower_bound"].as_float_vector()
 	upper_bounds = params["/plant/state_space_upper_bound"].as_float_vector()
