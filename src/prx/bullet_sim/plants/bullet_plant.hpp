@@ -38,13 +38,9 @@ namespace prx
 
 	    // btQuaternion getQuaternionFromEuler(const btVector3& rollPitchYaw);
 	  
-		virtual void propagate(const double simulation_step) override final;
-
 		virtual void propagate(const double simulation_step, const propagate_step step) override final;
 
 		virtual void compute_control() override;
-
-		virtual void update_from_bullet(const space_point_t& point, const bool save_sim_state) = 0;
 
 		virtual void update_to_bullet(const space_point_t& point);
 
@@ -93,6 +89,7 @@ namespace prx
 		std::shared_ptr<b3RobotSimulatorClientAPI> sim;
 
 		b3RobotSimulatorSetPhysicsEngineParameters physicsArgs;
+        b3RobotSimulatorLoadUrdfFileArgs loadURDFArgs;
 
 		int physicsClientId, lastSavedId;
 
@@ -104,11 +101,9 @@ namespace prx
 		std::string state_topo;
 
 		space_point_t current_state;
-
-
+		space_point_t current_control;
+        std::vector<double> current_state_vec;
 		// friend bullet_simulator;
-
-
 	};
 
 	

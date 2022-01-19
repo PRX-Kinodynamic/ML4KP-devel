@@ -16,18 +16,12 @@ namespace prx
         virtual void initialize(std::shared_ptr<b3RobotSimulatorClientAPI> sim) override;
 
         virtual void update_from_bullet(const bool save_sim_state) override;
-
-        virtual void update_from_bullet(const space_point_t& point, const bool save_sim_state) override final
-        {
-            prx_throw("Not implemented!");
-        }
         
         virtual int get_state_id() override;
 
         virtual void compute_control() override final;
         // void set_control(std::vector<double> control);
 
-        bool first_order = true;
         // bool sync_lr_wheels = true;
       
         protected:
@@ -46,10 +40,6 @@ namespace prx
         void shared_constructor(const std::string& path,std::vector<double> start_state);
 
         // std::shared_vector<b3RobotSimulatorClientAPI> sim;
-
-        space_point_t sampled_control;
-
-        std::vector<double> current_state_vec;
 
     };
 }

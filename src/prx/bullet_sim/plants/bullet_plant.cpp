@@ -19,29 +19,10 @@ namespace prx
 	{
 	}	
 
-	void bullet_plant_t::propagate(const double simulation_step)
-	{
-		prx_assert(current_state != nullptr, "current_state not initialized!");
-		sim->setTimeStep(simulation_step);
-		if(!is_collision())
-		{
-			state_space->copy_to_point(current_state);
-			std::cout << "current_state: " << current_state << std::endl;
-
-			update_to_bullet(current_state);
-			std::cout << "current_state: " << current_state << std::endl;
-			if(!is_collision())
-			{
-			  sim->stepSimulation();
-			}
-			this->update_from_bullet(current_state, true);
-		}
-	}
-
 	void bullet_plant_t::propagate(const double simulation_step, const propagate_step step)
 	{
-		// sim->setTimeStep(simulation_step);
-		space_point_t current_state = state_space->make_point();
+		sim->setTimeStep(simulation_step);
+		prx_assert(current_state != nullptr, "current_state not initialized!");
 		state_space->copy_to_point(current_state);
 
 		if (step == propagate_step::FIRST_STEP)
@@ -53,10 +34,8 @@ namespace prx
 		{
 		  sim->stepSimulation();
 		  bool save_sim_state = (step == propagate_step::FINAL_STEP);
-		  this->update_from_bullet(current_state, save_sim_state);
+		  this->update_from_bullet(save_sim_state);
 		}
-		// std::cout << "Exited Bullet propagate..." << std::endl;
-
 	}
 
 	void bullet_plant_t::compute_control()
@@ -79,7 +58,8 @@ namespace prx
 
 	void bullet_plant_t::update_to_bullet(const space_point_t& point)
 	{
-
+		std::cout << "[update_to_bullet] " << state_space->print_point(point,8) << std::endl;
+		// @aravind: I think there should be an easier way to do this.
 		std::vector<double> current_state_vec;
 		state_space->copy_vector_from_point(current_state_vec,point);
 		sim->restoreStateFromMemory(current_state_vec.back());

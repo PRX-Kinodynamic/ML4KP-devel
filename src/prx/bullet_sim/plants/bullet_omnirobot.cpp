@@ -19,11 +19,11 @@ namespace prx
         input_control_space = new space_t("EEEE",control_memory,"ctrl_space");
         control_bounds_l={-2,-2,-2,-2};
         control_bounds_u={ 2, 2, 2, 2};
-
         input_control_space->set_bounds(control_bounds_l,control_bounds_u); 
 
-        sampled_control = input_control_space->make_point();
-
+        // @aravind: Will this work if it is moved to the bullet plant constructor?
+        current_control = input_control_space->make_point();
+        current_state = state_space->make_point();
     }
 
     int bullet_omnirobot_t::get_state_id()
@@ -46,13 +46,9 @@ namespace prx
         baseRotation[2] = state_space -> at(5);
         bullet_simulator_t::get_quaternion_from_euler(baseOrientation, baseRotation);
 
-// std::cout << "basePosition: "; PRINT_BTVECTOR(basePosition)
-// std::cout << "baseOrientation: " ; PRINT_BTQUAT(baseOrientation)
-
-        b3RobotSimulatorLoadUrdfFileArgs loadURDArgs;
-        // std::cout << "robot_model_path: " << robot_model_path << std::endl;
-
-        uniqueId = sim -> loadURDF(robot_model_path, loadURDArgs);
+        loadURDFArgs.m_startPosition = basePosition;
+        loadURDFArgs.m_startOrientation = baseOrientation;
+        uniqueId = sim -> loadURDF(robot_model_path, loadURDFArgs);
 
         int numJoints = sim -> getNumJoints(uniqueId);
         b3JointInfo jointInfo;
@@ -76,12 +72,7 @@ namespace prx
             {
                 wheelJoints.push_back(i);
             }
-            // auto control_type = CONTROL_MODE_TORQUE;
-            // if(first_order)
-            // {
-                auto control_type = CONTROL_MODE_VELOCITY;
-            // }
-            b3RobotSimulatorJointMotorArgs controlArgs(control_type);
+            b3RobotSimulatorJointMotorArgs controlArgs(CONTROL_MODE_VELOCITY);
 
             controlArgs.m_targetVelocity = 0;
             controlArgs.m_maxTorqueValue = 0;
@@ -94,73 +85,23 @@ namespace prx
         }
 
         add_exclusion(0,-1,1,-1); //exclude collisions with plane
-        sim -> getBasePositionAndOrientation(uniqueId,basePosition,baseOrientation);
-    
-        state_space -> at(12) = sim->saveStateToMemory();
-
     }
 
     bullet_omnirobot_t::~bullet_omnirobot_t()
     {}
 
-    // void bullet_omnirobot_t::setup()
-    // {
-       
-        // std::cout << "Finished stepping" << std::endl;
-        // simulation_step = 0.01;
-        // sim->getBasePositionAndOrientation(uniqueId,basePosition,baseOrientation);
-        // auto baseRotation = getEulerFromQuaternion(baseOrientation);
-        // btVector3 baseVel, baseAngVel;
-        // sim->getBaseVelocity(uniqueId, baseVel, baseAngVel);
-        // sid = sim->saveStateToMemory();
-        
-        // x = basePosition[0];
-        // y = basePosition[1];
-        // z = basePosition[2];
-        // r = baseRotation[0];
-        // p = baseRotation[1];
-        // yaw = baseRotation[2];
-        // dx = baseVel[0];
-        // dy = baseVel[1];
-        // dz = baseVel[2];
-        // dr = baseAngVel[0];
-        // dp = baseAngVel[1];
-        // dyaw = baseAngVel[2];
-  
-        // current_state = state_space -> make_point();
-    // }
-
     void bullet_omnirobot_t::compute_control()
     {
+		input_control_space->copy_to_point(current_control);
 
-        input_control_space -> sample(sampled_control);
-            std::cout << "sampled_control: " << sampled_control << std::endl;
-        input_control_space -> copy_from_point(sampled_control);
-
-        // std::cout << "ctrl: " << sampled_control << std::endl;
-        auto control_type = CONTROL_MODE_TORQUE;
-        if(first_order)
-        {
-            control_type = CONTROL_MODE_VELOCITY;
-        }
-        b3RobotSimulatorJointMotorArgs controlArgs(control_type);
-  
+        b3RobotSimulatorJointMotorArgs controlArgs(CONTROL_MODE_VELOCITY);
         controlArgs.m_maxTorqueValue = maxForce;
 
         for (int i = 0; i < wheelJoints.size(); i++)
         {
-            if(first_order)
-            {
-                controlArgs.m_targetVelocity = sampled_control -> at(i);
-            }
-            else
-            {
-                controlArgs.m_maxTorqueValue = sampled_control -> at(i);
-            }
-            // std::cout << "uniqueId: " << uniqueId << " wheelJoints[" << i << "]: " << wheelJoints[i] << std::endl;
+            controlArgs.m_targetVelocity = current_control -> at(i);
             sim -> setJointMotorControl(uniqueId, wheelJoints[i], controlArgs);
         }
-        
     }
     
     void bullet_omnirobot_t::update_from_bullet(const bool save_sim_state)
@@ -195,7 +136,7 @@ namespace prx
         current_state_vec.push_back(sid);
         // lastSavedId = std::max(lastSavedId, sid);
         state_space -> copy_from_vector(current_state_vec);
-        // state_space->copy_point_from_vector(current_state,current_state_vec);
+        state_space->copy_point_from_vector(current_state,current_state_vec);
         // state_space->copy_from_point(current_state);
         // space_point_t result = state_space->make_point();
         // state_space->copy_to_point(result);
