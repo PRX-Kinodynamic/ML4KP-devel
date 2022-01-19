@@ -438,11 +438,14 @@ namespace prx
 			
 			double e1, e2;
 			double accum = 0;
+			int i = start;
 			for (auto e : zip_iters(p1, p2) )
 			{
+				if (i < start) continue;
+				if (i >= end) break;
 				std::tie(e1, e2) = unzip(e);
 				accum += std::pow(e1 - e2, 2.0);
-
+				i += 1;
 			}
 			return std::sqrt(accum);
 		}

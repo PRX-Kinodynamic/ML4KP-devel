@@ -7,6 +7,7 @@ import random
 import torch
 import libpyDirtMP as prx
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 
 class TimeMap:
@@ -29,7 +30,10 @@ class TimeMap:
         self.K = None
         self.lqr = None
 
+        self.ctrl_1 = None
+        self.ctrl = None
         self.checker_type = params["checker_type"].as_string()
+        self.checker_value = params["checker_value"].as_float()
         self.simulation_step = params["simulation_step"].as_float()
         prx.set_simulation_step(self.simulation_step)
         prx.init_random(params["random_seed"].as_int())
@@ -83,23 +87,23 @@ class TimeMap:
 
         self.radius = params["goal_region_radius"].as_float()
 
-        if system_type == "ackermann_hyb":
-            self.ctrl_1 = prx.ackermann_FO_ctrl(self.plant, "ackermann_FO_ctrl_1")
-            self.ctrl_2 = prx.ackermann_FO_ctrl(self.plant, "ackermann_FO_ctrl_2")
+        # if system_type == "ackermann_hyb":
+            # self.ctrl_1 = prx.ackermann_FO_ctrl(self.plant, "ackermann_FO_ctrl_1")
+            # self.ctrl_2 = prx.ackermann_FO_ctrl(self.plant, "ackermann_FO_ctrl_2")
 
-            k_rho_1 = +1.0
-            k_alpha_1 = +9.5
-            k_beta_1 = -9.0
+            # k_rho_1 = +1.0
+            # k_alpha_1 = +9.5
+            # k_beta_1 = -9.0
 
-            k_rho_2 = +1.0
-            k_alpha_2 = +9.5
-            k_beta_2 = -9.5
+            # k_rho_2 = +1.0
+            # k_alpha_2 = +9.5
+            # k_beta_2 = -9.5
 
-            self.ctrl_1.set_gains(k_rho_1, k_alpha_1, k_beta_1)
-            self.ctrl_2.set_gains(k_rho_2, k_alpha_2, k_beta_2)
+            # self.ctrl_1.set_gains(k_rho_1, k_alpha_1, k_beta_1)
+            # self.ctrl_2.set_gains(k_rho_2, k_alpha_2, k_beta_2)
 
-            self.ctrl_1.set_goal(self.goal_state)
-            self.ctrl_2.set_goal(self.goal_state)
+            # self.ctrl_1.set_goal(self.goal_state)
+            # self.ctrl_2.set_goal(self.goal_state)
 
         if system_type == 'ackermann_lqr':
             u_goal = self.cs.make_point()
@@ -215,8 +219,9 @@ class TimeMap:
             self.lqr.compute_K()
             self.K = self.lqr.get_K()
             self.radius = self.params["goal_region_radius"].as_float()
-            self.ps[0] = params["/plant/mass"].as_float()
-            self.ps[1] = params["/plant/g"].as_float()
+            self.ps[0] = self.params["/plant/mass"].as_float()
+            self.ps[1] = self.params["/plant/g"].as_float()
+            # self.ps[1] = self.params["/plant/friction"].as_float()
 
         duration_so_far = 0
         while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 4) > self.radius:
@@ -325,17 +330,40 @@ class TimeMap:
         return [self.end_state[0], self.end_state[1], self.end_state[2]]
 
     def ackermann_hyb(self, X):
+        if self.ctrl == None:
+            self.ctrl = prx.ackermann_FO_ctrl(self.plant, "ackermann_FO_ctrl_1")
+
+            k_rho_1     = +1.0
+            k_alpha_1   = +5.0
+            k_beta_1    = -2.0
+
+            self.ctrl.set_gains(k_rho_1, k_alpha_1, k_beta_1)
+            # self.ctrl_2.set_gains(k_rho_2, k_alpha_2, k_beta_2)
+
+        self.ctrl.set_goal(self.goal_state)
+        # self.ctrl_2.set_goal(self.goal_state)
+
         self.ss.copy_from_vector(X)
-        checker = prx.condition_check(
-            self.checker_type, self.time_step)
+
+        checker = prx.condition_check(self.checker_type, self.checker_value)
+
+        # r = R.from_euler('z', -np.pi/2.0 - self.goal_state[2], degrees=False)
+        # v1 = [-1.9, -1.8, -1.57]
+        # v2 = [ 0  ,  1.2, -1.57]
+    
+        # v1 = r.apply(v1)
+        # v2 = r.apply(v2)
 
         while True:
 
-            if (-1.9 <= self.end_state[0] and
-                    -1.8 <= self.end_state[1] and self.end_state[1] <= 1.2):
-                self.ctrl_2.compute_controls()
-            else:
-                self.ctrl_1.compute_controls()
+            # if (-1.9 <= self.end_state[0] and
+                    # -1.8 <= self.end_state[1] and self.end_state[1] <= 1.2):
+            # if (v1[0] <= X[0] and
+            #     v1[1] <= X[1] <= v2[1]):
+                # self.ctrl_2.compute_controls()
+            # else:
+                # self.ctrl_1.compute_controls()
+            self.ctrl.compute_controls()
             self.cs.enforce_bounds()
 
             self.plant.propagate(self.simulation_step)
@@ -344,8 +372,8 @@ class TimeMap:
             if checker.check():
                 break
 
-        self.ss.copy_to_point(self.end_state)
-        return [self.end_state[0], self.end_state[1], self.end_state[2]]
+        # self.ss.copy_to_point(self.end_state)
+        return self.end_state.to_list()
 
 if __name__ == "__main__":
     # Adding this for convenient testing... 

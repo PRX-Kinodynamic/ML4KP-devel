@@ -152,7 +152,6 @@ void pyprx_utilities_general_transforms()
         .def("__str__", &prx_to_str<Eigen::Block<Eigen::Matrix<double, 3, 4, 0, 3, 4>, 3, 1, true>>)
         ;
 
-
     class_< prx::quaternion_t >("quaternion" )
         .def("__init__", make_constructor(&fromAxisAngle, default_call_policies(),(arg("axis"),  arg("angle"))))
         .def("__init__", make_constructor(&fromAngleAxis, default_call_policies(),(arg("angle"), arg("axis"))))

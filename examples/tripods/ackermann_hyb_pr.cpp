@@ -94,17 +94,22 @@ int main(int argc, char* argv[])
     ctrl_2.set_goal(goal_state);
     solution_traj.copy_onto_back(ss);
 
+    ackermann_FO_ctrl_t* ctrl;
+    // v = [-1.9, -1.8, -1.57]
+    if (-1.9 <= solution_traj.back() -> at(0) &&
+            -1.8 <= solution_traj.back() -> at(1) && solution_traj.back() -> at(1) <= 1.2)
+    {
+        ctrl = &ctrl_2;
+    }
+    else 
+    {
+        ctrl = &ctrl_1;
+        // ctrl_1.compute_controls();
+    }
+
     do
     {
-        if (-1.9 <= solution_traj.back() -> at(0) &&
-                -1.8 <= solution_traj.back() -> at(1) && solution_traj.back() -> at(1) <= 1.2)
-        {
-            ctrl_2.compute_controls();
-        }
-        else 
-        {
-            ctrl_1.compute_controls();
-        }
+        ctrl -> compute_controls();
         cs -> enforce_bounds();
         std::cout << "[Ackermann] " << plant << std::endl;
 

@@ -128,7 +128,7 @@ if __name__ == "__main__":
     ss.copy_point_from_vector(goal_state, params["/plant/goal_state"].as_float_vector())
     ss.copy_from_point(start_state)
     
-    roa_file_name = prx.lib_path + "out/lc_" + plant_name + "_roa.txt"; 
+    roa_file_name = prx.lib_path + "out/pendulum/lc_" + plant_name + "_roa.txt"; 
     print("ROA file:", roa_file_name)
     fout_roa = open(roa_file_name, "w")
 
