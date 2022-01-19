@@ -1,6 +1,6 @@
 #ifndef BULLET_NOT_BUILT
 #include "prx/utilities/defs.hpp"
-#include "prx/bullet_sim/plants/husky.hpp"
+// #include "prx/bullet_sim/plants/husky.hpp"
 #include "prx/planning/world_model.hpp"
 #include "prx/planning/planners/rrt.hpp"
 #include "prx/bullet_sim/plants/plants.hpp"
