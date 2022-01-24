@@ -9,7 +9,6 @@ namespace prx
         z = 1;
         state_memory = {&x,&y,&z,&r,&p,&yaw,&dx,&dy,&dz,&dr,&dp,&dyaw,&sid};
         state_space = new space_t("EEERRREEEEEED",state_memory,"XYZRPYdxdydzdrdpdyaId");
-            PRX_DEBUG_PRINT
         state_bounds_l = {-15,-15,-.1,-3.14,-3.14,-3.14,-20,-20,-20,-20,-20,-20,0};
         state_bounds_u = {15,15,1,3.14,3.14,3.14,20,20,20,20,20,20,PRX_INFINITY};
         state_space->set_bounds(state_bounds_l, state_bounds_u);
