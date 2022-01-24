@@ -9,7 +9,6 @@ namespace prx
         public:
         
         bullet_omnirobot_t(const std::string& path);
-        // bullet_omnirobot_t(const std::string& path,std::vector<double> start_state);
       
         virtual ~bullet_omnirobot_t();
 
@@ -17,16 +16,10 @@ namespace prx
 
         virtual void update_from_bullet(const bool save_sim_state) override;
         
-        virtual int get_state_id() override;
-
         virtual void compute_control() override final;
-        // void set_control(std::vector<double> control);
 
-        // bool sync_lr_wheels = true;
-      
         protected:
         const std::string robot_model_path = models_path + "/RUmnibot/RUmnibot.urdf";
-      // const std::string robot_model_path = prx_filepath_check(models_path + "/Rumnibot/RUmnibot.urdf");
 
         std::vector<int> wheelJoints;// = {2,3,4,5};
 
@@ -38,9 +31,6 @@ namespace prx
       
         private:      
         void shared_constructor(const std::string& path,std::vector<double> start_state);
-
-        // std::shared_vector<b3RobotSimulatorClientAPI> sim;
-
     };
 }
 PRX_REGISTER_SYSTEM(bullet_omnirobot_t, bullet_omnirobot)

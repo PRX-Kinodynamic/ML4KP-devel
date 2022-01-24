@@ -32,12 +32,6 @@ namespace prx
 		
 		virtual void initialize(std::shared_ptr<b3RobotSimulatorClientAPI> sim) = 0;
 
-		// b3RobotSimulatorClientAPI* sim = new b3RobotSimulatorClientAPI();
-
-	    // btVector3 getEulerFromQuaternion(btQuaternion q);
-
-	    // btQuaternion getQuaternionFromEuler(const btVector3& rollPitchYaw);
-	  
 		virtual void propagate(const double simulation_step, const propagate_step step) override final;
 
 		virtual void compute_control() override;
@@ -46,12 +40,6 @@ namespace prx
 
 		virtual void update_configuration() override final;
 
-		// virtual void print_trajectories(const std::vector<trajectory_t> trajs);
-
-		// virtual void visualize_trajectories(const std::vector<trajectory_t> trajs);
-
-		// virtual void visualize_goal(const space_point_t goal, const double radius);
-
 		virtual void purge_saved_states();
 
 		/**
@@ -59,14 +47,12 @@ namespace prx
 		 *
 		 * @return     The state identifier.
 		 */
-		virtual int get_state_id() = 0;
+		virtual int get_state_id();
 
         virtual void update_from_bullet(const bool save_sim_state)
         {
         	prx_throw("Not implemented");
         }
-
-	  	// void execute_traj(trajectory_t traj);
 
 		void add_exclusion(int bID1, int lID1, int bID2, int lID2);
 

@@ -19,6 +19,11 @@ namespace prx
 	{
 	}	
 
+	int bullet_plant_t::get_state_id()
+	{
+		return state_space->at(state_space->get_dimension()-1);
+	}
+
 	void bullet_plant_t::propagate(const double simulation_step, const propagate_step step)
 	{
 		sim->setTimeStep(simulation_step);
@@ -58,7 +63,6 @@ namespace prx
 
 	void bullet_plant_t::update_to_bullet(const space_point_t& point)
 	{
-		std::cout << "[update_to_bullet] " << state_space->print_point(point,8) << std::endl;
 		// @aravind: I think there should be an easier way to do this.
 		std::vector<double> current_state_vec;
 		state_space->copy_vector_from_point(current_state_vec,point);
@@ -68,11 +72,7 @@ namespace prx
 
 	void bullet_plant_t::update_configuration()
 	{
-		space_point_t c_state = state_space->make_point();
-		state_space->copy_to_point(c_state);
-		std::vector<double> current_state_vec;
-		state_space->copy_vector_from_point(current_state_vec,c_state);
-		sim->restoreStateFromMemory(current_state_vec.back());		
+		// It doesn't make sense to update the configuration of a bullet plant.		
 	}
 
 	void bullet_plant_t::compute_derivative()

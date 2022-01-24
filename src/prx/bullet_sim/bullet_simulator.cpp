@@ -160,34 +160,18 @@ namespace prx
 		for(auto s : group)
 		{
 			auto sb = std::dynamic_pointer_cast<bullet_plant_t>(s);
-    		// PRX_DEBUG_PRINT
 			if (step == propagate_step::FIRST_STEP)
 			{	
-    		// PRX_DEBUG_PRINT
-				// update_to_bullet(current_state);
-				// std::vector<double> current_state_vec;
-				// s -> state_space -> copy_to_vector(current_state_vec);
-				std::cout << "state id: " << sb -> get_state_id() << std::endl;
 				sim -> restoreStateFromMemory(sb -> get_state_id());
-				// sim -> restoreStateFromMemory(sim->saveStateToMemory()-1);
-				// sim -> restoreStateFromMemory(0);
-
-
 			}
 
-			// if(!is_collision(sb))
 			if(! sb -> is_collision())
 			{
-    		// PRX_DEBUG_PRINT
 			  sim -> stepSimulation();
 			  bool save_sim_state = (step == propagate_step::FINAL_STEP);
-    		// PRX_DEBUG_PRINT
 			  sb -> update_from_bullet(save_sim_state);
 			}
-    		// PRX_DEBUG_PRINT
 		}
-
-		// s -> propagate(simulation_step, step);
 	}
 	
 	void bullet_simulator_t::execute_traj(bullet_plant_ptr_t sys, trajectory_t traj)

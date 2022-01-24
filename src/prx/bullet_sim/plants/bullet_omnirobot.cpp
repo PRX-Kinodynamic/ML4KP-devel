@@ -9,7 +9,6 @@ namespace prx
         z = 1;
         state_memory = {&x,&y,&z,&r,&p,&yaw,&dx,&dy,&dz,&dr,&dp,&dyaw,&sid};
         state_space = new space_t("EEERRREEEEEED",state_memory,"XYZRPYdxdydzdrdpdyaId");
-            PRX_DEBUG_PRINT
         state_bounds_l = {-15,-15,-.1,-3.14,-3.14,-3.14,-20,-20,-20,-20,-20,-20,0};
         state_bounds_u = {15,15,1,3.14,3.14,3.14,20,20,20,20,20,20,PRX_INFINITY};
         state_space->set_bounds(state_bounds_l, state_bounds_u);
@@ -24,11 +23,6 @@ namespace prx
         // @aravind: Will this work if it is moved to the bullet plant constructor?
         current_control = input_control_space->make_point();
         current_state = state_space->make_point();
-    }
-
-    int bullet_omnirobot_t::get_state_id()
-    {
-        return state_space->at(12);;
     }
 
     void bullet_omnirobot_t::initialize(std::shared_ptr<b3RobotSimulatorClientAPI> _sim)
@@ -125,20 +119,12 @@ namespace prx
         sim->getBaseVelocity(uniqueId,baseVel,baseAngVel);
         current_state_vec.insert(current_state_vec.end(),{baseVel[0],baseVel[1],baseVel[2],baseAngVel[0],baseAngVel[1],baseAngVel[2]});  
   
-        int sid = state_space->at(12);
+        int sid = get_state_id();
        
-        if (save_sim_state)
-        {
-            sid = sim->saveStateToMemory();
-            std::cout << "sid updated!" << std::endl;
-            std::cout << "sid: " << sid << std::endl;
-        } 
+        if (save_sim_state) sid = sim->saveStateToMemory();
         current_state_vec.push_back(sid);
-        // lastSavedId = std::max(lastSavedId, sid);
-        state_space -> copy_from_vector(current_state_vec);
+        lastSavedId = std::max(lastSavedId, sid);
+        state_space->copy_from_vector(current_state_vec);
         state_space->copy_point_from_vector(current_state,current_state_vec);
-        // state_space->copy_from_point(current_state);
-        // space_point_t result = state_space->make_point();
-        // state_space->copy_to_point(result);
     }
 }
