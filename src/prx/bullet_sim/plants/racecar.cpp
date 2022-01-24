@@ -135,11 +135,6 @@ namespace prx
 	racecar_t::~racecar_t()
 	{}
 
-	int racecar_t::get_state_id()
-	{
-		return state_space->at(3);
-	}
-
 	void racecar_t::compute_control()
 	{
 		input_control_space->copy_to_point(current_control);

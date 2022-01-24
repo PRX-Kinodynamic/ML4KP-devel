@@ -26,11 +26,6 @@ namespace prx
         current_state = state_space->make_point();
     }
 
-    int bullet_omnirobot_t::get_state_id()
-    {
-        return state_space->at(12);;
-    }
-
     void bullet_omnirobot_t::initialize(std::shared_ptr<b3RobotSimulatorClientAPI> _sim)
     {
         sim = _sim;
