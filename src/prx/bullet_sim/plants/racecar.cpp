@@ -170,12 +170,12 @@ namespace prx
 		current_state_vec.push_back(basePosition[0]);
 		current_state_vec.push_back(basePosition[1]);
 		current_state_vec.push_back(baseRotation[2]);
-		int sid = state_space->at(3);
+		int sid = get_state_id();
 		if (save_sim_state) sid = sim->saveStateToMemory();
 
 		current_state_vec.push_back(sid);
 		lastSavedId = std::max(lastSavedId, sid);
-		state_space -> copy_from_vector(current_state_vec);
+		state_space->copy_from_vector(current_state_vec);
         state_space->copy_point_from_vector(current_state,current_state_vec);
 	}
 }

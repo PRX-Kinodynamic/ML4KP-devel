@@ -120,20 +120,12 @@ namespace prx
         sim->getBaseVelocity(uniqueId,baseVel,baseAngVel);
         current_state_vec.insert(current_state_vec.end(),{baseVel[0],baseVel[1],baseVel[2],baseAngVel[0],baseAngVel[1],baseAngVel[2]});  
   
-        int sid = state_space->at(12);
+        int sid = get_state_id();
        
-        if (save_sim_state)
-        {
-            sid = sim->saveStateToMemory();
-            std::cout << "sid updated!" << std::endl;
-            std::cout << "sid: " << sid << std::endl;
-        } 
+        if (save_sim_state) sid = sim->saveStateToMemory();
         current_state_vec.push_back(sid);
-        // lastSavedId = std::max(lastSavedId, sid);
-        state_space -> copy_from_vector(current_state_vec);
+        lastSavedId = std::max(lastSavedId, sid);
+        state_space->copy_from_vector(current_state_vec);
         state_space->copy_point_from_vector(current_state,current_state_vec);
-        // state_space->copy_from_point(current_state);
-        // space_point_t result = state_space->make_point();
-        // state_space->copy_to_point(result);
     }
 }
