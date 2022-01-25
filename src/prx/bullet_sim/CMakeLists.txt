@@ -24,7 +24,7 @@ if(APPLE OR USE_BULLET_SUBMODULE)
 		        endif()
 		    endif()
 		endif()
-		if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/repo/CMakeLists.txt")
+		if(NOT EXISTS "${PROJECT_SOURCE_DIR}/src/prx/bullet_sim/external/bullet3/CMakeLists.txt")
 	    	message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
 		endif()
 	endif (USE_BULLET_SUBMODULE)
@@ -165,8 +165,8 @@ else()
     		rt
 		pthread 
 		dl
-		gwen
-		#${DL} 
+		# gwen
+		# ${DL} 
 		)
 endif()
 
