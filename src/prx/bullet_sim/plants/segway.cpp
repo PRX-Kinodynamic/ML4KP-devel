@@ -76,8 +76,6 @@ namespace prx
         {
             sim->stepSimulation();
         }
-
-        add_exclusion(0,-1,1,-1); //exclude collisions with plane
     }
 
 	segway_t::~segway_t()

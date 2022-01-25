@@ -31,6 +31,12 @@ namespace prx
 
 		void propagate_once(space_point_t control, propagate_step step);
 
+		void set_simulator(std::shared_ptr<simulator_t> sim_)
+		{
+			sim = sim_;
+			sim->set_group(group);
+		}
+
 	protected:
 
 		std::vector<system_ptr_t> group;

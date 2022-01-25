@@ -15,8 +15,5 @@ namespace prx
 	public:
 		bullet_collision_checker_t() : collision_checker_t(){};
 		virtual ~bullet_collision_checker_t(){};
-
-		virtual void add_collision_group(const std::string& group_name, const std::vector<system_ptr_t>& in_plants,const std::vector<std::shared_ptr<movable_object_t>>& in_obstacles) override;
-	  
 	};
 }

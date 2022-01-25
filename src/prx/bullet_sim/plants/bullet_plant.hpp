@@ -47,26 +47,21 @@ namespace prx
 		 *
 		 * @return     The state identifier.
 		 */
-		virtual int get_state_id();
+		virtual int get_state_id()
+		{
+			return state_space->at(state_space->get_dimension()-1);
+		}
 
         virtual void update_from_bullet(const bool save_sim_state)
         {
         	prx_throw("Not implemented");
         }
 
-		void add_exclusion(int bID1, int lID1, int bID2, int lID2);
-
-		bool is_collision(bool b_include_bounding_box=true);
-
-		bool b_exclude(std::pair<std::pair<int, int>, std::pair<int, int> > excluded_pair, const b3ContactPointData &contact);
-
-		bool b_exclude_contact(const b3ContactPointData &contact);
-
 		void setBasePositionAndRotation(btVector3 basePosition, btVector3 baseRotation);
 
 		std::vector<double> state_bounds_l, state_bounds_u, control_bounds_l, control_bounds_u;
 
-		int plane_id, uniqueId;
+		int uniqueId;
 
 		b3RobotSimulatorAddUserDebugLineArgs* lineArgs = new b3RobotSimulatorAddUserDebugLineArgs;
 

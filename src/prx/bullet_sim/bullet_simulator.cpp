@@ -34,8 +34,6 @@ namespace prx
 		lineArgs->m_lineWidth = 2.0;
 		lineArgs->m_colorRGB[1] = lineArgs->m_colorRGB[2] = 0;	
 	  	
-		contactInfo = new b3ContactInformation();	  
-		
 		sim -> setRealTimeSimulation(false);
 
 	}
@@ -53,8 +51,9 @@ namespace prx
 	{
 		for (auto f : urdf_paths)
 		{
-			std::cout << "f: " << f << std::endl;
-			sim -> loadURDF(f);
+			std::cout << "f: " << f.first << std::endl;
+			int body_id = sim -> loadURDF(f.first);
+			if (!f.second) allowed_collisions.push_back(body_id);
 		}
 
 		for (auto s : group)
@@ -62,12 +61,20 @@ namespace prx
 			auto sb = std::dynamic_pointer_cast<bullet_plant_t>(s);
 			sb -> initialize(sim);
 			sb -> update_from_bullet(true);
+			robot_ids.push_back(sb->uniqueId);
+			// TODO: Add exclusions between the system and the plane.
 		}
 	}
 
-	void bullet_simulator_t::add_urdf(std::string urdf_path)
+	void bullet_simulator_t::set_collision_group(collision_group_ptr_t cg_)
 	{
-		urdf_paths.push_back(urdf_path);
+		cg = cg_;
+	}
+
+	void bullet_simulator_t::add_urdf(std::string urdf_path,bool collision_contact)
+	{
+		// By default, it is NOT a collision contact.
+		urdf_paths.push_back(std::make_pair(urdf_path,collision_contact));
 	}
 
 	void bullet_simulator_t::get_euler_from_quaternion(btVector3& rpy2, const btQuaternion& quat)
@@ -75,15 +82,11 @@ namespace prx
 		btScalar roll, pitch, yaw;
 		quat.getEulerZYX(yaw, pitch, roll);
 		rpy2.setValue(yaw, pitch, roll);
-		// btVector3 rpy2 = btVector3(roll, pitch, yaw);
-		// return rpy2;
 	}
 
 	void bullet_simulator_t::get_quaternion_from_euler(btQuaternion& quat, const btVector3& rollPitchYaw)
 	{
-		// btQuaternion q;
 		quat.setEulerZYX(rollPitchYaw[2], rollPitchYaw[1], rollPitchYaw[0]);
-		// return q;
 	}
 
 	void bullet_simulator_t::print_trajectories(const std::vector<trajectory_t> trajs)
@@ -140,23 +143,9 @@ namespace prx
 		sim->addUserDebugText("GOAL",pos,*textArgs);
 	}
 
-	// bool bullet_simulator_t::is_collision(bullet_ptr_t sys, bool b_include_bounding_box)
-	// {
-	//   	b3RobotSimulatorGetContactPointsArgs args;
-	//   	sim->getContactPoints(args, contactInfo);
-	//   	for(int i=0; i<contactInfo->m_numContactPoints; i++)
-	//   	{  
-	//     	bool b_excluded = sys -> b_exclude_contact(contactInfo->m_contactPointData[i]);
-	//     	if(!b_excluded)
-	//     	{
-	//       		return true;
-	//     	}
-	//   	}
-	//   	return false;
-	// }
-
 	void bullet_simulator_t::step_simulation(propagate_step step)
 	{	
+		prx_assert(cg != nullptr,"Bullet collision group is NULL!");
 		for(auto s : group)
 		{
 			auto sb = std::dynamic_pointer_cast<bullet_plant_t>(s);
@@ -165,11 +154,11 @@ namespace prx
 				sim -> restoreStateFromMemory(sb -> get_state_id());
 			}
 
-			if(! sb -> is_collision())
+			if(! cg -> in_collision())
 			{
-			  sim -> stepSimulation();
-			  bool save_sim_state = (step == propagate_step::FINAL_STEP);
-			  sb -> update_from_bullet(save_sim_state);
+				sim -> stepSimulation();
+				bool save_sim_state = (step == propagate_step::FINAL_STEP);
+				sb -> update_from_bullet(save_sim_state);
 			}
 		}
 	}

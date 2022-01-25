@@ -19,13 +19,9 @@ namespace prx
 	{
 	}	
 
-	int bullet_plant_t::get_state_id()
-	{
-		return state_space->at(state_space->get_dimension()-1);
-	}
-
 	void bullet_plant_t::propagate(const double simulation_step, const propagate_step step)
 	{
+		prx_assert(false,"Bullet plant does not support propagate()!");
 		sim->setTimeStep(simulation_step);
 		prx_assert(current_state != nullptr, "current_state not initialized!");
 		state_space->copy_to_point(current_state);
@@ -35,7 +31,9 @@ namespace prx
 			update_to_bullet(current_state);
 		}
 
-		if(!is_collision())
+		// @aravind: Need to figure out what to do here.
+		// if(!is_collision())
+		if(true)
 		{
 		  sim->stepSimulation();
 		  bool save_sim_state = (step == propagate_step::FINAL_STEP);
@@ -79,67 +77,6 @@ namespace prx
 	{
 
 	}
-
-	void bullet_plant_t::add_exclusion(int bID1, int lID1, int bID2, int lID2)
-	{
-		std::pair<std::pair<int, int>, std::pair<int,int> > exclusion;
-		exclusion.first.first = bID1;
-		exclusion.first.second = lID1;
-		exclusion.second.first = bID2;
-		exclusion.second.second = lID2;
-		m_CD_exclusion_list.push_back(exclusion);
-  }
-  
-	bool bullet_plant_t::b_exclude(std::pair<std::pair<int, int>, std::pair<int, int> > excluded_pair, const b3ContactPointData &contact)
-	{
-		if(excluded_pair.first.first == contact.m_bodyUniqueIdA &&(excluded_pair.first.second == contact.m_linkIndexA || excluded_pair.first.second == -1))
-		{
-			if(excluded_pair.second.first == contact.m_bodyUniqueIdB &&(excluded_pair.second.second == contact.m_linkIndexB || excluded_pair.second.second == -1))
-			{
-				return true;
-			}
-		}
-		if(excluded_pair.second.first == contact.m_bodyUniqueIdA &&(excluded_pair.second.second == contact.m_linkIndexA || excluded_pair.second.second == -1))
-		{
-			if(excluded_pair.first.first == contact.m_bodyUniqueIdB &&(excluded_pair.first.second == contact.m_linkIndexB || excluded_pair.first.second == -1))
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool bullet_plant_t::b_exclude_contact(const b3ContactPointData &contact)
-	{
-		for(int i=0; i < m_CD_exclusion_list.size(); i++)
-		{		  
-			if(b_exclude(m_CD_exclusion_list[i], contact))
-			{
-				return true; 
-			}
-		}  
-		return false;
-	}
-
-  
-	bool bullet_plant_t::is_collision(bool b_include_bounding_box)
-	{
-		// const space_point_t s;
-		b3RobotSimulatorGetContactPointsArgs args;
-		b3ContactInformation *contactInfo = new b3ContactInformation();	  
-		sim->getContactPoints(args, contactInfo);
-		for(int i=0; i<contactInfo->m_numContactPoints; i++)
-		{  
-			bool b_excluded = b_exclude_contact(contactInfo->m_contactPointData[i]);
-			if(!b_excluded)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-  
-
 
   	void bullet_plant_t::setBasePositionAndRotation(btVector3 basePosition, btVector3 baseRotation)
   	{
