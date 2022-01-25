@@ -123,8 +123,8 @@ if __name__ == "__main__":
 		# 	-1.8 <= end_state[1] and end_state[1] <= 1.2):
 		# 	ctrl_2.compute_controls();
 		# else:
-		# 	ctrl_1.compute_controls();
-		compute_controls(start_state, goal_state, ctrl_1, ctrl_2)
+		ctrl_1.compute_controls();
+		# compute_controls(start_state, goal_state, ctrl_1, ctrl_2)
 		# compute_controls(end_state, goal_state, ctrl_1, ctrl_2)
 		cs.enforce_bounds();
 

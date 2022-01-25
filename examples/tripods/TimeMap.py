@@ -87,6 +87,9 @@ class TimeMap:
 
         self.radius = params["goal_region_radius"].as_float()
 
+        self.k_rho_1     = +1.0
+        self.k_alpha_1   = +5.0
+        self.k_beta_1    = -3.0
         # if system_type == "ackermann_hyb":
             # self.ctrl_1 = prx.ackermann_FO_ctrl(self.plant, "ackermann_FO_ctrl_1")
             # self.ctrl_2 = prx.ackermann_FO_ctrl(self.plant, "ackermann_FO_ctrl_2")
@@ -333,11 +336,7 @@ class TimeMap:
         if self.ctrl == None:
             self.ctrl = prx.ackermann_FO_ctrl(self.plant, "ackermann_FO_ctrl_1")
 
-            k_rho_1     = +1.0
-            k_alpha_1   = +5.0
-            k_beta_1    = -2.0
-
-            self.ctrl.set_gains(k_rho_1, k_alpha_1, k_beta_1)
+        self.ctrl.set_gains(self.k_rho_1, self.k_alpha_1, self.k_beta_1)
             # self.ctrl_2.set_gains(k_rho_2, k_alpha_2, k_beta_2)
 
         self.ctrl.set_goal(self.goal_state)
@@ -369,7 +368,7 @@ class TimeMap:
             self.plant.propagate(self.simulation_step)
             self.ss.copy_to_point(self.end_state)
 
-            if checker.check():
+            if checker.check() or prx.space_t.euclidean_2d(self.goal_state, self.end_state, 0, 3) <= self.radius:
                 break
 
         # self.ss.copy_to_point(self.end_state)

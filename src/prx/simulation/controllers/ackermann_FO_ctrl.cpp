@@ -27,7 +27,7 @@ namespace prx
 		movepoint_sfunc(x_diff, y_diff, theta);
 
 		// printf("vals: (%.2f, %.2f, %.2f, %.0f)\n", rho, alpha, beta, direccion);
-		beta += theta;
+		beta += (*goal)[2];
 
 		V = direccion * k_rho * rho;
 		auto omega = k_alpha * alpha + k_beta * beta;
