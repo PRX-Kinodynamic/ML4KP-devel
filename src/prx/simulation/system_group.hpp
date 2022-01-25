@@ -33,6 +33,7 @@ namespace prx
 
 		void set_simulator(std::shared_ptr<simulator_t> sim_)
 		{
+			prx_assert(group.size() > 0,"Group must be set up before simulator!");
 			sim = sim_;
 			sim->set_group(group);
 		}

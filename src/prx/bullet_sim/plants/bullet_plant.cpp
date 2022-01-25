@@ -22,23 +22,6 @@ namespace prx
 	void bullet_plant_t::propagate(const double simulation_step, const propagate_step step)
 	{
 		prx_assert(false,"Bullet plant does not support propagate()!");
-		sim->setTimeStep(simulation_step);
-		prx_assert(current_state != nullptr, "current_state not initialized!");
-		state_space->copy_to_point(current_state);
-
-		if (step == propagate_step::FIRST_STEP)
-		{	
-			update_to_bullet(current_state);
-		}
-
-		// @aravind: Need to figure out what to do here.
-		// if(!is_collision())
-		if(true)
-		{
-		  sim->stepSimulation();
-		  bool save_sim_state = (step == propagate_step::FINAL_STEP);
-		  this->update_from_bullet(save_sim_state);
-		}
 	}
 
 	void bullet_plant_t::compute_control()
