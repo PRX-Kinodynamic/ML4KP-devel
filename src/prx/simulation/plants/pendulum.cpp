@@ -4,7 +4,7 @@
 namespace prx
 {
 
-	pendulum_t::pendulum_t(const std::string& path) : lti_t(path)
+	pendulum_t::pendulum_t(const std::string& path) : ltv_t(path)
 	{
 		_theta1=_theta1dot=0;
 		state_memory = {&_theta1,&_theta1dot};
@@ -153,5 +153,16 @@ namespace prx
         // 
         return true;
 	}
+
+    bool pendulum_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
+    {
+    	if ( xt -> at(0) == 0 && xt -> at(1) == 0 )
+    	{
+    		// PRX_DEBUG_PRINT
+    		return linearize();
+    	}
+    	// PRX_DEBUG_PRINT
+		return ltv_t::linearize(xt, ut, epsilon);
+    }
 
 }

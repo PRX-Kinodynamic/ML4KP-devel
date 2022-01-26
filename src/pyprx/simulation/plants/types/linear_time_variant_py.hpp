@@ -33,6 +33,12 @@ using namespace boost::python;
 //     }
 
 // };
+bool linearize_0(std::shared_ptr<prx::ltv_t> ltv)
+{
+
+    return std::static_pointer_cast<prx::lti_t>(ltv) -> linearize();
+}
+
 bool linearize_2(prx::ltv_t* ltv, prx::space_point_t xt, prx::space_point_t ut)
 {
     return ltv -> linearize(xt, ut);
@@ -49,6 +55,7 @@ void pyprx_simulation_plants_types_ltv()
    	class_<prx::ltv_t, std::shared_ptr<prx::ltv_t>, bases<prx::lti_t>, boost::noncopyable>("ltv", no_init)
       // .def("__init__", make_constructor(&init_as_ptr<prx::lti_t, std::string>, default_call_policies(), (arg("path")) ))
       // .def("__init__", make_constructor(&init_as_ptr<prx::lti_t, const lti_t&>, default_call_policies(), (arg("other"))))
+      .def("linearize", &linearize_0)
       .def("linearize", &linearize_2)
       .def("linearize", &linearize_3)
       // TODO: Add "std::vector<double*>" class

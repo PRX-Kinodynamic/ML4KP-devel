@@ -19,11 +19,7 @@ namespace prx
 
 		virtual bool linearize() override final;
 
-        bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) override
-        {
-        	return ltv_t::linearize(xt, ut, epsilon);
-        }
-
+        bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) override;
 
 	protected:
 

@@ -20,8 +20,8 @@ namespace prx
 		typedef YAML::Node::const_iterator const_iterator;
 
 		param_loader();
-		param_loader(std::string file_name);
 		param_loader(int argc, char* argv[]);
+		param_loader(std::string file_name);
 		param_loader(std::vector<std::string> argv);
 		param_loader(std::string file_name, int argc, char* argv[]);
 		param_loader(std::string file_name, std::vector<std::string> argv);

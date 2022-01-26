@@ -37,6 +37,17 @@ if __name__ == "__main__":
 
 	ss = context.system_group.get_state_space()
 	cs = context.system_group.get_control_space()
+	ps = plant.get_parameter_space()
+
+	u_goal = cs.make_point()
+	if plant_name == "pendulum":
+		ps[1] = params["/plant/friction"].as_float()
+		u_goal[0] = 0
+	elif plant_name == "Acrobot":
+		ps[0] = params["/plant/mass"].as_float()
+		ps[1] = params["/plant/g"].as_float()
+		u_goal[0] = 0
+
 
 	lower_bounds = params["/plant/state_space_lower_bound"].as_float_vector()
 	upper_bounds = params["/plant/state_space_upper_bound"].as_float_vector()
@@ -58,7 +69,8 @@ if __name__ == "__main__":
 	solution_traj = prx.trajectory(ss)
 	solution_traj.copy_onto_back(ss)
 
-	plant.linearize()
+	# plant.linearize()
+	plant.linearize(goal_state, u_goal)
 
 	ss_dim = ss.get_dimension()
 	cs_dim = cs.get_dimension()

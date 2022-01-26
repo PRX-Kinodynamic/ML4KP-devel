@@ -11,19 +11,14 @@ struct lti_wrap : prx::lti_t, wrapper<prx::lti_t>
 
     lti_wrap(const std::string& path) : prx::lti_t(path){};
 
-    bool linearize_0()
-    {
-        return this->get_override("linearize")();
-    }
+    // bool linearize_0()
+    // {
+    //     return this->get_override("linearize")();
+    // }
 
     bool check() 
     {
         return this->get_override("check")();
-    }
-
-    void update_configuration()
-    {
-        this->get_override("update_configuration")();
     }
 
     void compute_derivative() 
@@ -36,7 +31,7 @@ struct lti_wrap : prx::lti_t, wrapper<prx::lti_t>
 
 void pyprx_simulation_plants_types_lti()
 {
-   	class_<lti_wrap, std::shared_ptr<lti_wrap>, bases<prx::plant_t>, boost::noncopyable>("lti", no_init)
+   	class_<prx::lti_t, std::shared_ptr<prx::lti_t>, bases<prx::plant_t>, boost::noncopyable>("lti", no_init)
       // .def("__init__", make_constructor(&init_as_ptr<prx::lti_t, std::string>, default_call_policies(), (arg("path")) ))
       // .def("__init__", make_constructor(&init_as_ptr<prx::lti_t, const lti_t&>, default_call_policies(), (arg("other"))))
       .def("linearize", &prx::lti_t::linearize)
@@ -46,7 +41,7 @@ void pyprx_simulation_plants_types_lti()
       .def("discretize", &prx::lti_t::discretize)
       .def("get_state_space", &prx::lti_t::get_state_space, return_internal_reference<>())
       .def("get_control_space", &prx::lti_t::get_control_space, return_internal_reference<>())
-      .def("update_configuration", pure_virtual(&lti_wrap::update_configuration))
+      // .def("update_configuration", pure_virtual(&lti_wrap::update_configuration))
       .def("compute_derivative", pure_virtual(&lti_wrap::compute_derivative))
       .def("get_A", &prx::lti_t::get_A)
       .def("get_B", &prx::lti_t::get_B)

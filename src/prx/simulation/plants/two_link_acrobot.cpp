@@ -115,6 +115,8 @@ namespace prx
 
         const double u1 =  0;//    - 1.0 * d1 * theta1dot;
         const double u2 = _tau;// - 1.0 * d2 * theta2dot;
+        // const double u1 = - 1.0 * d1 * theta1dot;
+        // const double u2 = _tau - 1.0 * d2 * theta2dot;
         const double theta1dot_dot = (d22 * (u1 - c1 - g1) - d12 * (u2 - c2 - g2)) / (d11 * d22 - d12 * d21);
         const double theta2dot_dot = (d11 * (u2 - c2 - g2) - d21 * (u1 - c1 - g1)) / (d11 * d22 - d12 * d21);
 
@@ -160,9 +162,17 @@ namespace prx
 		// D.resize(2,1);
 		// A << 0., 1., gravity / length, -friction / inertia;
 
-  //       B << 0., 1. / inertia;
 
 
        return true;
 	}
+
+	bool two_link_acrobot_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
+   {
+    	if ( xt -> at(0) == PRX_PI && xt -> at(1) == 0 && xt -> at(2) == 0 && xt -> at(3) == 0)
+    	{
+    		return linearize();
+    	}
+		return ltv_t::linearize(xt, ut, epsilon);
+   }
 }

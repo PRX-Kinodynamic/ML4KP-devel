@@ -9,7 +9,7 @@ using namespace boost::python;
 void pyprx_simulation_plants_acrobot_py()
 {
 
-   	class_<prx::two_link_acrobot_t, std::shared_ptr<prx::two_link_acrobot_t>, bases<prx::lti_t>>("two_link_acrobot", no_init)
+   	class_<prx::two_link_acrobot_t, std::shared_ptr<prx::two_link_acrobot_t>, bases<prx::ltv_t>>("two_link_acrobot", no_init)
             // ("two_link_acrobot_t", init<std::string>())
         .def("__init__", make_constructor(&create_system_ptr<prx::two_link_acrobot_t>, default_call_policies(), (arg("path"))))
    	    // .def("set_state", &prx::two_link_acrobot_t::set_state)

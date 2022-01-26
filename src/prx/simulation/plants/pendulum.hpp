@@ -1,11 +1,11 @@
 #pragma once
 
 #include "prx/simulation/plant.hpp"
-#include "prx/simulation/plants/types/linear_time_invariant.hpp"
+#include "prx/simulation/plants/types/linear_time_variant.hpp"
 
 namespace prx
 {
-	class pendulum_t : public lti_t
+	class pendulum_t : public ltv_t
 	{
 	public:
 		pendulum_t(const std::string& path);
@@ -17,6 +17,7 @@ namespace prx
 
 		virtual bool linearize() override final;
 
+        virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) override final;
 
 	protected:
 

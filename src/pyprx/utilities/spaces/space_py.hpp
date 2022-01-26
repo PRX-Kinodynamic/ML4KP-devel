@@ -26,6 +26,13 @@ void space_point_set_item(prx::space_point_t& pt, int i, double val)
     pt -> at(i) = val;
 }
 
+void space_set_item(prx::space_t& space, int i, double val)
+{
+    INDEX_CHECK(i, space.get_dimension(), "space_t" )
+
+    space.at(i) = val;
+}
+
 
 
 // object init_distance_function()
@@ -156,7 +163,8 @@ void pyprx_utilities_spaces_space()
         .def("enforce_bounds", enforce_bounds0)
    	    .def("enforce_bounds", enforce_bounds1)
         .def("at", &prx::space_t::at, return_value_policy<copy_non_const_reference>())
-   	    .def("__getitem__", &prx::space_t::at, return_value_policy<copy_non_const_reference>())
+        .def("__getitem__", &prx::space_t::at, return_value_policy<copy_non_const_reference>())
+   	    .def("__setitem__", &space_set_item)
    	    .def("get_dimension", &prx::space_t::get_dimension)
         .def("copy_to_point", &prx::space_t::copy_to_point)
         .def("copy_from_point", &prx::space_t::copy_from_point)

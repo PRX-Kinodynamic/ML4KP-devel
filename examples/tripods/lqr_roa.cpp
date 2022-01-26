@@ -59,6 +59,7 @@ int main(int argc, char* argv[])
 
     auto start_state = ss -> make_point();
 	auto goal_state = ss -> make_point();
+    auto u_goal = cs -> make_point();
 
     ss -> copy_point_from_vector(start_state, params["/plant/start_state"].as<std::vector<double>>());
     ss -> copy_point_from_vector(goal_state, params["/plant/goal_state"].as<std::vector<double>>());
@@ -67,12 +68,15 @@ int main(int argc, char* argv[])
     condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());
 
     trajectory_t solution_traj(ss);
-
-    auto lti = std::dynamic_pointer_cast<prx::lti_t>(plant);
-    lti -> linearize();
-
+    
     int ss_dim = ss -> get_dimension();
     int cs_dim = cs -> get_dimension();
+
+    cs -> copy_point_from_vector(u_goal, std::vector<double>(cs_dim, 0));
+
+    auto ltv = std::dynamic_pointer_cast<prx::ltv_t>(plant);
+    ltv -> linearize(goal_state, u_goal);
+
 
     ss -> print_bounds();
     cs -> print_bounds();
@@ -86,7 +90,7 @@ int main(int argc, char* argv[])
 
     Eigen::VectorXd v_goal(ss_dim);
     ss -> copy_vector_from_point(v_goal, goal_state);
-    lqr_t lqr(lti, Q, R, "LQR");
+    lqr_t lqr(ltv, Q, R, "LQR");
     lqr.set_goal(v_goal);
     lqr.compute_K();
     Eigen::MatrixXd K = lqr.get_K();
@@ -155,7 +159,7 @@ int main(int argc, char* argv[])
                 // break;
             // }
         }
-        while(!checker.check() && df(end_state, goal_state) > 0.01 );
+        while(!checker.check() && df(end_state, goal_state) > 0.1 );
 
         // ss -> copy_to_point(end_state);
         // auto end_state = solution_traj.back();
@@ -199,7 +203,7 @@ int main(int argc, char* argv[])
     do
     {
         // std::cout << "[" << traj_id << "]: " << pt << std::endl;
-        if (state -> at(ss_dim-1) != prev_last_dim)
+        if (ss_dim > 2 && state -> at(ss_dim-1) != prev_last_dim)
         {
             file_id++;
             fout_roa.close();

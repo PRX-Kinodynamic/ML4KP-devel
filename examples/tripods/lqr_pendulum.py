@@ -44,6 +44,10 @@ if __name__ == "__main__":
 
 	ss = context.system_group.get_state_space()
 	cs = context.system_group.get_control_space()
+	ps = plant.get_parameter_space()
+
+	ps[1] = params["/plant/friction"].as_float()
+	# print(ps.print_memory())
 
 	lower_bounds = params["/plant/state_space_lower_bound"].as_float_vector()
 	upper_bounds = params["/plant/state_space_upper_bound"].as_float_vector()
@@ -75,7 +79,15 @@ if __name__ == "__main__":
 	print("Q:", Q)
 	print("R:", R)
 
+	ss_dim = ss.get_dimension()
+
+	v_goal = prx.vector.Zero(ss_dim);
+	for i in range(ss_dim):
+		v_goal[i] = goal_state[i]
 	lqr = prx.lqr(plant, Q, R, "LQR");
+	print("v_goal:", v_goal)
+	
+	lqr.set_goal(v_goal);
 	lqr.compute_K();
 	K = lqr.get_K();
 	print("K:", K)
