@@ -48,7 +48,7 @@ TM.ss.copy_point_from_vector(pt, starting_lower_bound)
 
 TM.k_rho_1     = +1.0
 TM.k_alpha_1   = +5.0
-TM.k_beta_1    = -3.0
+TM.k_beta_1    = -2.750
 
 TM.goal_state = goal_state
 while True:

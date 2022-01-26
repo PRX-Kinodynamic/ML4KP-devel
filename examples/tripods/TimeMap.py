@@ -89,7 +89,7 @@ class TimeMap:
 
         self.k_rho_1     = +1.0
         self.k_alpha_1   = +5.0
-        self.k_beta_1    = -3.0
+        self.k_beta_1    = -2.750
         # if system_type == "ackermann_hyb":
             # self.ctrl_1 = prx.ackermann_FO_ctrl(self.plant, "ackermann_FO_ctrl_1")
             # self.ctrl_2 = prx.ackermann_FO_ctrl(self.plant, "ackermann_FO_ctrl_2")
