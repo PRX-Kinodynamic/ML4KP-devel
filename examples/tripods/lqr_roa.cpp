@@ -100,7 +100,8 @@ int main(int argc, char* argv[])
     std::string tau_max = std::to_string((int)cs_up[0]);
     std::ostringstream ss_file_id;
     ss_file_id << std::setw(5) << std::setfill('0') << file_id;
-    std::string roa_file_name = lib_path + "out/" + plant_name + "/" + horizon + "/lqr_" + ss_file_id.str() + "_" + tau_max + "_roa.txt";
+    std::string roa_file_dir  = lib_path + "out/" + plant_name + "/" + tau_max  + "/" + horizon;
+    std::string roa_file_name = roa_file_dir + "/lqr_" + ss_file_id.str() + "_roa.txt";
     
     std::cout << "saving roa to: " << roa_file_name << std::endl;
     fout_roa.open(roa_file_name.c_str());
@@ -165,7 +166,8 @@ int main(int argc, char* argv[])
         // fout_roa << traj_id << " ";
         fout_roa << std::setprecision(3) << std::fixed << state << " ";
         fout_roa << (df(end_state, goal_state) <= rad?1:0) << " ";
-        fout_roa << traj_duration;
+        fout_roa << traj_duration << " ";
+        fout_roa << df(end_state, goal_state)  << " ";
         fout_roa << "\n";
         
     };
@@ -204,7 +206,7 @@ int main(int argc, char* argv[])
             std::ostringstream ss_file_id;
             ss_file_id << std::setw(5) << std::setfill('0') << file_id;
             // roa_file_name = lib_path + "out/" + plant_name +  "/lqr_" + ss_file_id.str() + "_" + horizon + "_" + tau_max + "_roa.txt";
-            roa_file_name = lib_path + "out/" + plant_name + "/" + horizon + "/lqr_" + ss_file_id.str() + "_" + tau_max + "_roa.txt";
+            roa_file_name = roa_file_dir + "/lqr_" + ss_file_id.str() + "_roa.txt";
             fout_roa.open(roa_file_name.c_str());
             prev_last_dim = state -> at(ss_dim-1);
         }
