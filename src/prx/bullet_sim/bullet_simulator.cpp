@@ -1,40 +1,43 @@
 #include "prx/bullet_sim/bullet_simulator.hpp"
+#include "Utils/b3Clock.h"
 
 namespace prx
 {
 
 	bullet_simulator_t::bullet_simulator_t() 
-		: simulator_t()
+		: simulator_t(plant_type::BULLET)
 	{
-		sim_type = plant_type::BULLET; 
+		// system_groups = std::make_shared<system_group_manager_t>();
+		// system_groups -> sim = this -> shared_ptr();
 
-		sim = std::make_shared<b3RobotSimulatorClientAPI>();
+		// system_groups -> sim = this -> shared_ptr();
+		// sim = std::make_shared<b3RobotSimulatorClientAPI>();
 		// sim = new b3RobotSimulatorClientAPI();
 		lineArgs = new b3RobotSimulatorAddUserDebugLineArgs;
 
-		while(!sim->isConnected())
+		while(!this -> isConnected())
 		{
 		  	std::cout<<"waiting for connection"<<std::endl;
-		  	sim->connect(eCONNECT_GUI);
+		  	this ->connect(eCONNECT_GUI);
 		  	// sim -> connect(eCONNECT_SHARED_MEMORY);
 		  	// sim->connect(eCONNECT_DIRECT);
 		}
 		// If connecting to an existing physics server, make sure to uncomment the following line.
-		sim->syncBodies();
-		sim->configureDebugVisualizer(COV_ENABLE_GUI, 0);
-		sim->configureDebugVisualizer(COV_ENABLE_MOUSE_PICKING,0);
-		sim->setTimeOut(10);
+		this -> syncBodies();
+		this -> configureDebugVisualizer(COV_ENABLE_GUI, 0);
+		this -> configureDebugVisualizer(COV_ENABLE_MOUSE_PICKING,0);
+		this -> setTimeOut(10);
 	       
-		sim->setTimeStep(simulation_step);
+		this -> setTimeStep(simulation_step);
 		physicsArgs.m_deterministicOverlappingPairs = 1;
-		sim->setPhysicsEngineParameter(physicsArgs);
+		this -> setPhysicsEngineParameter(physicsArgs);
 
-		sim->setGravity(btVector3(0,0,-9.8));
+		this -> setGravity(btVector3(0,0,-9.8));
 
 		lineArgs->m_lineWidth = 2.0;
 		lineArgs->m_colorRGB[1] = lineArgs->m_colorRGB[2] = 0;	
 	  	
-		sim -> setRealTimeSimulation(false);
+		this -> setRealTimeSimulation(false);
 
 	}
 
@@ -42,28 +45,55 @@ namespace prx
 	{
 		std::cout << "Disconnecting simulation..." << std::endl;
 		//purge_saved_states();
-		sim->disconnect();		
+		this -> disconnect();		
 		std::cout << "Deleting simulation..." << std::endl;
 		// delete sim;
 	}
 
 	void bullet_simulator_t::initialize_simulation()
 	{
+		system_groups -> link_simulator(this);
+
 		for (auto f : urdf_paths)
 		{
 			std::cout << "f: " << f.first << std::endl;
-			int body_id = sim -> loadURDF(f.first);
+			int body_id = this -> loadURDF(f.first);
 			if (!f.second) allowed_collisions.push_back(body_id);
 		}
 
-		for (auto s : group)
+		std::string context_name = "bullet_context";
+		std::vector<system_ptr_t> context_systems;
+			// std::vector<std::shared_ptr<movable_object_t>> context_obstacles;
+		// for(auto&& s : system_names)
+		for (auto s_pair : this -> systems)
 		{
+			auto s = s_pair.second;
+			// context_systems.push_back(this -> systems[s]);
+			context_systems.push_back(s);
+		// }
+			// for(auto&& o : obstacle_names)
+			// {
+			// 	context_obstacles.push_back(obstacles[o]);
+			// }
+
+
+		// for (auto s : this -> group)
+		// {
 			auto sb = std::dynamic_pointer_cast<bullet_plant_t>(s);
-			sb -> initialize(sim);
+			auto ptr = std::static_pointer_cast<bullet_simulator_t>(this -> shared_ptr());
+			sb -> initialize(ptr);
 			sb -> update_from_bullet(true);
 			robot_ids.push_back(sb->uniqueId);
 			// TODO: Add exclusions between the system and the plane.
 		}
+		system_groups->add_system_group(context_name,context_systems);
+
+		auto ptr = std::static_pointer_cast<bullet_simulator_t>(this -> shared_ptr());
+		collision_groups.reset(new bullet_collision_checker_t(ptr));
+
+		collision_groups->add_collision_group(context_name,context_systems,{});
+
+		// this -> collision_groups -> link_simulator(this -> get_ptr());
 	}
 
 	void bullet_simulator_t::set_collision_group(collision_group_ptr_t cg_)
@@ -120,8 +150,8 @@ namespace prx
 		std::cout << "Number of trajectories = " << trajs.size() << std::endl;
 		btVector3 targetPos;
 		targetPos[0] = targetPos[1] = targetPos[2] = 0;
-		sim->resetDebugVisualizerCamera(4.0,-90.4,180.1,targetPos);		
-		sim->restoreStateFromMemory(0);
+		this -> resetDebugVisualizerCamera(4.0,-90.4,180.1,targetPos);		
+		this -> restoreStateFromMemory(0);
 		for (auto traj : trajs)
 		{
   			for (int i = 1; i < traj.size()-1; i++)
@@ -129,7 +159,7 @@ namespace prx
 				unsigned idx = i;
 				double* startLine = new double[3]{traj[idx]->at(0),traj[idx]->at(1),0.2};
 				double* endLine = new double[3]{traj[idx+1]->at(0),traj[idx+1]->at(1),0.2};
-				sim->addUserDebugLine(startLine,endLine,*lineArgs);
+				this ->addUserDebugLine(startLine,endLine,*lineArgs);
 			}
 		}
 	}
@@ -140,23 +170,24 @@ namespace prx
 		pos[0] = goal->at(0); pos[1] = goal->at(1); pos[2] = 0.2;	
 		b3RobotSimulatorAddUserDebugTextArgs* textArgs = new b3RobotSimulatorAddUserDebugTextArgs;
 		textArgs->m_colorRGB[0] = textArgs->m_colorRGB[1] = textArgs->m_colorRGB[2] = 0;
-		sim->addUserDebugText("GOAL",pos,*textArgs);
+		this ->addUserDebugText("GOAL",pos,*textArgs);
 	}
 
 	void bullet_simulator_t::step_simulation(propagate_step step)
 	{	
 		prx_assert(cg != nullptr,"Bullet collision group is NULL!");
-		for(auto s : group)
+		for(auto s_pair : this -> systems)
 		{
+			auto s = s_pair.second;
 			auto sb = std::dynamic_pointer_cast<bullet_plant_t>(s);
 			if (step == propagate_step::FIRST_STEP)
 			{	
-				sim -> restoreStateFromMemory(sb -> get_state_id());
+				this -> restoreStateFromMemory(sb -> get_state_id());
 			}
 
 			if(! cg -> in_collision())
 			{
-				sim -> stepSimulation();
+				this -> stepSimulation();
 				bool save_sim_state = (step == propagate_step::FINAL_STEP);
 				sb -> update_from_bullet(save_sim_state);
 			}
@@ -167,14 +198,56 @@ namespace prx
   	{
 		btVector3 targetPos;
 		targetPos[0] = targetPos[1] = targetPos[2] = 0;
-		sim -> resetDebugVisualizerCamera(15.0,-90.4,180.1,targetPos);	
-    	sim -> restoreStateFromMemory(0);
+		this -> resetDebugVisualizerCamera(15.0,-90.4,180.1,targetPos);	
+    	this -> restoreStateFromMemory(0);
     	for(int i=0; i<traj.size(); i++)
     	{
       		usleep(8000);
       		space_point_t point = traj[(unsigned)i];
       		int inpt;
-      		sim -> restoreStateFromMemory(sys -> get_state_id());
+      		this -> restoreStateFromMemory(sys -> get_state_id());
     	}
 	}
+
+
+	void bullet_simulator_t::step_simulation(double duration)
+	{
+		prx_assert(this -> canSubmitCommand(), "Error with bullet simulation: Cannot submit command (bullet_simulator_t::canSubmitCommand)");
+		
+		int rotateCamera = 0;
+
+		b3KeyboardEventsData keyEvents;
+		this -> getKeyboardEvents(&keyEvents);
+		if (keyEvents.m_numKeyboardEvents)
+		{
+			for (int i = 0; i < keyEvents.m_numKeyboardEvents; i++)
+			{
+				b3KeyboardEvent& e = keyEvents.m_keyboardEvents[i];
+
+				if (e.m_keyCode == 'r' && e.m_keyState & eButtonTriggered)
+				{
+					rotateCamera = 1 - rotateCamera;
+				}
+
+			}
+		}
+		this -> stepSimulation();
+
+		if (rotateCamera)
+		{
+			static double yaw = 0;
+			double distance = 1;
+			yaw += 0.1;
+			btVector3 basePos;
+			btQuaternion baseOrn;
+			// sim->getBasePositionAndOrientation(minitaurUid, basePos, baseOrn);
+			this -> resetDebugVisualizerCamera(distance, -20, yaw, basePos);
+		}
+		const double one_second = 1e+6; // microseconds
+		// double microSeconds = one_second * duration;
+		// void b3Clock::usleep(int microSeconds)
+		b3Clock::usleep(one_second * duration);
+
+	}
+
 }

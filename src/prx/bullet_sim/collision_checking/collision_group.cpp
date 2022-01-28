@@ -1,5 +1,6 @@
 
 #include "prx/bullet_sim/collision_checking/collision_group.hpp"
+#include "prx/bullet_sim/bullet_simulator.hpp"
 
 namespace prx
 {
@@ -9,6 +10,7 @@ namespace prx
 	}
 
 	bullet_collision_group_t::bullet_collision_group_t(const std::shared_ptr<bullet_simulator_t> _simulator)
+	// void bullet_collision_group_t::link_simulator(const std::shared_ptr<bullet_simulator_t> _simulator)
 	{
 		simulator = _simulator;
 
@@ -59,7 +61,7 @@ namespace prx
 		// I'm creating the contactInfo object in the class declaration to save time.
 		// But, depending on how it is populated inside Bullet, it may not be 
 		// getting reset properly. Need to check this.
-		simulator->sim->getContactPoints(contact_args, contactInfo);
+		simulator -> getContactPoints(contact_args, contactInfo);
 		for(int i=0; i<contactInfo->m_numContactPoints; i++)
 		{  
 			bool excluded = is_contact_excluded(contactInfo->m_contactPointData[i]);

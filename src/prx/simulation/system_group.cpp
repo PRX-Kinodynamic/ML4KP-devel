@@ -1,4 +1,5 @@
 
+#include "prx/simulation/simulator.hpp"
 #include "prx/simulation/system_group.hpp"
 
 #include <algorithm>
@@ -61,17 +62,18 @@ namespace prx
 		for(const plan_step_t& step : plan)
 		{
 			int steps = (int)((step.duration / simulation_step) + .1);
-			int i = 0;
+			// int i = 0;
 			if( steps > 0 )
 			{
-				for( ; i < steps; i++ )
-				{
-					if (i == 0) p_step = propagate_step::FIRST_STEP;
-					else if (i > 0 && i < steps-1) p_step = propagate_step::MIDDLE_STEP;
-					else p_step = propagate_step::FINAL_STEP;
+				// for( ; i < steps; i++ )
+				// {
+				// 	if (i == 0) p_step = propagate_step::FIRST_STEP;
+				// 	else if (i > 0 && i < steps-1) p_step = propagate_step::MIDDLE_STEP;
+				// 	else p_step = propagate_step::FINAL_STEP;
 
-					propagate_once(step.control,p_step);
-				}
+				// 	propagate_once(step.control,p_step);
+				// }
+				propagate(steps, step.control);
 			}
 		}
 		state_space->copy_to_point(result);
@@ -87,32 +89,54 @@ namespace prx
 		for(const plan_step_t& step : plan)
 		{
 			int steps = (int)((step.duration / simulation_step) + .1);
-			int i = 0;
+			// int i = 0;
 			if( steps > 0 )
 			{
-				for( ; i < steps; i++ )
-				{
-					if (i == 0) p_step = propagate_step::FIRST_STEP;
-					else if (i > 0 && i < steps-1) p_step = propagate_step::MIDDLE_STEP;
-					else p_step = propagate_step::FINAL_STEP;
+				propagate(steps, step.control, &traj);
+				// for( ; i < steps; i++ )
+				// {
+				// 	if (i == 0) p_step = propagate_step::FIRST_STEP;
+				// 	else if (i > 0 && i < steps-1) p_step = propagate_step::MIDDLE_STEP;
+				// 	else p_step = propagate_step::FINAL_STEP;
 
-					propagate_once(step.control,p_step);
-					traj.copy_onto_back(state_space);
-				}
+				// 	propagate_once(step.control,p_step);
+				// 	traj.copy_onto_back(state_space);
+				// }
 			}
 		}
 	}
 
-	void system_group_t::propagate_once(space_point_t control, propagate_step step)
+	void system_group_t::propagate(int steps, space_point_t control, trajectory_t* traj)
 	{
-		control_space->copy_from_point(control);
+		propagate_step p_step;
+		for(int i = 0; i < steps; i++ )
+		{
+			if (i == 0) p_step = propagate_step::FIRST_STEP;
+			else if (i > 0 && i < steps-1) p_step = propagate_step::MIDDLE_STEP;
+			else p_step = propagate_step::FINAL_STEP;
+
+			propagate_once(p_step, control);
+			if (traj != nullptr)
+			{
+				traj -> copy_onto_back(state_space);
+			}
+		}
+	}
+
+	void system_group_t::propagate_once(propagate_step step, space_point_t control)
+	{
+		if (control != nullptr)
+		{
+			control_space->copy_from_point(control);
+		}
 		for(auto s : group)
 		{
-			s->compute_control();
+			s -> compute_control();
+			s -> get_control_space() -> enforce_bounds();
 		}
 		// for(auto s : group)
 		// {
-			// s->propagate(simulation_step, step);
+		// 	s->propagate(simulation_step, step);
 		// }
 		sim -> step_simulation(step);
 	}

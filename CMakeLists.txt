@@ -79,7 +79,7 @@ link_directories(${PROJECT_SOURCE_DIR}/lib)
 add_subdirectory(examples)
 
 if(BUILD_TESTS)
-
+	enable_testing()
 	add_subdirectory(tests)
 endif(BUILD_TESTS)
 	# ${PROJECT_SOURCE_DIR}/tests/*.cpp

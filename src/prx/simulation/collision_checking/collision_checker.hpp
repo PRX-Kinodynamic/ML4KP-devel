@@ -1,4 +1,4 @@
-x#pragma once
+#pragma once
 
 #include "prx/simulation/plant.hpp"
 // #ifndef BULLET_NOT_BUILT

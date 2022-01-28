@@ -25,20 +25,21 @@ int main(int argc, char* argv[])
     		PRX_DEBUG_PRINT
 		bullet_simulator_t bsim;
     		PRX_DEBUG_PRINT
-		auto sim = bsim.sim;
+		auto sim = &bsim;
+		// auto sim = bsim.sim;
     		PRX_DEBUG_PRINT
     	bsim.add_urdf(bullet_path + "/data/plane.urdf");
-		bsim.set_group({plant});
+		bsim.add_group({plant});
 		bsim.initialize_simulation();
 		// sim -> loadURDF("/Users/Gary/pracsys/bullet3/build_cmake/data/plane.urdf");
 		// plant -> setup();
 		// plant -> setup(sim);
 		
-		world_model_t<system_group_manager_t, bullet_collision_checker_t> world_model({plant}, {});
-		world_model.create_context("racecar_context",{plant_name},{});
+		// world_model_t<system_group_manager_t, bullet_collision_checker_t> world_model({plant}, {});
+		// world_model.create_context("racecar_context",{plant_name},{});
 		// world_model.create_context("racecar_context",{"husky"},{});
 
-		auto context = world_model.get_context("racecar_context");
+		auto context = bsim.get_context("racecar_context");
 		auto state_space = context.first->get_state_space();
 		std::cout << "state_space dim: " << state_space -> get_dimension() << std::endl;
 		auto sg = context.first;

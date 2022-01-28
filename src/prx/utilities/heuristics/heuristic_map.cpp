@@ -334,7 +334,7 @@ namespace prx
 		system_ptr_t plant = create_system<cell_plant_t>("cell");
 		auto cell = std::dynamic_pointer_cast<cell_plant_t>(plant);
 		cell->set_geo(0.005,0.005);
-		world_model_t<> world_model({plant}, {obstacle_list});
+		world_model_t world_model({plant}, {obstacle_list});
 		world_model.create_context("grid_context",{"cell"},{obstacle_names});
 		auto context = world_model.get_context("grid_context");
 		trajectory_t traj(context.first->get_state_space());

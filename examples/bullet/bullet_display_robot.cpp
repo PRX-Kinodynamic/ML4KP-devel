@@ -23,13 +23,13 @@ int main(int argc, char* argv[])
 		auto plant = std::dynamic_pointer_cast<bullet_plant_t>(system);
 		prx_assert(plant != nullptr, "Plant is not a bullet_plant!");
 
-		bullet_simulator_t bsim;
-		auto sim = bsim.sim;
+		std::shared_ptr<bullet_simulator_t> sim = std::make_shared<bullet_simulator_t>();
+		// auto sim = bsim.get_ptr();
     	// bsim.add_urdf("/Users/Gary/pracsys/bullet3/data/plane.urdf");
-    	bsim.add_urdf(bullet_path + "/data/plane.urdf");
+    	sim -> add_urdf(bullet_path + "/data/plane.urdf");
     	
-		bsim.set_group({plant});
-		bsim.initialize_simulation();
+		sim -> add_group({plant});
+		sim -> initialize_simulation();
 
 		int rotateCamera = 0;
 		btScalar fixedTimeStep = simulation_step;
@@ -38,34 +38,35 @@ int main(int argc, char* argv[])
 
 		while (sim->canSubmitCommand())
 		{
-			b3KeyboardEventsData keyEvents;
-			sim->getKeyboardEvents(&keyEvents);
-			if (keyEvents.m_numKeyboardEvents)
-			{
-				for (int i = 0; i < keyEvents.m_numKeyboardEvents; i++)
-				{
-					b3KeyboardEvent& e = keyEvents.m_keyboardEvents[i];
+			sim -> step_simulation(simulation_step);
+		// 	b3KeyboardEventsData keyEvents;
+		// 	sim->getKeyboardEvents(&keyEvents);
+		// 	if (keyEvents.m_numKeyboardEvents)
+		// 	{
+		// 		for (int i = 0; i < keyEvents.m_numKeyboardEvents; i++)
+		// 		{
+		// 			b3KeyboardEvent& e = keyEvents.m_keyboardEvents[i];
 
-					if (e.m_keyCode == 'r' && e.m_keyState & eButtonTriggered)
-					{
-						rotateCamera = 1 - rotateCamera;
-					}
+		// 			if (e.m_keyCode == 'r' && e.m_keyState & eButtonTriggered)
+		// 			{
+		// 				rotateCamera = 1 - rotateCamera;
+		// 			}
 
-				}
-			}
-			sim->stepSimulation();
+		// 		}
+		// 	}
+		// 	sim->stepSimulation();
 
-			if (rotateCamera)
-			{
-				static double yaw = 0;
-				double distance = 1;
-				yaw += 0.1;
-				btVector3 basePos;
-				btQuaternion baseOrn;
-				// sim->getBasePositionAndOrientation(minitaurUid, basePos, baseOrn);
-				sim->resetDebugVisualizerCamera(distance, -20, yaw, basePos);
-			}
-			b3Clock::usleep(1000. * 1000. * fixedTimeStep);
+		// 	if (rotateCamera)
+		// 	{
+		// 		static double yaw = 0;
+		// 		double distance = 1;
+		// 		yaw += 0.1;
+		// 		btVector3 basePos;
+		// 		btQuaternion baseOrn;
+		// 		// sim->getBasePositionAndOrientation(minitaurUid, basePos, baseOrn);
+		// 		sim->resetDebugVisualizerCamera(distance, -20, yaw, basePos);
+		// 	}
+		// 	b3Clock::usleep(1000. * 1000. * fixedTimeStep);
 		}
 
 		std::cout << "Vis done!" << std::endl;
