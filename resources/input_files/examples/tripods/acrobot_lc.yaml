@@ -1,0 +1,20 @@
+random_seed: 11101993
+simulation_step: 0.01
+
+environment: "environments/empty.yaml"
+plant: !file "plants/acrobot.yaml"
+
+controller_path: "examples/tripods/lc/ackermann_l_deterministic.pt"
+
+trajs_to_file: false
+
+checker_type: iterations
+checker_value: 50
+
+goal_region_radius: 0.6
+state_increment: 0.1
+
+py_roa_file: "out/roa_lc_acrobot.txt"
+trajs_file: "out/roa_lc_acrobot_trajs.txt"
+
+out_dir: "out/acrobot_FO/"
