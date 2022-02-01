@@ -6,7 +6,7 @@ import TimeMap
 np.set_printoptions(suppress=True)
 
 if __name__ == "__main__":
-    step = 10  # for grid
+    step = 4  # for grid
     time_h = 10  # in seconds, time_h / simulation_step = total steps
 
     # Provide the path to the controller
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     def g(X):
         return TM.acrobot_lc(X)
 
-    as = np.linspace(0, 2*np.pi, step)
+    ts = np.linspace(0, 2*np.pi, step)
     bs = np.linspace(-np.pi, np.pi, step)
     cs = np.linspace(-6, 6, step)
     ds = np.linspace(-6,6,step)
@@ -28,11 +28,11 @@ if __name__ == "__main__":
 
     print(TM.time_step)
 
-    for a in tqdm(range(as.shape[0])):
+    for a in tqdm(range(ts.shape[0])):
         for b in range(bs.shape[0]):
             for c in range(cs.shape[0]):
                 for d in range(ds.shape[0]):
-                    start_state_vec = [as[a], bs[b], cs[c], ds[d]]
+                    start_state_vec = [ts[a], bs[b], cs[c], ds[d]]
                     TM.ss.copy_point_from_vector(start_state, start_state_vec)
 
                     end_state_vec = g(start_state_vec)

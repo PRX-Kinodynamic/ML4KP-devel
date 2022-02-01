@@ -7,7 +7,7 @@ import random
 import torch
 import libpyDirtMP as prx
 import numpy as np
-from scipy.spatial.transform import Rotation as R
+# from scipy.spatial.transform import Rotation as R
 
 
 class TimeMap:
@@ -146,7 +146,7 @@ class TimeMap:
         if system_type == "acrobot_lc":
             controller_path = params["controller_path"].as_string()
             controller_path = prx.lib_path + controller_path
-            self.controller = torch.load(controller_path)
+            self.controller = torch.load(controller_path,map_location=torch.device('cpu'))
             self.controller.eval()
             torch.manual_seed(params["random_seed"].as_int())
             self.radius = params["goal_region_radius"].as_float()
@@ -309,7 +309,7 @@ class TimeMap:
             duration_so_far += 0.1
 
         self.ss.copy_to_point(self.end_state)
-        return [self.end_state[0], self.end_state[1], self.end_state[2]]
+        return [self.end_state[0], self.end_state[1], self.end_state[2], self.end_state[3]]
     
     def ackermann_lc(self, X):
         self.ss.copy_from_vector(X)

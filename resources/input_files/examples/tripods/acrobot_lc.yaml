@@ -4,7 +4,7 @@ simulation_step: 0.01
 environment: "environments/empty.yaml"
 plant: !file "plants/acrobot.yaml"
 
-controller_path: "examples/tripods/lc/ackermann_l_deterministic.pt"
+controller_path: "examples/tripods/lc/acrobot.pt"
 
 trajs_to_file: false
 
