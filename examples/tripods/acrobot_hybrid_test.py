@@ -6,10 +6,11 @@ np.set_printoptions(suppress=True)
 
 if __name__ == "__main__":
     step = 4
-    time_h = 10 
+    time_h_lqr = 5
+    time_h_lc  = 10
 
-    TM_lqr = TimeMap.TimeMap("acrobot_lqr",time_h,"examples/tripods/acrobot_roa.yaml")
-    TM_lc  = TimeMap.TimeMap("acrobot_lc" ,time_h,"examples/tripods/acrobot_lc.yaml")
+    TM_lqr = TimeMap.TimeMap("acrobot_lqr",time_h_lqr,"examples/tripods/acrobot_roa.yaml")
+    TM_lc  = TimeMap.TimeMap("acrobot_lc" ,time_h_lc"examples/tripods/acrobot_lc.yaml")
     line = ""
 
     def g(X):
