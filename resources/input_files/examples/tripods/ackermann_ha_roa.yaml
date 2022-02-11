@@ -16,9 +16,9 @@ checker_value: 1000
 # checker_value: 10
 
 goal_region_radius: 0.1
-state_increment: 0.25
+# state_increment: 0.25
 # state_increment: 0.1
-# state_increment: 0.01
+state_increment: 0.05
 # state_increment: 0.025
 
 roa_file: "out/pendulum_roa.txt"
@@ -30,3 +30,7 @@ trajs_file: "out/pendulum_trajs.txt"
 # ending_upper_bound: [0.0, -3.141592653589793, -6, -5.0]
 file_id: 0
 multi_file: false
+
+c: 38.4863
+# c: 404.074
+v_type: 1

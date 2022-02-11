@@ -27,3 +27,11 @@ starting_lower_bound: [0.0, -3.141592653589793, -6, -6.0]
 ending_upper_bound: [6.283185307179586, 3.141592653589793, 6, -5.0]
 # ending_upper_bound: [0.0, -3.141592653589793, -6, -5.0]
 file_id: 0
+
+# SOS lqr pendulum file
+# est_roa_file: "out/pendulum/sos_roa_c1.250000e+00.txt"
+# est_roa_file: "out/pendulum/lyapSOS.txt"
+
+# LyapLQR pendulum file
+est_roa_file: "out/pendulum/lyapNN_LQR/roa_00101.txt"
+# est_roa_file: "out/pendulum/lyapLQR.txt"
