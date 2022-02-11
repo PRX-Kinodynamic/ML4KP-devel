@@ -9,6 +9,7 @@ namespace prx
 		k_rho = _k_rho;
 		k_alpha = _k_alpha;
 		k_beta = _k_beta;
+		direccion = 0;
 	}
 
 	void ackermann_FO_ctrl_t::compute_controls()
@@ -28,6 +29,7 @@ namespace prx
 
 		// printf("vals: (%.2f, %.2f, %.2f, %.0f)\n", rho, alpha, beta, direccion);
 		beta += (*goal)[2];
+		// beta = norm_angle_pi( beta );
 
 		V = direccion * k_rho * rho;
 		auto omega = k_alpha * alpha + k_beta * beta;
@@ -60,7 +62,9 @@ namespace prx
         	alpha = -theta - beta;
         	// fprintf('alpha %f, beta %f\n', alpha, beta);
         	// % first time in simulation, choose the direction of travel
-        	if (  aFO -> get_control_space() -> get_lower_bound(1) < 0.0 && ( (alpha > PRX_PI / 2.0) || (alpha < -PRX_PI / 2.0) ) )
+        	if (  aFO -> get_control_space() -> get_lower_bound(1) < 0.0 && ( (alpha > PRX_PI / 2.0) || (alpha < -PRX_PI / 2.0) ) 
+        		  || aFO -> get_control_space() -> get_upper_bound(1) <= 0.0
+        		)
         	{
         	    // printf("going backwards\n");
         	    direccion = -1;
