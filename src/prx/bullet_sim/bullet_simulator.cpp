@@ -70,15 +70,7 @@ namespace prx
 			auto s = s_pair.second;
 			// context_systems.push_back(this -> systems[s]);
 			context_systems.push_back(s);
-		// }
-			// for(auto&& o : obstacle_names)
-			// {
-			// 	context_obstacles.push_back(obstacles[o]);
-			// }
 
-
-		// for (auto s : this -> group)
-		// {
 			auto sb = std::dynamic_pointer_cast<bullet_plant_t>(s);
 			auto ptr = std::static_pointer_cast<bullet_simulator_t>(this -> shared_ptr());
 			sb -> initialize(ptr);
