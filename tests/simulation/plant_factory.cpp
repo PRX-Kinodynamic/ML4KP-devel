@@ -12,10 +12,11 @@ BOOST_AUTO_TEST_CASE( system_factory_test )
         {{"2D_Point", "2D_Point"}, {"rally_car", "rally_car"}, {"treaded_vehicle", "treaded_vehicle"}, {"FO_treaded_vehicle", "FO_treaded_vehicle"}};
 
 
-    for (auto name : prx::system_factory_t::available_systems())
+    auto available_systems = prx::system_factory_t::available_systems();
+    for (auto name : system_names)
     {
         printf("\tChecking available system: %s...", name.c_str() );
-        BOOST_CHECK(std::find(system_names.begin(), system_names.end(), name) != system_names.end());
+        BOOST_CHECK(std::find(available_systems.begin(), available_systems.end(), name) != available_systems.end());
         printf("\t[ OK ]\n" );
     }
 

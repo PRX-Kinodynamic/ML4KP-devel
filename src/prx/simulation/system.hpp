@@ -45,12 +45,12 @@ namespace prx
 
 		virtual void add_system(system_ptr_t& )=0;
 
-		// Keeping this for analitical plants. 
+		// Keeping this for analytical plants. 
 		virtual void propagate(const double simulation_step) = 0;
 		virtual void propagate(const double simulation_step, const propagate_step step)
 		{
 			// The defaul implementation is not using propagate_step
-			// Currently propagate step is only used inside bullet
+			// Currently propagate_step is only used inside bullet
 			// It can always be overridden if necessary
 			propagate(simulation_step);
 		}
@@ -78,6 +78,7 @@ namespace prx
 
 		space_t* state_space;
 		space_t* input_control_space;
+		space_t* parameter_space;
 	protected:
 
 		std::weak_ptr<system_t> parent_system;
@@ -94,6 +95,7 @@ namespace prx
 
 		std::vector<double*> state_memory;
 		std::vector<double*> control_memory;
+		std::vector<double*> parameter_memory;
 
 	private:
 		system_t(){}
