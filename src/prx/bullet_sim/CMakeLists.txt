@@ -157,7 +157,7 @@ if(APPLE)
 
 else()
 	
-	target_link_directories(${PROJECT_NAME}_bullet_sim PUBLIC
+	link_directories(${PROJECT_NAME}_bullet_sim PUBLIC
 	 	${BULLET_LIBRARY_DIR}
 	 	)
 	target_link_libraries(${PROJECT_NAME}_bullet_sim PUBLIC
