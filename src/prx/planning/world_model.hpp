@@ -7,6 +7,9 @@
 #define system_group first   
 #define collision_group second
 
+#define system_group first   
+#define collision_group second
+
 namespace prx
 {
 	typedef std::pair<std::shared_ptr<system_group_t>,std::shared_ptr<collision_group_t>> world_model_context;

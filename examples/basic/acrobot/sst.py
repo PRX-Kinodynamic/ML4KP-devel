@@ -33,16 +33,16 @@ b4 = prx.box.create_obstacle("b4", 1., 1., 1., obs_pose_4)
 obstacles = [b1, b2, b3, b4]
 obs_names = ["b1", "b2", "b3", "b4"]
 ### To have an obstacle-free environment, uncomment the following lines (and comment the above)
-# obstacles = []
-# obs_names = []
+obstacles = []
+obs_names = []
 wm = prx.world_model([acrobot], obstacles)
 wm.create_context("context", ["acrobot"], obs_names)
 context = wm.get_context("context");
 
 planner = prx.sst("sst");
 planner_spec = prx.sst_specification(context.system_group,context.collision_group);
-planner_spec.delta_near = 0.9
-planner_spec.delta_drain = 0.2
+planner_spec.delta_near = 0.5
+planner_spec.delta_drain = 0.01
 
 
 def acrobot_distance_function(s1, s2):
@@ -63,19 +63,22 @@ def acrobot_distance_function(s1, s2):
 	a3 = s1a3 - s2a3;
 
 	cost =  a0 * a0 + a1 * a1 + a2 * a2 + a3 * a3
+	# cost =  a0 * a0 + a1 * a1
 
 	return math.sqrt(cost);
 
 print_once_ss = True
 def sample_state_custom(s):
 	global print_once_ss
-	if print_once_ss:
-		print("Printing from python sample_state...")
-		print_once_ss = False
 	s[0] = random.uniform(0, 2.0 * 3.14159)
 	s[1] = random.uniform(-3.14159, 3.14159)
 	s[2] = random.uniform(-6, 6)
 	s[3] = random.uniform(-6, 6)
+	if print_once_ss:
+		print("Printing from python sample_state...")
+		print_once_ss = False
+		# print(s)
+
 
 planner_spec.distance_function = prx.distance_function.wrap(acrobot_distance_function);
 planner_spec.sample_state = prx.sample_state.wrap(sample_state_custom);
@@ -89,6 +92,8 @@ planner_spec.bnb = True;
 planner_query = prx.sst_query(context.system_group.get_state_space(),context.system_group.get_control_space());
 planner_query.start_state = context.system_group.get_state_space().make_point()
 planner_query.goal_state = context.system_group.get_state_space().make_point()
+
+
 context.system_group.get_state_space().copy_point_from_vector(planner_query.start_state, start_state);
 context.system_group.get_state_space().copy_point_from_vector(planner_query.goal_state, goal_state);
 
@@ -97,6 +102,17 @@ print("Goal  State:", planner_query.goal_state)
 
 planner_query.goal_region_radius = 0.5;
 planner_query.get_visualization = True;
+
+print_once_gc = True
+def custom_goal_check(s):
+	global print_once_gc
+	if print_once_gc:
+		print("Printing from python custom_goal_check...")
+		print_once_gc = False
+
+	return acrobot_distance_function(s, planner_query.goal_state) < planner_query.goal_region_radius
+
+planner_query.goal_check = prx.goal_check.wrap(custom_goal_check)
 
 planner.link_and_setup_spec(planner_spec)
 planner.preprocess()
