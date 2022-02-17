@@ -1,0 +1,1 @@
+export PYTHONPATH=${DIRTMP_PATH}/lib:${PYTHONPATH}
