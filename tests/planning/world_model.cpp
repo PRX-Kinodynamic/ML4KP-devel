@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE( world_model_test )
     // auto plant = prx::system_factory_t::create_system(system_names[0], system_names[0]);
 
     printf("Creating world model\n");
-    prx::world_model_t<> world_model({plants},{box_obstacle});
+    prx::world_model_t world_model({plants},{box_obstacle});
 
     printf("Creating context\n");
     world_model.create_context("test_context",{system_names},{"box"});

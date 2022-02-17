@@ -78,6 +78,8 @@ namespace prx
 
 	int default_horizon_function(const int&);
 
+	bool default_goal_check(const space_point_t& p, const space_point_t& goal, const double rad);
+
 	std::set<std::pair<std::shared_ptr<plan_t>, std::shared_ptr<trajectory_t>>> default_expand_set(
 		space_point_t& start_state, std::set<std::pair<space_point_t, double>> pts_time_set, 
 							std::shared_ptr<system_group_t> sg, propagate_t prop);
