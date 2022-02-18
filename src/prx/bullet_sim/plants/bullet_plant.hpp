@@ -42,6 +42,8 @@ namespace prx
 
 		virtual void purge_saved_states();
 
+		virtual void reset() = 0;
+
 		/**
 		 * @brief      Gets the state identifier - Within Bullet, each saved state has an unique id.
 		 *

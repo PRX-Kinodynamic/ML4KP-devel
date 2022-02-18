@@ -25,10 +25,8 @@ namespace prx
         current_state = state_space->make_point();
     }
 
-    void bullet_omnirobot_t::initialize(std::shared_ptr<b3RobotSimulatorClientAPI> _sim)
+    void bullet_omnirobot_t::reset()
     {
-        sim = _sim;
-
         btVector3 basePosition, baseRotation;
         btQuaternion baseOrientation;
 
@@ -77,6 +75,12 @@ namespace prx
         {
             sim->stepSimulation();
         }
+    }
+
+    void bullet_omnirobot_t::initialize(std::shared_ptr<b3RobotSimulatorClientAPI> _sim)
+    {
+        sim = _sim;
+        reset();
     }
 
     bullet_omnirobot_t::~bullet_omnirobot_t()

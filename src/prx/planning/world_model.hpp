@@ -102,6 +102,11 @@ namespace prx
 			
 		}
 
+		virtual void reset_simulation() override final
+		{
+			prx_throw("World model doesn't implement reset");
+		}
+
 	private:
 		// SGM* system_groups;
 		// CC* collision_groups;
