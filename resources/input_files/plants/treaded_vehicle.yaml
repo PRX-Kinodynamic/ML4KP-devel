@@ -9,6 +9,9 @@ min_steps: 1
 max_steps: 50
 
 state_space_lower_bound: [-10,-10,-3.14159,-.7,-.7]
-state_space_upper_bound: [30,30,3.14159,.7,.7]
+state_space_upper_bound: [10,10,3.14159,.7,.7]
+
+control_space_lower_bound: [-.2,-.2]
+control_space_upper_bound: [.2,.2]
 
 vis_body: "body"

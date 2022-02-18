@@ -77,6 +77,7 @@ endif()
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 
 add_subdirectory(examples)
+add_subdirectory(executables)
 
 if(BUILD_TESTS)
 	enable_testing()
