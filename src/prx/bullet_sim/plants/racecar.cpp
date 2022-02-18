@@ -18,12 +18,8 @@ namespace prx
         current_state = state_space->make_point();
   	}
 
-	void racecar_t::initialize(std::shared_ptr<b3RobotSimulatorClientAPI> _sim)
+	void racecar_t::reset()
 	{
-		sim = _sim;
-		simulation_step = 0.01;
-		sim->setTimeStep(simulation_step);
-
 		btVector3 basePosition, baseRotation;
 		btQuaternion baseOrientation;
 
@@ -31,11 +27,11 @@ namespace prx
 		basePosition[1] = state_space -> at(1);
 		basePosition[2] = 0.2;
 		baseRotation[2] = state_space -> at(2);
-        bullet_simulator_t::get_quaternion_from_euler(baseOrientation, baseRotation);
+		baseOrientation = btQuaternion(baseRotation[0],baseRotation[1],baseRotation[2],1);
 
 		loadURDFArgs.m_startPosition = basePosition;
-        loadURDFArgs.m_startOrientation = baseOrientation;
-        uniqueId = sim -> loadURDF(robot_model_path, loadURDFArgs);
+		loadURDFArgs.m_startOrientation = baseOrientation;
+		uniqueId = sim -> loadURDF(robot_model_path, loadURDFArgs);
 
 		int numJoints = sim->getNumJoints(uniqueId);
 		for (int i = 0; i < numJoints; i++)
@@ -45,7 +41,6 @@ namespace prx
 			controlArgs.m_maxTorqueValue = 0;
 			sim->setJointMotorControl(uniqueId,i,controlArgs);
 		}
-
 
 		b3JointInfo* jointInfo = new b3JointInfo;
 		b3RobotUserConstraint* constraintInfo = new b3RobotUserConstraint;
@@ -128,6 +123,12 @@ namespace prx
 		{
 			sim->stepSimulation();
 		}
+	}
+
+	void racecar_t::initialize(std::shared_ptr<b3RobotSimulatorClientAPI> _sim)
+	{
+		sim = _sim;
+		reset();
 	}
 	
 	racecar_t::~racecar_t()

@@ -16,6 +16,8 @@ namespace prx
 
         virtual void compute_control() override final;
 
+        virtual void reset() override final;
+
         bool sync_lr_wheels = true;
       
     protected:

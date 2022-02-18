@@ -46,6 +46,8 @@ namespace prx
 
 		virtual void step_simulation(propagate_step step) override final;
 
+		virtual void reset_simulation() override final;
+
 		static
 		void get_euler_from_quaternion(btVector3& rpy2, const btQuaternion& quat);
 

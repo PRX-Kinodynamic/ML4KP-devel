@@ -33,13 +33,11 @@ namespace prx
 
 		// @aravind: Will this work if it is moved to the bullet plant constructor?
         current_control = input_control_space->make_point();
-        current_state = state_space->make_point();;
+        current_state = state_space->make_point();
   	}
 
-	  void segway_t::initialize(std::shared_ptr<b3RobotSimulatorClientAPI> _sim)
+    void segway_t::reset()
     {
-        sim = _sim;
-
         btVector3 basePosition, baseRotation;
         btQuaternion baseOrientation;
 
@@ -76,6 +74,12 @@ namespace prx
         {
             sim->stepSimulation();
         }
+    }
+
+	void segway_t::initialize(std::shared_ptr<b3RobotSimulatorClientAPI> _sim)
+    {
+        sim = _sim;
+        reset();
     }
 
 	segway_t::~segway_t()

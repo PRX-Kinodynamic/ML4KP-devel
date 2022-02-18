@@ -66,6 +66,8 @@ PRX_DEBUG_PRINT
     	
 		virtual void step_simulation(propagate_step step) = 0;
 
+		virtual void reset_simulation() = 0;
+
 		const plant_type sim_type;
 
 	protected:

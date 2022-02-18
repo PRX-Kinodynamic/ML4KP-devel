@@ -88,6 +88,31 @@ namespace prx
 		// this -> collision_groups -> link_simulator(this -> get_ptr());
 	}
 
+	void bullet_simulator_t::reset_simulation()
+	{
+		this -> resetSimulation();
+
+		for (auto f : urdf_paths)
+		{
+			std::cout << "f: " << f.first << std::endl;
+			int body_id = this -> loadURDF(f.first);
+			if (!f.second) allowed_collisions.push_back(body_id);
+		}
+
+		robot_ids.clear();
+
+		for (auto s_pair : this -> systems)
+		{
+			auto s = s_pair.second;
+
+			auto sb = std::dynamic_pointer_cast<bullet_plant_t>(s);
+			sb -> reset();
+			sb -> update_from_bullet(true);
+			robot_ids.push_back(sb->uniqueId);
+			// TODO: Add exclusions between the system and the plane.
+		}
+	}
+
 	void bullet_simulator_t::set_collision_group(collision_group_ptr_t cg_)
 	{
 		cg = cg_;
