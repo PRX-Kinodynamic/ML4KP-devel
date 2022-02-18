@@ -24,10 +24,8 @@ namespace prx
         current_state = state_space->make_point();;
     }
 
-    void prius_t::initialize(std::shared_ptr<b3RobotSimulatorClientAPI> _sim)
+    void prius_t::reset()
     {
-        sim = _sim;
-
         btVector3 basePosition, baseRotation;
         btQuaternion baseOrientation;
 
@@ -68,6 +66,11 @@ namespace prx
         {
             sim->stepSimulation();
         }
+    }
+
+    void prius_t::initialize(std::shared_ptr<b3RobotSimulatorClientAPI> _sim)
+    {
+        sim = _sim;
     }
 
     prius_t::~prius_t(){}

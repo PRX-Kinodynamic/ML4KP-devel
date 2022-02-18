@@ -16,6 +16,8 @@ namespace prx
 
             virtual void compute_control() override final;
 
+            virtual void reset() override final;
+
         protected:
 
             const std::string robot_model_path = models_path + "/prius/prius.urdf";  //Note, you will need to change this path
