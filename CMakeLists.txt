@@ -68,6 +68,7 @@ add_subdirectory(src/prx/external)
 add_subdirectory(src/prx/utilities)
 add_subdirectory(src/prx/simulation)
 add_subdirectory(src/prx/visualization)
+add_subdirectory(src/prx/gtdynamics)
 
 if (BUILD_FOR_PYTHON)
 	enable_testing()
