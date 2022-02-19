@@ -103,7 +103,7 @@ class learned_controller_t
         }
         if (delta_input)
         {
-            for (int i = 0; i < normalized_goal.size(); i++)
+            for (int i = 0; i < 2; i++)
             {
                 normalized_goal[i] = normalized_goal[i] - normalized_state[i];
                 normalized_state[i] = 0;
