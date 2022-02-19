@@ -91,6 +91,7 @@ namespace prx
 	void bullet_simulator_t::reset_simulation()
 	{
 		this -> resetSimulation();
+		this -> setGravity(btVector3(0,0,-9.8));
 
 		for (auto f : urdf_paths)
 		{

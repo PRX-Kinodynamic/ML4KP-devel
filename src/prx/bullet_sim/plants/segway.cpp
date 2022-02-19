@@ -5,13 +5,12 @@ namespace prx
   	segway_t::segway_t(const std::string& path)
   		: bullet_plant_t(path)
   	{
-		x = y = z = r = p = yaw = dx = dy = dz = dr = dp = dyaw = sid = 0;
-        z = 1;
+		x = y = yaw = dx = dy = dyaw = sid = 0;
 
-		state_memory = {&x,&y,&z,&r,&p,&yaw,&dx,&dy,&dz,&dr,&dp,&dyaw,&sid};
-        state_space = new space_t("EEERRREEEEEED",state_memory,"XYZRPYdxdydzdrdpdyaId");
-        state_bounds_l = {-15,-15,-.1,-3.14,-3.14,-3.14,-20,-20,-20,-20,-20,-20,0};
-        state_bounds_u = {15,15,1,3.14,3.14,3.14,20,20,20,20,20,20,PRX_INFINITY};
+		state_memory = {&x,&y,&yaw,&dx,&dy,&dyaw,&sid};
+        state_space = new space_t("EEREEEI",state_memory,"XYZRPYdxdydzdrdpdyaId");
+        state_bounds_l = {-10,-10,-3.15,-20,-20,-20,0};
+        state_bounds_u = {10,10,3.15,20,20,20,PRX_INFINITY};
         state_space->set_bounds(state_bounds_l, state_bounds_u);
 
 		lf=rf=lr=rr=0;
@@ -43,10 +42,8 @@ namespace prx
 
         basePosition[0] = state_space -> at(0);
         basePosition[1] = state_space -> at(1);
-        basePosition[2] = state_space -> at(2);
-        baseRotation[0] = state_space -> at(3);
-        baseRotation[1] = state_space -> at(4);
-        baseRotation[2] = state_space -> at(5);
+		basePosition[2] = 0.1;
+        baseRotation[2] = state_space -> at(2);
         bullet_simulator_t::get_quaternion_from_euler(baseOrientation, baseRotation);
 
         loadURDFArgs.m_startPosition = basePosition;
@@ -126,15 +123,13 @@ namespace prx
 
 		current_state_vec.push_back(basePosition[0]);
 		current_state_vec.push_back(basePosition[1]);
-		current_state_vec.push_back(basePosition[2]);
-		
-		current_state_vec.push_back(baseRotation[0]);
-		current_state_vec.push_back(baseRotation[1]);
 		current_state_vec.push_back(baseRotation[2]);
 		
 		btVector3 baseVel, baseAngVel;
 		sim->getBaseVelocity(uniqueId,baseVel,baseAngVel);
-	    current_state_vec.insert(current_state_vec.end(),{baseVel[0],baseVel[1],baseVel[2],baseAngVel[0],baseAngVel[1],baseAngVel[2]});	
+		current_state_vec.push_back(baseVel[0]);
+		current_state_vec.push_back(baseVel[1]);
+		current_state_vec.push_back(baseAngVel[2]);
 	
 		int sid = get_state_id();
 	   

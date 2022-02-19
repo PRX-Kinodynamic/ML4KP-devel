@@ -25,7 +25,7 @@ namespace prx
 
         std::vector<int> wheelJoints;
 
-        double x,y,z,r,p,yaw,dx,dy,dz,dr,dp,dyaw,sid,lf,rf,lr,rr;
+        double x,y,yaw,dx,dy,dyaw,sid,lf,rf,lr,rr;
         double maxForce = 100;
         double controlMultiplier = 0.5;
  

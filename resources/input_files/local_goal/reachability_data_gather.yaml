@@ -6,10 +6,12 @@ plant: !file "plants/treaded_vehicle.yaml"
 
 controller_path: "networks/treaded_vehicle.pt"
 
+state_indices: [0,1,2,3,4]
+goal_indices: [0,1,2]
+
 num_trajectories: 10
 
 goal_radius: 0.5
-goal_dims: 3
 
 normalize_inputs: false
 control_duration: 1.0

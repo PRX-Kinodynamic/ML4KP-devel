@@ -14,10 +14,10 @@ class learned_controller_t
     private:
         torch::jit::script::Module controller;
     protected:
-        bool normalize_inputs;
+        bool normalize_input, delta_input;
         double control_duration;
-        int goal_dims;
         std::vector<double> state_upper_bounds, state_lower_bounds, control_upper_bounds, control_lower_bounds;
+        std::vector<int> state_indices, goal_indices;
     public:
     learned_controller_t(param_loader params)
     {
@@ -27,9 +27,9 @@ class learned_controller_t
         torch::Device device(torch::kCPU);
 
         // Get some controller parameters.
-        normalize_inputs = params["normalize_inputs"].as<bool>();
+        normalize_input = params["normalize_input"].as<bool>();
+        delta_input = params["delta_input"].as<bool>();
         control_duration = params["control_duration"].as<double>();
-        goal_dims = params["goal_dims"].as<int>();
 
         state_lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
         state_upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
@@ -37,6 +37,9 @@ class learned_controller_t
         control_lower_bounds = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
         control_upper_bounds = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
 
+        state_indices = params["state_indices"].as<std::vector<int>>();
+        goal_indices = params["goal_indices"].as<std::vector<int>>();
+        
         try
         {
             std::cout << input_path + controller_file << std::endl;
@@ -56,13 +59,13 @@ class learned_controller_t
         torch::Device device(torch::kCPU);
         std::vector<torch::jit::IValue> inputs;
         std::vector<double> normalized_state;
-        if (normalize_inputs)
+        if (normalize_input)
         {
-            normalized_state = normalize_state(state,state_lower_bounds,state_upper_bounds);
+            normalized_state = extract_state(normalize_state(state,state_lower_bounds,state_upper_bounds),state_indices);
         }
         else
         {
-            normalized_state = state;
+            normalized_state = extract_state(state,state_indices);
         }
         at::Tensor input = torch::zeros({1,normalized_state.size()},device);
         for (int i = 0; i < normalized_state.size(); i++)
@@ -88,17 +91,30 @@ class learned_controller_t
         torch::Device device(torch::kCPU);
         std::vector<torch::jit::IValue> inputs;
         std::vector<double> normalized_state, normalized_goal;
-        if (normalize_inputs)
+        if (normalize_input)
         {
-            normalized_state = normalize_state(state,state_lower_bounds,state_upper_bounds);
-            normalized_goal = normalize_state(goal,state_lower_bounds,state_upper_bounds);
+            normalized_state = extract_state(normalize_state(state,state_lower_bounds,state_upper_bounds),state_indices);
+            normalized_goal = extract_state(normalize_state(goal,state_lower_bounds,state_upper_bounds),goal_indices);
         }
         else
         {
-            normalized_state = state;
-            normalized_goal = goal;
+            normalized_state = extract_state(state,state_indices);
+            normalized_goal = extract_state(goal,goal_indices);
         }
-        normalized_state.insert(normalized_state.end(),normalized_goal.begin(),normalized_goal.begin()+goal_dims);
+        if (delta_input)
+        {
+            for (int i = 0; i < normalized_goal.size(); i++)
+            {
+                normalized_goal[i] = normalized_goal[i] - normalized_state[i];
+                normalized_state[i] = 0;
+            }
+        }
+        normalized_state.insert(normalized_state.end(),normalized_goal.begin(),normalized_goal.end());
+        for (auto i : normalized_state)
+        {
+            std::cout << i << " ";
+        }
+        std::cout << std::endl;
         at::Tensor input = torch::zeros({1,normalized_state.size()},device);
         for (int i = 0; i < normalized_state.size(); i++)
         {
@@ -115,6 +131,20 @@ class learned_controller_t
             control.push_back(output[0][i].item().toDouble());
         }
         return denormalize_control(control,control_lower_bounds,control_upper_bounds);
+    }
+
+    std::vector<double> extract_state(const std::vector<double>& state, const std::vector<int>& indices)
+    {
+        /*
+            Extracts the state from the state vector.
+        */
+        std::vector<double> extracted_state;
+        for (int i = 0; i < indices.size(); i++)
+        {
+            prx_assert(indices[i] < state.size(),"Index out of bounds!");
+            extracted_state.push_back(state[indices[i]]);
+        }
+        return extracted_state;
     }
 
     std::vector<double> normalize_state(const std::vector<double>& state, const std::vector<double>& lower_bounds, const std::vector<double>& upper_bounds)
@@ -155,12 +185,13 @@ class learned_controller_t
         space_point_t current = sg -> get_state_space() -> clone_point(query.start_state);
         sg -> get_state_space() -> copy_vector_from_point(goal_vec,query.goal_state);
 
-        while (time_so_far <= horizon && !query.goal_check(current))
+        while (time_so_far < horizon && !query.goal_check(current))
         {
             state_vec.clear();
             query.solution_plan.append_onto_back(control_duration);
             sg -> get_state_space() -> copy_vector_from_point(state_vec,current);
             sg -> get_control_space() -> copy_point_from_vector(query.solution_plan.back().control,get_control(state_vec,goal_vec));
+            std::cout << sg -> get_control_space() -> print_point(query.solution_plan.back().control) << std::endl;
             sg -> propagate(query.start_state, query.solution_plan, query.solution_traj);
             sg -> get_state_space() -> copy_point(current,query.solution_traj.back());
             time_so_far += control_duration;
