@@ -42,7 +42,7 @@ namespace prx
 
         basePosition[0] = state_space -> at(0);
         basePosition[1] = state_space -> at(1);
-		basePosition[2] = 0.1;
+		basePosition[2] = 0.2;
         baseRotation[2] = state_space -> at(2);
         bullet_simulator_t::get_quaternion_from_euler(baseOrientation, baseRotation);
 
