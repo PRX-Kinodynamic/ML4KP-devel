@@ -7,7 +7,7 @@
 
 namespace prx
 {
-    std::pair<std::vector<std::string>,std::vector<std::shared_ptr<movable_object_t>>> load_obstacles(std::string obstacles_file, b3RobotSimulatorClientAPI* sim)
+    std::pair<std::vector<std::string>,std::vector<std::shared_ptr<movable_object_t>>> load_obstacles(std::string obstacles_file, std::shared_ptr<bullet_simulator_t> sim)
     {
  
 		if(obstacles_file=="")
