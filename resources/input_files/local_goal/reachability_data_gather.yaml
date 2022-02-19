@@ -13,7 +13,8 @@ num_trajectories: 10
 
 goal_radius: 0.5
 
-normalize_inputs: false
+normalize_input: false
+delta_input: false
 control_duration: 1.0
 max_duration: 100.0
 
