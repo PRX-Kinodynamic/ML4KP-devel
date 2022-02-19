@@ -38,6 +38,8 @@ int main(int argc, char* argv[])
 
         auto bsim = std::make_shared<bullet_simulator_t>();
 		bsim -> add_urdf(bullet_path + "/data/plane.urdf");
+        std::string obstacles_file = params["environment"].as<std::string>();
+        // auto retval = load_obstacles(obstacles_file,bsim);
 		bsim -> add_group({plant});
 		bsim -> initialize_simulation();
 
@@ -74,6 +76,7 @@ int main(int argc, char* argv[])
         for (int i = 0; i < num_trajectories; i++)
         {
             ss->sample(rrt_query.start_state);
+            std::cout << "Sampled start: " << ss->print_point(rrt_query.start_state) << std::endl;
             // This is additional for the bullet-simulated plant.
             rrt_query.start_state->at(dim-1) = 0;
             ss->copy_from_point(rrt_query.start_state);
@@ -87,6 +90,9 @@ int main(int argc, char* argv[])
 
             controller.fulfill_query(rrt_query,sg,max_duration);
 
+            std::cout << rrt_query.solution_traj.print(2) << std::endl;
+
+            
             /*
             std::ofstream ofs;
             ofs.open(output_path+output_dir+"/trajectory_"+std::to_string(i)+".txt");
@@ -98,6 +104,7 @@ int main(int argc, char* argv[])
             }
             ofs.close();
             */
+            
 
             output_progress_bar(i*1.0/num_trajectories);
         }

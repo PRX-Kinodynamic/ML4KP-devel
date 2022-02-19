@@ -19,3 +19,4 @@ control_duration: 1.0
 max_duration: 100.0
 
 output_dir: "data_reach_treaded_vehicle/"
+debug_controller: false

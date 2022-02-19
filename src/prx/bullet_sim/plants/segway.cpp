@@ -46,11 +46,12 @@ namespace prx
         baseRotation[2] = state_space -> at(2);
         bullet_simulator_t::get_quaternion_from_euler(baseOrientation, baseRotation);
 
-        loadURDFArgs.m_startPosition = basePosition;
+		loadURDFArgs.m_startPosition = basePosition;
         loadURDFArgs.m_startOrientation = baseOrientation;
         uniqueId = sim -> loadURDF(robot_model_path, loadURDFArgs);
 
 		int numJoints = sim->getNumJoints(uniqueId);
+		wheelJoints.clear();
 		for (int i = 0; i < numJoints; i++)
 		{
 	  		b3JointInfo jointInfo;
@@ -123,7 +124,7 @@ namespace prx
 
 		current_state_vec.push_back(basePosition[0]);
 		current_state_vec.push_back(basePosition[1]);
-		current_state_vec.push_back(baseRotation[2]);
+		current_state_vec.push_back(baseRotation[0]);
 		
 		btVector3 baseVel, baseAngVel;
 		sim->getBaseVelocity(uniqueId,baseVel,baseAngVel);

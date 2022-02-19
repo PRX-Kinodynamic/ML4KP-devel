@@ -14,7 +14,7 @@ class learned_controller_t
     private:
         torch::jit::script::Module controller;
     protected:
-        bool normalize_input, delta_input;
+        bool normalize_input, delta_input, debug_controller;
         double control_duration;
         std::vector<double> state_upper_bounds, state_lower_bounds, control_upper_bounds, control_lower_bounds;
         std::vector<int> state_indices, goal_indices;
@@ -30,6 +30,7 @@ class learned_controller_t
         normalize_input = params["normalize_input"].as<bool>();
         delta_input = params["delta_input"].as<bool>();
         control_duration = params["control_duration"].as<double>();
+        debug_controller = params["debug_controller"].as<bool>();
 
         state_lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
         state_upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
@@ -110,11 +111,15 @@ class learned_controller_t
             }
         }
         normalized_state.insert(normalized_state.end(),normalized_goal.begin(),normalized_goal.end());
-        for (auto i : normalized_state)
+        if (debug_controller)
         {
-            std::cout << i << " ";
+            std::cout << "Normalized state: ";
+            for (int i = 0; i < normalized_state.size(); i++)
+            {
+                std::cout << normalized_state[i] << " ";
+            }
+            std::cout << std::endl;
         }
-        std::cout << std::endl;
         at::Tensor input = torch::zeros({1,normalized_state.size()},device);
         for (int i = 0; i < normalized_state.size(); i++)
         {
@@ -187,11 +192,12 @@ class learned_controller_t
 
         while (time_so_far < horizon && !query.goal_check(current))
         {
+            if (debug_controller) std::cout << sg -> get_state_space() -> print_point(current) << std::endl;
             state_vec.clear();
             query.solution_plan.append_onto_back(control_duration);
             sg -> get_state_space() -> copy_vector_from_point(state_vec,current);
             sg -> get_control_space() -> copy_point_from_vector(query.solution_plan.back().control,get_control(state_vec,goal_vec));
-            std::cout << sg -> get_control_space() -> print_point(query.solution_plan.back().control) << std::endl;
+            if (debug_controller) std::cout << sg -> get_control_space() -> print_point(query.solution_plan.back().control) << " " << query.solution_plan.back().duration << std::endl;
             sg -> propagate(query.start_state, query.solution_plan, query.solution_traj);
             sg -> get_state_space() -> copy_point(current,query.solution_traj.back());
             time_so_far += control_duration;

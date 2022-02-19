@@ -9,14 +9,15 @@ controller_path: "networks/segway.pt"
 state_indices: [0,1,2,3,4,5]
 goal_indices: [0,1,2]
 
-num_trajectories: 1
+num_trajectories: 10
 
 goal_radius: 0.5
 
 normalize_input: false
-delta_input: true
+delta_input: false
 
 control_duration: 1.0
-max_duration: 10.0
+max_duration: 20.0
 
 output_dir: "data_reach_segway/"
+debug_controller: false
