@@ -63,10 +63,10 @@ int main(int argc, char* argv[])
         rrt_query.start_state = ss -> make_point();
         rrt_query.goal_state  = ss -> make_point();
         rrt_query.goal_region_radius = params["goal_radius"].as<double>();
-        // rrt_query.goal_check = [&ss,&](space_point_t point)
-        // {
-        //     return ss -> euclidean_2d(point, goal_state, 0, 3) < goal_region_radius;
-        // };
+        rrt_query.goal_check = [&,ss](space_point_t point)
+        {
+            return ss -> euclidean_2d(point, rrt_query.goal_state, 0, 3) < rrt_query.goal_region_radius;
+        };
 
         std::string output_dir = params["output_dir"].as<std::string>();
 

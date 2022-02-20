@@ -187,6 +187,7 @@ class learned_controller_t
         double time_so_far = 0;
 
         std::vector<double> state_vec, goal_vec;
+        trajectory_t step_traj(sg -> get_state_space());
         space_point_t current = sg -> get_state_space() -> clone_point(query.start_state);
         sg -> get_state_space() -> copy_vector_from_point(goal_vec,query.goal_state);
 
@@ -194,11 +195,13 @@ class learned_controller_t
         {
             if (debug_controller) std::cout << sg -> get_state_space() -> print_point(current) << std::endl;
             state_vec.clear();
+            query.solution_plan.clear();
             query.solution_plan.append_onto_back(control_duration);
             sg -> get_state_space() -> copy_vector_from_point(state_vec,current);
             sg -> get_control_space() -> copy_point_from_vector(query.solution_plan.back().control,get_control(state_vec,goal_vec));
             if (debug_controller) std::cout << sg -> get_control_space() -> print_point(query.solution_plan.back().control) << " " << query.solution_plan.back().duration << std::endl;
-            sg -> propagate(query.start_state, query.solution_plan, query.solution_traj);
+            sg -> propagate(current, query.solution_plan, step_traj);
+            query.solution_traj += step_traj;
             sg -> get_state_space() -> copy_point(current,query.solution_traj.back());
             time_so_far += control_duration;
         }
