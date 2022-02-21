@@ -15,7 +15,7 @@ std::vector<double> extract_state(const std::vector<double>& state, const std::v
     return extracted_state;
 }
 
-std::vector<double> normalize_state(const std::vector<double>& state, const std::vector<double>& lower_bounds, const std::vector<double>& upper_bounds)
+std::vector<double> normalize_vector(const std::vector<double>& state, const std::vector<double>& lower_bounds, const std::vector<double>& upper_bounds)
 {
     /*
         Normalizes the state to be between 0 and 1.
@@ -28,7 +28,7 @@ std::vector<double> normalize_state(const std::vector<double>& state, const std:
     return normalized_state;
 }
 
-std::vector<double> denormalize_control(const std::vector<double>& control, const std::vector<double>& lower_bounds, const std::vector<double>& upper_bounds)
+std::vector<double> denormalize_vector(const std::vector<double>& control, const std::vector<double>& lower_bounds, const std::vector<double>& upper_bounds)
 {
     /*
         Denormalizes the control to be between the lower and upper bounds.

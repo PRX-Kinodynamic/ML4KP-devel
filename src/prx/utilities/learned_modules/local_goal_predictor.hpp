@@ -58,8 +58,8 @@ class local_goal_predictor_t
             std::vector<double> normalized_state, normalized_goal;
             if (normalize_input)
             {
-                normalized_state = extract_state(normalize_state(state, state_lower_bounds, state_upper_bounds),state_indices);
-                normalized_goal  = extract_state(normalize_state(goal, state_lower_bounds, state_upper_bounds),goal_indices);
+                normalized_state = extract_state(normalize_vector(state, state_lower_bounds, state_upper_bounds),state_indices);
+                normalized_goal  = extract_state(normalize_vector(goal, state_lower_bounds, state_upper_bounds),goal_indices);
             }
             else
             {
@@ -75,11 +75,15 @@ class local_goal_predictor_t
             }
             inputs.push_back(input);
             
-            torch::Tensor output_tensor = predictor.forward(input_tensor).toTensor();
-            std::vector<double> local_goal = output_tensor.data<double>();
+            torch::Tensor output_tensor = predictor.forward(inputs).toTensor();
+            std::vector<double> local_goal;
+            for (int i = 0; i < output_tensor.size(1); i++)
+            {
+                local_goal.push_back(output_tensor[0][i].item().toDouble());
+            }
             if (normalize_output)
             {
-                output = denormalize_vector(output, state_lower_bounds, state_upper_bounds);
+                local_goal = denormalize_vector(local_goal, state_lower_bounds, state_upper_bounds);
             }
             return local_goal;
         }

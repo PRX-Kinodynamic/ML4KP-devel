@@ -9,16 +9,16 @@ namespace prx
     class learned_expand_t
     {
         public:
-        learned_expand_t(planner_specification_t& spec, planner_query_t& query)
+        learned_expand_t(planner_specification_t spec, planner_query_t query)
         {
-            planner_spec = &spec;
-            planner_query = &query;
+            // planner_spec = &spec;
+            // planner_query = &query;
         }
 
         bool init(param_loader params)
         {
             controller = new learned_controller_t(params);
-            local_goal_predictor = new local_goal_predictor_t(params);
+            lg_predictor = new local_goal_predictor_t(params);
             reachability_estimator = new reachability_estimator_t(params);
         }
 
@@ -29,10 +29,8 @@ namespace prx
             
         }
 
-        planner_specification_t planner_spec;
-        planner_query_t planner_query;
         learned_controller_t* controller;
-        local_goal_predictor_t* predictor;
+        local_goal_predictor_t* lg_predictor;
         reachability_estimator_t* reachability_estimator;
     };
 }

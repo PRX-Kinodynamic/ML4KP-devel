@@ -66,7 +66,7 @@ class learned_controller_t
         std::vector<double> normalized_state;
         if (normalize_input)
         {
-            normalized_state = extract_state(normalize_state(state,state_lower_bounds,state_upper_bounds),state_indices);
+            normalized_state = extract_state(normalize_vector(state,state_lower_bounds,state_upper_bounds),state_indices);
         }
         else
         {
@@ -85,7 +85,7 @@ class learned_controller_t
         {
             control.push_back(output[0][i].item().toDouble());
         }
-        return denormalize_control(control,control_lower_bounds,control_upper_bounds);
+        return denormalize_vector(control,control_lower_bounds,control_upper_bounds);
     }
     
     std::vector<double> get_control(const std::vector<double>& state, const std::vector<double>& goal)
@@ -98,8 +98,8 @@ class learned_controller_t
         std::vector<double> normalized_state, normalized_goal;
         if (normalize_input)
         {
-            normalized_state = extract_state(normalize_state(state,state_lower_bounds,state_upper_bounds),state_indices);
-            normalized_goal = extract_state(normalize_state(goal,state_lower_bounds,state_upper_bounds),goal_indices);
+            normalized_state = extract_state(normalize_vector(state,state_lower_bounds,state_upper_bounds),state_indices);
+            normalized_goal = extract_state(normalize_vector(goal,state_lower_bounds,state_upper_bounds),goal_indices);
         }
         else
         {
@@ -139,7 +139,7 @@ class learned_controller_t
         {
             control.push_back(output[0][i].item().toDouble());
         }
-        return denormalize_control(control,control_lower_bounds,control_upper_bounds);
+        return denormalize_vector(control,control_lower_bounds,control_upper_bounds);
     }
     
     void fulfill_query(planner_query_t& query, std::shared_ptr<system_group_t> sg, int horizon)
