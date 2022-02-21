@@ -1,6 +1,7 @@
 #ifndef TORCH_NOT_BUILT
 #pragma once
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/learned_modules/learned_modules_utils.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"
 #include "prx/planning/planners/rrt.hpp"
 
@@ -21,34 +22,37 @@ class learned_controller_t
     public:
     learned_controller_t(param_loader params)
     {
-        std::string controller_file = params["controller_path"].as<std::string>();
-        int random_seed = params["random_seed"].as<int>();
-        torch::manual_seed(random_seed);
-        torch::Device device(torch::kCPU);
-
-        // Get some controller parameters.
-        normalize_input = params["normalize_input"].as<bool>();
-        delta_input = params["delta_input"].as<bool>();
-        control_duration = params["control_duration"].as<double>();
-        debug_controller = params["debug_controller"].as<bool>();
-
-        state_lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
-        state_upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
-
-        control_lower_bounds = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
-        control_upper_bounds = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
-
-        state_indices = params["state_indices"].as<std::vector<int>>();
-        goal_indices = params["goal_indices"].as<std::vector<int>>();
-        
-        try
+        if (params["use_learned_controller"].as<bool>())
         {
-            std::cout << input_path + controller_file << std::endl;
-            controller = torch::jit::load(input_path+controller_file,device);
-        }
-        catch(const c10::Error& e)
-        {
-            prx_assert(false,"Error loading the network from file!");
+            std::string controller_file = params["controller_path"].as<std::string>();
+            int random_seed = params["random_seed"].as<int>();
+            torch::manual_seed(random_seed);
+            torch::Device device(torch::kCPU);
+
+            // Get some controller parameters.
+            normalize_input = params["normalize_input"].as<bool>();
+            delta_input = params["delta_input"].as<bool>();
+            control_duration = params["control_duration"].as<double>();
+            debug_controller = params["debug_controller"].as<bool>();
+
+            state_lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
+            state_upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
+
+            control_lower_bounds = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
+            control_upper_bounds = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
+
+            state_indices = params["state_indices"].as<std::vector<int>>();
+            goal_indices = params["goal_indices"].as<std::vector<int>>();
+            
+            try
+            {
+                std::cout << input_path + controller_file << std::endl;
+                controller = torch::jit::load(input_path+controller_file,device);
+            }
+            catch(const c10::Error& e)
+            {
+                prx_assert(false,"Error loading the network from file!");
+            }
         }
     }
 
@@ -137,48 +141,7 @@ class learned_controller_t
         }
         return denormalize_control(control,control_lower_bounds,control_upper_bounds);
     }
-
-    std::vector<double> extract_state(const std::vector<double>& state, const std::vector<int>& indices)
-    {
-        /*
-            Extracts the state from the state vector.
-        */
-        std::vector<double> extracted_state;
-        for (int i = 0; i < indices.size(); i++)
-        {
-            prx_assert(indices[i] < state.size(),"Index out of bounds!");
-            extracted_state.push_back(state[indices[i]]);
-        }
-        return extracted_state;
-    }
-
-    std::vector<double> normalize_state(const std::vector<double>& state, const std::vector<double>& lower_bounds, const std::vector<double>& upper_bounds)
-    {
-        /*
-            Normalizes the state to be between 0 and 1.
-        */
-        std::vector<double> normalized_state;
-        for(int i = 0; i < state.size(); i++)
-        {
-            normalized_state.push_back((state[i] - lower_bounds[i])/(upper_bounds[i] - lower_bounds[i]));
-        }
-        return normalized_state;
-    }
-
-    std::vector<double> denormalize_control(const std::vector<double>& control, const std::vector<double>& lower_bounds, const std::vector<double>& upper_bounds)
-    {
-        /*
-            Denormalizes the control to be between the lower and upper bounds.
-            Assumes the network outputs between -1 and 1.
-        */
-        std::vector<double> denormalized_control;
-        for(int i = 0; i < control.size(); i++)
-        {
-            denormalized_control.push_back(0.5*(control[i] + 1.0)*(upper_bounds[i] - lower_bounds[i]) + lower_bounds[i]);
-        }
-        return denormalized_control;
-    }
-
+    
     void fulfill_query(planner_query_t& query, std::shared_ptr<system_group_t> sg, int horizon)
     {
         // @TODO for Aravind: Adapt this for the non-goal-reaching case.

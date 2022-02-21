@@ -4,6 +4,8 @@ simulation_step: 0.01
 environment: "environments/bug_trap.yaml"
 plant: !file "plants/segway.yaml"
 
+use_learned_controller: true
+
 controller_path: "networks/segway.pt"
 
 state_indices: [0,1,2,3,4,5]
