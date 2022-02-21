@@ -48,6 +48,7 @@ int main(int argc, char* argv[])
 		auto ss = context.first->get_state_space();
     	auto cs = context.first -> get_control_space();
 		auto sg = context.first;
+        auto cg = context.second;
 
         bullet_collision_group_t bcg(bsim);
 		auto bcg_ptr = std::make_shared<bullet_collision_group_t>(bcg);
@@ -57,7 +58,22 @@ int main(int argc, char* argv[])
         const double max_duration  = params["max_duration"].as<double>();
         const double control_duration = params["control_duration"].as<double>();
 
+        btVector3 basePosition, baseRotation;
+        btQuaternion baseOrientation;
+
         rrt_specification_t rrt_spec(context.first,context.second);
+        rrt_spec.valid_state = [&](const space_point_t& state)
+        {
+            PRX_DEBUG_PRINT
+            basePosition[0] = state -> at(0);
+            basePosition[1] = state -> at(1);
+            baseRotation[2] = state -> at(2);
+            bullet_simulator_t::get_quaternion_from_euler(baseOrientation, baseRotation);
+            bsim->resetBasePositionAndOrientation(bsim->robot_ids[0],basePosition,baseOrientation);
+            bsim->stepSimulation();
+            bool valid = !cg->in_collision();
+            return valid;
+        };
 
         rrt_query_t rrt_query(ss,cs);
         rrt_query.start_state = ss -> make_point();
@@ -92,19 +108,23 @@ int main(int argc, char* argv[])
 
             std::cout << rrt_query.solution_traj.print(2) << std::endl;
 
+            auto retval = load_obstacles(obstacles_file,bsim);
             
-            /*
             std::ofstream ofs;
             ofs.open(output_path+output_dir+"/trajectory_"+std::to_string(i)+".txt");
 
+            unsigned last_state = -1;
             for (unsigned i = 0; i < rrt_query.solution_traj.size(); i += control_duration/simulation_step)
             {
+        
                 ss->copy_point(current,rrt_query.solution_traj[i]);
-                ofs << ss->print_point(rrt_query.solution_traj[i],4) << "," << rrt_spec.valid_state(current) << std::endl;
+                if (last_state != current->at(dim-1))
+                {
+                    last_state = current->at(dim-1);
+                    ofs << ss->print_point(rrt_query.solution_traj[i],4) << "," << rrt_spec.valid_state(current) << std::endl;
+                }
             }
             ofs.close();
-            */
-            
 
             output_progress_bar(i*1.0/num_trajectories);
         }
