@@ -267,9 +267,11 @@ namespace prx
 	void space_t::copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const
 	{
 		prx_assert(source->parent->space_name==space_name,"Point and space have different names: "<<source->parent->space_name<<" and "<<space_name);
-		//prx_assert(source->parent->dimension==destination.size(),"Point and vector have different sizes: "<<source->parent->dimension<<" and "<<destination.size());
+		// prx_assert(source->parent->dimension==destination.size(),"Point and vector have different sizes: "<<source->parent->dimension<<" and "<<destination.size());
+		destination.clear();
 		for(unsigned i=0;i<dimension;++i)
 		{
+			// destination[i]=source->memory[i];
 			destination.push_back(source->memory[i]);
 		}
 	}
