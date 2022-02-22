@@ -22,5 +22,5 @@ planner_name: "dirt_random"
 
 stats_runs: 2
 checker_type: time
-checker_value: 1
-stats_iters: 5
+checker_value: 0.1
+stats_iters: 10

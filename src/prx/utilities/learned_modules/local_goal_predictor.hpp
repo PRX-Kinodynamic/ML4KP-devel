@@ -26,6 +26,7 @@ class local_goal_predictor_t
             int random_seed = params["/local_goal_predictor/random_seed"].as<int>();
             torch::manual_seed(random_seed);
             torch::Device device(torch::kCPU);
+            torch::NoGradGuard no_grad;
             
             // Get some parameters.
             normalize_input = params["/local_goal_predictor/normalize_input"].as<bool>();

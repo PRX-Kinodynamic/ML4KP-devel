@@ -26,6 +26,7 @@ class learned_controller_t
         int random_seed = params["/learned_controller/random_seed"].as<int>();
         torch::manual_seed(random_seed);
         torch::Device device(torch::kCPU);
+        torch::NoGradGuard no_grad;
 
         // Get some controller parameters.
         normalize_input = params["/learned_controller/normalize_input"].as<bool>();

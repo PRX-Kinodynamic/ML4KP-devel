@@ -41,7 +41,11 @@ namespace prx
                 sg->get_state_space()->copy_vector_from_point(current_state_vec,s);
 
                 // Get local goal prediction.
-                std::vector<double> lg_prediction = lg_predictor->get_local_goal(current_state_vec, goal_state_vec);
+                std::vector<double> lg_prediction = goal_state_vec;
+                if (!reachability_estimator->is_reachable(current_state_vec,goal_state_vec))
+                {
+                    lg_prediction = lg_predictor->get_local_goal(current_state_vec, goal_state_vec);
+                }
 
                 // Get controller prediction
                 std::vector<double> controller_prediction = controller->get_control(current_state_vec, lg_prediction);

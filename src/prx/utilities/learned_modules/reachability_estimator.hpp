@@ -28,6 +28,7 @@ class reachability_estimator_t
             int random_seed = params["/reachability_estimator/random_seed"].as<int>();
             torch::manual_seed(random_seed);
             torch::Device device(torch::kCPU);
+            torch::NoGradGuard no_grad;
             
             // Get some parameters.
             normalize_input = params["/reachability_estimator/normalize_input"].as<bool>();
@@ -46,6 +47,7 @@ class reachability_estimator_t
             }
             catch(const c10::Error& e)
             {
+                std::cout << e.msg() << std::endl;
                 prx_assert(false,"Error loading the network from file!");
             }
         }
@@ -62,13 +64,13 @@ class reachability_estimator_t
             std::vector<double> normalized_state, normalized_goal;
             if (normalize_input)
             {
-                normalized_state = normalize_vector(state, state_lower_bounds, state_upper_bounds);
-                normalized_goal = normalize_vector(goal, state_lower_bounds, state_upper_bounds);
+                normalized_state = extract_state(normalize_vector(state, state_lower_bounds, state_upper_bounds),state_indices);
+                normalized_goal  = extract_state(normalize_vector(goal, state_lower_bounds, state_upper_bounds),goal_indices);
             }
             else
             {
-                normalized_state = state;
-                normalized_goal = goal;
+                normalized_state = extract_state(state,state_indices);
+                normalized_goal  = extract_state(goal,goal_indices);
             }
             
             normalized_state.insert(normalized_state.end(),normalized_goal.begin(),normalized_goal.end());
@@ -80,9 +82,8 @@ class reachability_estimator_t
             }
             inputs.push_back(input);
             
-            std::vector<torch::jit::IValue> outputs = predictor.forward(inputs).toTuple()->elements();
-            torch::Tensor output_tensor = outputs[0].toTensor();
-            double output = output_tensor.item<double>();
+            torch::Tensor output_tensor = predictor.forward(inputs).toTensor();
+            double output = output_tensor[0].item<double>();
             return sigmoid(output);
         }
         else
