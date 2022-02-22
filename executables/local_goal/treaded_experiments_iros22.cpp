@@ -5,6 +5,7 @@
 #include "prx/planning/planners/dirt.hpp"
 #include "prx/planning/planner_statistics.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
+#include "prx/visualization/three_js_group.hpp"
 
 using namespace prx;
 
@@ -65,11 +66,19 @@ int main(int argc, char* argv[])
 		context.first->get_state_space()->copy_point_from_vector(dirt_query.goal_state,params["/plant/goal_state"].as<std::vector<double>>());
 
         // Define goal check function here
+        dirt_query.goal_region_radius = params["goal_radius"].as<double>();
+        dirt_query.goal_check = [&,ss](space_point_t point)
+        {
+            return ss -> euclidean_2d(point, dirt_query.goal_state, 0, 3) < dirt_query.goal_region_radius;
+        };
 
-        learned_expand_t learned_expand(dirt_spec,dirt_query);
+        learned_expand_t learned_expand(dirt_spec,dirt_query, sg);
         learned_expand.init(params);
         
-        // Set up learned expand here.
+        dirt_spec.expand = [&learned_expand](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn, bool blossom_expand)
+        {
+            learned_expand.expand(s,plans,trajs,bn,blossom_expand);
+        };
 
         int stats_runs = params["stats_runs"].as<int>();
         condition_check_t checker(params["checker_type"].as<std::string>(),params["checker_value"].as<double>());
@@ -87,12 +96,21 @@ int main(int argc, char* argv[])
             stats.link_criterion(&checker);
             stats.repeat_data_gathering(stats_iters);
 
-            std::string full_filename = lib_path+params["data_output_folder"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";
+            std::string full_filename = output_path+params["output_dir"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";
 			fout.open(full_filename);
 			fout<<stats.serialize() << std::endl;
 			fout.close();
 
             // TODO: Add visualization code here.
+            if (true)
+            {
+                dirt.fulfill_query();
+                std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+                three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
+                vis_group->add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss, "0x000000");
+                vis_group->output_html(params["output_dir"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".html");
+                delete vis_group;
+            }
         }
     }
     catch(const prx_assert_t& e) 
