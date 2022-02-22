@@ -93,6 +93,8 @@ namespace prx
 		this -> resetSimulation();
 		this -> setGravity(btVector3(0,0,-9.8));
 
+		allowed_collisions.clear();
+
 		for (auto f : urdf_paths)
 		{
 			std::cout << "f: " << f.first << std::endl;
@@ -112,6 +114,8 @@ namespace prx
 			robot_ids.push_back(sb->uniqueId);
 			// TODO: Add exclusions between the system and the plane.
 		}
+
+		cg -> update_collisions();
 	}
 
 	void bullet_simulator_t::set_collision_group(collision_group_ptr_t cg_)

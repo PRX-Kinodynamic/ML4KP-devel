@@ -1,0 +1,26 @@
+random_seed: 111093
+simulation_step: 0.01
+
+environment: "environments/bug_trap.yaml"
+plant: !file "plants/segway.yaml"
+
+use_learned_controller: false
+controller_path: "networks/segway.pt"
+state_indices: [0,1,2,3,4,5]
+goal_indices: [0,1,2]
+normalize_input: false
+delta_input: false
+control_duration: 1.0
+
+blossom_number: 1
+
+goal_radius: 0.5
+
+output_dir: "data_reach_segway/"
+planner_name: "dirt_random"
+debug_controller: false
+
+stats_runs: 2
+checker_type: time
+checker_value: 1
+stats_iters: 5

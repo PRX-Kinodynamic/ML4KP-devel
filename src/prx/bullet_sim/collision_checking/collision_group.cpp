@@ -24,6 +24,20 @@ namespace prx
 		}
 	}
 
+	void bullet_collision_group_t::update_collisions()
+	{
+		collision_exclusion_list.clear();
+
+		for (auto i : simulator->allowed_collisions)
+		{
+			for (auto j : simulator->robot_ids)
+			{
+				std::cout << "[bullet_collision_group_t] Adding an allowed collision between " << i << " and " << j << std::endl;
+				collision_exclusion_list.push_back(std::make_pair(std::make_pair(i, -1), std::make_pair(j, -1)));
+			}
+		}
+	}
+
 
 	bullet_collision_group_t::~bullet_collision_group_t()
 	{

@@ -13,6 +13,7 @@ class reachability_estimator_t
 {
     private:
         torch::jit::script::Module predictor;
+        double threshold;
     protected:
         bool normalize_input, use_reachability_estimator;
         std::vector<double> state_upper_bounds, state_lower_bounds;
@@ -35,6 +36,8 @@ class reachability_estimator_t
             
             state_indices = params["state_indices"].as<std::vector<int>>();
             goal_indices = params["goal_indices"].as<std::vector<int>>();
+
+            threshold = params["threshold"].as<double>();
             
             try
             {
@@ -86,6 +89,12 @@ class reachability_estimator_t
         {
             return 1.0;
         }
+    }
+
+    bool is_reachable(const std::vector<double>& state, const std::vector<double>& goal)
+    {
+        double reachability_estimate = get_estimate(state, goal);
+        return reachability_estimate > threshold;
     }
 };
 

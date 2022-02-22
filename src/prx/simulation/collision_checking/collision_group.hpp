@@ -62,6 +62,8 @@ namespace prx
 			std::vector<std::vector<double>> closest_points;
 		};
 
+		virtual void update_collisions();
+
 		/**
 		 * @brief Check if there is a collision in the scene.
 		 * */

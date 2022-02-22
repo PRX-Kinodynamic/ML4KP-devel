@@ -23,6 +23,8 @@ namespace prx
 
 		bool in_collision() override;
 
+		virtual void update_collisions() override;
+
 		protected:
 
 		std::shared_ptr<bullet_simulator_t> simulator;

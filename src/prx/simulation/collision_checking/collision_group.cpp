@@ -95,6 +95,9 @@ namespace prx
 	{
 	}
 
+	void collision_group_t::update_collisions()
+	{}
+
 	bool collision_group_t::in_collision()	  
 	{	
 		update_plants();
