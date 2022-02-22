@@ -24,20 +24,20 @@ class reachability_estimator_t
         use_reachability_estimator = params["use_reachability_estimator"].as<bool>();
         if (use_reachability_estimator)
         {
-            std::string predictor_file = params["predictor_path"].as<std::string>();
-            int random_seed = params["random_seed"].as<int>();
+            std::string predictor_file = params["/reachability_estimator/predictor_path"].as<std::string>();
+            int random_seed = params["/reachability_estimator/random_seed"].as<int>();
             torch::manual_seed(random_seed);
             torch::Device device(torch::kCPU);
             
             // Get some parameters.
-            normalize_input = params["normalize_input"].as<bool>();
+            normalize_input = params["/reachability_estimator/normalize_input"].as<bool>();
             state_lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
             state_upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
             
-            state_indices = params["state_indices"].as<std::vector<int>>();
-            goal_indices = params["goal_indices"].as<std::vector<int>>();
+            state_indices = params["/reachability_estimator/state_indices"].as<std::vector<int>>();
+            goal_indices = params["/reachability_estimator/goal_indices"].as<std::vector<int>>();
 
-            threshold = params["threshold"].as<double>();
+            threshold = params["/reachability_estimator/threshold"].as<double>();
             
             try
             {
@@ -83,7 +83,7 @@ class reachability_estimator_t
             std::vector<torch::jit::IValue> outputs = predictor.forward(inputs).toTuple()->elements();
             torch::Tensor output_tensor = outputs[0].toTensor();
             double output = output_tensor.item<double>();
-            return output;
+            return sigmoid(output);
         }
         else
         {

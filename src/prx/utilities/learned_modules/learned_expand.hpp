@@ -15,7 +15,7 @@ namespace prx
             // planner_query = &query;
         }
 
-        bool init(param_loader params)
+        void init(param_loader params)
         {
             controller = new learned_controller_t(params);
             lg_predictor = new local_goal_predictor_t(params);

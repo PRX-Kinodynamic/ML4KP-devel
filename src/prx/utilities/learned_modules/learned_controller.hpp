@@ -22,37 +22,34 @@ class learned_controller_t
     public:
     learned_controller_t(param_loader params)
     {
-        if (params["use_learned_controller"].as<bool>())
+        std::string controller_file = params["/learned_controller/controller_path"].as<std::string>();
+        int random_seed = params["/learned_controller/random_seed"].as<int>();
+        torch::manual_seed(random_seed);
+        torch::Device device(torch::kCPU);
+
+        // Get some controller parameters.
+        normalize_input = params["/learned_controller/normalize_input"].as<bool>();
+        delta_input = params["/learned_controller/delta_input"].as<bool>();
+        control_duration = params["/learned_controller/control_duration"].as<double>();
+        debug_controller = params["/learned_controller/debug_controller"].as<bool>();
+
+        state_lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
+        state_upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
+
+        control_lower_bounds = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
+        control_upper_bounds = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
+
+        state_indices = params["/learned_controller/state_indices"].as<std::vector<int>>();
+        goal_indices = params["/learned_controller/goal_indices"].as<std::vector<int>>();
+        
+        try
         {
-            std::string controller_file = params["controller_path"].as<std::string>();
-            int random_seed = params["random_seed"].as<int>();
-            torch::manual_seed(random_seed);
-            torch::Device device(torch::kCPU);
-
-            // Get some controller parameters.
-            normalize_input = params["normalize_input"].as<bool>();
-            delta_input = params["delta_input"].as<bool>();
-            control_duration = params["control_duration"].as<double>();
-            debug_controller = params["debug_controller"].as<bool>();
-
-            state_lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
-            state_upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
-
-            control_lower_bounds = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
-            control_upper_bounds = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
-
-            state_indices = params["state_indices"].as<std::vector<int>>();
-            goal_indices = params["goal_indices"].as<std::vector<int>>();
-            
-            try
-            {
-                std::cout << input_path + controller_file << std::endl;
-                controller = torch::jit::load(input_path+controller_file,device);
-            }
-            catch(const c10::Error& e)
-            {
-                prx_assert(false,"Error loading the network from file!");
-            }
+            std::cout << input_path + controller_file << std::endl;
+            controller = torch::jit::load(input_path+controller_file,device);
+        }
+        catch(const c10::Error& e)
+        {
+            prx_assert(false,"Error loading the network from file!");
         }
     }
 
@@ -85,7 +82,7 @@ class learned_controller_t
         {
             control.push_back(output[0][i].item().toDouble());
         }
-        return denormalize_vector(control,control_lower_bounds,control_upper_bounds);
+        return denormalize_control(control,control_lower_bounds,control_upper_bounds);
     }
     
     std::vector<double> get_control(const std::vector<double>& state, const std::vector<double>& goal)
@@ -139,7 +136,7 @@ class learned_controller_t
         {
             control.push_back(output[0][i].item().toDouble());
         }
-        return denormalize_vector(control,control_lower_bounds,control_upper_bounds);
+        return denormalize_control(control,control_lower_bounds,control_upper_bounds);
     }
     
     void fulfill_query(planner_query_t& query, std::shared_ptr<system_group_t> sg, int horizon)

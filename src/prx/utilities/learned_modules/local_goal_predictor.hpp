@@ -22,19 +22,19 @@ class local_goal_predictor_t
         use_local_goal_predictor = params["use_local_goal_predictor"].as<bool>();
         if (use_local_goal_predictor)
         {
-            std::string predictor_file = params["predictor_path"].as<std::string>();
-            int random_seed = params["random_seed"].as<int>();
+            std::string predictor_file = params["/local_goal_predictor/predictor_path"].as<std::string>();
+            int random_seed = params["/local_goal_predictor/random_seed"].as<int>();
             torch::manual_seed(random_seed);
             torch::Device device(torch::kCPU);
             
             // Get some parameters.
-            normalize_input = params["normalize_input"].as<bool>();
-            normalize_output = params["normalize_output"].as<bool>();
+            normalize_input = params["/local_goal_predictor/normalize_input"].as<bool>();
+            normalize_output = params["/local_goal_predictor/normalize_output"].as<bool>();
             state_lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
             state_upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
             
-            state_indices = params["state_indices"].as<std::vector<int>>();
-            goal_indices = params["goal_indices"].as<std::vector<int>>();
+            state_indices = params["/local_goal_predictor/state_indices"].as<std::vector<int>>();
+            goal_indices = params["/local_goal_predictor/goal_indices"].as<std::vector<int>>();
             
             try
             {
@@ -83,7 +83,7 @@ class local_goal_predictor_t
             }
             if (normalize_output)
             {
-                local_goal = denormalize_vector(local_goal, state_lower_bounds, state_upper_bounds);
+                local_goal = denormalize_state(local_goal, state_lower_bounds, state_upper_bounds);
             }
             return local_goal;
         }

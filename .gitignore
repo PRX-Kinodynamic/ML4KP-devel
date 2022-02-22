@@ -9,7 +9,6 @@ tests/old/
 docs/html/
 docs/latex/
 src/prx/external/libtorch/
-resources/input_files/networks/
 resources/input_files/mazes/*.yaml
 *.html
 *.out

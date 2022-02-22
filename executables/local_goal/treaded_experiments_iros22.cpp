@@ -1,6 +1,7 @@
 #ifndef TORCH_NOT_BUILT
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/learned_modules/learned_expand.hpp"
+#include "prx/simulation/plants/plants.hpp"
 #include "prx/planning/planners/dirt.hpp"
 #include "prx/planning/planner_statistics.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
@@ -34,6 +35,7 @@ int main(int argc, char* argv[])
         std::string plant_name = params["/plant/name"].as<std::string>();
         std::string plant_path = params["/plant/path"].as<std::string>();
         auto plant = system_factory_t::create_system(plant_name,plant_path);
+        prx_assert(plant != nullptr, "Plant is nullptr!");
 
         std::vector<double> lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
         std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
@@ -49,8 +51,8 @@ int main(int argc, char* argv[])
 
         dirt_t dirt("dirt");
         dirt_specification_t dirt_spec(context.first,context.second);
-        dirt_spec.min_control_steps = params["min_steps"].as<int>();
-        dirt_spec.max_control_steps = params["max_steps"].as<int>();
+        dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
+        dirt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
         dirt_spec.blossom_number = params["blossom_number"].as<int>();
         dirt_spec.use_pruning = false;
 
@@ -58,9 +60,9 @@ int main(int argc, char* argv[])
 
         dirt_query_t dirt_query(ss,cs);
         dirt_query.start_state = context.first->get_state_space()->make_point();
-		context.first->get_state_space()->copy_point_from_vector(dirt_query.start_state,params["start_state"].as<std::vector<double>>());
+		context.first->get_state_space()->copy_point_from_vector(dirt_query.start_state,params["/plant/start_state"].as<std::vector<double>>());
 		dirt_query.goal_state = context.first->get_state_space()->make_point();
-		context.first->get_state_space()->copy_point_from_vector(dirt_query.goal_state,params["goal_state"].as<std::vector<double>>());
+		context.first->get_state_space()->copy_point_from_vector(dirt_query.goal_state,params["/plant/goal_state"].as<std::vector<double>>());
 
         // Define goal check function here
 

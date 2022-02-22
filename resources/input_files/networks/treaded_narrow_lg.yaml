@@ -1,0 +1,12 @@
+predictor_path: "networks/treaded_narrow_lg.pt"
+
+random_seed: 111093
+
+state_indices: [0,1,2,3,4]
+goal_indices: [0,1,2]
+
+normalize_input: true
+normalize_output: true
+
+state_indices: [0,1,2,3,4]
+goal_indices: [0,1,2]

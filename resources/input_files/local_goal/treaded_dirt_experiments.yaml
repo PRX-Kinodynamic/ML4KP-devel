@@ -1,0 +1,26 @@
+random_seed: 111093
+simulation_step: 0.1
+
+environment: "environments/narrow.yaml"
+plant: !file "plants/treaded_vehicle.yaml"
+
+use_learned_controller: true
+learned_controller: !file "networks/treaded_vehicle_controller.yaml"
+
+use_local_goal_predictor: true
+local_goal_predictor: !file "networks/treaded_narrow_lg.yaml"
+
+use_reachability_estimator: true
+reachability_estimator: !file "networks/treaded_narrow_reach.yaml"
+
+blossom_number: 1
+
+goal_radius: 0.5
+
+output_dir: "treaded_test/"
+planner_name: "dirt_random"
+
+stats_runs: 2
+checker_type: time
+checker_value: 1
+stats_iters: 5
