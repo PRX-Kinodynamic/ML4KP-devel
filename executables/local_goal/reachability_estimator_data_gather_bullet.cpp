@@ -106,12 +106,14 @@ int main(int argc, char* argv[])
 
             controller.fulfill_query(rrt_query,sg,max_duration);
 
-            std::cout << rrt_query.solution_traj.print(2) << std::endl;
+            std::ofstream ofs;
+            ofs.open(output_path+output_dir+ "/trajectory_" + std::to_string(i) + ".txt");
+            ofs << rrt_query.solution_traj.print(2) << std::endl;
+            ofs.close();
 
             auto retval = load_obstacles(obstacles_file,bsim);
             
-            std::ofstream ofs;
-            ofs.open(output_path+output_dir+"/trajectory_"+std::to_string(i)+".txt");
+            ofs.open(output_path+output_dir+"/trajectory_annotated_"+std::to_string(i)+".txt");
 
             unsigned last_state = -1;
             for (unsigned i = 0; i < rrt_query.solution_traj.size(); i += control_duration/simulation_step)
@@ -128,49 +130,6 @@ int main(int argc, char* argv[])
 
             output_progress_bar(i*1.0/num_trajectories);
         }
-
-        
-
-        /*
-        auto obstacles = load_obstacles(params["environment"].as<std::string>());
-        auto obstacle_list = obstacles.second;
-        auto obstacle_names = obstacles.first;
-
-        
-
-        std::vector<double> lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
-        std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
-        plant -> set_state_space_bounds(lower_bounds,upper_bounds);
-
-        
-
-        std::string output_dir = params["output_dir"].as<std::string>();
-
-        space_point_t current = ss -> make_point();
-
-        for (int i = 0; i < num_trajectories; i++)
-        {
-            ss->sample(rrt_query.start_state);
-            ss->sample(rrt_query.goal_state);
-
-            std::cout << ss->print_point(rrt_query.start_state,2) << " " 
-            << ss->print_point(rrt_query.goal_state,2) << std::endl;
-
-            controller.fulfill_query(rrt_query,sg,max_duration);
-
-            std::ofstream ofs;
-            ofs.open(output_path+output_dir+"/trajectory_"+std::to_string(i)+".txt");
-
-            for (unsigned i = 0; i < rrt_query.solution_traj.size(); i += control_duration/simulation_step)
-            {
-                ss->copy_point(current,rrt_query.solution_traj[i]);
-                ofs << ss->print_point(rrt_query.solution_traj[i],4) << "," << rrt_spec.valid_state(current) << std::endl;
-            }
-            ofs.close();
-
-            output_progress_bar(i*1.0/num_trajectories);
-        }
-        */
 
     }
     catch(const prx_assert_t& e) 
