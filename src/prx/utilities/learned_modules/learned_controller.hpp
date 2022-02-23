@@ -156,6 +156,7 @@ class learned_controller_t
         {
             if (debug_controller) std::cout << sg -> get_state_space() -> print_point(current) << std::endl;
             state_vec.clear();
+            step_traj.clear();
             query.solution_plan.clear();
             query.solution_plan.append_onto_back(control_duration);
             sg -> get_state_space() -> copy_vector_from_point(state_vec,current);
@@ -165,6 +166,10 @@ class learned_controller_t
             query.solution_traj += step_traj;
             sg -> get_state_space() -> copy_point(current,query.solution_traj.back());
             time_so_far += control_duration;
+        }
+        if (!query.goal_check(current))
+        {
+            query.clear_outputs();
         }
     }
 };

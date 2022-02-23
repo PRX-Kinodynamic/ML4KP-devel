@@ -72,6 +72,7 @@ int main(int argc, char* argv[])
 
         for (int i = 0; i < num_trajectories; i++)
         {
+            rrt_query.clear_outputs();
             ss->sample(rrt_query.start_state);
             ss->sample(rrt_query.goal_state);
 
