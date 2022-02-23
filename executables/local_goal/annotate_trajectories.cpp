@@ -122,13 +122,11 @@ int main(int argc, char* argv[])
             }
             else
             {
-
                 trajectory_t lc_trajectory(dirt_query.solution_traj);
                 dirt_query.clear_outputs();
                 
                 std::cout << ss->print_point(dirt_query.start_state,4) << "," << ss->print_point(dirt_query.goal_state,4) << std::endl;
                 // Get a trajectory from the planner.
-                dirt.reset();
                 dirt.link_and_setup_spec(&dirt_spec);
                 dirt.preprocess();
                 dirt.link_and_setup_query(&dirt_query);
@@ -140,10 +138,10 @@ int main(int argc, char* argv[])
 
                 if (dirt_query.solution_traj.size() > 0)
                 {
-                    controller.fulfill_query(dirt_query,sg,horizon);
-
                     std::cout << lc_trajectory.size() << " " << dirt_query.solution_traj.size() << std::endl;
                 }
+
+                dirt.reset();
                 
             }
             output_progress_bar(i*1.0/num_trajectories);
