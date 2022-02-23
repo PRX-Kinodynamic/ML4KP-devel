@@ -111,6 +111,9 @@ int main(int argc, char* argv[])
                 vis_group->output_html(params["output_dir"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".html");
                 delete vis_group;
             }
+
+            dirt.reset();
+            dirt_query.clear_outputs();
         }
     }
     catch(const prx_assert_t& e) 
