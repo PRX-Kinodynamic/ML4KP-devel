@@ -93,9 +93,9 @@ int main(int argc, char* argv[])
         std::ofstream ofs;
         ofs.open(output_path + output_file, std::ofstream::out);
 
-        std::vector<double> start_vec, goal_vec;
+        std::vector<double> start_vec, goal_vec, local_vec, last_state_vec;
 
-        for (int i = 0; i < num_trajectories; i++)
+        for (int idx = 0; idx < num_trajectories; idx++)
         {
             dirt_query.clear_outputs();
 
@@ -108,26 +108,30 @@ int main(int argc, char* argv[])
                 sample = !dirt_spec.valid_state(dirt_query.start_state) || !dirt_spec.valid_state(dirt_query.goal_state);
             }
 
-            ss -> copy_vector_from_point(start_vec, dirt_query.start_state);
-            ss -> copy_vector_from_point(goal_vec, dirt_query.goal_state);
-
             controller.fulfill_query(dirt_query, sg, horizon);
 
             if (dirt_query.solution_traj.size() == 0) continue;
 
+            std::vector <std::vector <double>> input_states, local_goals, last_states, global_goals;
             if (dirt_spec.valid_check(dirt_query.solution_traj))
             {
                 unsigned last_added = 0;
                 for (int i = 0; i < dirt_query.solution_traj.size(); i++)
                 {
-                    
+                    ss -> copy_vector_from_point(start_vec, dirt_query.start_state);
+                    ss -> copy_vector_from_point(local_vec, dirt_query.goal_state);
+                    ss -> copy_vector_from_point(last_state_vec, dirt_query.solution_traj.back());
+                    ss -> copy_vector_from_point(goal_vec, dirt_query.goal_state);
+
+                    input_states.push_back(start_vec);
+                    local_goals.push_back(local_vec);
+                    last_states.push_back(last_state_vec);
+                    global_goals.push_back(goal_vec);
                 }
             }
             else
             {
-                trajectory_t lc_trajectory(dirt_query.solution_traj);
                 dirt_query.clear_outputs();
-                
                 std::cout << ss->print_point(dirt_query.start_state,4) << "," << ss->print_point(dirt_query.goal_state,4) << std::endl;
 
                 dirt.reset();
@@ -135,30 +139,43 @@ int main(int argc, char* argv[])
                 dirt.preprocess();
                 dirt.link_and_setup_query(&dirt_query);
 
-                condition_check_t checker("time",5);
+                condition_check_t checker("time",30);
 
                 dirt.resolve_query(&checker);
                 dirt.fulfill_query();
 
                 if (dirt_query.solution_traj.size() == 0) continue;
+                trajectory_t lc_trajectory(dirt_query.solution_traj);
 
                 unsigned state_id = 0;
 
-                while (state_id < dirt_query.solution_traj.size()-1)
+                while (state_id < lc_trajectory.size()-1)
                 {
                     int max_state_id = -1;
-                    space_point_t state = ss -> clone_point(dirt_query.solution_traj[state_id]);
+                    space_point_t state = ss -> clone_point(lc_trajectory[state_id]);
                     space_point_t max_state;
                     std::vector<double> test_state, test_goal;
                     ss -> copy_vector_from_point(test_state, state);
-                    for (unsigned i = dirt_query.solution_traj.size()-1; i > state_id; i -= dirt_spec.max_control_steps)
+                    for (unsigned i = lc_trajectory.size()-1; i > state_id; i -= dirt_spec.max_control_steps)
                     {
-                        ss -> copy_vector_from_point(test_goal, dirt_query.solution_traj[i]);
-                        if (estimator.is_reachable(test_state, test_goal))
-                        {
-                            max_state_id = i;
-                            break;
+                        dirt_query.clear_outputs();
+                        dirt_query.goal_state = lc_trajectory[i];
+                        dirt_query.start_state = state;
+                        controller.fulfill_query(dirt_query, sg, horizon);
+                        if (dirt_query.solution_traj.size() == 0) continue;
+                        for(auto s: dirt_query.solution_traj){
+                            ss -> copy_vector_from_point(start_vec, s);
+                            ss -> copy_vector_from_point(local_vec, lc_trajectory[i]);
+                            ss -> copy_vector_from_point(last_state_vec, dirt_query.solution_traj.back());
+                            ss -> copy_vector_from_point(goal_vec, lc_trajectory.back());
+
+                            input_states.push_back(start_vec);
+                            local_goals.push_back(local_vec);
+                            last_states.push_back(last_state_vec);
+                            global_goals.push_back(goal_vec);
                         }
+                        max_state_id = i;
+                        break;
                     }
                     if (max_state_id == -1)
                     {
@@ -170,7 +187,7 @@ int main(int argc, char* argv[])
                             three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
                             vis_group->add_vis_infos(info_geometry_t::LINE, dirt_query.solution_traj, body_name, ss, "0x000000");
                             vis_group->add_vis_infos(info_geometry_t::LINE, lc_trajectory, body_name, ss, "0x0000ff");
-                            vis_group->output_html(params["output_dir"].as<std::string>()+std::to_string(i)+".html");
+                            vis_group->output_html(params["output_dir"].as<std::string>()+std::to_string(idx)+".html");
                             delete vis_group;
                         }
 
@@ -182,10 +199,33 @@ int main(int argc, char* argv[])
                         std::cout << "Max state id: " << max_state_id << std::endl;
                         max_state = ss -> clone_point(dirt_query.solution_traj[id]);
                     }
+                    std::cout << max_state_id;
                     state_id = max_state_id;
                 }
             }
-            output_progress_bar(i*1.0/num_trajectories);
+            std::ofstream fout;
+            fout.open("/home/kushal/ML4KP-devel/out/city_collect/annotated_trajectories_"+std::to_string(idx)+".txt");
+            for(int i=0; i<input_states.size();i++){
+                for(int j=0; j<input_states[i].size(); j++){
+                    fout << input_states[j] << " ";
+                }
+                fout << "# ";
+                for(int j=0; j<input_states[i].size(); j++){
+                    fout << local_goals[j] << " ";
+                }
+                fout << "# ";
+                for(int j=0; j<input_states[i].size(); j++){
+                    fout << last_states[j] << " ";
+                }
+                fout << "# ";
+                for(int j=0; j<input_states[i].size(); j++){
+                    fout << global_goals[j] << " ";
+                }
+                fout << "\n";
+            }
+            fout.close();
+
+            output_progress_bar(idx*1.0/num_trajectories);
         }
     }
     catch(const prx_assert_t& e) 

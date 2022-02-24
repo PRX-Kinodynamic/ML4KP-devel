@@ -1,7 +1,7 @@
 random_seed: 111093
 simulation_step: 0.1
 
-environment: "environments/narrow.yaml"
+environment: "environments/warehouse.yaml"
 plant: !file "plants/treaded_vehicle.yaml"
 
 use_learned_controller: true
@@ -14,4 +14,6 @@ reachability_estimator: !file "networks/treaded_narrow_reach.yaml"
 goal_radius: 0.5
 
 output_file: "lgdata_treaded_narrow.txt"
-num_trajectories: 1000
+num_trajectories: 1
+
+debug: false
