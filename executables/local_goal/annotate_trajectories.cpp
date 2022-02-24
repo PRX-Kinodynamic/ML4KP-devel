@@ -110,15 +110,13 @@ int main(int argc, char* argv[])
 
             controller.fulfill_query(dirt_query, sg, horizon);
 
-            if (dirt_query.solution_traj.size() == 0) continue;
-
             std::vector <std::vector <double>> input_states, local_goals, last_states, global_goals;
-            if (dirt_spec.valid_check(dirt_query.solution_traj))
+            if (dirt_query.solution_traj.size() != 0 && dirt_spec.valid_check(dirt_query.solution_traj))
             {
-                unsigned last_added = 0;
-                for (int i = 0; i < dirt_query.solution_traj.size(); i++)
+                std::cout << "Valid\n";
+                for (unsigned i = 0; i < dirt_query.solution_traj.size(); i++)
                 {
-                    ss -> copy_vector_from_point(start_vec, dirt_query.start_state);
+                    ss -> copy_vector_from_point(start_vec, dirt_query.solution_traj[i]);
                     ss -> copy_vector_from_point(local_vec, dirt_query.goal_state);
                     ss -> copy_vector_from_point(last_state_vec, dirt_query.solution_traj.back());
                     ss -> copy_vector_from_point(goal_vec, dirt_query.goal_state);
@@ -145,7 +143,11 @@ int main(int argc, char* argv[])
                 dirt.fulfill_query();
 
                 if (dirt_query.solution_traj.size() == 0) continue;
-                trajectory_t lc_trajectory(dirt_query.solution_traj);
+                trajectory_t lc_trajectory(ss);
+                lc_trajectory.clear();
+                for (auto s:dirt_query.solution_traj){
+                    lc_trajectory.copy_onto_back(s);
+                }
 
                 unsigned state_id = 0;
 
@@ -162,7 +164,7 @@ int main(int argc, char* argv[])
                         dirt_query.goal_state = lc_trajectory[i];
                         dirt_query.start_state = state;
                         controller.fulfill_query(dirt_query, sg, horizon);
-                        if (dirt_query.solution_traj.size() == 0) continue;
+                        if (dirt_query.solution_traj.size() == 0 || !dirt_spec.valid_check(dirt_query.solution_traj)) continue;
                         for(auto s: dirt_query.solution_traj){
                             ss -> copy_vector_from_point(start_vec, s);
                             ss -> copy_vector_from_point(local_vec, lc_trajectory[i]);
@@ -180,7 +182,7 @@ int main(int argc, char* argv[])
                     if (max_state_id == -1)
                     {
                         std::cout << "No max state found" << std::endl;
-
+                        // return -1;
                         if (params["debug"].as<bool>())
                         {
                             std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
@@ -197,7 +199,7 @@ int main(int argc, char* argv[])
                     {
                         unsigned id = max_state_id;
                         std::cout << "Max state id: " << max_state_id << std::endl;
-                        max_state = ss -> clone_point(dirt_query.solution_traj[id]);
+                        max_state = ss -> clone_point(lc_trajectory[id]);
                     }
                     std::cout << max_state_id;
                     state_id = max_state_id;
@@ -207,19 +209,19 @@ int main(int argc, char* argv[])
             fout.open("/home/kushal/ML4KP-devel/out/city_collect/annotated_trajectories_"+std::to_string(idx)+".txt");
             for(int i=0; i<input_states.size();i++){
                 for(int j=0; j<input_states[i].size(); j++){
-                    fout << input_states[j] << " ";
+                    fout << input_states[i][j] << " ";
                 }
                 fout << "# ";
                 for(int j=0; j<input_states[i].size(); j++){
-                    fout << local_goals[j] << " ";
+                    fout << local_goals[i][j] << " ";
                 }
                 fout << "# ";
                 for(int j=0; j<input_states[i].size(); j++){
-                    fout << last_states[j] << " ";
+                    fout << last_states[i][j] << " ";
                 }
                 fout << "# ";
                 for(int j=0; j<input_states[i].size(); j++){
-                    fout << global_goals[j] << " ";
+                    fout << global_goals[i][j] << " ";
                 }
                 fout << "\n";
             }
