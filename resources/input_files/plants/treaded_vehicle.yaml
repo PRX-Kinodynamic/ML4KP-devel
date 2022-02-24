@@ -2,14 +2,14 @@ name: "treaded_vehicle"
 path: "treaded_vehicle"
 
 # Assume simple_obstacle environment
-start_state: [-10.0, -10.0, 0.0, 0.0, 0.0]
-goal_state:  [10.0, 10.0, 0.0, 0.0, 0.0]
+start_state: [-20.0, -10.0, 0.0, 0.0, 0.0]
+goal_state:  [20.0, 10.0, 0.0, 0.0, 0.0]
 
 min_steps: 10
 max_steps: 20
 
-state_space_lower_bound: [-15,-15,-3.14159,-.7,-.7]
-state_space_upper_bound: [15,15,3.14159,.7,.7]
+state_space_lower_bound: [-20,-20,-3.14159,-.7,-.7]
+state_space_upper_bound: [20,20,3.14159,.7,.7]
 
 control_space_lower_bound: [-.2,-.2]
 control_space_upper_bound: [.2,.2]

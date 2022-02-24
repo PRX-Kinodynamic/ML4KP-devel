@@ -154,22 +154,27 @@ class learned_controller_t
 
         while (time_so_far < horizon && !query.goal_check(current))
         {
-            if (debug_controller) std::cout << sg -> get_state_space() -> print_point(current) << std::endl;
             state_vec.clear();
             step_traj.clear();
             query.solution_plan.clear();
             query.solution_plan.append_onto_back(control_duration);
             sg -> get_state_space() -> copy_vector_from_point(state_vec,current);
             sg -> get_control_space() -> copy_point_from_vector(query.solution_plan.back().control,get_control(state_vec,goal_vec));
-            if (debug_controller) std::cout << sg -> get_control_space() -> print_point(query.solution_plan.back().control) << " " << query.solution_plan.back().duration << std::endl;
+            if (debug_controller) std::cout << sg -> get_control_space() -> print_point(query.solution_plan.back().control,4) << " " << query.solution_plan.back().duration << std::endl;
             sg -> propagate(current, query.solution_plan, step_traj);
+            if (debug_controller) std::cout << sg -> get_state_space() -> print_point(step_traj.back(),4) << std::endl;
             query.solution_traj += step_traj;
             sg -> get_state_space() -> copy_point(current,query.solution_traj.back());
             time_so_far += control_duration;
         }
         if (!query.goal_check(current))
         {
+            PRX_DEBUG_PRINT
             query.clear_outputs();
+        }
+        else
+        {
+            PRX_DEBUG_PRINT
         }
     }
 };

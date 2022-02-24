@@ -37,6 +37,10 @@ std::vector<double> denormalize_control(const std::vector<double>& control, cons
     std::vector<double> denormalized_control;
     for(int i = 0; i < control.size(); i++)
     {
+        if (control[i] <= -1.0 || control[i] >= 1.0)
+        {
+            PRX_DEBUG_PRINT
+        }
         denormalized_control.push_back(0.5*(control[i] + 1.0)*(upper_bounds[i] - lower_bounds[i]) + lower_bounds[i]);
     }
     return denormalized_control;

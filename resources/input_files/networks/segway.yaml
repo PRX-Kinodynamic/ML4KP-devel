@@ -1,0 +1,12 @@
+controller_path: "networks/segway.pt"
+random_seed: 111093
+
+state_indices: [0,1,2,3,4,5]
+goal_indices: [0,1,2]
+
+normalize_input: false
+delta_input: true
+
+control_duration: 1.0
+
+debug_controller: false

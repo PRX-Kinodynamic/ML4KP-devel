@@ -84,14 +84,11 @@ int main(int argc, char* argv[])
             // return ss -> euclidean_2d(point, dirt_query.goal_state, 0, 3) < dirt_query.goal_region_radius;
         };
 
-        std::string output_file = params["output_file"].as<std::string>();
+        std::string output_dir = params["output_dir"].as<std::string>();
 
         reachability_estimator_t estimator(params);
         learned_controller_t controller(params);
         double horizon = params["max_steps"].as<double>();
-
-        std::ofstream ofs;
-        ofs.open(output_path + output_file, std::ofstream::out);
 
         std::vector<double> start_vec, goal_vec, local_vec, last_state_vec;
 
@@ -206,7 +203,7 @@ int main(int argc, char* argv[])
                 }
             }
             std::ofstream fout;
-            fout.open("/home/kushal/ML4KP-devel/out/city_collect/annotated_trajectories_"+std::to_string(idx)+".txt");
+            fout.open(output_path+output_dir+std::to_string(random_seed)+"annotated_trajectories_"+std::to_string(idx)+".txt");
             for(int i=0; i<input_states.size();i++){
                 for(int j=0; j<input_states[i].size(); j++){
                     fout << input_states[i][j] << " ";

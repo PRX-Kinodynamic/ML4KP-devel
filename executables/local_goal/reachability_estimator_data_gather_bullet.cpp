@@ -36,8 +36,12 @@ int main(int argc, char* argv[])
         std::string plant_path = params["/plant/path"].as<std::string>();
         auto plant = system_factory_t::create_system(plant_name,plant_path);
 
+        std::vector<double> lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
+        std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
+        plant -> set_state_space_bounds(lower_bounds,upper_bounds);
+
         auto bsim = std::make_shared<bullet_simulator_t>();
-		bsim -> add_urdf(bullet_path + "/data/plane.urdf");
+		bsim -> add_urdf(models_path + "misc/plane.urdf");
         std::string obstacles_file = params["environment"].as<std::string>();
         // auto retval = load_obstacles(obstacles_file,bsim);
 		bsim -> add_group({plant});
@@ -64,7 +68,6 @@ int main(int argc, char* argv[])
         rrt_specification_t rrt_spec(context.first,context.second);
         rrt_spec.valid_state = [&](const space_point_t& state)
         {
-            PRX_DEBUG_PRINT
             basePosition[0] = state -> at(0);
             basePosition[1] = state -> at(1);
             baseRotation[2] = state -> at(2);
@@ -93,7 +96,6 @@ int main(int argc, char* argv[])
         {
             rrt_query.clear_outputs();
             ss->sample(rrt_query.start_state);
-            std::cout << "Sampled start: " << ss->print_point(rrt_query.start_state) << std::endl;
             // This is additional for the bullet-simulated plant.
             rrt_query.start_state->at(dim-1) = 0;
             ss->copy_from_point(rrt_query.start_state);
@@ -117,15 +119,16 @@ int main(int argc, char* argv[])
             ofs.open(output_path+output_dir+"/trajectory_annotated_"+std::to_string(i)+".txt");
 
             unsigned last_state = -1;
-            for (unsigned i = 0; i < rrt_query.solution_traj.size(); i += control_duration/simulation_step)
+            // for (unsigned i = 0; i < rrt_query.solution_traj.size(); i += control_duration/simulation_step)
+            for (unsigned i = 0; i < rrt_query.solution_traj.size(); i += 1)
             {
         
                 ss->copy_point(current,rrt_query.solution_traj[i]);
-                if (last_state != current->at(dim-1))
-                {
-                    last_state = current->at(dim-1);
+                // if (last_state != current->at(dim-1))
+                // {
+                    // last_state = current->at(dim-1);
                     ofs << ss->print_point(rrt_query.solution_traj[i],4) << "," << rrt_spec.valid_state(current) << std::endl;
-                }
+                // }
             }
             ofs.close();
 
