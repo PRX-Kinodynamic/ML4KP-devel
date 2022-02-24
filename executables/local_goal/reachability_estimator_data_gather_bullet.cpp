@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
         btQuaternion baseOrientation;
 
         rrt_specification_t rrt_spec(context.first,context.second);
-        rrt_spec.valid_state = [&](const space_point_t& state)
+        rrt_spec.valid_state = [&,bcg](const space_point_t& state)
         {
             basePosition[0] = state -> at(0);
             basePosition[1] = state -> at(1);
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
             bullet_simulator_t::get_quaternion_from_euler(baseOrientation, baseRotation);
             bsim->resetBasePositionAndOrientation(bsim->robot_ids[0],basePosition,baseOrientation);
             bsim->stepSimulation();
-            bool valid = !cg->in_collision();
+            bool valid = !bcg_ptr->in_collision();
             return valid;
         };
 
