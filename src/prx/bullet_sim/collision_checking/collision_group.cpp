@@ -18,7 +18,7 @@ namespace prx
 		{
 			for (auto j : simulator->robot_ids)
 			{
-				std::cout << "[bullet_collision_group_t] Adding an allowed collision between " << i << " and " << j << std::endl;
+				std::cout << "[bullet_collision_group_t (first)] Adding an allowed collision between " << i << " and " << j << std::endl;
 				collision_exclusion_list.push_back(std::make_pair(std::make_pair(i, -1), std::make_pair(j, -1)));
 			}
 		}
@@ -32,7 +32,7 @@ namespace prx
 		{
 			for (auto j : simulator->robot_ids)
 			{
-				std::cout << "[bullet_collision_group_t] Adding an allowed collision between " << i << " and " << j << std::endl;
+				std::cout << "[bullet_collision_group_t (reset)] Adding an allowed collision between " << i << " and " << j << std::endl;
 				collision_exclusion_list.push_back(std::make_pair(std::make_pair(i, -1), std::make_pair(j, -1)));
 			}
 		}

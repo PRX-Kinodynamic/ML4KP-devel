@@ -35,17 +35,22 @@ int main(int argc, char* argv[])
         auto plant = system_factory_t::create_system(plant_name,plant_path);
         auto bplant = std::dynamic_pointer_cast<bullet_plant_t>(plant);
 
+        std::vector<double> lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
+        std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
+        plant -> set_state_space_bounds(lower_bounds,upper_bounds);
+
         auto bsim = std::make_shared<bullet_simulator_t>();
-		bsim -> add_urdf(bullet_path + "/data/plane.urdf");
+		bsim -> add_urdf(models_path + "misc/plane.urdf");
 		bsim -> add_group({plant});
-        std::string obstacles_file = params["environment"].as<std::string>();
-        auto retval = load_obstacles(obstacles_file,bsim);
 
         space_point_t init_state = plant -> state_space ->make_point();
 		plant->state_space->copy_point_from_vector(init_state,params["/plant/start_state"].as<std::vector<double>>());
         plant->state_space->copy_from_point(init_state);
 
+        std::string obstacles_file = params["environment"].as<std::string>();
+        auto retval = load_obstacles(obstacles_file,bsim);
 		bsim -> initialize_simulation();
+
         int start_state_id = bplant -> get_state_id();
 
         auto context = bsim -> get_context("bullet_context");

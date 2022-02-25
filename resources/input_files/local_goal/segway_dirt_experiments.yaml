@@ -1,7 +1,7 @@
 random_seed: 111093
 simulation_step: 0.01
 
-environment: "environments/bug_trap.yaml"
+environment: "environments/warehouse.yaml"
 plant: !file "plants/segway.yaml"
 
 use_learned_controller: false
@@ -12,7 +12,7 @@ normalize_input: false
 delta_input: false
 control_duration: 1.0
 
-blossom_number: 1
+blossom_number: 5
 
 goal_radius: 0.5
 
@@ -20,7 +20,7 @@ output_dir: "data_reach_segway/"
 planner_name: "dirt_random"
 debug_controller: false
 
-stats_runs: 2
+stats_runs: 1
 checker_type: time
 checker_value: 1
-stats_iters: 5
+stats_iters: 30

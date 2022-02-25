@@ -5,6 +5,7 @@
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/bullet_sim/plants/bullet_plant.hpp"
 #include "prx/bullet_sim/collision_checking/collision_checker.hpp"
+#include "prx/bullet_sim/loaders/obstacle_loader.hpp"
 
 #include "prx/bullet_sim/bullet_includes.hpp"
 
@@ -15,7 +16,7 @@ namespace prx
 {
 	class bullet_plant_t;
 	typedef std::shared_ptr<bullet_plant_t> bullet_plant_ptr_t;
-	typedef std::shared_ptr<collision_group_t> collision_group_ptr_t;
+	typedef std::shared_ptr<bullet_collision_group_t> bullet_collision_group_ptr_t;
 
 	// template<
  //    class SGM = system_group_manager_t,
@@ -48,6 +49,10 @@ namespace prx
 
 		virtual void reset_simulation() override final;
 
+		void reset_simulation_with_obstacles(std::string obstacles_file);
+
+		void obstacle_loader(std::string obstacles_file);
+
 		static
 		void get_euler_from_quaternion(btVector3& rpy2, const btQuaternion& quat);
 
@@ -56,7 +61,7 @@ namespace prx
 	  	
 		void execute_traj(bullet_plant_ptr_t sys, trajectory_t traj);
 
-		void set_collision_group(collision_group_ptr_t cg_);
+		void set_collision_group(bullet_collision_group_ptr_t cg_);
 
 		// std::shared_ptr<b3RobotSimulatorClientAPI> sim;
 
@@ -82,7 +87,7 @@ namespace prx
 		b3RobotSimulatorAddUserDebugLineArgs* lineArgs;
 		
 		std::vector<std::pair<std::string,bool>> urdf_paths;
-		collision_group_ptr_t cg;
+		bullet_collision_group_ptr_t cg;
 
 	};
 }

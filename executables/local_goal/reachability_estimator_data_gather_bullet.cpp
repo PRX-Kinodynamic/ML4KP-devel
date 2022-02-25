@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
         auto bsim = std::make_shared<bullet_simulator_t>();
 		bsim -> add_urdf(models_path + "misc/plane.urdf");
         std::string obstacles_file = params["environment"].as<std::string>();
-        // auto retval = load_obstacles(obstacles_file,bsim);
+        auto retval = load_obstacles(obstacles_file,bsim);
 		bsim -> add_group({plant});
 		bsim -> initialize_simulation();
 
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
         btQuaternion baseOrientation;
 
         rrt_specification_t rrt_spec(context.first,context.second);
-        rrt_spec.valid_state = [&,bcg](const space_point_t& state)
+        rrt_spec.valid_state = [&](const space_point_t& state)
         {
             basePosition[0] = state -> at(0);
             basePosition[1] = state -> at(1);
@@ -104,8 +104,7 @@ int main(int argc, char* argv[])
             ss->copy_to_point(rrt_query.start_state);
             // End of Bullet stuff
 
-            std::cout << ss->print_point(rrt_query.start_state,2) << " " 
-            << ss->print_point(rrt_query.goal_state,2) << std::endl;
+            std::cout << ss->print_point(rrt_query.start_state,2) << " " << ss->print_point(rrt_query.goal_state,2) << std::endl;
 
             controller.fulfill_query(rrt_query,sg,max_duration);
 
@@ -118,17 +117,11 @@ int main(int argc, char* argv[])
             
             ofs.open(output_path+output_dir+"/trajectory_annotated_"+std::to_string(i)+".txt");
 
-            unsigned last_state = -1;
-            // for (unsigned i = 0; i < rrt_query.solution_traj.size(); i += control_duration/simulation_step)
             for (unsigned i = 0; i < rrt_query.solution_traj.size(); i += 1)
             {
         
                 ss->copy_point(current,rrt_query.solution_traj[i]);
-                // if (last_state != current->at(dim-1))
-                // {
-                    // last_state = current->at(dim-1);
-                    ofs << ss->print_point(rrt_query.solution_traj[i],4) << "," << rrt_spec.valid_state(current) << std::endl;
-                // }
+                ofs << ss->print_point(rrt_query.solution_traj[i],4) << "," << rrt_spec.valid_state(current) << std::endl;
             }
             ofs.close();
 
