@@ -18,17 +18,36 @@ using namespace boost::python;
  */
 #define PRX_FUNC_WRAPPER(OBJ, PTR, FUNC) void OBJ##_##FUNC##_wrapper(prx::OBJ& o, std::shared_ptr<prx::PTR> smart_p) { o.FUNC(smart_p.get()); }
 
+#define PRX_ITERABLE_WRAPPER(CLASS, NAME) class_<CLASS>(NAME).def(vector_indexing_suite<CLASS>()).def("__str__", &iter_to_str<CLASS>); 
+#define PRX_ITERABLE_WRAPPER_NONSTR(CLASS, NAME) class_<CLASS>(NAME).def(vector_indexing_suite<CLASS>()); 
+
+#define SINGLE_ARG(...) __VA_ARGS__
 
 /*
  * Iterating functions    
  */
-
 template<typename T>
 std::string to_str(const std::vector<T> &v) 
 {
    // using namespace std;
    std::ostringstream os;
    copy(v.begin(), v.end(), std::ostream_iterator<T>(os, " "));
+   return os.str();
+}
+
+template<typename T>
+std::string iter_to_str(T &v) 
+{
+   // using namespace std;
+   std::ostringstream os;
+   // copy(v.begin(), v.end(), std::ostream_iterator<T>(os, " "));
+   os << "[";
+   for (int i = 0; i < v.size(); ++i)
+   {
+        if(i != 0) os << ", ";
+        os << v[i];
+   }
+   os << "]";
    return os.str();
 }
 
@@ -153,3 +172,12 @@ struct iterable_converter
     data->convertible = storage;
   }
 };
+
+template<class T>
+boost::python::list returning_a_pylist(const T& v)
+{
+    boost::python::object get_iter = boost::python::iterator<T>();
+    boost::python::object iter = get_iter(v);
+    boost::python::list l(iter);
+    return l;
+}

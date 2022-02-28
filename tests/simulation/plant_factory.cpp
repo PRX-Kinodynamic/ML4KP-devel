@@ -11,7 +11,6 @@ BOOST_AUTO_TEST_CASE( system_factory_test )
     std::vector<std::pair<std::string, std::string>> fn_names = 
         {{"2D_Point", "2D_Point"}, {"rally_car", "rally_car"}, {"treaded_vehicle", "treaded_vehicle"}, {"FO_treaded_vehicle", "FO_treaded_vehicle"}};
 
-
     auto available_systems = prx::system_factory_t::available_systems();
     for (auto name : system_names)
     {

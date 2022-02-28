@@ -203,6 +203,35 @@ namespace prx
 	// 	}
 	// }
 
+	void space_t::copy_to_vector(Eigen::VectorXd& _v) const
+	{
+		prx_assert(_v.size() == dimension, "Vector and space must have the same dimensions.");
+		for(unsigned i=0;i<dimension;++i)
+		{
+			_v[i] = *addresses[i];
+		}
+	}
+
+	void space_t::copy_from_vector(const Eigen::VectorXd& _v) const
+	{
+		prx_assert(_v.size() == dimension, "Vector and space must have the same dimensions.");
+		for(unsigned i=0;i<dimension;++i)
+		{
+			// _v[i]=*addresses[i];
+			*addresses[i] = _v[i];
+		}
+	}
+
+	void space_t::copy_from_vector(const std::vector<double>& source) const
+	{
+		prx_assert(source.size() == dimension, "Vector and space must have the same dimensions.");
+		for(unsigned i=0;i<dimension;++i)
+		{
+			// _v[i]=*addresses[i];
+			*addresses[i] = source[i];
+		}
+	}
+
 
 	void space_t::copy_to_point(const space_point_t& point) const
 	{
@@ -262,17 +291,38 @@ namespace prx
 			destination->memory[i]=source[i];
 		}
 		enforce_bounds(destination);
-
 	}
+
+	void space_t::copy_point_from_vector(const space_point_t& destination, Eigen::Ref<Eigen::VectorXd> source) const
+	{
+		prx_assert(destination->parent->dimension==source.size(),"Point and vector have different sizes: "<<destination->parent->dimension<<" and "<<source.size());
+		for(unsigned i=0;i<dimension;++i)
+		{
+			destination->memory[i]=source[i];
+		}
+		enforce_bounds(destination);
+	}
+
+
 	void space_t::copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const
 	{
 		prx_assert(source->parent->space_name==space_name,"Point and space have different names: "<<source->parent->space_name<<" and "<<space_name);
-		//prx_assert(source->parent->dimension==destination.size(),"Point and vector have different sizes: "<<source->parent->dimension<<" and "<<destination.size());
 		for(unsigned i=0;i<dimension;++i)
 		{
 			destination.push_back(source->memory[i]);
 		}
 	}
+	
+	void space_t::copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, const space_point_t& source) const
+	{
+		prx_assert(source->parent->space_name==space_name,"Point and space have different names: "<<source->parent->space_name<<" and "<<space_name);
+		prx_assert(destination.size() == dimension,"Vector and point have different sizes - Vector: "<< destination.size() <<", point:"<<dimension);
+		for(unsigned i=0;i<dimension;++i)
+		{
+			destination[i] = source->memory[i];
+		}
+	}
+
 	void space_t::enforce_bounds(const space_point_t& point) const
 	{
 		prx_assert(point->parent->space_name==space_name,"Point and space have different names: "<<point->parent->space_name<<" and "<<space_name);
@@ -283,14 +333,18 @@ namespace prx
 			{
         		p = norm_angle_pi(p, *lower_bounds[i], *upper_bounds[i]);
 			}
-			if(p<*lower_bounds[i])
+			else
 			{
-				p=*lower_bounds[i];
+				p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
 			}
-			if(p>*upper_bounds[i])
-			{
-				p=*upper_bounds[i];
-			}
+			// if(p<*lower_bounds[i])
+			// {
+			// 	p=*lower_bounds[i];
+			// }
+			// if(p>*upper_bounds[i])
+			// {
+			// 	p=*upper_bounds[i];
+			// }
 		}
 	}
 	void space_t::enforce_bounds() const
@@ -300,16 +354,20 @@ namespace prx
 			double& p = (*addresses[i]);
 			if(topology[i]==topology_t::ROTATIONAL)
 			{
-				p = norm_angle_pi(p);
+				p = norm_angle_pi(p, *lower_bounds[i], *upper_bounds[i]);
 			}
-			if(p<*lower_bounds[i])
+			else
 			{
-				p=*lower_bounds[i];
+				p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
 			}
-			if(p>*upper_bounds[i])
-			{
-				p=*upper_bounds[i];
-			}
+			// if(p<*lower_bounds[i])
+			// {
+			// 	p=*lower_bounds[i];
+			// }
+			// if(p>*upper_bounds[i])
+			// {
+			// 	p=*upper_bounds[i];
+			// }
 		}
 	}
 	bool space_t::satisfies_bounds(const space_point_t& point) const
@@ -353,6 +411,43 @@ namespace prx
 			bounds.push_back(std::make_pair(*lower_bounds[i],*upper_bounds[i]));
 		}
 		return bounds;
+	}
+
+	std::vector<double> space_t::get_upper_bounds() const
+	{
+		std::vector<double> ub;
+		for(unsigned i=0;i<dimension;i++)
+		{
+			ub.push_back(*upper_bounds[i]);
+		}
+		return ub;
+	}
+		
+	std::vector<double> space_t::get_lower_bounds() const
+	{
+		std::vector<double> ub;
+		for(unsigned i=0;i<dimension;i++)
+		{
+			ub.push_back(*lower_bounds[i]);
+		}
+		return ub;
+	}
+
+	void space_t::print_bounds() const
+	{
+		std::cout << "Bounds: ( ";
+		for (int i = 0; i < dimension; ++i)
+		{
+			if (i != 0) std::cout << ", ";
+			std::cout << *lower_bounds[i];
+		}
+		std::cout << " ), (";
+		for (int i = 0; i < dimension; ++i)
+		{
+			if (i != 0) std::cout << ", ";
+			std::cout << *upper_bounds[i];
+		}
+		std::cout << ")" << std::endl;
 	}
 
 	void space_t::integrate(const space_point_t& point,const space_t* derivative,double delta_t)
@@ -406,7 +501,7 @@ namespace prx
 					else
 						result->memory[i] = point1->memory[i] + t*(2*PRX_PI - point1->memory[i]+point2->memory[i]);
 				}
-				result->memory[i] = norm_angle_pi(result->memory[i]);
+				result->memory[i] = norm_angle_pi(result->memory[i], *lower_bounds[i], *upper_bounds[i]);
 			}
 			else if(topology[i]==topology_t::DISCRETE)
 			{
@@ -451,5 +546,4 @@ namespace prx
 
 		return out.str();
 	}
-
 }

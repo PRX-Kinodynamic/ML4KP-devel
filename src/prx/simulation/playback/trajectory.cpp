@@ -41,6 +41,11 @@ namespace prx
 		std::advance(end_iterator, num_states);
 		std::advance(const_end_iterator, num_states);
 	}
+	void trajectory_t::copy(const trajectory_t& t)
+	{
+		(*this) = t;
+	}
+
 	trajectory_t& trajectory_t::operator=(const trajectory_t& t)
 	{
 		prx_assert(state_space->get_space_name()==t.state_space->get_space_name(),"Trajectory buffers have mismatched state spaces.");

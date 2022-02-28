@@ -19,6 +19,7 @@ namespace prx
 	class plant_t : public system_t, public movable_object_t
 	{
 	public:
+		plant_t(const plant_t& _plant) = default;
 		plant_t(const std::string& path);
 		virtual ~plant_t();
 

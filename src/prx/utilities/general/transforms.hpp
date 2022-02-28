@@ -25,4 +25,26 @@ namespace prx
 	using quaternion_t = Eigen::Quaternion<double>;
 	using axis_angle_t = Eigen::AngleAxis<double>;
 	using transform_t = Eigen::Transform<double, 3, Eigen::AffineCompact>;
+
+	using ref_matrixXd_t = Eigen::Ref<const Eigen::MatrixXd>;
+
+	// template<typename Derived>
+	// static
+	inline
+	bool are_matrices_approx_equal(const ref_matrixXd_t m1, const ref_matrixXd_t m2, const double tolerance = 1e-7)
+	{
+		prx_assert(m1.rows() == m2.rows(), "Matrices must have equal dimensions!");
+		prx_assert(m1.cols() == m2.cols(), "Matrices must have equal dimensions!");
+
+		for (int i = 0; i < m1.rows(); ++i)
+		{
+			for (int j = 0; j < m1.cols(); ++j)
+			{
+				if ( ! ( std::fabs(m1(i,j) - m2(i,j)) <= tolerance ) )
+					return false;
+			}
+		}
+		return true;
+	}
+
 }

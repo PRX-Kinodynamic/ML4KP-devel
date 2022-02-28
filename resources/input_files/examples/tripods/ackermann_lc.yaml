@@ -1,0 +1,22 @@
+random_seed: 11101993
+simulation_step: 0.01
+
+environment: "environments/empty.yaml"
+# plant: !file "plants/pendulum.yaml"
+# plant: !file "plants/acrobot.yaml"
+plant: !file "plants/ackermann_FO.yaml"
+
+controller_path: "examples/tripods/lc/ackermann_l_deterministic.pt"
+
+trajs_to_file: false
+
+checker_type: iterations
+checker_value: 500
+
+goal_region_radius: 0.1
+state_increment: 0.1
+
+py_roa_file: "out/roa_lc_pendulum.txt"
+trajs_file: "out/roa_lc_pendulum_trajs.txt"
+
+out_dir: "out/ackermann_FO/"

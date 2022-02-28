@@ -12,6 +12,8 @@
 
 namespace prx
 {
+	extern double simulation_step;
+	
 	// TODO: Add condition of "Return at first solution found"
 	/**
 	 * @brief A class which checks if a condition is met.
@@ -93,6 +95,11 @@ namespace prx
 		 * @brief Which type of condition to check. 0 for iterations, 1 for time.
 		 */
 		unsigned condition_type;
+
+		/**
+		 * @brief The accumulator for simulation time.
+		 */
+		double sim_time_accum;
 
 	};
 }

@@ -5,6 +5,7 @@
 #include "prx/utilities/general/string_manip.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/utilities/general/zipped_iter.hpp"
+#include "prx/utilities/general/progress_bar.hpp"
 
 #define PRX_DEBUG_PRINT std::cout << __PRETTY_FUNCTION__ << ": " << __LINE__ << std::endl;
 

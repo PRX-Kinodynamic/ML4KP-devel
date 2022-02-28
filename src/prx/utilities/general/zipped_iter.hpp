@@ -148,6 +148,7 @@ namespace prx
     		zipped_end   = te;
     	}
 
+    	~zipped_t() = default;
     	/**
     	 * @brief      The first element (which contains the first iterators of the encapsulated classes)
     	 *

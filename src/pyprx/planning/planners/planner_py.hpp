@@ -93,7 +93,7 @@ void pyprx_planning_planners_planner_py()
 
 	class_<prx::goal_check_t>("goal_check")
         .def("__call__", &prx::goal_check_t::operator() )
-        .def("wrap", &create_function<prx::goal_check_t, bool, prx::space_point_t&>).staticmethod("wrap")
+        // .def("wrap", &create_function<prx::goal_check_t, bool, prx::space_point_t&>).staticmethod("wrap")
         ;
 
 	class_<planner_wrapper, boost::noncopyable>("planner", no_init)

@@ -6,6 +6,8 @@ A library for integrating machine learning tools with state-of-the-art sampling-
 
 * Eigen
 * Yaml-Cpp
+* Boost
+* Boost-python
 ### _(Optional)_ Bullet Physics
 
 1. Add the ML4KP directory to `$DIRTMP_PATH`.
@@ -68,9 +70,9 @@ make -j4
 
 ### Compilation options
 By default, all options are on. To turn off any option, set it off while configuring:
-I.e. to turn off Tests:
+I.e. to turn off Tests, Bullet and Torch:
 ```
-cmake -DBUILD_TESTS=OFF ..
+cmake -DBUILD_TESTS=OFF -DBUILD_FOR_BULLET=OFF -DBUILD_FOR_TORCH=OFF ..
 make -j4
 ```
 

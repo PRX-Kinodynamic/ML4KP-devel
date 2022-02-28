@@ -29,4 +29,4 @@ namespace prx
 
 }
 PRX_REGISTER_SYSTEM(two_dimensional_point_t, 2D_Point)
-PRX_REGISTER_VELOCITY_FN(2D_Point, [](system_ptr_t s){return s -> input_control_space -> get_bounds()[0].second;})
+PRX_REGISTER_VELOCITY_FN(2D_Point, [](system_ptr_t s){return s -> get_control_space() -> get_bounds()[0].second;})
