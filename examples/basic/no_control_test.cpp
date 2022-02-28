@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     prx_assert(plant != nullptr, "Plant is nullptr!");
 
 PRX_DEBUG_PRINT
-    world_model_t<> world_model({plant},{obstacle_list});
+    world_model_t world_model({plant},{obstacle_list});
     world_model.create_context("context",{plant_name},{obstacle_names});
     auto context = world_model.get_context("context");
 
