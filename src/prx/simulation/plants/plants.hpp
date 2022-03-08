@@ -10,3 +10,5 @@
 #include "prx/simulation/plants/three_dimensional_point.hpp"
 #include "prx/simulation/plants/treaded_vehicle_first_order.hpp"
 #include "prx/simulation/plants/double_integrator_2d.hpp"
+#include "prx/simulation/plants/quadrotor_1d.hpp"
+#include "prx/simulation/plants/quadrotor_2d.hpp"
