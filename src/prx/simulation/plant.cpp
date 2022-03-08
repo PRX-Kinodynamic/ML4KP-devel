@@ -50,7 +50,7 @@ namespace prx
 
 	void plant_t::compute_control()
 	{
-		//the control should have already been set in the control space
+		// No controls for the regular abstract plant
 	}
 
 	void plant_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times, std::vector<double>& ctrls)

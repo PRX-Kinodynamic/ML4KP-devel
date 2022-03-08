@@ -42,6 +42,11 @@ namespace prx
 					lower_bounds.push_back(new double(0));
 					upper_bounds.push_back(new double(std::numeric_limits<int>::max()));
 					break;
+				case 'I':
+					topology.push_back(topology_t::IDLE);
+					lower_bounds.push_back(new double(0));
+					upper_bounds.push_back(new double(std::numeric_limits<int>::max()));
+					break;
 				default:
 					prx_throw("Bad topology identifier '"<<c<<"' from topology string "<<topo);
 			}
@@ -258,6 +263,25 @@ namespace prx
 		}
 
 	}
+
+	void space_t::copy_to_vector(std::vector<double>& destination) const
+	{
+		destination.clear();
+		for(unsigned i=0;i<dimension;++i)
+		{
+			destination.push_back(*addresses[i]);
+		}
+	}
+
+	void space_t::copy_from_vector(const std::vector<double>& source)
+	{
+		prx_assert(dimension==source.size(),"Point and vector have different sizes: " << dimension << " and " << source.size());
+		for(unsigned i=0;i<dimension;++i)
+		{
+			*addresses[i] = source[i];
+		}
+	}
+
 	void space_t::copy_point_from_vector(const space_point_t& destination, const std::vector<double>& source) const
 	{
 		prx_assert(destination->parent->space_name==space_name,"Point and space have different names: "<<destination->parent->space_name<<" and "<<space_name);
@@ -445,6 +469,10 @@ namespace prx
 			{
 				*(addresses[i]) += delta_t * derivative->at(i);
 				*(addresses[i]) = round(*(addresses[i]));
+			}
+			else if(topology[i] == topology_t::IDLE)
+			{
+				continue;
 			}
 		}
 		enforce_bounds();
