@@ -7,7 +7,8 @@
 #include "prx/utilities/general/zipped_iter.hpp"
 #include "prx/utilities/general/progress_bar.hpp"
 
-#define PRX_DEBUG_PRINT printf("%s: %d\n", __PRETTY_FUNCTION__, __LINE__ );
+#define PRX_DEBUG_PRINT std::cout << __PRETTY_FUNCTION__ << ": " << __LINE__ << std::endl;
+
 #define PRX_DEBUG_ITERABLE(msg, v) std::cout << "[DBG " << msg << "] "; for(auto e : v){std::cout << e << " ";}std::cout << std::endl;
 
 #define STR_TO_BOOL(VAL) (std::string(VAL)=="True" | std::string(VAL) == "true")

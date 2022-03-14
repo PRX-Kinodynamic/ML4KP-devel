@@ -21,9 +21,9 @@ void pyprx_planning_world_model_py()
 		// void create_context(const std::string& context_name,const std::vector<std::string>& system_names,const std::vector<std::string>& obstacle_names);
 		// std::pair<,std::shared_ptr<collision_group_t>> get_context(const std::string& context_name);
 			
-   	class_<prx::world_model_t<>>("world_model", init<std::vector<prx::system_ptr_t>, std::vector<std::shared_ptr<prx::movable_object_t>>>())
-   	    .def("create_context", &prx::world_model_t<>::create_context)
-   	    .def("get_context",    &prx::world_model_t<>::get_context)
+   	class_<prx::world_model_t>("world_model", init<std::vector<prx::system_ptr_t>, std::vector<std::shared_ptr<prx::movable_object_t>>>())
+   	    .def("create_context", &prx::world_model_t::create_context)
+   	    .def("get_context",    &prx::world_model_t::get_context)
    	    ;
    	
 }

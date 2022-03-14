@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE( integrators )
         return std::sqrt(res);
     };
 
-    prx::world_model_t<> world_model({acrobot_euler},{});
+    prx::world_model_t world_model({acrobot_euler},{});
     world_model.create_context("disk_context",{"Acrobot_euler"},{});
     auto context = world_model.get_context("disk_context");
     auto sg = context.first;
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE( integrators )
     prx::trajectory_t euler_traj(state_space);
     
 
-    prx::world_model_t<> world_model_rk4({acrobot_rk4},{});
+    prx::world_model_t world_model_rk4({acrobot_rk4},{});
     world_model_rk4.create_context("context_rk4",{"Acrobot_rk4"},{});
     auto context_rk4 = world_model_rk4.get_context("context_rk4");
     auto sg_rk4 = context.first;
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE( integrators )
     prx::plan_t plan_rk4(control_space_rk4);
     prx::trajectory_t traj_rk4(state_space_rk4);
 
-    prx::world_model_t<> world_model_dorpi({acrobot_dorpi},{});
+    prx::world_model_t world_model_dorpi({acrobot_dorpi},{});
     world_model_dorpi.create_context("context_dorpi",{"Acrobot_dorpi"},{});
     auto context_dorpi = world_model_dorpi.get_context("context_dorpi");
     auto sg_dorpi = context.first;

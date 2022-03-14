@@ -169,7 +169,8 @@ namespace prx
 		{
 			EUCLIDEAN=0,
 			ROTATIONAL=1,
-			DISCRETE=2
+			DISCRETE=2,
+			IDLE=3
 		};
 
 		space_t(const std::string& topology, const std::vector<double*>& addresses, const std::string& name);
@@ -259,6 +260,8 @@ namespace prx
 		void copy_to_point(const space_point_t& point) const;
 		void copy_from_point(const space_point_t& point) const;
 		void copy_point(const space_point_t& destination,const space_point_t& source) const;
+		void copy_to_vector(std::vector<double>& destination) const;
+		void copy_from_vector(const std::vector<double>& source);
 
 		void copy_point_from_vector(const space_point_t& destination, const std::vector<double>& source) const;
 		void copy_point_from_vector(const space_point_t& destination, Eigen::Ref<Eigen::VectorXd> source) const;

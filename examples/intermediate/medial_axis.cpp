@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
         std::string plant_name = "treaded_vehicle_fo";
         system_ptr_t plant = system_factory_t::create_system(plant_name, plant_name);
 
-        world_model_t<> world_model({plant},{obstacle_list});
+        world_model_t world_model({plant},{obstacle_list});
 
         world_model.create_context("disk_context",{plant_name},{obstacle_names});
 

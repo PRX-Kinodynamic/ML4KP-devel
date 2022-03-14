@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE( rrt_ackermann_test )
         auto plant_name = "Ackermann_FO";
         auto plant = prx::system_factory_t::create_system(plant_name, plant_name);
 
-        prx::world_model_t<> world_model({plant}, {obstacle_list});
+        prx::world_model_t world_model({plant}, {obstacle_list});
         world_model.create_context("context", {plant_name}, {obstacles_names});
         auto context = world_model.get_context("context");
 

@@ -1,0 +1,3 @@
+[submodule "src/prx/bullet_sim/external/bullet3"]
+	path = src/prx/bullet_sim/external/bullet3
+	url = https://github.com/aravindsiv/bullet3.git

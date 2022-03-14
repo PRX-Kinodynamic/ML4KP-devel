@@ -14,6 +14,7 @@ namespace prx
 	void system_group_manager_t::add_system_group(const std::string& group_name, const std::vector<system_ptr_t>& systems)
 	{
 		system_groups[group_name] = std::make_shared<system_group_t>(systems);
+		system_groups[group_name] -> sim = sim;
 	}
 
 	std::shared_ptr<system_group_t> system_group_manager_t::get_system_group(const std::string& group_name)

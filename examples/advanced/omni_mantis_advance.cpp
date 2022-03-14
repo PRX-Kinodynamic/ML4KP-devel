@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 		obstacle_pose.translation() = (vector_t(10,10,0));
 		auto box_obstacle = create_obstacle(new box_t("box",2,3,4,obstacle_pose));
 
-		world_model_t<> world_model({plant},{box_obstacle});
+		world_model_t world_model({plant},{box_obstacle});
 
 		world_model.create_context("disk_context",{"mantis"},{"box"});
 

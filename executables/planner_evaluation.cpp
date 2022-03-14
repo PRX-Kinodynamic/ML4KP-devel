@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 		auto obstacle_names = obstacles.first;
 		auto plant = system_factory_t::create_system(plant_type,plant_name);
 
-		world_model_t<> world_model({plant},{obstacle_list});
+		world_model_t world_model({plant},{obstacle_list});
 		world_model.create_context("planning_context",{plant_name},{obstacle_names});
 		auto context = world_model.get_context("planning_context");
 

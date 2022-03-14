@@ -10,6 +10,8 @@
 
 namespace prx
 {
+	class system_group_t;
+	
 	class system_group_manager_t
 	{
 	public:
@@ -18,6 +20,14 @@ namespace prx
 
 		void add_system_group(const std::string& group_name, const std::vector<system_ptr_t>& systems);
 		std::shared_ptr<system_group_t> get_system_group(const std::string& group_name);
+		
+		void link_simulator(simulator_t* _sim)
+		{
+			sim = _sim;
+		}
+
+	protected:
+		simulator_t* sim;
 	private:
 		std::unordered_map<std::string,std::shared_ptr<system_group_t>> system_groups;
 	};

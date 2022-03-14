@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
     prx_assert(plant != nullptr, "Plant is nullptr!");
 
-    world_model_t<> world_model({plant},{obstacle_list});
+    world_model_t world_model({plant},{obstacle_list});
     world_model.create_context("dirt_context",{plant_name},{obstacle_names});
     auto context = world_model.get_context("dirt_context");
 
