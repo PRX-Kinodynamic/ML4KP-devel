@@ -38,9 +38,22 @@ class TimeMap:
         prx.set_simulation_step(self.simulation_step)
         prx.init_random(params["random_seed"].as_int())
 
-        obstacles = prx.load_obstacles(params["environment"].as_string())
-        obstacle_list = obstacles.objects
-        obstacle_names = obstacles.names
+        obstacle_list = []
+        obstacle_names = []
+        if params["use_obstacle"].as_bool() and system_type == "ackermann_lc":
+            obs_pose = prx.transform()
+            obs_pose.setIdentity()
+            obs_pose.translation(prx.vector(5.,0.,1.))
+            box = prx.box.create_obstacle("box",3.,3.,2.,obs_pose)
+            obstacle_list = [box]
+            obstacle_names = ["box"]
+
+        # For some reason the below code doesn't work.
+        # 
+        # obstacles = prx.load_obstacles(params["environment"].as_string())
+        # obstacle_list = obstacles.objects
+        # obstacle_names = obstacles.names
+        # 
 
         plant_name = params["/plant/name"].as_string()
         plant_path = params["/plant/path"].as_string()
@@ -51,10 +64,10 @@ class TimeMap:
 
         wm = prx.world_model([self.plant], obstacle_list)
         wm.create_context("context", [plant_name], obstacle_names)
-        context = wm.get_context("context")
+        self.context = wm.get_context("context")
 
-        self.ss = context.system_group.get_state_space()
-        self.cs = context.system_group.get_control_space()
+        self.ss = self.context.system_group.get_state_space()
+        self.cs = self.context.system_group.get_control_space()
         self.ps = self.plant.get_parameter_space()
 
         lower_bounds = params["/plant/state_space_lower_bound"].as_float_vector()
@@ -321,6 +334,8 @@ class TimeMap:
         duration_so_far = 0
 
         while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 3) > self.radius:
+            if not prx.default_valid_state(self.start_state,self.ss,self.context.collision_group):
+                return self.start_state.to_list(), False
             ctrl_input[0, 0] = self.start_state[0]
             ctrl_input[0, 1] = self.start_state[1]
             ctrl_input[0, 2] = self.start_state[2]
@@ -344,7 +359,7 @@ class TimeMap:
             duration_so_far += 0.1
 
         self.ss.copy_to_point(self.end_state)
-        return [self.end_state[0], self.end_state[1], self.end_state[2]]
+        return [self.end_state[0], self.end_state[1], self.end_state[2]], True
 
     def ackermann_lqr(self, X):
         self.ss.copy_from_vector(X)

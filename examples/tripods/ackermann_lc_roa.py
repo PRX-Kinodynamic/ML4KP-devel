@@ -6,7 +6,7 @@ import TimeMap
 np.set_printoptions(suppress=True)
 
 if __name__ == "__main__":
-    step = 30  # for grid
+    step = 5  # for grid
     time_h = 500  # in seconds, time_h / simulation_step = total steps
 
     # Provide the path to the controller
@@ -33,7 +33,7 @@ if __name__ == "__main__":
                 start_state_vec = [xs[a], ys[b], ts[c]]
                 TM.ss.copy_point_from_vector(start_state, start_state_vec)
 
-                end_state_vec = g(start_state_vec)
+                end_state_vec, is_collision = g(start_state_vec)
 
                 TM.ss.copy_point_from_vector(end_state, end_state_vec)
 
