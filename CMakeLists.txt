@@ -4,17 +4,21 @@ project(DirtMP)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+set(BUILD_SHARED_LIBS True)
 
-set(BUILD_FOR_PYTHON ON CACHE BOOL "Set ON/TRUE for building Python Bindings")
-set(BUILD_FOR_BULLET ON CACHE BOOL "Set ON/TRUE for building for PyBullet")
-set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
-set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+cmake_policy(SET CMP0079 NEW)
+
+set(BUILD_FOR_PYTHON ON  CACHE BOOL "Set ON/TRUE for building Python Bindings")
+set(BUILD_FOR_BULLET OFF CACHE BOOL "Set ON/TRUE for building for PyBullet")
+set(BUILD_FOR_TORCH  ON  CACHE BOOL "Set ON/TRUE for building using Torch")
+set(BUILD_TESTS		 ON  CACHE BOOL "Set ON/TRUE for building tests")
+set(BUILD_FOR_GAZEBO ON  CACHE BOOL "SET ON/TRUE for building for Gazebo")
 
 # TODO: go back to c++11?
 add_definitions(-O3 -fPIC -g )
 if(APPLE)
-	set(CMAKE_CXX_STANDARD 14)
+	set(CMAKE_CXX_STANDARD 17)
 else()
 	add_definitions(-lstdc++fs)
 	link_libraries(stdc++fs)
@@ -61,6 +65,7 @@ include_directories(src/prx/visualization)
 include_directories(src/prx/planning)
 include_directories(src/prx/utilities)
 include_directories(src/prx/simulation)
+include_directories(src/prx/gazebo)
 
 # TODO: Make a shared libraries.
 add_subdirectory(src/prx/planning)
@@ -68,6 +73,7 @@ add_subdirectory(src/prx/external)
 add_subdirectory(src/prx/utilities)
 add_subdirectory(src/prx/simulation)
 add_subdirectory(src/prx/visualization)
+add_subdirectory(src/prx/gazebo)
 
 if (BUILD_FOR_PYTHON)
 	enable_testing()
@@ -84,69 +90,3 @@ if(BUILD_TESTS)
 endif(BUILD_TESTS)
 	# ${PROJECT_SOURCE_DIR}/tests/*.cpp
 
-
-# file(GLOB_RECURSE EXAMPLE_FILES
-# 	${PROJECT_SOURCE_DIR}/examples/*.cpp)
-# foreach(f ${EXAMPLE_FILES})
-# GET_FILENAME_COMPONENT(fname ${f} NAME_WE )
-# add_executable(${fname} ${f})
-# target_link_libraries(${fname} 
-# 		${PROJECT_NAME}_external 
-# 		${PROJECT_NAME}_utilities 
-# 		${PROJECT_NAME}_simulation 
-# 		${PROJECT_NAME}_planning 	
-# 		${PROJECT_NAME}_visualization 
-# 		)
-# 	if(BUILD_FOR_BULLET)
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_bullet_sim )
-# 	endif()
-# endforeach()
-
-
-# file(GLOB_RECURSE EXECUTABLE_FILES
-# 	${PROJECT_SOURCE_DIR}/executables/*.cpp)
-# 	# ${PROJECT_SOURCE_DIR}/src/prx/experiments/*.cpp)
-
-# foreach(f ${EXECUTABLE_FILES})
-# GET_FILENAME_COMPONENT(fname ${f} NAME_WE )
-# add_executable(${fname} ${f})
-# target_link_libraries(${fname}
-# 		${PROJECT_NAME}_external 
-# 		${PROJECT_NAME}_utilities 
-# 		${PROJECT_NAME}_simulation 
-# 		${PROJECT_NAME}_planning 	
-# 		${PROJECT_NAME}_visualization 
-# 		)
-# 	if(BUILD_FOR_BULLET)
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_bullet_sim )
-# 	endif()
-# 	if (BUILD_FOR_TORCH)
-# 		target_link_libraries(${fname} ${TORCH_LIBRARIES})
-# 	endif()
-# endforeach()
-
-# if(BUILD_TESTS)
-# 	message("Building tests")
-# 	ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
-# 	enable_testing()
-# 	file(GLOB_RECURSE TESTS_FILES
-# 		${PROJECT_SOURCE_DIR}/tests/simulation/*.cpp
-# 		${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
-# 		${PROJECT_SOURCE_DIR}/tests/utilities/*.cpp
-# 		)
-
-# 	foreach(f ${TESTS_FILES})
-# 		GET_FILENAME_COMPONENT(fname ${f} NAME_WE )
-# 		add_executable(${fname} ${f})
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_external )
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_utilities )
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_visualization )
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_simulation )
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_planning )
-# 		if(BUILD_FOR_BULLET)
-# 			target_link_libraries(${fname} ${PROJECT_NAME}_bullet_sim )
-# 		endif()
-# 		target_link_libraries(${fname} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-# 		add_test(NAME ${fname}_test COMMAND ${fname})
-# 	endforeach()
-# endif()
