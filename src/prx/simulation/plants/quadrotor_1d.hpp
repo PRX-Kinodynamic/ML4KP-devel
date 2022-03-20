@@ -1,10 +1,11 @@
 #pragma once
 
 #include "prx/simulation/plant.hpp"
+#include "prx/simulation/plants/types/linear_time_variant.hpp"
 
 namespace prx 
 {
-    class quadrotor_1d_t : public plant_t 
+    class quadrotor_1d_t : public ltv_t 
     {
         public:
         quadrotor_1d_t(const std::string& path);

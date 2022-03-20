@@ -2,7 +2,7 @@
 
 namespace prx
 {
-    quadrotor_1d_t::quadrotor_1d_t(const std::string& path) : plant_t(path)
+    quadrotor_1d_t::quadrotor_1d_t(const std::string& path) : ltv_t(path)
     {
         z=zdot=0;
         state_memory = {&z, &zdot};
@@ -29,7 +29,7 @@ namespace prx
         configurations["body"]= std::make_shared<transform_t>();
         configurations["body"]->setIdentity();
 
-        set_integrator(integrator_t::kEULER);
+        set_integrator(integrator_t::kRK4);
     }
 
     quadrotor_1d_t::~quadrotor_1d_t()
