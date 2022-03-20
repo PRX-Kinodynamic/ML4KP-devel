@@ -6,8 +6,8 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
-set(BUILD_FOR_PYTHON ON CACHE BOOL "Set ON/TRUE for building Python Bindings")
-set(BUILD_FOR_BULLET ON CACHE BOOL "Set ON/TRUE for building for PyBullet")
+set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
+set(BUILD_FOR_BULLET OFF CACHE BOOL "Set ON/TRUE for building for PyBullet")
 set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
 
