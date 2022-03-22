@@ -1,0 +1,3 @@
+simulation_step: 0.01
+
+plant: !file "plants/acrobot.yaml"
