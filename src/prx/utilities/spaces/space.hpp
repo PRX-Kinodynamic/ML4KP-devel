@@ -140,6 +140,8 @@ namespace prx
         	return os;
         }
 
+
+
 	protected:
 
 		const space_t* const parent;
@@ -320,6 +322,8 @@ namespace prx
 
 		std::string print_memory(unsigned prec = 25) const;
 
+		// void linearize(const Eigen::Ref<Eigen::VectorXd>, const Eigen::Ref<Eigen::MatrixXd>, double epsilon = 1e-3);
+
 		friend std::ostream& operator<< (std::ostream& os, const space_t& obj) 
         {
         	os << obj.print_memory(3);
@@ -463,6 +467,12 @@ namespace prx
 		bool owned_values;
 
 		space_t(){};
+
+		// For linearization... there must be a better way to handle this
+		Eigen::VectorXd x_plus;
+        Eigen::VectorXd x_minus;
+        Eigen::VectorXd xd_plus;
+        Eigen::VectorXd xd_minus;
 	};
 
 	typedef std::shared_ptr<space_t> space_ptr_t;

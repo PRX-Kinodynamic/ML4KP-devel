@@ -546,4 +546,48 @@ namespace prx
 
 		return out.str();
 	}
+
+	// void space_t::linearize(const Eigen::Ref<Eigen::VectorXd>, Eigen::Ref<Eigen::MatrixXd>, double epsilon = 1e-3)
+	// {
+	// 	if (A.rows() != dimension || A.cols() != dimension) A.resize(dimension, dimension);
+	// 	if (x.size() == 0) 
+ //    	{
+ //    		x.resize(ss_dim);
+ //    		x_plus.resize(ss_dim);
+ //    		x_minus.resize(ss_dim);
+ //    		xd_plus.resize(ss_dim);
+ //    		xd_minus.resize(ss_dim);
+ //    	}
+	// 	get_state_space() -> copy_vector_from_point(x, xt);
+    	
+	// 	for (int i=0; i < ss_dim; i++) 
+ //  		{
+	// 		x_plus  = x;// + simulation_step;
+	// 		x_minus = x;// - simulation_step;
+	// 		x_plus(i) += epsilon;
+	// 		x_minus(i) -= epsilon;
+
+	// 		// std::cout << "x: " << x.transpose() << std::endl;
+	// 		// std::cout << "x_plus: "  << x_plus.transpose() << std::endl;
+	// 		// std::cout << "x_minus: " << x_minus.transpose() << std::endl;
+
+	// 		get_state_space() -> copy_from_vector(x_plus);
+	// 		propagate(epsilon);
+	// 		// get_state_space() -> copy_to_vector(xd_plus);
+	// 		get_derivative_space() -> copy_to_vector(xd_plus);
+
+	// 		get_state_space() -> copy_from_vector(x_minus);
+	// 		propagate(epsilon);
+	// 		// get_state_space() -> copy_to_vector(xd_minus);
+	// 		get_derivative_space() -> copy_to_vector(xd_minus);
+
+	// 		// std::cout << "xd_plus: "  << xd_plus.transpose() << std::endl;
+	// 		// std::cout << "xd_minus: " << xd_minus.transpose() << std::endl;
+	// 		// std::cout << "DIFF: " << (( xd_plus - xd_minus) / ( 2. * epsilon ) ).transpose() << std::endl;
+
+ //    		A.col(i) = ( xd_plus - xd_minus) / ( 2. * epsilon );
+
+	// 	}
+	// }
+
 }

@@ -15,7 +15,11 @@
 namespace prx
 {
 	class system_factory_t;
-	
+
+	class plant_t;
+	typedef std::shared_ptr<plant_t> plant_ptr_t;
+
+
 	class plant_t : public system_t, public movable_object_t
 	{
 	public:
@@ -42,13 +46,20 @@ namespace prx
 
         virtual void set_state_space_bounds(const std::vector<double>& lower,const std::vector<double>& upper) override;
 
+        space_t* get_derivative_space()
+        {
+        	return derivative_space;
+        }
+
 		space_t* derivative_space;
 		std::vector<double*> derivative_memory;
 
 		static int registred_plants;
+		
+		virtual void compute_derivative()=0;
+	
 	protected:
 
-		virtual void compute_derivative()=0;
 
 
 		//bodies that we want to check collisions for

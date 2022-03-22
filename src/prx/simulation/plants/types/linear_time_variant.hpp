@@ -33,10 +33,10 @@ namespace prx
 
         protected:
 
-        virtual void compute_derivative() override
-        {
-            linear_derivative();
-        }
+        // virtual void compute_derivative() override
+        // {
+        //     linear_derivative();
+        // }
 
         Eigen::VectorXd x_plus;
         Eigen::VectorXd x_minus;

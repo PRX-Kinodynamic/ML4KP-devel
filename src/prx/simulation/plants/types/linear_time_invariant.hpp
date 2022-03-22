@@ -109,10 +109,10 @@ namespace prx
 
 		protected:
 
-			virtual void compute_derivative() override
-			{
-				linear_derivative();
-			}
+			// virtual void compute_derivative() override
+			// {
+			// 	linear_derivative();
+			// }
 			
 			// space_t* lti_stt_space;
 			// space_t* lti_ctr_space;
