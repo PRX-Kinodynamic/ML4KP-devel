@@ -65,7 +65,12 @@ include_directories(src/prx/visualization)
 include_directories(src/prx/planning)
 include_directories(src/prx/utilities)
 include_directories(src/prx/simulation)
-include_directories(src/prx/gazebo)
+
+if(BUILD_FOR_GAZEBO)
+	include(src/prx/gazebo/gazebo.cmake)
+	include_directories(src/prx/gazebo)
+	add_subdirectory(src/prx/gazebo)
+endif(BUILD_FOR_GAZEBO)
 
 # TODO: Make a shared libraries.
 add_subdirectory(src/prx/planning)
@@ -73,7 +78,6 @@ add_subdirectory(src/prx/external)
 add_subdirectory(src/prx/utilities)
 add_subdirectory(src/prx/simulation)
 add_subdirectory(src/prx/visualization)
-add_subdirectory(src/prx/gazebo)
 
 if (BUILD_FOR_PYTHON)
 	enable_testing()

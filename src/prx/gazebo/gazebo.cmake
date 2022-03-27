@@ -15,3 +15,7 @@ function(find_ign_lib)
         endif()
     endwhile()
 endfunction()
+
+
+find_package(Protobuf REQUIRED)
+find_package(gazebo REQUIRED)
