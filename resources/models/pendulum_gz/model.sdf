@@ -54,5 +54,8 @@
                 <xyz>1.0 0.0 0.0</xyz>
             </axis>
         </joint>
+
+        <plugin filename="/Users/Gary/pracsys/ML4KP-devel/lib/gazebo_plugins/libexecute_plan_plugin.so" name="execute_plan"/>
+
     </model>
 </sdf>

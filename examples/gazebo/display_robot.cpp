@@ -12,6 +12,9 @@ using namespace prx;
 int main(int argc, char* argv[])
 {
 	// gazebo::setupServer({});
+    // printf("GAZEBO_MODEL_PATH: %s\n", std::getenv("GAZEBO_MODEL_PATH") );
+    // printf("GAZEBO_MODEL_PATH_SET: %s\n", GAZEBO_MODEL_PATH_SET?"True":"False" );
+    // printf("GAZEBO_RESOURCE_PATH_SET: %s\n", GAZEBO_RESOURCE_PATH_SET?"True":"False" );
 	auto sim = std::make_shared<gz_sim_t>();
 
   // Load a world
@@ -33,14 +36,26 @@ int main(int argc, char* argv[])
     std::cout<<"press q to exit! "<<std::endl;
     while(keep_running) 
     {
-        if (std::cin.get() == 'q')
+        auto c = std::cin.get();
+        if (c == 'q')
         {
             //! desired user input 'q' received
             keep_running = false;
         }
-        if (std::cin.get() == 'r')
+        else if (c == 's')
         {
-        	// gazebo::runWorld(world, 100);
+            std::cout << "Stepping..." << std::endl;
+        	sim -> step_simulation(1000);
+            std::cout << "done stepping!" << std::endl;
+        }
+        else if (c == 'r')
+        {
+            sim -> reset_simulation();
+        }
+        else if (c == 'm')
+        {
+            gazebo::physics::ModelState m = sim -> get_model_state("pendulum_gz");
+            std::cout << "state: " << m.GetJointStateCount() << std::endl;
         }
     }
 

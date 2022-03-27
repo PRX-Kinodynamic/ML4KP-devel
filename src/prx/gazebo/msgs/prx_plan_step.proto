@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package prx_gz.msgs;
+
+message prx_plan_step
+{
+    repeated double control    = 1 [packed = true];
+    double duration   = 2 ; 
+}
