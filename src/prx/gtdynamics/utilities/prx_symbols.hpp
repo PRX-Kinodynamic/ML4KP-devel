@@ -3,6 +3,8 @@
 #include <gtsam/inference/Key.h>
 #include <gtsam/inference/Symbol.h>
 
+#include "prx/utilities/defs.hpp"
+
 namespace prx 
 {
 
@@ -21,25 +23,33 @@ namespace prx
           * @param[in] state_idx  index of the state
           * @param[in] t         time step
           */
-            prx_symbol_t(const std::string& s, uint16_t state_idx, uint64_t t);
+            prx_symbol_t(const std::string& s, uint8_t state_idx, uint64_t t);
 
         public:
             /** Default constructor */
-            prx_symbol_t() = default;
+            prx_symbol_t();
 
             /** Copy constructor */
-            prx_symbol_t(const prx_symbol_t& key) = default;
+            prx_symbol_t(const prx_symbol_t& key);
 
             /**
              * Constructor for symbol related to both link and joint.
              *  See private constructor
              */
-            static prx_symbol_t state_symbol(const std::string& s,
-                                        uint16_t state_idx, uint64_t t)
+            static prx_symbol_t state_symbol(uint64_t t)
             {
-                return prx_symbol_t(s, state_idx, t);
+                return prx_symbol_t("Xi", 0, t);
             }
 
+            static prx_symbol_t control_symbol(uint64_t t)
+            {
+                return prx_symbol_t("Ui", 0, t);
+            }
+
+            static prx_symbol_t goal_state_symbol()
+            {
+                return prx_symbol_t("Xg", 0, 0);
+            }
 
             static std::string state_string_symbol(std::string c, int i)
             {
@@ -95,13 +105,13 @@ namespace prx
    */
   static constexpr size_t kMax_uchar_ =
       std::numeric_limits<uint8_t>::max();
-    static constexpr size_t kMax_state_ =
-      std::numeric_limits<uint16_t>::max();
+    static constexpr size_t kMax_state_ = 
+      std::numeric_limits<uint8_t>::max();
   // bit counts
   static constexpr size_t key_bits = sizeof(gtsam::Key) * 8;
   static constexpr size_t ch1_bits = sizeof(uint8_t) * 8;
   static constexpr size_t ch2_bits = sizeof(uint8_t) * 8;
-  static constexpr size_t state_bits = sizeof(uint16_t) * 16;
+  static constexpr size_t state_bits = sizeof(uint8_t) * 8;
   static constexpr size_t time_bits = key_bits - ch1_bits - ch2_bits - state_bits;
   // masks
   static constexpr gtsam::Key ch1_mask = gtsam::Key(kMax_uchar_)
@@ -109,14 +119,14 @@ namespace prx
   static constexpr gtsam::Key ch2_mask = gtsam::Key(kMax_uchar_)
                                          << (key_bits - ch1_bits - ch2_bits);
   static constexpr gtsam::Key state_mask = gtsam::Key(kMax_state_ )
-                                          << (time_bits + state_bits);
+                                          << (key_bits - ch1_bits - ch2_bits - state_bits);
   static constexpr gtsam::Key time_mask =
-      ~(ch1_mask | ch2_mask | state_bits);
+      ~(ch1_mask | ch2_mask | state_mask);
   /**@}*/
 };
 
 // /// key formatter function
-    std::string _GTDKeyFormatter(gtsam::Key key);
+    std::string prx_key_formatter(gtsam::Key key);
 
 // static const gtsam::KeyFormatter GTDKeyFormatter = &_GTDKeyFormatter;
 

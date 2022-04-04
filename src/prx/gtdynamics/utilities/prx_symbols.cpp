@@ -11,18 +11,22 @@ namespace prx
 {
 
 /* ************************************************************************* */
-// prx_symbol_t::prx_symbol_t()
-    // : c1_(0), c2_(0), state_idx_(0), t_(0) {}
+prx_symbol_t::prx_symbol_t()
+    : c1_(0), c2_(0), state_idx_(0), t_(0) {}
 
 /* ************************************************************************* */
-// prx_symbol_t::prx_symbol_t(const DynamicsSymbol& key)
-//     : c1_(key.c1_),
-//       c2_(key.c2_),
-//       state_idx_(key.state_idx_),
-//       t_(key.t_) {}
+prx_symbol_t::prx_symbol_t(const prx_symbol_t& key)
+    : c1_(key.c1_),
+      c2_(key.c2_),
+      state_idx_(key.state_idx_),
+      t_(key.t_) 
+    {
+        // std::cout << "(copy constructor) t: " << t_ << std::endl;
+
+    }
 
 /* ************************************************************************* */
-    prx_symbol_t::prx_symbol_t(const std::string& s, uint16_t state_idx, uint64_t t)
+    prx_symbol_t::prx_symbol_t(const std::string& s, uint8_t state_idx, uint64_t t)
       : state_idx_(state_idx), t_(t) 
     {
         if (s.length() > 2) {
@@ -44,6 +48,7 @@ namespace prx
             c1_ = 0;
             c2_ = 0;
         }
+        // std::cout << "t: " << t_ << std::endl;
     }
 
 
@@ -52,15 +57,20 @@ prx_symbol_t prx_symbol_t::time_symbol(const std::string& s, uint64_t t) {
 }
 
 /* ************************************************************************* */
-prx_symbol_t::prx_symbol_t(const gtsam::Key& key) {
-  c1_ = (uint8_t)((key & ch1_mask) >> (key_bits - ch1_bits));
-  c2_ = (uint8_t)((key & ch2_mask) >> (key_bits - ch1_bits - ch2_bits));
-  state_idx_ = (uint16_t)((key & state_mask) >> (time_bits));
-  t_ = key & time_mask;
-}
+    prx_symbol_t::prx_symbol_t(const gtsam::Key& key) 
+    {
+        c1_ = (uint8_t)((key & ch1_mask) >> (key_bits - ch1_bits));
+        c2_ = (uint8_t)((key & ch2_mask) >> (key_bits - ch1_bits - ch2_bits));
+        state_idx_ = (uint8_t)((key & state_mask) >> (time_bits));
+        // std::cout << time_mask << "(key) key: " << key << "\t";
+    
+        t_ = key & time_mask;
+        // std::cout << "t: " << t_ << std::endl;
+    }
 
 /* ************************************************************************* */
-    prx_symbol_t::operator gtsam::Key() const {
+    prx_symbol_t::operator gtsam::Key() const 
+    {
         gtsam::Key ch1_comp = gtsam::Key(c1_) << (key_bits - ch1_bits);
         gtsam::Key ch2_comp = gtsam::Key(c2_) << (key_bits - ch1_bits - ch2_bits);
         gtsam::Key state_comp = gtsam::Key(state_idx_) << (time_bits);
@@ -69,18 +79,18 @@ prx_symbol_t::prx_symbol_t(const gtsam::Key& key) {
     }
 
 /* ************************************************************************* */
-std::string prx_symbol_t::label() const {
-  std::string s = "";
-  if (c1_ != 0) 
-  {
-    s += c1_;
-  }
-  if (c2_ != 0) 
-  {
-    s += c2_;
-  }
-  return s;
-}
+    std::string prx_symbol_t::label() const {
+        std::string s = "";
+        if (c1_ != 0) 
+        {
+            s += c1_;
+        }
+        if (c2_ != 0) 
+        {
+            s += c2_;
+        }
+        return s;
+    }
 
 /* ************************************************************************* */
 void prx_symbol_t::print(const std::string& s) const 
@@ -98,11 +108,13 @@ prx_symbol_t::operator std::string() const
   if (state_idx_ != kMax_uchar_) {
     s += "[" + std::to_string((int)(state_idx_)) + "]";
   }
+  // std::cout << "t: " << t_ << std::endl;
   s += std::to_string(t_);
   return s;
 }
 
-std::string _GTDKeyFormatter(gtsam::Key key) {
+std::string prx_key_formatter(gtsam::Key key) 
+{
   return std::string(prx_symbol_t(key));
 }
 

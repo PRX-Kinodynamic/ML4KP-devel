@@ -1,5 +1,6 @@
 #pragma once
 
+#include <gtsam/linear/Sampler.h>
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/linear/NoiseModel.h>
 #include <gtsam/nonlinear/expressions.h>
@@ -14,8 +15,9 @@
 #include "prx/simulation/playback/trajectory.hpp"
 
 #include "prx/gtdynamics/utilities/prx_symbols.hpp"
-#include "prx/gtdynamics/simulation/state_limit_factor.hpp"
-#include "prx/gtdynamics/simulation/propagation_factor.hpp"
+#include "prx/gtdynamics/factors/space_limit_factor.hpp"
+#include "prx/gtdynamics/factors/propagation_factor.hpp"
+#include "prx/gtdynamics/factors/goal_distance_factor.hpp"
 
 namespace prx
 {
@@ -52,14 +54,17 @@ namespace prx
 
 		gtsam::NonlinearFactorGraph get_fg(const int num_steps);
 
-		gtsam::NonlinearFactorGraph limits_factors(const int t) const ;
+		gtsam::NonlinearFactorGraph limits_factors(const int t, const int num_steps) const ;
 
 		gtsam::NonlinearFactorGraph collocationFactors(const int t);
+	
+		gtsam::NonlinearFactorGraph add_goal_distance_factor(const int t);
 
-		gtsam::Values ZeroValues(const int t, const int num_steps);
+		// gtsam::Values ZeroValues(const int t, const int num_steps);
 		
-		gtsam::Values ZeroValuesTrajectory(const int num_steps);
+		// gtsam::Values ZeroValuesTrajectory(const int num_steps);
 
+		gtsam::Values init_from_traj(const trajectory_t& traj, const plan_t& plan);
 
 		private:
 			plant_ptr_t plant_ptr;

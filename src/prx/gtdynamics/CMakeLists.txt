@@ -1,11 +1,6 @@
 
 
 if(BUILD_FOR_GTDYNAMICS)
-
-	set(GTSAM_DIR "/Users/Gary/pracsys/gtsam/install/usr/local/lib/cmake/GTSAM/")
-# set(GTSAM_UNSTABLE_DIR "/Users/Gary/pracsys/gtsam/install/usr/local/lib/cmake/GTSAM_UNSTABLE/")
-	set(GTSAMCMakeTools_DIR "/Users/Gary/pracsys/gtsam/install/usr/local/lib/cmake/GTSAMCMakeTools/")
-
 	# add_subdirectory(GTDynamics/)
 	set(SDFormat_VERSION 10)
 	find_package(sdformat${SDFormat_VERSION} REQUIRED)
@@ -29,7 +24,7 @@ if(BUILD_FOR_GTDYNAMICS)
 	file(GLOB_RECURSE SRC_PRX_LIB_GTDYNAMICS 
 		planning/*.cpp
 		utilities/*.cpp
-		simulation/*.cpp
+		factors/*.cpp
 		)
 	add_library(${PROJECT_NAME}_gtdynamics STATIC ${SRC_PRX_LIB_GTDYNAMICS})
 
