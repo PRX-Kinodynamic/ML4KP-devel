@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE( spaces_test )
     space_1.copy_point(pt_sp2, pt_sp1);
     BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
 
-    space_1.copy_point_from_vector(pt_sp2, {2,5,1});
+    space_1.copy_point_from_vector(pt_sp2, std::vector<double>({2,5,1}));
     std::vector<double> v;
     space_1.copy_vector_from_point(v, pt_sp2);
     BOOST_CHECK(v[0] == 2 && v[1] == 5 && v[2] == 1);

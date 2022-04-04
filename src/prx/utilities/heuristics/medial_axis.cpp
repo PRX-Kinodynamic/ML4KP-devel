@@ -575,7 +575,7 @@ namespace prx
 			auto node_index = graph.add_vertex<undirected_node_t,undirected_edge_t>();
 			auto node = graph.get_vertex_as<undirected_node_t>(node_index);
 			node -> point = state_space -> make_point();
-			state_space -> copy_point_from_vector(node -> point, {pt.real(), pt.imag()});
+			state_space -> copy_point_from_vector(node -> point, std::vector<double>(pt.real(), pt.imag()));
 
 			metric_close -> add_node(node.get());
 			nodes_visited.insert(node_index);

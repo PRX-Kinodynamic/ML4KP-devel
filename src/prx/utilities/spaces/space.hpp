@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <fstream>
 #include <numeric>
 
 namespace prx
@@ -141,7 +142,6 @@ namespace prx
         }
 
 
-
 	protected:
 
 		const space_t* const parent;
@@ -266,9 +266,11 @@ namespace prx
 		void copy_from_vector(const std::vector<double>& source);
 
 		void copy_point_from_vector(const space_point_t& destination, const std::vector<double>& source) const;
-		void copy_point_from_vector(const space_point_t& destination, Eigen::Ref<Eigen::VectorXd> source) const;
+		void copy_point_from_vector(const space_point_t& destination, const Eigen::VectorXd& source) const;
 		void copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const;
 		void copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, const space_point_t& source) const;
+
+		void copy_point_from_string(const space_point_t& destination, const std::string source, char sep = ' ') const;
 
 		inline unsigned int get_dimension() const {return dimension;}
 
@@ -455,6 +457,33 @@ namespace prx
 				i += 1;
 			}
 			return std::sqrt(accum);
+		}
+
+		static double angle_diff(double a0, double a1)
+		{
+			return std::min((2 * PRX_PI) - std::fabs(a0 - a1), std::fabs(a0 - a1));
+		}
+
+		topology_t topology_at(unsigned i)
+		{
+			return topology[i];
+		};
+
+		void difference(space_point_t s0, space_point_t s1, space_point_t res)
+		{
+			for (int i = 0; i < dimension; ++i)
+			{
+				if(topology[i]==topology_t::ROTATIONAL)
+				{
+					(*res)[i] = angle_diff( (*s0)[i], (*s1)[i] );
+
+				}
+				else
+				{
+					(*res)[i] = (*s0)[i] - (*s1)[i] ;
+				}
+
+			}
 		}
 
 	protected:

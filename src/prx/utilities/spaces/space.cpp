@@ -293,7 +293,7 @@ namespace prx
 		enforce_bounds(destination);
 	}
 
-	void space_t::copy_point_from_vector(const space_point_t& destination, Eigen::Ref<Eigen::VectorXd> source) const
+	void space_t::copy_point_from_vector(const space_point_t& destination, const Eigen::VectorXd& source) const
 	{
 		prx_assert(destination->parent->dimension==source.size(),"Point and vector have different sizes: "<<destination->parent->dimension<<" and "<<source.size());
 		for(unsigned i=0;i<dimension;++i)
@@ -321,6 +321,23 @@ namespace prx
 		{
 			destination[i] = source->memory[i];
 		}
+	}
+
+	void space_t::copy_point_from_string(const space_point_t& destination, const std::string source, char sep) const
+	{
+		std::istringstream ss(source);
+		std::string token;
+		int i = 0;
+		while(std::getline(ss, token, sep)) 
+		{
+			prx_assert(i <= destination->parent->dimension, 
+				"Point and source string have different sizes - Point: "<< destination->parent->dimension <<", string: "<< i);
+			(*destination)[i] = std::stod(token);
+			i++;
+
+		}
+		prx_assert(destination->parent->dimension == i, 
+			"Point and source string have different sizes - Point: "<< destination->parent->dimension <<", string: "<< i);
 	}
 
 	void space_t::enforce_bounds(const space_point_t& point) const
