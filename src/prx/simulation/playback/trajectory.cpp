@@ -215,4 +215,32 @@ namespace prx
 		}
 
 	}
+
+    void trajectory_t::to_file(const std::string file_name) const
+    {
+    	std::ofstream ofs_map;
+		ofs_map.open(file_name.c_str(), std::ofstream::trunc);
+
+		for (unsigned i = 0; i < num_states; ++i)
+		{
+			ofs_map << states[i] << std::endl;
+		}
+
+		ofs_map.close();
+    }
+
+    void trajectory_t::from_file(const std::string file_name)
+    {
+		std::ifstream ifs(file_name);
+		std::string line;
+
+		space_point_t aux = state_space -> make_point();
+
+		while(std::getline(ifs,line))
+		{
+			state_space -> copy_point_from_string(aux, line);
+			copy_onto_back(aux);
+		}
+	}
+
 }

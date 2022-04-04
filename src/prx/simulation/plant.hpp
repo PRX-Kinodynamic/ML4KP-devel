@@ -57,6 +57,29 @@ namespace prx
 		static int registred_plants;
 		
 		virtual void compute_derivative()=0;
+
+		void compute_derivative(Eigen::VectorXd x, Eigen::VectorXd u)
+		{
+			get_state_space() -> copy_from_vector(x);
+			get_control_space() -> copy_from_vector(u);
+			compute_derivative();
+			
+			// get_state_space() -> copy_to_vector(xdot);
+			
+		}
+
+		void compute_derivative(space_point_t x, space_point_t u, space_point_t xdot = nullptr)
+		{
+			get_state_space() -> copy_from_point(x);
+			get_control_space() -> copy_from_point(u);
+			compute_derivative();
+			if (xdot)
+			{
+				get_state_space() -> copy_to_point(xdot);
+			}
+		}
+
+		// void gradient(space_point_t x, space_point_t u, bool xu, Eigen::VectorXd out );
 	
 	protected:
 
@@ -71,6 +94,14 @@ namespace prx
 
 		space_point_t derivative_state;
 		friend system_factory_t;
+
+		// Eigen::VectorXd v;
+		// Eigen::VectorXd xv;
+		// Eigen::VectorXd uv;
+		// Eigen::VectorXd plus;
+  //       Eigen::VectorXd minus;
+  //       Eigen::VectorXd d_plus;
+  //       Eigen::VectorXd d_minus;
 
 	};
 

@@ -34,15 +34,15 @@ namespace prx
 		system_t(const std::string& path);
 		virtual ~system_t();
 
-		virtual inline const space_t* get_state_space() const
+		virtual inline space_t* get_state_space() const
 		{
 			return state_space;
 		}
-		inline const space_t* get_control_space() const
+		inline space_t* get_control_space() const
 		{
 			return input_control_space;
 		}
-		inline const space_t* get_parameter_space() const
+		inline space_t* get_parameter_space() const
 		{
 			return parameter_space;
 		}

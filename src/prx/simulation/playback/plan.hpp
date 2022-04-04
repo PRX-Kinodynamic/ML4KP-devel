@@ -160,6 +160,8 @@ namespace prx
          */
 		void append_onto_back(double time);
 
+		void append_onto_back(double time, space_t* ctrl_space);
+
 		/**
          * @brief Extend the duration of the last control in the plan by a specified time.
 		 * @param time Time to extend the duration of the last control by (in seconds).
@@ -181,6 +183,9 @@ namespace prx
 		 * @return A string object that outputs the plan.
          */
 		std::string print( unsigned precision = 3 ) const;
+
+		void to_file(const std::string) const;
+    	void from_file(const std::string file_name);
 
 	private:
 

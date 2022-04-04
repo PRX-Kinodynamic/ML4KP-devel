@@ -200,6 +200,12 @@ namespace prx
 		++num_steps;
 	}
 
+	void plan_t::append_onto_back(double time, space_t* ctrl_space)
+	{
+		append_onto_back(time);
+		ctrl_space -> copy_to_point(this -> back().control);
+	}
+
 	void plan_t::extend_last_control(double time)
 	{
 		prx_assert(num_steps>0,"Can't extend the last control if a plan has no controls");
@@ -249,6 +255,7 @@ namespace prx
     }
 
 
+
 	void plan_t::increase_buffer()
 	{
 		if( max_num_steps != 0 )
@@ -266,6 +273,47 @@ namespace prx
 			num_steps = 0;
 			end_iterator = steps.begin();
 			const_end_iterator = steps.begin();
+		}
+	}
+
+	void plan_t::to_file(const std::string file_name) const
+    {
+    	std::ofstream ofs_map;
+		ofs_map.open(file_name.c_str(), std::ofstream::trunc);
+
+		for (unsigned i = 0; i < num_steps; ++i)
+		{
+			ofs_map << steps[i].duration << " ";
+			ofs_map << steps[i].control;
+			ofs_map << std::endl;
+		}
+
+		ofs_map.close();
+    }
+
+    void plan_t::from_file(const std::string file_name)
+    {
+		std::ifstream ifs(file_name);
+		std::string line;
+
+		space_point_t aux = control_space -> make_point();
+		char sep = ' ';
+		double time;
+		while(std::getline(ifs,line))
+		{
+			std::istringstream ss(line);
+			std::string token;
+			int i = 0;
+			std::string ctrl = "";
+			while(std::getline(ss, token, sep))
+			{
+				if (i == 0) time = std::stod(token);
+				else ctrl += token + sep;
+				i++;
+			}
+			// std::cout << "ctrl:" << ctrl << std::endl;
+			control_space -> copy_point_from_string(aux, ctrl, sep);
+			copy_onto_back(aux, time);
 		}
 	}
 }

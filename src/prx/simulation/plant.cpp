@@ -63,4 +63,46 @@ namespace prx
 		state_space->set_bounds(lower, upper);
 	}
 
+	// void plant_t::gradient(space_point_t x, space_point_t u, bool xu, Eigen::VectorXd out )
+	// {
+	// 	const double epsilon = std::sqrt(simulation_step);
+ //    	unsigned ss_dim = get_state_space() -> get_dimension(); 
+ //    	unsigned cs_dim = get_control_space() -> get_dimension(); 
+
+ //    	unsigned dd_dim = xu ? ss_dim : cs_dim;
+
+ //    	out.resize(ss_dim);
+
+ //    	plus.resize(dd_dim);
+ //    	minus.resize(dd_dim);
+
+ //    	v.resize(dd_dim);
+
+	// 	get_state_space() -> copy_vector_from_point(xv, x);
+	// 	get_state_space() -> copy_vector_from_point(uv, u);
+
+
+	// 	for (int i=0; i < dd_dim; i++) 
+ //  		{
+	// 		plus  = v;
+	// 		minus = v;
+	// 		plus(i) += epsilon;
+	// 		minus(i) -= epsilon;
+
+	// 		if (xu) compute_derivative(plus, uv);
+	// 		else    compute_derivative(xv, plus);
+	// 		propagate(epsilon);
+	// 		get_derivative_space() -> copy_to_vector(d_plus);
+
+
+	// 		if (xu) compute_derivative(minus, uv);
+	// 		else    compute_derivative(xv, minus);
+	// 		propagate(epsilon);
+	// 		get_derivative_space() -> copy_to_vector(d_minus);
+
+ //    		out.col(i) = ( d_plus - d_minus) / ( 2. * epsilon );
+
+	// 	}
+	// }
+
 }
