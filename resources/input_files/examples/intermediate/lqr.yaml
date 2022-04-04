@@ -8,7 +8,7 @@ plant: !file "plants/acrobot.yaml"
 visualize: true
 
 checker_type: sim_time
-checker_value: 10
+checker_value: 5
 
 # checker_type: iterations
 # checker_value: 500
