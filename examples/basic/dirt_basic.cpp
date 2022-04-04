@@ -45,13 +45,13 @@ int main(int argc, char* argv[])
         // Basically for x in traj, call valid_state
     // };
 	
-    params["max_speed"].set(system_factory_t::get_system_max_velocity(plant_name, plant));
-    const double max_vel = params["max_speed"].as<double>();
-    dirt_spec.h = [&](const space_point_t& s, const space_point_t& s2)
-    {
-        // Custom h function: ( eucledian distance from s to s2 ) / (max velocity)
-        return space_t::euclidean_2d(s, s2) / max_vel;
-    };
+    // params["max_speed"].set(system_factory_t::get_system_max_velocity(plant_name, plant));
+    // const double max_vel = params["max_speed"].as<double>();
+    // dirt_spec.h = [&](const space_point_t& s, const space_point_t& s2)
+    // {
+    //     // Custom h function: ( eucledian distance from s to s2 ) / (max velocity)
+    //     return space_t::euclidean_2d(s, s2) / max_vel;
+    // };
 
     // Two ways of accessing lengthy parameter paths
     int min_steps = params["plant"]["min_steps"].as<int>();
@@ -74,6 +74,12 @@ int main(int argc, char* argv[])
     auto lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
     auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
     context.first -> get_state_space() -> set_bounds(lower_bounds, upper_bounds);
+
+    const auto cs = context.first -> get_control_space();
+
+    auto cs_lb = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
+    auto cs_up = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
+    cs -> set_bounds(cs_lb, cs_up);
 
     context.first -> get_state_space() -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
     context.first -> get_state_space() -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
@@ -105,6 +111,9 @@ int main(int argc, char* argv[])
     three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
     // TODO: Add function to visualization to replace tree_to_html
     // tree_to_html(vis_group, dirt_query, context.first -> get_state_space());
+
+    dirt_query.solution_traj.to_file(out_path + "dirt_traj.txt");
+    dirt_query.solution_plan.to_file(out_path + "dirt_plan.txt");
 
     std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
     auto ss = context.first -> get_state_space();

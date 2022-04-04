@@ -81,17 +81,26 @@ int main(int argc, char* argv[])
     Eigen::MatrixXd K = lqr.get_K();
     std::cout << "K: " << K << std::endl;
     
+    // solution_traj.copy_onto_back(ss);
+    plan_t sln_plan(cs);
+
     do
     {
+        solution_traj.copy_onto_back(ss);
         lqr.compute_controls();
         cs -> enforce_bounds();
+        sln_plan.append_onto_back(simulation_step, cs);
+
         plant -> propagate(simulation_step);
         // std::cout << "[plant] " << plant << std::endl;
-        solution_traj.copy_onto_back(ss);
 
     }
     while(!checker.check()); //&& space_t::euclidean_2d(solution_traj.back(), goal_state, 0, ss_dim) > 0.01);
+    solution_traj.copy_onto_back(ss);
 
+    solution_traj.to_file(out_path + "lqr_traj.txt");
+    sln_plan.to_file(out_path + "lqr_plan.txt");
+    
     std::cout << "Last state: " << solution_traj.back() << " distance: " << space_t::euclidean_2d(solution_traj.back(), goal_state, 0, ss_dim) << std::endl;
 
     three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});

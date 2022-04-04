@@ -65,17 +65,24 @@ int main(int argc, char* argv[])
     auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
     context.first -> get_state_space() -> set_bounds(lower_bounds, upper_bounds);
 
+    const auto ss = context.first -> get_state_space();
+    const auto cs = context.first -> get_control_space();
+
+    auto cs_lb = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
+    auto cs_up = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
+    cs -> set_bounds(cs_lb, cs_up);
+
     context.first -> get_state_space() -> copy_point_from_vector(rrt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
     context.first -> get_state_space() -> copy_point_from_vector(rrt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
 
     rrt_query.goal_region_radius = params["goal_region_radius"].as<double>();
     
     // Alternatively, change the goal_check function
-    // rrt_query.goal_check = [&](space_point_t pt)
-    // {
-    //    // Default is:
-        // return space_t::euclidean_2d(pt, rrt_query.goal_state) < goal_region_radius;
-    // }
+    rrt_query.goal_check = [&](space_point_t pt)
+    {
+       // Default is:
+        return space_t::euclidean_2d(pt, rrt_query.goal_state, 0, ss -> get_dimension()) < rrt_query.goal_region_radius;
+    };
 
     rrt_query.get_visualization = params["visualize"].as<bool>();
 
@@ -95,11 +102,14 @@ int main(int argc, char* argv[])
         
     three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
 
-    std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
-    auto ss = context.first -> get_state_space();
+    rrt_query.solution_traj.to_file(out_path + "rrt_traj.txt");
+    rrt_query.solution_plan.to_file(out_path + "rrt_plan.txt");
 
-    vis_group -> add_vis_infos(info_geometry_t::LINE, rrt_query.tree_visualization, 
-        body_name, ss);
+    std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+    // auto ss = context.first -> get_state_space();
+
+    // vis_group -> add_vis_infos(info_geometry_t::LINE, rrt_query.tree_visualization, 
+        // body_name, ss);
 
     vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, rrt_query.solution_traj, 
         body_name, ss);
