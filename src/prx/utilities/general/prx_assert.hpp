@@ -9,10 +9,10 @@
 
 namespace prx
 {
-	#define COLOR_NORMAL "\033[0m"
-  	#define COLOR_RED "\033[31m"
-  	#define COLOR_GREEN "\033[32m"
-  	#define COLOR_YELLOW "\033[33m"
+	// #define COLOR_NORMAL "\033[0m"
+ //  	#define COLOR_RED "\033[31m"
+ //  	#define COLOR_GREEN "\033[32m"
+ //  	#define COLOR_YELLOW "\033[33m"
 	class prx_assert_t : public std::exception
 	{
 	private:
@@ -134,7 +134,7 @@ namespace prx
 	};
 
 
-	#define prx_assert(EXPRESSION, MESSAGE) if(!(EXPRESSION)) { throw prx::prx_assert_t(#EXPRESSION, __FILE__, __LINE__, (prx::prx_assert_t::stream_t() << MESSAGE)); }
+	#define prx_assert(EXPRESSION, MESSAGE) if(!(EXPRESSION)) { throw prx::prx_assert_t(#EXPRESSION, __FILE__, __LINE__, (prx::prx_assert_t::stream_t() << "[" << __PRETTY_FUNCTION__ << "] " << MESSAGE)); }
 	#define prx_throw(MESSAGE) {throw prx::prx_assert_t("", __FILE__, __LINE__, (prx::prx_assert_t::stream_t() << MESSAGE)); }
 	#define prx_throw_quiet(MESSAGE) {throw prx::prx_assert_t((prx::prx_assert_t::stream_t() << MESSAGE)); }
 
@@ -145,6 +145,6 @@ namespace prx
 	 */
 	#define prx_throw_backtrace(...) {throw prx::prx_assert_t().get_backtrace(__VA_ARGS__); }
 
-	#define prx_warn(MESSAGE) std::cerr << COLOR_YELLOW << "[PRX WARN] " << __PRETTY_FUNCTION__ << ":" << __LINE__ << " " << MESSAGE << COLOR_NORMAL << std::endl;
+	#define prx_warn(MESSAGE) std::cerr << PRX_COLOR_YELLOW << "[PRX WARN] " << __PRETTY_FUNCTION__ << ":" << __LINE__ << " " << MESSAGE << PRX_COLOR_NORMAL << std::endl;
 	#define prx_warn_cond(EXPRESSION, MESSAGE) if (!(EXPRESSION)) {prx_warn(#EXPRESSION << " " << MESSAGE)}
 }

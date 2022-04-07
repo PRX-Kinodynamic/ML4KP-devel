@@ -9,7 +9,7 @@ set(BUILD_SHARED_LIBS True)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 cmake_policy(SET CMP0079 NEW)
 
-set(BUILD_FOR_PYTHON ON  CACHE BOOL "Set ON/TRUE for building Python Bindings")
+set(BUILD_FOR_PYTHON OFF  CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_BULLET OFF CACHE BOOL "Set ON/TRUE for building for PyBullet")
 set(BUILD_FOR_TORCH  ON  CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_TESTS		 ON  CACHE BOOL "Set ON/TRUE for building tests")

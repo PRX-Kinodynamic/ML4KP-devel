@@ -40,6 +40,14 @@ namespace prx
 			}
 		}
 
+		virtual void add_context(const std::vector<system_ptr_t>& all_systems) 
+		{
+			for(auto s : all_systems)
+			{
+				systems[s->get_pathname()] = s;
+			}
+		}
+
 		inline simulation_context get_context(const std::string& context_name)
 		{
 			return std::make_pair(system_groups->get_system_group(context_name),collision_groups->get_collision_group(context_name));
@@ -75,6 +83,6 @@ namespace prx
 
 		std::unordered_map<std::string,system_ptr_t> systems;
 
-		// std::vector<system_ptr_t> group;
+		std::set<std::string> all_context_names;
 	};
 }

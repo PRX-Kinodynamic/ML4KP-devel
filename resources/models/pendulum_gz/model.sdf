@@ -46,6 +46,7 @@
                 </visual>
             </link>
         </model>
+        
         <joint name="joint_00" type="revolute">
             <parent>link_00</parent>
             <child>base::link_01</child>

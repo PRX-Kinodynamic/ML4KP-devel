@@ -34,6 +34,7 @@ namespace prx
 		system_t(const std::string& path);
 		virtual ~system_t();
 
+
 		virtual inline const space_t* get_state_space() const
 		{
 			return state_space;
@@ -93,10 +94,10 @@ namespace prx
 		}
 
 	protected:
+		system_t(const system_ptr_t&);
 		space_t* state_space;
 		space_t* input_control_space;
 		space_t* parameter_space;
-	protected:
 
 		std::weak_ptr<system_t> parent_system;
 

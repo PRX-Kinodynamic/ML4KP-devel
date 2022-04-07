@@ -11,29 +11,31 @@ using namespace prx;
 
 int main(int argc, char* argv[])
 {
-	// gazebo::setupServer({});
-    // printf("GAZEBO_MODEL_PATH: %s\n", std::getenv("GAZEBO_MODEL_PATH") );
-    // printf("GAZEBO_MODEL_PATH_SET: %s\n", GAZEBO_MODEL_PATH_SET?"True":"False" );
-    // printf("GAZEBO_RESOURCE_PATH_SET: %s\n", GAZEBO_RESOURCE_PATH_SET?"True":"False" );
 	auto sim = std::make_shared<gz_sim_t>();
 
-  // Load a world
-  // gazebo::physics::WorldPtr world = gazebo::loadWorld(worlds_path + "pendulum.world");
-	sim -> set_world(worlds_path + "pendulum.world");
-  // This is your custom main loop. In this example the main loop is just a
-  // for loop with 2 iterations.
+    sim -> set_world(worlds_path + "pendulum.world");
 
-  // Close everything.
-	sim -> initialize_simulation();
+    std::string plant_name = "pendulum_gz";//params["/plant/name"].as<>();
+    std::string plant_path = "pendulum_gz";//params["/plant/path"].as<>();
+
+    auto plant = prx::system_factory_t::create_system_as<plant_gz_wrapper_t>(plant_name, plant_path);
+    // auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
+    // auto plant = std::dynamic_pointer_cast<plant_t>(plant_gz);
+    std::cout << "plant created as: " << typeid(plant).name() << plant << std::endl;
+    prx_assert(plant != nullptr, "Plant is nullptr!");
+
+    sim -> add_group({plant});
+    sim -> create_context({plant_name}, {});
+    sim -> initialize_simulation();
+    
+    auto ss = plant -> get_state_space();
+    std::cout << plant -> get_pathname() << " space " << ss << std::endl;
+    auto state = ss -> make_point();
+
 	bool keep_running = true;
 
-	// auto models = sim -> world -> Models();
-	// for (auto m : models)
-	// {
-	// 	std::cout << "Model: " << m -> GetName() << std::endl;
-	// }
-
     std::cout<<"press q to exit! "<<std::endl;
+    gazebo::physics::ModelPtr m = sim -> get_model_ptr("pendulum_gz");
     while(keep_running) 
     {
         auto c = std::cin.get();
@@ -45,7 +47,14 @@ int main(int argc, char* argv[])
         else if (c == 's')
         {
             std::cout << "Stepping..." << std::endl;
-        	sim -> step_simulation(1000);
+            for (int i = 0; i < 100; ++i)
+            {
+                sim -> step_simulation(10);
+                // m = sim -> get_model_state("pendulum_gz");
+                // std::cout << "Pose: " << m.Pose().Rot().Euler().X() << std::endl;
+                // std::cout << "Link Pose: " << m -> GetLinks()[0] -> WorldPose() << std::endl;
+                // std::cout << "Joint Vel: " << m -> GetJoints()[0] -> GetVelocity(0) << std::endl;
+            }
             std::cout << "done stepping!" << std::endl;
         }
         else if (c == 'r')
@@ -54,8 +63,17 @@ int main(int argc, char* argv[])
         }
         else if (c == 'm')
         {
-            gazebo::physics::ModelState m = sim -> get_model_state("pendulum_gz");
-            std::cout << "state: " << m.GetJointStateCount() << std::endl;
+            auto m_ptr = sim -> get_model_ptr("pendulum_gz");
+            // std::cout << "Model Pointer: "; 
+            // std::cout << "JointCount: " << m_ptr -> GetJointCount() << std::endl;
+            // std::cout << "ModelState: " << m.GetJointStateCount() << std::endl;
+        }
+        else if (c == 'e')
+        {   
+            ss -> sample(state);
+            std::cout << "sample state: " << state << std::endl;
+            ss -> copy_from_point(state);
+            // std::cout << "space state: " << ss << std::endl;
         }
     }
 

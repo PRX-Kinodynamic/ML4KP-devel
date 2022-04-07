@@ -1,19 +1,19 @@
+#include <memory>
 #include <optional>
-
-#include "prx/utilities/defs.hpp"
-#include "prx/gazebo/constants.hpp"
-#include "prx/simulation/simulator.hpp"
-#include "prx/utilities/general/constants.hpp"
-#include "prx/simulation/playback/trajectory.hpp"
+#include <typeinfo>
 
 #include <gazebo/gazebo.hh>
 #include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
-// #include "gazebo/math/Vector3.hh"
-// #include "gazebo/msgs/msgs.hh"
-// #include "gazebo/physics/physics.hh"
-// #include "gazebo/transport/transport.hh"
-#include "gazebo/rendering/RenderingIface.hh"
+#include <gazebo/rendering/RenderingIface.hh>
+
+#include "prx/utilities/defs.hpp"
+#include "prx/simulation/simulator.hpp"
+#include "prx/utilities/general/constants.hpp"
+#include "prx/simulation/playback/trajectory.hpp"
+
+#include "prx/gazebo/constants.hpp"
+#include "prx/gazebo/plants/plants.hpp"
 
 namespace prx
 {
@@ -35,11 +35,13 @@ namespace prx
 			}
 		}
 
-		virtual ~gz_sim_t()
+		~gz_sim_t()
 		{
   			gazebo::shutdown();
 		}
 
+		// void add_group(const std::vector<std::shared_ptr<plant_gz_t<system_t>>>& all_systems);
+		virtual void add_group(const std::vector<system_ptr_t>& all_systems) override;
 
 		virtual void step_simulation(propagate_step step) override;
 
@@ -51,6 +53,8 @@ namespace prx
 
         gazebo::physics::ModelState get_model_state(std::string plant_name);
 
+		gazebo::physics::ModelPtr get_model_ptr(const std::string& plant_name);
+
 		void set_world(std::string _path)
 		{
 			world_file = _path;
@@ -60,6 +64,10 @@ namespace prx
 		{
 			gazebo::physics::pause_world(world, pause);
 		}
+
+		void create_context(const std::vector<std::string>& system_names, 
+			const std::vector<std::string>& obstacle_names, 
+			const std::string& context_name = "default_context");
 
 		system_ptr_t get_plant(std::string name);
 
@@ -72,5 +80,7 @@ namespace prx
 		std::unique_ptr<gazebo::Server> server;
 
 		std::shared_ptr<gazebo::physics::WorldState> world_state;
+
+
 	};
 }
