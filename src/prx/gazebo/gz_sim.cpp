@@ -37,9 +37,9 @@ namespace prx
 			auto sys_name = s_pair.first;
 			auto sys = s_pair.second;
 			auto pw = std::dynamic_pointer_cast<plant_gz_wrapper_t>(sys) -> get_plant_gz();
+			pw -> copy_from_model_ptr();
 			// auto gz_sys = std::dynamic_pointer_cast<plant_gz_t<system_t>>(sys);
 			// auto m_ptr = world -> ModelByName(sys_name);
-			pw -> copy_from_model_ptr();
 		}
 
 	}
@@ -81,7 +81,14 @@ namespace prx
 
 	void gz_sim_t::reset_simulation()
 	{
+		for(auto s_pair : systems)
+		{	
+			auto sys = s_pair.second;
+			auto pw = std::dynamic_pointer_cast<plant_gz_wrapper_t>(sys) -> get_plant_gz();
+			pw -> reset_system();
+		}
 		world -> Reset();
+
 	}
 
 	void gz_sim_t::initialize_simulation()

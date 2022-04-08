@@ -33,9 +33,16 @@ namespace prx
 
 			virtual void copy_from_model_ptr() = 0;
 
+			virtual void reset_system() = 0;
+
 			void update()
 			{
 				m_ptr -> Update();
+			}
+
+			void set_reset_state(const std::vector<double>& _rv)
+			{
+				reset_vec.assign(_rv.begin(), _rv.end());
 			}
 
 			// virtual void update_configuration() override
@@ -44,6 +51,8 @@ namespace prx
 		protected:
 
 			gazebo::physics::ModelPtr m_ptr;
+			std::vector<double> reset_vec;
+
 	};
 
 }

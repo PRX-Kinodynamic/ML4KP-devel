@@ -1,5 +1,6 @@
 <?xml version='1.0'?>
 <sdf version='1.4'>
+
     <model name="pendulum_gz">
         <pose>0 0 0 0 0 0</pose>
         <link name="link_00">
@@ -26,33 +27,16 @@
                 </material>
             </visual>
         </link>
-
-        <model name="base">
-            <static> True </static>
-            <pose>0 0 2.0 0 0 0</pose>
-            <link name="link_01">
-                <pose>-0.1 0 0.0 0 0 0</pose>
-                <visual name="visual_01">
-                    <geometry>
-                        <box>
-                            <size>.1 .1 .1</size>
-                        </box>
-                    </geometry>
-                    <material>
-                        <ambient> 0 0 0 0 </ambient>
-                        <diffuse> 1 1 1 1 </diffuse>
-                        <specular> 1 1 1 1 </specular>
-                    </material>
-                </visual>
-            </link>
-        </model>
         
         <joint name="joint_00" type="revolute">
-            <parent>link_00</parent>
-            <child>base::link_01</child>
-            <pose>0.0 0.0 0.0 0.0 0.0 0.0</pose>
+            <parent>world</parent>
+            <child>link_00</child>
+            <pose>0.0 0.0 0.5 0.0 0.0 0.0</pose>
             <axis>
                 <xyz>1.0 0.0 0.0</xyz>
+                <limit> 
+                    <velocity>6.2831853072</velocity>
+                </limit>
             </axis>
         </joint>
 

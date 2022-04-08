@@ -14,7 +14,9 @@ namespace prx
 	public:
 		pendulum_gz_t(const std::string& path)
 			: plant_gz_t(), pendulum_t(path)
-		{}
+		{
+			reset_vec = {0,0};
+		}
 		
 		virtual ~pendulum_gz_t();
 
@@ -24,8 +26,7 @@ namespace prx
 		void copy_from_model_ptr() override;
 		// void copy_from_model_ptr(const gazebo::physics::ModelPtr&) override;
 
-		// virtual void update_configuration() override { pendulum_t::update_configuration(); } ;
-
+		void reset_system() override;
 
 	protected:
 		// virtual void compute_derivative() { pendulum_t::compute_derivative(); }
