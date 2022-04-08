@@ -15,12 +15,7 @@ namespace prx
 				"Unable to wrap class " << typeid(_plant).name() << ", can't cast to plant_t.");
 			plant = std::dynamic_pointer_cast<plant_t>(_plant);
 			plant_gz = std::dynamic_pointer_cast<plant_gz_t>(_plant);
-			// auto this_plant = dynamic_cast<plant_t*>(this);
-			// this_plant = std::move(_plant.get());
-			// *dynamic_cast<plant_t*>(this) = *dynamic_cast<plant_t*>(_plant.get());
-			// pathname = _plant -> get_pathname();
-			// pathname = _plant -> get_pathname();
-			// collision_list = plant -> get_collision_list();
+
 		}
 
 		~plant_gz_wrapper_t() = default;

@@ -6,22 +6,12 @@
 
 namespace prx
 {	
-	// template <class PC> 
-	// class plant_gz_t;
 
-	// template <typename PC>
-	// using plant_gz_ptr_t = std::shared_ptr<plant_gz_t<PC>>;
-	// using PC = system_t;
-	// template <class PC> // Plant Class
-	// class plant_gz_t : public PC
-	// class plant_gz_t : public virtual PC
 	class plant_gz_t
 	{
-		// static_assert(std::is_base_of<system_t, PC>::value, "plant_gz_t<PC>, PC must derive from plant_t");
 		public:
 
 			plant_gz_t() = default;
-			// plant_gz_t(const std::string& path) : system_t(path) {};
 			virtual ~plant_gz_t() = default;
 
 			void set_model_ptr(const gazebo::physics::ModelPtr& _m_ptr)
@@ -44,9 +34,6 @@ namespace prx
 			{
 				reset_vec.assign(_rv.begin(), _rv.end());
 			}
-
-			// virtual void update_configuration() override
-			// {}
 
 		protected:
 

@@ -6,9 +6,6 @@
 
 namespace prx
 {
-	// class pendulum_gz_t : public plant_gz_wrapper_t<pendulum_t>, public plant_gz_t
-	// class pendulum_gz_t : public plant_gz_wrapper_t<pendulum_t>
-	// class pendulum_gz_t : public pendulum_t, public plant_gz_t
 	class pendulum_gz_t : public pendulum_t, public plant_gz_t
 	{
 	public:
@@ -21,10 +18,8 @@ namespace prx
 		virtual ~pendulum_gz_t();
 
 		void copy_to_model_ptr() const override;
-		// void copy_to_model_ptr(const gazebo::physics::ModelPtr&) const override;
 
 		void copy_from_model_ptr() override;
-		// void copy_from_model_ptr(const gazebo::physics::ModelPtr&) override;
 
 		void reset_system() override;
 

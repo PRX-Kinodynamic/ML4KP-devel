@@ -19,8 +19,6 @@ int main(int argc, char* argv[])
     std::string plant_path = "pendulum_gz";//params["/plant/path"].as<>();
 
     auto plant = prx::system_factory_t::create_system_as<plant_gz_wrapper_t>(plant_name, plant_path);
-    // auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
-    // auto plant = std::dynamic_pointer_cast<plant_t>(plant_gz);
     std::cout << "plant created as: " << typeid(plant).name() << plant << std::endl;
     prx_assert(plant != nullptr, "Plant is nullptr!");
 
@@ -41,7 +39,6 @@ int main(int argc, char* argv[])
         auto c = std::cin.get();
         if (c == 'q')
         {
-            //! desired user input 'q' received
             keep_running = false;
         }
         else if (c == 's')
@@ -50,10 +47,6 @@ int main(int argc, char* argv[])
             for (int i = 0; i < 100; ++i)
             {
                 sim -> step_simulation(10);
-                // m = sim -> get_model_state("pendulum_gz");
-                // std::cout << "Pose: " << m.Pose().Rot().Euler().X() << std::endl;
-                // std::cout << "Link Pose: " << m -> GetLinks()[0] -> WorldPose() << std::endl;
-                // std::cout << "Joint Vel: " << m -> GetJoints()[0] -> GetVelocity(0) << std::endl;
             }
             std::cout << "done stepping!" << std::endl;
         }
@@ -64,16 +57,12 @@ int main(int argc, char* argv[])
         else if (c == 'm')
         {
             auto m_ptr = sim -> get_model_ptr("pendulum_gz");
-            // std::cout << "Model Pointer: "; 
-            // std::cout << "JointCount: " << m_ptr -> GetJointCount() << std::endl;
-            // std::cout << "ModelState: " << m.GetJointStateCount() << std::endl;
         }
         else if (c == 'e')
         {   
             ss -> sample(state);
             std::cout << "sample state: " << state << std::endl;
             ss -> copy_from_point(state);
-            // std::cout << "space state: " << ss << std::endl;
         }
     }
 
