@@ -16,9 +16,9 @@ BOOST_AUTO_TEST_CASE( integrators )
     auto acrobot_rk4 = prx::system_factory_t::create_system("Acrobot", "Acrobot_rk4");
     auto acrobot_dorpi = prx::system_factory_t::create_system("Acrobot", "Acrobot_dorpi");
 	
-     std::dynamic_pointer_cast<prx::plant_t>(acrobot_euler) -> set_integrator(prx::integrator_t::kEULER);
-     std::dynamic_pointer_cast<prx::plant_t>(acrobot_rk4) -> set_integrator(prx::integrator_t::kRK4);
-     std::dynamic_pointer_cast<prx::plant_t>(acrobot_dorpi) -> set_integrator(prx::integrator_t::kDOPRI5);
+    std::dynamic_pointer_cast<prx::plant_t>(acrobot_euler) -> set_integrator(prx::integrator_t::kEULER);
+    std::dynamic_pointer_cast<prx::plant_t>(acrobot_rk4) -> set_integrator(prx::integrator_t::kRK4);
+    std::dynamic_pointer_cast<prx::plant_t>(acrobot_dorpi) -> set_integrator(prx::integrator_t::kDOPRI5);
 
     std::vector<std::vector<double> > ctrls = {{6.94678,0.12,0.12},
                                                {6.70279,0.28,0.4},
