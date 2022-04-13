@@ -68,7 +68,7 @@ namespace prx
 		 * @return Dimensionality of the space snapshot.
 		*/
 		inline const
-		int get_dim()
+		unsigned int get_dim()
 		{
 			return memory.size();
 		}

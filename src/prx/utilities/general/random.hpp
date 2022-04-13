@@ -5,9 +5,12 @@
 #pragma once
 
 #include <vector>
+#include <random>
 
 namespace prx
 {
+    // This might not be the best way to have a generator
+    extern std::mt19937_64 global_generator;
 
     /**
     * Initializes the uniform random number generator with the given seed.
