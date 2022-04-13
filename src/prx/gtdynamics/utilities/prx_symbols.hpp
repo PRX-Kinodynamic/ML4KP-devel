@@ -63,7 +63,11 @@ namespace prx
              * @param[in] s         1 or 2 characters to represent the variable type
              * @param[in] t         time step
              */
-            static prx_symbol_t time_symbol(const std::string& s, uint64_t t);
+// prx_symbol_t prx_symbol_t::time_symbol(const std::string& s, uint64_t t) {
+            static prx_symbol_t time_symbol(uint64_t t)
+            {
+                return prx_symbol_t("ti", 0, t);
+            }
 
             /**
              * Constructor that decodes an integer gtsam::Key
@@ -126,7 +130,7 @@ namespace prx
 };
 
 // /// key formatter function
-    std::string prx_key_formatter(gtsam::Key key);
+    std::string key_formatter(gtsam::Key key);
 
 // static const gtsam::KeyFormatter GTDKeyFormatter = &_GTDKeyFormatter;
 

@@ -14,25 +14,37 @@
 #include "prx/utilities/general/zipped_iter.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 
+#include "prx/gtdynamics/factors/factors.hpp"
 #include "prx/gtdynamics/utilities/prx_symbols.hpp"
-#include "prx/gtdynamics/factors/space_limit_factor.hpp"
-#include "prx/gtdynamics/factors/propagation_factor.hpp"
-#include "prx/gtdynamics/factors/goal_distance_factor.hpp"
 
 namespace prx
 {
+	struct trajectory_fg_params_t
+	{
+		int  num_steps = 50;
+		bool initial_state_as_prior = true;
+		bool goal_state_as_prior = false;
+		bool limits_factors = true;
+		int  propagation_factors_type = 3; // only 3 or 4 for now... could be an enum
+		bool use_goal_factors = true;
+
+		void print()
+		{
+			std::cout << "trajectory_fg_params_t:" << std::endl;
+			std::cout << "\tnum_steps:" << num_steps << std::endl;
+			std::cout << "\tinitial_state_as_prior:" << initial_state_as_prior << std::endl;
+			std::cout << "\tgoal_state_as_prior:" << goal_state_as_prior << std::endl;
+			std::cout << "\tlimits_factors:" << limits_factors << std::endl;
+			std::cout << "\tpropagation_factors_type:" << propagation_factors_type << std::endl;
+			std::cout << "\tuse_goal_factors:" << use_goal_factors << std::endl;
+			// std::cout << "\t:" << std::endl;
+		}
+	};
+
 	class trajectory_fg_t
 	{
-	public:
-		trajectory_fg_t(system_ptr_t);
-
-		// set_x_factors(const std::vector<bool> _vec)
-		// 	: x_ss(_vec)
-		// 	{};
-
-		// set_xdot_factors(const std::vector<bool> _vec)
-		// 	: xdot_ss(_vec)
-		// 	{};
+		public:
+			trajectory_fg_t(system_ptr_t);
 
 			void set_initial_state(const std::vector<double> _vec)
 			{
@@ -52,17 +64,13 @@ namespace prx
 				}
 			};
 
-		gtsam::NonlinearFactorGraph get_fg(const int num_steps);
+		gtsam::NonlinearFactorGraph get_fg(const trajectory_fg_params_t& _params);
 
 		gtsam::NonlinearFactorGraph limits_factors(const int t, const int num_steps) const ;
 
-		gtsam::NonlinearFactorGraph collocationFactors(const int t);
+		gtsam::NonlinearFactorGraph add_propagation_factor(const int t, const int prop_type);
 	
 		gtsam::NonlinearFactorGraph add_goal_distance_factor(const int t);
-
-		// gtsam::Values ZeroValues(const int t, const int num_steps);
-		
-		// gtsam::Values ZeroValuesTrajectory(const int num_steps);
 
 		gtsam::Values init_from_traj(const trajectory_t& traj, const plan_t& plan);
 

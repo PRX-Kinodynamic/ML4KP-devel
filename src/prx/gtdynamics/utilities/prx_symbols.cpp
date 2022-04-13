@@ -51,11 +51,6 @@ prx_symbol_t::prx_symbol_t(const prx_symbol_t& key)
         // std::cout << "t: " << t_ << std::endl;
     }
 
-
-prx_symbol_t prx_symbol_t::time_symbol(const std::string& s, uint64_t t) {
-  return prx_symbol_t(s, kMax_state_, t);
-}
-
 /* ************************************************************************* */
     prx_symbol_t::prx_symbol_t(const gtsam::Key& key) 
     {
@@ -113,7 +108,7 @@ prx_symbol_t::operator std::string() const
   return s;
 }
 
-std::string prx_key_formatter(gtsam::Key key) 
+std::string key_formatter(gtsam::Key key) 
 {
   return std::string(prx_symbol_t(key));
 }

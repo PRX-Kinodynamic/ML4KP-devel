@@ -22,8 +22,12 @@ namespace prx
 	{
 		public:
 			static gtsam::Values zero_state(const system_ptr_t _sys_ptr, const int t, const int num_steps, const double sigma);
-		
+			
 			static gtsam::Values zeros_trajectory(const system_ptr_t _sys_ptr, const int num_steps, const double sigma = 0.0);
+		
+			static gtsam::Values state_from_space(const space_t* space, const int t, const bool state_or_ctrl, const double sigma);
+			
+			static gtsam::Values constant_trajectory(const system_ptr_t _sys_ptr, const space_point_t x, const space_point_t u, const int num_steps, const double sigma = 0.0);
 			
 			static gtsam::Values linear_trajectory(const system_ptr_t _sys_ptr, 
 				const space_point_t& start, const space_point_t& goal,
@@ -34,6 +38,8 @@ namespace prx
 			static gtsam::Values control_to_value(const system_ptr_t _sys_ptr, const space_point_t pt, const int t);
 
 			static gtsam::Values state_to_value(const system_ptr_t _sys_ptr, const space_point_t pt, const int t);
+
+			static gtsam::Values init_time_factors(const int num_steps, const double sigma);
 
 	};
 }

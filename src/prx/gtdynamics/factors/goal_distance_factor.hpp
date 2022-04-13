@@ -6,6 +6,7 @@
 #include <gtsam/nonlinear/Expression.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
+#include "prx/utilities/math/math_functions.hpp"
 #include "prx/simulation/plants/types/linear_time_variant.hpp"
 
 namespace prx
@@ -46,6 +47,7 @@ namespace prx
       	virtual Eigen::VectorXd evaluateError(const X&,
       		boost::optional<Eigen::MatrixXd&> H1 = boost::none) const override;
 
+      	Eigen::VectorXd compute_error(Eigen::VectorXd xt_v) const;
       	void print(const std::string &s = "",
                const gtsam::KeyFormatter &keyFormatter =
                    gtsam::DefaultKeyFormatter) const override 

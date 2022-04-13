@@ -21,7 +21,6 @@ namespace prx
   		gtsam::Sampler x_sampler(sampler_noise_model);
   		gtsam::Sampler u_sampler(sampler_noise_ctrl);
 
-
   		auto xi_sy = prx_symbol_t::state_symbol(t);
   		values.insert(xi_sy, x_sampler.sample());
 
@@ -31,6 +30,69 @@ namespace prx
   			values.insert(ui_sy, u_sampler.sample());
   		}
 
+		return values;
+	}
+
+	gtsam::Values initialization_trajs_fg_t::state_from_space(const space_t* space, const int t, const bool state_or_ctrl, const double sigma)
+	{
+		gtsam::Values values;
+
+  		auto dim = space -> get_dimension();
+
+		auto sampler_noise = 
+			gtsam::noiseModel::Isotropic::Sigma(dim, sigma);
+
+  		gtsam::Sampler sampler(sampler_noise);
+
+  		prx_symbol_t st = state_or_ctrl ? prx_symbol_t::state_symbol(t) : prx_symbol_t::control_symbol(t);
+  			
+  		Eigen::VectorXd v(dim);
+  		space -> copy_to_vector(v);
+  		v += sampler.sample();
+  		values.insert(st, v);
+
+		return values;
+	}
+
+	gtsam::Values initialization_trajs_fg_t::constant_trajectory(const system_ptr_t _sys_ptr, const space_point_t x, const space_point_t u, const int num_steps, const double sigma)
+	{
+		gtsam::Values values;
+		auto ss = _sys_ptr -> get_state_space();
+		auto cs = _sys_ptr -> get_control_space();
+
+		ss -> copy_from_point(x);
+		cs -> copy_from_point(u);
+
+  		for (int t = 0; t <= num_steps; t++)
+	  	{
+	   		values.insert(state_from_space(ss, t, true, sigma));
+  			if (t < num_steps)
+			{
+				values.insert(state_from_space(cs, t, false, sigma));
+			}
+  		}
+  		return values;
+	}
+
+	gtsam::Values initialization_trajs_fg_t::init_time_factors(const int num_steps, const double sigma)
+	{
+		gtsam::Values values;
+
+		auto sampler_noise = 
+			gtsam::noiseModel::Isotropic::Sigma(1, sigma);
+
+  		gtsam::Sampler sampler(sampler_noise);
+
+  		for (int t = 0; t < num_steps; ++t)
+  		{
+  			auto ti = prx_symbol_t::time_symbol(t);
+  			Eigen::VectorXd v(1);
+  			v[0] = std::fabs( simulation_step + sampler.sample()[0] );
+	  		// v += sampler.sample();
+	  		// v[0] = std::fabs(v[0]);
+	  		values.insert(ti, v);
+  		}
+  			
 		return values;
 	}
 

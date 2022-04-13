@@ -1,15 +1,19 @@
 #pragma once
 
+#include <cmath>
+#include <limits>
+#include <string>
+#include <vector>
+#include <iostream>
+#include <boost/optional.hpp>
+
 #include <gtsam/base/Matrix.h>
 #include <gtsam/base/Vector.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
-#include <boost/optional.hpp>
-#include <cmath>
-#include <iostream>
-#include <limits>
-#include <string>
-#include <vector>
+#include "prx/utilities/defs.hpp"
+#include "prx/utilities/spaces/space.hpp"
+
 
 // #include "gtdynamics/universal_robot/Joint.h"
 
@@ -84,23 +88,6 @@ class space_limit_factor_t : public gtsam::NoiseModelFactor1<Eigen::VectorXd>
                     error[i] = q - ( ss -> get_upper_bound(i) );
                 }
             }   
-
-            // if (q < low_) 
-            // {
-            //     if (H_q) *H_q = -gtsam::I_1x1;
-            //     return gtsam::Vector1(low_ - q);
-            // }
-            // else if (q <= high_) 
-            // {
-            //     if (H_q) *H_q = gtsam::Z_1x1;
-            //     return gtsam::Vector1(0.0);
-            // }
-            // else 
-            // {
-            //     if (H_q) *H_q = gtsam::I_1x1;
-            //     return gtsam::Vector1(q - high_);
-            // }
-            // 
         }
         return error;
     }
@@ -114,11 +101,11 @@ class space_limit_factor_t : public gtsam::NoiseModelFactor1<Eigen::VectorXd>
 
     /// print contents
     void print(const std::string &s = "",
-               const gtsam::KeyFormatter &keyFormatter =
+               const gtsam::KeyFormatter &kf =
                    gtsam::DefaultKeyFormatter) const override 
     {
       std::cout << s << "space_limit_factor";
-      Base::print("", prx_key_formatter);
+      Base::print("", kf);
     }
 
     private:
