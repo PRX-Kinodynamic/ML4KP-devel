@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package prx_gz.msgs;
+import "prx_plan_step.proto";
+
+message prx_plan
+{
+    repeated prx_gz.msgs.prx_plan_step steps  = 1;
+}

@@ -58,6 +58,18 @@ namespace prx
         return nullptr;
     };
 
+    // template< typename T>
+    // std::shared_ptr<T> system_factory_t::create_system_as(const std::string& name, const std::string& path)
+    // {
+    //     auto it = system_factory_t::get().system_generators.find(name);
+    //     if (it != system_factory_t::get().system_generators.end())
+    //     {
+    //         return std::dynamic_pointer_cast<T>(it->second(path));
+    //     }
+        
+    //     return nullptr;
+    // }
+
     std::vector<std::string> system_factory_t::available_velocity_functions()
     {
         std::vector<std::string> r;

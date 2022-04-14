@@ -34,6 +34,18 @@ namespace prx
 		static
 		system_ptr_t create_system(const std::string& name, const std::string& path="");
 
+		template< typename T> static
+		std::shared_ptr<T> create_system_as(const std::string& name, const std::string& path="")
+		{
+        	auto it = system_factory_t::get().system_generators.find(name);
+        	if (it != system_factory_t::get().system_generators.end())
+        	{
+        	    return std::dynamic_pointer_cast<T>(it->second(path));
+        	    // return it->second(path);
+        	}
+        
+        	return nullptr;
+    	}
 		/**
 		 * Register a system to the factory. (Preferably, use macro PRX_REGISTER_SYSTEM instead of this function)
 		 * @param  name Name of the system. Note that one can register multiple versions of the same system by assigning different names
@@ -96,6 +108,21 @@ namespace prx { namespace factory_registration \
 	}; \
 	const bool VAR_##SYSTEM_NAME##_REGISTRED = system_factory_t::get().register_system(#SYSTEM_NAME, FN_##SYSTEM_NAME##_GENERATOR); \
 } }
+
+
+// #define PRX_REGISTER_SYSTEM(SYSTEM_CLASS, SYSTEM_NAME) PRX_REGISTER_SYSTEM_AS(SYSTEM_CLASS, SYSTEM_NAME, Syst)
+
+// #define PRX_REGISTER_SYSTEM(SYSTEM_CLASS, SYSTEM_NAME) \
+// namespace prx { namespace factory_registration \
+// { \
+// 	static auto FN_##SYSTEM_NAME##_GENERATOR = [](std::string path) \
+// 	{ \
+// 		std::shared_ptr<SYSTEM_CLASS> new_ptr; \
+// 		new_ptr.reset(new SYSTEM_CLASS(path)); \
+// 		return new_ptr; \
+// 	}; \
+// 	const bool VAR_##SYSTEM_NAME##_REGISTRED = system_factory_t::get().register_system(#SYSTEM_NAME, FN_##SYSTEM_NAME##_GENERATOR); \
+// } }
 
 // TODO: Test this macro. A change to sys_gen_fn might be needed to accept variadic args.
 /**

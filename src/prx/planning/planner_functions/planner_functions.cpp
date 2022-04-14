@@ -35,9 +35,9 @@ namespace prx
 		{
 			return default_valid_state(s, state_space,cg);
 		};
-		valid_check = [state_space,cg](trajectory_t& traj)
+		valid_check = [&](trajectory_t& traj)
 		{
-			return default_valid_trajectory(traj, state_space,cg);
+			return default_valid_trajectory(traj, valid_state);
 		};
 		valid_stop_check = [sg, cg](	space_point_t start_state,
 							plan_t* stopping_plan,
@@ -81,18 +81,31 @@ namespace prx
 		control_space->sample(plan.back().control);
 	}
 
-	bool default_valid_trajectory(trajectory_t& traj, space_t* ss,std::shared_ptr<collision_group_t> cg)
+	bool default_valid_trajectory(trajectory_t& traj, valid_state_t valid_state )
 	{
    
 	  	for(auto&& s : traj)
 	    {
-	      	if (!default_valid_state(s,ss,cg))
+	      	if (!valid_state(s))
 			{
 		  		return false;
 			}
 	    }
 	  	return true;
 	}
+
+	// bool default_valid_trajectory(trajectory_t& traj, space_t* ss,std::shared_ptr<collision_group_t> cg )
+	// {
+   
+	//   	for(auto&& s : traj)
+	//     {
+	//       	if (!default_valid_state(s,ss,cg))
+	// 		{
+	// 	  		return false;
+	// 		}
+	//     }
+	//   	return true;
+	// }
 
 
 	bool default_valid_stop(space_point_t start_state,
@@ -130,7 +143,13 @@ namespace prx
 		// std::cout << stopping_plan->print() << std::endl;
 		// Get trajectory
 		sg->propagate(start_state, *stopping_plan, *stopping_traj);
-		return default_valid_trajectory(*stopping_traj, ss, cg);
+
+		valid_state_t vs = [&](space_point_t& s)
+		{
+			return default_valid_state(s, ss, cg);
+		};
+
+		return default_valid_trajectory(*stopping_traj, vs);
 	}
 
 	bool default_valid_state(space_point_t& s,space_t* ss,std::shared_ptr<collision_group_t> cg)

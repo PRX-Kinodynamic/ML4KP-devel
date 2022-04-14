@@ -4,7 +4,10 @@ project(DirtMP)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+set(BUILD_SHARED_LIBS True)
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+cmake_policy(SET CMP0079 NEW)
 
 set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_BULLET OFF CACHE BOOL "Set ON/TRUE for building for PyBullet")
@@ -18,7 +21,7 @@ include(cmake_utils)
 
 add_definitions(-O3 -fPIC -g )
 if(APPLE)
-	set(CMAKE_CXX_STANDARD 14)
+	set(CMAKE_CXX_STANDARD 17)
 else()
 	add_definitions(-lstdc++fs)
 	link_libraries(stdc++fs)
@@ -65,6 +68,12 @@ include_directories(src/prx/visualization)
 include_directories(src/prx/planning)
 include_directories(src/prx/utilities)
 include_directories(src/prx/simulation)
+
+if(BUILD_FOR_GAZEBO)
+	include(src/prx/gazebo/gazebo.cmake)
+	include_directories(src/prx/gazebo)
+	add_subdirectory(src/prx/gazebo)
+endif(BUILD_FOR_GAZEBO)
 
 # TODO: Make a shared libraries.
 add_subdirectory(src/prx/planning)

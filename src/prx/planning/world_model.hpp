@@ -51,13 +51,18 @@ namespace prx
 			return std::make_pair(system_groups->get_system_group(context_name),collision_groups->get_collision_group(context_name));
 		}
 
-		// QUESTION: what about separating this in two stages:
-		// 				1) add_context
-		// 				2) initialize_simulation
-		// 				With the benefit of analytical and bullet being more alike
 		void create_context(const std::string& context_name, 
 			const std::vector<std::string>& system_names, 
 			const std::vector<std::string>& obstacle_names)
+		{
+			// Changing the order, adding here this for backwards compatibility
+			create_context(system_names, obstacle_names, context_name);
+		}
+
+		void create_context( 
+			const std::vector<std::string>& system_names, 
+			const std::vector<std::string>& obstacle_names,
+			const std::string& context_name = "default_context")
 		{
 			// auto ptr = std::static_pointer_cast<world_model_t>(this -> shared_ptr());
 			// std::shared_ptr<world_model_t> ptr;
@@ -65,7 +70,7 @@ namespace prx
 			// auto ptr = this -> shared_ptr();
 			system_groups -> link_simulator(this);
 
-			all_context_names.push_back(context_name);
+			all_context_names.insert(context_name);
 			std::vector<system_ptr_t> context_systems;
 			std::vector<std::shared_ptr<movable_object_t>> context_obstacles;
 			for(auto&& s : system_names)
@@ -83,7 +88,8 @@ namespace prx
 
 		inline std::vector<std::string> get_all_context_names()
 		{
-			return all_context_names;
+
+			return std::vector<std::string>(all_context_names.begin(), all_context_names.end());
 		}
 
 		// TODO: is stepping all contexts ok?
@@ -113,6 +119,6 @@ namespace prx
 
 		std::unordered_map<std::string,std::shared_ptr<movable_object_t>> obstacles;
 
-		std::vector<std::string> all_context_names;
+
 	};
 }

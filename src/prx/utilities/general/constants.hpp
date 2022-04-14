@@ -58,8 +58,9 @@ namespace prx
 	// TODO: Add code that creates/check for existance of directory
 	const std::string out_path = lib_path + "out/";
 
+	
 	enum propagate_step { FIRST_STEP, MIDDLE_STEP, FINAL_STEP };
-	enum plant_type { ANALYTICAL, BULLET };
+	enum plant_type { ANALYTICAL, BULLET, GZ };
 
 	static inline
 	double norm_angle_pi( double angle, double min_angle = -PRX_PI, double max_angle = PRX_PI )

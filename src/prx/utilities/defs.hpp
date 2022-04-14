@@ -7,7 +7,15 @@
 #include "prx/utilities/general/zipped_iter.hpp"
 #include "prx/utilities/general/progress_bar.hpp"
 
+#define PRX_COLOR_NORMAL "\033[0m"
+#define PRX_COLOR_RED "\033[31m"
+#define PRX_COLOR_GREEN "\033[32m"
+#define PRX_COLOR_YELLOW "\033[33m"
+
 #define PRX_DEBUG_PRINT std::cout << __PRETTY_FUNCTION__ << ": " << __LINE__ << std::endl;
+
+#define PRX_DEPRECIATED std::cout << PRX_COLOR_YELLOW << __PRETTY_FUNCTION__ << " is depreciated." << PRX_COLOR_NORMAL << std::endl;
+#define PRX_DEPRECIATED_1(MSG) std::cout << PRX_COLOR_YELLOW << __PRETTY_FUNCTION__ << " is depreciated. " << MSG << PRX_COLOR_NORMAL << std::endl;
 
 #define PRX_DEBUG_ITERABLE(msg, v) std::cout << "[DBG " << msg << "] "; for(auto e : v){std::cout << e << " ";}std::cout << std::endl;
 

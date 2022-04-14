@@ -23,7 +23,7 @@ namespace prx
 	class plant_t : public system_t, public movable_object_t
 	{
 	public:
-		plant_t(const plant_t& _plant) = default;
+		plant_t(const std::shared_ptr<plant_t>& _plant);
 		plant_t(const std::string& path);
 		virtual ~plant_t();
 
@@ -89,9 +89,7 @@ namespace prx
 		std::vector<std::pair<unsigned,unsigned>> collision_list;
 
 		std::shared_ptr<integrator_t> integrator;
-
 	private:
-
 		space_point_t derivative_state;
 		friend system_factory_t;
 

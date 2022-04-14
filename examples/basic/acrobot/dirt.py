@@ -66,6 +66,18 @@ def acrobot_distance_function(s1, s2):
 
 	return math.sqrt(cost);
 
+first_valid_state_check = True
+ss = context.system_group.get_state_space()
+cg = context.collision_group
+def custom_valid_state(state):
+	global first_valid_state_check, ss, cg
+	if first_valid_state_check:
+		print("At custom_valid_state")
+		first_valid_state_check = False
+	return prx.default_valid_state(state, ss, cg)
+
+
+planner_spec.valid_state = prx.valid_state.wrap(custom_valid_state)
 planner_spec.distance_function = prx.distance_function.set_df(acrobot_distance_function);
 
 planner_spec.min_control_steps = 1
@@ -92,7 +104,7 @@ planner.link_and_setup_query(planner_query)
 
 ### Note: Python slows down computation ==> more time might be needed
 # checker = prx.condition_check("time", 60)
-checker = prx.condition_check("iterations", 50000)
+checker = prx.condition_check("iterations", 5000)
 
 print("Resolving query...")
 planner.resolve_query(checker)
@@ -106,7 +118,11 @@ if (planner_query.get_visualization):
 		vis_group.add_vis_infos(prx.info_geometry.FULL_LINE, planner_query.solution_traj, "acrobot/ball", context.system_group.get_state_space(), "0x000000");
 
 	timestamp = 0.0
-	for state in planner_query.solution_traj :
+	for state in planner_query.solution_traj:
+		# if prx.default_valid_state(state, context.system_group.get_state_space(), context.collision_group):
+		# 	print("valid!")
+		# else:
+		# 	print("invalid!")
 		context.system_group.get_state_space().copy_from_point(state);
 		vis_group.snapshot_state(timestamp)
 		timestamp += simulation_step

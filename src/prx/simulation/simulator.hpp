@@ -26,17 +26,21 @@ namespace prx
 		simulator_t(plant_type _sim_type) 
 			: sim_type(_sim_type)
 		{
-PRX_DEBUG_PRINT
-			system_groups = std::make_shared<system_group_manager_t>();
-PRX_DEBUG_PRINT
-PRX_DEBUG_PRINT
-			
+			system_groups = std::make_shared<system_group_manager_t>();	
 		}
 
 		~simulator_t() = default;
 
 		// void set_group(const std::vector<system_ptr_t>& sys_group);
 		virtual void add_group(const std::vector<system_ptr_t>& all_systems) 
+		{
+			for(auto s : all_systems)
+			{
+				systems[s->get_pathname()] = s;
+			}
+		}
+
+		virtual void add_context(const std::vector<system_ptr_t>& all_systems) 
 		{
 			for(auto s : all_systems)
 			{
@@ -79,6 +83,6 @@ PRX_DEBUG_PRINT
 
 		std::unordered_map<std::string,system_ptr_t> systems;
 
-		// std::vector<system_ptr_t> group;
+		std::set<std::string> all_context_names;
 	};
 }

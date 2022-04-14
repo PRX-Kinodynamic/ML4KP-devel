@@ -13,7 +13,7 @@
 #include "prx/utilities/geometry/basic_geoms/box.hpp"
 
 #ifdef __cpp_lib_filesystem
-    #include <filesystem.hpp>
+    #include <filesystem>
     namespace fs = std::filesystem;
 #else
     #define _LIBCPP_NO_EXPERIMENTAL_DEPRECATION_WARNING_FILESYSTEM
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE( rrt_ackermann_test )
             // Rejected if
             // F < F_{1−\alpha/2,N1−1,N2−1} or
             // F > F_{\alpha/2,N1−1,N2−1}
-            BOOST_CHECK_MESSAGE( ! ( (F < f_lower) || (F > f_upper) ), "H0: Equal variance REJECTED");
+            BOOST_CHECK_MESSAGE( ! ( (F < f_lower) || (F > f_upper) ), "H0: Equal variance REJECTED - v1: " << v1 << " v2: " << v2);
         };
         std::cout << "header," << header;
         std::cout << stats.serialize() << std::endl;

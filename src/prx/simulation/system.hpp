@@ -93,6 +93,7 @@ namespace prx
 		}
 
 	protected:
+		system_t(const system_ptr_t&);
 		space_t* state_space;
 		space_t* input_control_space;
 		space_t* parameter_space;
