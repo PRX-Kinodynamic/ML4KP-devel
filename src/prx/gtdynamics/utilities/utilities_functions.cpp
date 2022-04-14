@@ -77,5 +77,23 @@ namespace prx
 
 			return nl_opt.values(); 
 		}
+
+		void values_to_traj(gtsam::Values& vals, trajectory_t& traj)
+		{
+  			for (int t = 0; t <= t_steps; t++, t_elapsed += dt) 
+
+  			do
+    		{
+    		    // lqr.compute_controls();
+    		    cs -> enforce_bounds();
+    		    // sln_plan.append_onto_back(simulation_step, cs);
+    		    plant -> propagate(simulation_step);
+    		    
+    		    traj.copy_onto_back(vec);
+    		}
+    		while(!checker.check());
+
+		}
+
 	}
 }

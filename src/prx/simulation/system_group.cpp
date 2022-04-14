@@ -106,6 +106,43 @@ namespace prx
 		}
 	}
 
+	void system_group_t::propagate(space_point_t start_state, const std::shared_ptr<controller_t>& ctrl, double duration, const plan_t& plan, trajectory_t& traj)
+	{
+		prx_assert(duration >= 0, "Duration cannot be negative!");
+		state_space -> copy_from_point(start_state); 
+		propagate_step p_step;
+
+		plan.clear();
+		
+		traj.clear();
+		traj.copy_onto_back(state_space);
+
+		for (double i = 0; i < duration; i += simulation_step)
+		{
+			plan.append_onto_back();
+			propagate(steps, step.control, &traj);
+			
+		}
+		for(const plan_step_t& step : plan)
+		{
+			int steps = (int)((step.duration / simulation_step) + .1);
+			// int i = 0;
+			if( steps > 0 )
+			{
+				propagate(steps, step.control, &traj);
+				// for( ; i < steps; i++ )
+				// {
+				// 	if (i == 0) p_step = propagate_step::FIRST_STEP;
+				// 	else if (i > 0 && i < steps-1) p_step = propagate_step::MIDDLE_STEP;
+				// 	else p_step = propagate_step::FINAL_STEP;
+
+				// 	propagate_once(step.control,p_step);
+				// 	traj.copy_onto_back(state_space);
+				// }
+			}
+		}
+	}
+
 	void system_group_t::propagate(int steps, space_point_t control, trajectory_t* traj)
 	{
 		propagate_step p_step;

@@ -141,6 +141,12 @@ namespace prx
 		++num_states;
 	}
 
+	void trajectory_t::copy_onto_back(const Eigen::Ref<Eigen::VectorXd> v_state)
+	{
+		state_space -> copy_from_vector(v_state);
+		copy_onto_back(state_space);
+	}
+
 	void trajectory_t::copy_onto_back(const space_t* space)
 	{
 		prx_assert(state_space->get_space_name()==space->get_space_name(),"Trying to add a new point from the wrong space ("+space->get_space_name()+" in a trajectory with space"+state_space->get_space_name()+")");

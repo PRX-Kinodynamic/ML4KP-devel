@@ -94,6 +94,7 @@ namespace prx
 		
 		void clear();
 		void copy_onto_back(space_point_t state);
+		void copy_onto_back(const Eigen::Ref<Eigen::VectorXd> v_state);
 		void copy_onto_back(const space_t* space);
 
         std::string print(unsigned precision=3) const;

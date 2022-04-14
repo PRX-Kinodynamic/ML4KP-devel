@@ -19,6 +19,7 @@ namespace prx
 		const gtsam::Values& optimize_and_log(
 			gtsam::NonlinearOptimizer& nl_opt, const gtsam::NonlinearOptimizerParams& params, fg_logger_t& logger);
 
+		void values_to_traj(gtsam::Values& vals, trajectory_t& traj);
 
 	}
 }
