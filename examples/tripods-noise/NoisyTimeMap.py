@@ -19,7 +19,6 @@ class NoisyTimeMap:
         self.K = None
         self.lqr = None
 
-        self.ctrl = None
         self.simulation_step = params["simulation_step"].as_float()
         prx.set_simulation_step(self.simulation_step)
         prx.init_random(params["random_seed"].as_int())
@@ -31,12 +30,13 @@ class NoisyTimeMap:
             print("Error: plant not found!")
             exit(-1)
 
-        wm = prx.world_model([self.plant], []])
-        wm.create_context("context", [plant_name], []])
+        wm = prx.world_model([self.plant], [])
+        wm.create_context("context", [plant_name], [])
         self.context = wm.get_context("context")
 
         self.ss = self.context.system_group.get_state_space()
         self.cs = self.context.system_group.get_control_space()
+        self.ctrl = self.cs.make_point()
         self.ps = self.plant.get_parameter_space()
 
         lower_bounds = params["/plant/state_space_lower_bound"].as_float_vector()
@@ -77,7 +77,7 @@ class NoisyTimeMap:
         self.u_t_noise = None 
         self.t_noise = None
 
-        if params["x_0_noise"] == "uniform":
+        if params["x_0_noise"].as_string() == "uniform":
             noise_params = params["x_0_noise_params"].as_float_vector()
             self.x_0_noise = prx.uniform_noise(
                 noise_params[0], noise_params[1])
@@ -87,22 +87,22 @@ class NoisyTimeMap:
         #     self.f_noise = prx.uniform_noise(
         #         noise_params[0], noise_params[1])
         
-        if params["u_t_noise"] == "uniform":
+        if params["u_t_noise"].as_string() == "uniform":
             noise_params = params["u_t_noise_params"].as_float_vector()
             self.u_t_noise = prx.uniform_noise(
                 noise_params[0], noise_params[1])
         
-        if params["t_noise"] == "uniform":
+        if params["t_noise"].as_string() == "uniform":
             noise_params = params["t_noise_params"].as_float_vector()
             self.t_noise = prx.uniform_noise(
                 noise_params[0], noise_params[1])
     
     def pendulum_lc(self, X):
+        self.ss.copy_point_from_vector(self.start_state,X)
         if self.x_0_noise is not None:
-            self.x_0_noise.add_noise(X)
-        self.ss.copy_from_vector(X)
+            self.x_0_noise.add_noise(self.start_state)
+        self.ss.copy_from_point(self.start_state)
         self.ss.enforce_bounds()
-        self.ss.copy_to_point(self.start_state)
 
         ctrl_input = torch.zeros(1, 4)
 
@@ -141,11 +141,11 @@ class NoisyTimeMap:
         return [self.end_state[0], self.end_state[1]]
 
     def pendulum_lqr(self, X):
+        self.ss.copy_point_from_vector(self.start_state,X)
         if self.x_0_noise is not None:
-            self.x_0_noise.add_noise(X)
-        self.ss.copy_from_vector(X)
+            self.x_0_noise.add_noise(self.start_state)
+        self.ss.copy_from_point(self.start_state)
         self.ss.enforce_bounds()
-        self.ss.copy_to_point(self.start_state)
 
         if self.lqr == None:
             self.plant.linearize(self.goal_state, self.u_goal)
@@ -163,6 +163,7 @@ class NoisyTimeMap:
         duration_so_far = 0
         while duration_so_far <= total_time and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 2) > self.radius:
             self.lqr.compute_controls()
+            # u_noise is TODO for LQR
             self.cs.enforce_bounds()
             self.plant.propagate(self.simulation_step)
             self.ss.copy_to_point(self.start_state)
