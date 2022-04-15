@@ -45,7 +45,7 @@ namespace prx
 			template<class T, typename = std::enable_if_t<std::is_arithmetic<T>::value> >
 			T add_noise(T& val)
 			{
-				val += rnd(generator);
+				return val += rnd(generator);
 			}
 
 			template<typename T> // Add template checks to generalize to containers
@@ -57,7 +57,7 @@ namespace prx
 				}
 			}
 
-			void add_noise(const Eigen::Ref<const Eigen::MatrixXd> mat)
+			void add_noise(Eigen::Ref<Eigen::MatrixXd> mat)
 			{
 				// There might be a better (faster) way of doing this
 				for (int i = 0; i < mat.rows(); ++i)

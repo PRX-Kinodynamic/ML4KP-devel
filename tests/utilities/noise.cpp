@@ -21,18 +21,19 @@ BOOST_AUTO_TEST_CASE( noise_test )
 	state_space -> copy_point_from_vector(pt, v);
 
 	// Using Normal(0,1)
-	prx::gaussian_noise_t g_noise;
+	// prx::gaussian_noise_t g_noise;
 
-	std::cout << "Original point: " << pt << std::endl;
-	for (int i = 0; i < 10000; ++i)
-	{
-		state_space -> copy_point_from_vector(pt, v);
-		g_noise.add_noise(pt);
-		std::cout << pt << std::endl;
-	}
+	// std::cout << "Original point: " << pt << std::endl;
+	// for (int i = 0; i < 10000; ++i)
+	// {
+	// 	state_space -> copy_point_from_vector(pt, v);
+	// 	g_noise.add_noise(pt);
+	// 	std::cout << pt << std::endl;
+	// }
 
 	// Using Normal(0,0.1)
-	prx::gaussian_noise_t g_noise_2(0,0.1);
+	// prx::gaussian_noise_t g_noise_2(0,0.1);
+	prx::uniform_noise_t g_noise_2(-1,1);
 
 	std::cout << "\nOriginal point: " << pt << std::endl;
 	for (int i = 0; i < 10000; ++i)
