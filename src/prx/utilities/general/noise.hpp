@@ -10,7 +10,14 @@ namespace prx
 {
 	template<class RandomNumberDistribution> class noise_t;
 
+	/**
+	 * Gaussian noise (mean=0.0, std_dev=1.0)
+	 */
 	typedef noise_t<std::normal_distribution<double>> gaussian_noise_t;
+
+	/**
+	 * Uniform noise, must provide (a,b) to constructor.
+	 */
 	typedef noise_t<std::uniform_real_distribution<double>> uniform_noise_t;
 
 	template<class RandomNumberDistribution>
