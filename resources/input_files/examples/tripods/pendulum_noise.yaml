@@ -1,4 +1,4 @@
-random_seed: 111093
+random_seed: 11101993
 simulation_step: 0.01
 
 plant: !file "plants/pendulum.yaml"

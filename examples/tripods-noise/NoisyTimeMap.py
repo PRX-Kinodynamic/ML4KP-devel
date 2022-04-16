@@ -162,8 +162,10 @@ class NoisyTimeMap:
             self.t_noise.add_noise(total_time) 
         duration_so_far = 0
         while duration_so_far <= total_time and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 2) > self.radius:
-            self.lqr.compute_controls()
-            # u_noise is TODO for LQR
+            self.lqr.compute_controls(self.ctrl)
+            if self.u_t_noise is not None:
+                self.u_t_noise.add_noise(self.ctrl)
+            self.cs.copy_from_point(self.ctrl)
             self.cs.enforce_bounds()
             self.plant.propagate(self.simulation_step)
             self.ss.copy_to_point(self.start_state)

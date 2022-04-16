@@ -8,11 +8,14 @@ if __name__ == "__main__":
     step = 11
     time_h = 5
 
-    TM = NoisyTimeMap.NoisyTimeMap("pendulum_lc", time_h,
+    # TM = NoisyTimeMap.NoisyTimeMap("pendulum_lc", time_h,
+                                #    "examples/tripods/pendulum_lc_noise.yaml")
+    TM = NoisyTimeMap.NoisyTimeMap("pendulum_lqr", time_h,
                                    "examples/tripods/pendulum_lc_noise.yaml")
 
     def g(X):
-        return TM.pendulum_lc(X)
+        # return TM.pendulum_lc(X)
+        return TM.pendulum_lqr(X)
     
     xs = np.linspace(-np.pi, np.pi, step)
     ys = np.linspace(-2*np.pi, 2*np.pi, step)
