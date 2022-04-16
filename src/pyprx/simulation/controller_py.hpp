@@ -13,6 +13,21 @@ struct controller_wrap : prx::controller_t, wrapper<prx::controller_t>
         this->get_override("compute_controls")();
     }
 
+    void compute_controls(prx::space_point_t& u)
+    {
+        if (override f = this->get_override("compute_controls"))
+        {
+        	this -> compute_controls(u);
+        }
+        else
+        {
+        	controller_t::compute_controls(u);
+        }
+        // this->get_override("compute_controls")(u);
+    }
+
+    void compute_controls_1_default() { return this->controller_t::compute_controls(); }
+
 	void propagate_1(const double simulation_step)
 	{
         this->get_override("propagate")(simulation_step);
@@ -30,19 +45,32 @@ struct controller_wrap : prx::controller_t, wrapper<prx::controller_t>
 
 };
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(controller_propagate_overloads, propagate, 1, 2)
+// void  compute_controls_1(prx::controller_t& c, prx::space_point_t u)
+// {
+// 	c.compute_controls(u);
+// }
+
+// BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(controller_propagate_overloads, propagate, 1, 2)
+// BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(controller_compute_controls_overloads, compute_controls, 0, 1)
+
+// void  (prx::controller_t::*compute_controls_1)(prx::space_point_t&) = &prx::controller_t::compute_controls;
+void  (controller_wrap::*compute_controls_0)() = &controller_wrap::compute_controls;
+void  (controller_wrap::*compute_controls_1)(prx::space_point_t&) = &controller_wrap::compute_controls;
+
 
 void pyprx_simulation_controller()
 {
 
 	class_<controller_wrap, boost::noncopyable>("controller", init<prx::system_ptr_t>())
 		.def(init<prx::system_ptr_t, std::string>())
-        // .def("__init__", make_constructor(&init_as_ptr<system_wrap, std::string>, default_call_policies()))
-		// .def("__init__", make_constructor(&system_wrap, default_call_policies(), (arg("path")) ))
-        // .def("__init__", make_constructor(&fromAxisAngle, default_call_policies(),(arg("axis"),  arg("angle"))))
 		.def("get_state_space", &prx::controller_t::get_state_space, return_internal_reference<>())
 		.def("get_control_space", &prx::controller_t::get_control_space, return_internal_reference<>())
-		.def("compute_controls", &controller_wrap::compute_controls)
+		// .def("compute_controls", pure_virtual(&prx::controller_t::compute_controls))
+      	.def("compute_controls", compute_controls_0)
+      	// .def("compute_controls", &controller_wrap::compute_controls_0)
+      	// .def("compute_controls", &controller_wrap::compute_controls_1)
+		// .def("compute_controls", compute_controls_1, &controller_wrap::compute_controls_1_default)
+		.def("compute_controls", compute_controls_1)
 	 	.def("propagate", &controller_wrap::propagate_1)
 	 	.def("propagate", &controller_wrap::propagate_2)
 		// .def("propagate", &controller_wrap::propagate, controller_propagate_overloads())
@@ -50,29 +78,5 @@ void pyprx_simulation_controller()
 	 	.def("get_plan", &prx::controller_t::get_plan)
 	 	.def("init_plan", &prx::controller_t::init_plan)
 		.def("set_goal", &prx::controller_t::set_goal)
-
-	 	// .def("compute_control", pure_virtual(&prx::system_t::compute_control))
-	 	// .def("compute_stopping_maneuver", &prx::system_t::compute_stopping_maneuver)
-	 	// .def("finalize_system_tree", &prx::system_t::finalize_system_tree)
-	 	// .def("set_state_space_bounds", pure_virtual(&prx::system_t::set_state_space_bounds))
-	 	// .def("get_pathname", &prx::system_t::get_pathname)
-	 	// .def("get_system_type", &prx::system_t::get_system_type)
-   //    	.def("get_state_space", &system_wrap::get_system_wrap_state_space, return_internal_reference<>())
-   //    	.def("set_state_space", &system_wrap::set_system_wrap_state_space, return_internal_reference<>())
-   //    	.def("get_input_control_space", &system_wrap::get_system_wrap_input_control_space, return_internal_reference<>())
-   //    	.def("set_input_control_space", &system_wrap::set_system_wrap_input_control_space, return_internal_reference<>())
-	 	// .def("get_parameter_space", &system_wrap::get_system_wrap_parameter_space, return_internal_reference<>())
-   //    	.def("set_parameter_space", &system_wrap::set_system_wrap_parameter_space, return_internal_reference<>())
-	 	// .def("", &prx::system_t::)
-	 	// .def("", &prx::system_t::)
-	 	// .def("", &prx::system_t::)
-		// virtual inline const space_t* get_state_space() const
-		// .def("create_ptr", &create_ptr<prx::system_t, prx::system_t> ).staticmethod("create_ptr")
 		;
-	// register_ptr_to_python< prx::system_ptr_t >();
-
-	// class_<std::vector<prx::system_ptr_t>>("vector_system")
- //   		.def(vector_indexing_suite<std::vector<prx::system_ptr_t>>())
-	// 	;
-
 }

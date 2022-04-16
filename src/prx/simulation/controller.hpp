@@ -56,6 +56,12 @@ namespace prx
 
 		virtual void compute_controls()=0;
 
+		virtual void compute_controls(space_point_t& u)
+		{
+			compute_controls();
+			get_control_space() -> copy_to_point(u);
+		}
+
 		// wrapper functions for better readability
 		
 		inline const space_t* get_state_space() const

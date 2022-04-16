@@ -10,15 +10,22 @@ void set_prx_goal(prx::lqr_t* l, prx::space_point_t _goal)
 	l -> set_goal(_goal);
 }
 
+// BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(lqr_compute_controls_overloads, prx::lqr_t::compute_controls, 0, 1)
+void  (prx::lqr_t::*lqr_compute_controls_0)() = &prx::lqr_t::compute_controls;
+void  (prx::lqr_t::*lqr_compute_controls_1)(prx::space_point_t&) = &prx::controller_t::compute_controls;
+
 
 void pyprx_simulation_controllers_lqr()
 {
     class_<prx::lqr_t, bases<prx::controller_t>>("lqr", no_init)
+    // class_<prx::lqr_t, bases<controller_wrap>>("lqr", no_init)
         .def(init<std::shared_ptr<prx::lti_t>, std::string>())
 		.def(init<std::shared_ptr<prx::lti_t>, Eigen::MatrixXd, Eigen::MatrixXd, std::string>())
 		.def("set_Q", &prx::lqr_t::set_Q)
 		.def("set_R", &prx::lqr_t::set_R)
-		.def("compute_controls", &prx::lqr_t::compute_controls)
+		// .def("compute_controls", &prx::lqr_t::compute_controls, lqr_compute_controls_overloads())
+		.def("compute_controls", lqr_compute_controls_0)
+		.def("compute_controls", lqr_compute_controls_1)
 		.def("compute_K", &prx::lqr_t::compute_K)
 		.def("get_K", &prx::lqr_t::get_K)
 		.def("set_goal", &set_eigen_goal)
