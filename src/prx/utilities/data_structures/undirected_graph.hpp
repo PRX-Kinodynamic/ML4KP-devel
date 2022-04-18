@@ -31,7 +31,7 @@ namespace prx
 
 	class undirected_node_t : public abstract_node_t
 	{
-	public:
+		public:
 		undirected_node_t() : abstract_node_t()
 		{
 			cost_to_go = std::numeric_limits<double>::infinity();
@@ -78,7 +78,7 @@ namespace prx
 			return best_neighbor;
 		}
 
-	protected:
+		protected:
 
 		node_index_t index;
 
@@ -155,16 +155,16 @@ namespace prx
 		{
 			if(max_count < new_size)
 			{
-				allocate_vertex<node_type, edge_type>(new_size);
+				allocate_vertex<node_type>(new_size);
 			}
 			if(max_edge_count < new_size)
 			{
-				allocate_edges(new_size);
+				allocate_edges<edge_type>(new_size);
 
 			}
 		}
 
-		template<class node_type,class edge_type>
+		template<class node_type>
 		void allocate_vertex(unsigned new_size)
 		{
 			unsigned old_size = vertex_count;
@@ -191,6 +191,7 @@ namespace prx
 			max_count = new_size;
 		}
 
+		template<class edge_type>
 		void allocate_edges(unsigned new_size)
 		{
 			unsigned old_size = edge_count;
@@ -199,7 +200,7 @@ namespace prx
 				e_index_map.resize(new_size);
 				for(unsigned i=max_edge_count; i<new_size; i++)
 				{
-					edge_list.insert(edge_list.end(),std::make_shared<undirected_edge_t>());
+					edge_list.insert(edge_list.end(),std::make_shared<edge_type>());
 				}
 			}
 			if(old_size==0)
@@ -222,7 +223,7 @@ namespace prx
 		{
 			if(vertex_id_counter==max_count)
 			{
-				allocate_vertex<node_type,edge_type>(vertex_list.size()*2+1);
+				allocate_vertex<node_type>(vertex_list.size()*2+1);
 			}
 			auto node = *v_iter;
 			node->index = vertex_id_counter;
@@ -243,7 +244,7 @@ namespace prx
 		}
 
 		template<class edge_type>
-		ug_edge_ptr get_edge_as(edge_index_t e) const
+		std::shared_ptr<edge_type> get_edge_as(edge_index_t e) const
 		{
 			return std::dynamic_pointer_cast<edge_type>(e_index_map[e]);
 		}
@@ -257,6 +258,7 @@ namespace prx
 		{
 			return std::make_pair(edge_list.begin(),const_e_iter);
 		}
+		
 		ug_node_ptr operator[](node_index_t v) const
 		{
 			return v_index_map[v];
@@ -283,10 +285,51 @@ namespace prx
 			return prx_opt::optional<edge_index_t>(*res) ;
 		}
 
+		template<class edge_type>
+		edge_index_t add_edge(node_index_t first, node_index_t second, double _value = std::numeric_limits<double>::max())
+		{
+
+			v_index_map[first]->neighbors.push_front(second);
+			v_index_map[second]->neighbors.push_front(first);
+
+			// std::cout << "edge_id_counter: " << edge_id_counter << std::endl;
+			// std::cout << "max_edge_count: " << max_edge_count << std::endl;
+			if(edge_id_counter==max_edge_count-2)
+			{
+			// PRX_DEBUG_PRINT
+				allocate_edges<edge_type>(e_index_map.size() * 2);
+			}
+			// PRX_DEBUG_PRINT
+
+			auto edge = *e_iter;
+			edge->index = edge_id_counter;
+			edge -> first = first;
+			edge -> second = second;
+			edge -> value = _value;
+			// edge->source = from;
+			// edge->target = to;
+			e_index_map[edge_id_counter]=edge;
+			edge_id_counter++;
+			e_iter++;
+			const_e_iter++;
+			edge_count++;
+		// v_index_map[second]->parent_edge = edge->index;
+
+		// v_index_map[first] ->  edges.insert(v_index_map[first] -> edges.begin(),  edge -> index);
+		// v_index_map[second] -> edges.insert(v_index_map[second] -> edges.begin(), edge -> index);
+// PRX_DEBUG_PRINT
+			v_index_map[first]  -> edges.push_back(edge -> index);
+			v_index_map[second] -> edges.push_back(edge -> index);
+		// std::cout << "edge: " << edge -> index << " first: " << first << " second: " << second;
+		// std::cout << std::endl;
+// PRX_DEBUG_PRINT
+
+			return edge->index;
+		}
+
 		undirected_graph_t();
 		~undirected_graph_t();
 
-		edge_index_t add_edge(node_index_t from, node_index_t to, double _value = std::numeric_limits<double>::max());
 
 		void remove_vertex(node_index_t v);
 

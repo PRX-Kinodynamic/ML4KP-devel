@@ -28,9 +28,106 @@
     #define nullopt {}
     //using boost::optional<int> nullopt = boost::none ;
 #endif
+
+#include "prx/utilities/data_structures/abstract_node.hpp"
+#include "prx/utilities/data_structures/abstract_edge.hpp"
+
 // #include <experimental/optional>
 namespace prx
 {
+
+    template <typename Node, typename Edge>
+    class graph_t;
+
+    /**
+     * @brief <b> A node on a graph_t. </b>
+     * 
+     * @author Edgar G.
+    */
+    class graph_node_t : public abstract_node_t
+    {
+        public:
+            graph_node_t() : abstract_node_t(){}
+            virtual ~graph_node_t(){}
+
+            /**
+             * @brief Returns the index of the tree node.
+             * 
+             * @return Index of the node.
+            */
+            node_index_t get_index() const
+            {
+                return index;
+            }
+
+            /**
+             * @brief Returns the children of the current node.
+             * 
+             * @return A list containing the node indices of the child nodes.
+            */
+            const std::list<node_index_t>& get_neighbors() const
+            {
+                return neighbors;
+            }
+    
+        protected:
+
+            node_index_t index;
+
+            std::list<node_index_t> neighbors;
+
+            template <typename Node, typename Edge>
+            friend class graph_t;
+    };
+
+    /**
+     * @brief <b> An edge of a tree. </b>
+     * 
+     * @author Edgar G.
+    */
+    class graph_edge_t : public abstract_edge_t
+    {
+        public:
+            graph_edge_t() : abstract_edge_t() {};
+
+            graph_edge_t(node_index_t _endpoint_1, node_index_t _endpoint_2) 
+                : abstract_edge_t() 
+            {
+                endpoint_1 = _endpoint_1;
+                endpoint_2 = _endpoint_2;
+            };
+        
+            virtual ~graph_edge_t(){}
+        
+            /**
+             * @brief Returns the index of the graph edge.
+             * 
+             * @return Index of the graph edge.
+            */
+            edge_index_t get_index() const
+            {
+                return index;
+            }
+
+            /**
+             * @brief Returns the indexes of both endpoints.
+             * 
+             * @return Pair containing the indexes of the connected endpoints
+            */
+            std::pair<node_index_t, node_index_t> endpoints() const
+            {
+                return std::make_pair(endpoint_1, endpoint_2);
+            }
+
+        protected:
+            node_index_t endpoint_1;
+            node_index_t endpoint_2;
+
+            edge_index_t index;
+            template <typename Node, typename Edge>
+            friend class graph_t;
+    };
+
 
 /**
  * @brief      A graph class. Does some memory management under the hood to maximize the amount of
@@ -40,10 +137,11 @@ namespace prx
  * @tparam     Edge An edge type, that contains `size_t index, size_t source_index, size_t
  * target_index` member variables
  */
-template <typename Node, typename Edge>
+template <typename Node = graph_node_t, typename Edge = graph_edge_t>
 class graph_t
 {
   public:
+    // ~graph();
     /**
      * @brief      Constructs a graph
      *
@@ -62,7 +160,7 @@ class graph_t
      *
      * @return     A ref wrapper around the node, so the user can update any information needed.
      */
-    const std::reference_wrapper<Node> make_node()
+    const std::reference_wrapper<Node> add_vertex()
     {
         if (available_node_positions.empty())
         {
@@ -94,7 +192,7 @@ class graph_t
      *
      * @return     A ref wrapper around the edge, so the user can update any information needed.
      */
-    const std::reference_wrapper<Edge> make_edge(size_t source_vertex, size_t target_vertex)
+    const std::reference_wrapper<Edge> add_edge(size_t source_vertex, size_t target_vertex)
     {
         if (available_edge_positions.empty())
         {
@@ -120,6 +218,18 @@ class graph_t
             num_valid_edges++;
             return std::ref(edges[position].value());
         }
+    }
+
+    template<class node_type>
+    std::shared_ptr<node_type> get_vertex_as(node_index_t v) const
+    {
+        return std::dynamic_pointer_cast<node_type>(nodes[v]);
+    }
+
+    template<class edge_type>
+    std::shared_ptr<edge_type> get_edge_as(edge_index_t e) const
+    {
+        return std::dynamic_pointer_cast<edge_type>(edges[e]);
     }
 
     /**
@@ -308,6 +418,11 @@ class graph_t
             }
         }
         return output_edges;
+    }
+
+    std::shared_ptr<Node> operator[](node_index_t v) const
+    {
+        return nodes[v];
     }
 
   protected:

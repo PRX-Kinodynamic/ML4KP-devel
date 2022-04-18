@@ -55,6 +55,8 @@ namespace prx
 		void snapshot_state(double timestamp);
 
 		void output_html(std::string filename);
+		
+		void output_graph_to_csv(std::string filename, std::string sep = ",");
 
 		void add_tree_log(std::string log_name, space_t* state_space);
 

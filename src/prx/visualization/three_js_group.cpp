@@ -256,6 +256,47 @@ namespace prx
 		plant_animation_params.push_back(params);
 	}
 
+	void three_js_group_t::output_graph_to_csv(std::string filename, std::string sep)
+	{
+		prx_assert(sep.size() > 0, "Error: separator cannot be empty!");
+		std::string full_filename = lib_path + "/out/" + filename;
+		std::cout<<"Outputting graph's CSV at "<< full_filename << std::endl;
+		std::ofstream fout;
+		
+		fout.open(full_filename.c_str());
+
+		for(auto&& element : info_geoms)
+		{
+			std::string csv_string;
+			if( ( element.first==info_geometry_t::LINE || element.first==info_geometry_t::FULL_LINE ) && element.second.size()>=2)
+			{
+				auto color_vals = string_to_rgb(element.third);
+
+				for(int i=0;i<element.second.size();i++)
+				{
+					csv_string += std::to_string(element.second[i].x()) + sep
+							   +  std::to_string(element.second[i].y()) + sep 
+							   +  std::to_string(element.second[i].z()) + sep
+							   +  std::to_string(color_vals.x()) + sep 
+							   +  std::to_string(color_vals.y()) + sep 
+							   +  std::to_string(color_vals.z()) + "\n";
+				}
+			}
+			else if(element.first==info_geometry_t::QUAD && element.second.size()>=4)
+			{
+				prx_throw("three_js_group_t::output_graph_to_csv - info_geometry_t::QUAD not supported yet.");
+				
+			}
+			else if (element.first == info_geometry_t::CIRCLE && element.second.size() >=1)
+			{	
+				prx_throw("three_js_group_t::output_graph_to_csv - info_geometry_t::CIRCLE not supported yet.");
+			}
+			fout << csv_string;
+		}
+		fout.close();
+
+	}
+
 	void three_js_group_t::output_html(std::string filename)
 	{
 		const auto vis_geometry_init = [](std::shared_ptr<vis_info_t>& element,std::string& js_string)

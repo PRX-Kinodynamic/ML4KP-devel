@@ -486,6 +486,25 @@ namespace prx
 			}
 		}
 
+		/**
+		 * @brief      Substract two points and save the resulting values into another: result = p1 - p2.
+		 *
+		 * @param[in]  result  The resulting point
+		 * @param[in]  p1      The first point
+		 * @param[in]  p2      The second point
+		 */
+		static void subtract(const space_point_t result, const space_point_t p1, const space_point_t p2)
+		{
+			prx_assert(result -> parent -> space_name == p1 -> parent -> space_name, "To substract two points, the spaces must be the same. Result is "<< result -> parent -> space_name <<" but p1 is "<< p1 -> parent -> space_name);
+			prx_assert(p1 -> parent -> space_name == p2 -> parent -> space_name,"To substract two points, the spaces must be the same. p1 is "<< p1 -> parent -> space_name <<" but p2 is "<< p2 -> parent -> space_name);
+
+			for (int i = 0; i < result -> get_dim(); ++i)
+			{
+				(*result)[i] = (*p1)[i] - (*p2)[i];
+ 			}
+
+		}
+
 	protected:
 		unsigned dimension;
 		std::vector<double*> addresses;
