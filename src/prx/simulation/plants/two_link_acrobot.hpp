@@ -21,6 +21,10 @@ namespace prx
 
         bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) override;
 
+        virtual double kinetic_energy() override;
+
+		virtual double potential_energy() override;
+
 	protected:
 
 		virtual void compute_derivative() override final;

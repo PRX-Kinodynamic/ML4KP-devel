@@ -98,3 +98,7 @@ if(BUILD_TESTS)
 	add_subdirectory(tests)
 endif(BUILD_TESTS)
 	# ${PROJECT_SOURCE_DIR}/tests/*.cpp
+
+
+# Add the "out" directory: "PATH/TO/ML4KP/out"
+file(MAKE_DIRECTORY out)

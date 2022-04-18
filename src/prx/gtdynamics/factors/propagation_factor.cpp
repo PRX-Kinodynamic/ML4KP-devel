@@ -41,7 +41,7 @@ namespace prx
 	{
 		auto error = compute_error(xt0, xt1, ut1);
 		if (H1)
-		{	
+		{
 			std::function<Eigen::VectorXd(Eigen::VectorXd)> fp = 
 				std::bind(&propagation_factor_t::compute_error, this, 
 							std::placeholders::_1, xt1, ut1);

@@ -9,7 +9,9 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include "prx/utilities/math/math_functions.hpp"
+#include "prx/gtdynamics/utilities/symbols_factory.hpp"
 #include "prx/simulation/plants/types/linear_time_variant.hpp"
+
 namespace prx
 {
 
@@ -54,6 +56,13 @@ namespace prx
 		Eigen::VectorXd compute_error(
 			Eigen::VectorXd xt0, Eigen::VectorXd xt1, Eigen::VectorXd ut1) const;
 
+			void print(const std::string &s = "",
+        	       const gtsam::KeyFormatter &keyFormatter =
+        	           gtsam::DefaultKeyFormatter) const override 
+    		{
+    			std::cout << s << "propagation_factor";
+    			Base::print("", keyFormatter);
+    		}
 		private:
   			using This = propagation_factor_t;
   			using Base = gtsam::NoiseModelFactor3<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd>;

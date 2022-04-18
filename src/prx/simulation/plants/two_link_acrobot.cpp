@@ -124,6 +124,45 @@ namespace prx
         _theta2dotdot = theta2dot_dot;
 	}
 
+	double two_link_acrobot_t::kinetic_energy()
+	{
+		const double theta2 = _theta2;
+      const double theta1 = _theta1 - M_PI / 2.0;
+      const double theta1dot = _theta1dot;
+      const double theta2dot = _theta2dot;
+        
+      const double lc1 = l1 / 2.0; 
+      const double lc2 = l2 / 2.0;
+      // TODO: Change to m1 & m2
+      double m = mass;
+
+      const double d11 = m * lc1 * lc1 + m * (l1 * l1 + lc2 * lc2 + 2 * l1 * lc1 * cos(theta2)) + I1 + I2;
+		const double d22 = m * lc2 * lc2 + I2;
+      const double d12 = m * (lc2 * lc2 + l1 * lc2 * cos(theta2)) + I2;
+      const double d21 = d12;
+
+      return (0.5) * d11 * theta1dot * theta1dot + 
+      				   d12 * theta1dot * theta2dot + 
+      		 (0.5) * d22 * theta2dot * theta2dot;
+	}
+
+	double two_link_acrobot_t::potential_energy()
+	{
+		const double theta2 = _theta2;
+      const double theta1 = _theta1 - M_PI / 2.0;
+      const double theta1dot = _theta1dot;
+      const double theta2dot = _theta2dot;
+      const double lc1 = l1 / 2.0; 
+      const double lc2 = l2 / 2.0;
+
+      double m1 = mass;
+      double m2 = mass;
+
+		return m1 * g * lc1 * std::sin(theta1) + 
+			    m2 * g * l1 * std::sin(theta1) + 
+			    m2 * g * lc2 * std::sin(theta1 + theta2);
+	}
+
 	bool two_link_acrobot_t::linearize()
 	{
 		constexpr double q1 = PRX_PI;

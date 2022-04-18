@@ -133,6 +133,11 @@ namespace prx
 		// std::cout<<duration<<" Copy to: "<<t.duration()<<std::endl;
 	}
 
+	void plan_t::copy_onto_back(Eigen::VectorXd v_control, double time)
+	{
+		control_space -> copy_from_vector(v_control);
+		append_onto_back(time, true);
+	}
 
 	void plan_t::copy_onto_back(space_point_t control, double time)
 	{
@@ -184,7 +189,7 @@ namespace prx
 		std::advance(const_end_iterator, num_steps);
 	}
 
-	void plan_t::append_onto_back(double time)
+	void plan_t::append_onto_back(double time, bool copy_from_control_space)
 	{
 		if( (num_steps + 1) >= max_num_steps )
 		{
@@ -195,6 +200,9 @@ namespace prx
 			std::advance(const_end_iterator, num_steps);
 		}
 		(*end_iterator).duration = time;
+		if(copy_from_control_space) 
+			control_space -> copy_to_point((*end_iterator).control);
+		
 		++end_iterator;
 		++const_end_iterator;
 		++num_steps;
@@ -202,6 +210,7 @@ namespace prx
 
 	void plan_t::append_onto_back(double time, space_t* ctrl_space)
 	{
+		PRX_DEPRECIATED_1("Use append_onto_back(time, true) instead")
 		append_onto_back(time);
 		ctrl_space -> copy_to_point(this -> back().control);
 	}

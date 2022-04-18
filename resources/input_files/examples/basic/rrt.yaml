@@ -1,4 +1,4 @@
-planner: "AORRT"
+planner: "RRT"
 
 random_seed: 231192
 simulation_step: 0.01
@@ -13,6 +13,6 @@ plant: !file "plants/acrobot.yaml"
 visualize: true
 
 checker_type: time
-checker_value: 10
+checker_value: 2
 
 goal_region_radius: 0.5

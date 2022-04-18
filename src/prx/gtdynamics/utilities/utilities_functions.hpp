@@ -1,9 +1,12 @@
 #pragma once 
 
 #include "prx/utilities/defs.hpp"
+#include "prx/simulation/system.hpp"
+#include "prx/simulation/playback/plan.hpp"
+#include "prx/simulation/playback/trajectory.hpp"
+
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
-
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 
 
@@ -17,9 +20,15 @@ namespace prx
 	{	
 
 		const gtsam::Values& optimize_and_log(
-			gtsam::NonlinearOptimizer& nl_opt, const gtsam::NonlinearOptimizerParams& params, fg_logger_t& logger);
+			gtsam::NonlinearOptimizer& nl_opt, 
+			const gtsam::NonlinearOptimizerParams& params,
+			fg_logger_t& logger, const int extra_iters = 0);
 
-		void values_to_traj(gtsam::Values& vals, trajectory_t& traj);
+		void values_to_plan_and_traj(const gtsam::Values& vals, trajectory_t* traj, plan_t* plan, const int total_steps);
+		// void values_to_plan_and_traj(gtsam::Values& vals, trajectory_t* traj, plan_t* plan, const double duration);
+
+		void updates_values_from_plan_and_traj(gtsam::Values& values, system_ptr_t _sys_ptr, const trajectory_t& traj, const plan_t& plan, const int total_steps);
+
 
 	}
 }

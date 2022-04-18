@@ -3,6 +3,7 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/simulation/system.hpp"
 // #include "prx/simulation/simulator.hpp"
+#include "prx/simulation/controller.hpp"
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/simulation/collision_checking/collision_checker.hpp"
@@ -18,6 +19,8 @@ namespace prx
 		// system_group_t(const std::vector<system_ptr_t>& sys_group);
 		system_group_t(const std::vector<system_ptr_t>& sys_group, plant_type p_type = plant_type::ANALYTICAL);
 		~system_group_t();
+
+		void propagate(space_point_t start_state, const std::shared_ptr<controller_t>& ctrl, double duration, plan_t& plan, trajectory_t& traj);
 
 		void propagate(space_point_t start_state, const plan_t& plan, space_point_t result);
 		

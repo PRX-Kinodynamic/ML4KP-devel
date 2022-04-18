@@ -15,7 +15,7 @@
 #include "prx/simulation/playback/trajectory.hpp"
 
 #include "prx/gtdynamics/utilities/prx_symbols.hpp"
-
+#include "prx/simulation/system_group.hpp"
 namespace prx
 {
 	class initialization_trajs_fg_t
@@ -40,6 +40,8 @@ namespace prx
 			static gtsam::Values state_to_value(const system_ptr_t _sys_ptr, const space_point_t pt, const int t);
 
 			static gtsam::Values init_time_factors(const int num_steps, const double sigma);
+
+			static gtsam::Values init_from_plan(std::shared_ptr<system_group_t> sg, const space_point_t start_state, const plan_t& plan);
 
 	};
 }

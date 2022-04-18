@@ -58,6 +58,7 @@ namespace prx
 
 		void add_tree_log(std::string log_name, space_t* state_space);
 
+		void reset();
 
 	protected:
 

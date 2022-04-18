@@ -61,6 +61,9 @@ namespace prx
 
 		virtual void compute_control()=0;
 
+		virtual double kinetic_energy(){PRX_NOT_IMPLEMENTED; return 0;};
+		virtual double potential_energy(){PRX_NOT_IMPLEMENTED; return 0;};
+
 		virtual void compute_stopping_maneuver(space_point_t, std::vector<double>&, std::vector<double>&);
 		virtual void finalize_system_tree()
 		{

@@ -14,6 +14,8 @@
 
 #define PRX_DEBUG_PRINT std::cout << __PRETTY_FUNCTION__ << ": " << __LINE__ << std::endl;
 
+#define PRX_NOT_IMPLEMENTED std::cout << PRX_COLOR_RED << __PRETTY_FUNCTION__ << " NOT IMPLEMENTED. Is an override needed?" << PRX_COLOR_NORMAL << std::endl;
+
 #define PRX_DEPRECIATED std::cout << PRX_COLOR_YELLOW << __PRETTY_FUNCTION__ << " is depreciated." << PRX_COLOR_NORMAL << std::endl;
 #define PRX_DEPRECIATED_1(MSG) std::cout << PRX_COLOR_YELLOW << __PRETTY_FUNCTION__ << " is depreciated. " << MSG << PRX_COLOR_NORMAL << std::endl;
 

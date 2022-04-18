@@ -27,6 +27,8 @@ namespace prx
 		bool limits_factors = true;
 		int  propagation_factors_type = 3; // only 3 or 4 for now... could be an enum
 		bool use_goal_factors = true;
+		bool use_energy_factors = false;
+		goal_factor_params_t goal_factor_params;
 
 		void print()
 		{
@@ -37,6 +39,8 @@ namespace prx
 			std::cout << "\tlimits_factors:" << limits_factors << std::endl;
 			std::cout << "\tpropagation_factors_type:" << propagation_factors_type << std::endl;
 			std::cout << "\tuse_goal_factors:" << use_goal_factors << std::endl;
+			std::cout << "\tuse_energy_factors:" << use_energy_factors << std::endl;
+			std::cout << goal_factor_params << std::endl;
 			// std::cout << "\t:" << std::endl;
 		}
 	};
@@ -70,7 +74,11 @@ namespace prx
 
 		gtsam::NonlinearFactorGraph add_propagation_factor(const int t, const int prop_type);
 	
-		gtsam::NonlinearFactorGraph add_goal_distance_factor(const int t);
+		gtsam::NonlinearFactorGraph add_goal_distance_factor(const int t, const goal_factor_params_t& _params);
+
+		gtsam::NonlinearFactorGraph add_energy_factors(const int t, goal_factor_params_t params);
+
+		gtsam::NonlinearFactorGraph add_state_propagation_factor(const int t);
 
 		gtsam::Values init_from_traj(const trajectory_t& traj, const plan_t& plan);
 

@@ -12,17 +12,22 @@ namespace prx
 		Eigen::VectorXd error = Eigen::VectorXd::Zero(ss_dim);
 
 		ss -> copy_point_from_vector(xt_pt, xt_v);
-		// ss -> copy_point_from_vector(xt_goal_pt, xt_goal_v);
+		
 
 		ss -> difference(xt_pt, xt_goal_pt, error_pt);
 		ss -> copy_vector_from_point(error, error_pt);
 
-		Eigen::MatrixXd Q = 1 * Eigen::MatrixXd::Identity(ss -> get_dimension(), ss -> get_dimension());
+		for (int i = 0; i < ss_dim; ++i)
+		{
+			error[i] *= error_scale[i];
+			error[i] *= std::pow(theta, T-t_i);
+		}
+		// Eigen::MatrixXd Q = 1 * Eigen::MatrixXd::Identity(ss -> get_dimension(), ss -> get_dimension());
 		// Q(0,0) = 10;
 		// Q(1,1) = 10;
 		// std::cout << "\terror: " << error.transpose() * Q * error << std::endl;
-		return error.transpose() * Q * error;
-		// return  error;
+		// return error.transpose() * Q * error;
+		return  error;
 	}
 
 	Eigen::VectorXd goal_distance_factor_t::evaluateError(

@@ -7,10 +7,31 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include "prx/utilities/math/math_functions.hpp"
+// #include "prx/gtdynamics/utilities/prx_symbols.hpp"
+#include "prx/gtdynamics/utilities/symbols_factory.hpp"
 #include "prx/simulation/plants/types/linear_time_variant.hpp"
+
 
 namespace prx
 {
+	struct goal_factor_params_t
+	{
+		int T = 0; 
+		double theta = 1;
+		Eigen::VectorXd goal;
+      	Eigen::VectorXd error_scale;
+
+        friend std::ostream& operator<< (std::ostream& os, const goal_factor_params_t& obj) 
+        {
+        	os << "goal_factor_params_t:" << std::endl;
+			os << "\tT:" << obj.T << std::endl;
+			os << "\ttheta:" << obj.theta << std::endl;
+			os << "\tgoal:" << obj.goal.transpose() << std::endl;
+			os << "\terror_scale:" << obj.error_scale.transpose() << std::endl;
+			return os;
+        }
+
+	};
 
 	class goal_distance_factor_t : public gtsam::NoiseModelFactor1<Eigen::VectorXd> 
 	{
@@ -28,18 +49,28 @@ namespace prx
   		 */
       	goal_distance_factor_t(const gtsam::noiseModel::Base::shared_ptr &cost_model,
       		gtsam::Key xt_key,
-      		Eigen::VectorXd goal, 
       		system_ptr_t _sys_ptr, 
-      		double _t_i)
+      		int _ti, 
+      		goal_factor_params_t _params
+      		)
       		: Base(cost_model, xt_key)
       	{
       		system_ptr = _sys_ptr;
       		auto ss = system_ptr -> get_state_space();
+      		
+      		prx_assert(_params.T >= _ti, "Total time step T (" << _params.T << ") must be greater than or equal than time step (" << _ti << ").")
+      		prx_assert(0 < _params.theta && _params.theta <= 1, "Theta must be \\in (0,1]");
+      		prx_assert(_params.error_scale.size() == ss -> get_dimension(), "Error_scale must be the same size as the state space! ");
+      		
       		xt_pt = ss -> make_point();
 			xt_goal_pt = ss -> make_point();
 			error_pt = ss -> make_point();
-			ss -> copy_point_from_vector(xt_goal_pt, goal);
-			t_i = _t_i;
+			ss -> copy_point_from_vector(xt_goal_pt, _params.goal);
+			T = _params.T;
+			t_i = _ti;
+			theta = _params.theta;
+			error_scale = _params.error_scale;
+
   		}
   		
   		virtual ~goal_distance_factor_t() {}
@@ -65,7 +96,12 @@ namespace prx
   			space_point_t xt_goal_pt;
   			space_point_t error_pt;
 
-  			double t_i;
+  			Eigen::VectorXd error_scale;
+
+  			int t_i;
+  			int T;
+  			double theta;
   	};
 
 }
+

@@ -10,25 +10,31 @@ init_traj_from_file: true
 init_traj_constant: false
 init_traj_linear: false
 
-traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/lqr_traj.txt
-plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/lqr_plan.txt
+# traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/lqr_traj.txt
+# plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/lqr_plan.txt
+
+# traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrt_traj.txt
+# plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrt_plan.txt
+
+traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrt_traj_2.txt
+plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrt_plan_2.txt
 
 goal_state_as_prior: true
-traj_duration: 10 #seconds
+traj_duration: 5 #seconds
 
 sigma: 0
+goal_discount: 0.9
+outer_iters: 10
+
+propagation_factors_type: 3
+
+use_goal_factors: true
+
+max_iterations: 500
+
+use_energy_factors: false
 
 # constant_state: [0, 0] # Pendulum
-
-# Ackermann
-# constant_state: [0, 0, 1.57] 
-# constant_ctrl: [0, 0]
-
-# Acrobot
-constant_state: [3.14159, 0, 0, 0]
-# constant_state: [1.57079, 0, 0, 0]
-# constant_state: [0.00000, 0, 0, 0]
-constant_ctrl: [10]
 
 # treaded_plant
 # constant_state: [20.0, 20.0, 0.0, 0.0, 0.0]
@@ -38,9 +44,3 @@ constant_ctrl: [10]
 # constant_state: [9.5, 9.5, 0.0]
 # constant_ctrl: 
 
-
-propagation_factors_type: 3
-
-use_goal_factors: true
-
-max_iterations: 1000

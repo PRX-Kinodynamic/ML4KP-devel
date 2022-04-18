@@ -14,6 +14,9 @@ state_space_upper_bound: [6.283185307179586, 3.141592653589793, 6, 6]
 control_space_lower_bound: [-14]
 control_space_upper_bound: [14]
 
+# control_space_lower_bound: [-7]
+# control_space_upper_bound: [7]
+
 starting_lower_bound: [0.0, -3.141592653589793, -6, -6]
 ending_upper_bound:   [6.283185307179586, 3.141592653589793, 6, 6]
 
@@ -23,3 +26,10 @@ lqr_Q: [10,10,1,1]
 
 g: 9.81
 mass: 1
+
+constant_state: [3.14159, 0, 0, 0]
+# constant_state: [1.57079, 0, 0, 0]
+# constant_state: [0.00000, 0, 0, 0]
+constant_ctrl: [0]
+
+error_scale: [10,10,1,1]

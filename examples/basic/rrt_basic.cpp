@@ -102,8 +102,8 @@ int main(int argc, char* argv[])
         
     three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
 
-    rrt_query.solution_traj.to_file(out_path + "rrt_traj.txt");
-    rrt_query.solution_plan.to_file(out_path + "rrt_plan.txt");
+    rrt_query.solution_traj.to_file(out_path + "rrt_traj_2.txt");
+    rrt_query.solution_plan.to_file(out_path + "rrt_plan_2.txt");
 
     std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
     // auto ss = context.first -> get_state_space();

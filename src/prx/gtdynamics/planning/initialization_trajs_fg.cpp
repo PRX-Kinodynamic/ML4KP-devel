@@ -106,6 +106,70 @@ namespace prx
   		return z_values;
 	}
 
+	gtsam::Values initialization_trajs_fg_t::init_from_plan(std::shared_ptr<system_group_t> sg, const space_point_t start_state, const plan_t& plan)
+	{
+		gtsam::Values values;
+
+		auto ss = sg -> get_state_space();
+		auto cs = sg -> get_control_space();
+	
+		auto x_dim = ss -> get_dimension();
+		auto u_dim = cs -> get_dimension();
+
+		auto aux_pt = ss -> make_point();
+		// auto traj = trajectory_t(ss);
+		// sg -> propagate(start_state, plan, traj);
+
+		// std::cout << "plan size: " << plan.size() << std::endl;
+		// std::cout << "traj size: " << traj.size() << std::endl;
+
+		int t = 0; 
+		auto xi_sy = prx_symbol_t::state_symbol(t);
+		Eigen::VectorXd vs = gtsam::Vector::Zero(x_dim);
+		ss -> copy_vector_from_point(vs, start_state);
+		values.insert(xi_sy, vs);
+		
+		
+		ss -> copy_from_point(start_state);
+		for (auto step : plan)
+		{
+			for (double i = 0; i < step.duration; i += simulation_step)
+			{
+				auto ui_sy = prx_symbol_t::control_symbol(t);
+				// std::cout << std::string(ui_sy) << std::endl;
+				Eigen::VectorXd vu = gtsam::Vector::Zero(u_dim);
+				cs -> copy_vector_from_point(vu, step.control);
+				values.insert(ui_sy, vu);
+
+				t++; 
+				sg -> propagate_once(propagate_step::MIDDLE_STEP, step.control);
+				auto xi_sy = prx_symbol_t::state_symbol(t);
+				Eigen::VectorXd vs = gtsam::Vector::Zero(x_dim);
+				ss -> copy_to_vector(vs);
+				// ss -> copy_vector_from_point(vs, aux_pt);
+				values.insert(xi_sy, vs);
+				
+				// t++;
+			}
+		}
+		std::cout << "Last t: " << t << std::endl;
+
+		// t=0;
+
+		// for (auto state : traj)
+		// {
+		// 	auto xi_sy = prx_symbol_t::state_symbol(t);
+		// 	// std::cout << std::string(xi_sy) << std::endl;
+		// 	Eigen::VectorXd vs = gtsam::Vector::Zero(x_dim);
+		// 	ss -> copy_vector_from_point(vs, state);
+		// 	values.insert(xi_sy, vs);
+
+		// 	t++;
+		// }
+		// std::cout << "Last t: " << t << std::endl;
+		return values;
+	}
+
 	gtsam::Values initialization_trajs_fg_t::init_from_traj(const system_ptr_t _sys_ptr, const trajectory_t& traj, const plan_t& plan)
 	{
 		gtsam::Values values;
@@ -120,6 +184,7 @@ namespace prx
 		for (auto state : traj)
 		{
 			auto xi_sy = prx_symbol_t::state_symbol(t);
+			// std::cout << std::string(xi_sy) << std::endl;
 			Eigen::VectorXd vs = gtsam::Vector::Zero(x_dim);
 			ss -> copy_vector_from_point(vs, state);
 			values.insert(xi_sy, vs);
@@ -133,6 +198,7 @@ namespace prx
 			for (double i = 0; i < step.duration; i += simulation_step)
 			{
 				auto ui_sy = prx_symbol_t::control_symbol(t);
+				// std::cout << std::string(ui_sy) << std::endl;
 				Eigen::VectorXd vu = gtsam::Vector::Zero(u_dim);
 				cs -> copy_vector_from_point(vu, step.control);
 				values.insert(ui_sy, vu);

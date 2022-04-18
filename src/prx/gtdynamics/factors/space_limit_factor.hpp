@@ -14,8 +14,8 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/spaces/space.hpp"
 
+#include "prx/gtdynamics/utilities/prx_symbols.hpp"
 
-// #include "gtdynamics/universal_robot/Joint.h"
 
 namespace prx 
 {

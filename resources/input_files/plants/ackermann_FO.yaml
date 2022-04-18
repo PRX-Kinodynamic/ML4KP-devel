@@ -28,3 +28,9 @@ file_id: 0
 propagation_step: 0.1
 
 lqr_Q: [1,1,1]
+
+# constant_state: [0, 0, 1.57] 
+constant_state: [0,0,0]
+constant_ctrl: [0, 0]
+
+error_scale: [1,1,1]

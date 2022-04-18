@@ -102,10 +102,29 @@ namespace prx
         void to_file(const std::string) const;
     	void from_file(const std::string file_name);
 
+        friend std::ostream& operator<< (std::ostream& os, const trajectory_t* obj) 
+        {
+        	os << *obj;
+        	return os;
+        }
         friend std::ostream& operator<< (std::ostream& os, const trajectory_t& obj) 
         {
-
-        	os << obj.print() << " ";
+        	if (obj.num_states < 10)  
+        	{
+        		os << obj.print() << " ";
+        	}
+        	else
+        	{
+        		for (unsigned i = 0; i < 5; ++i)
+        		{
+        			os << obj[i] << "\n";
+        		}
+        		os << "(...)\n";
+        		for (unsigned i = obj.num_states-5; i < obj.num_states; ++i)
+        		{
+        			os << obj[i] << "\n";
+        		}
+        	}
         	// os << std::endl;
         	return os;
         }

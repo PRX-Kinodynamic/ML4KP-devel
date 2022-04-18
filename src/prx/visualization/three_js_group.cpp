@@ -9,6 +9,13 @@ namespace prx
 		rotation = quaternion_t(config_ptr->linear());
 		position = config_ptr->translation();
 	}
+	
+	void three_js_group_t::reset()
+	{
+		info_geoms.clear();
+		plant_animation_params.clear();
+		tree_log_file.clear();
+	}
 
 	three_js_group_t::three_js_group_t(const std::vector<system_ptr_t>& in_plants,const std::vector<std::shared_ptr<movable_object_t>>& in_obstacles)
 	{

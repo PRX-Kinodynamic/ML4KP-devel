@@ -1,7 +1,8 @@
 #pragma once
 
-#include "prx/utilities/spaces/space.hpp"
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/spaces/space.hpp"
+#include "prx/utilities/general/transforms.hpp"
 
 #include <deque>
 
@@ -18,6 +19,11 @@ namespace prx
 			duration = step.duration;
 		}
 
+        friend std::ostream& operator<< (std::ostream& os, const plan_step_t& obj) 
+		{
+			os << "duration: " << obj.duration << " ctrl: " << obj.control;
+			return os;
+		}
 		space_point_t control;
 		double duration;
 	};
@@ -145,6 +151,7 @@ namespace prx
 		void copy_to(const double start_time, const double duration, plan_t& t);
 
 		void copy_onto_back(space_point_t control, double time);
+		void copy_onto_back(Eigen::VectorXd v_control, double time);
 
 		void copy_onto_front(space_point_t control, double time);
 
@@ -158,7 +165,7 @@ namespace prx
          * @brief Add one step to the back of the plan.
 		 * @param time Duration of the last control of the modified plan.
          */
-		void append_onto_back(double time);
+		void append_onto_back(double time, bool copy_from_control_space = false);
 
 		void append_onto_back(double time, space_t* ctrl_space);
 
@@ -187,6 +194,31 @@ namespace prx
 		void to_file(const std::string) const;
     	void from_file(const std::string file_name);
 
+    	friend std::ostream& operator<< (std::ostream& os, const plan_t* obj) 
+        {
+        	os << *obj;
+        	return os;
+        }
+        friend std::ostream& operator<< (std::ostream& os, const plan_t& obj) 
+        {
+        	if (obj.num_steps < 10)  
+        	{
+        		os << obj.print() << " ";
+        	}
+        	else
+        	{
+        		for (unsigned i = 0; i < 5; ++i)
+        		{
+        			os << obj[i] << "\n";
+        		}
+        		os << "(...)\n";
+        		for (unsigned i = obj.num_steps-5; i < obj.num_steps; ++i)
+        		{
+        			os << obj[i] << "\n";
+        		}
+        	}
+        	return os;
+        }
 	private:
 
 		void increase_buffer();

@@ -15,7 +15,7 @@ namespace prx
         uint8_t c1_, c2_, state_idx_; 
         uint64_t t_;
 
-        private:
+        public:
          /**
           * Constructor.
           *
@@ -25,7 +25,6 @@ namespace prx
           */
             prx_symbol_t(const std::string& s, uint8_t state_idx, uint64_t t);
 
-        public:
             /** Default constructor */
             prx_symbol_t();
 
