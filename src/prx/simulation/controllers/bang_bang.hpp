@@ -50,7 +50,7 @@ namespace prx
 
 		virtual void compute_controls() override
 		{
-			auto ss = plant -> get_control_space();
+			// auto ss = plant -> get_control_space();
 		}
 
 		space_point_t get_control_at(unsigned int i)

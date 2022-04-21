@@ -64,6 +64,7 @@ namespace prx
 
 		virtual ~lqr_t();
 
+		using controller_t::compute_controls;
 		virtual void compute_controls() override;
 
 		void compute_K();

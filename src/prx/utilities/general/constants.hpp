@@ -55,6 +55,7 @@ namespace prx
 	const std::string models_path = lib_path + "resources/models/";
 	const std::string input_path = lib_path + "resources/input_files/";
 	const std::string js_path = lib_path + "resources/js/";
+	const std::string out_path = lib_path + "out/";
 
 	enum propagate_step { FIRST_STEP, MIDDLE_STEP, FINAL_STEP };
 	enum plant_type { ANALYTICAL, BULLET };

@@ -24,17 +24,18 @@ namespace prx
 	class noise_t
 	{
 		public:
-			noise_t() : noise_t(global_generator)
+			noise_t() //: noise_t(global_generator)
 			{
-				// generator = global_generator;
+				generator = global_generator;
 			}
 
 			template<class... Types>
 			noise_t(Types... args) : rnd(args...)
 			{
+				generator = global_generator;
 			}
 
-			noise_t(std::mt19937_64 _gen)
+			void set_generator(std::mt19937_64 _gen)
 			{
 				// rnd = _rnd;
 				generator = _gen;
