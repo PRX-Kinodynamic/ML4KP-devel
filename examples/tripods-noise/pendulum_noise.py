@@ -10,8 +10,9 @@ if __name__ == "__main__":
 
     # TM = NoisyTimeMap.NoisyTimeMap("pendulum_lc", time_h,
                                 #    "examples/tripods/pendulum_lc_noise.yaml")
-    TM = NoisyTimeMap.NoisyTimeMap("pendulum_lqr", time_h,
-                                   "examples/tripods/pendulum_lc_noise.yaml")
+    g_name = "pendulum_lqr"
+    g_name = "pendulum_lc"
+    TM = NoisyTimeMap.NoisyTimeMap("examples/tripods/pendulum_noise.yaml")
 
     def g(X):
         # return TM.pendulum_lc(X)
@@ -29,13 +30,14 @@ if __name__ == "__main__":
             start_state_vec = [xs[a], ys[b]]
             TM.ss.copy_point_from_vector(start_state, start_state_vec)
 
-            end_state_vec = g(start_state_vec)
+            # end_state_vec = g(start_state_vec)
+            end_state_vec = TM.g_func(start_state_vec)
 
             TM.ss.copy_point_from_vector(end_state, end_state_vec)
 
             line += str(end_state) + "\n"
     
-    name_file = f"/common/home/as2578/pendulum_noise.out"
+    name_file = f"/home/gary/motion_planning/ML4KP-devel/out/pendulum_noise.out"
     with open(name_file, "w") as f:
         f.write(line)
 
