@@ -22,9 +22,9 @@ void add_noise_space_point_wrapper_1(T& noise, const prx::space_point_t& pt)
 }
 
 template <class T, class S>
-void add_noise_S_wrapper(T& noise, S v)
+S add_noise_S_wrapper(T& noise, S v)
 {
-	noise.add_noise(v);
+	return noise.add_noise(v);
 }
 
 // template <class T, class S>
@@ -51,6 +51,7 @@ void bind_noise(const std::string& name)
 		.def("add_noise", add_noise_space_point_wrapper_2<T>)
 		.def("add_noise", add_noise_space_point_wrapper_3<T>)
 		.def("add_noise", add_noise_S_wrapper<T, double>)
+		// .def("add_noise", add_noise_S_wrapper<T, float>)
 		// .def("add_noise", add_noise_S_wrapper<T, std::vector,double>)
 		// .def("add_noise", add_noise_S_wrapper<T, Eigen::MatrixXd>)
 		// .def("add_noise", &T::add_noise, noise_add_noise_overloads())

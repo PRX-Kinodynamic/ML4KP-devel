@@ -78,6 +78,11 @@ namespace prx
 			return condition_check;
 		}
 
+		void set_check_value(const double _condition_check)
+		{
+			condition_check = _condition_check;
+		}
+
 		void add_condition(condition_check_t* _cond);
 
 		std::vector<std::string> get_available_types()

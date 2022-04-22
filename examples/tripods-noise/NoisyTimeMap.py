@@ -20,7 +20,8 @@ class NoisyTimeMap:
             print("Instance of prx.param_loader")
             params = parameters
         
-        self.time_step = params["duration"].as_float()
+        self.duration = params["duration"].as_float() 
+        self.time_step = self.duration # For backwards comp, should delete it eventually
         self.system_name = params["system_name"].as_string()
         self.params = params
         self.Q = None
@@ -80,7 +81,7 @@ class NoisyTimeMap:
         self.u_t_noise = None 
         self.t_noise = None
 
-        self.checker = prx.condition_check("sim_time" , params["duration"].as_float() );
+        self.checker = prx.condition_check("sim_time" , self.duration );
         self.goal_check = prx.create_default_goal_check(self.ss, self.goal_state, params["goal_region_radius"].as_float() );
         self.checker_gc = prx.condition_check( self.goal_check );
         self.checker.add_condition(self.checker_gc);
@@ -206,11 +207,11 @@ class NoisyTimeMap:
             # if self.u_t_noise is not None:
             #     self.controller = prx.noisy_uniform_controller
 
-        total_time = self.time_step
+        total_time = self.duration
         if self.t_noise is not None:
-            self.t_noise.add_noise(total_time) 
-        duration_so_far = 0
+            total_time = self.t_noise.add_noise(total_time) 
 
+        self.checker.set_check_value(total_time)
         self.checker.reset()
         # print("Before propagate: ", self.start_state)
         self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
