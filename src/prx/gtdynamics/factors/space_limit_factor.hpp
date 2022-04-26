@@ -60,35 +60,46 @@ class space_limit_factor_t : public gtsam::NoiseModelFactor1<Eigen::VectorXd>
     {
         auto ss_dim = ss -> get_dimension();
         Eigen::VectorXd error = Eigen::VectorXd::Zero(ss_dim);
-
+        Eigen::MatrixXd H_qp = Eigen::MatrixXd::Zero(ss_dim, ss_dim);
         for (int i = 0; i < ss_dim; ++i)
         {
+
             auto q = ss -> at(i);
             // TODO: incorporate limits in angles... e.i ackermann steering
             if ( ss -> topology_at(i) == space_t::topology_t::ROTATIONAL )
             {
-                if (H_q) *H_q = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
+                // if (H_q) *H_q = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
+                H_qp(i,i) = 0;
                 error[i] = 0;
             }
             else // TODO: Other topologies?
             {
+                // std::cout << "q: " << q << "\t[ " << ss -> get_lower_bound(i);
+                // std::cout << ", "  << ss -> get_upper_bound(i) << " ]" << std::endl;
+
+
                 if ( q < ss -> get_lower_bound(i) )
                 {
-                    if (H_q) *H_q = -1 * Eigen::MatrixXd::Identity(ss_dim, ss_dim);
+                    H_qp(i,i) = -1;
+                    // if (H_q) *H_q = -1 * Eigen::MatrixXd::Identity(ss_dim, ss_dim);
                     error[i] = ss -> get_lower_bound(i) - q;
                 }
                 else if ( q <= ss -> get_upper_bound(i) )
                 {
-                    if (H_q) *H_q = Eigen::MatrixXd::Zero(ss_dim, ss_dim);
+                    H_qp(i,i) = 0;
+                    // if (H_q) *H_q = Eigen::MatrixXd::Zero(ss_dim, ss_dim);
                     error[i] = 0;
                 }
                 else
                 {
-                    if (H_q) *H_q = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
+                    H_qp(i,i) = 1;
+                    // if (H_q) *H_q = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
                     error[i] = q - ( ss -> get_upper_bound(i) );
                 }
             }   
         }
+        if (H_q) *H_q = H_qp;
+        // if (error.sum() > 0) std::cout << "error: " << error.transpose() << std::endl;
         return error;
     }
 

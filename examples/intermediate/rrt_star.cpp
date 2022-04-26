@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 
     prx_assert(plant != nullptr, "Plant is nullptr!");
 
-    world_model_t<> world_model({plant},{obstacle_list});
+    world_model_t world_model({plant},{obstacle_list});
     world_model.create_context("rrt_context",{plant_name},{obstacle_names});
     auto context = world_model.get_context("rrt_context");
 
@@ -106,11 +106,14 @@ int main(int argc, char* argv[])
         
     three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
 
+    rrt_star_query.solution_traj.to_file(out_path + "rrtstar_traj_1.txt");
+    rrt_star_query.solution_plan.to_file(out_path + "rrtstar_plan_1.txt");
+
     std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
     auto ss = context.first -> get_state_space();
 
-    vis_group -> add_vis_infos(info_geometry_t::LINE, rrt_star_query.tree_visualization, 
-        body_name, ss);
+    // vis_group -> add_vis_infos(info_geometry_t::LINE, rrt_star_query.tree_visualization, 
+    //     body_name, ss);
 
     vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, rrt_star_query.solution_traj, 
         body_name, ss);

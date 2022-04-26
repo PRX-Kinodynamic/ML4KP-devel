@@ -11,11 +11,15 @@ namespace prx
 		dynamics_model = //nullptr;
 			gtsam::noiseModel::Isotropic::Sigma(
 			plant_ptr -> get_state_space() -> get_dimension(),
-			1e-3);
+			1e0);
 		control_model = //nullptr;
 			gtsam::noiseModel::Isotropic::Sigma(
 			plant_ptr -> get_control_space() -> get_dimension(),
-			1e-4);    // Dynamics constraints.
+			1e0);    // Dynamics constraints.
+		// limits_model = //nullptr;
+			// gtsam::noiseModel::Isotropic::Sigma(
+			// plant_ptr -> get_state_space() -> get_dimension(),
+			// 1e0);
 	}
 
 	gtsam::NonlinearFactorGraph trajectory_fg_t::limits_factors(const int t, const int num_steps) const 
@@ -69,6 +73,23 @@ namespace prx
 		return graph;
 	}
 
+	gtsam::NonlinearFactorGraph trajectory_fg_t::add_bang_bang_factor(const int t)
+	{
+		gtsam::NonlinearFactorGraph graph;
+		auto u_key  = symbol_factory_t::create_symbol("control_symbol", t);
+
+		graph.add(
+			bang_bang_factor_t(
+				control_model,
+      			u_key,
+      			plant_ptr, 
+      			t
+      			)
+			);
+
+		return graph;
+	}
+
 	gtsam::NonlinearFactorGraph trajectory_fg_t::add_propagation_factor(const int t, const int prop_type)
 	{
 
@@ -92,6 +113,13 @@ namespace prx
 					x0_key, x1_key, 
 					u1_key, 
 					plant_ptr)
+				);
+			graph.add(
+				compute_controls_factor_t(control_model,
+					x1_key,
+					u1_key,
+					plant_ptr
+					)
 				);
 		}
 		else if (prop_type == 4)
@@ -124,7 +152,7 @@ namespace prx
 		// goal_factor_params_t params;
 		// params.goal = goal_state;
 		graph.add(
-			kinetic_energy_factor_t(nullptr, 
+			kinetic_energy_factor_t(control_model, 
 				xi, 
 				plant_ptr,
 				t,
@@ -132,7 +160,7 @@ namespace prx
 		);
 
 		graph.add(
-			potential_energy_factor_t(nullptr, 
+			potential_energy_factor_t(control_model, 
 				xi, 
 				plant_ptr,
 				params.T - t,
@@ -151,7 +179,7 @@ namespace prx
 		gtsam::NonlinearFactorGraph graph;
 
 		graph.add(
-			goal_distance_factor_t(nullptr, 
+			goal_distance_factor_t(dynamics_model, 
 				xi_f, 
 				plant_ptr,
 				t,
@@ -170,18 +198,30 @@ namespace prx
 
 		if (_params.initial_state_as_prior)
 		{
-			graph.addPrior(
-				prx_symbol_t::state_symbol(0),
-				initial_state,
-				dynamics_model
+			// graph.addPrior(
+			// 	prx_symbol_t::state_symbol(0),
+			// 	initial_state,
+			// 	dynamics_model
+			// 	);
+			// std::cout << "initial_state: " << initial_state.transpose() << std::endl;
+			graph.add(
+				gtsam::NonlinearEquality<Eigen::VectorXd>(
+					prx_symbol_t::state_symbol(0), 
+					initial_state)
 				);
 		}
 		if (_params.goal_state_as_prior)
 		{
-			graph.addPrior(
-				prx_symbol_t::state_symbol(num_steps),
-				goal_state,
-				dynamics_model
+			// graph.addPrior(
+			// 	prx_symbol_t::state_symbol(num_steps),
+			// 	goal_state,
+			// 	dynamics_model
+			// 	);
+			graph.add(
+				gtsam::NonlinearEquality<Eigen::VectorXd>(
+					prx_symbol_t::state_symbol(num_steps), 
+					goal_state, 
+					0.5)
 				);
 		}
 
@@ -194,9 +234,11 @@ namespace prx
 			{
 				// case(3): graph.add(collocationFactors(t)); break;
 				graph.add(add_propagation_factor(t, _params.propagation_factors_type));
+				// graph.add(add_bang_bang_factor(t));
 				// graph.add(add_state_propagation_factor(t));
 			}
 
+			// if (_params.use_goal_factors && t == num_steps -1) graph.add(add_goal_distance_factor(t, _params.goal_factor_params));
 			if (_params.use_goal_factors) graph.add(add_goal_distance_factor(t, _params.goal_factor_params));
 			if (_params.use_energy_factors) graph.add(add_energy_factors(t, _params.goal_factor_params));
 		}

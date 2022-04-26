@@ -12,7 +12,6 @@ namespace prx
 			fg_logger_t& logger, const int extra_iters) 
 		{ 
 			double currentError = nl_opt.error();
-			logger.add_graph_errors(nl_opt.graph(), nl_opt.values(), std::to_string(extra_iters + nl_opt.iterations()));
 
 			// check if we're already close enough
 			if (currentError <= params.errorTol) 
@@ -46,6 +45,7 @@ namespace prx
 			double newError = currentError; // used to avoid repeated calls to error()
 			do 
 			{
+				logger.add_graph_errors(nl_opt.graph(), nl_opt.values(), std::to_string(extra_iters + nl_opt.iterations()));
 				
 				// Do next iteration
 				currentError = newError;
@@ -65,13 +65,14 @@ namespace prx
 				if (params.verbosity >= gtsam::NonlinearOptimizerParams::ERROR)
 					std::cout << "newError: " << newError << std::endl;
 
-				logger.add_graph_errors(nl_opt.graph(), nl_opt.values(), std::to_string(extra_iters + nl_opt.iterations()));
 			} 
 			while (nl_opt.iterations() < params.maxIterations &&
 					!gtsam::checkConvergence(params.relativeErrorTol, params.absoluteErrorTol, params.errorTol,
 							 currentError, newError, params.verbosity) && 
 					std::isfinite(currentError));
 
+			logger.add_graph_errors(nl_opt.graph(), nl_opt.values(), std::to_string(extra_iters + nl_opt.iterations()));
+			
 			// Printing if verbose
 			if (params.verbosity >= gtsam::NonlinearOptimizerParams::TERMINATION) 
 			{

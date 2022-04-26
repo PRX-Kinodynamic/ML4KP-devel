@@ -18,3 +18,13 @@ vis_body: "body"
 mu: [1,1,1,1]
 # mu: [1.5,1.5,1.5,1.5]
 # mu: [2,2,2,2]
+
+
+control_space_lower_bound: [-.2, -.2, -.2, -.2]
+control_space_upper_bound: [.2, .2, .2, .2]
+# constant_state: [3.14159, 0, 0, 0]
+constant_state: [10, 10, 0]
+# constant_state: [0, 0, 0]
+constant_ctrl: [0,0,0,0]
+
+error_scale: [10000,10000,10000]

@@ -507,7 +507,7 @@ namespace prx
 		{
 			if(topology[i]==topology_t::ROTATIONAL)
 			{
-				if(std::fabs(point1->memory[i]-point2->memory[i])<PRX_PI)
+				if(std::fabs(point1->memory[i]-point2->memory[i])<=PRX_PI)
 				{
 					result->memory[i]=(1-t)*point1->memory[i] + t*point2->memory[i];
 				}

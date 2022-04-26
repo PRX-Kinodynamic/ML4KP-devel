@@ -11,7 +11,8 @@ namespace prx
 			std::function<Eigen::VectorXd(Eigen::VectorXd)> f,
 	 		Eigen::VectorXd xt, double sim_step = simulation_step)
 		{
-			auto epsilon = std::sqrt(sim_step);
+			auto epsilon = sim_step * sim_step;
+			// auto epsilon = std::sqrt(sim_step);
 			auto x_dim = xt.size();
 			Eigen::MatrixXd diff;
 			Eigen::VectorXd x_plus = Eigen::VectorXd::Zero(xt.size());

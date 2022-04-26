@@ -63,6 +63,9 @@ namespace prx
 
 		virtual double kinetic_energy(){PRX_NOT_IMPLEMENTED; return 0;};
 		virtual double potential_energy(){PRX_NOT_IMPLEMENTED; return 0;};
+		virtual Eigen::MatrixXd get_mass_matrix(){PRX_NOT_IMPLEMENTED; return Eigen::MatrixXd::Zero(1,1);}
+		virtual Eigen::VectorXd get_coriolis_vector(){PRX_NOT_IMPLEMENTED; return Eigen::VectorXd::Zero(1);}
+		virtual Eigen::VectorXd get_gravity_vector(){PRX_NOT_IMPLEMENTED; return Eigen::VectorXd::Zero(1);}
 
 		virtual void compute_stopping_maneuver(space_point_t, std::vector<double>&, std::vector<double>&);
 		virtual void finalize_system_tree()

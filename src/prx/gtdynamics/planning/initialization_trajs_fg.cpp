@@ -54,20 +54,32 @@ namespace prx
 		return values;
 	}
 
-	gtsam::Values initialization_trajs_fg_t::constant_trajectory(const system_ptr_t _sys_ptr, const space_point_t x, const space_point_t u, const int num_steps, const double sigma)
+	gtsam::Values initialization_trajs_fg_t::constant_trajectory(const system_ptr_t _sys_ptr, const space_point_t start_state, const space_point_t x, const space_point_t u, const int num_steps, const double sigma)
 	{
 		gtsam::Values values;
 		auto ss = _sys_ptr -> get_state_space();
 		auto cs = _sys_ptr -> get_control_space();
 
-		ss -> copy_from_point(x);
 		cs -> copy_from_point(u);
 
   		for (int t = 0; t <= num_steps; t++)
 	  	{
-	   		values.insert(state_from_space(ss, t, true, sigma));
+	  		if (t == 0)
+	  		{ 
+	  			// std::cout << "start_state: " << start_state << std::endl;
+	  			ss -> copy_from_point(start_state);
+	   			values.insert(state_from_space(ss, t, true, 0.0));
+	  		}
+	  		else
+	  		{
+	  			// std::cout << "x: " << start_state << std::endl;
+				ss -> copy_from_point(x);
+	   			values.insert(state_from_space(ss, t, true, sigma));
+	  		}
   			if (t < num_steps)
 			{
+				// cs -> sample(u);
+				cs -> copy_from_point(u);
 				values.insert(state_from_space(cs, t, false, sigma));
 			}
   		}
@@ -106,7 +118,8 @@ namespace prx
   		return z_values;
 	}
 
-	gtsam::Values initialization_trajs_fg_t::init_from_plan(std::shared_ptr<system_group_t> sg, const space_point_t start_state, const plan_t& plan)
+	gtsam::Values initialization_trajs_fg_t::init_from_plan(
+		std::shared_ptr<system_group_t> sg, const space_point_t start_state, const plan_t& plan, int& total_steps, double sigma)
 	{
 		gtsam::Values values;
 
@@ -117,17 +130,19 @@ namespace prx
 		auto u_dim = cs -> get_dimension();
 
 		auto aux_pt = ss -> make_point();
-		// auto traj = trajectory_t(ss);
-		// sg -> propagate(start_state, plan, traj);
 
-		// std::cout << "plan size: " << plan.size() << std::endl;
-		// std::cout << "traj size: " << traj.size() << std::endl;
+		auto x_sampler_noise = gtsam::noiseModel::Isotropic::Sigma(x_dim, sigma);
+		auto u_sampler_noise = gtsam::noiseModel::Isotropic::Sigma(u_dim, sigma);
 
-		int t = 0; 
-		auto xi_sy = prx_symbol_t::state_symbol(t);
+  		gtsam::Sampler x_sampler(x_sampler_noise);
+  		gtsam::Sampler u_sampler(u_sampler_noise);
+
+		total_steps = 0; 
+		auto xi_sy = prx_symbol_t::state_symbol(total_steps);
 		Eigen::VectorXd vs = gtsam::Vector::Zero(x_dim);
 		ss -> copy_vector_from_point(vs, start_state);
-		values.insert(xi_sy, vs);
+		// vs += x_sampler.sample();
+		values.insert(xi_sy, vs );
 		
 		
 		ss -> copy_from_point(start_state);
@@ -135,24 +150,26 @@ namespace prx
 		{
 			for (double i = 0; i < step.duration; i += simulation_step)
 			{
-				auto ui_sy = prx_symbol_t::control_symbol(t);
+				auto ui_sy = prx_symbol_t::control_symbol(total_steps);
 				// std::cout << std::string(ui_sy) << std::endl;
 				Eigen::VectorXd vu = gtsam::Vector::Zero(u_dim);
 				cs -> copy_vector_from_point(vu, step.control);
-				values.insert(ui_sy, vu);
+				vu += u_sampler.sample();
+				values.insert(ui_sy, vu );
 
-				t++; 
+				total_steps++; 
 				sg -> propagate_once(propagate_step::MIDDLE_STEP, step.control);
-				auto xi_sy = prx_symbol_t::state_symbol(t);
+				auto xi_sy = prx_symbol_t::state_symbol(total_steps);
 				Eigen::VectorXd vs = gtsam::Vector::Zero(x_dim);
 				ss -> copy_to_vector(vs);
 				// ss -> copy_vector_from_point(vs, aux_pt);
-				values.insert(xi_sy, vs);
+				vs += x_sampler.sample();
+				values.insert(xi_sy, vs );
 				
 				// t++;
 			}
 		}
-		std::cout << "Last t: " << t << std::endl;
+		std::cout << "Last t: " << total_steps << std::endl;
 
 		// t=0;
 
@@ -254,18 +271,20 @@ namespace prx
 		auto interpolated = ss -> make_point();
 		auto zero_ctrl = cs -> make_point();
 
-		for (int i = 0; i < u_dim; ++i)
-		{
-			(*zero_ctrl)[i] = 0;
-		}
+		// for (int i = 0; i < u_dim; ++i)
+		// {
+		// 	(*zero_ctrl)[i] = 0;
+		// }
 
 		for (int t = 0; t <= num_steps; t++)
 		{
 			double t_i = t / static_cast<double>(num_steps);
 			ss -> interpolate(start, goal, t_i, interpolated);
+			// std::cout << "interpolated: " << interpolated << std::endl;
 			values.insert(state_to_value(_sys_ptr, interpolated, t));
 			if (t < num_steps)
 			{
+				cs -> sample(zero_ctrl);
 				values.insert(control_to_value(_sys_ptr, zero_ctrl, t));
 
 			}

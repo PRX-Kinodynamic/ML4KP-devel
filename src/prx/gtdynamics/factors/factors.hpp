@@ -1,8 +1,9 @@
+#include "prx/gtdynamics/factors/bang_bang_factor.hpp"
 #include "prx/gtdynamics/factors/space_limit_factor.hpp"
 #include "prx/gtdynamics/factors/propagation_factor.hpp"
 #include "prx/gtdynamics/factors/goal_distance_factor.hpp"
 #include "prx/gtdynamics/factors/kinetic_energy_factor.hpp"
 #include "prx/gtdynamics/factors/potential_energy_factor.hpp"
 #include "prx/gtdynamics/factors/state_propagation_factor.hpp"
-
+#include "prx/gtdynamics/factors/compute_controls_factor.hpp"
 #include <gtsam/nonlinear/PriorFactor.h>

@@ -1,38 +1,43 @@
 simulation_step: 0.01
 
-plant: !file "plants/acrobot.yaml"
+# plant: !file "plants/acrobot.yaml"
+plant: !file "plants/planar_2link.yaml"
 # plant: !file "plants/pendulum.yaml"
 # plant: !file "plants/ackermann_FO.yaml"
 # plant: !file "plants/treaded_vehicle.yaml"
-# plant: !file "plants/bullet_omnirobot.yaml"
+# plant: !file "plants/omnibot_FO.yaml"
 
-init_traj_from_file: true
-init_traj_constant: false
+init_traj_from_file: false
+init_traj_constant: true
 init_traj_linear: false
 
-# traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/lqr_traj.txt
-# plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/lqr_plan.txt
+traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/lqr_traj.txt
+plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/lqr_plan.txt
 
 # traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrt_traj.txt
 # plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrt_plan.txt
 
-traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrt_traj_2.txt
-plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrt_plan_2.txt
-
+# traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrt_traj_2.txt
+# plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrt_plan_2.txt
+# # 
+# traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrtstar_traj_1.txt
+# plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrtstar_plan_1.txt
+initial_state_as_prior: true
 goal_state_as_prior: true
 traj_duration: 5 #seconds
 
-sigma: 0
-goal_discount: 0.9
-outer_iters: 10
+sigma: 1
+goal_discount: 0.8
+outer_iters: 1
 
 propagation_factors_type: 3
 
 use_goal_factors: true
 
-max_iterations: 500
+max_iterations: 1000
 
 use_energy_factors: false
+limits_factors: true
 
 # constant_state: [0, 0] # Pendulum
 

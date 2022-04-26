@@ -75,6 +75,8 @@ int main(int argc, char* argv[])
 	trajectory_fg_params_t fg_params;
 	gtsam::Values init_vals;
 	int t_steps = -1;
+	auto sigma = params["sigma"].as<double>();
+
 	if (params["init_traj_from_file"].as<bool>())
 	{
 		std::string traj_name = params["traj_file_in"].as<>();
@@ -84,14 +86,13 @@ int main(int argc, char* argv[])
 		initial_traj -> from_file(traj_name);
 		initial_plan -> from_file(plan_name);
 
-		t_steps = initial_traj -> get_num_states() - 1;
-		init_vals = initialization_trajs_fg_t::init_from_traj(plant, *initial_traj, *initial_plan);
-		init_vals = initialization_trajs_fg_t::init_from_plan(sg, start_state, *initial_plan);
+		// init_vals = initialization_trajs_fg_t::init_from_traj(plant, *initial_traj, *initial_plan);
+		init_vals = initialization_trajs_fg_t::init_from_plan(sg, start_state, *initial_plan, t_steps, sigma);
+		// t_steps = initial_plan -> size() ;
 	}
 	else if (params["init_traj_constant"].as<bool>())
 	{
 		t_steps = static_cast<int>(std::ceil(params["traj_duration"].as<int>() / dt));
-		auto sigma = params["sigma"].as<double>();
 
 		auto x = ss -> make_point();
 		auto u = cs -> make_point();
@@ -101,7 +102,7 @@ int main(int argc, char* argv[])
 		cs -> copy_point_from_vector(u, params["/plant/constant_ctrl"].as<std::vector<double>>());
 
 		init_vals = initialization_trajs_fg_t::constant_trajectory(
-			plant, x, u, t_steps, sigma);
+			plant, start_state, x, u, t_steps, sigma);
 
 	}
 	else if (params["init_traj_linear"].as<bool>())
@@ -110,23 +111,26 @@ int main(int argc, char* argv[])
 		// t_steps = params["num_steps"].as<int>();
 
 		init_vals = initialization_trajs_fg_t::linear_trajectory(plant, start_state, goal_state, t_steps);
+		fg_utilities::values_to_plan_and_traj(init_vals, sln_traj.get(), sln_plan.get(), fg_params.num_steps);
+		fg_utilities::updates_values_from_plan_and_traj(init_vals, plant, *sln_traj, *sln_plan, fg_params.num_steps);
 	}
 	else
 	{
 		prx_throw("Values initialization type not supported");
 	}
-	fg_params.initial_state_as_prior = true;
+	fg_params.limits_factors = params["limits_factors"].as<bool>();
 	fg_params.num_steps = t_steps;
 	fg_params.goal_state_as_prior = params["goal_state_as_prior"].as<bool>();
 	fg_params.propagation_factors_type = params["propagation_factors_type"].as<int>();
 	fg_params.use_goal_factors = params["use_goal_factors"].as<bool>();
-	
+	fg_params.initial_state_as_prior = params["initial_state_as_prior"].as<bool>();
+
 	fg_params.goal_factor_params.T = t_steps;
 	fg_params.goal_factor_params.theta = params["goal_discount"].as<double>();
 	fg_params.use_energy_factors = params["use_energy_factors"].as<bool>();
 
 	// Eigen::Map<Eigen::VectorXd> start_ev(start_v.data(), start_v.size());
-	fg_params.goal_factor_params.goal = Eigen::Map<Eigen::VectorXd>(start_v.data(), start_v.size());
+	fg_params.goal_factor_params.goal = Eigen::Map<Eigen::VectorXd>(goal_v.data(), goal_v.size());
 	auto error_scale = params["/plant/error_scale"].as<std::vector<double>>();
 	fg_params.goal_factor_params.error_scale = Eigen::Map<Eigen::VectorXd>(error_scale.data(), error_scale.size());
 	
@@ -145,7 +149,7 @@ int main(int argc, char* argv[])
 	gtsam::LevenbergMarquardtParams lm_params;
 	lm_params.setVerbosityLM("SUMMARY");
 	lm_params.setlambdaUpperBound(1e32);
-	lm_params.setUseFixedLambdaFactor(true);
+	lm_params.setUseFixedLambdaFactor(false);
 	lm_params.setDiagonalDamping(false);
 	lm_params.setlambdaFactor(4);
 	lm_params.setlambdaInitial(1e-6);
@@ -157,7 +161,9 @@ int main(int argc, char* argv[])
 	// std::cout << "Printing graph: " << std::endl; 
 	// graph.print("Printing graph: ", prx::key_formatter);
 	// graph.printErrors(init_vals, "NonlinearFactorGraph: ", prx_key_formatter);
-	fg_logger_t lg(out_path + "fg_" + params["/plant/name"].as<>() + "_log.txt", ' ', "-");
+	// 
+	std::string file_prefix = out_path + "fg_" + params["/plant/name"].as<>();
+	fg_logger_t lg(file_prefix + "_log.txt", ' ', "-");
 	int outer_iters = params["outer_iters"].as<int>();
 	// const gtsam::Values results;
 	int total_iters = 0;
@@ -170,9 +176,13 @@ int main(int argc, char* argv[])
 		init_vals = results;
 		fg_utilities::values_to_plan_and_traj(init_vals, sln_traj.get(), sln_plan.get(), fg_params.num_steps);
 		fg_utilities::values_to_plan_and_traj(init_vals, aux_traj.get(), aux_plan.get(), fg_params.num_steps);
-		sg -> propagate(start_state, *sln_plan, *sln_traj);
 
-		fg_utilities::updates_values_from_plan_and_traj(init_vals, plant, *sln_traj, *sln_plan, fg_params.num_steps);
+		if (i < outer_iters - 1)
+		{
+			sg -> propagate(start_state, *sln_plan, *sln_traj);
+			fg_utilities::updates_values_from_plan_and_traj(init_vals, plant, *sln_traj, *sln_plan, fg_params.num_steps);
+
+		}
 		last_error = optimizer.error();
 	}
 
@@ -181,19 +191,28 @@ int main(int argc, char* argv[])
 
 	std::cout << "Done!" << std::endl;
 	std::cout << "Final error: " << last_error << std::endl;
-	std::ofstream traj_file;
-	traj_file.open(out_path + "fg_traj.txt");
+	// std::ofstream traj_file;
+	// traj_file.open(out_path + "fg_traj.txt");
 	double t_elapsed = 0;
 
-PRX_DEBUG_PRINT
 	// fg_utilities::values_to_plan_and_traj(results, sln_traj.get(), sln_plan.get(), fg_params.num_steps);
-PRX_DEBUG_PRINT
 	// std::cout << "initial_plan:\n" << initial_plan.get() << std::endl;
-	std::cout << "sln_plan:\n" << aux_plan.get() << std::endl;
+	std::cout << "sln_plan:\n" << sln_plan.get() << std::endl;
+	std::cout << "aux_plan:\n" << aux_plan.get() << std::endl;
 	sg -> propagate(start_state, *aux_plan, *aux_traj);
-PRX_DEBUG_PRINT
-	std::cout << "sln_traj:\n" << aux_traj << std::endl;
 
+	std::cout << "REAL TRAJECTORY\n" << aux_traj << "-~-~-~-~-~-~" << std::endl;
+	std::cout << "PROP TRAJECTORY\n" << sln_traj << "-~-~-~-~-~-~" << std::endl;
+	aux_traj -> to_file(file_prefix + "_traj_real.txt");
+	sln_traj -> to_file(file_prefix + "_traj_prop.txt");
+	aux_plan -> to_file(file_prefix + "_prop_plan.txt");
+	if (initial_plan != nullptr) initial_plan -> to_file(file_prefix + "_real_plan.txt");
+	else 
+	{
+		// Just erase the "(...)_real_plan.txt" file...
+		aux_plan -> clear();
+		aux_plan -> to_file(file_prefix + "_real_plan.txt");
+	}
 
 	three_js_group_t* vis_group = new three_js_group_t({plant},{});
 	std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();

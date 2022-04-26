@@ -78,10 +78,10 @@ namespace prx
 			{
 				return default_valid_state(s, state_space,cg);
 			};
-			valid_check = [this,cg](trajectory_t& traj)
-			{
-				return default_valid_trajectory(traj, state_space,cg);
-			};
+			// valid_check = [this,cg](trajectory_t& traj)
+			// {
+			// 	return default_valid_trajectory(traj, state_space,cg);
+			// };
 			steer = [](space_point_t& state, space_point_t& local_goal, plan_t& plan, trajectory_t& traj)
 			{
 				prx_throw("rrg_specification_t.steer_t: No steer function! ");

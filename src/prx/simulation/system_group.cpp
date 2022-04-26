@@ -88,6 +88,7 @@ namespace prx
 		traj.copy_onto_back(state_space);
 		for(const plan_step_t& step : plan)
 		{
+			// std::cout << "step: " << step << std::endl;
 			int steps = (int)((step.duration / simulation_step) + .1);
 			// int i = 0;
 			if( steps > 0 )

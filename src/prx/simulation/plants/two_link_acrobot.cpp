@@ -142,9 +142,72 @@ namespace prx
       const double d12 = m * (lc2 * lc2 + l1 * lc2 * cos(theta2)) + I2;
       const double d21 = d12;
 
-      return (0.5) * d11 * theta1dot * theta1dot + 
-      				   d12 * theta1dot * theta2dot + 
-      		 (0.5) * d22 * theta2dot * theta2dot;
+      Eigen::Vector2d th_dot;
+      Eigen::Matrix2d M;
+
+      th_dot(0) = theta1dot;
+      th_dot(1) = theta2dot;
+      M(0,0) = d11;
+      M(1,0) = d21;
+      M(0,1) = d12;
+      M(1,1) = d22;
+      return 0.5 * th_dot.transpose() * M * th_dot;
+      // return (0.5) * d11 * theta1dot * theta1dot + 
+      // 				   d12 * theta1dot * theta2dot + 
+      // 		 (0.5) * d22 * theta2dot * theta2dot;
+	}
+
+	void two_link_acrobot_t::compute_control()
+	{
+		const double theta2 = _theta2;
+      const double theta1 = _theta1 - M_PI / 2.0;
+      const double theta1dot = _theta1dot;
+      const double theta2dot = _theta2dot;
+        
+      const double lc1 = l1 / 2.0; 
+      const double lc2 = l2 / 2.0;
+      // TODO: Change to m1 & m2
+      double m = mass;
+
+      const double d11 = m * lc1 * lc1 + m * (l1 * l1 + lc2 * lc2 + 2 * l1 * lc1 * cos(theta2)) + I1 + I2;
+		const double d22 = m * lc2 * lc2 + I2;
+      const double d12 = m * (lc2 * lc2 + l1 * lc2 * cos(theta2)) + I2;
+      const double d21 = d12;
+
+      const double c1 = -m * l1 * lc2 * theta2dot * theta2dot * sin(theta2) - (2.0 * m * l1 * lc2 * theta1dot * theta2dot * sin(theta2));
+      const double c2 =  m * l1 * lc2 * theta1dot * theta1dot * sin(theta2);
+
+      const double g1 = (m * lc1 + m * l1) * g * cos(theta1) + (m * lc2 * g * cos(theta1 + theta2));
+      const double g2 = m * lc2 * g * cos(theta1 + theta2);
+
+		Eigen::Vector2d u;
+		Eigen::Matrix2d M;
+		Eigen::Vector2d C;
+		Eigen::Vector2d G;
+		Eigen::Vector2d th;
+		Eigen::Vector2d th_dot;
+
+		th_dot(0) = theta1dot;
+      th_dot(1) = theta2dot;
+      
+      M(0,0) = d11;
+      M(1,0) = d21;
+      M(0,1) = d12;
+      M(1,1) = d22;
+      
+      C(0) = c1;
+      C(1) = c2;
+
+		G(0) = g1;
+      G(1) = g2;      
+
+		u = M * th_dot + C + G;
+
+		// std::cout << "u: " << u << std::endl;
+		// _tau = u[1];
+
+		// get_control_space() -> copy_from_vector(u);
+
 	}
 
 	double two_link_acrobot_t::potential_energy()

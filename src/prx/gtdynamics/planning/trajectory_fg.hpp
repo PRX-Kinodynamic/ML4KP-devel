@@ -5,6 +5,7 @@
 #include <gtsam/linear/NoiseModel.h>
 #include <gtsam/nonlinear/expressions.h>
 #include <gtsam/nonlinear/ExpressionFactor.h>
+#include <gtsam/nonlinear/NonlinearEquality.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <gtdynamics/factors/MinTorqueFactor.h>
@@ -16,7 +17,6 @@
 
 #include "prx/gtdynamics/factors/factors.hpp"
 #include "prx/gtdynamics/utilities/prx_symbols.hpp"
-
 namespace prx
 {
 	struct trajectory_fg_params_t
@@ -81,6 +81,8 @@ namespace prx
 		gtsam::NonlinearFactorGraph add_state_propagation_factor(const int t);
 
 		gtsam::Values init_from_traj(const trajectory_t& traj, const plan_t& plan);
+
+		gtsam::NonlinearFactorGraph add_bang_bang_factor(const int t);
 
 		private:
 			plant_ptr_t plant_ptr;
