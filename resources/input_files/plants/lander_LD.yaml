@@ -1,0 +1,48 @@
+name: "lander_LD"
+path: "lander_LD"
+
+# parameters
+lander_mass: &m_s 1.0
+# velocity of the exhaust gases with respect to the spacecraft
+k: &k_ 0.1
+# Moon gravity
+gravity: &g_ 1.62 
+
+start_state: [5, 0.0, 1.50]
+goal_state:  [0.0, 0.0, 1.5]
+
+min_steps: 1
+max_steps: 50
+
+parameters: [*m_s, *k_, *g_]
+
+state_space_lower_bound: [0.0, -10, 1.0]
+state_space_upper_bound: [10, 10.0, 2]
+
+control_space_lower_bound: [0]
+control_space_upper_bound: [1]
+
+
+vis_body: "body"
+
+lqr_Q: [1,1,1]
+lqr_R: [0.01]
+
+# controller_path: "examples/tripods/lc/pendulum.pt"
+# controller_path: "examples/tripods/lc/pendulum_deterministic.pt"
+# controller_path: "examples/tripods/controllers/Pendulum.pt"
+
+x_0_noise: "uniform"
+# x_0_noise_params: [-0.25,0.25]
+# x_0_noise_params: [-0.1,0.1]
+x_0_noise_params: [-0.,0.]
+
+u_t_noise: "uniform"
+# u_t_noise_params: [-0.25,0.25]
+# u_t_noise_params: [-0.1,0.1]
+u_t_noise_params: [-0.,0.]
+
+t_noise: "uniform"
+# t_noise_params: [-0.25,0.25]
+# t_noise_params: [-0.05,0.05]
+t_noise_params: [-0.,0.]

@@ -1,6 +1,7 @@
 #include "prx/simulation/plants/koules.hpp"
 #include "prx/simulation/plants/pendulum.hpp"
 #include "prx/simulation/plants/rally_car.hpp"
+#include "prx/simulation/plants/lander_LD.hpp"
 #include "prx/simulation/plants/fixed_wing.hpp"
 #include "prx/simulation/plants/omni_mantis.hpp"
 #include "prx/simulation/plants/racecar_mini.hpp"

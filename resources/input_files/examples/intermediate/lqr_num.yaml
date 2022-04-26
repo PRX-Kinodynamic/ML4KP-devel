@@ -4,7 +4,8 @@ simulation_step: 0.01
 environment: "environments/empty.yaml"
 # plant: !file "plants/pendulum.yaml"
 # plant: !file "plants/acrobot.yaml"
-plant: !file "plants/ackermann_FO.yaml"
+# plant: !file "plants/ackermann_FO.yaml"
+plant: !file "plants/lander_LD.yaml"
 
 visualize: true
 

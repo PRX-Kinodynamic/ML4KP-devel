@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
 
     const auto ss = context.first -> get_state_space();
     const auto cs = context.first -> get_control_space();
+    const auto ps = plant -> get_parameter_space();
 
     auto lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
     auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
@@ -39,6 +40,12 @@ int main(int argc, char* argv[])
     auto cs_lb = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
     auto cs_up = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
     cs -> set_bounds(cs_lb, cs_up);
+
+    if (ps -> get_dimension() > 0)
+    {
+        ps -> copy_from_vector(params["/plant/parameters"].as<std::vector<double>>());
+        std::cout << "params: " << ps -> print_memory(2) << std::endl;
+    }
 
     auto start_state = ss -> make_point();
 	auto goal_state = ss -> make_point();
@@ -65,24 +72,30 @@ int main(int argc, char* argv[])
     std::cout << "B: " << ltv -> get_B() << std::endl;
     // std::cout << "state_space dim: " << ss_dim << std::endl;
     // std::cout << "ctrl_space  dim: " << cs_dim << std::endl;
-    
+    PRX_DEBUG_PRINT
     Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
     auto q_vec = params["/plant/lqr_Q"].as<std::vector<double>>();
     for (int i = 0; i < ss_dim; ++i) Q(i,i) = q_vec[i];
 
+    PRX_DEBUG_PRINT
     // std::cout << "Q:\n" << Q << std::endl;
     Eigen::MatrixXd R = Eigen::MatrixXd::Identity(cs_dim, cs_dim);
     auto r_vec = params["/plant/lqr_R"].as<std::vector<double>>();
     for (int i = 0; i < cs_dim; ++i) R(i,i) = r_vec[i];
 
+    PRX_DEBUG_PRINT
     Eigen::VectorXd v_goal(ss_dim);
     ss -> copy_vector_from_point(v_goal, goal_state);
+    PRX_DEBUG_PRINT
     lqr_t lqr(ltv, Q, R, "LQR");
+    PRX_DEBUG_PRINT
     lqr.set_goal(v_goal);
+    PRX_DEBUG_PRINT
     lqr.compute_K();
     Eigen::MatrixXd K = lqr.get_K();
     std::cout << "K: " << K << std::endl;
     
+    PRX_DEBUG_PRINT
     do
     {
         lqr.compute_controls();

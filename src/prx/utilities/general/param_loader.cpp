@@ -127,7 +127,7 @@ namespace prx
 		// Bool can be without value: "--/some/bool/param"
 		const std::regex opt_regex_bool("--((\\/)?\\w)+=?");
 		// Special case for the executable: "./executable_name"
-		const std::regex opt_regex_exec("\\.\\/\\w+");
+		const std::regex opt_regex_exec("\\.(\\/\\w+)+");
 		const std::regex opt_regex_expy("(.)+\\.py");
 
 		auto argc = argv.size();
