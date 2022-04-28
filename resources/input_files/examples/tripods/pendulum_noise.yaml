@@ -13,8 +13,8 @@ controller_path: "examples/tripods/lc/pendulum.pt"
 x_0_noise: "uniform"
 x_0_noise_params: [-0.1,0.1]
 
-# f_noise: "uniform"
-# f_noise_params: [-0.01,0.01]
+f_noise: "uniform"
+f_noise_params: [-0.01,0.01]
 
 u_t_noise: "uniform"
 u_t_noise_params: [-0.1,0.1]

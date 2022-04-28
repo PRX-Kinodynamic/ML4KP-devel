@@ -89,6 +89,7 @@ class NoisyTimeMap:
         self.x_0_noise = self.init_noise("/plant/x_0_noise", "/plant/x_0_noise_params");
         self.u_t_noise = self.init_noise("/plant/u_t_noise", "/plant/u_t_noise_params");
         self.t_noise   = self.init_noise("/plant/t_noise",   "/plant/t_noise_params"  );
+        self.f_noise   = self.init_noise("/plant/f_noise",   "/plant/f_noise_params"  );
 
         # if system_type == "pendulum_lc":
         #     controller_path = params["controller_path"].as_string()
@@ -163,6 +164,9 @@ class NoisyTimeMap:
             self.t_noise.add_noise(total_time)         
 
         while duration_so_far < total_time and not self.check_goal_reached(2):
+            if self.f_noise is not None:
+                self.f_noise.add_noise(self.start_state)
+            
             ctrl_input[0, 0] = self.start_state[0]
             ctrl_input[0, 1] = self.start_state[1]
             ctrl_input[0, 2] = self.goal_state[0]
