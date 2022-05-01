@@ -14,24 +14,6 @@ namespace prx
 		set_integrator(integrator_t::kEULER);
 	}
 
-	plant_t::plant_t(const std::shared_ptr<plant_t>& _plant) 
-		: system_t(_plant),
-		  movable_object_t(_plant -> get_pathname())
-	{
-		// public stuff
-		
-		derivative_space = _plant -> derivative_space;
-		derivative_memory = _plant -> derivative_memory;
-
-		// protected stuff
-		integrator = _plant -> integrator;
-		collision_list = _plant -> collision_list;
-
-		// private stuff:
-		derivative_state = _plant -> derivative_state;
-	}
-
-
 	plant_t::~plant_t()
 	{
 		if(derivative_space!=nullptr)

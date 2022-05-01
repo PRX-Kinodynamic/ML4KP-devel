@@ -222,15 +222,15 @@ namespace prx
 		}
 	}
 
-	void space_t::copy_from_vector(const std::vector<double>& source) const
-	{
-		prx_assert(source.size() == dimension, "Vector and space must have the same dimensions.");
-		for(unsigned i=0;i<dimension;++i)
-		{
-			// _v[i]=*addresses[i];
-			*addresses[i] = source[i];
-		}
-	}
+	// void space_t::copy_from_vector(const std::vector<double>& source) const
+	// {
+	// 	prx_assert(source.size() == dimension, "Vector and space must have the same dimensions.");
+	// 	for(unsigned i=0;i<dimension;++i)
+	// 	{
+	// 		// _v[i]=*addresses[i];
+	// 		*addresses[i] = source[i];
+	// 	}
+	// }
 
 
 	void space_t::copy_to_point(const space_point_t& point) const

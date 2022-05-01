@@ -102,7 +102,7 @@ void  (prx::space_t::*integrate_0)(const prx::space_point_t&, const prx::space_t
 void  (prx::space_t::*integrate_1)(const prx::space_t*, double) = &prx::space_t::integrate;
 
 void  (prx::space_t::*copy_from_std_vector)(const Eigen::VectorXd& _v) const = &prx::space_t::copy_from_vector;
-void  (prx::space_t::*copy_from_eigen_vector)(const std::vector<double>& source) const = &prx::space_t::copy_from_vector;
+void  (prx::space_t::*copy_from_eigen_vector)(const std::vector<double>& source) = &prx::space_t::copy_from_vector;
 
 void  (prx::space_t::*copy_std_vector_from_point)(std::vector<double>& destination, const prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
 // void  (prx::space_t::*copy_eigen_vector_from_point)(Eigen::Ref<Eigen::VectorXd> destination, const prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
