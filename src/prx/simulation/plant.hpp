@@ -52,7 +52,6 @@ namespace prx
         }
 
 		space_t* derivative_space;
-		std::vector<double*> derivative_memory;
 
 		static int registred_plants;
 		

@@ -24,7 +24,7 @@ namespace prx
 
 	class space_snapshot_t 
 	{
-	public:
+		public:
 		
 		typedef std::vector<double>::iterator iterator;
 		typedef std::vector<double>::const_iterator const_iterator;
@@ -149,7 +149,7 @@ namespace prx
 		std::vector<double> memory;
 
 		friend class space_t;
-	private:
+		private:
 		space_snapshot_t():parent(nullptr){memory.clear();}
 	};
 
@@ -256,7 +256,7 @@ namespace prx
 		 *
 		 * @param[in]  Vector to copy from.
 		 */
-		void copy_from_vector(const std::vector<double>& source) const;
+		// void copy_from_vector(const std::vector<double>& source) const;
 
 
 		void copy_to_point(const space_point_t& point) const;
@@ -506,6 +506,17 @@ namespace prx
 		}
 
 	protected:
+		space_t(const space_t* other)
+		{
+			dimension = other -> dimension;
+			addresses = other -> addresses;
+			lower_bounds = other -> lower_bounds;
+			upper_bounds = other -> upper_bounds;
+			topology = other -> topology;
+			space_name = other -> space_name;
+			owned_values = false;
+		}
+
 		unsigned dimension;
 		std::vector<double*> addresses;
 		std::vector<double*> lower_bounds;
