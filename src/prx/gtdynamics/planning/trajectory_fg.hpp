@@ -17,6 +17,7 @@
 
 #include "prx/gtdynamics/factors/factors.hpp"
 #include "prx/gtdynamics/utilities/prx_symbols.hpp"
+#include "prx/gtdynamics/utilities/symbols_factory.hpp"
 namespace prx
 {
 	struct trajectory_fg_params_t
@@ -56,12 +57,14 @@ namespace prx
 				for (int i = 0; i < _vec.size(); ++i)
 				{
 					initial_state[i] = _vec[i];
-				}
+			}
 			};
 
 			void set_goal_state(const std::vector<double> _vec)
 			{
 				goal_state.resize(_vec.size());
+				// std::cout << "_vec: " << _vec.size() << std::endl;
+				// std::cout << "goal: " << goal_state.transpose() << std::endl;
 				for (int i = 0; i < _vec.size(); ++i)
 				{
 					goal_state[i] = _vec[i];
@@ -69,6 +72,8 @@ namespace prx
 			};
 
 		gtsam::NonlinearFactorGraph get_fg(const trajectory_fg_params_t& _params);
+		
+		gtsam::NonlinearFactorGraph get_smoothing_fg(const trajectory_fg_params_t& _params);
 
 		gtsam::NonlinearFactorGraph limits_factors(const int t, const int num_steps) const ;
 

@@ -148,5 +148,24 @@ namespace prx
 			}
 		}
 
+		void add_noise(gtsam::Values& values, const std::string symbol_name, boost::shared_ptr<gtsam::noiseModel::Isotropic> & noise)
+		{
+			std::function<bool(gtsam::Key)> fn = [&](gtsam::Key k)
+			{
+				auto ps = prx_symbol_t(k);
+				return ps.label() == symbol_name && ps.time() > 0;
+			};
+
+			auto filtered = values.filter<Eigen::VectorXd>(fn);
+  			gtsam::Sampler sampler(noise);
+
+			for (auto v : filtered)
+			{
+				// std::cout << "filtered: " << prx::key_formatter(v.key) << std::endl;
+				v.value = v.value + sampler.sample();
+			}
+		}
+
+
 	}
 }

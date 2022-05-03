@@ -114,13 +114,13 @@ namespace prx
 					u1_key, 
 					plant_ptr)
 				);
-			graph.add(
-				compute_controls_factor_t(control_model,
-					x1_key,
-					u1_key,
-					plant_ptr
-					)
-				);
+			// graph.add(
+			// 	compute_controls_factor_t(control_model,
+			// 		x1_key,
+			// 		u1_key,
+			// 		plant_ptr
+			// 		)
+			// 	);
 		}
 		else if (prop_type == 4)
 		{
@@ -155,6 +155,7 @@ namespace prx
 			kinetic_energy_factor_t(control_model, 
 				xi, 
 				plant_ptr,
+				goal_state,
 				t,
 				params)
 		);
@@ -163,6 +164,7 @@ namespace prx
 			potential_energy_factor_t(control_model, 
 				xi, 
 				plant_ptr,
+				goal_state,
 				params.T - t,
 				params
 				)
@@ -183,8 +185,45 @@ namespace prx
 				xi_f, 
 				plant_ptr,
 				t,
+				goal_state,
 				_params)
 		);
+
+		return graph;
+	}
+
+	gtsam::NonlinearFactorGraph trajectory_fg_t::get_smoothing_fg(
+		const trajectory_fg_params_t& _params
+		)
+	{
+		gtsam::NonlinearFactorGraph graph;
+		int num_steps = _params.num_steps;
+
+		graph.add(
+			gtsam::NonlinearEquality<Eigen::VectorXd>(
+				prx_symbol_t::state_symbol(0), 
+				// symbol_factory_t::create_symbol("start_state_symbol"),
+				initial_state)
+			);
+		graph.add(
+			gtsam::NonlinearEquality<Eigen::VectorXd>(
+				// symbol_factory_t::create_symbol("goal_symbol"),
+				prx_symbol_t::state_symbol(num_steps), 
+				goal_state, 
+				0.01)
+			);
+
+		for (int t = 0; t < num_steps+1; t++) 
+		{
+			// std::cout << "t: " << t << std::endl;
+			if (_params.limits_factors) graph.add(limits_factors(t, num_steps));
+			if (t < num_steps) 
+			{
+				graph.add(add_propagation_factor(t, _params.propagation_factors_type));
+			}
+			if (_params.use_goal_factors) graph.add(add_goal_distance_factor(t, _params.goal_factor_params));
+
+		}
 
 		return graph;
 	}
@@ -232,7 +271,6 @@ namespace prx
 			if (_params.limits_factors) graph.add(limits_factors(t, num_steps));
 			if (t < num_steps) 
 			{
-				// case(3): graph.add(collocationFactors(t)); break;
 				graph.add(add_propagation_factor(t, _params.propagation_factors_type));
 				// graph.add(add_bang_bang_factor(t));
 				// graph.add(add_state_propagation_factor(t));

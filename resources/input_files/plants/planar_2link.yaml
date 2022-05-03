@@ -24,9 +24,9 @@ lqr_Q: [10,10,1,1]
 g: 9.81
 mass: 1
 
-constant_state: [3.14159, 0, 0, 0]
+# constant_state: [3.14159, 0, 0, 0]
 # constant_state: [1.57079, 0, 0, 0]
-# constant_state: [0.00000, 0, 0, 0]
+constant_state: [0.00000, 0, 0, 0]
 constant_ctrl: [0,0]
 
 error_scale: [1,1,1,1]

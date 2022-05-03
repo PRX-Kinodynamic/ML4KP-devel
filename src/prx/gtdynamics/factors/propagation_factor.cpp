@@ -3,27 +3,6 @@
 
 namespace prx
 {
-	// Eigen::VectorXd propagation_factor_t::prop(Eigen::VectorXd xt0, Eigen::VectorXd ut1)
-	// {
-	// 	auto ss = ltv -> get_state_space();
-	// 	auto cs = ltv -> get_control_space();
-	// 	auto ss_dim = ss -> get_dimension();
-	// 	auto cs_dim = cs -> get_dimension();
-
-	// 	Eigen::VectorXd res_v(ss_dim);
-
-	// 	ss -> copy_from_vector(xt0);
-	// 	ss -> enforce_bounds();
-	// 	cs -> copy_from_vector(ut1);
-	// 	cs -> enforce_bounds();
-	// 	ltv -> compute_derivative();
-
-	// 	ltv -> propagate(simulation_step);
-	// 	ss -> copy_to_point(res_v);
-	// 	ss -> copy_point_from_vector(xt, xt1);
-
-	// 	return res_v;
-	// }
 
 	Eigen::VectorXd propagation_factor_t::compute_error(
 		Eigen::VectorXd xt0, Eigen::VectorXd xt1, Eigen::VectorXd ut1) const

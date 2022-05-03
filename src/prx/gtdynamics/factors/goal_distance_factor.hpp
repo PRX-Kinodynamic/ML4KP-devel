@@ -18,7 +18,7 @@ namespace prx
 	{
 		int T = 0; 
 		double theta = 1;
-		Eigen::VectorXd goal;
+		// Eigen::VectorXd goal;
       	Eigen::VectorXd error_scale;
 
         friend std::ostream& operator<< (std::ostream& os, const goal_factor_params_t& obj) 
@@ -26,7 +26,7 @@ namespace prx
         	os << "goal_factor_params_t:" << std::endl;
 			os << "\tT:" << obj.T << std::endl;
 			os << "\ttheta:" << obj.theta << std::endl;
-			os << "\tgoal:" << obj.goal.transpose() << std::endl;
+			// os << "\tgoal:" << obj.goal.transpose() << std::endl;
 			os << "\terror_scale:" << obj.error_scale.transpose() << std::endl;
 			return os;
         }
@@ -51,6 +51,7 @@ namespace prx
       		gtsam::Key xt_key,
       		system_ptr_t _sys_ptr, 
       		int _ti, 
+      		Eigen::VectorXd _goal,
       		goal_factor_params_t _params
       		)
       		: Base(cost_model, xt_key)
@@ -65,7 +66,7 @@ namespace prx
       		xt_pt = ss -> make_point();
 			xt_goal_pt = ss -> make_point();
 			error_pt = ss -> make_point();
-			ss -> copy_point_from_vector(xt_goal_pt, _params.goal);
+			ss -> copy_point_from_vector(xt_goal_pt, _goal);
 			T = _params.T;
 			t_i = _ti;
 			theta = _params.theta;

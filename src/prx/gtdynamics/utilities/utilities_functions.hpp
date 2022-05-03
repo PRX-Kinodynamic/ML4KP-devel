@@ -6,9 +6,10 @@
 #include "prx/simulation/playback/trajectory.hpp"
 
 
+#include <gtsam/linear/Sampler.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
-
+#include <gtsam/linear/NoiseModel.h>
 
 // #define GET_FACTOR_NAME_MACRO_GTSAM(FACTOR_CLASS, FACTOR, NAME) \
 // 	if (dynamic_cast<gtsam::FACTOR_CLASS*>(FACTOR.get())) return NAME;
@@ -29,6 +30,7 @@ namespace prx
 
 		void updates_values_from_plan_and_traj(gtsam::Values& values, system_ptr_t _sys_ptr, const trajectory_t& traj, const plan_t& plan, const int total_steps);
 
+		void add_noise(gtsam::Values& values, const std::string symbol_name, boost::shared_ptr<gtsam::noiseModel::Isotropic>& noise);
 
 	}
 }

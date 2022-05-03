@@ -249,12 +249,15 @@ namespace prx
       const double g1 = (m * lc1 + m * l1) * g * cos(theta1) + (m * lc2 * g * cos(theta1 + theta2));
       const double g2 = m * lc2 * g * cos(theta1 + theta2);
 
-		Eigen::Vector2d G;
-
-				G(0) = g1;
-      G(1) = g2;      
-
-      return G;
+		// Eigen::VectorXd G(2);
+		// G << g1, g2;
+				// G(0) = g1;
+      // G(1) = g2;      
+		// 
+PRX_DEBUG_PRINT
+      // return (Eigen::VectorXd(2) << g1, g2).finished();
+		return Eigen::VectorXd::Zero(2);
+      // return G;
 	}
 
 	double planar_2link_t::potential_energy()

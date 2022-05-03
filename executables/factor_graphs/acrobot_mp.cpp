@@ -118,6 +118,7 @@ int main(int argc, char* argv[])
 	{
 		prx_throw("Values initialization type not supported");
 	}
+	
 	fg_params.limits_factors = params["limits_factors"].as<bool>();
 	fg_params.num_steps = t_steps;
 	fg_params.goal_state_as_prior = params["goal_state_as_prior"].as<bool>();
@@ -130,7 +131,7 @@ int main(int argc, char* argv[])
 	fg_params.use_energy_factors = params["use_energy_factors"].as<bool>();
 
 	// Eigen::Map<Eigen::VectorXd> start_ev(start_v.data(), start_v.size());
-	fg_params.goal_factor_params.goal = Eigen::Map<Eigen::VectorXd>(goal_v.data(), goal_v.size());
+	// fg_params.goal_factor_params.goal = Eigen::Map<Eigen::VectorXd>(goal_v.data(), goal_v.size());
 	auto error_scale = params["/plant/error_scale"].as<std::vector<double>>();
 	fg_params.goal_factor_params.error_scale = Eigen::Map<Eigen::VectorXd>(error_scale.data(), error_scale.size());
 	
@@ -145,7 +146,7 @@ int main(int argc, char* argv[])
 
 	fg_params.print();
 	auto graph = tfg.get_fg(fg_params);
-
+PRX_DEBUG_PRINT
 	gtsam::LevenbergMarquardtParams lm_params;
 	lm_params.setVerbosityLM("SUMMARY");
 	lm_params.setlambdaUpperBound(1e32);
@@ -162,12 +163,14 @@ int main(int argc, char* argv[])
 	// graph.print("Printing graph: ", prx::key_formatter);
 	// graph.printErrors(init_vals, "NonlinearFactorGraph: ", prx_key_formatter);
 	// 
+PRX_DEBUG_PRINT
 	std::string file_prefix = out_path + "fg_" + params["/plant/name"].as<>();
 	fg_logger_t lg(file_prefix + "_log.txt", ' ', "-");
 	int outer_iters = params["outer_iters"].as<int>();
 	// const gtsam::Values results;
 	int total_iters = 0;
 	double last_error = 0;
+PRX_DEBUG_PRINT
 	for (int i = 0; i < outer_iters; ++i)
 	{
 		gtsam::LevenbergMarquardtOptimizer optimizer(graph, init_vals, lm_params);

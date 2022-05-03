@@ -70,7 +70,8 @@ namespace prx
 		// w2_tr.translation() = (vector_t(0,0.1375,0));
     	R = 0.125;
     	mu[0] = mu[1] = mu[2] = mu[3] = 1;
-		set_integrator(integrator_t::kRK4);
+		// set_integrator(integrator_t::kRK4);
+		set_integrator(integrator_t::kEULER);
 		state = state_space -> make_point();
 		ctrl = input_control_space -> make_point();
 	}
@@ -181,10 +182,10 @@ namespace prx
 	void omnirobot_FO_t::compute_derivative()
 	{
 		// U << w1, w2, w3, w4;
-    	U[0] =  w1 * (1. - (mu[0] * mass * gravity * radius) / (4. * stall_torque));
-    	U[1] =  w2 * (1. - (mu[1] * mass * gravity * radius) / (4. * stall_torque));
-    	U[2] =  w3 * (1. - (mu[2] * mass * gravity * radius) / (4. * stall_torque));
-    	U[3] =  w4 * (1. - (mu[3] * mass * gravity * radius) / (4. * stall_torque));
+    	U[0] =  w1 * (1. - (0 * mass * gravity * radius) / (4. * stall_torque));
+    	U[1] =  w2 * (1. - (0 * mass * gravity * radius) / (4. * stall_torque));
+    	U[2] =  w3 * (1. - (0 * mass * gravity * radius) / (4. * stall_torque));
+    	U[3] =  w4 * (1. - (0 * mass * gravity * radius) / (4. * stall_torque));
 		
 		Xd = Dp * U; // (3x4) * (4x1)
 		x_d = Xd[0];

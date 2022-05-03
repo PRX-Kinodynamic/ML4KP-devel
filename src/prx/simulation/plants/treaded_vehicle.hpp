@@ -35,8 +35,8 @@ namespace prx
 		double delta_x, delta_y, cell_size;	// global to local space conversion for cost map
 		bool use_cost_map;
 	private:
-		std::vector<double> lower_bound = {-11,-11,-3.15,-.7,-.7};
-		std::vector<double> upper_bound = {11,11,3.15,.7,.7};
+		std::vector<double> lower_bound = {-20,-20,-M_PI,-.7,-.7};
+		std::vector<double> upper_bound = { 20, 20, M_PI,.7,.7};
 		friend system_factory_t;
 	};
 

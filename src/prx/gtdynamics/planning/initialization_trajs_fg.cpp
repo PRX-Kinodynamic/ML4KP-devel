@@ -187,6 +187,7 @@ namespace prx
 		return values;
 	}
 
+	// TODO: Change _sys_ptr to system_group?
 	gtsam::Values initialization_trajs_fg_t::init_from_traj(const system_ptr_t _sys_ptr, const trajectory_t& traj, const plan_t& plan)
 	{
 		gtsam::Values values;
@@ -196,19 +197,40 @@ namespace prx
 	
 		auto x_dim = ss -> get_dimension();
 		auto u_dim = cs -> get_dimension();
-	
+		
 		int t = 0;
+		int last = traj.size();
 		for (auto state : traj)
 		{
-			auto xi_sy = prx_symbol_t::state_symbol(t);
-			// std::cout << std::string(xi_sy) << std::endl;
+			prx_symbol_t xi;
+			
+			
+			if (t == 0)
+			{
+				std::cout << "X0: " << state << std::endl;
+			// 	xi = symbol_factory_t::create_symbol("start_state_symbol");
+			}
+			// else if (t == last -1)
+			// {
+			// 	xi = symbol_factory_t::create_symbol("goal_symbol");
+
+			// }
+			// else
+			// {
+				xi = prx_symbol_t::state_symbol(t);
+				// auto xi_sy = prx_symbol_t::state_symbol(t);
+				// std::cout << std::string(xi_sy) << std::endl;
+
+			// }
 			Eigen::VectorXd vs = gtsam::Vector::Zero(x_dim);
 			ss -> copy_vector_from_point(vs, state);
-			values.insert(xi_sy, vs);
+			values.insert(xi, vs);
 
+			// std::cout << "vs: " << vs.transpose() << std::endl;
 			t++;
 		}
 
+		std::cout << "Last t: " << t << std::endl;
 		t = 0; 
 		for (auto step : plan)
 		{

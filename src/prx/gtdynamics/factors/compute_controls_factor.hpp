@@ -50,21 +50,70 @@ class compute_controls_factor_t : public gtsam::NoiseModelFactor2<Eigen::VectorX
 
         public:
             Eigen::VectorXd compute_error(
-                Eigen::VectorXd xt0, Eigen::VectorXd ut1) const
+                const Eigen::VectorXd& xt0, const Eigen::VectorXd& ut1) const
             {
                 auto ss = system_ptr -> get_state_space();
                 auto cs = system_ptr -> get_control_space();
                 auto ss_dim = ss -> get_dimension();
                 auto cs_dim = cs -> get_dimension();
+                Eigen::VectorXd error(cs_dim);
 
-                ss -> copy_from_vector(xt0);
+                // ss -> copy_from_vector(xt0);
+    double mass = 1.0;
+        double g = 9.81;
+        double l1 = 1.0;
+        double l2 = 1.0;
+        double I1 = 0.2;
+        double I2 = 1.0;
+        double d1 = 1.0; // Damping
+        double d2 = 1.0; 
+    const double theta2 = xt0[1];
+      const double theta1 = xt0[0] - M_PI / 2.0;
+      const double theta1dot = xt0[2];
+      const double theta2dot = xt0[3];
+        
+      const double lc1 = l1 / 2.0; 
+      const double lc2 = l2 / 2.0;
+      // TODO: Change to m1 & m2
+      double m = mass;
 
-                auto M = system_ptr -> get_mass_matrix();
-                auto C = system_ptr -> get_coriolis_vector();
-                auto G = system_ptr -> get_gravity_vector();
-                Eigen::VectorXd u = M + C + G;
+       Eigen::Vector2d th_dot;
+      Eigen::Matrix2d M;
 
-                return ut1 - u;
+            const double d11 = m * lc1 * lc1 + m * (l1 * l1 + lc2 * lc2 + 2 * l1 * lc1 * cos(theta2)) + I1 + I2;
+        const double d22 = m * lc2 * lc2 + I2;
+      const double d12 = m * (lc2 * lc2 + l1 * lc2 * cos(theta2)) + I2;
+      const double d21 = d12;
+
+      const double c1 = -m * l1 * lc2 * theta2dot * theta2dot * sin(theta2) - (2.0 * m * l1 * lc2 * theta1dot * theta2dot * sin(theta2));
+      const double c2 =  m * l1 * lc2 * theta1dot * theta1dot * sin(theta2);
+
+        Eigen::Vector2d C;
+        Eigen::Vector2d G;
+            C(0) = c1;
+      C(1) = c2;
+
+      th_dot(0) = theta1dot;
+      th_dot(1) = theta2dot;
+      M(0,0) = d11;
+      M(1,0) = d21;
+      M(0,1) = d12;
+      M(1,1) = d22;
+
+      const double g1 = (m * lc1 + m * l1) * g * cos(theta1) + (m * lc2 * g * cos(theta1 + theta2));
+      const double g2 = m * lc2 * g * cos(theta1 + theta2);
+      G << g1,g2;
+                // auto M = system_ptr -> get_mass_matrix();
+                // auto C = system_ptr -> get_coriolis_vector();
+                // Eigen::VectorXd G = system_ptr -> get_gravity_vector();
+                Eigen::VectorXd u = M * th_dot + C + G;
+                // Eigen::VectorXd u = G ;
+                // Eigen::VectorXd u = Eigen::VectorXd::Zero(cs_dim);
+                // std::cout << "u: " << u.transpose() << std::endl;
+                // std::cout << "ut1: " << ut1.transpose() << std::endl;
+                error = ut1 - u;
+// PRX_DEBUG_PRINT
+                return error;
                 // cs -> copy_from_vector(ut1);
                 // system_ptr -> compute_control();
 
@@ -84,7 +133,7 @@ class compute_controls_factor_t : public gtsam::NoiseModelFactor2<Eigen::VectorX
         boost::optional<gtsam::Matrix&> H1 = boost::none, 
         boost::optional<gtsam::Matrix&> H2 = boost::none) const override 
     {
-        auto error = compute_error(X1, X2);
+        // auto error = compute_error(X1, X2);
         // std::cout << "prop error: " << error.transpose() << std::endl;
         if (H1)
         {
@@ -101,7 +150,7 @@ class compute_controls_factor_t : public gtsam::NoiseModelFactor2<Eigen::VectorX
                             X1, std::placeholders::_1);
             *H2 = math_functions::differentiate(fp, X2);
         }
-        return error;
+        return compute_error(X1, X2);
     }
 
     //// @return a deep copy of this factor

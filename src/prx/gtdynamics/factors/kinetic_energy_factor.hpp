@@ -32,8 +32,8 @@ namespace prx
       	kinetic_energy_factor_t(const gtsam::noiseModel::Base::shared_ptr &cost_model,
       		gtsam::Key xt_key,
       		system_ptr_t _sys_ptr, 
+      		Eigen::VectorXd& _goal,
       		int _ti,
-      		// Eigen::VectorXd& goal
       		goal_factor_params_t _params
       		)
       		: Base(cost_model, xt_key)
@@ -49,7 +49,7 @@ namespace prx
 			// T = _params.T;
 			theta = _params.theta;
 			
-			ss -> copy_from_vector(_params.goal);
+			ss -> copy_from_vector(_goal);
 			energy_goal = _sys_ptr -> kinetic_energy();
 			std::cout << "kinetic_energy: " << energy_goal << std::endl;
   		}

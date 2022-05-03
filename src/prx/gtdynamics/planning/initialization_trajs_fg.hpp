@@ -14,6 +14,7 @@
 #include "prx/utilities/general/zipped_iter.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 
+#include "prx/gtdynamics/utilities/symbols_factory.hpp"
 #include "prx/gtdynamics/utilities/prx_symbols.hpp"
 #include "prx/simulation/system_group.hpp"
 namespace prx

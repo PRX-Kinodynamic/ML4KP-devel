@@ -31,9 +31,9 @@ namespace prx
       	potential_energy_factor_t(const gtsam::noiseModel::Base::shared_ptr &cost_model,
       		gtsam::Key xt_key,
       		system_ptr_t _sys_ptr, 
+      		Eigen::VectorXd& _goal,
       		double _ti,
       		goal_factor_params_t _params
-      		// Eigen::VectorXd& goal
       		)
       		: Base(cost_model, xt_key)
       	{
@@ -47,7 +47,7 @@ namespace prx
 			t_i = _ti;
 			theta = _params.theta;
 			
-			ss -> copy_from_vector(_params.goal);
+			ss -> copy_from_vector(_goal);
 			energy_goal = _sys_ptr -> potential_energy();
 			std::cout << "potential_energy: " << energy_goal << std::endl;
 
