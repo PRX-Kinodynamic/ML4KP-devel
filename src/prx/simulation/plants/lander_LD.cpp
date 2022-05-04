@@ -3,7 +3,7 @@
 namespace prx
 {
 
-	lander_LD_t::lander_LD_t(const std::string& path) : ltv_t(path)
+	lander_LD_t::lander_LD_t(const std::string& path) : plant_t(path)
 	{
 		m=h=h_dot=0;
 		state_memory = {&h,&h_dot,&m};
@@ -70,9 +70,9 @@ namespace prx
 		m_dot = -k * _alpha;
 	}
 
-    bool lander_LD_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
-    {
-		return ltv_t::linearize(xt, ut, epsilon);
-    }
+  //   bool lander_LD_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
+  //   {
+		// return ltv_t::linearize(xt, ut, epsilon);
+  //   }
 
 }

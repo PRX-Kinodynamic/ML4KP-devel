@@ -31,7 +31,8 @@ void acrobot_check()
     std::vector<double> v = {mass,g,l1,l2,I1,I2,d1,d2,viz_length};
     ps -> copy_from_vector(v);
     
-    auto acrobot = std::dynamic_pointer_cast<prx::two_link_acrobot_t>(plant);
+    // auto acrobot = std::dynamic_pointer_cast<prx::two_link_acrobot_t>(plant);
+    auto acrobot = std::make_shared<prx::ltv_t>(plant);
 
     acrobot -> linearize();
 PRX_DEBUG_PRINT
@@ -79,12 +80,13 @@ PRX_DEBUG_PRINT
     Q.diagonal() << 10, 10, 1, 1;
     std::cout << "Q:" << Q << std::endl;
     Eigen::MatrixXd R = Eigen::MatrixXd::Identity(1,1);
-    prx::lqr_t lqr(acrobot, Q, R, "LQR");
-    lqr.compute_K();
-    Eigen::MatrixXd K = lqr.get_K();
-    std::cout << "A: " << acrobot -> get_A() << std::endl;
-    std::cout << "B: " << acrobot -> get_B() << std::endl;
-    std::cout << "K: " << K << std::endl;
+    
+    // prx::lqr_t lqr(acrobot, Q, R, "LQR");
+    // lqr.compute_K();
+    // Eigen::MatrixXd K = lqr.get_K();
+    // std::cout << "A: " << acrobot -> get_A() << std::endl;
+    // std::cout << "B: " << acrobot -> get_B() << std::endl;
+    // std::cout << "K: " << K << std::endl;
 
     std::cout << "Acrobot OK" << std::endl;
 }

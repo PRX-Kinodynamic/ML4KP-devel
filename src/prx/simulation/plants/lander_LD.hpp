@@ -5,7 +5,7 @@
 
 namespace prx
 {
-	class lander_LD_t : public ltv_t
+	class lander_LD_t : public plant_t
 	{
 	public:
 		lander_LD_t(const std::string& path);
@@ -15,7 +15,7 @@ namespace prx
 
 		virtual void update_configuration() override;
 
-    	virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon) override;
+    	// virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon) override;
 
 
 	protected:

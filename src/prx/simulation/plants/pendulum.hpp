@@ -5,7 +5,7 @@
 
 namespace prx
 {
-	class pendulum_t : public ltv_t
+	class pendulum_t : public plant_t
 	{
 	public:
 		pendulum_t(const std::string& path);
@@ -15,9 +15,10 @@ namespace prx
 
 		virtual void update_configuration() override;
 
-		virtual bool linearize() override final;
+		// virtual bool linearize() override final;
+		virtual bool linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D, space_point_t xt = nullptr, space_point_t ut = nullptr, double epsilon = 1e-3) override final;
 
-        virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) override final;
+        // virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) override final;
 
 	protected:
 

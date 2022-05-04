@@ -5,7 +5,7 @@
 
 namespace prx 
 {
-    class quadrotor_1d_t : public ltv_t 
+    class quadrotor_1d_t : public plant_t 
     {
         public:
         quadrotor_1d_t(const std::string& path);

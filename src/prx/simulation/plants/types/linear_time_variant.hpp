@@ -16,15 +16,28 @@ namespace prx
         ltv_t(const ltv_t& other) = default;
         ltv_t(std::string _path);
 
+        ltv_t(const system_ptr_t& _sys_ptr)
+            : lti_t(_sys_ptr)
+        {
+        }
+
         virtual ~ltv_t();
 
+        using lti_t::linearize;
         /**
          * @brief      Generate the analitical linearization of the system around xt and ut. This is 
          *             populate matrices A, B.
          *
          * @return     True if successful.
          */
-        virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3);
+        // virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) override
+        virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3)
+        {
+
+            if (plant -> linearize(A, B, C, D, xt, ut, epsilon))
+                return true;
+            return linearize_numerical(xt, ut, epsilon);
+        }
 
 
         // Eigen::MatrixXd get_A() const {return A;};
@@ -32,6 +45,8 @@ namespace prx
 
 
         protected:
+
+        virtual bool linearize_numerical(space_point_t xt, space_point_t ut, double epsilon = 1e-3);
 
         virtual void compute_derivative() override
         {

@@ -4,16 +4,14 @@ namespace prx
 {
 	ltv_t::ltv_t(std::string _path) : lti_t(_path)
 	{
-		
 	}
 	
 	ltv_t::~ltv_t()
 	{
 	}
 
-    bool ltv_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
+    bool ltv_t::linearize_numerical(space_point_t xt, space_point_t ut, double epsilon)
     {
-    	// PRX_DEBUG_PRINT
     	unsigned ss_dim = get_state_space() -> get_dimension(); 
     	unsigned cs_dim = get_control_space() -> get_dimension(); 
     	if (x.size() == 0 || u.size() == 0) 

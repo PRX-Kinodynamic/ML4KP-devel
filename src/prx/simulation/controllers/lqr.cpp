@@ -8,12 +8,11 @@ namespace prx
 	{
 
 	}
-
 	
 	void lqr_t::compute_K()
 	{
-		Eigen::MatrixXd A = lti -> get_A();
-		Eigen::MatrixXd B = lti -> get_B();
+		Eigen::MatrixXd A = ltv -> get_A();
+		Eigen::MatrixXd B = ltv -> get_B();
 		Eigen::MatrixXd S = care::solve(A, B, Q, R);
 		K = R.inverse() * (B.transpose() * S);
 

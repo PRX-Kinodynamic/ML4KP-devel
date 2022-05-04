@@ -7,7 +7,7 @@
 
 namespace prx
 {
-	class two_link_acrobot_t : public ltv_t
+	class two_link_acrobot_t : public plant_t
 	{
 	public:
 		two_link_acrobot_t(const std::string& path);
@@ -17,9 +17,10 @@ namespace prx
 
 		virtual void update_configuration() override;
 
-		virtual bool linearize() override final;
+		// virtual bool linearize() override final;
 
-        bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) override;
+		virtual bool linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D, space_point_t xt = nullptr, space_point_t ut = nullptr, double epsilon = 1e-3) override final;
+        // bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) override;
 
 	protected:
 

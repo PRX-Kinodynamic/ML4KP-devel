@@ -26,16 +26,17 @@ void pendulum_check()
     
     auto Q = Eigen::MatrixXd::Identity(2,2);
     auto R = Eigen::MatrixXd::Identity(1,1);
-    auto pendulum = std::dynamic_pointer_cast<prx::pendulum_t>(plant);
+    // auto pendulum = std::dynamic_pointer_cast<prx::pendulum_t>(plant);
+    // auto pendulum = std::make_shared<prx::lti_t>(plant);
+    // pendulum -> linearize();
 
-    pendulum -> linearize();
-
-    prx::lqr_t lqr(pendulum, Q, R, "LQR");
+    prx::lqr_t lqr(plant, Q, R, "LQR");
+    lqr.set_goal(Eigen::VectorXd::Zero(2));
     lqr.compute_K();
     Eigen::MatrixXd K = lqr.get_K();
-    std::cout << "A: " << pendulum -> get_A() << std::endl;
-    std::cout << "B: " << pendulum -> get_B() << std::endl;
-    std::cout << "K: " << K << std::endl;
+    // std::cout << "A: " << lqr.get_linearized_plant -> get_A() << std::endl;
+    // std::cout << "B: " << lqr.get_linearized_plant -> get_B() << std::endl;
+    // std::cout << "K: " << K << std::endl;
 
     BOOST_CHECK(prx::are_approx_equal(K(0,0), 7.39050619, 1e-5));
     BOOST_CHECK(prx::are_approx_equal(K(0,1), 2.60611851, 1e-5));
@@ -71,19 +72,18 @@ void acrobot_check()
     Q.diagonal() << 10, 10, 1, 1;
     // auto Q = diagonal.asDiagonal(); //Eigen::MatrixXd::Identity(4,4);
     Eigen::MatrixXd R = Eigen::MatrixXd::Identity(1,1);
-    auto acrobot = std::dynamic_pointer_cast<prx::two_link_acrobot_t>(plant);
-
-    std::cout << "Q: " << Q << std::endl;
-    acrobot -> linearize();
-PRX_DEBUG_PRINT
-    std::cout << "A: " << acrobot -> get_A() << std::endl;
-    std::cout << "B: " << acrobot -> get_B() << std::endl;
-    prx::lqr_t lqr(acrobot, Q, R, "LQR");
-PRX_DEBUG_PRINT
+    // auto acrobot = std::dynamic_pointer_cast<prx::two_link_acrobot_t>(plant);
+    // auto acrobot = std::make_shared<prx::lti_t>(plant);
+    auto goal_pt = ss -> make_point();
+    (*goal_pt)[0] = PRX_PI;
+    // std::cout << "Q: " << Q << std::endl;
+    // acrobot -> linearize();
+    // std::cout << "A: " << acrobot -> get_A() << std::endl;
+    // std::cout << "B: " << acrobot -> get_B() << std::endl;
+    prx::lqr_t lqr(plant, Q, R, "LQR");
+    lqr.set_goal(goal_pt);
     lqr.compute_K();
-PRX_DEBUG_PRINT
     Eigen::MatrixXd K = lqr.get_K();
-PRX_DEBUG_PRINT
     
     std::cout << "K: " << K << std::endl;
 
@@ -114,8 +114,8 @@ PRX_DEBUG_PRINT
     std::cout << "A from matlab: " << A_from_matlab << std::endl;
     std::cout << "B from matlab: " << B_from_matlab << std::endl;
     PRX_DEBUG_PRINT 
-    BOOST_CHECK(prx::are_matrices_approx_equal(acrobot -> get_A(), A_from_matlab, 1e-5));
-   BOOST_CHECK(prx::are_matrices_approx_equal(acrobot -> get_B(), B_from_matlab, 1e-5));
+    BOOST_CHECK(prx::are_matrices_approx_equal(lqr.get_linearized_plant() -> get_A(), A_from_matlab, 1e-5));
+   BOOST_CHECK(prx::are_matrices_approx_equal(lqr.get_linearized_plant() -> get_B(), B_from_matlab, 1e-5));
    BOOST_CHECK(prx::are_matrices_approx_equal(K, K_from_matlab, 1e-5));
 
     // BOOST_CHECK(prx::are_approx_equal(K(0,0), 7.39050619, 1e-5));

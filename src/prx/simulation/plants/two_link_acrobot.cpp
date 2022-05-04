@@ -4,7 +4,8 @@
 namespace prx
 {
 
-	two_link_acrobot_t::two_link_acrobot_t(const std::string& path) : ltv_t(path)
+	two_link_acrobot_t::two_link_acrobot_t(const std::string& path) 
+		: plant_t(path)
 	{
 		_theta1=_theta2=_theta1dot=_theta2dot=0;
 		state_memory = {&_theta1,&_theta2,&_theta1dot,&_theta2dot};
@@ -124,8 +125,13 @@ namespace prx
         _theta2dotdot = theta2dot_dot;
 	}
 
-	bool two_link_acrobot_t::linearize()
+	// bool two_link_acrobot_t::linearize()
+	bool two_link_acrobot_t::linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D, space_point_t xt, space_point_t ut, double epsilon)
 	{
+		if ( xt != nullptr && ut != nullptr &&
+    		 xt -> at(0) != PRX_PI && xt -> at(1) != 0 && xt -> at(2) != 0 && xt -> at(3) != 0)
+				return false;
+			
 		constexpr double q1 = PRX_PI;
     	constexpr double q2 = 0;
     	constexpr double dq1 = 0;
@@ -167,12 +173,12 @@ namespace prx
        return true;
 	}
 
-	bool two_link_acrobot_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
-   {
-    	if ( xt -> at(0) == PRX_PI && xt -> at(1) == 0 && xt -> at(2) == 0 && xt -> at(3) == 0)
-    	{
-    		return linearize();
-    	}
-		return ltv_t::linearize(xt, ut, epsilon);
-   }
+	// bool two_link_acrobot_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
+ //   {
+ //    	if ( xt -> at(0) == PRX_PI && xt -> at(1) == 0 && xt -> at(2) == 0 && xt -> at(3) == 0)
+ //    	{
+ //    		return linearize();
+ //    	}
+	// 	return ltv_t::linearize(xt, ut, epsilon);
+ //   }
 }
