@@ -1,7 +1,10 @@
 #pragma once
 
+#include <Eigen/Core>
 #include "prx/utilities/general/constants.hpp"
 #include "prx/utilities/general/prx_assert.hpp"
+
+
 namespace prx 
 {
 

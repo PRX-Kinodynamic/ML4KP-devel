@@ -42,7 +42,8 @@ namespace prx
             iteration++;
         } while (iteration < max_iterations && relative_norm > PRX_EPSILON);
 
-        prx_assert( !std::isnan(Z.template maxCoeff<Eigen::PropagateNaN>()), "CARE: Matrix contains NaNs!" );
+//        This seems to not be available in Eigen < 3.4... but the check is usefull
+//        prx_assert( !std::isnan(Z.template maxCoeff<Eigen::PropagateNaN>()), "CARE: Matrix contains NaNs!" );
 
         Eigen::MatrixXd W11 = Z.block(0, 0, n, n);
         Eigen::MatrixXd W12 = Z.block(0, n, n, n);
