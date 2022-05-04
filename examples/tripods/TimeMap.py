@@ -127,7 +127,7 @@ class TimeMap:
             u_goal[0] = 0
             u_goal[1] = 1
 
-            self.plant.linearize(self.goal_state, u_goal)
+            # self.plant.linearize(self.goal_state, u_goal)
 
             Q = prx.matrix.Identity(ss_dim, ss_dim)
             R = prx.matrix.Identity(cs_dim, cs_dim)
@@ -137,7 +137,7 @@ class TimeMap:
                 Q[i, i] = q_vec[i]
 
             self.lqr = prx.lqr(self.plant, Q, R, "LQR")
-            self.lqr.set_goal(self.goal_state)
+            self.lqr.set_goal(self.goal_state, u_goal)
             self.lqr.compute_K()
 
         if system_type == "ackermann_lc":
@@ -203,11 +203,11 @@ class TimeMap:
         self.ss.copy_to_point(self.start_state)
 
         if self.lqr == None:
-            self.plant.linearize(self.goal_state, self.u_goal)
             self.Q = prx.matrix.Identity(2, 2)
             self.R = prx.matrix.Identity(1, 1)
             self.lqr = prx.lqr(self.plant, self.Q, self.R, "LQR")
-            self.lqr.set_goal(self.goal_state)
+            self.lqr.set_goal(self.goal_state, self.u_goal)
+            # self.lqr.set_goal(self.goal_state)
             self.lqr.compute_K()
             self.K = self.lqr.get_K()
             #self.ps[1] = self.params["/plant/friction"].as_float()
@@ -229,7 +229,7 @@ class TimeMap:
         self.ss.copy_to_point(self.start_state)
 
         if self.lqr == None:
-            self.plant.linearize()
+            # self.plant.linearize()
             self.Q = prx.matrix.Identity(4, 4)
             self.Q[0, 0] = 10
             self.Q[1, 1] = 10

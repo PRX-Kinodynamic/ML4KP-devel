@@ -4,6 +4,8 @@ import torch
 import libpyDirtMP as prx 
 import numpy as np 
 
+# from inspect import currentframe, getframeinfo
+
 class NoisyTimeMap:
 
     def g_func(self, X):
@@ -28,6 +30,7 @@ class NoisyTimeMap:
         self.R = None
         self.K = None
         self.controller = None
+        self.noisy_plant = None
 
         self.simulation_step = params["simulation_step"].as_float()
         prx.set_simulation_step(self.simulation_step)
@@ -75,7 +78,6 @@ class NoisyTimeMap:
 
         self.radius = params["goal_region_radius"].as_float()
 
-
         self.x_0_noise = None 
         self.f_noise = None 
         self.u_t_noise = None 
@@ -91,12 +93,7 @@ class NoisyTimeMap:
         self.t_noise   = self.init_noise("/plant/t_noise",   "/plant/t_noise_params"  );
         self.f_noise   = self.init_noise("/plant/f_noise",   "/plant/f_noise_params"  );
 
-        # if system_type == "pendulum_lc":
-        #     controller_path = params["controller_path"].as_string()
-        #     controller_path = prx.lib_path + controller_path
-        #     self.controller = torch.load(controller_path)
-        #     self.controller.eval()
-        #     torch.manual_seed(params["random_seed"].as_int())
+
     def init_noise(self, noise_type_pn, noise_params_pn):
         prx_noise = None
         noise_type = self.params[noise_type_pn].as_string()
@@ -107,6 +104,17 @@ class NoisyTimeMap:
         else:
             print("Noise: ", noise_type, " not supported")
         return prx_noise
+
+    def get_noisy_system(self):
+        noise_type = self.params["/plant/f_noise"].as_string()
+        if noise_type == "uniform":
+            noise_params = self.params["/plant/f_noise_params"].as_float_vector()
+            self.noisy_plant = prx.uniform_noisy_plant(self.plant, noise_params[0], noise_params[1]);
+        elif noise_type == "None":
+            self.noisy_plant = self.plant
+        else:
+            print("Noise: ", noise_type, " not supported")
+            exit(-1)
 
     def get_noisy_controller(self):
         noise_type = self.params["/plant/u_t_noise"].as_string()
@@ -119,23 +127,6 @@ class NoisyTimeMap:
             print("Noise: ", noise_type, " not supported")
             exit(-1)
 
-        # if params["u_t_noise"].as_string() == "uniform":
-        #     noise_params = params["u_t_noise_params"].as_float_vector()
-        #     self.u_t_noise = prx.uniform_noise(
-        #         noise_params[0], noise_params[1])
-        
-        # if params["t_noise"].as_string() == "uniform":
-        #     noise_params = params["t_noise_params"].as_float_vector()
-        #     self.t_noise = prx.uniform_noise(
-        #         noise_params[0], noise_params[1])
-
-        
-
-        
-        # if params["f_noise"] == "uniform":
-        #     noise_params = params["f_noise_params"].as_float_vector()
-        #     self.f_noise = prx.uniform_noise(
-        #         noise_params[0], noise_params[1])
     def check_goal_reached(self, dim):
         return prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, dim) <= self.radius
 
@@ -194,22 +185,28 @@ class NoisyTimeMap:
         return self.end_state.to_list()
     
     def pendulum_lqr(self, X):
+
         self.ss.copy_point_from_vector(self.start_state,X)
         if self.x_0_noise is not None:
             self.x_0_noise.add_noise(self.start_state)
         self.ss.copy_from_point(self.start_state)
         self.ss.enforce_bounds()
 
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
         if self.controller == None:
-            self.plant.linearize(self.goal_state, self.u_goal)
             self.Q = prx.matrix.Identity(2, 2)
             self.R = prx.matrix.Identity(1, 1)
-            self.controller_base = prx.lqr(self.plant, self.Q, self.R, "LQR")
-            self.controller_base.set_goal(self.goal_state)
+            self.controller_base = prx.lqr(self.noisy_plant, self.Q, self.R, "LQR")
+            self.controller_base.set_goal(self.goal_state, self.u_goal)
+            # self.controller_base.set_goal(self.goal_state)
             self.controller_base.compute_K()
             self.get_noisy_controller()
             # if self.u_t_noise is not None:
             #     self.controller = prx.noisy_uniform_controller
+
+
 
         total_time = self.duration
         if self.t_noise is not None:
@@ -220,40 +217,4 @@ class NoisyTimeMap:
         # print("Before propagate: ", self.start_state)
         self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
         # print("After propagate: ", self.end_state)
-        return self.end_state.to_list()
-
-
-    def pendulum_lqr_old(self, X):
-        self.ss.copy_point_from_vector(self.start_state,X)
-        if self.x_0_noise is not None:
-            self.x_0_noise.add_noise(self.start_state)
-        self.ss.copy_from_point(self.start_state)
-        self.ss.enforce_bounds()
-
-        if self.controller == None:
-            self.plant.linearize(self.goal_state, self.u_goal)
-            self.Q = prx.matrix.Identity(2, 2)
-            self.R = prx.matrix.Identity(1, 1)
-            self.controller = prx.lqr(self.plant, self.Q, self.R, "LQR")
-            self.controller.set_goal(self.goal_state)
-            self.controller.compute_K()
-            self.K = self.controller.get_K()
-            #self.ps[1] = self.params["/plant/friction"].as_float()
-
-        total_time = self.time_step
-        if self.t_noise is not None:
-            self.t_noise.add_noise(total_time) 
-        duration_so_far = 0
-        while duration_so_far <= total_time and not self.check_goal_reached(2):
-            self.controller.compute_controls(self.ctrl)
-            if self.u_t_noise is not None:
-                self.u_t_noise.add_noise(self.ctrl)
-            self.cs.copy_from_point(self.ctrl)
-            self.cs.enforce_bounds()
-            self.plant.propagate(self.simulation_step)
-            self.ss.copy_to_point(self.start_state)
-
-            duration_so_far += self.simulation_step
-
-        self.ss.copy_to_point(self.end_state)
         return self.end_state.to_list()

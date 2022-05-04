@@ -3,12 +3,12 @@ simulation_step: 0.01
 
 plant: !file "plants/pendulum.yaml"
 
-goal_region_radius: 0.5
+goal_region_radius: 0.1
 
 duration: 5
 state_increment: 0.01
 system_name: "pendulum_lqr"
 # system_name: "pendulum_lc"
 out_dir: "roas/"
-file_name_suffix: "_00005.txt"
-num_samples: 100
+file_name_suffix: "_test.txt"
+num_samples: 10
