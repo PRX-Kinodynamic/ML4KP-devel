@@ -30,8 +30,8 @@ public:
 PRX_SETTER(plant_t, derivative_space)
 PRX_GETTER(plant_t, derivative_space)
 
-PRX_SETTER(plant_t, derivative_memory)
-PRX_GETTER(plant_t, derivative_memory)
+// PRX_SETTER(plant_t, derivative_memory)
+// PRX_GETTER(plant_t, derivative_memory)
 
 void pyprx_simulation_plant()
 {
@@ -54,8 +54,8 @@ void pyprx_simulation_plant()
       // .def("get_collision_list", &prx::plant_t::get_collision_list)
       .def("set_integrator", &prx::plant_t::set_integrator)
       .def("set_state_space_bounds", &prx::plant_t::set_state_space_bounds)
-      .def("get_derivative_space", &get_plant_t_derivative_space<prx::space_t*>, return_internal_reference<>())
-      .def("set_derivative_space", &set_plant_t_derivative_space<prx::space_t*>, return_internal_reference<>())
+      // .def("get_derivative_space", &get_plant_t_derivative_space<prx::space_t*>, return_internal_reference<>())
+      // .def("set_derivative_space", &set_plant_t_derivative_space<prx::space_t*>, return_internal_reference<>())
       // TODO: Add "std::vector<double*>" class
       // .def("derivative_memory", &get_plant_t_derivative_memory<std::vector<double*>>, &set_plant_t_derivative_memory<std::vector<double*>>)
    		;

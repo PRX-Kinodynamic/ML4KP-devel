@@ -25,6 +25,6 @@ void bind_noisy_controller(const std::string& name)
 
 void pyprx_simulation_controllers_noisy()
 {
-	bind_noisy_controller<std::normal_distribution<double>, double, double>("noisy_gaussian_controller_t");
+	bind_noisy_controller<std::normal_distribution<double>, double, double>("noisy_gaussian_controller");
 	bind_noisy_controller<std::uniform_real_distribution<double>, double, double>("noisy_uniform_controller");
 }

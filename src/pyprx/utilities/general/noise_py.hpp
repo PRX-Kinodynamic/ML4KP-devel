@@ -22,7 +22,7 @@ void add_noise_space_point_wrapper_1(T& noise, const prx::space_point_t& pt)
 }
 
 template <class T, class S>
-S add_noise_S_wrapper(T& noise, S v)
+S add_noise_S_wrapper(T& noise, S v) 
 {
 	return noise.add_noise(v);
 }
@@ -38,7 +38,7 @@ template <class T, class... Types >
 void bind_noise(const std::string& name)
 {
 	// void (T::*add_noise_space_point_wrapper_2)(const prx::space_point_t& pt, unsigned int start) = &T::add_noise;
-	void (T::*add_noise_space_point_wrapper)(const prx::space_point_t& pt, unsigned int start, unsigned int end) = &T::add_noise;
+	// void (T::*add_noise_space_point_wrapper)(const prx::space_point_t& pt, unsigned int start, unsigned int end) = &T::add_noise;
 	// void (T::*add_noise_space_point_wrapper_2)(const prx::space_point_t& pt, unsigned int start) = &T::add_noise;
 
 	// BOOST_PYTHON_FUNCTION_OVERLOADS(noise_add_noise_overloads, add_noise_space_point_wrapper, 1, 2);
