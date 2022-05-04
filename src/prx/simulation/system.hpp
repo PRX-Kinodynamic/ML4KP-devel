@@ -38,11 +38,11 @@ namespace prx
 		{
 			return state_space;
 		}
-		inline const space_t* get_control_space() const
+		inline space_t* get_control_space() const
 		{
 			return input_control_space;
 		}
-		inline const space_t* get_parameter_space() const
+		inline space_t* get_parameter_space() const
 		{
 			return parameter_space;
 		}
@@ -64,11 +64,19 @@ namespace prx
 		virtual void compute_stopping_maneuver(space_point_t, std::vector<double>&, std::vector<double>&);
 		virtual void finalize_system_tree()
 		{
+        	PRX_NOT_IMPLEMENTED
 			//default do nothing because you don't have any subsystems
 		}
 
         virtual void set_state_space_bounds(const std::vector<double>& lower,const std::vector<double>& upper)=0;
 
+        // virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) 
+
+		virtual bool linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D, space_point_t xt = nullptr, space_point_t ut = nullptr, double epsilon = 1e-3)
+        {
+        	PRX_NOT_IMPLEMENTED
+			return false;        	
+        };
 
 		inline std::string get_pathname()
 		{
@@ -96,7 +104,21 @@ namespace prx
 		space_t* state_space;
 		space_t* input_control_space;
 		space_t* parameter_space;
-	protected:
+
+		system_t(const system_ptr_t other)
+		{
+			state_space = other -> state_space;
+			input_control_space = other -> input_control_space;
+			parameter_space = other -> parameter_space;
+			parent_system = other -> parent_system;
+			pathname = other -> pathname;
+			system_type = other -> system_type;
+			owned_values = false;
+			// state_memory = other -> state_memory;
+			// control_memory = other -> control_memory;
+			// parameter_memory = other -> parameter_memory;
+
+		}
 
 		std::weak_ptr<system_t> parent_system;
 
@@ -113,6 +135,8 @@ namespace prx
 		std::vector<double*> state_memory;
 		std::vector<double*> control_memory;
 		std::vector<double*> parameter_memory;
+
+		bool owned_values;
 
 	private:
 		system_t(){}

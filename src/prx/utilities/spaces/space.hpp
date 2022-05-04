@@ -23,7 +23,7 @@ namespace prx
 
 	class space_snapshot_t 
 	{
-	public:
+		public:
 		
 		typedef std::vector<double>::iterator iterator;
 		typedef std::vector<double>::const_iterator const_iterator;
@@ -150,14 +150,14 @@ namespace prx
         	return os;
         }
 
-	protected:
+		protected:
 
 		const space_t* const parent;
 
 		std::vector<double> memory;
 
 		friend class space_t;
-	private:
+		private:
 		space_snapshot_t():parent(nullptr){memory.clear();}
 	};
 
@@ -243,35 +243,46 @@ namespace prx
 		 */
 		// void point_addition(const space_point_t& pt1, const space_point_t& pt2, const space_point_t& pt_res);
 
-		bool equal_points(const space_point_t& point1,const space_point_t& point2);
+		bool equal_points(const space_point_t& point1,const space_point_t& point2) const;
 
 		/**
 		 * @brief      Copy current state to a Eigen::VectorXd.
 		 *
 		 * @param[in]  Vector to copy the current space memory to.
 		 */
-		void copy_to_vector(Eigen::VectorXd& _v) const;
+		virtual void copy_to_vector(Eigen::VectorXd& _v) const;
 
 		/**
 		 * @brief      Copy from a Eigen::VectorXd.
 		 *
 		 * @param[in]  Vector to copy from.
 		 */
-		void copy_from_vector(const Eigen::VectorXd& _v) const;
+		virtual void copy_from_vector(const Eigen::VectorXd& _v) const;
 
 		/**
 		 * @brief      Copy from a std::vector<double>
 		 *
 		 * @param[in]  Vector to copy from.
 		 */
-		void copy_from_vector(const std::vector<double>& source) const;
+		// void copy_from_vector(const std::vector<double>& source) const;
 
+		/**
+		 * @brief      Copy current memory of the space to the given space point
+		 *
+		 * @param[in/out]  point  The point to copy to.
+		 */
+		virtual void copy_to_point(const space_point_t& point) const;
 
-		void copy_to_point(const space_point_t& point) const;
-		void copy_from_point(const space_point_t& point) const;
-		void copy_point(const space_point_t& destination,const space_point_t& source) const;
-		void copy_to_vector(std::vector<double>& destination) const;
-		void copy_from_vector(const std::vector<double>& source);
+		virtual void copy_from_point(const space_point_t& point) const;
+		virtual void copy_point(const space_point_t& destination,const space_point_t& source) const;
+		
+		/**
+		 * @brief      Copy current memory of the space to the given vector
+		 *
+		 * @param      destination  The std::vector to copy to
+		 */
+		virtual void copy_to_vector(std::vector<double>& destination) const;
+		virtual void copy_from_vector(const std::vector<double>& source);
 
 		void copy_point_from_vector(const space_point_t& destination, const std::vector<double>& source) const;
 		void copy_point_from_vector(const space_point_t& destination, Eigen::Ref<Eigen::VectorXd> source) const;
@@ -283,7 +294,7 @@ namespace prx
 		void enforce_bounds(const space_point_t& point) const;
 		void enforce_bounds() const;
 		bool satisfies_bounds(const space_point_t& point) const;
-		void sample(const space_point_t& point) const;
+		virtual void sample(const space_point_t& point) const;
 
 		inline std::string get_space_name() const
 		{
@@ -458,6 +469,26 @@ namespace prx
 
 
 	protected:
+		space_t(const space_t* other)
+		{
+			dimension = other -> dimension;
+			for (int i = 0; i < dimension; ++i)
+			{
+				addresses.push_back(other -> addresses[i]);
+				lower_bounds.push_back(other -> lower_bounds[i]);
+				upper_bounds.push_back(other -> upper_bounds[i]);
+				topology.push_back(other -> topology[i]);
+			}
+
+			// addresses = other -> addresses;
+			// lower_bounds = other -> lower_bounds;
+			// upper_bounds = other -> upper_bounds;
+			space_name = other -> space_name;
+			// topology = other -> topology;
+			owned_values = false;
+			// std::cout << "space_name: " << space_name << std::endl;
+		}
+
 		unsigned dimension;
 		std::vector<double*> addresses;
 		std::vector<double*> lower_bounds;

@@ -97,6 +97,8 @@ namespace prx
 
 	space_t::~space_t()
 	{
+		// std::cout << "space_name: " << space_name << std::endl;
+		// PRX_DEBUG_PRINT
 		if(owned_values)
 		{
 			for(auto d : lower_bounds)
@@ -108,7 +110,9 @@ namespace prx
 				delete d;
 			}
 		}
+		// PRX_DEBUG_PRINT
 	}
+
 	void space_t::set_bounds(const std::vector<double>& lower,const std::vector<double>& upper)
 	{
 		prx_assert(lower.size()==lower_bounds.size(),"Given lower bounds have size "<<lower.size()<<" while the space bounds have size "<<lower_bounds.size());
@@ -177,7 +181,7 @@ namespace prx
 		}
 	}
 
-	bool space_t::equal_points(const space_point_t& point1,const space_point_t& point2)
+	bool space_t::equal_points(const space_point_t& point1,const space_point_t& point2) const
 	{
 		prx_assert(point1->parent->space_name==point2->parent->space_name,"Points have different parent spaces: "<<point1->parent->space_name<<" and "<<point2->parent->space_name);
 		prx_assert(point1->parent->space_name==space_name,"Points and space have different names: "<<point1->parent->space_name<<" and "<<space_name);
@@ -222,15 +226,15 @@ namespace prx
 		}
 	}
 
-	void space_t::copy_from_vector(const std::vector<double>& source) const
-	{
-		prx_assert(source.size() == dimension, "Vector and space must have the same dimensions.");
-		for(unsigned i=0;i<dimension;++i)
-		{
-			// _v[i]=*addresses[i];
-			*addresses[i] = source[i];
-		}
-	}
+	// void space_t::copy_from_vector(const std::vector<double>& source) const
+	// {
+	// 	prx_assert(source.size() == dimension, "Vector and space must have the same dimensions.");
+	// 	for(unsigned i=0;i<dimension;++i)
+	// 	{
+	// 		// _v[i]=*addresses[i];
+	// 		*addresses[i] = source[i];
+	// 	}
+	// }
 
 
 	void space_t::copy_to_point(const space_point_t& point) const

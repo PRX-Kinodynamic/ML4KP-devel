@@ -9,6 +9,8 @@
 
 #define PRX_DEBUG_PRINT std::cout << __PRETTY_FUNCTION__ << ": " << __LINE__ << std::endl;
 
+#define PRX_NOT_IMPLEMENTED std::cout << PRX_COLOR_RED << __PRETTY_FUNCTION__ << " NOT IMPLEMENTED. Is an override needed?" << PRX_COLOR_NORMAL << std::endl;
+
 #define PRX_DEBUG_ITERABLE(msg, v) std::cout << "[DBG " << msg << "] "; for(auto e : v){std::cout << e << " ";}std::cout << std::endl;
 
 #define STR_TO_BOOL(VAL) (std::string(VAL)=="True" | std::string(VAL) == "true")
