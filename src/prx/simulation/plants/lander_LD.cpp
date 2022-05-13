@@ -8,11 +8,11 @@ namespace prx
 		m=h=h_dot=0;
 		state_memory = {&h,&h_dot,&m};
 		state_space = new space_t("EEE",state_memory,"lander_state");
-		state_space->set_bounds({0,-2*h_0,m_s},{2*h_0,2*h_0,m_s + fuel_0});
+		state_space->set_bounds({0,-2*h_0,M_0},{2*h_0,2*h_0,M_0 + fuel_0});
 		// state_space->set_bounds({-3.15,-3.15,-6,-6},{3.15,3.15,6,6});
 
-		alpha=0;
-		control_memory = {&alpha};
+		u=0;
+		control_memory = {&u};
 		input_control_space = new space_t("E",control_memory,"Thrust");
 		input_control_space->set_bounds({0},{1});
 
@@ -21,7 +21,7 @@ namespace prx
 		derivative_space = new space_t("EEE",derivative_memory,"lander_deriv");
 
 
-		parameter_memory = {&m_s,&k,&gravity};
+		parameter_memory = {&M_0,&k,&gravity};
 		parameter_space = new space_t("EEE", parameter_memory, "lander_params");
 
 		const double length = 20;
@@ -65,9 +65,9 @@ namespace prx
 	void lander_LD_t::compute_derivative()
 	{
 		// h_ddot = (-g * m + alpha ) / m;
-		double _alpha = m <= m_s ? 0 : alpha;
-		h_ddot = -gravity + _alpha / m;
-		m_dot = -k * _alpha;
+		double _u = m <= M_0 ? 0 : u;
+		h_ddot = -gravity - _u / m;
+		m_dot = -k * _u;
 	}
 
   //   bool lander_LD_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
