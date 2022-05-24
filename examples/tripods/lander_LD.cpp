@@ -38,7 +38,7 @@ controller_ptr_t create_controller(const system_ptr_t& _sys_ptr, param_loader& p
     Eigen::MatrixXd K = lqr -> get_K();
     std::cout << "K: " << K << std::endl;
     // K(0,0) = K(0,0) * 0.25;
-    lqr -> set_K(K);
+    lqr -> set_Q(K);
     std::cout << "K: " << K << std::endl;
     
     return lqr;
