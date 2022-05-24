@@ -141,6 +141,15 @@ namespace prx
         	return os;
         }
 
+        Eigen::VectorXd to_vector()
+        {
+        	Eigen::VectorXd v(memory.size());
+        	for (int i = 0; i < memory.size(); ++i)
+        	{
+        		v[i] = memory[i];
+        	}
+        	return v;
+        }
 
 	protected:
 
@@ -268,7 +277,7 @@ namespace prx
 		void copy_point_from_vector(const space_point_t& destination, const std::vector<double>& source) const;
 		void copy_point_from_vector(const space_point_t& destination, const Eigen::VectorXd& source) const;
 		void copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const;
-		void copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, const space_point_t& source) const;
+		void copy_vector_from_point(Eigen::VectorXd& destination, const space_point_t& source) const;
 
 		void copy_point_from_string(const space_point_t& destination, const std::string source, char sep = ' ') const;
 

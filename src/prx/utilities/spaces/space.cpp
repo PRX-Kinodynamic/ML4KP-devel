@@ -92,7 +92,6 @@ namespace prx
 			}
 		}
 		dimension = addresses.size();
-
 	}
 
 	space_t::~space_t()
@@ -313,7 +312,7 @@ namespace prx
 		}
 	}
 	
-	void space_t::copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, const space_point_t& source) const
+	void space_t::copy_vector_from_point(Eigen::VectorXd& destination, const space_point_t& source) const
 	{
 		prx_assert(source->parent->space_name==space_name,"Point and space have different names: "<<source->parent->space_name<<" and "<<space_name);
 		prx_assert(destination.size() == dimension,"Vector and point have different sizes - Vector: "<< destination.size() <<", point:"<<dimension);

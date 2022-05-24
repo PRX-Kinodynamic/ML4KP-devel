@@ -29,6 +29,7 @@ class space_limit_factor_t : public gtsam::NoiseModelFactor1<Eigen::VectorXd>
     using This = space_limit_factor_t;
     using Base = gtsam::NoiseModelFactor1<Eigen::VectorXd>;
     space_t* ss;
+    double epsilon;
 
     public:
     /**
@@ -40,10 +41,11 @@ class space_limit_factor_t : public gtsam::NoiseModelFactor1<Eigen::VectorXd>
      */
     space_limit_factor_t(gtsam::Key q_key,
         const gtsam::noiseModel::Base::shared_ptr &cost_model,
-        space_t* _ss)
+        space_t* _ss, double _epsilon = 0.001)
         : Base(cost_model, q_key)
     {
         ss = _ss;
+        epsilon = _epsilon;
     }
 
   virtual ~space_limit_factor_t() {}
@@ -61,9 +63,10 @@ class space_limit_factor_t : public gtsam::NoiseModelFactor1<Eigen::VectorXd>
         auto ss_dim = ss -> get_dimension();
         Eigen::VectorXd error = Eigen::VectorXd::Zero(ss_dim);
         Eigen::MatrixXd H_qp = Eigen::MatrixXd::Zero(ss_dim, ss_dim);
+
+        // std::cout << "q: " << q.transpose() << std::endl;
         for (int i = 0; i < ss_dim; ++i)
         {
-
             auto q = ss -> at(i);
             // TODO: incorporate limits in angles... e.i ackermann steering
             if ( ss -> topology_at(i) == space_t::topology_t::ROTATIONAL )
@@ -74,24 +77,23 @@ class space_limit_factor_t : public gtsam::NoiseModelFactor1<Eigen::VectorXd>
             }
             else // TODO: Other topologies?
             {
-                // std::cout << "q: " << q << "\t[ " << ss -> get_lower_bound(i);
-                // std::cout << ", "  << ss -> get_upper_bound(i) << " ]" << std::endl;
-
-
-                if ( q < ss -> get_lower_bound(i) )
+                if ( q < ss -> get_lower_bound(i) - epsilon )
                 {
+                    // std::cout << "LOWER: " << q << "\tbound: " << ss -> get_lower_bound(i) << std::endl;
                     H_qp(i,i) = -1;
                     // if (H_q) *H_q = -1 * Eigen::MatrixXd::Identity(ss_dim, ss_dim);
                     error[i] = ss -> get_lower_bound(i) - q;
                 }
-                else if ( q <= ss -> get_upper_bound(i) )
+                else if ( q <= ss -> get_upper_bound(i) + epsilon )
                 {
+                    // std::cout << "IN BOUNDS" << std::endl;
                     H_qp(i,i) = 0;
                     // if (H_q) *H_q = Eigen::MatrixXd::Zero(ss_dim, ss_dim);
                     error[i] = 0;
                 }
                 else
                 {
+                    // std::cout << "UPPER" << std::endl;
                     H_qp(i,i) = 1;
                     // if (H_q) *H_q = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
                     error[i] = q - ( ss -> get_upper_bound(i) );

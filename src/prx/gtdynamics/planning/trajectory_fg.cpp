@@ -136,7 +136,11 @@ namespace prx
 		{
 			graph.add(add_state_propagation_factor(t));
 		}
-		else
+		// else if (prop_type == 6)
+		// {
+		// 	graph.add(propagation_witness_factor_t(  ));
+		// }
+		else 
 		{
 			prx_throw("Propagation type not supported.");
 		}
@@ -199,30 +203,76 @@ namespace prx
 		gtsam::NonlinearFactorGraph graph;
 		int num_steps = _params.num_steps;
 
+		// X_0
 		graph.add(
 			gtsam::NonlinearEquality<Eigen::VectorXd>(
 				prx_symbol_t::state_symbol(0), 
-				// symbol_factory_t::create_symbol("start_state_symbol"),
 				initial_state)
 			);
-		graph.add(
-			gtsam::NonlinearEquality<Eigen::VectorXd>(
-				// symbol_factory_t::create_symbol("goal_symbol"),
-				prx_symbol_t::state_symbol(num_steps), 
-				goal_state, 
-				0.01)
-			);
+		// X_N
+		// graph.add(
+		// 	gtsam::NonlinearEquality<Eigen::VectorXd>(
+		// 		// symbol_factory_t::create_symbol("goal_symbol"),
+		// 		prx_symbol_t::state_symbol(num_steps), 
+		// 		goal_state, 
+		// 		0.1)
+		// 	);
 
 		for (int t = 0; t < num_steps+1; t++) 
 		{
 			// std::cout << "t: " << t << std::endl;
-			if (_params.limits_factors) graph.add(limits_factors(t, num_steps));
+			// if (_params.limits_factors) graph.add(limits_factors(t, num_steps));
 			if (t < num_steps) 
 			{
 				graph.add(add_propagation_factor(t, _params.propagation_factors_type));
 			}
+			// graph.add(add_witness);
 			if (_params.use_goal_factors) graph.add(add_goal_distance_factor(t, _params.goal_factor_params));
 
+		}
+
+		return graph;
+	}
+
+	gtsam::NonlinearFactorGraph trajectory_fg_t::get_recovering_ctrls_fg(
+		const trajectory_t& traj, std::shared_ptr<system_group_t> sg, const trajectory_fg_params_t& _params
+		)
+	{
+		gtsam::NonlinearFactorGraph graph;
+
+		for (unsigned i = 0; i < traj.size(); ++i)
+		{
+			// graph.add(
+			// 	gtsam::NonlinearEquality<Eigen::VectorXd>(
+			// 		symbol_factory_t::create_symbol("state_symbol", i),
+			// 		traj[i] -> to_vector())
+			// );
+			if (i < traj.size() - 1) 
+			{
+				graph.add(
+					space_limit_factor_t(
+						symbol_factory_t::create_symbol("control_symbol", i),
+						control_model,
+						plant_ptr -> get_control_space()
+						)
+					);
+				graph.add(
+					// auto t01_key = prx_symbol_t::time_symbol(t);
+					propagation_factor_1_t(dynamics_model, 
+						traj[i] -> to_vector(),
+						traj[i+1] -> to_vector(),
+						symbol_factory_t::create_symbol("control_symbol", i),
+						(Eigen::VectorXd(1) << 1).finished(),
+						Eigen::VectorXd::Zero(1),
+						sg)
+					);
+				// graph.add(
+				// 	gtsam::NonlinearEquality<Eigen::VectorXd>(
+				// 		symbol_factory_t::create_symbol("time_symbol", i),
+				// 		(Eigen::VectorXd(1) << 1).finished())
+				// 	);
+
+			}
 		}
 
 		return graph;

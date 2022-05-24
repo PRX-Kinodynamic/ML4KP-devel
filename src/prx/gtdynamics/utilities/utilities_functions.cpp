@@ -84,6 +84,40 @@ namespace prx
 			return nl_opt.values(); 
 		}
 
+		void values_to_plan(const gtsam::Values& vals, plan_t* plan, const int total_steps)
+		{
+			plan -> clear();
+
+			int ti = 0;
+
+			// X, U \in [0, T)
+			// for (double t_elapsed = 0; ti < total_steps; ti++, t_elapsed += simulation_step) 
+			for (int i = 0; i < total_steps; ++i)
+			{
+				// auto ti = symbol_factory_t::create_symbol("time_symbol", i);
+				auto us = symbol_factory_t::create_symbol("control_symbol", i);
+
+				auto u = vals.at<Eigen::VectorXd>(us);
+				// auto t = vals.at<Eigen::VectorXd>(ti);
+				plan -> copy_onto_back(u, 1);
+			}
+		}
+
+		void values_to_traj(const gtsam::Values& vals, trajectory_t& traj, const int total_steps)
+		{
+			traj.clear();
+
+			int ti = 0;
+
+			// X, U \in [0, T)
+			for (double t_elapsed = 0; ti < total_steps; ti++, t_elapsed += simulation_step) 
+			{
+				auto xs = symbol_factory_t::create_symbol("state_symbol", ti);				
+				auto x = vals.at<Eigen::VectorXd>(xs);
+				traj.copy_onto_back(x);
+			}
+		}
+
 		void values_to_plan_and_traj(const gtsam::Values& vals, trajectory_t* traj, plan_t* plan, const int total_steps)
 		{
 			traj -> clear();

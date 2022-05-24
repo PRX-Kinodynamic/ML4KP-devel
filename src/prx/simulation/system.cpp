@@ -37,6 +37,7 @@ namespace prx
 	{
 		state_space = nullptr;
 		input_control_space = nullptr;
+		parameter_space = nullptr;
 		pathname = path;
 		system_type = plant_type::ANALYTICAL;
 	}

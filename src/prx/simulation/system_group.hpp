@@ -30,6 +30,7 @@ namespace prx
 
 
 		void compute_stopping_maneuver(space_point_t start_state, std::vector<double>&, std::vector<double>&);
+		
 		inline space_t* get_state_space()
 		{
 			return state_space;
@@ -40,6 +41,11 @@ namespace prx
 			return control_space;
 		}
 
+		inline space_t* get_parameter_space()
+		{
+			return parameter_space;
+		}
+
 		void propagate_once(propagate_step step, space_point_t control = nullptr);
 
 	protected:
@@ -47,6 +53,7 @@ namespace prx
 		std::vector<system_ptr_t> group;
 		space_t* state_space;
 		space_t* control_space;
+		space_t* parameter_space;
 		simulator_t* sim;
 
 		friend system_group_manager_t;

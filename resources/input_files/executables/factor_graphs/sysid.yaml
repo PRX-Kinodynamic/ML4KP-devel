@@ -1,0 +1,27 @@
+random_seed: 112392
+simulation_step: 0.01
+
+# environment: "environments/empty.yaml"
+environment: "environments/narrow.yaml"
+
+plant: !file "plants/acrobot.yaml"
+# plant: !file "plants/planar_2link.yaml"
+# plant: !file "plants/pendulum.yaml"
+# plant: !file "plants/ackermann_FO.yaml"
+# plant: !file "plants/treaded_vehicle.yaml"
+# plant: !file "plants/omnibot_FO.yaml"
+
+# traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/omnibot_trajs/constant_traj_omnirobot_FO_3_9.txt
+# plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/omnibot_trajs/constant_plan_omnirobot_FO_3_9.txt
+
+traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/omnibot_trajs/constant_traj_Acrobot_0_1.txt
+plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/omnibot_trajs/constant_plan_Acrobot_0_1.txt
+# traj_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrtstar_traj_1.txt
+# plan_file_in: /Users/Gary/pracsys/ML4KP-devel/out/rrtstar_plan_1.txt
+
+max_iterations: 500
+num_steps: 100
+# use_energy_factors: false
+# limits_factors: true
+
+

@@ -4,7 +4,7 @@ namespace prx
 {
 	void runge_kutta4_t::integrate(const double simulation_step) 
 	{
-		h = simulation_step == 0.0? h : simulation_step;
+		// h = simulation_step == 0.0? h : simulation_step;
 		if(!start_integration_state)
 		{
 			start_integration_state = state_space->make_point();

@@ -33,3 +33,10 @@ constant_state: [1.0, 0]
 constant_ctrl: [0]
 
 error_scale: [1,1]
+
+length
+friction
+mass
+normalize
+
+parameters: [*LENGTH, *FRICTION, *MASS, *L2, *I1, *I2]

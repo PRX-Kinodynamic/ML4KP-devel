@@ -64,6 +64,8 @@ namespace prx
 		lm_params.setlambdaFactor(2);
 		lm_params.setlambdaInitial(1e-6);
 		lm_params.setMaxIterations(100);
+		lm_params.setRelativeErrorTol(1e-7);
+		lm_params.setAbsoluteErrorTol(1e-7);		
 
 
 		ss -> copy_vector_from_point(start_v, traj_original.front());

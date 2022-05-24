@@ -89,6 +89,7 @@ namespace prx
 
 		gtsam::NonlinearFactorGraph add_bang_bang_factor(const int t);
 
+		gtsam::NonlinearFactorGraph get_recovering_ctrls_fg(const trajectory_t& traj, std::shared_ptr<system_group_t> sg, const trajectory_fg_params_t& _params);
 		private:
 			plant_ptr_t plant_ptr;
 			Eigen::VectorXd initial_state;

@@ -24,8 +24,12 @@ vis_body: "ball"
 
 lqr_Q: [10,10,1,1]
 
-g: 9.81
-mass: 1
+mass: &MASS 0.8
+g: &GRAVITY 9.81
+l1: &L1 1.0
+l2: &L2 1.0
+I1: &I1 0.2
+I2: &I2 0.5
 
 constant_state: [3.14159, 0, 0, 0]
 # constant_state: [1.57079, 0, 0, 0]
@@ -33,3 +37,9 @@ constant_state: [3.14159, 0, 0, 0]
 constant_ctrl: [0]
 
 error_scale: [1,1,1,1]
+
+# parameters: [*MASS, *GRAVITY, *L1, *L2, *I1, *I2]
+parameters: [*L1, *L2, *I1, *I2]
+
+constant_ctrl: [1.0]
+ctrl_duration: 5

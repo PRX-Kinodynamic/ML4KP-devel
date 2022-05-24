@@ -32,5 +32,9 @@ namespace prx
 
 		void add_noise(gtsam::Values& values, const std::string symbol_name, boost::shared_ptr<gtsam::noiseModel::Isotropic>& noise);
 
+		void values_to_plan(const gtsam::Values& vals, plan_t* plan, const int total_steps);
+
+		void values_to_traj(const gtsam::Values& vals, trajectory_t& traj, const int total_steps);
+
 	}
 }

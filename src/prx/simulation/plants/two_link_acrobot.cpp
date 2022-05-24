@@ -21,8 +21,13 @@ namespace prx
 		derivative_memory = {&_theta1dot,&_theta2dot,&_theta1dotdot,&_theta2dotdot};
 		derivative_space = new space_t("EEEE",derivative_memory,"TwoLinkDeriv");
 
-		parameter_memory = {&mass,&g,&l1,&l2,&I1,&I2,&d1,&d2,&viz_length};
-		parameter_space = new space_t("EEEEEEEEE", parameter_memory, "acrobot_params");
+		// parameter_memory = {&mass,&g,&l1,&l2,&I1,&I2};//,&d1,&d2,&viz_length};
+		// parameter_space = new space_t("EEEEEE", parameter_memory, "acrobot_params");
+		// parameter_space->set_bounds({0,0,0,0,0,0},{10,10,10,10,2,2});
+
+		parameter_memory = {&l1,&l2, &I1,&I2};//,&d1,&d2,&viz_length};
+		parameter_space = new space_t("EEEE", parameter_memory, "acrobot_params");
+		parameter_space->set_bounds({0,0, 0,0},{10,10,2,2});
 
 		geometries["rod1"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
 		geometries["rod1"]->initialize_geometry({viz_length,1,1});

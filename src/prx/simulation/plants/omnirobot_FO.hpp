@@ -78,13 +78,14 @@ namespace prx
 		Eigen::Vector4d U;
 		Eigen::Vector3d Xd;
 		Eigen::Vector4d mu;
+		double mu_0, mu_1, mu_2, mu_3;
 		// Eigen::Matrix3d w1_r;
 		transform_t w1_tr;
 		// transform_t w2_tr;
 
 	private:
-		std::vector<double> lower_bound = {-11,-11,-3.15};
-		std::vector<double> upper_bound = {11,11,3.15};
+		std::vector<double> lower_bound = {-11,-11,-M_PI};
+		std::vector<double> upper_bound = {11,11,M_PI};
 
 		space_point_t state;
 		space_point_t ctrl;

@@ -30,7 +30,7 @@ using namespace prx;
 
 int main(int argc, char* argv[])
 {
-	auto params = param_loader("executables/factor_graphs/smoothing_trajs.yaml", argc, argv);
+	auto params = param_loader("executables/factor_graphs/improving_trajs.yaml", argc, argv);
 
 	simulation_step = params["simulation_step"].as<double>();
 
@@ -56,7 +56,6 @@ int main(int argc, char* argv[])
 	auto cs_up = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
 	cs -> set_bounds(cs_lb, cs_up);
 
-	std::string file_prefix = out_path + "traj_opt_" + params["/plant/name"].as<>();
 	std::string traj_in_name = params["traj_file_in"].as<>();
 
 	trajectory_t traj_in(ss);
@@ -67,20 +66,94 @@ int main(int argc, char* argv[])
 	auto start_state = ss -> make_point();
 	auto goal_state = ss -> make_point();
 
-	PRX_DEBUG_PRINT
 	ss -> copy_point(start_state, traj_in.front());
 	ss -> copy_point(goal_state, traj_in.back());
 	
 	std::cout << "[IN] traj front: " << traj_in.front() << std::endl;
  	std::cout << "[IN] traj back: " << traj_in.back() << std::endl;
 
-
 	plan_t plan_out(cs);
 
-	trajectory_optimizer traj_opt(traj_in, plant, sg, plant_name);
-	traj_opt.traj_opt_params.traj_rate = params["original_traj_rate"].as<double>();
-	traj_opt.optimize(traj_out, plan_out);
+	// trajectory_optimizer traj_opt(traj_in, plant, sg, plant_name);
+	// traj_opt.traj_opt_params.traj_rate = params["original_traj_rate"].as<double>();
+	// traj_opt.optimize(traj_out, plan_out);
+	gtsam::Values values;
+	double t = 0;
+	auto ss_cm = gtsam::noiseModel::Isotropic::Sigma(ss_dim, 1e0);
+	gtsam::NonlinearFactorGraph graph;
+	graph.add(
+		gtsam::NonlinearEquality<Eigen::VectorXd>(
+			symbol_factory_t::create_symbol("state_symbol", 0),
+			traj_in[static_cast<unsigned>(0)] -> to_vector()
+			)
+		);
+	graph.add(
+		gtsam::NonlinearEquality<Eigen::VectorXd>(
+			symbol_factory_t::create_symbol("state_symbol", traj_in.size()-1),
+			goal_state -> to_vector(), 
+			0.5)
+		);
 
+	auto cs_pt = cs -> make_point();
+	values.insert(symbol_factory_t::create_symbol("state_symbol", 0), traj_in[static_cast<unsigned>(0)] -> to_vector());
+	for (unsigned i = 0; i < traj_in.size(); ++i)
+	{
+		
+		if (i < traj_in.size() - 1) 
+		{
+			cs -> sample(cs_pt);
+			values.insert(symbol_factory_t::create_symbol("state_symbol", i+1), traj_in[i+1] -> to_vector());
+			values.insert(symbol_factory_t::create_symbol("control_symbol", i), cs_pt -> to_vector());
+			values.insert(symbol_factory_t::create_symbol("time_symbol", i), (gtsam::Vector(1) << 1).finished());
+
+			graph.add(
+				propagation_witness_factor_t(ss_cm, 
+					symbol_factory_t::create_symbol("state_symbol", i),
+					symbol_factory_t::create_symbol("state_symbol", i+1),
+					symbol_factory_t::create_symbol("control_symbol", i),
+					symbol_factory_t::create_symbol("time_symbol", i),
+					traj_in[i] -> to_vector(),
+					params["radius"].as<double>(),
+					sg)
+				);
+			graph.add(
+				space_limit_factor_t(
+					symbol_factory_t::create_symbol("control_symbol", i),
+					gtsam::noiseModel::Isotropic::Sigma(cs_dim, 1e0),
+					cs
+					)
+				);
+			graph.add(
+				space_limit_factor_t(
+					symbol_factory_t::create_symbol("state_symbol", i+1),
+					ss_cm,
+					ss
+					)
+				);
+		}
+		t += simulation_step;
+	}
+
+	gtsam::LevenbergMarquardtParams lm_params;
+	lm_params.setVerbosityLM("SUMMARY");
+	lm_params.setlambdaUpperBound(1e32);
+	lm_params.setUseFixedLambdaFactor(false);
+	lm_params.setDiagonalDamping(false);
+	lm_params.setlambdaFactor(2);
+	lm_params.setlambdaInitial(1e-6);
+	lm_params.setMaxIterations(100);
+	lm_params.setRelativeErrorTol(1e-7);
+	lm_params.setAbsoluteErrorTol(1e-7);	
+
+	std::string file_prefix = out_path + "smoothing_trajs/out/improving_trajs_" + params["/plant/name"].as<>();
+	fg_logger_t lg(file_prefix + "_log.txt", ' ', "-");
+
+	double total_iters = 0;
+	gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
+	auto results = fg_utilities::optimize_and_log(optimizer, lm_params, lg, total_iters);
+	total_iters += optimizer.iterations();
+
+	fg_utilities::values_to_plan_and_traj(results, &traj_out, &plan_out, traj_in.size()-1);
 	std::cout << "sln_plan:\n" << plan_out << std::endl;
 
 	sg -> propagate(start_state, plan_out, traj_real);

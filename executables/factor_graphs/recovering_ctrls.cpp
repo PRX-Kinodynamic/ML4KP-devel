@@ -30,7 +30,7 @@ using namespace prx;
 
 int main(int argc, char* argv[])
 {
-	auto params = param_loader("executables/factor_graphs/smoothing_trajs.yaml", argc, argv);
+	auto params = param_loader("executables/factor_graphs/recovering_ctrls.yaml", argc, argv);
 
 	simulation_step = params["simulation_step"].as<double>();
 
@@ -51,12 +51,10 @@ int main(int argc, char* argv[])
 	const auto cs = sg -> get_control_space();
 	auto ss_dim = ss -> get_dimension();
 	auto cs_dim = cs -> get_dimension();
-
 	auto cs_lb = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
 	auto cs_up = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
 	cs -> set_bounds(cs_lb, cs_up);
 
-	std::string file_prefix = out_path + "traj_opt_" + params["/plant/name"].as<>();
 	std::string traj_in_name = params["traj_file_in"].as<>();
 
 	trajectory_t traj_in(ss);
@@ -67,32 +65,92 @@ int main(int argc, char* argv[])
 	auto start_state = ss -> make_point();
 	auto goal_state = ss -> make_point();
 
-	PRX_DEBUG_PRINT
 	ss -> copy_point(start_state, traj_in.front());
 	ss -> copy_point(goal_state, traj_in.back());
 	
 	std::cout << "[IN] traj front: " << traj_in.front() << std::endl;
  	std::cout << "[IN] traj back: " << traj_in.back() << std::endl;
 
-
 	plan_t plan_out(cs);
 
-	trajectory_optimizer traj_opt(traj_in, plant, sg, plant_name);
-	traj_opt.traj_opt_params.traj_rate = params["original_traj_rate"].as<double>();
-	traj_opt.optimize(traj_out, plan_out);
+	trajectory_fg_params_t fg_params;
+	fg_params.num_steps = traj_in.size();
+
+	auto tfg = trajectory_fg_t(plant);
+	auto graph = tfg.get_recovering_ctrls_fg(traj_in, sg, fg_params);
+
+	gtsam::LevenbergMarquardtParams lm_params;
+	lm_params.setVerbosityLM("SUMMARY");
+	lm_params.setlambdaUpperBound(1e32);
+	lm_params.setUseFixedLambdaFactor(false);
+	lm_params.setDiagonalDamping(false);
+	lm_params.setlambdaFactor(1);
+	lm_params.setlambdaInitial(1e-7);
+	lm_params.setMaxIterations(params["max_iterations"].as<int>());
+	lm_params.setRelativeErrorTol(1e-9);
+	lm_params.setAbsoluteErrorTol(1e-9);	
+
+	std::string file_prefix = out_path + "/recovering_ctrls_" + params["/plant/name"].as<>();
+	fg_logger_t lg(file_prefix + "_log.txt", ' ', "-");
+	// int outer_iters = params["outer_iters"].as<int>();
+
+	gtsam::Values init_vals;
+	// auto init_vals = initialization_trajs_fg_t::traj_to_vals(plant, traj_in);
+
+	double step_size = simulation_step * params["num_steps"].as<double>();
+
+	auto ctrl_pt = cs -> make_point();
+	for (int i = 0; i < traj_in.size() - 1; ++i)
+	{
+		// cs -> sample(ctrl_pt);
+		init_vals.insert(
+			initialization_trajs_fg_t::control_to_value(plant, ctrl_pt, i)
+			);
+		// init_vals.insert(
+		// 		symbol_factory_t::create_symbol("time_symbol", i),
+		// 		(Eigen::VectorXd(1) << step_size).finished()
+		// 	);
+	} 
+	// init_vals.insert(initialization_trajs_fg_t::init_time_factors(traj_in.size() - 1, 0.0));
+
+	// init_vals.print("", prx::key_formatter);
+	// graph.print("Printing graph: ", prx::key_formatter);
+
+	int total_iters = 0;
+	// int outer_iters = params["outer_iters"].as<int>();
+
+	// for (int i = 0; i < outer_iters; ++i)
+	// {
+		gtsam::LevenbergMarquardtOptimizer optimizer(graph, init_vals, lm_params);
+		auto results = fg_utilities::optimize_and_log(optimizer, lm_params, lg, total_iters);
+	// 	total_iters += optimizer.iterations();
+	// 	init_vals = results;
+	// 	fg_utilities::values_to_plan_and_traj(init_vals, &traj_out, &plan_out, fg_params.num_steps);
+	// 	// fg_utilities::values_to_plan_and_traj(init_vals, &traj_aux, &plan_aux, fg_params.num_steps);
+	// 	if (i < outer_iters - 1)
+	// 	{
+	// 		sg -> propagate(start_state, plan_out, traj_out);
+	// 		fg_utilities::updates_values_from_plan_and_traj(init_vals, plant, traj_out, plan_out, fg_params.num_steps);
+	// 	}
+	// 	last_error = optimizer.error();
+	// }
+	std::cout << "Done!!!" << std::endl; 
+
+	// fg_utilities::values_to_traj(results, traj_out, fg_params.num_steps );
+	fg_utilities::values_to_plan(results, &plan_out, fg_params.num_steps -1 );
 
 	std::cout << "sln_plan:\n" << plan_out << std::endl;
 
 	sg -> propagate(start_state, plan_out, traj_real);
 
-	std::cout << "[OUT] start_state: " << traj_out.front() << std::endl;
- 	std::cout << "[OUT] goal_state: " << traj_out.back() << std::endl;
+	// std::cout << "[OUT] start_state: " << traj_out.front() << std::endl;
+ 	// std::cout << "[OUT] goal_state: " << traj_out.back() << std::endl;
 
  	std::cout << "[REAL] start_state: " << traj_real.front() << std::endl;
  	std::cout << "[REAL] goal_state: " << traj_real.back() << std::endl;
 
  	traj_real.to_file(file_prefix + "_real.txt");
-
+ 	std::cout << "traj_real: " << file_prefix + "_real.txt" << std::endl;
 	three_js_group_t* vis_group = new three_js_group_t({plant},{});
 	std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 

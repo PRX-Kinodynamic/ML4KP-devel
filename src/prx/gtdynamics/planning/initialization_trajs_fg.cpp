@@ -100,8 +100,6 @@ namespace prx
   			auto ti = prx_symbol_t::time_symbol(t);
   			Eigen::VectorXd v(1);
   			v[0] = std::fabs( simulation_step + sampler.sample()[0] );
-	  		// v += sampler.sample();
-	  		// v[0] = std::fabs(v[0]);
 	  		values.insert(ti, v);
   		}
   			
@@ -187,6 +185,50 @@ namespace prx
 		return values;
 	}
 
+	gtsam::Values initialization_trajs_fg_t::traj_to_vals(const system_ptr_t _sys_ptr, const trajectory_t& traj)
+	{
+		gtsam::Values values;
+		auto ss = _sys_ptr -> get_state_space();
+	
+		auto x_dim = ss -> get_dimension();
+
+		int t = 0;
+		for (auto state : traj)
+		{
+			// prx_symbol_t xi;
+			auto xi = symbol_factory_t::create_symbol("state_symbol", t);
+			
+			Eigen::VectorXd vs = gtsam::Vector::Zero(x_dim);
+			ss -> copy_vector_from_point(vs, state);
+			values.insert(xi, vs);
+
+			t++;
+		}
+		return values;
+	}
+
+	gtsam::Values initialization_trajs_fg_t::plan_to_vals(const system_ptr_t _sys_ptr, const plan_t& plan)
+	{
+		gtsam::Values values;
+
+		auto cs = _sys_ptr -> get_control_space();
+		auto u_dim = cs -> get_dimension();
+
+		int t = 0;
+		for (auto step : plan)
+		{
+			// prx_symbol_t xi;
+			auto xi = symbol_factory_t::create_symbol("control_symbol", t);
+			
+			Eigen::VectorXd vs = gtsam::Vector::Zero(u_dim);
+			cs -> copy_vector_from_point(vs, step.control);
+			values.insert(xi, vs);
+
+			t++;
+		}
+		return values;
+	}
+
 	// TODO: Change _sys_ptr to system_group?
 	gtsam::Values initialization_trajs_fg_t::init_from_traj(const system_ptr_t _sys_ptr, const trajectory_t& traj, const plan_t& plan)
 	{
@@ -208,25 +250,13 @@ namespace prx
 			if (t == 0)
 			{
 				std::cout << "X0: " << state << std::endl;
-			// 	xi = symbol_factory_t::create_symbol("start_state_symbol");
 			}
-			// else if (t == last -1)
-			// {
-			// 	xi = symbol_factory_t::create_symbol("goal_symbol");
+			xi = prx_symbol_t::state_symbol(t);
 
-			// }
-			// else
-			// {
-				xi = prx_symbol_t::state_symbol(t);
-				// auto xi_sy = prx_symbol_t::state_symbol(t);
-				// std::cout << std::string(xi_sy) << std::endl;
-
-			// }
 			Eigen::VectorXd vs = gtsam::Vector::Zero(x_dim);
 			ss -> copy_vector_from_point(vs, state);
 			values.insert(xi, vs);
 
-			// std::cout << "vs: " << vs.transpose() << std::endl;
 			t++;
 		}
 
@@ -271,7 +301,7 @@ namespace prx
 		auto cs = _sys_ptr -> get_control_space();
 		auto u_dim = cs -> get_dimension();
 
-		auto ui_sy = prx_symbol_t::control_symbol(t);
+		auto ui_sy = symbol_factory_t::create_symbol("control_symbol", t);
 		Eigen::VectorXd vu(u_dim);
 		cs -> copy_vector_from_point(vu, pt);
 		values.insert(ui_sy, vu);

@@ -44,5 +44,9 @@ namespace prx
 
 			static gtsam::Values init_from_plan(std::shared_ptr<system_group_t> sg, const space_point_t start_state, const plan_t& plan, int& total_steps, double sigma = 0 );
 
+			static gtsam::Values plan_to_vals(const system_ptr_t _sys_ptr, const plan_t& plan);
+
+			static gtsam::Values traj_to_vals(const system_ptr_t _sys_ptr, const trajectory_t& traj);
+
 	};
 }

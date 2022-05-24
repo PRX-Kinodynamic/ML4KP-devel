@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 
     // vis_group -> add_vis_infos(info_geometry_t::LINE, rrt_star_query.tree_visualization, 
     //     body_name, ss);
-
+    // rrt_star_query.solution_traj.to_file("rrt_star_" + params["/plant/name"].as<>() + ".txt");
     vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, rrt_star_query.solution_traj, 
         body_name, ss);
 
