@@ -164,7 +164,44 @@ class TimeMap:
             torch.manual_seed(params["random_seed"].as_int())
             self.radius = params["goal_region_radius"].as_float()
 
+        if system_type == "mountain_car_lc":
+            controller_path = prx.lib_path
+            controller_path += params["/plant/controller_path"].as_string()
+            self.controller = torch.load(controller_path,map_location=torch.device('cpu'))
+            self.controller.eval()
+            torch.manual_seed(params["random_seed"].as_int())
+
         params.print()
+    
+    def mountain_car_lc(self, X):
+        self.ss.copy_from_vector(X)
+        self.ss.copy_to_point(self.start_state)
+
+        ctrl_input = torch.zeros(1, 2)
+
+        duration_so_far = 0
+        ctrl = [0]
+        while duration_so_far <= self.time_step and self.start_state[0] < 0.6:
+        # while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 2) > self.radius:
+            ctrl_input[0, 0] = self.start_state[0]
+            ctrl_input[0, 1] = self.start_state[1]
+
+            with torch.no_grad():
+                ctrl_output = self.controller(ctrl_input)[0].cpu()
+
+            # ctrl = [-0.6371781908344007 + ((ctrl_output + 1.)*0.6371781908344007)]
+            ctrl = np.array(ctrl_output,dtype=np.float64)
+
+            self.ctrl_pt[0] = ctrl[0]
+            self.cs.copy_from_point(self.ctrl_pt)
+            self.cs.enforce_bounds()
+            self.plant.propagate(self.simulation_step)
+            self.ss.copy_to_point(self.start_state)
+
+            duration_so_far += self.simulation_step
+
+        self.ss.copy_to_point(self.end_state)
+        return [self.end_state[0], self.end_state[1]]
 
     def pendulum_lc(self, X):
         self.ss.copy_from_vector(X)
