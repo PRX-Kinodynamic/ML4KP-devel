@@ -8,13 +8,13 @@ namespace prx
 		m=h=h_dot=0;
 		state_memory = {&h,&h_dot,&m};
 		state_space = new space_t("EEE",state_memory,"lander_state");
-		state_space->set_bounds({0,-2*h_0,M_0},{2*h_0,2*h_0,M_0 + fuel_0});
+		state_space->set_bounds({0.0, -10, 2134},{10, 10.0, 10334});
 		// state_space->set_bounds({-3.15,-3.15,-6,-6},{3.15,3.15,6,6});
 
 		u=0;
 		control_memory = {&u};
 		input_control_space = new space_t("E",control_memory,"Thrust");
-		input_control_space->set_bounds({0},{1});
+		input_control_space->set_bounds({0},{9.765625});
 
 		m_dot=h_dot=h_ddot=0;
 		derivative_memory = {&h_dot,&h_ddot,&m_dot};
@@ -65,10 +65,15 @@ namespace prx
 	void lander_LD_t::compute_derivative()
 	{
 		// h_ddot = (-g * m + alpha ) / m;
-		double _u = m <= M_0 ? 0 : u;
-		h_ddot = -gravity - _u / m;
-		m_dot = -k * _u;
-	}
+		// Mass of lander without fuel
+		const double min_lander_mass = state_space -> get_lower_bound(2);
+		double _u = m <= min_lander_mass ? 0 : -u;
+
+		m_dot = _u;
+			// PRX_DEBUG_VARS(m_dot, u)
+
+		h_ddot = - k * _u / m - gravity ;
+	}	
 
   //   bool lander_LD_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
   //   {

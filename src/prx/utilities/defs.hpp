@@ -13,6 +13,13 @@
 
 #define PRX_DEBUG_ITERABLE(msg, v) std::cout << "[DBG " << msg << "] "; for(auto e : v){std::cout << e << " ";}std::cout << std::endl;
 
+#define PRX_DEBUG_VAR_1(VAR) std::cout << #VAR << ": " << VAR << std::endl;
+#define PRX_DEBUG_VAR_2(VAR1, VAR2) std::cout << #VAR1 << ": " << VAR1 << "\t" << #VAR2 << ": " << VAR2 << std::endl;
+#define PRX_DEBUG_VAR_3(VAR1, VAR2, VAR3) std::cout << #VAR1 << ": " << VAR1 << "\t" << #VAR2 << ": " << VAR2 << "\t" << #VAR3 << ": " << VAR3 << std::endl;
+
+#define GET_MACRO(_1,_2,_3,NAME,...) NAME
+#define PRX_DEBUG_VARS(...) GET_MACRO(__VA_ARGS__, PRX_DEBUG_VAR_3, PRX_DEBUG_VAR_2, PRX_DEBUG_VAR_1)(__VA_ARGS__)
+
 #define STR_TO_BOOL(VAL) (std::string(VAL)=="True" | std::string(VAL) == "true")
 #define STR_TO_INT(VAR) (std::stoi(VAR))
 #define STR_TO_DOUBLE(VAR) (std::stod(VAR))

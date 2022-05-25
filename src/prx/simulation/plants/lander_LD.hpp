@@ -33,12 +33,12 @@ namespace prx
 		// double alpha = ;
 
 		// Mass of the system when no fuel is left
-		double M_0 = 1; 
-		double fuel_0 = 0.5; 
+		double M_0 = 10334; 
+
+		// Mass of lander without fuel
 
  		double gravity = 1.62;
- 		double k = 0.1; // velocity of the exhaust gases with respect to the spacecraft
- 		double h_0 = 5;
+ 		double k = 2048; // velocity of the exhaust gases with respect to the spacecraft
 
 	};
 
@@ -49,6 +49,29 @@ namespace prx
 			: controller_t(_plant, _name)
 		{
 			_aux = plant -> get_control_space() -> make_point();
+        	std::cout << "control limits: " << std::endl;
+        	plant -> get_control_space() -> print_bounds();
+
+        	auto ss = plant -> get_state_space();
+			auto cs = plant -> get_control_space();
+			auto ps = plant -> get_parameter_space();
+
+			// double x1 = ss -> at(0);
+			// double x2 = ss -> at(1);
+			double M_0 = ps -> at(0);
+
+			PRX_DEBUG_VARS(M_0)
+
+			double k   = ps -> at(1);
+			double g   = ps -> at(2);
+
+			double alpha = cs -> get_upper_bound(0);
+
+			PRX_DEBUG_VARS(k, g, alpha)
+
+        	a = 0.5 * (k * alpha - g * M_0) / M_0;
+			b = (k * alpha * alpha) / ( 2.0 * M_0 * M_0 ); 
+			PRX_DEBUG_VARS(a,b)
 		}
 
 		virtual void compute_controls() override
@@ -59,15 +82,14 @@ namespace prx
 
 			double x1 = ss -> at(0);
 			double x2 = ss -> at(1);
+			// double M_0 = ss -> at(2);
 
-			double M_0 = ps -> at(0);
-			double k   = ps -> at(1);
-			double g   = ps -> at(2);
+			// double k   = ps -> at(1);
+			// double g   = ps -> at(2);
 
-			double alpha = cs -> get_upper_bound(0);
+			// double alpha = cs -> get_upper_bound(0);
 
-			double a = 0.5 * (k * alpha - g * M_0) / M_0;
-			double b = (k * alpha * alpha) / ( 2 * M_0 * M_0 ); 
+			
 
 			auto f = (b/a) * x1 + 2*a * std::sqrt(x1/a) + x2;
 
@@ -82,6 +104,7 @@ namespace prx
 		}
 
 		private:
+			double a, b;
 			space_point_t _aux;
 
 	};
