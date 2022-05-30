@@ -1,0 +1,44 @@
+simulation_step: 0.1
+random_seed: 0
+
+plant_name: "FO_unicycle"
+plant_type: "FO_unicycle"
+# obstacles_file: "environments/kmp_benchmark/bugtrap_0.yaml"
+# obstacles_file: "environments/kmp_benchmark/kink_0.yaml"
+# obstacles_file: "environments/kmp_benchmark/parallelpark_0.yaml"
+obstacles_file: "environments/kmp_benchmark/wall_0.yaml"
+
+# bugtrap
+start_state: [3.8, 3, 0]
+goal_state: [5.2,3,0]
+goal_radius: 0.1
+
+# kink
+# start_state: [0.5, 4.5, 1.55]
+# goal_state: [5.5,4.0,1.55]
+# goal_radius: 0.1
+
+# wall
+# start_state: [1.5, 2.5, 0]
+# goal_state: [3.5,2.5,0]
+# goal_radius: 0.1
+
+# parallelpark
+# start_state: [0.7,0.8,0]
+# goal_state: [1.9,0.3,0]
+# goal_radius: 0.05
+
+min_control_steps: 1
+max_control_steps: 10
+
+planner_runs: 10
+condition_check: "time"
+planner_iterations: 3
+statistics_iterations: 30
+
+data_output_folder: "out/kmp_benchmark/"
+planner_name: "dirt_random"
+
+visualize: true
+visualization_body: "FO_unicycle/body"
+output_html: "out"
