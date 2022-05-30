@@ -13,4 +13,6 @@
 #include "prx/simulation/plants/unicycle_fo.hpp"
 #include "prx/simulation/plants/unicycle_so.hpp"
 #include "prx/simulation/plants/trailer_car.hpp"
-#include "prx/simulation/plants/ducted_fan.hpp"
+// #include "prx/simulation/plants/ducted_fan.hpp"
+#include "prx/simulation/plants/quadrotor_1d.hpp"
+#include "prx/simulation/plants/quadrotor_2d.hpp"
