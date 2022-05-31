@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
     step = 11
-    time_h = 200
+    time_h = 10
 
     TM = TimeMap.TimeMap("mountain_car_lc",time_h,
                         "examples/tripods/mountain_car_lc.yaml")
@@ -14,7 +14,7 @@ if __name__ == "__main__":
         return TM.mountain_car_lc(X)
 
     xs = np.linspace(-1.2,0.6,11)
-    ys = np.linspace(-.07,.07,11)
+    ys = np.linspace(-1.5,1.5,11)
     line = ""
 
     start_state = TM.ss.make_point()
@@ -30,7 +30,7 @@ if __name__ == "__main__":
             TM.ss.copy_point_from_vector(end_state, end_state_vec)
 
             line += str(start_state) + str(end_state) + \
-                str(end_state[0] >= 0.6) + "\n"
+                str(end_state[0] >= 0.5) + "\n"
     
     fname = f"mountain_car.out"
     with open(fname,"w") as f:

@@ -68,7 +68,7 @@ class TimeMap:
 
         self.ss = self.context.system_group.get_state_space()
         self.cs = self.context.system_group.get_control_space()
-        self.ps = self.plant.get_parameter_space()
+        # self.ps = self.plant.get_parameter_space()
 
         lower_bounds = params["/plant/state_space_lower_bound"].as_float_vector()
         upper_bounds = params["/plant/state_space_upper_bound"].as_float_vector()
@@ -164,6 +164,7 @@ class TimeMap:
             torch.manual_seed(params["random_seed"].as_int())
             self.radius = params["goal_region_radius"].as_float()
 
+        print("Before create controller")
         if system_type == "mountain_car_lc":
             controller_path = prx.lib_path
             controller_path += params["/plant/controller_path"].as_string()
@@ -181,7 +182,7 @@ class TimeMap:
 
         duration_so_far = 0
         ctrl = [0]
-        while duration_so_far <= self.time_step and self.start_state[0] < 0.6:
+        while duration_so_far <= self.time_step and self.start_state[0] < 0.5:
         # while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 2) > self.radius:
             ctrl_input[0, 0] = self.start_state[0]
             ctrl_input[0, 1] = self.start_state[1]
@@ -190,7 +191,8 @@ class TimeMap:
                 ctrl_output = self.controller(ctrl_input)[0].cpu()
 
             # ctrl = [-0.6371781908344007 + ((ctrl_output + 1.)*0.6371781908344007)]
-            ctrl = np.array(ctrl_output,dtype=np.float64)
+            ctrl = np.array([-.2 + ((ctrl_output + 1.)*0.4)],dtype=np.float64)
+            # ctrl = np.array(ctrl_output,dtype=np.float64)
 
             self.ctrl_pt[0] = ctrl[0]
             self.cs.copy_from_point(self.ctrl_pt)
