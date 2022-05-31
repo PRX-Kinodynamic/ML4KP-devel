@@ -12,37 +12,6 @@ using namespace prx;
 space_point_t start_state = nullptr;
 space_point_t goal_state = nullptr;
 
-controller_ptr_t create_controller(const system_ptr_t& _sys_ptr, param_loader& params)
-{
-    auto ss = _sys_ptr -> get_state_space();
-    auto cs = _sys_ptr -> get_control_space();
-    auto ss_dim = ss -> get_dimension();
-    auto cs_dim = cs -> get_dimension();
-
-
-    Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
-    auto q_vec = params["/plant/lqr_Q"].as<std::vector<double>>();
-    for (int i = 0; i < ss_dim; ++i) Q(i,i) = q_vec[i];
-
-    Eigen::MatrixXd R = Eigen::MatrixXd::Identity(cs_dim, cs_dim);
-    auto r_vec = params["/plant/lqr_R"].as<std::vector<double>>();
-    // PRX_DEBUG_ITERABLE("lqr_R: ", r_vec)
-    for (int i = 0; i < cs_dim; ++i) R(i,i) = r_vec[i];
-    std::cout << "R: " << R.transpose() << std::endl;
-
-    Eigen::VectorXd v_goal(ss_dim);
-    ss -> copy_vector_from_point(v_goal, goal_state);
-    std::shared_ptr<lqr_t> lqr = std::make_shared<lqr_t>(_sys_ptr, Q, R, "LQR");
-    lqr -> set_goal(v_goal);
-    lqr -> compute_K();
-    Eigen::MatrixXd K = lqr -> get_K();
-    std::cout << "K: " << K << std::endl;
-    // K(0,0) = K(0,0) * 0.25;
-    lqr -> set_Q(K);
-    std::cout << "K: " << K << std::endl;
-    
-    return lqr;
-}
 
 int main(int argc, char* argv[])
 {
