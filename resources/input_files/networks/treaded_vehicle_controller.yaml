@@ -1,3 +1,4 @@
+# controller_path: "networks/treaded_vehicle_v2.pt"
 controller_path: "networks/treaded_vehicle.pt"
 random_seed: 111093
 

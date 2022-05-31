@@ -85,6 +85,69 @@ class learned_controller_t
         }
         return denormalize_control(control,control_lower_bounds,control_upper_bounds);
     }
+
+    std::vector<std::vector<double>> get_controls(const std::vector<std::vector<double>>& states, const std::vector<std::vector<double>>& goals)
+    {
+        /*
+            Get multiple predictions from the network.
+        */
+        torch::Device device(torch::kCPU);
+        std::vector<torch::jit::IValue> inputs;
+        std::vector<std::vector<double>> normalized_states, normalized_goals;
+
+        if (normalize_input)
+        {
+            for (int i = 0; i < states.size(); i++)
+            {
+                normalized_states.push_back(extract_state(normalize_vector(states[i],state_lower_bounds,state_upper_bounds),state_indices));
+                normalized_goals.push_back(extract_state(normalize_vector(goals[i],state_lower_bounds,state_upper_bounds),goal_indices));
+            }
+        }
+        else
+        {
+            for (int i = 0; i < states.size(); i++)
+            {
+                normalized_states.push_back(extract_state(states[i],state_indices));
+                normalized_goals.push_back(extract_state(goals[i],goal_indices));
+            }
+        }
+        if (delta_input)
+        {
+            for (int i = 0; i < normalized_goals.size(); i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    normalized_goals[i][j] = normalized_goals[i][j] - normalized_states[i][j];
+                    normalized_states[i][j] = 0;
+                }
+            }
+        }
+        for (int i = 0; i < normalized_states.size(); i++)
+        {
+            normalized_states[i].insert(normalized_states[i].end(),normalized_goals[i].begin(),normalized_goals[i].end());
+        }
+        at::Tensor input = torch::zeros({normalized_states.size(),normalized_states[0].size()},device);
+        for (int i = 0; i < normalized_states.size(); i++)
+        {
+            for (int j = 0; j < normalized_states[i].size(); j++)
+            {
+                input[i][j] = normalized_states[i][j];
+            }
+        }
+        inputs.push_back(input);
+        auto output = controller.forward(inputs).toTensor();
+        std::vector<std::vector<double>> controls;
+        for(int i = 0; i < output.size(0); i++)
+        {
+            std::vector<double> control;
+            for(int j = 0; j < output.size(1); j++)
+            {
+                control.push_back(output[i][j].item().toDouble());
+            }
+            controls.push_back(denormalize_control(control,control_lower_bounds,control_upper_bounds));
+        }
+        return controls;
+    }
     
     std::vector<double> get_control(const std::vector<double>& state, const std::vector<double>& goal)
     {
@@ -167,6 +230,7 @@ class learned_controller_t
             sg -> get_state_space() -> copy_point(current,query.solution_traj.back());
             time_so_far += control_duration;
         }
+        /*
         if (!query.goal_check(current))
         {
             PRX_DEBUG_PRINT
@@ -176,6 +240,7 @@ class learned_controller_t
         {
             PRX_DEBUG_PRINT
         }
+        */
     }
 };
 #else

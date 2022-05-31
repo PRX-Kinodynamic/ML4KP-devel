@@ -1,19 +1,21 @@
-random_seed: 0
-simulation_step: 0.1
+random_seed: 11101993
+simulation_step: 0.01
 
-environment: "environments/city.yaml"
+environment: "environments/narrow.yaml"
+# environment: "environments/simple_warehouse.yaml"
+# environment: "environments/city.yaml"
 plant: !file "plants/treaded_vehicle.yaml"
 
 use_learned_controller: true
 learned_controller: !file "networks/treaded_vehicle_controller.yaml"
 max_steps: 100
 
-use_reachability_estimator: true
-reachability_estimator: !file "networks/treaded_narrow_reach.yaml"
-
 goal_radius: 0.5
 
-output_dir: "lg_treaded_cities/"
-num_trajectories: 400
+output_dir: "smoothen_classify/"
+num_trajectories: 1000
 
-debug: false
+max_tries: 100
+roadmap_points: 40
+
+debug: true
