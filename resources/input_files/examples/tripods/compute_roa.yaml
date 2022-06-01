@@ -1,14 +1,16 @@
 random_seed: 11101993
 simulation_step: 0.01
 
-plant: !file "plants/pendulum.yaml"
+# plant: !file "plants/pendulum.yaml"
+plant: !file "plants/lander_LD.yaml"
 
 goal_region_radius: 0.1
 
-duration: 5
-state_increment: 0.01
-system_name: "pendulum_lqr"
+duration: 10
+state_increment: 0.5
+# system_name: "pendulum_lqr"
 # system_name: "pendulum_lc"
+system_name: "lander_analytical"
 out_dir: "roas/"
 file_name_suffix: "_test.txt"
-num_samples: 10
+num_samples: 1
