@@ -19,6 +19,11 @@ namespace prx
         virtual void compute_derivative() override final;
 
         double x, xdot, xdotdot, u;
+        double oldxdot;
+
+        double m = 0.2;
+        double g = -9.8;
+        double k = 0.3;
     };
 }
 

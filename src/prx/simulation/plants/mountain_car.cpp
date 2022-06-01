@@ -8,15 +8,15 @@ namespace prx
         state_memory = {&x, &xdot};
         state_space = new space_t("EE",state_memory,"XXdot");
         state_space->set_bounds(
-            {-1.2,-.07},
-            { 0.7, .07}
+            {-1.2,-1.5},
+            { 0.6, 1.5}
             );
         
         u=0;
         control_memory = {&u};
         input_control_space = new space_t("E",control_memory,"u");
         input_control_space->set_bounds(
-            {-1.0}, {1.0}
+            {-.2}, {.2}
             );
         
         derivative_memory = {&xdot,&xdotdot};
@@ -42,6 +42,7 @@ namespace prx
 
     void mountain_car_t::compute_derivative()
     {
-        xdot = 1e-3 * u + std::cos(3 * x) * 2.5e-3;
+    	oldxdot = xdot;
+        xdot = m * g * std::cos(3 * x) + (u / m) -k * oldxdot;
     }
 }
