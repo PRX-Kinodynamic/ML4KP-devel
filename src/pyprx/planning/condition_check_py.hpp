@@ -11,7 +11,6 @@ void pyprx_planning_condition_check_py()
         def("create_default_goal_check", &prx::create_default_goal_check);
         class_<prx::custom_check_t>("custom_check")
                 .def("__call__", &prx::custom_check_t::operator() )
-                // .def("create_default_goal_check", make_function(&create_default_goal_check, default_call_policies())).staticmethod("default")
                 .def("wrap", &create_function<prx::custom_check_t, bool>).staticmethod("wrap")
                 ;
 
