@@ -31,7 +31,20 @@ namespace prx
 		{
 			return object_name;
 		}
-		
+
+		inline void set_object_pose(const std::vector<double> new_position)
+		{
+			prx_assert(configurations.size() == 1, "set_object_pose() is supported only for a single rigid body!")
+			
+			for(auto&& c : configurations)
+			{
+				auto body = c.second;
+				body -> setIdentity();
+				body->linear() = (quaternion_t(0,0,0,1).toRotationMatrix());
+				body->translation() = (vector_t(new_position[0],new_position[1],0));
+			}
+		}
+
 	protected:
 		std::unordered_map<std::string,std::shared_ptr<geometry_t>> geometries;
 		std::unordered_map<std::string,std::shared_ptr<transform_t>> configurations;

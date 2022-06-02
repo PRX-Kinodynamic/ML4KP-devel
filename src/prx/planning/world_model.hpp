@@ -23,8 +23,6 @@ namespace prx
 		explicit world_model_t(const std::vector<system_ptr_t>& all_systems,const std::vector<std::shared_ptr<movable_object_t>>& all_obstacles)
 			: simulator_t(plant_type::ANALYTICAL)
 		{
-			PRX_DEBUG_PRINT
-
 			collision_groups = std::make_shared<collision_checker_t>();
 			
 
@@ -105,6 +103,13 @@ namespace prx
 		virtual void reset_simulation() override final
 		{
 			prx_throw("World model doesn't implement reset");
+		}
+
+		inline void update_obstacle_pose(const std::string obstacle_name, const std::vector<double> new_pose)
+		{
+			prx_assert(obstacles.find(obstacle_name) != obstacles.end(), "Obstacle " << obstacle_name << " not found in world model");
+			auto obstacle = obstacles[obstacle_name];
+			obstacle -> set_object_pose(new_pose);
 		}
 
 	private:

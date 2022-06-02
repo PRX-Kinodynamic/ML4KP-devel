@@ -165,8 +165,8 @@ else()
     		rt
 		pthread 
 		dl
-		# gwen
-		# ${DL} 
+		gwen
+		${DL} 
 		)
 endif()
 

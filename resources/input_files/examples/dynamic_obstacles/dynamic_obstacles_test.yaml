@@ -1,0 +1,17 @@
+planner: "dirt"
+
+random_seed: 11101993
+simulation_step: 0.1
+
+environment: "environments/dynamic.yaml"
+plant: !file "plants/treaded_vehicle.yaml"
+
+blossom: 5
+pruning: false
+
+visualize: true
+
+checker_type: time
+checker_value: 1
+
+goal_region_radius: 0.1

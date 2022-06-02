@@ -8,12 +8,8 @@
 
 namespace prx
 {
-// #ifndef BULLET_NOT_BUILT
-//     std::pair<std::vector<std::string>,std::vector<std::shared_ptr<movable_object_t>>> load_obstacles(std::string obstacles_file, b3RobotSimulatorClientAPI* sim){
-// #else
-    std::pair<std::vector<std::string>,std::vector<std::shared_ptr<movable_object_t>>> load_obstacles(std::string obstacles_file){
-// #endif
-	
+    std::pair<std::vector<std::string>,std::vector<std::shared_ptr<movable_object_t>>> load_obstacles(std::string obstacles_file)
+	{
 		if(obstacles_file=="")
 		{
 			std::cout<<"Trying to load an empty obstacle file. No obstacles loaded"<<std::endl;
