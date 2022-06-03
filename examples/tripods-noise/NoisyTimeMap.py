@@ -248,9 +248,9 @@ class NoisyTimeMap:
             self.checker = prx.condition_check("sim_time" , self.duration );
             # self.goal_check = prx.custom_check.wrap(lander_custom_check_2);
             # self.goal_check = lander_custom_check_2
-            self.goal_check_2 = prx.custom_check.wrap(self.lander_custom_check_1);
-            self.checker_gc = prx.condition_check( self.goal_check_2 );
-            self.checker.add_condition(self.checker_gc);
+            # self.goal_check_2 = prx.custom_check.wrap(self.lander_custom_check_1);
+            # self.checker_gc = prx.condition_check( self.goal_check_2 );
+            # self.checker.add_condition(self.checker_gc);
 
             
             self.controller_base = prx.lander_meditch_ctrl(self.noisy_plant, "lander_ctrl")

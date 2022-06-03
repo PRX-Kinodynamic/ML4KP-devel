@@ -6,7 +6,7 @@ plant: !file "plants/lander_LD.yaml"
 
 goal_region_radius: 0.1
 
-duration: 10
+duration: 20
 state_increment: 0.5
 # system_name: "pendulum_lqr"
 # system_name: "pendulum_lc"

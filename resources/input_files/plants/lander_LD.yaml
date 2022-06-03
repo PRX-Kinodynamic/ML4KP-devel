@@ -10,7 +10,7 @@ gravity: &g_ 1.62
 
 lander_total_mass: &M_tot 10334
 
-start_state: [3, 0.0, *M_tot]
+start_state: [10, 0.0, *M_tot]
 goal_state:  [0.0, 0.0, *m_s]
 
 min_steps: 1
@@ -18,8 +18,10 @@ max_steps: 50
 
 parameters: [*M_tot, *k_, *g_]
 
-state_space_lower_bound: [0.0, -10, *m_s]
+state_space_lower_bound: [-1.0, -10, *m_s]
 state_space_upper_bound: [10, 10.0, *M_tot]
+
+start_state_space_lower_bound: [-1, -10, *M_tot]
 
 control_space_lower_bound: [0]
 control_space_upper_bound: [9.765625]

@@ -32,6 +32,7 @@ if __name__ == "__main__":
     TM = NoisyTimeMap.NoisyTimeMap("examples/tripods/compute_roa.yaml")
     TM.params.print()
     lower_bounds = TM.ss.get_lower_bounds()
+    # lower_bounds = TM.params["/plant/start_state_space_lower_bound"].as_float_vector()
     upper_bounds = TM.ss.get_upper_bounds()
     step_inc = TM.params["state_increment"].as_float()
     sys_name = TM.params["system_name"].as_string()
@@ -57,7 +58,10 @@ if __name__ == "__main__":
             if TM.goal_check(): reached += 1
 
 
-        fout_roa.write(str(reached/num_samples)  + "\n")
+        # fout_roa.write(str(reached/num_samples)  + "\n")
+        fout_roa.write(str(reached/num_samples) + " ")
+        fout_roa.write(str(TM.end_state))
+        fout_roa.write("\n")
 
         # fout_roa.write("\n")
 

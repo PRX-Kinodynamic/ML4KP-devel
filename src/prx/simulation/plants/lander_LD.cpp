@@ -35,6 +35,8 @@ namespace prx
 
 		// set_integrator("rk4");
 		set_integrator(integrator_t::kRK4);
+
+		_h_neg = 0;
 		
 	}
 
@@ -45,7 +47,13 @@ namespace prx
 
 	void lander_LD_t::propagate(const double simulation_step)
 	{
-		integrator -> integrate(simulation_step);
+		if (h >= 0)
+		{
+			// _h_neg = _h_neg == 0 ? h : _h_neg;
+			// h = _h_neg;
+			// m_dot=h_ddot=0;
+			integrator -> integrate(simulation_step);
+		}
 
         state_space -> enforce_bounds();
 	}
@@ -66,13 +74,21 @@ namespace prx
 	{
 		// h_ddot = (-g * m + alpha ) / m;
 		// Mass of lander without fuel
-		const double min_lander_mass = state_space -> get_lower_bound(2);
-		double _u = m <= min_lander_mass ? 0 : -u;
+		// if (h < 0)
+		// {
+		// 	_h_neg = _h_neg == 0 ? h : _h_neg;
+		// 	h = _h_neg;
+		// 	m_dot=h_ddot=0;
+		// }
+		// else
+		// {
+			const double min_lander_mass = state_space -> get_lower_bound(2);
+			double _u = m <= min_lander_mass ? 0 : -u;
+			m_dot = _u;
+			h_ddot = - k * _u / m - gravity ;
+		// }
 
-		m_dot = _u;
-			// PRX_DEBUG_VARS(m_dot, u)
-
-		h_ddot = - k * _u / m - gravity ;
+		// PRX_DEBUG_VARS(h,h_dot,m)
 	}	
 
   //   bool lander_LD_t::linearize(space_point_t xt, space_point_t ut, double epsilon)

@@ -39,6 +39,7 @@ namespace prx
 
  		double gravity = 1.62;
  		double k = 2048; // velocity of the exhaust gases with respect to the spacecraft
+		double _h_neg;
 
 	};
 
@@ -106,7 +107,6 @@ namespace prx
 		private:
 			double a, b;
 			space_point_t _aux;
-
 	};
 }
 
