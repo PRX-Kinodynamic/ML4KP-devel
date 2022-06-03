@@ -236,21 +236,23 @@ class NoisyTimeMap:
             def lander_custom_check_1():
                 # print("Start:", self.start_state,"\tEnd:", self.end_state)
                 # print(getframeinfo(currentframe()).filename, getframeinfo(currentframe()).lineno)
-                return -0.1 <= self.ss.at(0) <= 0.1 
+                return self.ss.at(0) <= -1 
 
             def lander_custom_check_2():
                 # print("2) Start:", self.start_state,"\tEnd:", self.end_state)
                 return -0.1 <= self.end_state[0] <= 0.1 and -0.5 <= self.end_state[1] <= 0.5
 
             self.lander_custom_check_1 = lander_custom_check_1
+            # self.lander_custom_check_1 = lander_custom_check_2
             self.goal_check  = lander_custom_check_2
 
             self.checker = prx.condition_check("sim_time" , self.duration );
             # self.goal_check = prx.custom_check.wrap(lander_custom_check_2);
             # self.goal_check = lander_custom_check_2
-            # self.goal_check_2 = prx.custom_check.wrap(self.lander_custom_check_1);
-            # self.checker_gc = prx.condition_check( self.goal_check_2 );
-            # self.checker.add_condition(self.checker_gc);
+            self.goal_check_2 = prx.custom_check.wrap(self.lander_custom_check_1);
+            # self.goal_check_2 = prx.custom_check.wrap(self.lander_custom_check_2);
+            self.checker_gc = prx.condition_check( self.goal_check_2 );
+            self.checker.add_condition(self.checker_gc);
 
             
             self.controller_base = prx.lander_meditch_ctrl(self.noisy_plant, "lander_ctrl")

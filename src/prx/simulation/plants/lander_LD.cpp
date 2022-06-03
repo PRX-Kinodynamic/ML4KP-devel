@@ -47,7 +47,7 @@ namespace prx
 
 	void lander_LD_t::propagate(const double simulation_step)
 	{
-		if (h >= 0)
+		if ( ! (std::fabs(h) <= 0.1 && std::fabs(h_dot) <= 0.5) )
 		{
 			// _h_neg = _h_neg == 0 ? h : _h_neg;
 			// h = _h_neg;
