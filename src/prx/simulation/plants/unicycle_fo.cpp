@@ -7,8 +7,14 @@ namespace prx
         x=y=theta=0;
         state_memory = {&x,&y,&theta};
 		state_space = new space_t("EER",state_memory,"TreadedFOState");
-		state_space->set_bounds({0,0,-3.15},{5,5,3.15});
+		//**state_space->set_bounds({0,0,-3.15},{5,5,3.15});
 		// state_space->set_bounds({0,0,-3.15},{3,1.2,3.15});
+		
+		//IMRCLab state_space->set_bounds({0,0,-3.15},{6,6,3.15});
+		
+		state_space->set_bounds(
+			{-std::numeric_limits<double>::max(),-std::numeric_limits<double>::max()},
+			{ std::numeric_limits<double>::max(), std::numeric_limits<double>::max()});
 
         v=0;
         control_memory = {&v,&dtheta};
@@ -37,6 +43,11 @@ namespace prx
 
     unicycle_fo_t::~unicycle_fo_t() {}
 
+    void unicycle_fo_t::set_state_space_bounds(const std::vector<double>& lower,const std::vector<double>& upper)
+	{
+		state_space->set_bounds(lower, upper);
+	}
+	
     void unicycle_fo_t::propagate(const double simulation_step)
     {
         integrator -> integrate(simulation_step);

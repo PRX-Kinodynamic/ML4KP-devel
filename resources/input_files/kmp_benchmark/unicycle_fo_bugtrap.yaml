@@ -6,7 +6,12 @@ plant_type: "FO_unicycle"
 # obstacles_file: "environments/kmp_benchmark/bugtrap_0.yaml"
 # obstacles_file: "environments/kmp_benchmark/kink_0.yaml"
 # obstacles_file: "environments/kmp_benchmark/parallelpark_0.yaml"
-obstacles_file: "environments/kmp_benchmark/wall_0.yaml"
+##obstacles_file: "environments/kmp_benchmark/wall_0.yaml"
+
+#obstacles_file: "/common/home/aca132/benchmarking_project/may30/ML4KP-devel/resources/input_files/environments/kmp_benchmark/unicycle_fo/bugtrap_0_ad_new.yaml"
+
+
+obstacles_file: "environments/kmp_benchmark/unicycle_fo/bugtrap_0_ad_new.yaml"
 
 # bugtrap
 start_state: [3.8, 3, 0]
@@ -27,6 +32,11 @@ goal_radius: 0.1
 # start_state: [0.7,0.8,0]
 # goal_state: [1.9,0.3,0]
 # goal_radius: 0.05
+
+
+state_space_lower_bound: [0, 0]
+state_space_upper_bound: [6, 6]
+
 
 min_control_steps: 1
 max_control_steps: 10
