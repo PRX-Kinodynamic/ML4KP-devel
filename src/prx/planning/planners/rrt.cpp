@@ -21,7 +21,6 @@ namespace prx
 		sample_state = rrt_spec->sample_state;
 		sample_plan = rrt_spec->sample_plan;
 		valid_check = rrt_spec->valid_check;
-		valid_stop_check = rrt_spec->valid_stop_check;
 		propagate = rrt_spec->propagate;
 		use_replanning = rrt_spec->use_replanning;
 		expand = rrt_spec->expand;

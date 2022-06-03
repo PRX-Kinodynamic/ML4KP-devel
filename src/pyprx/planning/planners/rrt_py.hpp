@@ -18,9 +18,6 @@ PRX_GETTER(rrt_specification_t, distance_function)
 PRX_SETTER(rrt_specification_t, valid_check)
 PRX_GETTER(rrt_specification_t, valid_check)
 
-PRX_SETTER(rrt_specification_t, valid_stop_check)
-PRX_GETTER(rrt_specification_t, valid_stop_check)
-
 PRX_SETTER(rrt_specification_t, valid_state)
 PRX_GETTER(rrt_specification_t, valid_state)
 
@@ -83,7 +80,6 @@ void pyprx_planning_planners_rrt_py()
 		.add_property("sample_state", 		&get_rrt_specification_t_sample_state<prx::sample_state_t>, 			&set_rrt_specification_t_sample_state<prx::sample_state_t>)
 		.add_property("sample_plan", 		&get_rrt_specification_t_sample_plan<prx::sample_plan_t>, 				&set_rrt_specification_t_sample_plan<prx::sample_plan_t>)
 		.add_property("valid_check", 		&get_rrt_specification_t_valid_check<prx::valid_trajectory_t>, 			&set_rrt_specification_t_valid_check<prx::valid_trajectory_t>)
-		.add_property("valid_stop_check", 	&get_rrt_specification_t_valid_stop_check<prx::valid_stop_t>, 			&set_rrt_specification_t_valid_stop_check<prx::valid_stop_t>)
 		.add_property("valid_state", 		&get_rrt_specification_t_valid_state<prx::valid_state_t>, 				&set_rrt_specification_t_valid_state<prx::valid_state_t>)
 		.add_property("propagate", 			&get_rrt_specification_t_propagate<prx::propagate_t>, 					&set_rrt_specification_t_propagate<prx::propagate_t>)
 		.def("state_space", 				&get_rrt_specification_t_state_space<prx::space_t*>, return_internal_reference<>())

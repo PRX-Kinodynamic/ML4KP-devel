@@ -22,7 +22,7 @@ namespace prx
 		derivative_space = new space_t("EEEEE",derivative_memory,"ThetaDerivative");
 
 		geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
-		geometries["body"]->initialize_geometry({.9,.6,.25});
+		geometries["body"]->initialize_geometry({.508,.430,.25});
 		geometries["body"]->generate_collision_geometry();
 		geometries["body"]->set_visualization_color("0xff00ff");
 		configurations["body"]= std::make_shared<transform_t>();

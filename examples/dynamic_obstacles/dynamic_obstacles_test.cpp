@@ -6,6 +6,8 @@
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/visualization/three_js_group.hpp"
 
+#include <fstream>
+
 using namespace prx;
 
 int main(int argc, char* argv[])
@@ -24,9 +26,10 @@ int main(int argc, char* argv[])
     auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
     prx_assert(plant != nullptr, "Plant is nullptr!");
 
-    world_model_t world_model({plant},{obstacle_list});
-    world_model.create_context("dirt_context",{plant_name},{obstacle_names});
-    auto context = world_model.get_context("dirt_context");
+    
+    std::shared_ptr<world_model_t> sim(new world_model_t({plant},{obstacle_list}));
+    sim -> create_context("dirt_context",{plant_name},{obstacle_names});
+    auto context = sim -> get_context("dirt_context");
 
     dirt_t dirt(params["planner"].as<>());
     dirt_specification_t dirt_spec(context.first,context.second);
@@ -58,7 +61,6 @@ int main(int argc, char* argv[])
     context.first -> get_state_space() -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
     context.first -> get_state_space() -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
     
-    world_model.update_obstacle_pose("right",{5.0,0.0,0.0});
     
     dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
 
@@ -72,6 +74,20 @@ int main(int argc, char* argv[])
 
     dirt.resolve_query(&checker);
     dirt.fulfill_query(); 
+
+    // Attempt to step through the trajectory while applying the obstacle dynamics.
+    std::ofstream fout;
+    std::string fname = lib_path+"out/dynamic/trajectory.txt";
+    fout.open(fname);
+
+    for (unsigned i = 0; i < dirt_query.solution_traj.size(); i++)
+    {
+        sim -> update_obstacle_pose("box",{0.0,10*std::sin(i*simulation_step),0.0});
+        auto step_state = dirt_query.solution_traj.at(i);
+        fout << context.first -> get_state_space() -> print_point(step_state,4) 
+        << "," << dirt_spec.valid_state(step_state) << std::endl;
+    }
+    fout.close();
 
     three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
     // TODO: Add function to visualization to replace tree_to_html

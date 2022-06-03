@@ -206,7 +206,6 @@ namespace prx
 		
 		cost_function_t cost_function;
 		
-		valid_stop_t valid_stop_check;
 		valid_trajectory_t valid_check;
 		
 		distance_function_t distance_function;

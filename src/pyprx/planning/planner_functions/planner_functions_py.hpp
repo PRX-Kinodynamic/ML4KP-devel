@@ -48,11 +48,6 @@ void pyprx_planning_planner_functions_py()
         .def("wrap", &create_function<prx::sample_plan_t, void, prx::plan_t, prx::space_point_t>).staticmethod("wrap")
         ;
 
-    class_<prx::valid_stop_t>("valid_stop")
-        .def("__call__", &prx::valid_stop_t::operator() )
-        .def("wrap", &create_function<prx::valid_stop_t, bool, prx::space_point_t, prx::plan_t*, prx::trajectory_t* >).staticmethod("wrap")
-        ;
-
     class_<prx::propagate_t>("propagate")
         .def("__call__", &prx::propagate_t::operator() )
         .def("wrap", &create_function<prx::propagate_t, void, prx::space_point_t, prx::plan_t&, prx::trajectory_t& >).staticmethod("wrap")

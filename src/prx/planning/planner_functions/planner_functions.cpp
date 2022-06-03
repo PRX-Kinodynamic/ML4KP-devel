@@ -39,13 +39,6 @@ namespace prx
 		{
 			return default_valid_trajectory(traj, state_space,cg);
 		};
-		valid_stop_check = [sg, cg](	space_point_t start_state,
-							plan_t* stopping_plan,
-							trajectory_t* stopping_traj
-							)
-		{
-			return default_valid_stop(start_state, stopping_plan, stopping_traj, sg, cg);
-		};
 		propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj)
 		{
 			default_propagate(start_state,plan,out_traj,sg);
@@ -93,49 +86,34 @@ namespace prx
 	    }
 	  	return true;
 	}
-
-
-	bool default_valid_stop(space_point_t start_state,
-					plan_t* stopping_plan,
-					trajectory_t* stopping_traj,
-					std::shared_ptr<system_group_t> sg,
-					std::shared_ptr<collision_group_t> cg
-					)
-	{
-		space_t * ss = sg->get_state_space();
-		space_t * cs = sg->get_control_space();
-		std::vector<double> times;
-		std::vector<double> ctrls;
-		sg->compute_stopping_maneuver(start_state, times, ctrls);
-		// Get plan
-		while (*std::max_element(times.begin(), times.end()) != 0)
-		{
-			space_point_t ctrl = cs->make_point();
-			cs->copy_point_from_vector(ctrl, ctrls);
-			int j = 0;
-			double pos = std::numeric_limits<double>::max();
-			for (; j < times.size(); j++)
-			{
-				pos = pos > times[j] && times[j] != 0 ? times[j] : pos;
-			}
-			stopping_plan->copy_onto_back(ctrl, pos);
-			ctrls[std::min_element(times.begin(), times.end())-times.begin()] = 0;
-			for (int i = 0; i < times.size(); i++)
-			{
-				times[i] -= pos;
-				if (times[i] < 0.01)
-					times[i] = 0;
-			}
-		}
-		// std::cout << stopping_plan->print() << std::endl;
-		// Get trajectory
-		sg->propagate(start_state, *stopping_plan, *stopping_traj);
-		return default_valid_trajectory(*stopping_traj, ss, cg);
-	}
-
+	
 	bool default_valid_state(space_point_t& s,space_t* ss,std::shared_ptr<collision_group_t> cg)
 	{
 		ss->copy_from_point(s);
+		if(cg->in_collision() || !ss->satisfies_bounds(s))
+		{
+			return false;
+		}
+		return true;
+	}
+
+	bool default_time_valid_trajectory(trajectory_t& traj, space_t* ss, std::shared_ptr<collision_group_t> cg, std::shared_ptr<world_model_t> wm, double start_time)
+	{
+		for (unsigned i = 0; i < traj.size(); i++)
+		{
+			auto s = traj.at(i);
+			if (!default_time_valid_state(s,ss,cg,wm,start_time + i*simulation_step))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	bool default_time_valid_state(space_point_t& s, space_t* ss, std::shared_ptr<collision_group_t> cg, std::shared_ptr<world_model_t> wm, double current_time)
+	{
+		ss -> copy_from_point(s);
+		wm -> update_all_obstacle_poses(current_time);
 		if(cg->in_collision() || !ss->satisfies_bounds(s))
 		{
 			return false;

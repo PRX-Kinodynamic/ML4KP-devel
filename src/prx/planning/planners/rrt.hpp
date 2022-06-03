@@ -79,13 +79,6 @@ namespace prx
 			{
 				return default_valid_trajectory(traj, state_space,cg);
 			};
-			valid_stop_check = [this, sg, cg](space_point_t start_state,
-									plan_t* stopping_plan,
-									trajectory_t* stopping_traj
-									)
-			{
-				return default_valid_stop(start_state, stopping_plan, stopping_traj, sg, cg);
-			};
 			propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj)
 			{
 				default_propagate(start_state,plan,out_traj,sg);
@@ -104,7 +97,6 @@ namespace prx
 		sample_state_t sample_state;
 		sample_plan_t sample_plan;
 		valid_trajectory_t valid_check;
-		valid_stop_t valid_stop_check;
 		valid_state_t valid_state;
 		expand_t expand;
 		propagate_t propagate;
@@ -180,7 +172,6 @@ namespace prx
 		sample_state_t sample_state;
 		sample_plan_t sample_plan;
 		valid_trajectory_t valid_check;
-		valid_stop_t valid_stop_check;
 		expand_t expand;
 		propagate_t propagate;
 

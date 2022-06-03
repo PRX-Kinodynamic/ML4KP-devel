@@ -12,8 +12,9 @@ namespace prx
 	typedef std::function<void (space_point_t&)> sample_state_t;
 	typedef std::function<void (plan_t&, space_point_t)> sample_plan_t;
 	typedef std::function<bool (trajectory_t&)> valid_trajectory_t;
-	typedef std::function<bool (space_point_t, plan_t*, trajectory_t*)> valid_stop_t;
 	typedef std::function<bool (space_point_t&)> valid_state_t;
+	typedef std::function<bool (trajectory_t&, double)> time_valid_trajectory_t;
+	typedef std::function<bool (space_point_t&, double)> time_valid_state_t;
 	typedef std::function<void (space_point_t&, plan_t&, trajectory_t& )> propagate_t;
 	typedef std::function<void (space_point_t&, std::vector<plan_t*>&, std::vector<trajectory_t*>&, int bn, bool blossom_expand)> expand_t;
 
@@ -33,7 +34,8 @@ namespace prx
 		sample_plan_t sample_plan;
 		valid_state_t valid_state;
 		valid_trajectory_t valid_check;
-		valid_stop_t valid_stop_check;
+		time_valid_state_t time_valid_state;
+		time_valid_trajectory_t time_valid_trajectory;
 		propagate_t propagate;
 		expand_t expand;
 		cost_function_t cost_function;
@@ -54,15 +56,12 @@ namespace prx
 
 	bool default_valid_trajectory(trajectory_t&,space_t*,std::shared_ptr<collision_group_t>);
 
-	bool default_valid_stop(space_point_t start_state,
-					plan_t* stopping_plan,
-					trajectory_t* stopping_traj,
-					std::shared_ptr<system_group_t> sg,
-					std::shared_ptr<collision_group_t> cg
-					);	// replanning: inevitable collision state check
-
 	bool default_valid_state(space_point_t&,space_t*,std::shared_ptr<collision_group_t>);
 
+	bool default_time_valid_state(space_point_t&, space_t* ss, std::shared_ptr<collision_group_t>, std::shared_ptr<world_model_t> wm, double current_time);
+
+	bool default_time_valid_trajectory(trajectory_t& traj, space_t* ss, std::shared_ptr<collision_group_t>, std::shared_ptr<world_model_t> wm, double start_time);
+	
 	void default_propagate(space_point_t&, plan_t&, trajectory_t&,std::shared_ptr<system_group_t>);
 
 	void default_expand(space_point_t&, std::vector<plan_t*>&, std::vector<trajectory_t*>&, int bn, std::shared_ptr<system_group_t>, sample_plan_t sp, propagate_t prop);

@@ -22,7 +22,6 @@ namespace prx
 		sample_state = aorrt_spec -> sample_state;
 		sample_plan = aorrt_spec -> sample_plan;
 		valid_check = aorrt_spec -> valid_check;
-		valid_stop_check = aorrt_spec -> valid_stop_check;
 		propagate = aorrt_spec -> propagate;
 		use_replanning = aorrt_spec -> use_replanning;
 

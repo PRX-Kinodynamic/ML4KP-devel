@@ -112,6 +112,11 @@ namespace prx
 			obstacle -> set_object_pose(new_pose);
 		}
 
+		inline void update_all_obstacle_poses(double time)
+		{
+			
+		}
+
 	private:
 		// SGM* system_groups;
 		// CC* collision_groups;
