@@ -40,6 +40,12 @@ namespace prx
 		bool check();
 
 		/**
+		 * @brief Report a new solution.
+		 * @details Report a new solution.
+		 */
+		void report_new_solution();
+
+		/**
 		 * @brief Get the time on the timer.
 		 * @details Get the time on the timer.
 		 * 
@@ -93,6 +99,11 @@ namespace prx
 		 * @brief Which type of condition to check. 0 for iterations, 1 for time.
 		 */
 		unsigned condition_type;
+
+		/**
+		 * @brief A counter for solutions.
+		 */
+		long unsigned solution_counter;
 
 	};
 }

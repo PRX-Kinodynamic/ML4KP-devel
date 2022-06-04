@@ -66,13 +66,15 @@ namespace prx
 
 		int blossom_number;
 
-		bool use_pruning;
+		bool use_pruning, use_prescience;
 
 		double replanning_cycle;
 		int order;
 
 		heuristic_function_t h;
 		obstacle_distance_function_t obstacle_distance_function;
+		time_valid_state_t time_valid_state;
+		time_valid_trajectory_t time_valid_trajectory;
 	};
 
 	class dirt_query_t : public rrt_query_t
@@ -95,7 +97,7 @@ namespace prx
 
 	protected:
 
-		virtual void update_goal(node_index_t node_index) override;
+		virtual void update_goal(node_index_t node_index, condition_check_t* condition) override;
 
 		virtual void _link_and_setup_spec(planner_specification_t* spec) override;
 		virtual bool _preprocess() override;
@@ -119,6 +121,8 @@ namespace prx
 
 		heuristic_function_t h;
 		expand_t expand;
+		time_valid_state_t time_valid_state;
+		time_valid_trajectory_t time_valid_trajectory;
 
 		double max_radius;
 		bool child_extension;
@@ -127,7 +131,8 @@ namespace prx
 		void add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg,
 		dirt_node_t* closest_node,
 		std::vector<dirt_node_t*> dir_updates,
-		double new_node_dir_radius
+		double new_node_dir_radius,
+		condition_check_t* condition
 		);
 
 		dirt_node_t* get_vertex(node_index_t v) const

@@ -2,9 +2,9 @@
 #include "prx/planning/world_model.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/planning/planners/dirt.hpp"
+#include "prx/planning/planner_statistics.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
-#include "prx/visualization/three_js_group.hpp"
 
 #include <fstream>
 
@@ -30,6 +30,8 @@ int main(int argc, char* argv[])
     std::shared_ptr<world_model_t> sim(new world_model_t({plant},{obstacle_list}));
     sim -> create_context("dirt_context",{plant_name},{obstacle_names});
     auto context = sim -> get_context("dirt_context");
+    auto cg = context.second;
+    auto ss = context.first -> get_state_space();
 
     dirt_t dirt(params["planner"].as<>());
     dirt_specification_t dirt_spec(context.first,context.second);
@@ -39,6 +41,18 @@ int main(int argc, char* argv[])
     {
         // Custom h function: ( eucledian distance from s to s2 ) / (max velocity)
         return space_t::euclidean_2d(s, s2) / max_vel;
+    };
+
+    dirt_spec .use_prescience = params["prescience"].as<bool>();
+    
+    dirt_spec.time_valid_state = [&](space_point_t& s, double current_time)
+    {
+        return default_time_valid_state(s,ss,cg,sim,current_time);
+    };
+
+    dirt_spec.time_valid_trajectory = [&](trajectory_t& traj, double start_time)
+    {
+        return default_time_valid_trajectory(traj,ss,cg,sim,start_time);
     };
 
     // Two ways of accessing lengthy parameter paths
@@ -61,45 +75,48 @@ int main(int argc, char* argv[])
     context.first -> get_state_space() -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
     context.first -> get_state_space() -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
     
-    
     dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
 
-    dirt_query.get_visualization = params["visualize"].as<bool>();
+    condition_check_t checker(params["checker_type"].as<>(), 0.1 * params["checker_value"].as<double>()); 
+    int num_trials = params["num_trials"].as<int>();
 
-    dirt.link_and_setup_spec(&dirt_spec);
-    dirt.preprocess();
-    dirt.link_and_setup_query(&dirt_query);
-
-    condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>()); //'
-
-    dirt.resolve_query(&checker);
-    dirt.fulfill_query(); 
-
-    // Attempt to step through the trajectory while applying the obstacle dynamics.
-    std::ofstream fout;
-    std::string fname = lib_path+"out/dynamic/trajectory.txt";
-    fout.open(fname);
-
-    for (unsigned i = 0; i < dirt_query.solution_traj.size(); i++)
+    for (int i = 0; i < num_trials; i++)
     {
-        sim -> update_obstacle_pose("box",{0.0,10*std::sin(i*simulation_step),0.0});
-        auto step_state = dirt_query.solution_traj.at(i);
-        fout << context.first -> get_state_space() -> print_point(step_state,4) 
-        << "," << dirt_spec.valid_state(step_state) << std::endl;
+        dirt.reset();
+        dirt_query.clear_outputs();
+
+        dirt.link_and_setup_spec(&dirt_spec);
+        dirt.preprocess();
+        dirt.link_and_setup_query(&dirt_query);
+
+        planner_statistics_t stats;
+        stats.link_planner(&dirt);
+        stats.link_criterion(&checker);
+        stats.repeat_data_gathering(10);
+
+        dirt.fulfill_query();
+
+        std::string fname = out_path + params["output_dir"].as<std::string>() + "/" +
+                    "dirt_" + std::to_string(i) + ".txt";
+        std::cout << fname << std::endl;
+        std::ofstream fout;
+        fout.open(fname);
+        fout << stats.serialize() << std::endl;
+        fout.close();
+
+        fname = out_path + params["output_dir"].as<std::string>() + "/" +
+                    "trajectory_" + std::to_string(i) + ".txt";
+        fout.open(fname);
+
+        for (unsigned i = 0; i < dirt_query.solution_traj.size(); i++)
+        {
+            sim -> update_obstacle_pose("box1",{-5.0,10*std::cos(i*simulation_step),0.0});
+            sim -> update_obstacle_pose("box2",{ 0.0,10*std::sin(i*simulation_step),0.0});
+            sim -> update_obstacle_pose("box3",{ 5.0,10*std::cos(i*simulation_step),0.0});
+            auto step_state = dirt_query.solution_traj.at(i);
+            fout << context.first -> get_state_space() -> print_point(step_state,4) 
+            << "," << dirt_spec.valid_state(step_state) << std::endl;
+        }
+        fout.close();
     }
-    fout.close();
-
-    three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
-    // TODO: Add function to visualization to replace tree_to_html
-    // tree_to_html(vis_group, dirt_query, context.first -> get_state_space());
-
-    std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
-    auto ss = context.first -> get_state_space();
-
-    vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
-    vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, dirt_query.solution_traj, body_name, ss);
-    vis_group -> add_animation(dirt_query.solution_traj, ss, dirt_query.start_state);
-    vis_group -> output_html("output.html");
-
-    delete vis_group;
 }

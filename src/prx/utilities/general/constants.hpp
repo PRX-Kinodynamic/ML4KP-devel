@@ -27,6 +27,7 @@ namespace prx
 	}
 
 	const std::string lib_path = lib_path_safe("DIRTMP_PATH");
+	const std::string out_path = lib_path + "out/";
 	
 	const std::string models_path = lib_path + "resources/models/";
 	const std::string input_path = lib_path + "resources/input_files/";

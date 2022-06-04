@@ -1,6 +1,6 @@
 planner: "dirt"
 
-random_seed: 11101993
+random_seed: 111093
 simulation_step: 0.1
 
 environment: "environments/dynamic.yaml"
@@ -9,9 +9,12 @@ plant: !file "plants/treaded_vehicle.yaml"
 blossom: 5
 pruning: false
 
-visualize: true
+prescience: true
 
 checker_type: time
-checker_value: 1
+checker_value: 0.5
 
 goal_region_radius: 0.1
+
+num_trials: 30
+output_dir: "dynamic/noisy_prescience"

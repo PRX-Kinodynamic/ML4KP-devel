@@ -114,7 +114,9 @@ namespace prx
 
 		inline void update_all_obstacle_poses(double time)
 		{
-			
+			update_obstacle_pose("box1",{-5.0,10*std::cos(time),0.0});
+			update_obstacle_pose("box2",{ 0.0,10*std::sin(time),0.0});
+			update_obstacle_pose("box3",{ 5.0,10*std::cos(time),0.0});
 		}
 
 	private:

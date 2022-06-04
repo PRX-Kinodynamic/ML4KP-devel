@@ -1,19 +1,24 @@
 import numpy as np 
 import os
+import subprocess
 import yaml
 import matplotlib.pyplot as plt 
 from matplotlib.patches import Rectangle
 from tqdm import tqdm
 from PIL import Image
 
-def f(sim_time):
+def f_sin(sim_time):
     return 10 * np.sin(sim_time)
+
+def f_cos(sim_time):
+    return 10 * np.cos(sim_time)
 
 box_size = [1.0,1.0]
 robot_dims = [0.508,0.430]
+diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 goal = [9.0,0.0]
 goal_radius = 0.1
-data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/"
+data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/no_prescience/"
 simulation_step = 0.1
 
 environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/dynamic.yaml"
@@ -24,7 +29,7 @@ with open(environment_file, 'r') as stream:
     except yaml.YAMLError as exc:
         print(exc)
 
-traj = np.loadtxt(data_dir+"trajectory.txt",delimiter=",")
+traj = np.loadtxt(data_dir+"trajectory_0.txt",delimiter=",")
 continue_plotting = True
 first_collision_state = -1
 
@@ -37,12 +42,20 @@ for i in tqdm(range(0,len(traj))):
 
     obstacles = env_params["environment"]["geometries"]
     for obstacle in obstacles:
-        if obstacle["dynamic"]: continue
-        box_center = obstacle["config"]["position"][:2]
-        box_dims = obstacle["collision_geometry"]["dims"][:2]
-        rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
-        linewidth=1,edgecolor='r',facecolor='r')
-        plt.gca().add_patch(rect)
+        if not obstacle["dynamic"]:
+            box_center = obstacle["config"]["position"][:2]
+            box_dims = obstacle["collision_geometry"]["dims"][:2]
+            rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
+            linewidth=1,edgecolor='r',facecolor='r')
+            plt.gca().add_patch(rect)
+        else:
+            box_center = obstacle["config"]["position"][:2]
+            if obstacle["name"] == "box1" or obstacle["name"] == "box3": box_center[1] = f_cos(i*simulation_step)
+            else: box_center[1] = f_sin(i*simulation_step)
+            box_dims = obstacle["collision_geometry"]["dims"][:2]
+            rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
+            linewidth=1,edgecolor='r',facecolor='r')
+            plt.gca().add_patch(rect)
 
     circle = plt.Circle((goal[0],goal[1]),goal_radius,color='green')
     plt.gca().add_patch(circle)
@@ -50,27 +63,25 @@ for i in tqdm(range(0,len(traj))):
     plt.plot(traj[:,0],traj[:,1],color='black')
 
     if continue_plotting:
-        rectangle_corner = np.array([traj[i,0]-robot_dims[0]*0.5,traj[i,1]-robot_dims[1]*0.5])
+        # rectangle_corner = np.array([traj[i,0]-robot_dims[0]*0.5,traj[i,1]-robot_dims[1]*0.5])
+        rectangle_corner = np.array([traj[i,0]-diag_len*np.cos(0.25*np.pi+traj[i,2]),
+                                traj[i,1]-diag_len*np.sin(0.25*np.pi+traj[i,2])])
         first_collision_state = i
         rect = Rectangle((rectangle_corner[0],rectangle_corner[1]),
                         robot_dims[0],robot_dims[1],
-                        edgecolor='purple',facecolor='purple',angle=180*traj[i,2]/np.pi)
+                        edgecolor='purple',facecolor='purple',angle=180.*traj[i,2]/np.pi)
         plt.gca().add_patch(rect)
     else:
         break
     continue_plotting = (continue_plotting and traj[max(0,i-1),-1] == 1)
 
-    rectangle_corner = np.array([0- box_size[0]*0.5,f(i*simulation_step)- box_size[1]*0.5])
-    rect = Rectangle((rectangle_corner[0],rectangle_corner[1]),
-                     box_size[0], box_size[1],
-                     edgecolor='red',facecolor='red')
-    plt.gca().add_patch(rect)
-
+    plt.text(6.0,9.0,"t =: "+f"{(i*simulation_step): .1f}"+"s",fontsize=10)
     plt.title("DIRT_NoReplan_NoPrescience")
-    plt.savefig(data_dir+str(i)+".png")
+    plt.savefig(data_dir+str(i)+".png",bbox_inches='tight')
     plt.clf()
 
 
 fnames = [Image.open(data_dir+str(i)+".png") for i in range(first_collision_state)]
 fnames[0].save(data_dir+'output.gif',format='GIF',append_images=fnames[1:],
 save_all=True,duration=10)
+subprocess.call("cd " + data_dir + " && rm -rf *.png",shell=True)
