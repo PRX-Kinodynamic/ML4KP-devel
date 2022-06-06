@@ -1,6 +1,7 @@
 #pragma once
 
 #include "prx/utilities/geometry/geometry.hpp"
+#include "prx/simulation/loaders/pose_function_helper.hpp"
 
 #include "prx/utilities/defs.hpp"
 
@@ -32,6 +33,8 @@ namespace prx
 			return object_name;
 		}
 
+		position_function_t position_function;
+
 		inline void set_object_pose(const std::vector<double> new_position)
 		{
 			prx_assert(configurations.size() == 1, "set_object_pose() is supported only for a single rigid body!")
@@ -41,7 +44,7 @@ namespace prx
 				auto body = c.second;
 				body -> setIdentity();
 				body->linear() = (quaternion_t(0,0,0,1).toRotationMatrix());
-				body->translation() = (vector_t(new_position[0],new_position[1],0));
+				body->translation() = (vector_t(new_position[0],new_position[1],new_position[2]));
 			}
 		}
 

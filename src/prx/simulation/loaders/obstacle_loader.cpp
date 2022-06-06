@@ -1,8 +1,8 @@
 #include "prx/simulation/loaders/obstacle_loader.hpp"
+#include "prx/simulation/loaders/pose_function_helper.hpp"
 #include "prx/utilities/geometry/basic_geoms/box.hpp"
 #include "prx/utilities/geometry/basic_geoms/cylinder.hpp"
 #include "prx/utilities/geometry/basic_geoms/sphere.hpp"
-
 
 
 
@@ -35,10 +35,22 @@ namespace prx
 
 			if (geom_type == "box")
 			{
-
 				auto dims = geom_params["dims"].as<std::vector<double>>();
 				obstacle_list.push_back(create_obstacle(new box_t(name,dims[0],dims[1],dims[2],obstacle_pose)));
 				obstacle_names.push_back(name);
+
+				auto is_dynamic = geom["dynamic"].as<bool>();
+				const std::vector<double> res = {geom_position[0],geom_position[1], geom_position[2]};
+				if (is_dynamic)
+				{
+					std::string position_function_descriptor = geom["position_function"].as<std::string>();
+					double func_multiplier = geom["multiplier"].as<double>();
+					obstacle_list.back() -> position_function.init(position_function_descriptor, func_multiplier, res);
+				}
+				else 
+				{
+					obstacle_list.back() -> position_function.init("position_function_descriptor", 1.0, res);
+				}
 			}
 			else if (geom_type == "cylinder")
 			{

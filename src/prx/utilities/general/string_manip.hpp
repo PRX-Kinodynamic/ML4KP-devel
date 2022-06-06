@@ -6,6 +6,8 @@
  * */
 #include <utility>
 #include <string>
+#include <vector>
+#include <sstream>
 
 namespace prx
 {
@@ -90,5 +92,13 @@ namespace prx
 	 */
 
 	void output_progress_bar(double value);
+
+	/**
+	 * @brief A helper function for splitting a string based on a delimiter.
+	 * 
+	 * @param str The string to be split.
+	 * @param delimiter The delimiter to split the string on.
+	 */
+	std::vector<std::string> split_string(const std::string& str, char delimiter);
 
 }

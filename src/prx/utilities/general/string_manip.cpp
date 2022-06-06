@@ -69,4 +69,16 @@ namespace prx
 		std::cout << "] " << int(value * 100.0) << " %\r";
 		std::cout.flush();
 	}
+
+	std::vector<std::string> split_string(const std::string& str, char delimiter)
+	{
+		std::vector<std::string> tokens;
+		std::string token;
+		std::istringstream tokenStream(str);
+		while (std::getline(tokenStream, token, delimiter))
+		{
+			tokens.push_back(token);
+		}
+		return tokens;
+	}
 }

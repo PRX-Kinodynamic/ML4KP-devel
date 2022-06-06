@@ -44,6 +44,8 @@ environment:
       -
         name: box1
         dynamic: true
+        position_function: "cos"
+        multiplier: 10.
         collision_geometry: 
           type: box
           material: red 
@@ -54,6 +56,8 @@ environment:
       -
         name: box2
         dynamic: true
+        position_function: "sin"
+        multiplier: 10.
         collision_geometry: 
           type: box
           material: red 
@@ -64,6 +68,8 @@ environment:
       -
         name: box3
         dynamic: true
+        position_function: "cos"
+        multiplier: 10.
         collision_geometry: 
           type: box
           material: red 

@@ -26,7 +26,6 @@ int main(int argc, char* argv[])
     auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
     prx_assert(plant != nullptr, "Plant is nullptr!");
 
-    
     std::shared_ptr<world_model_t> sim(new world_model_t({plant},{obstacle_list}));
     sim -> create_context("dirt_context",{plant_name},{obstacle_names});
     auto context = sim -> get_context("dirt_context");
@@ -44,7 +43,6 @@ int main(int argc, char* argv[])
     };
 
     dirt_spec .use_prescience = params["prescience"].as<bool>();
-    
     dirt_spec.time_valid_state = [&](space_point_t& s, double current_time)
     {
         return default_time_valid_state(s,ss,cg,sim,current_time);
@@ -110,9 +108,7 @@ int main(int argc, char* argv[])
 
         for (unsigned i = 0; i < dirt_query.solution_traj.size(); i++)
         {
-            sim -> update_obstacle_pose("box1",{-5.0,10*std::cos(i*simulation_step),0.0});
-            sim -> update_obstacle_pose("box2",{ 0.0,10*std::sin(i*simulation_step),0.0});
-            sim -> update_obstacle_pose("box3",{ 5.0,10*std::cos(i*simulation_step),0.0});
+            sim -> update_all_obstacle_poses(i*simulation_step);
             auto step_state = dirt_query.solution_traj.at(i);
             fout << context.first -> get_state_space() -> print_point(step_state,4) 
             << "," << dirt_spec.valid_state(step_state) << std::endl;
