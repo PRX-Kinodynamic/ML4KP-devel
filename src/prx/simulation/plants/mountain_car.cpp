@@ -16,7 +16,7 @@ namespace prx
         control_memory = {&u};
         input_control_space = new space_t("E",control_memory,"u");
         input_control_space->set_bounds(
-            {-.2}, {.2}
+            {-.4}, {.4}
             );
         
         derivative_memory = {&xdot,&xdotdot};
