@@ -68,9 +68,6 @@ namespace prx
 
 		bool use_pruning, use_prescience;
 
-		double replanning_cycle;
-		int order;
-
 		heuristic_function_t h;
 		obstacle_distance_function_t obstacle_distance_function;
 		time_valid_state_t time_valid_state;
@@ -115,10 +112,6 @@ namespace prx
 
 
 	private:
-
-		int replanning_iteration;
-		double ri_step;	// Time during a replanning cycle
-
 		heuristic_function_t h;
 		expand_t expand;
 		time_valid_state_t time_valid_state;

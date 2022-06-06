@@ -22,7 +22,6 @@ namespace prx
 		sample_plan = rrt_spec->sample_plan;
 		valid_check = rrt_spec->valid_check;
 		propagate = rrt_spec->propagate;
-		use_replanning = rrt_spec->use_replanning;
 		expand = rrt_spec->expand;
 
 
@@ -114,7 +113,7 @@ namespace prx
 	}
 	void rrt_t::_fulfill_query()
 	{
-		if(goal_vertex!=start_vertex && !use_replanning)
+		if(goal_vertex!=start_vertex)
 		{
 			//backtrack to get the plan and trajectory
 			rrt_query->solution_cost = tree.get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come;
@@ -140,37 +139,6 @@ namespace prx
 		else
 		{
 			rrt_query->solution_cost = 0;
-		}
-		if (use_replanning&&false)
-		{
-			std::deque<node_index_t> node_indices;
-			node_index_t current_index;
-			if (goal_vertex!=start_vertex)
-			{
-				rrt_query->solution_cost = tree.get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come;
-				current_index = goal_vertex;
-				while(current_index!=start_vertex)
-				{
-					node_indices.push_front(current_index);
-					current_index = tree[current_index]->get_parent();
-				}
-
-			}
-			current_index = start_vertex;
-			while(current_index!=0)
-			{
-				node_indices.push_front(current_index);
-				current_index = tree[current_index]->get_parent();
-			}
-			rrt_query->solution_plan = *tree.get_edge_as<rrt_edge_t>(tree[node_indices[0]]->get_parent_edge())->plan;
-			rrt_query->solution_traj = *tree.get_edge_as<rrt_edge_t>(tree[node_indices[0]]->get_parent_edge())->traj;
-
-			for(int i=1;i<node_indices.size();i++)
-			{
-				rrt_query->solution_traj.resize(rrt_query->solution_traj.size()-1);
-				rrt_query->solution_plan += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->plan;
-				rrt_query->solution_traj += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->traj;
-			}
 		}
 		if(rrt_query->get_visualization)
 		{

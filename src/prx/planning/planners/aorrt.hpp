@@ -242,7 +242,6 @@ namespace prx
 		long unsigned current_solution_iters;
 
 		double c_max;
-		bool use_replanning;
 		std::vector<space_point_t> trajectory_costs;
 
 		bool use_heuristic;

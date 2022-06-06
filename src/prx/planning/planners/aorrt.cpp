@@ -23,7 +23,6 @@ namespace prx
 		sample_plan = aorrt_spec -> sample_plan;
 		valid_check = aorrt_spec -> valid_check;
 		propagate = aorrt_spec -> propagate;
-		use_replanning = aorrt_spec -> use_replanning;
 
 		cost_state_space = aorrt_spec -> cost_state_space;
 		X_state_space = aorrt_spec -> X_state_space;
@@ -160,7 +159,7 @@ namespace prx
 
 	void aorrt_t::_fulfill_query()
 	{
-		if(goal_vertex!=start_vertex && !use_replanning)
+		if(goal_vertex!=start_vertex)
 		{
 			//backtrack to get the plan and trajectory
 			aorrt_query->solution_cost = Y_min_cost;
@@ -195,11 +194,6 @@ namespace prx
 		else
 		{
 			aorrt_query -> solution_cost = 0;
-		}
-		if (use_replanning)
-		{
-			std::cout << "REPLANNING NOT IMPLEMENTED" << std::endl;
-
 		}
 		if(aorrt_query -> get_visualization)
 		{

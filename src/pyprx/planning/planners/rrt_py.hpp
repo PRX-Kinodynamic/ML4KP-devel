@@ -31,9 +31,6 @@ PRX_GETTER(rrt_specification_t, control_space)
 PRX_SETTER(rrt_specification_t, bnb)
 PRX_GETTER(rrt_specification_t, bnb)
 
-PRX_SETTER(rrt_specification_t, use_replanning)
-PRX_GETTER(rrt_specification_t, use_replanning)
-
 PRX_SETTER(rrt_specification_t, min_control_steps)
 PRX_GETTER(rrt_specification_t, min_control_steps)
 
@@ -85,7 +82,6 @@ void pyprx_planning_planners_rrt_py()
 		.def("state_space", 				&get_rrt_specification_t_state_space<prx::space_t*>, return_internal_reference<>())
 		.def("control_space", 				&get_rrt_specification_t_control_space<prx::space_t*>, return_internal_reference<>())
 		.add_property("bnb", 			    &get_rrt_specification_t_bnb<bool>, 									&set_rrt_specification_t_bnb<bool>)
-		.add_property("use_replanning",	    &get_rrt_specification_t_use_replanning<bool>, 							&set_rrt_specification_t_use_replanning<bool>)
 		.add_property("min_control_steps", 	&get_rrt_specification_t_min_control_steps<int>,						&set_rrt_specification_t_min_control_steps<int>)
 		.add_property("max_control_steps", 	&get_rrt_specification_t_max_control_steps<int>,						&set_rrt_specification_t_max_control_steps<int>)
 		// .add_property("", 			    &get_rrt_specification_t_<>, 									&set_rrt_specification_t_<>)

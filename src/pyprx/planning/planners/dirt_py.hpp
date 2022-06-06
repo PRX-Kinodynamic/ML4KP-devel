@@ -37,12 +37,6 @@ PRX_GETTER(dirt_specification_t, blossom_number)
 PRX_SETTER(dirt_specification_t, use_pruning)
 PRX_GETTER(dirt_specification_t, use_pruning)
 
-PRX_SETTER(dirt_specification_t, replanning_cycle)
-PRX_GETTER(dirt_specification_t, replanning_cycle)
-
-PRX_SETTER(dirt_specification_t, order)
-PRX_GETTER(dirt_specification_t, order)
-
 PRX_SETTER(dirt_specification_t, h)
 PRX_GETTER(dirt_specification_t, h)
 
@@ -83,8 +77,6 @@ void pyprx_planning_planners_dirt_py()
 	class_<prx::dirt_specification_t, std::shared_ptr<prx::dirt_specification_t>, bases<prx::rrt_specification_t>>("dirt_specification", init<std::shared_ptr<prx::system_group_t>, std::shared_ptr<prx::collision_group_t>>())
 		.add_property("blossom_number", 				&get_dirt_specification_t_blossom_number<int>, 					&set_dirt_specification_t_blossom_number<int>)
 		.add_property("use_pruning", 					&get_dirt_specification_t_use_pruning<bool>, 					&set_dirt_specification_t_use_pruning<bool>)
-		.add_property("replanning_cycle", 				&get_dirt_specification_t_replanning_cycle<double>, 			&set_dirt_specification_t_replanning_cycle<double>)
-		.add_property("order", 							&get_dirt_specification_t_order<int>, 							&set_dirt_specification_t_order<int>)
 		.add_property("h", 								&get_dirt_specification_t_h<prx::heuristic_function_t>, 		&set_dirt_specification_t_h<prx::heuristic_function_t>)
 		// .add_property("expand", 						&get_dirt_specification_t_expand<prx::expand_t>, 				&set_dirt_specification_t_expand<prx::expand_t>)
 		// .add_property("obstacle_distance_function", 	&get_dirt_specification_t_<prx::obstacle_distance_function_t>, 	&set_dirt_specification_t_<prx::obstacle_distance_function_t>)

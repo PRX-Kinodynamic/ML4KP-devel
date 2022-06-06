@@ -46,7 +46,6 @@ namespace prx
 		rrt_specification_t(std::shared_ptr<system_group_t> sg,std::shared_ptr<collision_group_t> cg)
 		{
 			bnb = true;
-			use_replanning = false;
 			state_space = sg->get_state_space();
 			control_space = sg->get_control_space();
 			double multiplier = simulation_step >= 1 ? simulation_step : 1./simulation_step;
@@ -105,7 +104,6 @@ namespace prx
 		space_t* control_space;
 
 		bool bnb;
-		bool use_replanning;
 
 		int min_control_steps;
 		int max_control_steps;
@@ -189,8 +187,6 @@ namespace prx
 		double current_solution;
 		long unsigned current_solution_iters;
 		double current_solution_time;
-
-		bool use_replanning;
 
 		int print_statistics_count;
 
