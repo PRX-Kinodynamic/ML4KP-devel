@@ -53,19 +53,19 @@ namespace prx
         integrator -> integrate(simulation_step);
     }
 
-    void unicycle_fo_t::set_state_space_bounds(const std::vector<double>& lower,const std::vector<double>& upper)
-    {
-        for (int i = 0; i < std::min(lower.size(), lower_bound.size()); ++i)
-        {
-            lower_bound[i] = lower[i];
-        }
-        for (int i = 0; i < std::min(upper.size(), upper_bound.size()); ++i)
-        {
-            upper_bound[i] = upper[i];
-        }
+    // void unicycle_fo_t::set_state_space_bounds(const std::vector<double>& lower,const std::vector<double>& upper)
+    // {
+    //     for (int i = 0; i < std::min(lower.size(), lower_bound.size()); ++i)
+    //     {
+    //         lower_bound[i] = lower[i];
+    //     }
+    //     for (int i = 0; i < std::min(upper.size(), upper_bound.size()); ++i)
+    //     {
+    //         upper_bound[i] = upper[i];
+    //     }
 
-        state_space->set_bounds(lower_bound, upper_bound);
-    }
+    //     state_space->set_bounds(lower_bound, upper_bound);
+    // }
 
     void unicycle_fo_t::update_configuration()
     {

@@ -65,6 +65,20 @@ namespace prx
 		};
 	}
 
+	void default_interpolate_trajectory(space_point_t& start, space_point_t& end, trajectory_t& traj, unsigned size)
+	{
+		// Given two states, start and end, and a number of steps size,
+		// this function will interpolate a trajectory between the two states.
+		for (unsigned i = 0; i < size; ++i)
+		{
+			traj.copy_onto_back(start);
+			traj.at(i)->at(0) = start->at(0) + (end->at(0) - start->at(0))*i/size;
+			traj.at(i)->at(1) = start->at(1) + (end->at(1) - start->at(1))*i/size;
+			traj.at(i)->at(2) = start->at(2) + (end->at(2) - start->at(2))*i/size;
+		}
+		traj.copy_onto_back(end);
+	}
+
 	void default_sample_state(space_point_t& s,space_t* ss)
 	{
 		ss->sample(s);

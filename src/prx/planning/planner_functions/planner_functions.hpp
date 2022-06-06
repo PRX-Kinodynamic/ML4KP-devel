@@ -14,6 +14,7 @@ namespace prx
 	typedef std::function<bool (trajectory_t&)> valid_trajectory_t;
 	typedef std::function<bool (space_point_t, plan_t*, trajectory_t*)> valid_stop_t;
 	typedef std::function<bool (space_point_t&)> valid_state_t;
+	typedef std::function<void (space_point_t&, space_point_t&, trajectory_t&, unsigned)> interpolate_trajectory_t;
 	typedef std::function<void (space_point_t&, plan_t&, trajectory_t& )> propagate_t;
 	typedef std::function<void (space_point_t&, std::vector<plan_t*>&, std::vector<trajectory_t*>&, int bn, bool blossom_expand)> expand_t;
 
@@ -47,6 +48,8 @@ namespace prx
 	protected:
 		planner_functions_t(){}
 	};
+
+	void default_interpolate_trajectory(space_point_t& start, space_point_t& end, trajectory_t& traj, unsigned size);
 
 	void default_sample_state(space_point_t&,space_t*);
 
