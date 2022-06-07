@@ -22,7 +22,7 @@ namespace prx
 
 		expand = dirt_spec->expand;
 		h = dirt_spec->h;
-        execution_time = dirt_spec->execution_time;
+        replanning_cycle = dirt_spec->replanning_cycle;
 	}
 	bool dirt_replan_t::_preprocess()
 	{
@@ -157,9 +157,9 @@ namespace prx
 				closest_node->blossom_number=1;
 				for(int i=0;i<plans.size();i++)
 				{
-                    if (plans[i]->duration() + closest_node->checkpoint_time > execution_time)
+                    if (plans[i]->duration() + closest_node->checkpoint_time > replanning_cycle)
                     {
-                        plans[i]->reduce_last_control(plans[i]->duration() + closest_node->checkpoint_time - execution_time);
+                        plans[i]->reduce_last_control(plans[i]->duration() + closest_node->checkpoint_time - replanning_cycle);
                         propagate(closest_node->point,*plans[i],*trajs[i]);
                     }
                     if (plans[i]->duration() > 0)

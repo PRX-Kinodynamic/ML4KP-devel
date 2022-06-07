@@ -74,7 +74,7 @@ for i in tqdm(range(0,len(traj))):
         plt.gca().add_patch(rect)
     else:
         break
-    continue_plotting = (continue_plotting and traj[max(0,i),-1] == 1)
+    continue_plotting = (continue_plotting and traj[max(0,i-1),-1] == 1)
 
     plt.text(6.0,9.0,"t =: "+f"{(i*simulation_step): .1f}"+"s",fontsize=10)
     plt.title("DIRT_Replan_NoPrescience")

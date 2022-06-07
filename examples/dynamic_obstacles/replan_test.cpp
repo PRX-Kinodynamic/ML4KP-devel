@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
             dirt_query.start_time = 0;
         }
 
-        dirt_spec.execution_time = (i + 1) * params["execution_time"].as<double>();
+        dirt_spec.replanning_cycle = (i + 1) * params["replanning_cycle"].as<double>();
 
         dirt.reset();
         checker.reset();
@@ -97,15 +97,12 @@ int main(int argc, char* argv[])
         vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
         full_traj += dirt_query.solution_traj;
         auto last_state = full_traj.back();
+        continue_planning &= !dirt_query.goal_check(last_state);
         if (i != max_cycles - 1 && !dirt_query.goal_check(last_state))
         {
             full_traj.resize(full_traj.size()-1);
         }
-        PRX_DEBUG_PRINT
-        std::cout << "Solution cost: " << dirt_query.solution_cost << std::endl;
 
-        // Execute the trajectory
-        // TODO: A pop if it is valid;
         bool valid = true;
         for (unsigned i = 0; i < dirt_query.solution_traj.size(); i++)
         {
@@ -117,6 +114,8 @@ int main(int argc, char* argv[])
         continue_planning &= valid;
         ss -> copy_point(dirt_query.start_state, dirt_query.solution_traj.back());
         dirt_query.start_time += dirt_query.solution_cost;
+        std::cout << "Resetting obstacles to time " << dirt_query.start_time - params["checker_value"].as<double>() << std::endl;
+        sim -> update_all_obstacle_poses(dirt_query.start_time - params["checker_value"].as<double>());
     }
 
     std::string fname = out_path + params["output_dir"].as<std::string>() + "/" +

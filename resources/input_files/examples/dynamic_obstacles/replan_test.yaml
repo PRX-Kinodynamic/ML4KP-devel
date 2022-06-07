@@ -1,6 +1,6 @@
 planner: "dirt"
 
-random_seed: 11101993
+random_seed: 111093
 simulation_step: 0.1
 
 environment: "environments/dynamic.yaml"
@@ -13,10 +13,10 @@ prescience: true
 replan: true
 
 checker_type: time
-checker_value: 0.5
+checker_value: 0.1
 
-execution_time: 1
-max_cycles: 100
+replanning_cycle: 2.5
+max_cycles: 20
 
 goal_region_radius: 0.1
 
