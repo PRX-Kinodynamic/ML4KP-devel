@@ -1,3 +1,4 @@
+from pickletools import optimize
 import numpy as np 
 import os
 import subprocess
@@ -8,17 +9,17 @@ from tqdm import tqdm
 from PIL import Image
 
 def f_sin(sim_time):
-    return 10 * np.sin(sim_time)
+    return 10 * np.sin(0.5*sim_time)
 
 def f_cos(sim_time):
-    return 10 * np.cos(sim_time)
+    return 10 * np.cos(0.5*sim_time)
 
 box_size = [1.0,1.0]
 robot_dims = [0.508,0.430]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 goal = [9.0,0.0]
 goal_radius = 0.1
-data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/no_prescience/"
+data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience/"
 simulation_step = 0.1
 
 environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/dynamic.yaml"
@@ -73,15 +74,15 @@ for i in tqdm(range(0,len(traj))):
         plt.gca().add_patch(rect)
     else:
         break
-    continue_plotting = (continue_plotting and traj[max(0,i-1),-1] == 1)
+    continue_plotting = (continue_plotting and traj[max(0,i),-1] == 1)
 
     plt.text(6.0,9.0,"t =: "+f"{(i*simulation_step): .1f}"+"s",fontsize=10)
-    plt.title("DIRT_NoReplan_NoPrescience")
+    plt.title("DIRT_Replan_NoPrescience")
     plt.savefig(data_dir+str(i)+".png",bbox_inches='tight')
     plt.clf()
 
 
 fnames = [Image.open(data_dir+str(i)+".png") for i in range(first_collision_state)]
 fnames[0].save(data_dir+'output.gif',format='GIF',append_images=fnames[1:],
-save_all=True,duration=10)
+save_all=True,duration=20,optimize=True)
 subprocess.call("cd " + data_dir + " && rm -rf *.png",shell=True)

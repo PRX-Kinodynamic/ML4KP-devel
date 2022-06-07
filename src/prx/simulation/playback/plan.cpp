@@ -206,6 +206,20 @@ namespace prx
 		this->back().duration+=time;
 	}
 
+	void plan_t::reduce_last_control(double time)
+	{
+		prx_assert(num_steps>0,"Can't reduce the last control if a plan has no controls");
+		if (this->back().duration > time)
+		{
+			this->back().duration-=time;
+		}
+		else
+		{
+			this->pop_back();
+			num_steps--;
+		}
+	}
+
 	void plan_t::pop_front()
 	{
 		if( num_steps == 0 )

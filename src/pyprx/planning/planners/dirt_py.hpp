@@ -24,13 +24,6 @@ PRX_GETTER(dirt_node_t, random_expand)
 PRX_SETTER(dirt_node_t, indices)
 PRX_GETTER(dirt_node_t, indices)
 
-PRX_SETTER(dirt_node_t, checkpoint_time)
-PRX_GETTER(dirt_node_t, checkpoint_time)
-
-PRX_SETTER(dirt_node_t, is_safety_node)
-PRX_GETTER(dirt_node_t, is_safety_node)
-
-
 PRX_SETTER(dirt_specification_t, blossom_number)
 PRX_GETTER(dirt_specification_t, blossom_number)
 
@@ -70,8 +63,6 @@ void pyprx_planning_planners_dirt_py()
 		// TODO: Add "std::vector<std::pair<plan_t*,trajectory_t*>>" class
 		// .add_property("edge_generators", &get_sst_node_t_edge_generators<std::vector<std::pair<plan_t*,trajectory_t*>>>, &get_sst_node_t_edge_generators<std::vector<std::pair<plan_t*,trajectory_t*>>>)
 		.add_property("indices", 			&get_dirt_node_t_indices<std::vector<int>>, &get_dirt_node_t_indices<std::vector<int>>)
-		.add_property("checkpoint_time", 	&get_dirt_node_t_checkpoint_time<double>, 	&get_dirt_node_t_checkpoint_time<double>)
-		.add_property("is_safety_node", 	&get_dirt_node_t_is_safety_node<bool>, 		&get_dirt_node_t_is_safety_node<bool>)
 		;
 
 	class_<prx::dirt_specification_t, std::shared_ptr<prx::dirt_specification_t>, bases<prx::rrt_specification_t>>("dirt_specification", init<std::shared_ptr<prx::system_group_t>, std::shared_ptr<prx::collision_group_t>>())
