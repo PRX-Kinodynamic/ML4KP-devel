@@ -29,42 +29,8 @@ link_libraries(
 	)
 
 
-
-
-#find_package(Eigen3 REQUIRED)
-#include_directories(${EIGEN3_INCLUDE_DIR})
-
-
-
-#include_directories("$ENV{EIGEN3_INCLUDE_DIR}")
-
-#find_path(EIGEN3_INCLUDE_DIR "Eigen" paths "/usr/include" "/usr/local/include" path_suffixes "eigen3")
-#message(${EIGEN3_INCLUDE_DIR})
-#if ( NOT EIGEN3_INCLUDE_DIR )
-#    message(FATAL_ERROR "CMake variable EIGEN3_INCLUDE_DIRS not found.")
-#endif()
-#include_directories ( "${EIGEN3_INCLUDE_DIR}" )
-
-
-#set(EIGEN3_INCLUDE_DIR "/usr/include/boost/numeric/odeint/external/eigen")
-
-set(EIGEN3_INCLUDE_DIR "/usr/include/boost/compute/interop/eigen")
-
-#set(EIGEN3_INCLUDE_DIR "/common/home/aca132/Downloads/eigen-3.3.9/Eigen")
-#include_directories(${EIGEN3_INCLUDE_DIR})
-include_directories("$ENV{EIGEN3_INCLUDE_DIR}")
-
-#set(EIGEN3_INCLUDE_DIR "/common/home/aca132/Downloads/eigen-3.3.9")
-
-
-
-
-
-
-
-
-##find_package(Eigen3 REQUIRED)
-##include_directories(${EIGEN3_INCLUDE_DIR})
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})

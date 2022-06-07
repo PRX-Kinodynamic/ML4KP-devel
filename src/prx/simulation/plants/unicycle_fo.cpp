@@ -8,14 +8,10 @@ namespace prx
         state_memory = {&x,&y,&theta};
 		state_space = new space_t("EER",state_memory,"TreadedFOState");
 		//**state_space->set_bounds({0,0,-3.15},{5,5,3.15});
-		// state_space->set_bounds({0,0,-3.15},{3,1.2,3.15});
+		state_space->set_bounds({0,0,-3.15},{3,1.2,3.15});
 		
 		//IMRCLab state_space->set_bounds({0,0,-3.15},{6,6,3.15});
 		
-		state_space->set_bounds(
-			{-std::numeric_limits<double>::max(),-std::numeric_limits<double>::max()},
-			{ std::numeric_limits<double>::max(), std::numeric_limits<double>::max()});
-
         v=0;
         control_memory = {&v,&dtheta};
         input_control_space = new space_t("EE",control_memory,"TreadedFOControl");
