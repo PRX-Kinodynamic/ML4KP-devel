@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from tqdm import tqdm
 from PIL import Image
+np.set_printoptions(suppress=True)
 
 def f_sin(sim_time):
     return 10 * np.sin(0.5*sim_time)
@@ -74,15 +75,14 @@ for i in tqdm(range(0,len(traj))):
         plt.gca().add_patch(rect)
     else:
         break
-    continue_plotting = (continue_plotting and traj[max(0,i-1),-1] == 1)
+    continue_plotting = (continue_plotting and traj[max(0,i),-1] == 1)
 
     plt.text(6.0,9.0,"t =: "+f"{(i*simulation_step): .1f}"+"s",fontsize=10)
     plt.title("DIRT_Replan_NoPrescience")
     plt.savefig(data_dir+str(i)+".png",bbox_inches='tight')
     plt.clf()
 
-
-fnames = [Image.open(data_dir+str(i)+".png") for i in range(first_collision_state)]
+fnames = [Image.open(data_dir+str(i)+".png") for i in range(first_collision_state+1)]
 fnames[0].save(data_dir+'output.gif',format='GIF',append_images=fnames[1:],
 save_all=True,duration=20,optimize=True)
 subprocess.call("cd " + data_dir + " && rm -rf *.png",shell=True)

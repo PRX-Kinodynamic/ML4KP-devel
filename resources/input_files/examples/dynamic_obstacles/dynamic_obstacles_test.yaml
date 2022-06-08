@@ -12,9 +12,9 @@ pruning: false
 prescience: true
 
 checker_type: time
-checker_value: 0.5
+checker_value: 1.0
 
 goal_region_radius: 0.1
 
 num_trials: 30
-output_dir: "dynamic/noisy_prescience"
+output_dir: "dynamic/prescience"

@@ -19,8 +19,15 @@ namespace prx
         void link_planner(rrt_t* planner, rrt_specification_t* spec, rrt_query_t* query);
         void resolve_query();
 
+        void reset()
+        {
+            continue_planning = true;
+            current_cycle = -1;
+        }
+
         void perform_single_planning_cycle()
         {
+            rrt_query -> clear_outputs();
             planner -> reset();
             checker -> reset();
 
@@ -33,12 +40,15 @@ namespace prx
         }
 
         std::string planner_name;
+        trajectory_t* full_solution_trajectory;
     protected:
         rrt_t* planner;
         rrt_specification_t* rrt_spec;
         rrt_query_t* rrt_query;
         std::shared_ptr<world_model_t> sim;
         space_t* state_space;
+
+
     private:
         /**
          * @brief This is the time to wait between the start of the current execution

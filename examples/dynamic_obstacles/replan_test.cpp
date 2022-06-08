@@ -56,7 +56,6 @@ int main(int argc, char* argv[])
     auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
     ss -> set_bounds(lower_bounds, upper_bounds);
 
-    ss -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
     ss -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
     
     dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
@@ -67,8 +66,31 @@ int main(int argc, char* argv[])
 
     replanner.link_planner(&dirt,&dirt_spec,&dirt_query);
     replanner.link_world_model(sim);
-    replanner.resolve_query();
+    PRX_DEBUG_PRINT
+    
+    for (int j = 0; j < params["num_trials"].as<int>(); j++)
+    {
+        ss -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
+        dirt_query.start_time = 0;
+        
+        replanner.reset();
+        replanner.resolve_query();
 
+        std::string fname = out_path + params["output_dir"].as<std::string>() + "/" +
+                    "trajectory_" + std::to_string(j) +".txt";
+        std::ofstream fout;
+        fout.open(fname);
+        for (unsigned i = 0; i < replanner.full_solution_trajectory -> size(); i++)
+        {
+            sim -> update_all_obstacle_poses(i*simulation_step);
+            auto step_state = replanner.full_solution_trajectory -> at(i);
+            fout << ss -> print_point(step_state,4) 
+            << "," << dirt_spec.valid_state(step_state) << std::endl;
+        }
+        fout.close();
+        output_progress_bar(1.0 * j/params["num_trials"].as<int>());
+    }
+    
     /*
     for (int i = 0; i < max_cycles && continue_planning; i++)
     {
@@ -124,18 +146,7 @@ int main(int argc, char* argv[])
         sim -> update_all_obstacle_poses(dirt_query.start_time - params["checker_value"].as<double>());
     }
 
-    std::string fname = out_path + params["output_dir"].as<std::string>() + "/" +
-                    "trajectory_0.txt";
-    std::ofstream fout;
-    fout.open(fname);
-    for (unsigned i = 0; i < full_traj.size(); i++)
-    {
-        sim -> update_all_obstacle_poses(i*simulation_step);
-        auto step_state = full_traj.at(i);
-        fout << ss -> print_point(step_state,4) 
-        << "," << dirt_spec.valid_state(step_state) << std::endl;
-    }
-    fout.close();
+    
 
     vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, full_traj, body_name, ss);
     vis_group -> add_animation(dirt_query.solution_traj, ss, dirt_query.start_state);
