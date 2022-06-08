@@ -11,4 +11,7 @@ max_steps: 10
 state_space_lower_bound: [-11,-11,-3.14159,-.7,-.7]
 state_space_upper_bound: [ 11, 11, 3.14159, .7, .7]
 
+control_space_lower_bound: [-.2,-.2]
+control_space_upper_bound: [ .2,.2]
+
 vis_body: "body"

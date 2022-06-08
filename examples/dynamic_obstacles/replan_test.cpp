@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 
     ss -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
     
-    dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
+    dirt_query.goal_region_radius = params["goal_radius"].as<double>();
     dirt_query.get_visualization = true;
 
     three_js_group_t* vis_group = new three_js_group_t({plant},{});
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     {
         ss -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
         dirt_query.start_time = 0;
-        
+
         replanner.reset();
         replanner.resolve_query();
 

@@ -1,0 +1,13 @@
+random_seed: 210896
+simulation_step: 0.1
+
+environment: "environments/dynamic.yaml"
+plant: !file "plants/treaded_vehicle.yaml"
+
+num_trials: 1
+output_dir: "dynamic/data/"
+goal_radius: 0.5
+
+learned_controller: !file "networks/treaded_vehicle_controller.yaml"
+num_trajectories: 1
+max_duration: 50
