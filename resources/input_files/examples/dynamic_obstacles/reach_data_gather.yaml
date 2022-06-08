@@ -9,5 +9,8 @@ output_dir: "dynamic/data/"
 goal_radius: 0.5
 
 learned_controller: !file "networks/treaded_vehicle_controller.yaml"
-num_trajectories: 1
+num_trajectories: 10000
 max_duration: 50
+
+min_sim_steps: 0
+max_sim_steps: 200

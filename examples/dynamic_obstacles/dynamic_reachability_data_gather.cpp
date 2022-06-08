@@ -68,7 +68,13 @@ int main(int argc, char* argv[])
             return ss -> euclidean_2d(point, rrt_query.goal_state, 0, 3) < rrt_query.goal_region_radius;
         };
 
+        const int min_sim_steps = params["min_sim_steps"].as<int>();
+        const int max_sim_steps = params["max_sim_steps"].as<int>();
+
         std::string output_dir = params["output_dir"].as<std::string>();
+        std::ofstream ofs;
+        ofs.open(out_path+output_dir+"/trajectory_"+std::to_string(num_trajectories)+".txt");
+
 
         space_point_t current = ss -> make_point();
 
@@ -78,24 +84,29 @@ int main(int argc, char* argv[])
             ss->sample(rrt_query.start_state);
             ss->sample(rrt_query.goal_state);
 
-            std::cout << ss->print_point(rrt_query.start_state,2) << " " 
-            << ss->print_point(rrt_query.goal_state,2) << std::endl;
-
             controller.fulfill_query(rrt_query,sg,max_duration);
 
-            std::ofstream ofs;
-            ofs.open(out_path+output_dir+"/trajectory_"+std::to_string(i)+".txt");
+            bool valid = true;
+            int start_steps = uniform_int_random(min_sim_steps,max_sim_steps);
 
-            for (unsigned i = 0; i < rrt_query.solution_traj.size(); i += control_duration/simulation_step)
+            for (unsigned i = 0; i < rrt_query.solution_traj.size() && valid; i++)
             {
+                sim -> update_all_obstacle_poses((start_steps + i) * simulation_step);
                 ss->copy_point(current,rrt_query.solution_traj[i]);
-                ofs << ss->print_point(rrt_query.solution_traj[i],4) << "," << rrt_spec.valid_state(current) << std::endl;
+                valid &= rrt_spec.valid_state(current);
+                if (!valid && i > 0) ss->copy_point(current,rrt_query.solution_traj[i-1]);
             }
-            ofs.close();
-
+            if (!valid)
+            {
+                ofs << start_steps << "," << ss->print_point(rrt_query.start_state) << "," 
+                << ss->print_point(current) << ",1" << std::endl;
+            }
+            ofs << start_steps << "," << ss->print_point(rrt_query.start_state) << "," 
+                << ss->print_point(rrt_query.goal_state) << "," 
+                << valid << std::endl;
             output_progress_bar(i*1.0/num_trajectories);
         }
-
+        ofs.close();
     }
     catch(const prx_assert_t& e) 
     {

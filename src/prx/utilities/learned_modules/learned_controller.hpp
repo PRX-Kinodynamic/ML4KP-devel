@@ -229,8 +229,10 @@ class learned_controller_t
             if (debug_controller) std::cout << sg -> get_state_space() -> print_point(step_traj.back(),4) << std::endl;
             query.solution_traj += step_traj;
             sg -> get_state_space() -> copy_point(current,query.solution_traj.back());
+            query.solution_traj.resize(query.solution_traj.size() - 1);
             time_so_far += control_duration;
         }
+        if (query.goal_check(current)) query.solution_traj.copy_onto_back(current);
         /*
         if (!query.goal_check(current))
         {
