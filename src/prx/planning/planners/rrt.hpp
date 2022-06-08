@@ -88,6 +88,7 @@ namespace prx
 			};
 
 			blossom_number = 1;
+			horizon = PRX_INFINITY;
 		}
 		virtual ~rrt_specification_t(){}
 
@@ -102,6 +103,8 @@ namespace prx
 
 		space_t* state_space;
 		space_t* control_space;
+
+		double horizon;
 
 		bool bnb;
 
@@ -119,6 +122,7 @@ namespace prx
 			clear_outputs();
 
 			goal_region_radius = 0.5;
+			start_time = 0;
 
 			goal_check = [&](space_point_t s)
 			{
@@ -128,6 +132,7 @@ namespace prx
 		}
 		virtual ~rrt_query_t(){}
 		double goal_region_radius;
+		double start_time;
 	};
 
 	class rrt_t : public planner_t

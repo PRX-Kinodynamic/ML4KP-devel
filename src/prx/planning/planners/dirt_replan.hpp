@@ -62,8 +62,6 @@ namespace prx
 		int blossom_number;
 
 		bool use_pruning;
-        double replanning_cycle;
-
 		heuristic_function_t h;
 	};
 
@@ -72,11 +70,8 @@ namespace prx
 	public:
 		dirt_replan_query_t(space_t* state_space, space_t* control_space) : rrt_query_t(state_space,control_space)
 		{
-			start_time = 0;
 		}
 		virtual ~dirt_replan_query_t(){}
-
-		double start_time;
 	};
 
 	class dirt_replan_t : public rrt_t
@@ -110,7 +105,7 @@ namespace prx
 	private:
 		heuristic_function_t h;
 		expand_t expand;
-        double replanning_cycle;
+        double horizon;
 		node_index_t best_node;
 		double best_cost;
 

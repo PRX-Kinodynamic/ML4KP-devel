@@ -2,6 +2,7 @@
 #include "prx/planning/world_model.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/planning/planners/dirt_replan.hpp"
+#include "prx/planning/replanners/replanner.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/visualization/three_js_group.hpp"
@@ -29,49 +30,46 @@ int main(int argc, char* argv[])
     std::shared_ptr<world_model_t> sim(new world_model_t({plant},{obstacle_list}));
     sim -> create_context("dirt_context",{plant_name},{obstacle_names});
     auto context = sim -> get_context("dirt_context");
-    auto cg = context.second;
     auto ss = context.first -> get_state_space();
 
     dirt_replan_t dirt(params["planner"].as<>());
     dirt_replan_specification_t dirt_spec(context.first,context.second);
+    replanner_t replanner(params["planner"].as<>());
+    replanner.setup(params);
 
-    const double max_vel = 1.0;
     dirt_spec.h = [&](const space_point_t& s, const space_point_t& s2)
     {
         // Custom h function: ( eucledian distance from s to s2 ) / (max velocity)
-        return space_t::euclidean_2d(s, s2) / max_vel;
+        return space_t::euclidean_2d(s, s2)/1.0;
     };
 
-    int min_steps = params["/plant/min_steps"].as<int>();
-    int max_steps = params["/plant/max_steps"].as<int>();
-
-    dirt_spec.min_control_steps = min_steps;
-    dirt_spec.max_control_steps = max_steps;
+    dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
+    dirt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
     dirt_spec.blossom_number    = params["blossom"].as<int>();
     dirt_spec.use_pruning       = params["pruning"].as<bool>();
 
     dirt_replan_query_t dirt_query(context.first->get_state_space(),context.first->get_control_space());
-    dirt_query.start_state = context.first->get_state_space()->make_point();
-    dirt_query.goal_state  = context.first->get_state_space()->make_point();
+    dirt_query.start_state = ss->make_point();
+    dirt_query.goal_state  = ss->make_point();
 
     auto lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
     auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
-    context.first -> get_state_space() -> set_bounds(lower_bounds, upper_bounds);
+    ss -> set_bounds(lower_bounds, upper_bounds);
 
-    context.first -> get_state_space() -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
-    context.first -> get_state_space() -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
+    ss -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
+    ss -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
     
     dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
     dirt_query.get_visualization = true;
 
-    condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<double>()); 
-    three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
+    three_js_group_t* vis_group = new three_js_group_t({plant},{});
     std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
-    trajectory_t full_traj(ss);
 
-    int max_cycles = params["max_cycles"].as<int>();
-    bool continue_planning = true;
+    replanner.link_planner(&dirt,&dirt_spec,&dirt_query);
+    replanner.link_world_model(sim);
+    replanner.resolve_query();
 
+    /*
     for (int i = 0; i < max_cycles && continue_planning; i++)
     {
         std::cout << "Replanning iteration " << i << std::endl;
@@ -93,6 +91,14 @@ int main(int argc, char* argv[])
         
         dirt.resolve_query(&checker);
         dirt.fulfill_query();
+
+        PRX_DEBUG_PRINT
+        std::cout << "Solution cost: " << dirt_query.solution_cost << std::endl;
+        if (dirt_query.solution_cost == 0) 
+        {
+            continue_planning = false;
+            break;
+        }
 
         vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
         full_traj += dirt_query.solution_traj;
@@ -126,7 +132,7 @@ int main(int argc, char* argv[])
     {
         sim -> update_all_obstacle_poses(i*simulation_step);
         auto step_state = full_traj.at(i);
-        fout << context.first -> get_state_space() -> print_point(step_state,4) 
+        fout << ss -> print_point(step_state,4) 
         << "," << dirt_spec.valid_state(step_state) << std::endl;
     }
     fout.close();
@@ -136,4 +142,5 @@ int main(int argc, char* argv[])
     vis_group -> output_html("output.html");
 
     delete vis_group;
+    */
 }
