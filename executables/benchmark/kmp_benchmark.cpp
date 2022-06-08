@@ -99,8 +99,8 @@ int main(int argc, char* argv[])
             // return ss -> euclidean_2d(point, dirt_query.goal_state, 0, 3) < dirt_query.goal_region_radius;
         };
 
-		// condition_check_t checker(params["condition_check"].as<std::string>(),  planner_iterations/stats_iterations);
-		condition_check_t checker("time",  10);
+		condition_check_t checker(params["condition_check"].as<std::string>(),  planner_iterations/stats_iterations);
+		// condition_check_t checker("time",  10);
 		std::ofstream fout;
 
 		int stats_runs = params["planner_runs"].as<int>();
@@ -113,8 +113,8 @@ int main(int argc, char* argv[])
 			planner_statistics_t stats;
 			stats.link_planner(&dirt);
 			stats.link_criterion(&checker);
-			stats.repeat_data_gathering(30);
-			// stats.repeat_data_gathering(stats_iterations);
+			// stats.repeat_data_gathering(30);
+			stats.repeat_data_gathering(stats_iterations);
 
 			std::string full_filename = lib_path+params["data_output_folder"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";
 			fout.open(full_filename);
