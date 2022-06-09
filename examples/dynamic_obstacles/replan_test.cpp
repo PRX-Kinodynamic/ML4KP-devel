@@ -7,6 +7,14 @@
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/visualization/three_js_group.hpp"
 
+#ifdef __cpp_lib_filesystem
+    #include <filesystem.hpp>
+    namespace fs = std::filesystem;
+#else
+    #define _LIBCPP_NO_EXPERIMENTAL_DEPRECATION_WARNING_FILESYSTEM
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;
+#endif
 #include <fstream>
 
 using namespace prx;
@@ -61,13 +69,17 @@ int main(int argc, char* argv[])
     dirt_query.goal_region_radius = params["goal_radius"].as<double>();
     dirt_query.get_visualization = true;
 
-    three_js_group_t* vis_group = new three_js_group_t({plant},{});
+    three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
     std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 
     replanner.link_planner(&dirt,&dirt_spec,&dirt_query);
     replanner.link_world_model(sim);
-    PRX_DEBUG_PRINT
-    
+
+    if (!fs::exists(out_path + params["output_dir"].as<std::string>()))
+    {
+        fs::create_directory(out_path + params["output_dir"].as<std::string>());
+    }
+
     for (int j = 0; j < params["num_trials"].as<int>(); j++)
     {
         ss -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
@@ -91,67 +103,8 @@ int main(int argc, char* argv[])
         output_progress_bar(1.0 * j/params["num_trials"].as<int>());
     }
     
-    /*
-    for (int i = 0; i < max_cycles && continue_planning; i++)
-    {
-        std::cout << "Replanning iteration " << i << std::endl;
-        if (i == 0) 
-        {
-            ss -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
-            dirt_query.start_time = 0;
-        }
-
-        dirt_spec.replanning_cycle = (i + 1) * params["replanning_cycle"].as<double>();
-
-        dirt.reset();
-        checker.reset();
-        dirt_query.clear_outputs();
-
-        dirt.link_and_setup_spec(&dirt_spec);
-        dirt.preprocess();
-        dirt.link_and_setup_query(&dirt_query);
-        
-        dirt.resolve_query(&checker);
-        dirt.fulfill_query();
-
-        PRX_DEBUG_PRINT
-        std::cout << "Solution cost: " << dirt_query.solution_cost << std::endl;
-        if (dirt_query.solution_cost == 0) 
-        {
-            continue_planning = false;
-            break;
-        }
-
-        vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
-        full_traj += dirt_query.solution_traj;
-        auto last_state = full_traj.back();
-        continue_planning &= !dirt_query.goal_check(last_state);
-        if (i != max_cycles - 1 && !dirt_query.goal_check(last_state))
-        {
-            full_traj.resize(full_traj.size()-1);
-        }
-
-        bool valid = true;
-        for (unsigned i = 0; i < dirt_query.solution_traj.size(); i++)
-        {
-            sim -> update_all_obstacle_poses(dirt_query.start_time + i*simulation_step);
-            auto step_state = dirt_query.solution_traj.at(i);
-            valid &= dirt_spec.valid_state(step_state);
-        }
-
-        continue_planning &= valid;
-        ss -> copy_point(dirt_query.start_state, dirt_query.solution_traj.back());
-        dirt_query.start_time += dirt_query.solution_cost;
-        std::cout << "Resetting obstacles to time " << dirt_query.start_time - params["checker_value"].as<double>() << std::endl;
-        sim -> update_all_obstacle_poses(dirt_query.start_time - params["checker_value"].as<double>());
-    }
-
-    
-
-    vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, full_traj, body_name, ss);
-    vis_group -> add_animation(dirt_query.solution_traj, ss, dirt_query.start_state);
+    vis_group -> add_vis_infos(info_geometry_t::LINE, replanner.tree_visualization, body_name, ss);
     vis_group -> output_html("output.html");
 
     delete vis_group;
-    */
 }

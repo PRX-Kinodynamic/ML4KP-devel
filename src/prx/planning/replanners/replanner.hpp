@@ -41,6 +41,8 @@ namespace prx
 
         std::string planner_name;
         trajectory_t* full_solution_trajectory;
+
+        std::vector<trajectory_t> tree_visualization;
     protected:
         rrt_t* planner;
         rrt_specification_t* rrt_spec;

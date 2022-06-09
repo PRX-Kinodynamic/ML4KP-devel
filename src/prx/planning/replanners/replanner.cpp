@@ -51,13 +51,23 @@ namespace prx
                 // Increment the cycle and update the underlying planner's horizon.
                 current_cycle += 1;
                 std::cout << "Cycle: " << current_cycle << std::endl;
-                // std::cout << "Current time: " << rrt_query -> start_time << std::endl;
-                // std::cout << "Planning from: " << state_space -> print_point(rrt_query -> start_state,4) << std::endl;
+                std::cout << "Current time: " << rrt_query -> start_time << std::endl;
+                std::cout << "Planning from: " << state_space -> print_point(rrt_query -> start_state,4) << std::endl;
                 // std::cout << "State valid? " << rrt_spec -> valid_state(rrt_query -> start_state) << std::endl; 
-                rrt_spec -> horizon = (current_cycle + 1) * horizon;
+                // rrt_spec -> horizon = (current_cycle + 1) * horizon;
+                rrt_spec -> horizon = rrt_query -> start_time + horizon;
+                // std::cout << "Planning for a horizon of " << rrt_spec -> horizon << std::endl;
 
                 // Perform the planning cycle.
                 perform_single_planning_cycle();
+
+                if (rrt_query -> get_visualization)
+                {
+                    for (auto e : rrt_query -> tree_visualization)
+                    {
+                        tree_visualization.push_back(e);
+                    }
+                }
 
                 //  Now we have a plan.
                 if (rrt_query -> solution_traj.size() == 0) break;
@@ -87,12 +97,13 @@ namespace prx
                 continue_planning &= !rrt_query -> goal_check(next_execution_state);
 
                 // Update the planning info for the next planning cycle.
+                // sim -> update_all_obstacle_poses(rrt_query -> start_time + buffer_time + planning_time);
                 sim -> update_all_obstacle_poses(rrt_query -> start_time + buffer_time);
 
                 // Update the start state for the next planning cycle.
                 state_space -> copy_point(rrt_query -> start_state, next_execution_state);
                 rrt_query -> start_time += buffer_time + planning_time;
-                // std::cout << "Continue planning? " << continue_planning << std::endl;
+                std::cout << "Continue planning? " << continue_planning << std::endl;
 
             } while (continue_planning && current_cycle < max_replanning_cycles);
             full_solution_trajectory->copy_onto_back(final_state);

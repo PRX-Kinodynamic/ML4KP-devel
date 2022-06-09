@@ -22,7 +22,7 @@ goal = [9.0,0.0]
 goal_radius = 0.1
 data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience/"
 simulation_step = 0.1
-num_trajs = 10
+num_trajs = 30
 
 environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/dynamic.yaml"
 
@@ -32,10 +32,12 @@ with open(environment_file, 'r') as stream:
     except yaml.YAMLError as exc:
         print(exc)
 
+num_success = 0.0
 plt.figure(figsize=(8,8))
 for idx in tqdm(range(num_trajs)):
 
     traj = np.loadtxt(data_dir+"trajectory_"+str(idx)+".txt",delimiter=",")
+    if sum(traj[:,-1]) == traj.shape[0]: num_success += 1
     continue_plotting = True
     first_collision_state = -1
 
@@ -89,3 +91,4 @@ for idx in tqdm(range(num_trajs)):
     fnames[0].save(data_dir+'output_'+str(idx)+'.gif',format='GIF',append_images=fnames[1:],
     save_all=True,duration=20,optimize=True)
     subprocess.call("cd " + data_dir + " && rm -rf *.png",shell=True)
+print("Success Rate: ",num_success/num_trajs)

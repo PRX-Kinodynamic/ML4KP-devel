@@ -157,13 +157,15 @@ namespace prx
 				closest_node->blossom_number=1;
 				for(int i=0;i<plans.size();i++)
 				{
-                    if (plans[i]->duration() + closest_node->checkpoint_time > horizon)
+                    if ((plans[i]->duration() + closest_node->checkpoint_time) > horizon)
                     {
                         plans[i]->reduce_last_control(plans[i]->duration() + closest_node->checkpoint_time - horizon);
                         propagate(closest_node->point,*plans[i],*trajs[i]);
                     }
                     if (plans[i]->duration() > 0)
+					{
                         closest_node->edge_generators.push_back(std::make_pair(plans[i],trajs[i]));
+					}
 				}
 
 				std::vector<double> pred_values;
@@ -341,7 +343,14 @@ namespace prx
 		new_tree_node->blossom_number = dirt_spec->blossom_number;
 		new_tree_node->dir_radius = new_node_dir_radius;
         new_tree_node->checkpoint_time = closest_node->checkpoint_time + eg.first->duration();
-        
+		if (new_tree_node -> checkpoint_time > horizon + PRX_EPSILON) 
+		{
+			std::cout.precision(16);
+			std::cout << "Info: Tried adding a node with: " << new_tree_node->checkpoint_time << " > " << horizon << std::endl;
+			std::cout << "More info: " << closest_node -> checkpoint_time << " " << eg.first->duration() << std::endl;
+			prx_throw("Tried adding a node beyond the planning horizon. This shouldn't happen");
+		}
+
         if (new_tree_node->cost_to_go < best_cost)
         {
             best_cost = new_tree_node->cost_to_go;
