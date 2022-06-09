@@ -1,7 +1,6 @@
 name: "treaded_vehicle"
 path: "treaded_vehicle"
 
-# Assume simple_obstacle environment
 start_state: [-9.0, 0.0, 0.0, 0.0, 0.0]
 goal_state:  [ 9.0, 0.0, 0.0, 0.0, 0.0]
 

@@ -85,11 +85,13 @@ int main(int argc, char* argv[])
             ss->sample(rrt_query.goal_state);
 
             controller.fulfill_query(rrt_query,sg,max_duration);
+            if (rrt_query.solution_traj.size() < control_duration/simulation_step) continue;
 
             bool valid = true;
             int start_steps = uniform_int_random(min_sim_steps,max_sim_steps);
 
-            for (unsigned i = 0; i < rrt_query.solution_traj.size() && valid; i++)
+            // for (unsigned i = 0; i < rrt_query.solution_traj.size() && valid; i++)
+            for (unsigned i = 0; i < control_duration/simulation_step && valid; i++)
             {
                 sim -> update_all_obstacle_poses((start_steps + i) * simulation_step);
                 ss->copy_point(current,rrt_query.solution_traj[i]);

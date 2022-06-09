@@ -50,7 +50,7 @@ namespace prx
             {
                 // Increment the cycle and update the underlying planner's horizon.
                 current_cycle += 1;
-                // std::cout << "Cycle: " << current_cycle << std::endl;
+                std::cout << "Cycle: " << current_cycle << std::endl;
                 // std::cout << "Current time: " << rrt_query -> start_time << std::endl;
                 // std::cout << "Planning from: " << state_space -> print_point(rrt_query -> start_state,4) << std::endl;
                 // std::cout << "State valid? " << rrt_spec -> valid_state(rrt_query -> start_state) << std::endl; 
@@ -62,7 +62,7 @@ namespace prx
                 //  Now we have a plan.
                 if (rrt_query -> solution_traj.size() == 0) break;
                 // std::cout << "Solution cost so far: " << rrt_query -> solution_cost << std::endl;
-                unsigned next_execution_index = 1 + (buffer_time + planning_time)/simulation_step;
+                unsigned next_execution_index = std::min(1 + (buffer_time + planning_time)/simulation_step, rrt_query -> solution_traj.size() - 1.0);
                 auto next_execution_state = rrt_query -> solution_traj.at(next_execution_index);
 
                 // We have to do this otherwise there may be duplicates.
