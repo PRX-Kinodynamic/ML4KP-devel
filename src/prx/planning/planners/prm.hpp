@@ -29,6 +29,7 @@ namespace prx
     {
         public:
             prm_edge_t() : abstract_edge_t(){}
+            prm_edge_t(size_t source, size_t target) : source_index(source), target_index(target) {}
             virtual ~prm_edge_t(){}
 
             double cost;
@@ -41,6 +42,7 @@ namespace prx
         prm_specification_t(std::shared_ptr<system_group_t> sg, std::shared_ptr<collision_group_t> cg)
         {
             state_space = sg->get_state_space();
+            control_space = sg->get_control_space();
 
             cost_function = [](const trajectory_t& t, const plan_t& plan)
             {
@@ -59,6 +61,14 @@ namespace prx
 			{
 				return default_valid_trajectory(traj, state_space,cg);
 			};
+            sample_state = [this](space_point_t& s)
+            {
+                return default_sample_state(s,state_space);
+            };
+            local_planner = [this](space_point_t& s1, space_point_t& s2, trajectory_t& traj, unsigned size)
+            {
+                return default_interpolate_trajectory(s1, s2, traj, size);
+            };
         }
         virtual ~prm_specification_t(){}
 
@@ -66,9 +76,12 @@ namespace prx
         distance_function_t distance_function;
         valid_state_t valid_state;
         valid_trajectory_t valid_check;
-        double k, M;
+        sample_state_t sample_state;
+        interpolate_trajectory_t local_planner;
+        int k, M;
 
 		space_t* state_space;
+        space_t* control_space;
     };
     class prm_query_t : public planner_query_t
     {
@@ -84,7 +97,7 @@ namespace prx
     {
         public:
             prm_t(const std::string& new_name);
-            virtual ~prm_t(){};
+            virtual ~prm_t();
         protected:
             virtual void _link_and_setup_spec(planner_specification_t* spec) override;
             virtual bool _preprocess() override;
@@ -102,10 +115,17 @@ namespace prx
             distance_function_t distance_function;
             valid_state_t valid_state;
             valid_trajectory_t valid_check;
+            sample_state_t sample_state;
+            interpolate_trajectory_t local_planner;
+
+            space_point_t sample_point;
 
             graph_t<prm_node_t, prm_edge_t> graph;
             graph_nearest_neighbors_t* metric;
 
+            int k, M;
+
             space_t* state_space;
+            space_t* control_space;
     };
 }

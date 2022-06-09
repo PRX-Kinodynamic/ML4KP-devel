@@ -3,12 +3,13 @@
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/planning/world_model.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"
+#include "prx/planning/planners/prm.hpp"
 
 using namespace prx;
 
 int main(int argc, char* argv[])
 {
-    simulation_step = 0.01;
+    simulation_step = 0.1;
     init_random(11101993);
 
     std::string plant_name = "treaded_vehicle";
