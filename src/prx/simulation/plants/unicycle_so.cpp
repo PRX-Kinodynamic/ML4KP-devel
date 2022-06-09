@@ -9,6 +9,8 @@ namespace prx
 		state_space = new space_t("EEREE",state_memory,"TreadedFOState");
 		// state_space->set_bounds({0,0,-3.15,-.5,-.5},{6,6,3.15,.5,.5});
 		state_space->set_bounds({0,0,-3.15,-.5,-.5},{3,1,3.15,.5,.5});
+		
+		
 
         dv=ddtheta=0;
         control_memory = {&dv,&ddtheta};
@@ -31,6 +33,7 @@ namespace prx
     }
 
     unicycle_so_t::~unicycle_so_t() {}
+    
 
     void unicycle_so_t::propagate(const double simulation_step)
     {

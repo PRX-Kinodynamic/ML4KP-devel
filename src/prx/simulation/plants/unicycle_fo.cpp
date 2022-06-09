@@ -8,7 +8,7 @@ namespace prx
         state_memory = {&x,&y,&theta};
 		state_space = new space_t("EER",state_memory,"TreadedFOState");
 		//**state_space->set_bounds({0,0,-3.15},{5,5,3.15});
-		state_space->set_bounds({0,0,-3.15},{3,1.2,3.15});
+		state_space->set_bounds({0,0,-3.15},{6,6,3.15});
 		
 		//IMRCLab state_space->set_bounds({0,0,-3.15},{6,6,3.15});
 		
@@ -19,8 +19,9 @@ namespace prx
         // input_control_space->set_bounds({-0.5,-0.5},{0.5,0.5});
         // v1
         // input_control_space->set_bounds({0.2,-0.5},{0.5,0.5});
+        input_control_space->set_bounds({0.25,-0.5},{0.5,0.5});
         // v2
-        input_control_space->set_bounds({-0.5,-0.25},{0.5,0.5});
+        // input_control_space->set_bounds({-0.5,-0.25},{0.5,0.5});
 
 
         dx=dy=dtheta=0;

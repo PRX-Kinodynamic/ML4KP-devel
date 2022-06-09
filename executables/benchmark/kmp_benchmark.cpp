@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 		int stats_iterations = params["statistics_iterations"].as<int>();
 		int random_seed = params["random_seed"].as<int>();
 		init_random(random_seed);
-
+		params.print();
 
 		//which plant we are planning for
 		std::string plant_name = params["plant_name"].as<std::string>();
