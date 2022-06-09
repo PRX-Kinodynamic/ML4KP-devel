@@ -54,9 +54,8 @@ namespace prx
                 std::cout << "Current time: " << rrt_query -> start_time << std::endl;
                 std::cout << "Planning from: " << state_space -> print_point(rrt_query -> start_state,4) << std::endl;
                 // std::cout << "State valid? " << rrt_spec -> valid_state(rrt_query -> start_state) << std::endl; 
-                // rrt_spec -> horizon = (current_cycle + 1) * horizon;
                 rrt_spec -> horizon = rrt_query -> start_time + horizon;
-                // std::cout << "Planning for a horizon of " << rrt_spec -> horizon << std::endl;
+                std::cout << "Planning for a horizon of " << rrt_spec -> horizon << std::endl;
 
                 // Perform the planning cycle.
                 perform_single_planning_cycle();
@@ -70,7 +69,14 @@ namespace prx
                 }
 
                 //  Now we have a plan.
-                if (rrt_query -> solution_traj.size() == 0) break;
+                if (rrt_query -> solution_traj.size() == 0)
+                {
+                    std::cout << "No solution found during planning cycle." << std::endl;
+                    // Apply no controls for the next execution cycle.
+                    rrt_query->solution_plan.append_onto_back(horizon);
+                    rrt_spec ->propagate(rrt_query -> start_state, rrt_query -> solution_plan, rrt_query -> solution_traj);
+                    // break;
+                } 
                 // std::cout << "Solution cost so far: " << rrt_query -> solution_cost << std::endl;
                 unsigned next_execution_index = std::min(1 + (buffer_time + planning_time)/simulation_step, rrt_query -> solution_traj.size() - 1.0);
                 auto next_execution_state = rrt_query -> solution_traj.at(next_execution_index);
@@ -82,22 +88,23 @@ namespace prx
                 *full_solution_trajectory += copy_traj;
 
                 auto first_state = rrt_query -> solution_traj.front();
-                // std::cout << "First state: " << state_space -> print_point(first_state,4) << std::endl;
-                // std::cout << "Traj len: " << full_solution_trajectory -> size() << std::endl;
-                // std::cout << "Next execution state: " << state_space -> print_point(next_execution_state,4) << std::endl;
+                std::cout << "First state: " << state_space -> print_point(first_state,4) << std::endl;
+                std::cout << "Traj len: " << full_solution_trajectory -> size() << std::endl;
+                std::cout << "Next execution state: " << state_space -> print_point(next_execution_state,4) << std::endl;
                
                 // Check if the current execution cycle would lead to a collision.
-                for (unsigned i = 0; i < next_execution_index; i++)
+                for (unsigned i = 0; i < next_execution_index && continue_planning; i++)
                 {
                     sim -> update_all_obstacle_poses(rrt_query -> start_time + i * simulation_step);
                     auto step_state = rrt_query -> solution_traj.at(i);
+                    if (!rrt_spec -> valid_state(step_state))
+                        std::cout << "Collision during execution! t = " << rrt_query -> start_time + i * simulation_step << std::endl;
                     continue_planning &= rrt_spec -> valid_state(step_state);
                 }
 
                 continue_planning &= !rrt_query -> goal_check(next_execution_state);
 
                 // Update the planning info for the next planning cycle.
-                // sim -> update_all_obstacle_poses(rrt_query -> start_time + buffer_time + planning_time);
                 sim -> update_all_obstacle_poses(rrt_query -> start_time + buffer_time);
 
                 // Update the start state for the next planning cycle.

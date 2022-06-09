@@ -23,6 +23,7 @@ namespace prx
         {
             continue_planning = true;
             current_cycle = -1;
+            tree_visualization.clear();
         }
 
         void perform_single_planning_cycle()

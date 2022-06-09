@@ -69,7 +69,6 @@ int main(int argc, char* argv[])
     dirt_query.goal_region_radius = params["goal_radius"].as<double>();
     dirt_query.get_visualization = true;
 
-    three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
     std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 
     replanner.link_planner(&dirt,&dirt_spec,&dirt_query);
@@ -82,6 +81,9 @@ int main(int argc, char* argv[])
 
     for (int j = 0; j < params["num_trials"].as<int>(); j++)
     {
+        std::cout << "Trial " << j << std::endl;
+        three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
+
         ss -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
         dirt_query.start_time = 0;
 
@@ -98,13 +100,17 @@ int main(int argc, char* argv[])
             auto step_state = replanner.full_solution_trajectory -> at(i);
             fout << ss -> print_point(step_state,4) 
             << "," << dirt_spec.valid_state(step_state) << std::endl;
+            if(!dirt_spec.valid_state(step_state)) std::cout << "Detected collison at " 
+            << i*simulation_step << std::endl;
         }
         fout.close();
         output_progress_bar(1.0 * j/params["num_trials"].as<int>());
+
+        vis_group -> add_vis_infos(info_geometry_t::LINE, replanner.tree_visualization, body_name, ss);
+        vis_group -> output_html(params["output_dir"].as<std::string>() + "/"+"output_"+std::to_string(j)+".html");
+
+        delete vis_group;
     }
     
-    vis_group -> add_vis_infos(info_geometry_t::LINE, replanner.tree_visualization, body_name, ss);
-    vis_group -> output_html("output.html");
-
-    delete vis_group;
+    
 }

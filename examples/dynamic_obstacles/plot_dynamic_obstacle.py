@@ -22,7 +22,7 @@ goal = [9.0,0.0]
 goal_radius = 0.1
 data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience/"
 simulation_step = 0.1
-num_trajs = 30
+num_trajs = 10
 
 environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/dynamic.yaml"
 
