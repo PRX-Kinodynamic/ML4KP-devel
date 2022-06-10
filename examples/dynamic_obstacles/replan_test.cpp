@@ -21,8 +21,18 @@ using namespace prx;
 
 int main(int argc, char* argv[])
 {
-    auto params = param_loader("examples/dynamic_obstacles/replan_test.yaml");
+    std::string params_file;
+    if (argc <= 1)
+    {
+        params_file = "examples/dynamic_obstacles/dirt_replan_test.yaml";
+        // prx_throw("The planner evaluation executable needs a parameter file!");
+    }
+    else 
+    {
+        params_file = std::string(argv[1]);
+    }
 
+    param_loader params(params_file);
     simulation_step = params["simulation_step"].as<double>();
     init_random(params["random_seed"].as<int>());
 
