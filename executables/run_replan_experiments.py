@@ -26,8 +26,9 @@ del planner_params["plant"]
 planner_params["num_trials"] = 30
 
 planning_times = [0.1, 0.2, 0.5]
-buffer_times   = [0.1, 0.2, 0.5]
-horizons = [0.5, 1.0, 2.0]
+buffer_times   = [0.1, 0.2, 0.5, 1.0]
+horizons = [5.0]
+# horizons = [0.5, 1.0, 2.0]
 
 for pt in tqdm(planning_times):
     for bt in buffer_times:
@@ -44,5 +45,8 @@ for pt in tqdm(planning_times):
                 f.write("plant: !file \"plants/treaded_vehicle.yaml\"\n")
             
             cmd = [os.environ["DIRTMP_PATH"]+"bin/examples/dynamic_obstacles/replan_test","examples/test.yaml"]
-            popen = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-            popen.wait()
+            popen = subprocess.Popen(cmd)
+            time.sleep(1)
+            # popen.wait()
+
+print("Done!")
