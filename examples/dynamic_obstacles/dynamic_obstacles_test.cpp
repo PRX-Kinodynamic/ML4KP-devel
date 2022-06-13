@@ -27,6 +27,9 @@ int main(int argc, char* argv[])
     prx_assert(plant != nullptr, "Plant is nullptr!");
 
     std::shared_ptr<world_model_t> sim(new world_model_t({plant},{obstacle_list}));
+    sensor_ptr_t sensor(new sensor_t("simple_sensor"));
+    sim -> link_sensor(sensor);
+    sensor -> print_obstacle_infos();
     sim -> create_context("dirt_context",{plant_name},{obstacle_names});
     auto context = sim -> get_context("dirt_context");
     auto cg = context.second;

@@ -112,6 +112,13 @@ namespace prx
 			obstacle -> set_object_pose(new_pose);
 		}
 
+		inline std::vector<double> get_obstacle_pose(const std::string obstacle_name)
+		{
+			prx_assert(obstacles.find(obstacle_name) != obstacles.end(), "Obstacle " << obstacle_name << " not found in world model");
+			auto obstacle = obstacles[obstacle_name];
+			return obstacle -> get_object_pose();
+		}
+
 		inline void update_all_obstacle_poses(double time)
 		{
 			for (auto it : obstacles)
@@ -121,6 +128,21 @@ namespace prx
 			}
 		}
 
+		virtual void init_sensor() override final
+		{
+			prx_assert(sensor != nullptr, "Sensor not set for world model");
+			for (auto it : this -> obstacles)
+			{
+				sensor -> add_obstacle(it.first, this -> get_obstacle_pose(it.first));
+			}
+		}
+
+		virtual void link_sensor(sensor_ptr_t s_ptr)
+		{
+			sensor = s_ptr;
+			init_sensor();
+		}
+
 	private:
 		// SGM* system_groups;
 		// CC* collision_groups;
@@ -128,5 +150,8 @@ namespace prx
 		std::unordered_map<std::string,std::shared_ptr<movable_object_t>> obstacles;
 
 		std::vector<std::string> all_context_names;
+
+		// Right now we will just associate a single sensor with the world model
+		sensor_ptr_t sensor;
 	};
 }

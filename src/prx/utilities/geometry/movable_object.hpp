@@ -48,6 +48,18 @@ namespace prx
 			}
 		}
 
+		inline std::vector<double> get_object_pose()
+		{
+			prx_assert(configurations.size() == 1, "get_object_pose() is supported only for a single rigid body!");
+			std::vector<double> res;
+			for (auto && c : configurations)
+			{
+				auto body = c.second;
+				res = {body->translation()[0],body->translation()[1],body->translation()[2]};
+			}
+			return res;
+		}
+
 	protected:
 		std::unordered_map<std::string,std::shared_ptr<geometry_t>> geometries;
 		std::unordered_map<std::string,std::shared_ptr<transform_t>> configurations;

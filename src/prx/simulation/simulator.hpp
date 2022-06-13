@@ -4,7 +4,7 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/simulation/system.hpp"
 #include "prx/simulation/system_group.hpp"
-// #include "prx/simulation/simulator.hpp"
+#include "prx/simulation/sensor.hpp"
 #include "prx/simulation/system_group_manager.hpp"
 #include "prx/simulation/collision_checking/collision_checker.hpp"
 
@@ -12,6 +12,7 @@ namespace prx
 {
 
 	typedef std::pair<std::shared_ptr<system_group_t>,std::shared_ptr<collision_group_t>> simulation_context;
+    typedef std::shared_ptr<sensor_t> sensor_ptr_t;
 	
 	// typedef std::pair<std::shared_ptr<system_group_t>,
 	// std::shared_ptr<collision_group_t>> world_model_context;
@@ -63,6 +64,8 @@ namespace prx
 		virtual void step_simulation(propagate_step step) = 0;
 
 		virtual void reset_simulation() = 0;
+
+		virtual void init_sensor() = 0;
 
 		const plant_type sim_type;
 

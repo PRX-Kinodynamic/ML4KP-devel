@@ -48,6 +48,9 @@ namespace prx
 
 		virtual void reset_simulation() override final;
 
+		virtual void init_sensor() override final
+		{}
+
 		static
 		void get_euler_from_quaternion(btVector3& rpy2, const btQuaternion& quat);
 
