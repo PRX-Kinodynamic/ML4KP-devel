@@ -124,6 +124,7 @@ namespace prx
 			for (auto it : obstacles)
 			{
 				auto result = it.second->position_function(time);
+				if (sensor != nullptr) sensor->update_obstacle_pose(it.first, result, time);
 				update_obstacle_pose(it.first,result);
 			}
 		}

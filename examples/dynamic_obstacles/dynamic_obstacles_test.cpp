@@ -1,4 +1,5 @@
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/timer.hpp"
 #include "prx/planning/world_model.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/planning/planners/dirt.hpp"
@@ -46,14 +47,39 @@ int main(int argc, char* argv[])
     };
 
     dirt_spec .use_prescience = params["prescience"].as<bool>();
+    std::unordered_map<std::string, std::vector<double>> poses;
     dirt_spec.time_valid_state = [&](space_point_t& s, double current_time)
     {
-        return default_time_valid_state(s,ss,cg,sim,current_time);
+        // Custom time_valid_state function:
+        ss -> copy_from_point(s);
+        sim -> update_all_obstacle_poses(current_time);
+
+        // The below part is redundant, but we gotta test it anyway
+        // poses = sensor->get_obstacle_poses(current_time + 0.01);
+        // for (auto p : poses)
+        // {
+        //     sim -> update_obstacle_pose(p.first, p.second);
+        // }
+
+        // This is standard
+        if(cg->in_collision() || !ss->satisfies_bounds(s))
+		{
+			return false;
+		}
+		return true;
     };
 
     dirt_spec.time_valid_trajectory = [&](trajectory_t& traj, double start_time)
     {
-        return default_time_valid_trajectory(traj,ss,cg,sim,start_time);
+        for (unsigned i = 0; i < traj.size(); i++)
+		{
+			auto s = traj.at(i);
+            if (!dirt_spec.time_valid_state(s, start_time + i * simulation_step))
+            {
+                return false;
+            }
+		}
+        return true;
     };
 
     // Two ways of accessing lengthy parameter paths

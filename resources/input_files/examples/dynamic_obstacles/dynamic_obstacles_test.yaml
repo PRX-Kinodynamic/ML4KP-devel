@@ -17,4 +17,4 @@ checker_value: 1.0
 goal_region_radius: 0.1
 
 num_trials: 30
-output_dir: "dynamic/outdated_prescience_2.0"
+output_dir: "dynamic/prescience_test"

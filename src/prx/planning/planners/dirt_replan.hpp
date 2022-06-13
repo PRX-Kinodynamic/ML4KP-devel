@@ -63,6 +63,8 @@ namespace prx
 
 		bool use_pruning;
 		heuristic_function_t h;
+		time_valid_state_t time_valid_state;
+		time_valid_trajectory_t time_valid_trajectory;
 	};
 
 	class dirt_replan_query_t : public rrt_query_t
