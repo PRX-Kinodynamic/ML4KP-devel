@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
         return space_t::euclidean_2d(s, s2) / max_vel;
     };
 
-    dirt_spec .use_prescience = params["prescience"].as<bool>();
+    dirt_spec.use_prescience = params["prescience"].as<bool>();
     std::unordered_map<std::string, std::vector<double>> poses;
     dirt_spec.time_valid_state = [&](space_point_t& s, double current_time)
     {

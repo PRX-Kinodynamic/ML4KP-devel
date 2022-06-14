@@ -281,7 +281,7 @@ namespace prx
 				//validity check
 				bool valid;
 				if (dirt_spec->use_prescience)
-					valid = time_valid_trajectory(*eg.second,closest_node->cost_to_come);
+					valid = time_valid_trajectory(*eg.second,closest_node->checkpoint_time);
 				else 
 					valid = valid_check(*eg.second);
 				bool new_node_added = false;
@@ -356,6 +356,13 @@ namespace prx
 			std::cout << "Info: Tried adding a node with: " << new_tree_node->checkpoint_time << " > " << horizon << std::endl;
 			std::cout << "More info: " << closest_node -> checkpoint_time << " " << eg.first->duration() << std::endl;
 			prx_throw("Tried adding a node beyond the planning horizon. This shouldn't happen");
+		}
+
+		if (!time_valid_state(new_tree_node->point,new_tree_node->checkpoint_time))
+		{
+			std::cout << "Info: Tried adding a node with checkpoint time: " << new_tree_node->checkpoint_time << std::endl;
+			std::cout << "More info: " << closest_node -> checkpoint_time << " " << eg.first->duration() << std::endl;
+			prx_throw("Tried adding a node tha is not valid at its checkpoint time. This shouldn't happen");
 		}
 
         if (new_tree_node->cost_to_go < best_cost)

@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     std::string params_file;
     if (argc <= 1)
     {
-        params_file = "examples/dynamic_obstacles/dirt_replan_test.yaml";
+        params_file = "examples/dynamic_obstacles/replan_test.yaml";
         // prx_throw("The planner evaluation executable needs a parameter file!");
     }
     else 
@@ -46,9 +46,12 @@ int main(int argc, char* argv[])
     prx_assert(plant != nullptr, "Plant is nullptr!");
 
     std::shared_ptr<world_model_t> sim(new world_model_t({plant},{obstacle_list}));
+    sensor_ptr_t sensor(new sensor_t("simple_sensor"));
+    sim -> link_sensor(sensor);
     sim -> create_context("dirt_context",{plant_name},{obstacle_names});
     auto context = sim -> get_context("dirt_context");
     auto ss = context.first -> get_state_space();
+    auto cg = context.second;
 
     dirt_replan_t dirt(params["planner"].as<>());
     dirt_replan_specification_t dirt_spec(context.first,context.second);
@@ -59,6 +62,41 @@ int main(int argc, char* argv[])
     {
         // Custom h function: ( eucledian distance from s to s2 ) / (max velocity)
         return space_t::euclidean_2d(s, s2)/1.0;
+    };
+
+    dirt_spec.use_prescience = params["prescience"].as<bool>();
+    std::unordered_map<std::string, std::vector<double>> poses;
+    dirt_spec.time_valid_state = [&](space_point_t& s, double current_time)
+    {
+        // Custom time_valid_state function:
+        ss -> copy_from_point(s);
+        sim -> update_all_obstacle_poses(current_time);
+
+        // poses = sensor->get_obstacle_poses(current_time);
+        // for (auto p : poses)
+        // {
+        //     sim -> update_obstacle_pose(p.first, p.second);
+        // }
+
+        // This is standard
+        if(cg->in_collision() || !ss->satisfies_bounds(s))
+		{
+			return false;
+		}
+		return true;
+    };
+
+    dirt_spec.time_valid_trajectory = [&](trajectory_t& traj, double start_time)
+    {
+        for (unsigned i = 0; i < traj.size(); i++)
+		{
+			auto s = traj.at(i);
+            if (!dirt_spec.time_valid_state(s, start_time + i * simulation_step))
+            {
+                return false;
+            }
+		}
+        return true;
     };
 
     dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();

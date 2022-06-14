@@ -20,9 +20,10 @@ robot_dims = [0.508,0.430]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 goal = [9.0,0.0]
 goal_radius = 0.1
-data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience_test/"
+data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/06_14/prescience/"
 simulation_step = 0.1
-num_trajs = 30
+num_trajs = 10
+# num_trajs = 30
 
 environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/dynamic.yaml"
 
@@ -89,6 +90,5 @@ for idx in tqdm(range(num_trajs)):
 
     fnames = [Image.open(data_dir+str(i)+".png") for i in range(first_collision_state+1)]
     fnames[0].save(data_dir+'output_'+str(idx)+'.gif',format='GIF',append_images=fnames[1:],
-    save_all=True,duration=20,optimize=True)
+    save_all=True,duration=40,optimize=True)
     subprocess.call("cd " + data_dir + " && rm -rf *.png",shell=True)
-print("Success Rate: ",num_success/num_trajs)
