@@ -61,7 +61,7 @@ namespace prx
 
 		int blossom_number;
 
-		bool use_pruning;
+		bool use_pruning, use_prescience;
 		heuristic_function_t h;
 		time_valid_state_t time_valid_state;
 		time_valid_trajectory_t time_valid_trajectory;
@@ -107,6 +107,9 @@ namespace prx
 	private:
 		heuristic_function_t h;
 		expand_t expand;
+		time_valid_state_t time_valid_state;
+		time_valid_trajectory_t time_valid_trajectory;
+		
         double horizon;
 		node_index_t best_node;
 		double best_cost;

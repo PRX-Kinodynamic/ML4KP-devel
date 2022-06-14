@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
         sim -> update_all_obstacle_poses(current_time);
 
         // The below part is redundant, but we gotta test it anyway
-        // poses = sensor->get_obstacle_poses(current_time + 0.01);
+        // poses = sensor->get_obstacle_poses(current_time);
         // for (auto p : poses)
         // {
         //     sim -> update_obstacle_pose(p.first, p.second);

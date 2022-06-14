@@ -20,7 +20,7 @@ robot_dims = [0.508,0.430]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 goal = [9.0,0.0]
 goal_radius = 0.1
-data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/06_10/0.2_0.1_5.0/"
+data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience_test/"
 simulation_step = 0.1
 num_trajs = 30
 

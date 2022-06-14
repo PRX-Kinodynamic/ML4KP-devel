@@ -22,6 +22,9 @@ namespace prx
 
 		expand = dirt_spec->expand;
 		h = dirt_spec->h;
+		time_valid_state = dirt_spec->time_valid_state;
+		time_valid_trajectory = dirt_spec->time_valid_trajectory;
+
         horizon = dirt_spec->horizon;
 	}
 	bool dirt_replan_t::_preprocess()
@@ -276,7 +279,11 @@ namespace prx
 				}
 
 				//validity check
-				bool valid = valid_check(*eg.second);
+				bool valid;
+				if (dirt_spec->use_prescience)
+					valid = time_valid_trajectory(*eg.second,closest_node->cost_to_come);
+				else 
+					valid = valid_check(*eg.second);
 				bool new_node_added = false;
 				double eg_dur = eg.first->duration();
 				
