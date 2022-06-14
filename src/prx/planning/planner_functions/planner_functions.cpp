@@ -67,6 +67,7 @@ namespace prx
 
 	void default_interpolate_trajectory(space_point_t& start, space_point_t& end, trajectory_t& traj, unsigned size)
 	{
+		traj.clear();
 		// Given two states, start and end, and a number of steps size,
 		// this function will interpolate a trajectory between the two states.
 		for (unsigned i = 0; i < size; ++i)

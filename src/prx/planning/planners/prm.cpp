@@ -21,6 +21,7 @@ namespace prx
         valid_state = prm_spec->valid_state;
         valid_check = prm_spec->valid_check;
         sample_state = prm_spec->sample_state;
+		local_planner = prm_spec->local_planner;
 
         state_space = prm_spec->state_space;
 		control_space = prm_spec->control_space;
@@ -30,6 +31,8 @@ namespace prx
         k = prm_spec->k;
         M = prm_spec->M;
 		//we now have spaces and necessary functions
+		graph.clear();
+		graph.allocate_memory<undirected_node_t,undirected_edge_t>(M);
 	}
 
 	bool prm_t::_preprocess()
@@ -45,14 +48,11 @@ namespace prx
             // Collision check
             if (valid_state(sample_point))
             {
-                auto new_node = graph.make_node();
-                new_node.get().point = state_space -> make_point();
-                state_space -> copy_point(new_node.get().point, sample_point);
-				std::cout << "Adding state: " << state_space -> print_point(new_node.get().point,2) << std::endl;
-                std::cout << new_node.get().get_index() << std::endl;
-				metric->add_node(&new_node.get());
+				auto node_index = graph.add_vertex<undirected_node_t,undirected_edge_t>();
+				auto node = graph.get_vertex_as<undirected_node_t>(node_index);
+				node->point = state_space->clone_point(sample_point);
+				metric->add_node(node.get());
             }
-			PRX_DEBUG_PRINT
 
             iter_count++;
         } while (iter_count < M);
@@ -62,25 +62,19 @@ namespace prx
 		plan_t dummy_plan(control_space);
 		unsigned trajectory_length = 1.0/simulation_step;
 
-		for (auto n : graph.get_nodes())
+		auto it_pair = graph.vertices();
+		for (auto it = it_pair.first; it != it_pair.second; ++it)
 		{
-			state_space -> copy_point(sample_point, n.get().point);
+			state_space -> copy_point(sample_point, it->get()->point);
 			auto neighbors = metric->multi_query(sample_point, k);
 
 			for (auto nn : neighbors)
 			{
-				auto candidate_node = static_cast<prm_node_t*>(nn);
+				auto candidate_node = static_cast<undirected_node_t*>(nn);
 				state_space -> copy_point(candidate, candidate_node->point);
-				local_plan.clear();
 				local_planner(sample_point, candidate, local_plan, trajectory_length);
-				if (valid_check(local_plan))
-				{
-					auto new_edge = graph.make_edge(n.get().get_index(), candidate_node->get_index());
-					new_edge.get().cost = cost_function(local_plan,dummy_plan);
-				}
+				if (valid_check(local_plan)) auto edge_index = graph.add_edge(it->get()->get_index(), candidate_node->get_index());
 			}
-
-			std::cout << neighbors.size() << std::endl;
 		}
 
         return true;

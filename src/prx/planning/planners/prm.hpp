@@ -3,7 +3,7 @@
 #include "prx/planning/planners/planner.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"
 #include "prx/utilities/data_structures/gnn.hpp"
-#include "prx/utilities/data_structures/graph.hpp"
+#include "prx/utilities/data_structures/undirected_graph.hpp"
 #include "prx/utilities/data_structures/abstract_node.hpp"
 #include "prx/utilities/data_structures/abstract_edge.hpp"
 #include "prx/utilities/defs.hpp"
@@ -120,8 +120,8 @@ namespace prx
 
             space_point_t sample_point;
 
-            graph_t<prm_node_t, prm_edge_t> graph;
             graph_nearest_neighbors_t* metric;
+            undirected_graph_t graph;
 
             int k, M;
 
