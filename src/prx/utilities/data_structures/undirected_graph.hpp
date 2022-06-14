@@ -4,6 +4,7 @@
 #include "prx/utilities/data_structures/abstract_node.hpp"
 #include "prx/utilities/data_structures/abstract_edge.hpp"
 #include "prx/utilities/spaces/space.hpp"
+#include "prx/simulation/playback/trajectory.hpp"
 
 #include <list>
 #include <queue>
@@ -126,6 +127,8 @@ namespace prx
 		{
 			value = _value;
 		}
+
+		std::shared_ptr<trajectory_t> traj;
 
 	protected:
 

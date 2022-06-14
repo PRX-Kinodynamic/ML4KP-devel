@@ -58,25 +58,30 @@ bool prm_t::_preprocess()
         } while (iter_count < M);
 
 		space_point_t candidate = state_space->make_point();
-		trajectory_t local_plan(state_space);
-		plan_t dummy_plan(control_space);
+		
 		unsigned trajectory_length = 1.0/simulation_step;
 
 		auto it_pair = graph.vertices();
 		for (auto it = it_pair.first; it != it_pair.second; ++it)
 		{
 			state_space -> copy_point(sample_point, it->get()->point);
-			auto neighbors = metric->multi_query(sample_point, k);
+			// Gotta do k + 1 otherwise it returns the same node as well.
+			auto neighbors = metric->multi_query(sample_point, k + 1);
 
 			for (auto nn : neighbors)
 			{
+				trajectory_t local_plan(state_space);
+				plan_t dummy_plan(control_space);
+
 				auto candidate_node = static_cast<prm_node_t*>(nn);
 				state_space -> copy_point(candidate, candidate_node->point);
 				local_planner(sample_point, candidate, local_plan, trajectory_length);
-				if (valid_check(local_plan))
+				
+				if (valid_check(local_plan) && it->get()->get_index() != candidate_node->get_index())
 				{
-					auto edge_index = graph.add_edge(it->get()->get_index(), candidate_node->get_index());
-					auto new_edge = tree.get_edge_as<prm_edge_t>(edge_index);
+					edge_index_t edge_index = graph.add_edge(it->get()->get_index(), candidate_node->get_index());
+					auto new_edge = graph.get_edge_as<prm_edge_t>(edge_index);
+					new_edge->traj = std::make_shared<trajectory_t>(local_plan);
 				}
 			}
 		}

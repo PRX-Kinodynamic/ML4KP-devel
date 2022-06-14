@@ -21,10 +21,8 @@ namespace prx
     class prm_edge_t : public undirected_edge_t
     {
         public:
-            prm_edge_t() : undirected_edge_t(){}
+            prm_edge_t() : undirected_edge_t() {}
             virtual ~prm_edge_t(){}
-
-            std::shared_ptr<trajectory_t> traj;
     };
 
     class prm_specification_t : public planner_specification_t
