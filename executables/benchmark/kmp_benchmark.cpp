@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 		context.first->get_state_space()->copy_point_from_vector(dirt_query.start_state,start_vec);
 		dirt_query.goal_state = context.first->get_state_space()->make_point();
 		context.first->get_state_space()->copy_point_from_vector(dirt_query.goal_state,goal_vec);
-		// dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
+		dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
 		dirt_query.get_visualization = get_visualization;
 
 		dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
@@ -93,10 +93,9 @@ int main(int argc, char* argv[])
             return dirt_spec.distance_function(a,b) / 0.5;
         };
 
-        dirt_query.goal_check = [&,dirt_spec,ss](space_point_t s)
+        dirt_query.goal_check = [&,dirt_spec](space_point_t s)
         {
             return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
-            // return ss -> euclidean_2d(point, dirt_query.goal_state, 0, 3) < dirt_query.goal_region_radius;
         };
 
 		condition_check_t checker(params["condition_check"].as<std::string>(),  planner_iterations/stats_iterations);

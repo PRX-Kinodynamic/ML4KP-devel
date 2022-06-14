@@ -12,28 +12,19 @@
 
 namespace prx
 {
-    class prm_node_t : public abstract_node_t
+    class prm_node_t : public undirected_node_t
     {
         public:
-            prm_node_t() : abstract_node_t(){}
+            prm_node_t() : undirected_node_t(){}
             virtual ~prm_node_t(){}
-
-            size_t get_index() const
-            {
-                return index;
-            }
-
-            size_t index;
     };
-    class prm_edge_t : public abstract_edge_t
+    class prm_edge_t : public undirected_edge_t
     {
         public:
-            prm_edge_t() : abstract_edge_t(){}
-            prm_edge_t(size_t source, size_t target) : source_index(source), target_index(target) {}
+            prm_edge_t() : undirected_edge_t(){}
             virtual ~prm_edge_t(){}
 
-            double cost;
-            size_t index, source_index, target_index;
+            std::shared_ptr<trajectory_t> traj;
     };
 
     class prm_specification_t : public planner_specification_t

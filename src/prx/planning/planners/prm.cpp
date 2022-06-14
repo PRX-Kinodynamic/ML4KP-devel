@@ -32,10 +32,10 @@ namespace prx
         M = prm_spec->M;
 		//we now have spaces and necessary functions
 		graph.clear();
-		graph.allocate_memory<undirected_node_t,undirected_edge_t>(M);
+		graph.allocate_memory<prm_node_t,prm_edge_t>(M);
 	}
 
-	bool prm_t::_preprocess()
+bool prm_t::_preprocess()
 	{
         metric -> clear();
         // bulk of the code will go here.
@@ -48,8 +48,8 @@ namespace prx
             // Collision check
             if (valid_state(sample_point))
             {
-				auto node_index = graph.add_vertex<undirected_node_t,undirected_edge_t>();
-				auto node = graph.get_vertex_as<undirected_node_t>(node_index);
+				auto node_index = graph.add_vertex<prm_node_t,prm_edge_t>();
+				auto node = graph.get_vertex_as<prm_node_t>(node_index);
 				node->point = state_space->clone_point(sample_point);
 				metric->add_node(node.get());
             }
@@ -70,10 +70,14 @@ namespace prx
 
 			for (auto nn : neighbors)
 			{
-				auto candidate_node = static_cast<undirected_node_t*>(nn);
+				auto candidate_node = static_cast<prm_node_t*>(nn);
 				state_space -> copy_point(candidate, candidate_node->point);
 				local_planner(sample_point, candidate, local_plan, trajectory_length);
-				if (valid_check(local_plan)) auto edge_index = graph.add_edge(it->get()->get_index(), candidate_node->get_index());
+				if (valid_check(local_plan))
+				{
+					auto edge_index = graph.add_edge(it->get()->get_index(), candidate_node->get_index());
+					auto new_edge = tree.get_edge_as<prm_edge_t>(edge_index);
+				}
 			}
 		}
 
