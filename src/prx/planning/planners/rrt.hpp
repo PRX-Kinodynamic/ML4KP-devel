@@ -86,6 +86,10 @@ namespace prx
 			{
 				default_expand(s, plans, trajs, bn, sg, sample_plan, propagate);
 			};
+			stopping_control = [sg,this](space_point_t& s, double t)
+			{
+				default_stopping_control(s, sg, t);
+			};
 
 			blossom_number = 1;
 			horizon = PRX_INFINITY;
@@ -100,6 +104,7 @@ namespace prx
 		valid_state_t valid_state;
 		expand_t expand;
 		propagate_t propagate;
+		stopping_control_t stopping_control;
 
 		space_t* state_space;
 		space_t* control_space;

@@ -38,23 +38,9 @@ namespace prx
 
 	}
 
-	void treaded_vehicle_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times, std::vector<double>& ctrls)//, std::vector<double> * controls)
+	void treaded_vehicle_t::compute_stopping_maneuver(space_point_t start_state, double time)
 	{
-		double stop_l = fabs(start_state->at(3) / 0.2);
-		double stop_r = fabs(start_state->at(4) / 0.2);
-		times.push_back(stop_l);
-		times.push_back(stop_r);
-		if (start_state->at(3) < 0)
-			ctrls.push_back(0.2);
-		else
-			ctrls.push_back(-0.2);
-		if (start_state->at(4) < 0)
-			ctrls.push_back(0.2);
-		else
-			ctrls.push_back(-0.2);
-		// std::cout << "time Left: " << stop_l << "\tRight: " << stop_r << std::endl;
-		// std::cout << "control Left: " << (*ctrls)[0] << "\tRight: " << (*ctrls)[1] << std::endl;
-		// std::cout << "Acc Left: " << al << "\tRight: " << ar << std::endl;
+		prx_throw("Unfortunately, this hasn't been implemented yet.");
 	}
 
 	void treaded_vehicle_t::set_cost_map(double ** c_map, double d_x, double d_y, int g_h, int g_w, double c_size)

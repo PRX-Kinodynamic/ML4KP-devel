@@ -141,9 +141,9 @@ namespace prx
 		sim -> step_simulation(step);
 	}
 
-	void system_group_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times, std::vector<double>& ctrls)
+	void system_group_t::compute_stopping_maneuver(space_point_t start_state, double time)
 	{
 		prx_assert(group.size() == 1, "[system_group_t::compute_stopping_maneuver] Expected group of size 1 but got "<<group.size());
-		group[0]->compute_stopping_maneuver(start_state, times, ctrls);
+		group[0]->compute_stopping_maneuver(start_state, time);
 	}
 }

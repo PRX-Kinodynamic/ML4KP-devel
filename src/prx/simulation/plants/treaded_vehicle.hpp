@@ -22,7 +22,7 @@ namespace prx
 
 		void set_cost_map(double ** cost_map, double delta_x, double delta_y, int , int , double);
 
-		virtual void compute_stopping_maneuver(space_point_t, std::vector<double>&, std::vector<double>&) override final;
+		virtual void compute_stopping_maneuver(space_point_t, double) override final;
 
 
 		virtual void compute_derivative() override final;
