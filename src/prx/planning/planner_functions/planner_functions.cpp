@@ -121,6 +121,12 @@ namespace prx
 		return true;
 	}
 
+
+	void default_stopping_control(space_point_t& s,std::shared_ptr<system_group_t> sg, double t)
+	{
+		sg ->compute_stopping_maneuver(s,t);
+	}
+
 	collision_group_t::pqp_distance_t default_obstacle_distance_function(const space_point_t& s,space_t* ss,std::shared_ptr<collision_group_t> cg)
 	{
 		ss->copy_from_point(s);

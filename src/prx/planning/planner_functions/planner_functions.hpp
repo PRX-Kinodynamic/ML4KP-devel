@@ -15,6 +15,7 @@ namespace prx
 	typedef std::function<bool (space_point_t&)> valid_state_t;
 	typedef std::function<bool (trajectory_t&, double)> time_valid_trajectory_t;
 	typedef std::function<bool (space_point_t&, double)> time_valid_state_t;
+	typedef std::function<void (space_point_t&, double)> stopping_control_t;
 	typedef std::function<void (space_point_t&, plan_t&, trajectory_t& )> propagate_t;
 	typedef std::function<void (space_point_t&, std::vector<plan_t*>&, std::vector<trajectory_t*>&, int bn, bool blossom_expand)> expand_t;
 
@@ -58,6 +59,8 @@ namespace prx
 
 	bool default_valid_state(space_point_t&,space_t*,std::shared_ptr<collision_group_t>);
 
+	void default_stopping_control(space_point_t&,std::shared_ptr<system_group_t>, double);
+	
 	bool default_time_valid_state(space_point_t&, space_t* ss, std::shared_ptr<collision_group_t>, std::shared_ptr<world_model_t> wm, double current_time);
 
 	bool default_time_valid_trajectory(trajectory_t& traj, space_t* ss, std::shared_ptr<collision_group_t>, std::shared_ptr<world_model_t> wm, double start_time);

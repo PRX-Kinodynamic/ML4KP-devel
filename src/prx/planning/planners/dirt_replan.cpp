@@ -358,7 +358,7 @@ namespace prx
 			prx_throw("Tried adding a node beyond the planning horizon. This shouldn't happen");
 		}
 
-		if (!time_valid_state(new_tree_node->point,new_tree_node->checkpoint_time))
+		if (dirt_spec->use_prescience && !time_valid_state(new_tree_node->point,new_tree_node->checkpoint_time))
 		{
 			std::cout << "Info: Tried adding a node with checkpoint time: " << new_tree_node->checkpoint_time << std::endl;
 			std::cout << "More info: " << closest_node -> checkpoint_time << " " << eg.first->duration() << std::endl;
