@@ -90,6 +90,10 @@ namespace prx
 			{
 				default_stopping_control(s, sg, t);
 			};
+			obstacle_distance_function = [cg,this](const space_point_t& s)
+			{
+				return default_obstacle_distance_function(s,state_space,cg);
+			};
 
 			blossom_number = 1;
 			horizon = PRX_INFINITY;
@@ -98,6 +102,7 @@ namespace prx
 
 		cost_function_t cost_function;
 		distance_function_t distance_function;
+		obstacle_distance_function_t obstacle_distance_function;
 		sample_state_t sample_state;
 		sample_plan_t sample_plan;
 		valid_trajectory_t valid_check;

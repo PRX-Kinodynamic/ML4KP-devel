@@ -53,10 +53,6 @@ namespace prx
 			{
 				return default_heuristic_function(s, s2, distance_function);
 			};
-			obstacle_distance_function = [cg,this](const space_point_t& s)
-			{
-				return default_obstacle_distance_function(s,state_space,cg);
-			};
 			blossom_number = 5;
 			use_pruning = true;
 		}
@@ -67,7 +63,6 @@ namespace prx
 		bool use_pruning, use_prescience;
 
 		heuristic_function_t h;
-		obstacle_distance_function_t obstacle_distance_function;
 		time_valid_state_t time_valid_state;
 		time_valid_trajectory_t time_valid_trajectory;
 	};

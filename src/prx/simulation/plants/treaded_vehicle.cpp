@@ -40,7 +40,8 @@ namespace prx
 
 	void treaded_vehicle_t::compute_stopping_maneuver(space_point_t start_state, double time)
 	{
-		prx_throw("Unfortunately, this hasn't been implemented yet.");
+		std::vector<double> desired_acceleration = {-start_state -> at(3)/time, -start_state -> at(4)/time};
+		input_control_space->copy_from_vector(desired_acceleration);
 	}
 
 	void treaded_vehicle_t::set_cost_map(double ** c_map, double d_x, double d_y, int g_h, int g_w, double c_size)
