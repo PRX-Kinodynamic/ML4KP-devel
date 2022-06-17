@@ -326,7 +326,7 @@ namespace prx
 			iteration_count++;
 		}
 		while(!condition->check());
-		print_statistics();
+		// print_statistics();
 	}
 
 	void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg,

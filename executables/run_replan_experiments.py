@@ -27,26 +27,26 @@ planner_params["num_trials"] = 30
 
 planning_times = [0.1, 0.2, 0.5]
 buffer_times   = [0.1, 0.2, 0.5, 1.0]
-horizons = [5.0]
+horizons = [1.0]
 # horizons = [0.5, 1.0, 2.0]
 
 for pt in tqdm(planning_times):
     for bt in buffer_times:
         for h in horizons:
-            if pt + bt > h: continue
-            planner_params["planning_time"] = pt
-            planner_params["buffer_time"]   = bt
-            planner_params["horizon"]       = h
+            if pt + bt <= h:
+                planner_params["planning_time"] = pt
+                planner_params["buffer_time"]   = bt
+                planner_params["horizon"]       = h
 
-            planner_params["output_dir"] = "dynamic/06_10/" + str(pt) + "_" + str(bt) + "_" + str(h)
+                planner_params["output_dir"] = "dynamic/06_16/no_prescience/" + str(pt) + "_" + str(bt) + "_" + str(h)
 
-            with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml', 'w') as f:
-                yaml.safe_dump(planner_params, f, sort_keys=False)
-                f.write("plant: !file \"plants/treaded_vehicle.yaml\"\n")
-            
-            cmd = [os.environ["DIRTMP_PATH"]+"bin/examples/dynamic_obstacles/replan_test","examples/test.yaml"]
-            popen = subprocess.Popen(cmd)
-            time.sleep(1)
+                with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml', 'w') as f:
+                    yaml.safe_dump(planner_params, f, sort_keys=False)
+                    f.write("plant: !file \"plants/treaded_vehicle.yaml\"\n")
+                
+                cmd = [os.environ["DIRTMP_PATH"]+"bin/examples/dynamic_obstacles/replan_test","examples/test.yaml"]
+                popen = subprocess.Popen(cmd)
+                time.sleep(1)
             # popen.wait()
 
 print("Done!")

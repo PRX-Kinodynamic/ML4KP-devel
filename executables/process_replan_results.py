@@ -7,7 +7,7 @@ goal_radius = 0.1
 # num_trials = 30
 num_trials = 10
 
-exps_dir = os.environ["DIRTMP_PATH"] + "out/dynamic/06_14"
+exps_dir = os.environ["DIRTMP_PATH"] + "out/dynamic/06_16/no_prescience/"
 dirs = sorted(os.listdir(exps_dir))
 
 

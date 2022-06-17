@@ -50,6 +50,7 @@ namespace prx
         rrt_query_t* rrt_query;
         std::shared_ptr<world_model_t> sim;
         space_t* state_space;
+        space_t* control_space;
 
 
     private:
