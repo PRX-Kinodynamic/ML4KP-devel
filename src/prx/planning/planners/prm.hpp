@@ -118,6 +118,6 @@ namespace prx
             space_t* control_space;
             
             node_index_t start_vertex;
-	    node_index_t goal_vertex;
+            node_index_t goal_vertex;
     };
 }
