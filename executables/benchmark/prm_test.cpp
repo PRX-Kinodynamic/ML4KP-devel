@@ -47,8 +47,13 @@ int main(int argc, char* argv[])
     
 
     //start and goal states
-	std::vector<double> start_vec = std::vector<double>({3.8, 3, 0}); 
-	std::vector<double> goal_vec = std::vector<double>({5.2,3,0});
+    	//bugtrap
+	//std::vector<double> start_vec = std::vector<double>({3.8, 3, 0}); 
+	//std::vector<double> goal_vec = std::vector<double>({5.2, 3, 0});
+	
+	//kink
+	std::vector<double> start_vec = std::vector<double>({0.5, 4.5, 1.55}); 
+	std::vector<double> goal_vec = std::vector<double>({5.5, 4, 1.55});
 	
 	prm_query.start_state = context.first->get_state_space()->make_point();
 	context.first->get_state_space()->copy_point_from_vector(prm_query.start_state,start_vec);
@@ -65,6 +70,10 @@ int main(int argc, char* argv[])
 
     	prm.link_and_setup_query(&prm_query);
     	
+    	condition_check_t checker("time",  10);
+    	
+    	prm.resolve_query(&checker);
+    	
     	
 	// connect start and goal to prm 
 	
@@ -76,7 +85,10 @@ int main(int argc, char* argv[])
         prm_spec.h = [&](space_point_t a, space_point_t b)
         {
             // changes here
-            return prm_spec.distance_function(a,b) / 0.5;
+            
+            return prm_query->dijkstra();
+            
+            // return prm_spec.distance_function(a,b) / 0.5;
         };
 
         prm_query.goal_check = [&,prm_spec](space_point_t s)

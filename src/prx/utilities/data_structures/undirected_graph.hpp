@@ -302,6 +302,8 @@ namespace prx
 		void dijkstra(node_index_t goal);
 
 		void vertex_list_to_file(std::string file_name);
+		
+		void edge_list_to_file(std::string file_name);
 
 	protected:
 

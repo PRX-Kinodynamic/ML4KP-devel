@@ -182,6 +182,7 @@ namespace prx
 	{
 		std::ofstream ofs_map;
 		ofs_map.open(file_name.c_str(), std::ofstream::trunc);
+		
 
 		// auto v = vertex_list.begin();
 		// while (v != const_v_iter)
@@ -229,5 +230,44 @@ namespace prx
 		}
 
 	}
+	
+	
+	
+	
+	void undirected_graph_t::edge_list_to_file(std::string file_name)
+	{
+		std::ofstream ofs_map;
+		ofs_map.open(file_name.c_str(), std::ofstream::trunc);
+
+		
+		for (auto e : e_index_map)
+		{
+			if (e == nullptr) continue; // sanity check
+			// for (auto e : v -> edges)
+			// {
+				// auto edge = e_index_map[e];
+				// auto candidate = v_index_map[edge -> get_other(v -> index)];
+			ofs_map << "Edge: ";
+			
+			ofs_map << e -> first << " ";
+			
+			ofs_map << e -> second << std::endl;
+			/*for (int i = 0; i < e -> point -> get_dim(); ++i)
+			{
+				ofs_map << v -> point -> at(i) << " ";
+			}
+			auto candidate = v_index_map[ v -> best_neighbor];
+			for (int i = 0; i < candidate -> point -> get_dim(); ++i)
+			{
+				ofs_map << candidate -> point -> at(i) << " ";
+			}
+			// ofs_map << "cost: " << edge -> value;
+			ofs_map << "cost: " << (v -> cost_to_go == std::numeric_limits<double>::infinity() ? std::numeric_limits<double>::max() : v -> cost_to_go);
+			ofs_map << std::endl;*/
+			// }
+		}
+
+	}
+
 
 }

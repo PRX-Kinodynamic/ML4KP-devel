@@ -59,7 +59,7 @@ namespace prx
             iter_count++;
         } while (iter_count < M);
 
-		graph.vertex_list_to_file("output_v.txt");
+		//graph.vertex_list_to_file("output_v.txt");
 		
 		space_point_t candidate = state_space->make_point();
 		
@@ -170,6 +170,11 @@ namespace prx
 	
 	void prm_t::_resolve_query(condition_check_t* condition)
 	{	
+		graph.dijkstra(goal_vertex);
+		
+		graph.vertex_list_to_file("output_v.txt");
+		graph.edge_list_to_file("output_e.txt");
+		
 		// graph.get_vertex_as<prm_node_t>(start_vertex)->point
 		/*for ( auto i_itr = 1, i_itr<=2, i_itr++)
 		{	
