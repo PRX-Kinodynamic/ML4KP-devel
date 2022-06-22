@@ -252,5 +252,6 @@ namespace prx
 				best_cost = g + h;
 			}
 		}
+		return best_cost;
 	}
 }

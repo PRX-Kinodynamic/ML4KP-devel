@@ -16,9 +16,10 @@ int main(int argc, char* argv[])
     
     simulation_step = 0.1;
     init_random(111093);
-
+    //init_random(111);
+    
     // auto obstacles = load_obstacles("environments/rrt_star_obstacles.yaml");
-    auto obstacles = load_obstacles("environments/kmp_benchmark/unicycle_fo/kink_0_ad_new.yaml");
+    auto obstacles = load_obstacles("environments/kmp_benchmark/unicycle_fo/bugtrap_0_ad_new.yaml");
     std::vector<std::shared_ptr<movable_object_t>> obstacle_list = obstacles.second;
     std::vector<std::string> obstacle_names = obstacles.first;
 
@@ -48,12 +49,20 @@ int main(int argc, char* argv[])
 
     //start and goal states
     	//bugtrap
-	//std::vector<double> start_vec = std::vector<double>({3.8, 3, 0}); 
-	//std::vector<double> goal_vec = std::vector<double>({5.2, 3, 0});
+	std::vector<double> start_vec = std::vector<double>({3.8, 3, 0}); 
+	std::vector<double> goal_vec = std::vector<double>({5.2, 3, 0});
 	
 	//kink
-	std::vector<double> start_vec = std::vector<double>({0.5, 4.5, 1.55}); 
-	std::vector<double> goal_vec = std::vector<double>({5.5, 4, 1.55});
+	//std::vector<double> start_vec = std::vector<double>({0.5, 4.5, 1.55}); 
+	//std::vector<double> goal_vec = std::vector<double>({5.5, 4, 1.55});
+	
+	//parallelpark
+	//std::vector<double> start_vec = std::vector<double>({0.7, 0.8, 0}); 
+	//std::vector<double> goal_vec = std::vector<double>({1.9, 0.3, 0});
+	
+	//wall
+	//std::vector<double> start_vec = std::vector<double>({1.5, 2.5, 0}); 
+	//std::vector<double> goal_vec = std::vector<double>({3.5, 2.5, 0});
 	
 	prm_query.start_state = context.first->get_state_space()->make_point();
 	context.first->get_state_space()->copy_point_from_vector(prm_query.start_state,start_vec);
@@ -74,8 +83,7 @@ int main(int argc, char* argv[])
     	
     	prm.resolve_query(&checker);
     	
-    	
-	// connect start and goal to prm 
+    	 
 	
 	
 	/*prm_query.goal_region_radius = 0.1;
@@ -86,9 +94,9 @@ int main(int argc, char* argv[])
         {
             // changes here
             
-            return prm_query->dijkstra();
+            // return prm.get_closest_cost(a) / max_velocity ;
             
-            // return prm_spec.distance_function(a,b) / 0.5;
+            return prm_spec.distance_function(a,b) / 0.5;
         };
 
         prm_query.goal_check = [&,prm_spec](space_point_t s)
