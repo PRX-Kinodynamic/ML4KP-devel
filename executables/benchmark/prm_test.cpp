@@ -166,9 +166,9 @@ int main(int argc, char* argv[])
 		std::cout<< "here3" << std::endl;
 		vis_group->output_html("out_"+std::to_string(1)+".html");
 		delete vis_group;
-	}
+	}*/
 	prm_query.clear_outputs();
-	prm.reset();*/
+	prm.reset();
     
     
     

@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 		context.first->get_state_space()->copy_point_from_vector(dirt_query.start_state,start_vec);
 		dirt_query.goal_state = context.first->get_state_space()->make_point();
 		context.first->get_state_space()->copy_point_from_vector(dirt_query.goal_state,goal_vec);
-		dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
+		dirt_query.goal_region_radius = params["goal_radius"].as<double>();
 		dirt_query.get_visualization = get_visualization;
 
 		dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
