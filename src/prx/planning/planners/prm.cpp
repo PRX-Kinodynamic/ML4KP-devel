@@ -234,4 +234,23 @@ namespace prx
 			metric = nullptr;
 		}
 	}
+
+	double prm_t::get_closest_cost(const space_point_t& s)
+	{
+		// Get the k closest points to s
+		auto neighbors = metric->multi_query(prm_query->start_state, k);
+		double best_cost = std::numeric_limits<double>::infinity();
+		double g,h;
+
+		for (auto nn : neighbors)
+		{
+			auto candidate_node = static_cast<prm_node_t*>(nn);
+			g = distance_function(s,candidate_node->point);
+			h = candidate_node->get_cost_to_go();
+			if (g + h < best_cost)
+			{
+				best_cost = g + h;
+			}
+		}
+	}
 }

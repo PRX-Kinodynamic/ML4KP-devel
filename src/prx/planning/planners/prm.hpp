@@ -87,6 +87,7 @@ namespace prx
         public:
             prm_t(const std::string& new_name);
             virtual ~prm_t();
+            double get_closest_cost(const space_point_t& s);
         protected:
             virtual void _link_and_setup_spec(planner_specification_t* spec) override;
             virtual bool _preprocess() override;
