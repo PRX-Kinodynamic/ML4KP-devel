@@ -114,7 +114,7 @@ namespace prx
 		space_t* state_space;
 		space_t* control_space;
 
-		double horizon;
+		double horizon, planning_time;
 
 		bool bnb;
 

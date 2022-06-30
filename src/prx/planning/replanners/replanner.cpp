@@ -44,6 +44,7 @@ namespace prx
         {
             prx_assert(planner != NULL && rrt_spec != NULL && rrt_query != NULL,"Planner not initialized");
             prx_assert(sim != NULL,"World model not initialized");
+            rrt_spec->planning_time = planning_time;
             full_solution_trajectory = new trajectory_t(state_space);
             space_point_t final_state = state_space -> make_point();
             double multiplier = 1.0/simulation_step;
@@ -51,12 +52,13 @@ namespace prx
             {
                 // Increment the cycle and update the underlying planner's horizon.
                 current_cycle += 1;
-                // std::cout << "Cycle: " << current_cycle << std::endl;
+                std::cout << "Cycle: " << current_cycle << std::endl;
                 rrt_spec -> horizon = rrt_query -> start_time + horizon;
 
                 // Perform the planning cycle.
                 perform_single_planning_cycle();
 
+                tree_visualization.clear();
                 if (rrt_query -> get_visualization)
                     for (auto e : rrt_query -> tree_visualization)
                         tree_visualization.push_back(e);
@@ -64,10 +66,13 @@ namespace prx
                 //  Now we have a plan.
                 if (rrt_query -> solution_traj.size() == 0)
                 {
-                    std::cout << "No solution found during planning cycle." << std::endl;
+                    // std::cout << state_space -> print_point(rrt_query -> start_state,4) << std::endl;
                     // Apply the fallback for the next cycle.
-                    rrt_query->solution_plan.append_onto_back(horizon);
-                    rrt_spec ->propagate(rrt_query -> start_state, rrt_query -> solution_plan, rrt_query -> solution_traj);
+                    rrt_query->solution_plan.append_onto_back(planning_time);
+                    rrt_spec -> stopping_control(rrt_query->start_state, planning_time);
+                    control_space -> copy_to_point(rrt_query -> solution_plan.back().control);
+                    control_space -> enforce_bounds(rrt_query -> solution_plan.back().control);
+                    rrt_spec -> propagate(rrt_query -> start_state, rrt_query -> solution_plan, rrt_query -> solution_traj);
                 }
                 if (rrt_query -> solution_traj.size() < planning_time*multiplier)
                 {
@@ -79,54 +84,7 @@ namespace prx
                         rrt_spec ->propagate(rrt_query -> start_state, rrt_query -> solution_plan, rrt_query -> solution_traj);
                         std::cout << "So this happened." << std::endl;
                     }
-                } 
-
-                /*
-                // We will now step through the trajectory until the end of the buffer time.
-                // If there is a collision, we trigger the fallback, but we DON'T replan.
-                bool trigger_fallback =  false;
-                unsigned fallback_trigger_index;
-                unsigned next_index = std::min(buffer_time*multiplier, rrt_query -> solution_traj.size() - 1.0);
-                for (unsigned i = 0; i <= next_index; i++)
-                {
-                    sim -> update_all_obstacle_poses(rrt_query -> start_time + i * simulation_step);
-                    // Step through the **rest** of the trajectory and see if you will be in collision.
-                    for (auto j = i; j <= next_index; j++)
-                    {
-                        auto step_state = rrt_query -> solution_traj.at(j);
-                        if (!rrt_spec -> valid_state(step_state))
-                        {
-                            std::cout << "Found collision at time " << rrt_query -> start_time + j * simulation_step
-                             << " based on information at time " << rrt_query -> start_time + i * simulation_step << std::endl;
-                            trigger_fallback = true;
-                            fallback_trigger_index = j;
-                            break; break;
-                        }
-                    }
                 }
-                
-                if (false && trigger_fallback)
-                {
-                    auto fallback_state = rrt_query -> solution_traj.at(fallback_trigger_index);
-                    rrt_query -> solution_traj.clear();
-                    rrt_query -> solution_plan.back().duration = fallback_trigger_index * simulation_step;
-                    rrt_query -> solution_plan.append_onto_back(buffer_time + planning_time - fallback_trigger_index * simulation_step);
-                    // Compute the stopping maneuver.
-                    std::cout << "Computing stopping maneuver for " << state_space -> print_point(fallback_state,4) << std::endl;
-                    std::cout << "Time remaining to stop: " << rrt_query->solution_plan.back().duration << std::endl;
-                    rrt_spec -> stopping_control(fallback_state, rrt_query->solution_plan.back().duration);
-                    control_space -> copy_to_point(rrt_query -> solution_plan.back().control);
-                    control_space -> enforce_bounds(rrt_query -> solution_plan.back().control);
-                    std::cout << "Maneuver to execute: " << control_space -> print_point(rrt_query -> solution_plan.back().control,4) << std::endl;
-                    // prx_throw("Not implemented!");
-                    rrt_spec -> propagate(rrt_query -> start_state, rrt_query -> solution_plan, rrt_query -> solution_traj);
-                    // Update the planning info for the next planning cycle. (just in case)
-                    sim -> update_all_obstacle_poses(rrt_query -> start_time + fallback_trigger_index * simulation_step);
-                    // Update the start state for the next planning cycle.
-                    state_space -> copy_point(rrt_query -> start_state, rrt_query -> solution_traj.back());
-                    rrt_query -> start_time += buffer_time + planning_time; 
-                }
-                */
 
                 unsigned next_execution_index = std::min(planning_time*multiplier, (rrt_query -> solution_traj.size() - 1.0));
                 auto next_execution_state = rrt_query -> solution_traj.at(next_execution_index);
@@ -160,6 +118,7 @@ namespace prx
 
                 // Update the start state for the next planning cycle.
                 state_space -> copy_point(rrt_query -> start_state, next_execution_state);
+                // TODO: Could this be less than the planning time?
                 rrt_query -> start_time += planning_time;
                 // std::cout << "Continue planning? " << continue_planning << std::endl;
 

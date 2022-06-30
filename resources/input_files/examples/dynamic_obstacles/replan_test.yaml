@@ -10,9 +10,9 @@ blossom: 5
 pruning: false
 prescience: false
 
-planning_time: 0.5
-horizon: 5.0
-max_replanning_cycles: 500
+planning_time: 3.5
+horizon: 10.0
+max_replanning_cycles: 20
 
 goal_radius: 0.1
 

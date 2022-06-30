@@ -31,11 +31,11 @@ horizons = [1.0, 2.0, 5.0]
 
 for pt in tqdm(planning_times):
     for h in horizons:
-        if pt + bt <= h:
+        if pt <= h:
             planner_params["planning_time"] = pt
             planner_params["horizon"]       = h
 
-            planner_params["output_dir"] = "dynamic/06_29/" + str(pt) + "_" + str(bt) + "_" + str(h)
+            planner_params["output_dir"] = "dynamic/no_prescience_unsafe/" + str(pt) + "_" + str(h)
 
             with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml', 'w') as f:
                 yaml.safe_dump(planner_params, f, sort_keys=False)

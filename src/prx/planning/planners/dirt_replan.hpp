@@ -26,6 +26,7 @@ namespace prx
 			edge_generators.clear();
 			is_blossom_expand_done = false;
 			random_expand = false;
+			is_safe = false;
 		}
 
 		double cost_to_go;
@@ -43,6 +44,8 @@ namespace prx
 		std::vector<int> indices;
 
 		double checkpoint_time;
+
+		bool is_safe;
 	};
 
 	class dirt_replan_specification_t : public rrt_specification_t
@@ -110,7 +113,8 @@ namespace prx
 		time_valid_state_t time_valid_state;
 		time_valid_trajectory_t time_valid_trajectory;
 		
-        double horizon;
+        double horizon, planning_time;
+		double multiplier;
 		node_index_t best_node;
 		double best_cost;
 

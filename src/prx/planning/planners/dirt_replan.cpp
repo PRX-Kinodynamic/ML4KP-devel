@@ -26,6 +26,8 @@ namespace prx
 		time_valid_trajectory = dirt_spec->time_valid_trajectory;
 
         horizon = dirt_spec->horizon;
+		planning_time = dirt_spec->planning_time;
+		multiplier = 1.0/simulation_step;
 	}
 	bool dirt_replan_t::_preprocess()
 	{
@@ -336,6 +338,34 @@ namespace prx
 		condition_check_t* condition
 	)
 	{
+		// if (closest_node->checkpoint_time + eg.first->duration() > dirt_replan_query->start_time + planning_time)
+		if (!closest_node->is_safe && closest_node->checkpoint_time < dirt_replan_query->start_time + planning_time &&
+			closest_node->checkpoint_time + eg.first->duration() > dirt_replan_query->start_time + planning_time)
+		{
+			// PRX_DEBUG_PRINT
+			// std::cout << closest_node->checkpoint_time << " " << eg.first->duration() << " " <<
+			// 	dirt_replan_query->start_time << " " << planning_time << std::endl;
+			// std::cout << "Checking safety for: " << std::endl;
+			plan_t stopping_plan(control_space);
+			trajectory_t stopping_traj(state_space);
+			unsigned last_safe_state_index = multiplier * (dirt_replan_query->start_time + planning_time - closest_node->checkpoint_time);
+			space_point_t last_safe_state = eg.second->at(last_safe_state_index);
+			// std::cout << state_space -> print_point(last_safe_state,4) << std::endl;
+			// Compute the stopping maneuver.
+			dirt_spec->stopping_control(last_safe_state, planning_time);
+			// std::cout << "Computed maneuver: " << control_space->print_memory(4) << std::endl;
+			stopping_plan.append_onto_back(planning_time);
+			control_space->copy_to_point(stopping_plan.back().control);
+			control_space->enforce_bounds(stopping_plan.back().control);
+			propagate(last_safe_state,stopping_plan,stopping_traj);
+			bool valid = false;
+			if (dirt_spec->use_prescience)
+				valid = time_valid_trajectory(stopping_traj,dirt_replan_query->start_time + planning_time);
+			else 
+				valid = valid_check(stopping_traj);
+			if (!valid) return;
+			// std::cout << "Stopping maneuver is valid" << std::endl;
+		}
 		auto node_index = tree.add_vertex<dirt_replan_node_t,rrt_edge_t>();
 		auto new_tree_node = tree.get_vertex_as<dirt_replan_node_t>(node_index);
 		new_tree_node->point = state_space->clone_point(eg.second->back());
@@ -350,6 +380,7 @@ namespace prx
 		new_tree_node->blossom_number = dirt_spec->blossom_number;
 		new_tree_node->dir_radius = new_node_dir_radius;
         new_tree_node->checkpoint_time = closest_node->checkpoint_time + eg.first->duration();
+		closest_node->is_safe = true;
 		if (new_tree_node -> checkpoint_time > horizon + PRX_EPSILON) 
 		{
 			std::cout.precision(16);
@@ -362,13 +393,14 @@ namespace prx
 		{
 			std::cout << "Info: Tried adding a node with checkpoint time: " << new_tree_node->checkpoint_time << std::endl;
 			std::cout << "More info: " << closest_node -> checkpoint_time << " " << eg.first->duration() << std::endl;
-			prx_throw("Tried adding a node tha is not valid at its checkpoint time. This shouldn't happen");
+			prx_throw("Tried adding a node that is not valid at its checkpoint time. This shouldn't happen");
 		}
 
-        if (new_tree_node->cost_to_go < best_cost)
+        if (closest_node->cost_to_go < best_cost)
+        // if (new_tree_node->cost_to_go < best_cost)
         {
-            best_cost = new_tree_node->cost_to_go;
-            best_node = node_index;
+            best_cost = closest_node->cost_to_go;
+            best_node = closest_node->get_index();
         }
 
 		max_radius = std::max(max_radius,new_node_dir_radius);
@@ -518,6 +550,7 @@ namespace prx
 		}
         else
         {
+			std::cout << "No solution found during planning cycle. # of nodes: " << metric->get_nr_nodes() << std::endl;
             rrt_query->solution_cost = 0;
         }
 		if(rrt_query->get_visualization)
