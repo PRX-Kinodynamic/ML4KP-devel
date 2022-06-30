@@ -13,7 +13,7 @@ if __name__ == "__main__":
     def g(X):
         return TM.mountain_car_lc(X)
 
-    xs = np.linspace(-1.2,0.6,11)
+    xs = np.linspace(-1.2,0.6,13)
     ys = np.linspace(-1.5,1.5,11)
     line = ""
 

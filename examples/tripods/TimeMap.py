@@ -191,7 +191,7 @@ class TimeMap:
                 ctrl_output = self.controller(ctrl_input)[0].cpu()
 
             # ctrl = [-0.6371781908344007 + ((ctrl_output + 1.)*0.6371781908344007)]
-            ctrl = np.array([-.2 + ((ctrl_output + 1.)*0.4)],dtype=np.float64)
+            ctrl = np.array([-.4 + ((ctrl_output + 1.)*0.8)],dtype=np.float64)
             # ctrl = np.array(ctrl_output,dtype=np.float64)
 
             self.ctrl_pt[0] = ctrl[0]

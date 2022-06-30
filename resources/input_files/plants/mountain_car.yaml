@@ -7,7 +7,7 @@ goal_state: [0.6,0.0]
 state_space_lower_bound: [-1.2, -1.5]
 state_space_upper_bound: [ 0.6,  1.5]
 
-control_space_lower_bound: [-0.2]
-control_space_upper_bound: [ 0.2]
+control_space_lower_bound: [-0.4]
+control_space_upper_bound: [ 0.4]
 
 controller_path: "examples/tripods/lc/mountain_car.pt"
