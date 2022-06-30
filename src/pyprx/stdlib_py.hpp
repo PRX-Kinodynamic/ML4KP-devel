@@ -45,6 +45,7 @@ void pyprx_stdlib_py()
  //        ;
     PRX_ITERABLE_WRAPPER(std::vector<std::string>, "vector_of_strings")
     PRX_ITERABLE_WRAPPER(std::vector<double>, "vector_of_doubles")
+    PRX_ITERABLE_WRAPPER_NONSTR(std::vector<std::vector<double>>, "vector_of_vector_of_doubles")
     // PRX_ITERABLE_WRAPPER_NONSTR(std::vector<double*>, "vector_of_doubles_ptrs")
 
     // PRX_ITERABLE_WRAPPER(std::vector<double>&, "vector_of_doubles")
@@ -61,6 +62,7 @@ void pyprx_stdlib_py()
         // .from_python<std::vector<double> >()
         // Each dimension needs to be convertable.
         .from_python<std::vector<std::string> >()
+        .from_python<std::vector<std::vector<double> > >()
         // .from_python<std::vector<std::shared_ptr<prx::movable_object_t>>>()
 
         ;

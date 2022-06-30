@@ -28,6 +28,7 @@ namespace prx
 
 		void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, space_point_t result);
 
+		void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, trajectory_t& result);
 
 		void compute_stopping_maneuver(space_point_t start_state, std::vector<double>&, std::vector<double>&);
 		inline space_t* get_state_space()
