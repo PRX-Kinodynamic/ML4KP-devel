@@ -76,6 +76,7 @@ namespace prx
 		{
 			return plant -> get_state_space();
 		}
+		
 		inline const space_t* get_control_space() const
 		{
 			return plant -> get_control_space();

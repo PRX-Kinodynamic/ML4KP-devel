@@ -9,48 +9,33 @@ namespace prx
 	class bang_bang_t : public controller_t
 	{
 		public:
-		bang_bang_t(system_ptr_t _plant, std::string _name = "bang-bang_ctrl")
-			: controller_t(_plant, _name)
+		bang_bang_t(system_ptr_t _plant, std::vector<std::vector<double>> _dimensions_set_points,
+			std::string _name = "bang-bang_ctrl")
+			: controller_t(_plant, _name),
+				dimensions_set_points(_dimensions_set_points)
 		{
-			ctrl_num = 0;
 			auto cs = plant -> get_control_space();
-			auto lb = cs -> get_lower_bounds();
-			auto ub = cs -> get_upper_bounds();
-			std::vector<double> aux(lb.begin(), lb.end());
-			// TODO: add ctrls with 0s
-			for (int i = 0; i < std::pow(2, cs -> get_dimension()); ++i)
-			{
-				// for (int j = 1; j < std::pow(2, cs -> get_dimension()); j = j << 1)
-				int k = 1;
-				for (int j = 0; j < cs -> get_dimension(); ++j)
-				{
-					// printf("i: %d\tj: %d\tmodulo: %d\n", i, j,i % static_cast<int>(std::pow(2, j)) );
-					// printf("i: %d\tj: %d\tAND: %d\n", i, j, i & j);
-					// if ( i % static_cast<int>(std::pow(2, j)) )
-					// if (aux[j] == lb[j])
-					if ( (i & k) )
-					{
-						aux[j] = ub[j];
-					}
-					else
-					{
-						aux[j] = lb[j];
-					}
-					k = k << 1;
-				}
-				auto pt = cs -> make_point();
-				cs -> copy_point_from_vector(pt, aux);
-				ctrls.push_back(pt);
-				std::cout << "ctrl: " << pt << std::endl;
-				// PRX_DEBUG_ITERABLE("AUX", aux)
-			}
+
+			auto cs_dim = cs -> get_dimension();
+			prx_assert(dimensions_set_points.size() == cs_dim, 
+					"[bang_bang_t]: number of set bounds must equal plant's control dimension");
+			aux_ctrl_pt = cs -> make_point();
+			generate_controls(0);
+			ctrl_to_use = 0;
 		}
 
 		virtual ~bang_bang_t(){}
 
 		virtual void compute_controls() override
 		{
-			// auto ss = plant -> get_control_space();
+			plant -> get_control_space() -> copy_from_point(ctrls[ctrl_to_use]);
+			plant -> get_control_space() -> enforce_bounds();
+		}
+
+		void set_control(unsigned int i)
+		{
+			prx_assert(i < ctrls.size(), "Control number must be less than " << ctrls.size());
+			ctrl_to_use = i;
 		}
 
 		space_point_t get_control_at(unsigned int i)
@@ -65,8 +50,31 @@ namespace prx
 		}
 
 		protected:
-		unsigned int ctrl_num;
+
+			void generate_controls(int c_i)
+			{
+				auto cs = plant -> get_control_space();
+				if (c_i == cs -> get_dimension())
+				{
+					auto new_ctrl = cs -> make_point();
+					cs -> copy_point(new_ctrl, aux_ctrl_pt);
+					ctrls.push_back(new_ctrl);
+					PRX_DEBUG_ITERABLE("CTRL", *new_ctrl);
+					return;
+				}
+
+				for (int i = 0; i < dimensions_set_points[c_i].size(); ++i)
+				{
+					(*aux_ctrl_pt)[c_i] = dimensions_set_points[c_i][i];
+					PRX_DEBUG_ITERABLE("aux_ctrl_pt", *aux_ctrl_pt);
+					generate_controls(c_i + 1);
+				}
+
+			};
+		space_point_t aux_ctrl_pt;
+		unsigned int ctrl_to_use;
 		std::vector<space_point_t> ctrls;
+		std::vector<std::vector<double>> dimensions_set_points;
 
 	};
 }
