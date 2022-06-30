@@ -154,8 +154,8 @@ int main(int argc, char* argv[])
         fout.close();
         output_progress_bar(1.0 * j/params["num_trials"].as<int>());
 
-        vis_group -> add_vis_infos(info_geometry_t::LINE, replanner.tree_visualization, body_name, ss);
-        vis_group -> output_html(params["output_dir"].as<std::string>() + "/"+"output_"+std::to_string(j)+".html");
+        // vis_group -> add_vis_infos(info_geometry_t::LINE, replanner.tree_visualization, body_name, ss);
+        // vis_group -> output_html(params["output_dir"].as<std::string>() + "/"+"output_"+std::to_string(j)+".html");
 
         delete vis_group;
     }

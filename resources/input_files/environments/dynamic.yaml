@@ -45,35 +45,47 @@ environment:
         name: box1
         dynamic: true
         position_function: "cos"
-        multiplier: 10.
+        multiplier: 6.
         collision_geometry: 
           type: box
           material: red 
           dims: [0.75,0.75,.2]      
         config:
-          position: [-5,0, 0]
+          position: [-6,0, 0]
           orientation: [0, 0, 0, 1]
       -
         name: box2
         dynamic: true
         position_function: "sin"
-        multiplier: 10.
+        multiplier: 6.
         collision_geometry: 
           type: box
           material: red 
           dims: [0.75,0.75,.2]      
         config:
-          position: [0,0, 0]
+          position: [-2,0, 0]
           orientation: [0, 0, 0, 1]
       -
         name: box3
         dynamic: true
         position_function: "cos"
-        multiplier: 10.
+        multiplier: 6.
         collision_geometry: 
           type: box
           material: red 
           dims: [0.75,0.75,.2]      
         config:
-          position: [5,0, 0]
+          position: [2,0, 0]
+          orientation: [0, 0, 0, 1]
+      -
+        name: box4
+        dynamic: true
+        position_function: "sin"
+        multiplier: 6.
+        collision_geometry: 
+          type: box
+          material: red 
+          dims: [0.75,0.75,.2]      
+        config:
+          position: [6,0, 0]
           orientation: [0, 0, 0, 1]

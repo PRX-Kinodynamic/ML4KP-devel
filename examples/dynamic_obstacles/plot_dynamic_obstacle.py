@@ -10,10 +10,10 @@ from PIL import Image
 np.set_printoptions(suppress=True)
 
 def f_sin(sim_time):
-    return 10 * np.sin(0.5*sim_time)
+    return 6 * np.sin(0.33*sim_time)
 
 def f_cos(sim_time):
-    return 10 * np.cos(0.5*sim_time)
+    return 6 * np.cos(0.33*sim_time)
 
 box_size = [1.0,1.0]
 robot_dims = [0.508,0.430]
@@ -21,9 +21,10 @@ diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 goal = [9.0,0.0]
 goal_radius = 0.1
 data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience_test/"
+step = 1
 simulation_step = 0.1
-# num_trajs = 10
-num_trajs = 1
+num_trajs = 10
+# num_trajs = 1
 
 environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/dynamic.yaml"
 
@@ -35,14 +36,14 @@ with open(environment_file, 'r') as stream:
 
 num_success = 0.0
 plt.figure(figsize=(8,8))
-for idx in tqdm(range(num_trajs)):
+for idx in tqdm(range(0,num_trajs)):
 
     traj = np.loadtxt(data_dir+"trajectory_"+str(idx)+".txt",delimiter=",")
     if sum(traj[:,-1]) == traj.shape[0]: num_success += 1
     continue_plotting = True
     first_collision_state = -1
 
-    for i in tqdm(range(0,len(traj))):
+    for i in tqdm(range(0,len(traj),step)):
         plt.xlim(-11,11)
         plt.ylim(-11,11)
         plt.gca().set_xticks([])
@@ -58,7 +59,7 @@ for idx in tqdm(range(num_trajs)):
                 plt.gca().add_patch(rect)
             else:
                 box_center = obstacle["config"]["position"][:2]
-                if obstacle["name"] == "box1" or obstacle["name"] == "box3": box_center[1] = f_cos(i*simulation_step)
+                if obstacle["name"] == "box1" or obstacle["name"] == "box3" or obstacle["name"] == "box5": box_center[1] = f_cos(i*simulation_step)
                 else: box_center[1] = f_sin(i*simulation_step)
                 box_dims = obstacle["collision_geometry"]["dims"][:2]
                 rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
@@ -88,7 +89,7 @@ for idx in tqdm(range(num_trajs)):
         plt.savefig(data_dir+str(i)+".png",bbox_inches='tight')
         plt.clf()
 
-    fnames = [Image.open(data_dir+str(i)+".png") for i in range(first_collision_state+1)]
+    fnames = [Image.open(data_dir+str(i)+".png") for i in range(0,first_collision_state+1,step)]
     fnames[0].save(data_dir+'output_'+str(idx)+'.gif',format='GIF',append_images=fnames[1:],
-    save_all=True,duration=40,optimize=True)
+    save_all=True,duration=50,optimize=True)
     subprocess.call("cd " + data_dir + " && rm -rf *.png",shell=True)

@@ -25,11 +25,11 @@ public:
         std::vector<double> result = initial_position;
         if (function_descriptor == "cos")
         {
-            result[1] = multiplier * std::cos(0.5*t);
+            result[1] = multiplier * std::cos(0.33*t);
         }
         else if (function_descriptor == "sin")
         {
-            result[1] = multiplier * std::sin(0.5*t);
+            result[1] = multiplier * std::sin(0.33*t);
         }
         return result;
 

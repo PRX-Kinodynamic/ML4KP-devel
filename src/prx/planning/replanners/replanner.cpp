@@ -15,13 +15,12 @@ namespace prx
 
         void replanner_t::setup(param_loader params)
         {
-            buffer_time = params["buffer_time"].as<double>();
             planning_time = params["planning_time"].as<double>();
             max_replanning_cycles = params["max_replanning_cycles"].as<int>();
             horizon = params["horizon"].as<double>();
 
             // Some asserts for sanity.
-            prx_assert(buffer_time >= 0 && planning_time > 0 && buffer_time + planning_time <= horizon, "Invalid parameters for replanner.");
+            prx_assert(planning_time > 0 && planning_time <= horizon, "Invalid parameters for replanner.");
 
             checker = new condition_check_t("time",planning_time);
         }
@@ -66,15 +65,20 @@ namespace prx
                 if (rrt_query -> solution_traj.size() == 0)
                 {
                     std::cout << "No solution found during planning cycle." << std::endl;
-                    // Apply no controls for the next execution cycle.
+                    // Apply the fallback for the next cycle.
                     rrt_query->solution_plan.append_onto_back(horizon);
                     rrt_spec ->propagate(rrt_query -> start_state, rrt_query -> solution_plan, rrt_query -> solution_traj);
                 }
-                if (rrt_query -> solution_traj.size() < (buffer_time + planning_time)*multiplier)
+                if (rrt_query -> solution_traj.size() < planning_time*multiplier)
                 {
+                    auto final_state = rrt_query -> solution_traj.back();
                     std::cout << "Found solution length: " << rrt_query -> solution_traj.size() << std::endl;
-                    rrt_query->solution_plan.append_onto_back(buffer_time + planning_time - rrt_query -> solution_cost);
-                    rrt_spec ->propagate(rrt_query -> start_state, rrt_query -> solution_plan, rrt_query -> solution_traj);
+                    if(!rrt_query->goal_check(final_state))
+                    {
+                        rrt_query->solution_plan.append_onto_back(planning_time - rrt_query -> solution_cost);
+                        rrt_spec ->propagate(rrt_query -> start_state, rrt_query -> solution_plan, rrt_query -> solution_traj);
+                        std::cout << "So this happened." << std::endl;
+                    }
                 } 
 
                 /*
@@ -124,7 +128,7 @@ namespace prx
                 }
                 */
 
-                unsigned next_execution_index = std::min((buffer_time + planning_time)*multiplier, (rrt_query -> solution_traj.size() - 1.0));
+                unsigned next_execution_index = std::min(planning_time*multiplier, (rrt_query -> solution_traj.size() - 1.0));
                 auto next_execution_state = rrt_query -> solution_traj.at(next_execution_index);
 
                 // We have to do this otherwise there may be duplicates.
@@ -152,12 +156,11 @@ namespace prx
                 continue_planning &= !rrt_query -> goal_check(next_execution_state);
 
                 // Update the planning info for the next planning cycle.
-                // Wait - what if this wasn't the full buffer time?
-                sim -> update_all_obstacle_poses(rrt_query -> start_time + buffer_time);
+                sim -> update_all_obstacle_poses(rrt_query -> start_time);
 
                 // Update the start state for the next planning cycle.
                 state_space -> copy_point(rrt_query -> start_state, next_execution_state);
-                rrt_query -> start_time += buffer_time + planning_time;
+                rrt_query -> start_time += planning_time;
                 // std::cout << "Continue planning? " << continue_planning << std::endl;
 
             } while (continue_planning && current_cycle < max_replanning_cycles);
