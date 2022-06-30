@@ -8,13 +8,13 @@ plant: !file "plants/treaded_vehicle.yaml"
 
 blossom: 5
 pruning: false
-prescience: true
+prescience: false
 
-planning_time: 1.0
+planning_time: 0.5
 horizon: 5.0
 max_replanning_cycles: 500
 
 goal_radius: 0.1
 
-num_trials: 10
+num_trials: 30
 output_dir: "dynamic/prescience_test"
