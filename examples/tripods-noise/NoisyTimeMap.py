@@ -63,6 +63,7 @@ class NoisyTimeMap:
         self.start_state = self.ss.make_point()
         self.goal_state = self.ss.make_point()
         self.end_state = self.ss.make_point()
+        self.traj = prx.trajectory(self.ss)
 
         self.u_goal = self.cs.make_point()
         for i in range(len(self.u_goal)): self.u_goal[i] = 0
@@ -205,9 +206,7 @@ class NoisyTimeMap:
             self.get_noisy_controller()
             # if self.u_t_noise is not None:
             #     self.controller = prx.noisy_uniform_controller
-
-
-
+  
         total_time = self.duration
         if self.t_noise is not None:
             total_time = self.t_noise.add_noise(total_time) 
@@ -216,6 +215,54 @@ class NoisyTimeMap:
         self.checker.reset()
         # print("Before propagate: ", self.start_state)
         self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
+        # print("After propagate: ", self.end_state)
+        return self.end_state.to_list()
+
+    def pendulum_bang_bang(self, X, ctrl_num = 2):
+
+        self.ss.copy_point_from_vector(self.start_state,X)
+        if self.x_0_noise is not None:
+            self.x_0_noise.add_noise(self.start_state)
+        self.ss.copy_from_point(self.start_state)
+        self.ss.enforce_bounds()
+
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
+        if self.controller == None:
+            u_min = self.cs.get_lower_bound(0);
+            u_equ = 0;
+            u_max = self.cs.get_upper_bound(0);
+
+            self.set_of_ctrls = [[u_min, u_equ, u_max]];
+            self.controller_base = prx.bang_bang(self.noisy_plant, self.set_of_ctrls, "bang_bang")
+            self.controller_base.set_control(ctrl_num)
+            self.get_noisy_controller()
+
+            self.fout_roa = open(prx.out_path + self.params["out_dir"].as_string() + "/" + self.params["system_name"].as_string() + "_traj" + self.params["file_name_suffix"].as_string(), "w", buffering=2^10)
+
+  
+        total_time = self.duration
+        if self.t_noise is not None:
+            total_time = self.t_noise.add_noise(total_time) 
+
+        self.checker.set_check_value(total_time)
+        self.checker.reset()
+        # print("Before propagate: ", self.start_state)
+        self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
+        
+        # self.traj.clear()
+        # self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.traj);
+        # past_state = self.traj[0]
+        # for state in self.traj:
+        #     if prx.space_t.euclidean_2d(past_state, state) < 1:
+        #         self.fout_roa.write(str(state) + "\n")
+        #         past_state = state
+        #     else:
+        #         self.fout_roa.write("\n")
+        #         past_state = state
+        # self.fout_roa.write("\n")
+
         # print("After propagate: ", self.end_state)
         return self.end_state.to_list()
 

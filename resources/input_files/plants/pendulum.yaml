@@ -45,5 +45,5 @@ t_noise: "uniform"
 t_noise_params: [-0.,0.]
 
 f_noise: "uniform"
-f_noise_params: [-1.,1.]
+f_noise_params: [-0.,0.]
 # f_noise_params: [-0.,0.]
