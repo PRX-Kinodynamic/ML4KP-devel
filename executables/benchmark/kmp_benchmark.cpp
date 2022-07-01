@@ -37,9 +37,11 @@ int main(int argc, char* argv[])
 		init_random(random_seed);
 		params.print();
 
+		std::string benchmark_name = params["benchmark"].as<std::string>();
+
 		//which plant we are planning for
-		std::string plant_name = params["plant_name"].as<std::string>();
-		std::string plant_type = params["plant_type"].as<std::string>();
+		std::string plant_name = params["/plant/name"].as<std::string>();
+		std::string plant_type = params["/plant/type"].as<std::string>();
 		std::string obstacles_file = params["obstacles_file"].as<std::string>();
 		auto obstacles = load_obstacles(obstacles_file);
 		auto obstacle_list = obstacles.second;
@@ -55,19 +57,23 @@ int main(int argc, char* argv[])
 
         dirt_t dirt("dirt");
 		dirt_specification_t dirt_spec(context.first,context.second);
+		dirt_spec.use_pruning = params["use_pruning"].as<bool>();
 		auto ss = context.first->get_state_space();
 		auto cs = context.first->get_control_space();
+		ss->set_bounds(params["/plant/state_space_lower_bound"].as<std::vector<double>>(),params["/plant/state_space_upper_bound"].as<std::vector<double>>());
+		cs->set_bounds(params["/plant/control_space_lower_bound"].as<std::vector<double>>(),params["/plant/control_space_upper_bound"].as<std::vector<double>>());
+
 		dirt_query_t dirt_query(ss,cs);
 		bool get_visualization = params["visualize"].as<bool>();
 
 		//start and goal states
-		std::vector<double> start_vec = params["start_state"].as<std::vector<double>>();
-		std::vector<double> goal_vec = params["goal_state"].as<std::vector<double>>();
+		std::vector<double> start_vec = params["/plant/start_state"].as<std::vector<double>>();
+		std::vector<double> goal_vec = params["/plant/goal_state"].as<std::vector<double>>();
 		dirt_query.start_state = context.first->get_state_space()->make_point();
 		context.first->get_state_space()->copy_point_from_vector(dirt_query.start_state,start_vec);
 		dirt_query.goal_state = context.first->get_state_space()->make_point();
 		context.first->get_state_space()->copy_point_from_vector(dirt_query.goal_state,goal_vec);
-		dirt_query.goal_region_radius = params["goal_radius"].as<double>();
+		dirt_query.goal_region_radius = params["/plant/goal_radius"].as<double>();
 		dirt_query.get_visualization = get_visualization;
 
 		dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
@@ -95,12 +101,10 @@ int main(int argc, char* argv[])
 
         dirt_query.goal_check = [&,dirt_spec](space_point_t s)
         {
-            //HERE
             return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
         };
 
 		condition_check_t checker(params["condition_check"].as<std::string>(),  planner_iterations/stats_iterations);
-		// condition_check_t checker("time",  10);
 		std::ofstream fout;
 
 		int stats_runs = params["planner_runs"].as<int>();
@@ -113,7 +117,6 @@ int main(int argc, char* argv[])
 			planner_statistics_t stats;
 			stats.link_planner(&dirt);
 			stats.link_criterion(&checker);
-			// stats.repeat_data_gathering(30);
 			stats.repeat_data_gathering(stats_iterations);
 
 			std::string full_filename = lib_path+params["data_output_folder"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";
@@ -124,7 +127,7 @@ int main(int argc, char* argv[])
 			if(get_visualization)
 			{
 				dirt.fulfill_query();
-				std::string vis_body = params["visualization_body"].as<std::string>();
+				std::string vis_body = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 				three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
 
 				for(auto& traj : dirt_query.tree_visualization)

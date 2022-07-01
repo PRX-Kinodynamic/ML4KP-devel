@@ -7,23 +7,13 @@ namespace prx
         x=y=theta=0;
         state_memory = {&x,&y,&theta};
 		state_space = new space_t("EER",state_memory,"TreadedFOState");
-		//state_space->set_bounds({0,0,-3.15},{5,5,3.15});
 		state_space->set_bounds({0,0,-3.15},{6,6,3.15});
-		//state_space->set_bounds({0,0,-3.15},{3,1.2,3.15});
 		
-		//IMRCLab state_space->set_bounds({0,0,-3.15},{6,6,3.15});
 		
         v=0;
         control_memory = {&v,&dtheta};
         input_control_space = new space_t("EE",control_memory,"TreadedFOControl");
-        // v0
         input_control_space->set_bounds({-0.5,-0.5},{0.5,0.5});
-        // v1
-        // input_control_space->set_bounds({0.2,-0.5},{0.5,0.5});
-        //input_control_space->set_bounds({0.25,-0.5},{0.5,0.5});
-        // v2
-        //input_control_space->set_bounds({-0.5,-0.25},{0.5,0.5});
-
 
         dx=dy=dtheta=0;
         derivative_memory = {&dx,&dy,&dtheta};
@@ -50,20 +40,6 @@ namespace prx
     {
         integrator -> integrate(simulation_step);
     }
-
-    // void unicycle_fo_t::set_state_space_bounds(const std::vector<double>& lower,const std::vector<double>& upper)
-    // {
-    //     for (int i = 0; i < std::min(lower.size(), lower_bound.size()); ++i)
-    //     {
-    //         lower_bound[i] = lower[i];
-    //     }
-    //     for (int i = 0; i < std::min(upper.size(), upper_bound.size()); ++i)
-    //     {
-    //         upper_bound[i] = upper[i];
-    //     }
-
-    //     state_space->set_bounds(lower_bound, upper_bound);
-    // }
 
     void unicycle_fo_t::update_configuration()
     {

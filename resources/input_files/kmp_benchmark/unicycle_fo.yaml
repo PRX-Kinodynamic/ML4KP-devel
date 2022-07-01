@@ -1,0 +1,25 @@
+simulation_step: 0.1
+random_seed: 0
+
+plant: !file "plants/unicycle_fo_v0.yaml"
+
+# kink
+obstacles_file: "environments/kmp_benchmark/kink_0.yaml"
+
+# bugtrap
+# obstacles_file: "environments/kmp_benchmark/bugtrap_0.yaml"
+
+# parallel_park
+# obstacles_file: "environments/kmp_benchmark/parallelpark_0.yaml"
+
+planner_runs: 10
+use_pruning: false
+condition_check: "time"
+planner_iterations: 300
+statistics_iterations: 30
+
+data_output_folder: "out/kmp_benchmark/"
+planner_name: "dirt_random"
+
+visualize: true
+output_html: "out"
