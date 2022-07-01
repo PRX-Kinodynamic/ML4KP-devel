@@ -20,7 +20,7 @@ namespace prx
         input_control_space->set_bounds({-0.5,-0.5},{0.5,0.5});
         // v1
         // input_control_space->set_bounds({0.2,-0.5},{0.5,0.5});
-        // input_control_space->set_bounds({0.25,-0.5},{0.5,0.5});
+        //input_control_space->set_bounds({0.25,-0.5},{0.5,0.5});
         // v2
         //input_control_space->set_bounds({-0.5,-0.25},{0.5,0.5});
 

@@ -357,7 +357,9 @@ namespace prx
 		static double euclidean_2d(const space_point_t& p1, const space_point_t& p2, int start = 0, int end = 2)
 		{
 			// int i = start;
-			auto fn = [](double accum, std::tuple<space_snapshot_t::iterator, space_snapshot_t::iterator>& e)
+			
+			// Changed for memory leaks
+			/*auto fn = [](double accum, std::tuple<space_snapshot_t::iterator, space_snapshot_t::iterator>& e)
 			{
 				double e1, e2;
 				std::tie(e1, e2) = unzip(e);
@@ -367,7 +369,22 @@ namespace prx
 
 			auto zipped = zip_iters(p1, p2);
 
-			return std::sqrt(std::accumulate(zipped.begin() + start, zipped.begin() + end, 0.0, fn));
+			return std::sqrt(std::accumulate(zipped.begin() + start, zipped.begin() + end, 0.0, fn));*/
+			
+			
+			double e1, e2;
+			double accum = 0;
+			int i = start;
+			for (auto e : zip_iters(p1, p2) )
+			{
+				if (i < start) continue;
+				if (i >= end) break;
+				std::tie(e1, e2) = unzip(e);
+				accum += std::pow(e1 - e2, 2.0);
+				i += 1;
+			}
+			return std::sqrt(accum);
+		
 		}
 
 	protected:

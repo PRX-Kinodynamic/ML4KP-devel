@@ -95,6 +95,7 @@ int main(int argc, char* argv[])
 
         dirt_query.goal_check = [&,dirt_spec](space_point_t s)
         {
+            //HERE
             return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
         };
 

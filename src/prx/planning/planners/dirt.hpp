@@ -60,7 +60,7 @@ namespace prx
 				return default_obstacle_distance_function(s,state_space,cg);
 			};
 			blossom_number = 5;
-			use_pruning = false;
+			use_pruning = true;
 		}
 		virtual ~dirt_specification_t(){}
 

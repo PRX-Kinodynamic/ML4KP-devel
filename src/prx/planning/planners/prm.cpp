@@ -238,7 +238,8 @@ namespace prx
 	double prm_t::get_closest_cost(const space_point_t& s)
 	{
 		// Get the k closest points to s
-		auto neighbors = metric->multi_query(prm_query->start_state, k);
+		//auto neighbors = metric->multi_query(prm_query->start_state, k);
+		auto neighbors = metric->multi_query(s, k);
 		double best_cost = std::numeric_limits<double>::infinity();
 		double g,h;
 
