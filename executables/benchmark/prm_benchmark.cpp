@@ -7,7 +7,6 @@
 #include "prx/simulation/system_factory.hpp"
 #include "prx/simulation/plants/plants.hpp"
 
-#include "prx/planning/planner_functions/planner_functions.hpp"
 #include "prx/planning/planners/prm.hpp"
 
 
@@ -42,63 +41,49 @@ int main(int argc, char* argv[])
 		//params.print();
 
 		//which plant we are planning for
-		std::string plant_name = params["plant_name"].as<std::string>();
-		std::string plant_type = params["plant_type"].as<std::string>();
+		std::string plant_name = params["/plant/name"].as<std::string>();
+		std::string plant_path = params["/plant/path"].as<std::string>();
 		std::string obstacles_file = params["obstacles_file"].as<std::string>();
 		auto obstacles = load_obstacles(obstacles_file);
 		auto obstacle_list = obstacles.second;
 		auto obstacle_names = obstacles.first;
-		auto plant = system_factory_t::create_system(plant_type,plant_name);
+		auto plant = system_factory_t::create_system(plant_path,plant_name);
 		prx_assert(plant != nullptr, "Plant is nullptr!");
 
-		
-		
 		world_model_t world_model({plant},{obstacle_list});
 		world_model.create_context("planning_context",{plant_name},{obstacle_names});
 		auto context = world_model.get_context("planning_context");
 
 		
-		
-		
         dirt_t dirt("dirt");
-        
 		dirt_specification_t dirt_spec(context.first,context.second);
-		
+		dirt_spec.use_pruning = params["use_pruning"].as<bool>();
 		auto ss = context.first->get_state_space();
-		
 		auto cs = context.first->get_control_space();
-		
+		ss->set_bounds(params["/plant/state_space_lower_bound"].as<std::vector<double>>(),params["/plant/state_space_upper_bound"].as<std::vector<double>>());
+		cs->set_bounds(params["/plant/control_space_lower_bound"].as<std::vector<double>>(),params["/plant/control_space_upper_bound"].as<std::vector<double>>());
+
 		dirt_query_t dirt_query(ss,cs);
-	
 		bool get_visualization = params["visualize"].as<bool>();
-		
-		
+
 		//start and goal states
-		std::vector<double> start_vec = params["start_state"].as<std::vector<double>>();
-		std::vector<double> goal_vec = params["goal_state"].as<std::vector<double>>();
-		
+		std::vector<double> start_vec = params["/plant/start_state"].as<std::vector<double>>();
+		std::vector<double> goal_vec = params["/plant/goal_state"].as<std::vector<double>>();
 		dirt_query.start_state = context.first->get_state_space()->make_point();
 		context.first->get_state_space()->copy_point_from_vector(dirt_query.start_state,start_vec);
-		
 		dirt_query.goal_state = context.first->get_state_space()->make_point();
 		context.first->get_state_space()->copy_point_from_vector(dirt_query.goal_state,goal_vec);
-		
-		dirt_query.goal_region_radius = params["goal_radius"].as<double>();
-		
+		dirt_query.goal_region_radius = params["/plant/goal_radius"].as<double>();
 		dirt_query.get_visualization = get_visualization;
 		
 		
 		
 		prm_t prm("prm");
-	    	prm_specification_t prm_spec(context.first,context.second);
-	    	prm_spec.k = 10;
-	    	prm_spec.M = 2000;
-		
-		
-		
-	    	prm_query_t prm_query(ss,cs);
-		
-		
+		prm_specification_t prm_spec(context.first,context.second);
+		prm_spec.k = 10;
+		prm_spec.M = 2000;
+	
+		prm_query_t prm_query(ss,cs);
 		
 		prm_query.start_state = context.first->get_state_space()->make_point();
 		context.first->get_state_space()->copy_point_from_vector(prm_query.start_state,start_vec);
@@ -112,7 +97,7 @@ int main(int argc, char* argv[])
             std::vector <double> diff = {a->at(0)-b->at(0),a->at(1)-b->at(1),
             norm_angle_pi(a->at(2)-b->at(2))};
 
-			if (params["plant_name"].as<std::string>() == "SO_unicycle")
+			if (params["/plant/name"].as<std::string>() == "SO_unicycle")
 			{
 				diff.push_back(a->at(3)-b->at(3));
 				diff.push_back(a->at(4)-b->at(4));
@@ -127,7 +112,6 @@ int main(int argc, char* argv[])
 
         dirt_spec.h = [&](space_point_t a, space_point_t b)
         {
-            //return dirt_spec.distance_function(a,b) / 0.5;
             return prm.get_closest_cost(a) / 0.5;
         };
 
@@ -139,25 +123,13 @@ int main(int argc, char* argv[])
 		
 		
 		prm.link_and_setup_spec(&prm_spec);
-
-	    	prm.preprocess();
-
-	    	prm.link_and_setup_query(&prm_query);
-	    
-		
-		
-		
+		prm.preprocess();
+		prm.link_and_setup_query(&prm_query);
 		
 		condition_check_t checker(params["condition_check"].as<std::string>(),  planner_iterations/stats_iterations);
-		// condition_check_t checker("time",  10);
-		
 		prm.resolve_query(&checker);
-		
 		std::ofstream fout;
-
 		int stats_runs = params["planner_runs"].as<int>();
-		
-		
 		
 		for (int i = 0; i < stats_runs; i++)
 		{				
@@ -168,7 +140,6 @@ int main(int argc, char* argv[])
 			planner_statistics_t stats;
 			stats.link_planner(&dirt);
 			stats.link_criterion(&checker);
-			// stats.repeat_data_gathering(30);
 			stats.repeat_data_gathering(stats_iterations);
 
 			std::string full_filename = lib_path+params["data_output_folder"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";

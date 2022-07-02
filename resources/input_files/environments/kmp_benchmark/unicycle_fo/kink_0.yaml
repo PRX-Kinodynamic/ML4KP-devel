@@ -32,4 +32,36 @@ environment:
       orientation: [0.0, 0.0, 0.0, 1.0]
       position: [3.0, 2.0, 0.0]
     name: box_3
+  - collision_geometry:
+      dims: [6.0, 0.01, 1.0]
+      material: 255
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [3.0, 0.0, 0.0]
+    name: box_10
+  - collision_geometry:
+      dims: [6.0, 0.01, 1.0]
+      material: 255
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [3.0, 6.0, 0.0]
+    name: box_11
+  - collision_geometry:
+      dims: [0.01, 6.0, 1.0]
+      material: 255
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [0.0, 3.0, 0.0]
+    name: box_12
+  - collision_geometry:
+      dims: [0.01, 6.0, 1.0]
+      material: 255
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [6.0, 3.0, 0.0]
+    name: box_13
   type: obstacle

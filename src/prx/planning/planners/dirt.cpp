@@ -43,12 +43,10 @@ namespace prx
 			start_vertex = tree.add_vertex<dirt_node_t,rrt_edge_t>();
 			goal_vertex = start_vertex;
 			auto start_node = tree.get_vertex_as<dirt_node_t>(start_vertex);
-			// std::cout<<rrt_query->start_state<<std::endl;
 			start_node->point = state_space->clone_point(rrt_query->start_state);
 			start_node->cost_to_come = 0;
 			start_node->dir_radius = 0;
 			start_node->checkpoint_time = 0;
-			// start_node->time_to_come = 0;
 			start_node->is_safety_node = false;
 			start_node->cost_to_go = h(start_node->point,dirt_query->goal_state);
 			start_node->blossom_number = dirt_spec->blossom_number;

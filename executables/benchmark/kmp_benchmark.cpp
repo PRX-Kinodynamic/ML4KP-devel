@@ -35,20 +35,17 @@ int main(int argc, char* argv[])
 		int stats_iterations = params["statistics_iterations"].as<int>();
 		int random_seed = params["random_seed"].as<int>();
 		init_random(random_seed);
-		params.print();
-
-		std::string benchmark_name = params["benchmark"].as<std::string>();
+		// params.print();
 
 		//which plant we are planning for
 		std::string plant_name = params["/plant/name"].as<std::string>();
-		std::string plant_type = params["/plant/type"].as<std::string>();
+		std::string plant_path = params["/plant/path"].as<std::string>();
 		std::string obstacles_file = params["obstacles_file"].as<std::string>();
 		auto obstacles = load_obstacles(obstacles_file);
 		auto obstacle_list = obstacles.second;
 		auto obstacle_names = obstacles.first;
-		auto plant = system_factory_t::create_system(plant_type,plant_name);
+		auto plant = system_factory_t::create_system(plant_path,plant_name);
 		prx_assert(plant != nullptr, "Plant is nullptr!");
-
 
 		world_model_t world_model({plant},{obstacle_list});
 		world_model.create_context("planning_context",{plant_name},{obstacle_names});
@@ -81,7 +78,7 @@ int main(int argc, char* argv[])
             std::vector <double> diff = {a->at(0)-b->at(0),a->at(1)-b->at(1),
             norm_angle_pi(a->at(2)-b->at(2))};
 
-			if (params["plant_name"].as<std::string>() == "SO_unicycle")
+			if (params["/plant/name"].as<std::string>() == "SO_unicycle")
 			{
 				diff.push_back(a->at(3)-b->at(3));
 				diff.push_back(a->at(4)-b->at(4));
@@ -94,7 +91,7 @@ int main(int argc, char* argv[])
             return sqrt(accum);
         };
 
-        dirt_spec.h = [&](space_point_t a, space_point_t b)
+        dirt_spec.h = [&,dirt_spec](space_point_t a, space_point_t b)
         {
             return dirt_spec.distance_function(a,b) / 0.5;
         };
@@ -110,16 +107,23 @@ int main(int argc, char* argv[])
 		int stats_runs = params["planner_runs"].as<int>();
 		for (int i = 0; i < stats_runs; i++)
 		{				
+			PRX_DEBUG_PRINT
 			dirt.link_and_setup_spec(&dirt_spec);
+			PRX_DEBUG_PRINT
 			dirt.preprocess();
+			PRX_DEBUG_PRINT
 			dirt.link_and_setup_query(&dirt_query);
+			PRX_DEBUG_PRINT
 			
+			PRX_DEBUG_PRINT
 			planner_statistics_t stats;
 			stats.link_planner(&dirt);
 			stats.link_criterion(&checker);
+			PRX_DEBUG_PRINT
 			stats.repeat_data_gathering(stats_iterations);
 
 			std::string full_filename = lib_path+params["data_output_folder"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";
+			std::cout << full_filename << std::endl;
 			fout.open(full_filename);
 			fout<<stats.serialize() << std::endl;
 			fout.close();
