@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
 			if(get_visualization)
 			{
 				dirt.fulfill_query();
-				std::string vis_body = params["visualization_body"].as<std::string>();
+				std::string vis_body = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 				three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
 
 				for(auto& traj : dirt_query.tree_visualization)
