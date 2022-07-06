@@ -21,10 +21,9 @@ diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 goal = [9.0,0.0]
 goal_radius = 0.1
 data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience_test/"
-step = 1
-simulation_step = 0.1
-num_trajs = 10
-# num_trajs = 1
+simulation_step = 0.01
+step = int(0.1/simulation_step)
+num_trajs = 30
 
 environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/dynamic.yaml"
 

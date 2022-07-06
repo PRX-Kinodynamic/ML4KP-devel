@@ -63,21 +63,22 @@ namespace prx
                     for (auto e : rrt_query -> tree_visualization)
                         tree_visualization.push_back(e);
 
+                // std::cout << "Solution cost: " << rrt_query -> solution_cost << std::endl;
                 //  Now we have a plan.
                 if (rrt_query -> solution_traj.size() == 0)
                 {
                     // std::cout << state_space -> print_point(rrt_query -> start_state,4) << std::endl;
                     // Apply the fallback for the next cycle.
+                    std::cout << "No solution found, falling back." << std::endl;
                     rrt_query->solution_plan.append_onto_back(planning_time);
                     rrt_spec -> stopping_control(rrt_query->start_state, planning_time);
                     control_space -> copy_to_point(rrt_query -> solution_plan.back().control);
                     control_space -> enforce_bounds(rrt_query -> solution_plan.back().control);
                     rrt_spec -> propagate(rrt_query -> start_state, rrt_query -> solution_plan, rrt_query -> solution_traj);
                 }
-                if (rrt_query -> solution_traj.size() < planning_time*multiplier)
+                if (rrt_query -> solution_traj.size() <= planning_time*multiplier)
                 {
                     auto final_state = rrt_query -> solution_traj.back();
-                    std::cout << "Found solution length: " << rrt_query -> solution_traj.size() << std::endl;
                     if(!rrt_query->goal_check(final_state))
                     {
                         rrt_query->solution_plan.append_onto_back(planning_time - rrt_query -> solution_cost);
@@ -85,7 +86,7 @@ namespace prx
                         control_space -> copy_to_point(rrt_query -> solution_plan.back().control);
                         control_space -> enforce_bounds(rrt_query -> solution_plan.back().control);
                         rrt_spec -> propagate(rrt_query -> start_state, rrt_query -> solution_plan, rrt_query -> solution_traj);
-                        std::cout << "So this happened." << std::endl;
+                        std::cout << "Falling back." << std::endl;
                     }
                 }
 
@@ -107,8 +108,8 @@ namespace prx
                 {
                     sim -> update_all_obstacle_poses(rrt_query -> start_time + i * simulation_step);
                     auto step_state = rrt_query -> solution_traj.at(i);
-                    std::cout << "Checking state " << state_space->print_point(step_state,4) <<
-                     " @ " << rrt_query -> start_time + i * simulation_step << std::endl;
+                    // std::cout << "Checking state " << state_space->print_point(step_state,4) <<
+                    //  " @ " << rrt_query -> start_time + i * simulation_step << std::endl;
                     if (!rrt_spec -> valid_state(step_state))
                         std::cout << "Collision during execution! t = " << rrt_query -> start_time + i * simulation_step << std::endl;
                     continue_planning &= rrt_spec -> valid_state(step_state);
