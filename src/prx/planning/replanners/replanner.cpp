@@ -3,7 +3,7 @@
 namespace prx
 {
 
-        replanner_t::replanner_t(const std::string& name) 
+        replanner_t::replanner_t(const std::string& name,rrt_specification_t* spec) : full_solution_trajectory(spec->state_space) 
         {
             planner_name = name;
             reset();
@@ -44,9 +44,11 @@ namespace prx
         {
             prx_assert(planner != NULL && rrt_spec != NULL && rrt_query != NULL,"Planner not initialized");
             prx_assert(sim != NULL,"World model not initialized");
+            full_solution_trajectory.clear();
             rrt_spec->planning_time = planning_time;
-            full_solution_trajectory = new trajectory_t(state_space);
             space_point_t final_state = state_space -> make_point();
+            space_point_t step_state  = state_space -> make_point();
+            space_point_t next_execution_state = state_space -> make_point();
             double multiplier = 1.0/simulation_step;
             do
             {
@@ -78,7 +80,7 @@ namespace prx
                 }
                 if (rrt_query -> solution_traj.size() <= planning_time*multiplier)
                 {
-                    auto final_state = rrt_query -> solution_traj.back();
+                    final_state = rrt_query -> solution_traj.back();
                     if(!rrt_query->goal_check(final_state))
                     {
                         rrt_query->solution_plan.append_onto_back(planning_time - rrt_query -> solution_cost);
@@ -91,13 +93,13 @@ namespace prx
                 }
 
                 unsigned next_execution_index = std::min(planning_time*multiplier, (rrt_query -> solution_traj.size() - 1.0));
-                auto next_execution_state = rrt_query -> solution_traj.at(next_execution_index);
+                next_execution_state = rrt_query -> solution_traj.at(next_execution_index);
 
                 // We have to do this otherwise there may be duplicates.
                 trajectory_t copy_traj(rrt_query -> solution_traj);
                 state_space -> copy_point(final_state, next_execution_state);
                 copy_traj.resize(next_execution_index);
-                *full_solution_trajectory += copy_traj;
+                full_solution_trajectory += copy_traj;
 
                 // Check if the current execution cycle would lead to a collision.
                 // This part is going to executed no matter what, so if there's a collision here,
@@ -107,7 +109,7 @@ namespace prx
                 for (unsigned i = 0; i <= next_execution_index && continue_planning; i++)
                 {
                     sim -> update_all_obstacle_poses(rrt_query -> start_time + i * simulation_step);
-                    auto step_state = rrt_query -> solution_traj.at(i);
+                    step_state = rrt_query -> solution_traj.at(i);
                     // std::cout << "Checking state " << state_space->print_point(step_state,4) <<
                     //  " @ " << rrt_query -> start_time + i * simulation_step << std::endl;
                     if (!rrt_spec -> valid_state(step_state))
@@ -127,6 +129,6 @@ namespace prx
                 // std::cout << "Continue planning? " << continue_planning << std::endl;
 
             } while (continue_planning && current_cycle < max_replanning_cycles);
-            full_solution_trajectory->copy_onto_back(final_state);
+            full_solution_trajectory.copy_onto_back(final_state);
         }
 }

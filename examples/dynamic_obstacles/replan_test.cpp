@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 
     dirt_replan_t dirt(params["planner"].as<>());
     dirt_replan_specification_t dirt_spec(context.first,context.second);
-    replanner_t replanner(params["planner"].as<>());
+    replanner_t replanner(params["planner"].as<>(),&dirt_spec);
     replanner.setup(params);
 
     dirt_spec.h = [&](const space_point_t& s, const space_point_t& s2)
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
     ss -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
     
     dirt_query.goal_region_radius = params["goal_radius"].as<double>();
-    dirt_query.get_visualization = true;
+    dirt_query.get_visualization = false;
 
     std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 
@@ -127,6 +127,7 @@ int main(int argc, char* argv[])
         fs::create_directory(out_path + params["output_dir"].as<std::string>());
     }
 
+    space_point_t step_state = ss->make_point();
     for (int j = 0; j < params["num_trials"].as<int>(); j++)
     {
         std::cout << "Trial " << j << std::endl;
@@ -142,10 +143,10 @@ int main(int argc, char* argv[])
                     "trajectory_" + std::to_string(j) +".txt";
         std::ofstream fout;
         fout.open(fname);
-        for (unsigned i = 0; i < replanner.full_solution_trajectory -> size(); i++)
+        for (unsigned i = 0; i < replanner.full_solution_trajectory.size(); i++)
         {
             sim -> update_all_obstacle_poses(i*simulation_step);
-            auto step_state = replanner.full_solution_trajectory -> at(i);
+            step_state = replanner.full_solution_trajectory.at(i);
             fout << ss -> print_point(step_state,4) 
             << "," << dirt_spec.valid_state(step_state) << std::endl;
             if(!dirt_spec.valid_state(step_state)) std::cout << "Detected collison at " 

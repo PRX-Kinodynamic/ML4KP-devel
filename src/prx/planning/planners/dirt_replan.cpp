@@ -161,6 +161,7 @@ namespace prx
 				else closest_node->is_blossom_expand_done = true;
 
 				closest_node->blossom_number=1;
+				std::vector<std::pair<plan_t*,trajectory_t*>> invalid_edges;
 				for(int i=0;i<plans.size();i++)
 				{
                     if ((plans[i]->duration() + closest_node->checkpoint_time) > horizon)
@@ -172,6 +173,16 @@ namespace prx
 					{
                         closest_node->edge_generators.push_back(std::make_pair(plans[i],trajs[i]));
 					}
+					else
+					{
+						invalid_edges.push_back(std::make_pair(plans[i],trajs[i]));
+					}
+				}
+				// Delete invalid edges.
+				for(int i=0;i<invalid_edges.size();i++)
+				{
+					delete invalid_edges[i].first;
+					delete invalid_edges[i].second;
 				}
 
 				std::vector<double> pred_values;
@@ -340,28 +351,30 @@ namespace prx
 		if (!closest_node->is_safe && closest_node->checkpoint_time < dirt_replan_query->start_time + planning_time &&
 			closest_node->checkpoint_time + eg.first->duration() > dirt_replan_query->start_time + planning_time)
 		{
+			stopping_traj = new trajectory_t(state_space);
+			stopping_plan = new plan_t(control_space);
 			// PRX_DEBUG_PRINT
 			// std::cout << closest_node->checkpoint_time << " " << eg.first->duration() << " " <<
 			// 	dirt_replan_query->start_time << " " << planning_time << std::endl;
 			// std::cout << "Checking safety for: " << std::endl;
-			plan_t stopping_plan(control_space);
-			trajectory_t stopping_traj(state_space);
 			unsigned last_safe_state_index = multiplier * (dirt_replan_query->start_time + planning_time - closest_node->checkpoint_time);
-			space_point_t last_safe_state = eg.second->at(last_safe_state_index);
+			last_safe_state = state_space -> clone_point(eg.second->at(last_safe_state_index));
 			// std::cout << state_space -> print_point(last_safe_state,4) << std::endl;
 			// std::cout << "Closest node: " << state_space->print_point(closest_node->point,4) << std::endl;
 			// Compute the stopping maneuver.
 			dirt_spec->stopping_control(last_safe_state, planning_time);
 			// std::cout << "Computed maneuver: " << control_space->print_memory(4) << std::endl;
-			stopping_plan.append_onto_back(planning_time);
-			control_space->copy_to_point(stopping_plan.back().control);
-			control_space->enforce_bounds(stopping_plan.back().control);
-			propagate(last_safe_state,stopping_plan,stopping_traj);
+			stopping_plan->append_onto_back(planning_time);
+			control_space->copy_to_point(stopping_plan->back().control);
+			control_space->enforce_bounds(stopping_plan->back().control);
+			propagate(last_safe_state,*stopping_plan,*stopping_traj);
 			bool valid = false;
 			if (dirt_spec->use_prescience)
-				valid = time_valid_trajectory(stopping_traj,dirt_replan_query->start_time + planning_time);
+				valid = time_valid_trajectory(*stopping_traj,dirt_replan_query->start_time + planning_time);
 			else 
-				valid = valid_check(stopping_traj);
+				valid = valid_check(*stopping_traj);
+			delete stopping_traj;
+			delete stopping_plan;
 			if (!valid) return;
 			closest_node->is_safe = true;
 			// std::cout << "Stopping maneuver is valid" << std::endl;

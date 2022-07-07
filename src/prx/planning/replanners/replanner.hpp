@@ -12,7 +12,7 @@ namespace prx
     class replanner_t
     {
     public:
-        replanner_t(const std::string& name);
+        replanner_t(const std::string& name,rrt_specification_t* spec);
         ~replanner_t();
         void setup(param_loader params);
         void link_world_model(std::shared_ptr<world_model_t> wm);
@@ -41,7 +41,7 @@ namespace prx
         }
 
         std::string planner_name;
-        trajectory_t* full_solution_trajectory;
+        trajectory_t full_solution_trajectory;
 
         std::vector<trajectory_t> tree_visualization;
     protected:

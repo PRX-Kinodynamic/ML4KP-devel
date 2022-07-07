@@ -103,6 +103,10 @@ namespace prx
 		dirt_replan_specification_t* dirt_spec;
 		dirt_replan_query_t* dirt_replan_query;
 
+		trajectory_t* stopping_traj;
+		plan_t* stopping_plan;
+		space_point_t last_safe_state;
+
 
 		virtual void bnb(node_index_t v, double cost_bound, bool delete_flag = false) override;
 
