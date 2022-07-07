@@ -11,6 +11,7 @@ namespace prx
 
         replanner_t::~replanner_t()
         {
+            delete checker;
         }
 
         void replanner_t::setup(param_loader params)
@@ -80,20 +81,22 @@ namespace prx
                 }
                 if (rrt_query -> solution_traj.size() <= planning_time*multiplier)
                 {
-                    final_state = rrt_query -> solution_traj.back();
+                    state_space->copy_point(final_state, rrt_query->solution_traj.back());
                     if(!rrt_query->goal_check(final_state))
                     {
+                        std::cout << "Falling back. " << rrt_query -> solution_traj.size() << std::endl;
                         rrt_query->solution_plan.append_onto_back(planning_time - rrt_query -> solution_cost);
-                        rrt_spec -> stopping_control(rrt_query->start_state, planning_time);
+                        rrt_spec -> stopping_control(final_state, planning_time - rrt_query -> solution_cost);
                         control_space -> copy_to_point(rrt_query -> solution_plan.back().control);
                         control_space -> enforce_bounds(rrt_query -> solution_plan.back().control);
+                        rrt_query -> solution_traj.clear();
                         rrt_spec -> propagate(rrt_query -> start_state, rrt_query -> solution_plan, rrt_query -> solution_traj);
-                        std::cout << "Falling back." << std::endl;
                     }
                 }
+                // std::cout << rrt_query -> solution_traj.print(4) << std::endl;
 
                 unsigned next_execution_index = std::min(planning_time*multiplier, (rrt_query -> solution_traj.size() - 1.0));
-                next_execution_state = rrt_query -> solution_traj.at(next_execution_index);
+                state_space->copy_point(next_execution_state, rrt_query -> solution_traj[next_execution_index]);
 
                 // We have to do this otherwise there may be duplicates.
                 trajectory_t copy_traj(rrt_query -> solution_traj);
@@ -104,12 +107,10 @@ namespace prx
                 // Check if the current execution cycle would lead to a collision.
                 // This part is going to executed no matter what, so if there's a collision here,
                 // then the planner screwed up.
-                // std::cout << "Solution traj size: " << rrt_query -> solution_traj.size() << std::endl;
-                // std::cout << "Next execution index: " << next_execution_index << std::endl;
                 for (unsigned i = 0; i <= next_execution_index && continue_planning; i++)
                 {
                     sim -> update_all_obstacle_poses(rrt_query -> start_time + i * simulation_step);
-                    step_state = rrt_query -> solution_traj.at(i);
+                    state_space -> copy_point(step_state, rrt_query -> solution_traj[i]);
                     // std::cout << "Checking state " << state_space->print_point(step_state,4) <<
                     //  " @ " << rrt_query -> start_time + i * simulation_step << std::endl;
                     if (!rrt_spec -> valid_state(step_state))

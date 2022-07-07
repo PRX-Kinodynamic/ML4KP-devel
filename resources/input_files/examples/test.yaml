@@ -1,0 +1,14 @@
+planner: dirt_replan
+random_seed: 10111993
+simulation_step: 0.1
+environment: environments/dynamic.yaml
+blossom: 5
+pruning: false
+prescience: true
+planning_time: 5.0
+horizon: 10.0
+max_replanning_cycles: 20
+goal_radius: 0.1
+num_trials: 30
+output_dir: dynamic/prescience/5.0_10.0
+plant: !file "plants/treaded_vehicle.yaml"

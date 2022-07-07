@@ -86,11 +86,12 @@ int main(int argc, char* argv[])
 		return true;
     };
 
+    space_point_t s = ss -> make_point();
     dirt_spec.time_valid_trajectory = [&](trajectory_t& traj, double start_time)
     {
         for (unsigned i = 0; i < traj.size(); i++)
 		{
-			auto s = traj.at(i);
+			s = traj.at(i);
             if (!dirt_spec.time_valid_state(s, start_time + i * simulation_step))
             {
                 return false;

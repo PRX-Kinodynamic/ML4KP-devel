@@ -1,7 +1,7 @@
 planner: "dirt_replan"
 
-random_seed: 210896
-simulation_step: 0.01
+random_seed: 10111993
+simulation_step: 0.1
 
 environment: "environments/dynamic.yaml"
 plant: !file "plants/treaded_vehicle.yaml"
@@ -10,11 +10,11 @@ blossom: 5
 pruning: false
 prescience: true
 
-planning_time: 5.0
+planning_time: 3.5
 horizon: 10.0
-max_replanning_cycles: 20
+max_replanning_cycles: 30
 
 goal_radius: 0.1
 
-num_trials: 5
+num_trials: 1
 output_dir: "dynamic/prescience_test"

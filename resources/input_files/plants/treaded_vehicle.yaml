@@ -4,8 +4,8 @@ path: "treaded_vehicle"
 start_state: [-9.0, 0.0, 0.0, 0.0, 0.0]
 goal_state:  [ 9.0, 0.0, 0.0, 0.0, 0.0]
 
-min_steps: 10
-max_steps: 50
+min_steps: 1
+max_steps: 5
 
 state_space_lower_bound: [-11,-11,-3.14159,-.7,-.7]
 state_space_upper_bound: [ 11, 11, 3.14159, .7, .7]
