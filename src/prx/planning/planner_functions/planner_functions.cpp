@@ -155,7 +155,9 @@ namespace prx
 	bool default_valid_state(space_point_t& s,space_t* ss,std::shared_ptr<collision_group_t> cg)
 	{
 		ss->copy_from_point(s);
-		if(cg->in_collision() || !ss->satisfies_bounds(s))
+		// For TRIPODS ackermann_lc
+		if(cg->in_collision())
+		// if(cg->in_collision() || !ss->satisfies_bounds(s))
 		{
 			return false;
 		}
