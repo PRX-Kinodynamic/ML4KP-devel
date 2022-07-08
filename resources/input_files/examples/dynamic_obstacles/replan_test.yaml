@@ -1,6 +1,6 @@
 planner: "dirt_replan"
 
-random_seed: 10111993
+random_seed: 210896
 simulation_step: 0.1
 
 environment: "environments/dynamic.yaml"

@@ -25,17 +25,17 @@ with open(original_yaml_path, 'r') as stream:
 del planner_params["plant"]
 planner_params["num_trials"] = 30
 
-planning_times = [0.1, 0.2, 0.5, 1.0]
-horizons = [1.0, 2.0, 5.0]
-# horizons = [0.5, 1.0, 2.0]
+planning_times = [2.5, 3.5, 5.0]
+horizons = [5.0, 10.0]
 
 for pt in tqdm(planning_times):
     for h in horizons:
-        if pt <= h:
+        if pt < h:
             planner_params["planning_time"] = pt
             planner_params["horizon"]       = h
+            planner_params["max_replanning_cycles"] = int(100/pt)
 
-            planner_params["output_dir"] = "dynamic/no_prescience_unsafe/" + str(pt) + "_" + str(h)
+            planner_params["output_dir"] = "dynamic/prescience/" + str(pt) + "_" + str(h)
 
             with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml', 'w') as f:
                 yaml.safe_dump(planner_params, f, sort_keys=False)

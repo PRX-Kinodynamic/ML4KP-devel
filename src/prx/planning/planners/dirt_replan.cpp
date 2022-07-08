@@ -409,11 +409,11 @@ namespace prx
 			prx_throw("Tried adding a node that is not valid at its checkpoint time. This shouldn't happen");
 		}
 
-        if (closest_node->is_safe && closest_node->cost_to_go < best_cost)
+        if (closest_node->is_safe && new_tree_node->cost_to_go < best_cost)
         // if (new_tree_node->cost_to_go < best_cost)
         {
-            best_cost = closest_node->cost_to_go;
-            best_node = closest_node->get_index();
+            best_cost = new_tree_node->cost_to_go;
+            best_node = new_tree_node->get_index();
 			// std::cout << "Updated best node to: " << state_space->print_point(closest_node->point,4) << " " << closest_node->is_safe << std::endl;
         }
 
@@ -548,6 +548,8 @@ namespace prx
 			node_index_t current_index = best_node;
 			while(current_index!=start_vertex)
 			{
+				// auto node = get_vertex(current_index);
+				// std::cout << state_space->print_point(node->point,4) << " " << node->is_safe << std::endl;
 				node_indices.push_front(current_index);
 				current_index = tree[current_index]->get_parent();
 			}

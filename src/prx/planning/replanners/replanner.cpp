@@ -55,7 +55,7 @@ namespace prx
             {
                 // Increment the cycle and update the underlying planner's horizon.
                 current_cycle += 1;
-                std::cout << "Cycle: " << current_cycle << std::endl;
+                std::cout << "Cycle: " << current_cycle << " t: " << rrt_query->start_time << std::endl;
                 rrt_spec -> horizon = rrt_query -> start_time + horizon;
 
                 // Perform the planning cycle.
@@ -94,6 +94,7 @@ namespace prx
                     }
                 }
                 // std::cout << rrt_query -> solution_traj.print(4) << std::endl;
+                // std::cout << rrt_query -> solution_plan.print(4) << std::endl;
 
                 unsigned next_execution_index = std::min(planning_time*multiplier, (rrt_query -> solution_traj.size() - 1.0));
                 state_space->copy_point(next_execution_state, rrt_query -> solution_traj[next_execution_index]);

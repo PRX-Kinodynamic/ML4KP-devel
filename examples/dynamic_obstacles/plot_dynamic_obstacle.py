@@ -20,8 +20,8 @@ robot_dims = [0.508,0.430]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 goal = [9.0,0.0]
 goal_radius = 0.1
-data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience_test/"
-simulation_step = 0.01
+data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience/3.5_10.0/"
+simulation_step = 0.1
 step = int(0.1/simulation_step)
 num_trajs = 30
 
@@ -33,12 +33,14 @@ with open(environment_file, 'r') as stream:
     except yaml.YAMLError as exc:
         print(exc)
 
-num_success = 0.0
 plt.figure(figsize=(8,8))
 for idx in tqdm(range(0,num_trajs)):
-
     traj = np.loadtxt(data_dir+"trajectory_"+str(idx)+".txt",delimiter=",")
-    if sum(traj[:,-1]) == traj.shape[0]: num_success += 1
+    if sum(traj[:,-1]) == traj.shape[0] and (np.linalg.norm(traj[-1,:2] - goal) < goal_radius): 
+        continue
+    if traj.shape[0] > 1000:
+        print("Trajectory ",idx," is too long!")
+        continue
     continue_plotting = True
     first_collision_state = -1
 
