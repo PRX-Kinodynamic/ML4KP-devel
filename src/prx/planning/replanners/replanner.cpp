@@ -3,7 +3,7 @@
 namespace prx
 {
 
-        replanner_t::replanner_t(const std::string& name,rrt_specification_t* spec) : full_solution_trajectory(spec->state_space) 
+        replanner_t::replanner_t(const std::string& name,rrt_specification_t* spec) : full_solution_trajectory(spec->state_space)
         {
             planner_name = name;
             reset();
@@ -126,9 +126,7 @@ namespace prx
 
                 // Update the start state for the next planning cycle.
                 state_space -> copy_point(rrt_query -> start_state, next_execution_state);
-                // TODO: Could this be less than the planning time?
                 rrt_query -> start_time += planning_time;
-                // std::cout << "Continue planning? " << continue_planning << std::endl;
 
             } while (continue_planning && current_cycle < max_replanning_cycles);
             full_solution_trajectory.copy_onto_back(final_state);

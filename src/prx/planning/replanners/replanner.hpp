@@ -55,12 +55,6 @@ namespace prx
 
     private:
         /**
-         * @brief This is the time to wait between the start of the current execution
-         * cycle and the next replanning cycle.
-         */
-        double buffer_time;
-
-        /**
          * @brief This is the allowed planning time for a single cycle.
          * 
          */

@@ -13,6 +13,7 @@ namespace prx
 			bridge = false;
 			is_blossom_expand_done = false;
 			random_expand = false;
+			is_safe = false;
 		}
 		virtual ~dirt_replan_node_t()
 		{
@@ -26,7 +27,6 @@ namespace prx
 			edge_generators.clear();
 			is_blossom_expand_done = false;
 			random_expand = false;
-			is_safe = false;
 		}
 
 		double cost_to_go;
@@ -107,7 +107,7 @@ namespace prx
 		plan_t* stopping_plan;
 		space_point_t last_safe_state;
 
-
+		void prune_tree(node_index_t v, node_index_t new_root, bool delete_flag = false);
 		virtual void bnb(node_index_t v, double cost_bound, bool delete_flag = false) override;
 
 

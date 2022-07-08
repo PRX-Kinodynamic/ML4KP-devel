@@ -353,17 +353,10 @@ namespace prx
 		{
 			stopping_traj = new trajectory_t(state_space);
 			stopping_plan = new plan_t(control_space);
-			// PRX_DEBUG_PRINT
-			// std::cout << closest_node->checkpoint_time << " " << eg.first->duration() << " " <<
-			// 	dirt_replan_query->start_time << " " << planning_time << std::endl;
-			// std::cout << "Checking safety for: " << std::endl;
 			unsigned last_safe_state_index = multiplier * (dirt_replan_query->start_time + planning_time - closest_node->checkpoint_time);
 			last_safe_state = state_space -> clone_point(eg.second->at(last_safe_state_index));
-			// std::cout << state_space -> print_point(last_safe_state,4) << std::endl;
-			// std::cout << "Closest node: " << state_space->print_point(closest_node->point,4) << std::endl;
 			// Compute the stopping maneuver.
 			dirt_spec->stopping_control(last_safe_state, planning_time);
-			// std::cout << "Computed maneuver: " << control_space->print_memory(4) << std::endl;
 			stopping_plan->append_onto_back(planning_time);
 			control_space->copy_to_point(stopping_plan->back().control);
 			control_space->enforce_bounds(stopping_plan->back().control);
@@ -377,7 +370,6 @@ namespace prx
 			delete stopping_plan;
 			if (!valid) return;
 			closest_node->is_safe = true;
-			// std::cout << "Stopping maneuver is valid" << std::endl;
 		}
 		auto node_index = tree.add_vertex<dirt_replan_node_t,rrt_edge_t>();
 		auto new_tree_node = tree.get_vertex_as<dirt_replan_node_t>(node_index);
@@ -578,6 +570,37 @@ namespace prx
 			}
 		}
     }
+
+	void dirt_replan_t::prune_tree(node_index_t v, node_index_t new_root, bool delete_flag)
+	{
+		auto node = get_vertex(v);
+		bool res = delete_flag;
+		if (v == new_root) res = false;
+		std::list<node_index_t> children = node->get_children();
+		for (auto child : children)
+		{
+			prune_tree(child, new_root, res);
+		}
+		if (res && is_leaf(v))
+		{
+			if(!node->bridge)
+			{
+				metric->remove_node(node);
+				node->bridge = true;
+			}
+			for(int man_index=0;man_index<node->indices.size();man_index++)
+			{
+				delete node->edge_generators[node->indices[man_index]].first;
+				delete node->edge_generators[node->indices[man_index]].second;
+			}
+			node->edge_generators.clear();
+			node->indices.clear();
+
+			//remove the node
+			tree.remove_vertex(v);
+		}
+
+	}
 
 	void dirt_replan_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
 	{
