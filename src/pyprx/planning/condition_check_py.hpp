@@ -8,7 +8,6 @@ using namespace boost::python;
 
 void pyprx_planning_condition_check_py()
 {
-        def("create_default_goal_check", &prx::create_default_goal_check);
         class_<prx::custom_check_t>("custom_check")
                 .def("__call__", &prx::custom_check_t::operator() )
                 .def("wrap", &create_function<prx::custom_check_t, bool>).staticmethod("wrap")
