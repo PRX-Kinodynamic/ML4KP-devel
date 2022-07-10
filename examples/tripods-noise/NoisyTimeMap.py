@@ -36,6 +36,8 @@ class NoisyTimeMap:
         prx.set_simulation_step(self.simulation_step)
         prx.init_random(params["random_seed"].as_int())
 
+        self.obstacles = prx.obstacle_loader(params["environment"].as_string())
+
         plant_name = params["/plant/name"].as_string()
         plant_path = params["/plant/path"].as_string()
         self.plant = prx.system_factory.create_system(plant_name, plant_path)
@@ -43,8 +45,8 @@ class NoisyTimeMap:
             print("Error: plant not found!")
             exit(-1)
 
-        self.wm = prx.world_model([self.plant], [])
-        self.wm.create_context("context", [plant_name], [])
+        self.wm = prx.world_model([self.plant], self.obstacles.get_obstacles())
+        self.wm.create_context("context", [plant_name], self.obstacles.get_names())
         self.context = self.wm.get_context("context")
 
         self.ss = self.context.system_group.get_state_space()
@@ -83,11 +85,15 @@ class NoisyTimeMap:
         self.f_noise = None 
         self.u_t_noise = None 
         self.t_noise = None
+        self.in_collision_py = lambda : self.context.collision_group.in_collision()
 
         self.checker = prx.condition_check("sim_time" , self.duration );
         self.goal_check = prx.create_default_goal_check(self.ss, self.goal_state, params["goal_region_radius"].as_float() );
+        self.obstacle_check = prx.custom_check.wrap(self.in_collision_py );
         self.checker_gc = prx.condition_check( self.goal_check );
+        self.checker_obstacle = prx.condition_check( self.obstacle_check );
         self.checker.add_condition(self.checker_gc);
+        self.checker.add_condition(self.checker_obstacle);
 
         self.x_0_noise = self.init_noise("/plant/x_0_noise", "/plant/x_0_noise_params");
         self.u_t_noise = self.init_noise("/plant/u_t_noise", "/plant/u_t_noise_params");
@@ -249,10 +255,11 @@ class NoisyTimeMap:
         self.checker.set_check_value(total_time)
         self.checker.reset()
         # print("Before propagate: ", self.start_state)
-        self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
+        # self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
         
-        # self.traj.clear()
-        # self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.traj);
+        self.traj.clear()
+        self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.traj);
+
         # past_state = self.traj[0]
         # for state in self.traj:
         #     if prx.space_t.euclidean_2d(past_state, state) < 1:
