@@ -33,7 +33,7 @@ def test_two_dimension_bang_bang_ctrl_build_correct():
     u1_equ = u1_max - u1_min;
 
     set_of_ctrls = [[u0_min, u0_equ, u0_max], [u1_min, u1_equ, u1_max]];
-    bb_ctrl = prx.bang_bang_t(plant, set_of_ctrls, "bang_bang");
+    bb_ctrl = prx.bang_bang(plant, set_of_ctrls, "bang_bang");
 
     assert(bb_ctrl.get_num_ctrls() == 9);
 
