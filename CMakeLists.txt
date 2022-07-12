@@ -29,8 +29,15 @@ link_libraries(
 	)
 
 
-find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
+#find_package(Eigen3 REQUIRED)
+#include_directories(${EIGEN3_INCLUDE_DIR})
+
+set(EIGEN3_INCLUDE_DIR "/usr/include/boost/compute/interop/eigen")
+
+include_directories("$ENV{EIGEN3_INCLUDE_DIR}")
+
+
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})

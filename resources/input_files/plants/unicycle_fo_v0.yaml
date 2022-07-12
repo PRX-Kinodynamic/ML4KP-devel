@@ -2,27 +2,46 @@ name: "FO_unicycle"
 path: "FO_unicycle"
 
 # kink
-state_space_lower_bound: [0,0,-3.15]
-state_space_upper_bound: [6,6, 3.15]
-start_state: [0.5, 4.5, 1.55]
-goal_state:  [5.5, 4.0, 1.55]
-goal_radius: 0.1
+#state_space_lower_bound: [0,0,-3.15]
+#state_space_upper_bound: [6,6, 3.15]
+#start_state: [0.5, 4.5, 1.55]
+#goal_state:  [5.5, 4.0, 1.55]
+#goal_radius: 0.1
 
 # bugtrap
-# state_space_lower_bound: [0,0,-3.15]
-# state_space_upper_bound: [6,6, 3.15]
-# start_state: [3.8, 3, 0]
-# goal_state:  [5.2, 3, 0]
-# goal_radius: 0.1
+#state_space_lower_bound: [0,0,-3.15]
+#state_space_upper_bound: [6,6, 3.15]
+#start_state: [3.8, 3, 0]
+#goal_state:  [5.2, 3, 0]
+#goal_radius: 0.1
 
 # parallel park
-# state_space_lower_bound: [0,0.0,-3.15]
-# state_space_upper_bound: [3,1.2, 3.15]
-# start_state: [0.5, 4.5, 1.55]
-# goal_state:  [5.5, 4.0, 1.55]
-# goal_radius: 0.05
+#state_space_lower_bound: [0,0.0,-3.15]
+#state_space_upper_bound: [3,1.2, 3.15]
+#start_state: [0.7, 0.8, 0]
+#goal_state:  [1.9, 0.3, 0]
+#goal_radius: 0.05
 
-control_space_lower_bound: [-0.5,-0.5]
+
+#wall
+state_space_lower_bound: [0,0.0,-3.15]
+state_space_upper_bound: [5,5, 3.15]
+start_state: [1.5, 2.5, 0]
+goal_state:  [3.5, 2.5, 0]
+goal_radius: 0.1
+
+
+
+#v0
+#control_space_lower_bound: [-0.5,-0.5]
+#control_space_upper_bound: [0.5,0.5]
+
+#v1
+#control_space_lower_bound: [0.25,-0.5]
+#control_space_upper_bound: [0.5,0.5]
+
+#v2
+control_space_lower_bound: [-0.5,-0.25]
 control_space_upper_bound: [0.5,0.5]
 
 min_steps: 1

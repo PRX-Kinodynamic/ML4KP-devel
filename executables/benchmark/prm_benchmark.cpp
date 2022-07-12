@@ -80,8 +80,12 @@ int main(int argc, char* argv[])
 		
 		prm_t prm("prm");
 		prm_specification_t prm_spec(context.first,context.second);
-		prm_spec.k = 10;
-		prm_spec.M = 2000;
+		
+		//prm_spec.k = 10;
+		//prm_spec.M = 2000;
+		
+		prm_spec.k = 20;
+		prm_spec.M = 4000;
 	
 		prm_query_t prm_query(ss,cs);
 		
@@ -141,8 +145,9 @@ int main(int argc, char* argv[])
 			stats.link_planner(&dirt);
 			stats.link_criterion(&checker);
 			stats.repeat_data_gathering(stats_iterations);
-
+			
 			std::string full_filename = lib_path+params["data_output_folder"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";
+			
 			fout.open(full_filename);
 			fout<<stats.serialize() << std::endl;
 			fout.close();
@@ -150,14 +155,13 @@ int main(int argc, char* argv[])
 			if(get_visualization)
 			{
 				dirt.fulfill_query();
-				std::string vis_body = params["visualization_body"].as<std::string>();
+				std::string vis_body = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 				three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
 
 				for(auto& traj : dirt_query.tree_visualization)
 				{
 					vis_group->add_vis_infos(info_geometry_t::LINE, traj, vis_body, context.first->get_state_space());
 				}
-
 				if (dirt_query.solution_cost > 0)
 				// if (dirt_query.solution_plan.duration() > 0)
 				{
@@ -180,6 +184,7 @@ int main(int argc, char* argv[])
 				vis_group->output_html(params["output_html"].as<std::string>()+"_"+std::to_string(i)+".html");
 				delete vis_group;
 			}
+			
 			dirt_query.clear_outputs();
 			dirt.reset();
 		}

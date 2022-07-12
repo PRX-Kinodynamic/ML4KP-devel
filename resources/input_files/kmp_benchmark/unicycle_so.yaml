@@ -1,59 +1,38 @@
 simulation_step: 0.1
 random_seed: 0
 
-plant_name: "SO_unicycle"
-plant_type: "SO_unicycle"
-# obstacles_file: "environments/kmp_benchmark/bugtrap.yaml"
-# obstacles_file: "environments/kmp_benchmark/kink.yaml"
-# obstacles_file: "environments/kmp_benchmark/park.yaml"
+plant: !file "plants/unicycle_so_v0.yaml"
 
-obstacles_file: "environments/kmp_benchmark/unicycle_so/parallelpark_0_so_ad_new.yaml"
+#plant_name: "SO_unicycle"
+#plant_type: "SO_unicycle"
 
-# bugtrap
-#start_state: [3.8, 3, 0, 0, 0]
-#goal_state: [5.2,3,0, 0, 0]
-#goal_radius: 0.2
+#bugtrap
+#obstacles_file: "environments/kmp_benchmark/unicycle_so/bugtrap.yaml"
 
-# kink
-#start_state: [0.5, 4.0, 1.55,0,0]
-#goal_state: [5.5,4.0,1.55,0,0]
-#goal_radius: 0.2
+#kink
+#obstacles_file: "environments/kmp_benchmark/unicycle_so/kink.yaml"
 
-# parallelpark
-start_state: [0.7,0.7,0,0,0]
-goal_state: [1.9,0.2,0,0,0]
-goal_radius: 0.1
+#park
+obstacles_file: "environments/kmp_benchmark/unicycle_so/parallelpark.yaml"
 
 
-
-
-#bugtrap 
-# state_space_lower_bound: [0, 0]
-# state_space_upper_bound: [6, 6]
-
-# kink 
-# state_space_lower_bound: [0, 0]
-# state_space_upper_bound: [6, 6]
-
-# paralellopark 
-# state_space_lower_bound: [0, 0]
-# state_space_upper_bound: [3, 1]
-
-
-
-min_control_steps: 1
-max_control_steps: 10
 
 planner_runs: 10
-#planner_runs: 1
+use_pruning: true
 condition_check: "time"
 planner_iterations: 300
 statistics_iterations: 30
-#statistics_iterations: 9
+
+#planner_runs: 10
+#use_pruning: true
+#condition_check: "iterations"
+#planner_iterations: 100
+#statistics_iterations: 1
+
 
 data_output_folder: "out/kmp_benchmark/"
 planner_name: "dirt_random"
 
 visualize: true
-visualization_body: "SO_unicycle/body"
+#visualization_body: "SO_unicycle/body"
 output_html: "out"

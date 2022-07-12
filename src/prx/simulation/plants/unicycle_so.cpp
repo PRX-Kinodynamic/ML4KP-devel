@@ -7,8 +7,8 @@ namespace prx
         x=y=theta=v=dtheta=0;
         state_memory = {&x,&y,&theta,&v,&dtheta};
 		state_space = new space_t("EEREE",state_memory,"TreadedFOState");
-		//state_space->set_bounds({0,0,-3.15,-.5,-.5},{6,6,3.15,.5,.5});
-		state_space->set_bounds({0,0,-3.15,-.5,-.5},{3,1,3.15,.5,.5});
+		state_space->set_bounds({0,0,-3.15,-.5,-.5},{6,6,3.15,.5,.5});
+		//state_space->set_bounds({0,0,-3.15,-.5,-.5},{3,1,3.15,.5,.5});
 		
 		
 
