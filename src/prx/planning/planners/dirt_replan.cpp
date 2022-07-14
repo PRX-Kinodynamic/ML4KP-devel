@@ -348,7 +348,9 @@ namespace prx
 		condition_check_t* condition
 	)
 	{
-		if (!closest_node->is_safe && closest_node->checkpoint_time < dirt_replan_query->start_time + planning_time &&
+		double safety_time = simulation_step;
+		// if (!closest_node->is_safe && closest_node->checkpoint_time < dirt_replan_query->start_time + planning_time &&
+		if (closest_node->checkpoint_time < dirt_replan_query->start_time + planning_time &&
 			closest_node->checkpoint_time + eg.first->duration() > dirt_replan_query->start_time + planning_time)
 		{
 			stopping_traj = new trajectory_t(state_space);
@@ -356,8 +358,8 @@ namespace prx
 			unsigned last_safe_state_index = multiplier * (dirt_replan_query->start_time + planning_time - closest_node->checkpoint_time);
 			last_safe_state = state_space -> clone_point(eg.second->at(last_safe_state_index));
 			// Compute the stopping maneuver.
-			dirt_spec->stopping_control(last_safe_state, planning_time);
-			stopping_plan->append_onto_back(planning_time);
+			dirt_spec->stopping_control(last_safe_state, safety_time);
+			stopping_plan->append_onto_back(safety_time);
 			control_space->copy_to_point(stopping_plan->back().control);
 			control_space->enforce_bounds(stopping_plan->back().control);
 			propagate(last_safe_state,*stopping_plan,*stopping_traj);
@@ -369,7 +371,10 @@ namespace prx
 			delete stopping_traj;
 			delete stopping_plan;
 			if (!valid) return;
-			closest_node->is_safe = true;
+			if (!closest_node->is_safe)
+			{
+				closest_node->is_safe = true;
+			} 
 		}
 		auto node_index = tree.add_vertex<dirt_replan_node_t,rrt_edge_t>();
 		auto new_tree_node = tree.get_vertex_as<dirt_replan_node_t>(node_index);
@@ -386,6 +391,7 @@ namespace prx
 		new_tree_node->dir_radius = new_node_dir_radius;
         new_tree_node->checkpoint_time = closest_node->checkpoint_time + eg.first->duration();
 		new_tree_node->is_safe = false;
+		new_tree_node->safety_time = safety_time;
 		if (new_tree_node -> checkpoint_time > horizon + PRX_EPSILON) 
 		{
 			std::cout.precision(16);
@@ -540,8 +546,8 @@ namespace prx
 			node_index_t current_index = best_node;
 			while(current_index!=start_vertex)
 			{
-				// auto node = get_vertex(current_index);
-				// std::cout << state_space->print_point(node->point,4) << " " << node->is_safe << std::endl;
+				auto node = get_vertex(current_index);
+				std::cout << state_space->print_point(node->point,4) << " " << node->is_safe << " " << " " << node->checkpoint_time << " " << node->safety_time << std::endl;
 				node_indices.push_front(current_index);
 				current_index = tree[current_index]->get_parent();
 			}
@@ -563,9 +569,10 @@ namespace prx
         }
 		if(rrt_query->get_visualization)
 		{
-	        	auto iter_bounds = tree.edges();
-	        	for(auto iter = iter_bounds.first; iter!=iter_bounds.second; iter++)
-	        	{
+			std::cout << "Visualizing " << tree.num_edges() << " edges" << std::endl;
+			auto iter_bounds = tree.edges();
+			for(auto iter = iter_bounds.first; iter!=iter_bounds.second; iter++)
+			{
 				rrt_query->tree_visualization.push_back(*tree.get_edge_as<rrt_edge_t>((*iter)->get_index())->traj);
 			}
 		}
@@ -575,7 +582,11 @@ namespace prx
 	{
 		auto node = get_vertex(v);
 		bool res = delete_flag;
-		if (v == new_root) res = false;
+		if (v == new_root)
+		{
+			res = false; 
+			return;
+		}
 		std::list<node_index_t> children = node->get_children();
 		for (auto child : children)
 		{
@@ -585,6 +596,7 @@ namespace prx
 		{
 			if(!node->bridge)
 			{
+				// if (v == goal_vertex) goal_vertex = start_vertex;
 				metric->remove_node(node);
 				node->bridge = true;
 			}
@@ -599,7 +611,15 @@ namespace prx
 			//remove the node
 			tree.remove_vertex(v);
 		}
-
+		else
+		{
+			if(!node->bridge)
+			{
+				// if (v == goal_vertex) goal_vertex = start_vertex;
+				metric->remove_node(node);
+				node->bridge = true;
+			}
+		}
 	}
 
 	void dirt_replan_t::bnb(node_index_t v, double cost_bound, bool delete_flag)

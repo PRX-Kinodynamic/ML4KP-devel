@@ -14,6 +14,7 @@ namespace prx
 			is_blossom_expand_done = false;
 			random_expand = false;
 			is_safe = false;
+			safety_time = 0;
 		}
 		virtual ~dirt_replan_node_t()
 		{
@@ -43,7 +44,7 @@ namespace prx
 
 		std::vector<int> indices;
 
-		double checkpoint_time;
+		double checkpoint_time, safety_time;
 
 		bool is_safe;
 	};
@@ -87,6 +88,34 @@ namespace prx
 
 		std::vector<long unsigned> random_edges_counter, blossom_edges_counter;
 
+		node_index_t get_node_index(bool return_start = true)
+		{
+			if (return_start)
+			{
+				return start_vertex;
+			}
+			else
+			{
+				// auto node = get_vertex(start_vertex);
+				// auto children = node->get_children();
+				// return children.back();
+				node_index_t n = goal_vertex;	
+				for (int steps = 50; steps > 0; steps--)
+				{
+					std::cout << n << " ";
+					auto node = get_vertex(n);
+					n = node->get_parent();
+				}
+				std::cout << std::endl;
+				return n;
+				// return uniform_int_random(0, tree.num_vertices() - 1);
+				// auto node = get_vertex(goal_vertex);
+				// return node -> get_parent();
+			}
+		}
+
+		void prune_tree(node_index_t v, node_index_t new_root, bool delete_flag = false);
+
 	protected:
 
 		virtual void update_goal(node_index_t node_index, condition_check_t* condition) override;
@@ -107,7 +136,6 @@ namespace prx
 		plan_t* stopping_plan;
 		space_point_t last_safe_state;
 
-		void prune_tree(node_index_t v, node_index_t new_root, bool delete_flag = false);
 		virtual void bnb(node_index_t v, double cost_bound, bool delete_flag = false) override;
 
 
