@@ -20,8 +20,9 @@ robot_dims = [0.508,0.430]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 goal = [9.0,0.0]
 goal_radius = 0.1
-data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience/3.5_10.0/"
+data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience_test/"
 simulation_step = 0.1
+planning_time = 2.0
 step = int(0.1/simulation_step)
 num_trajs = 30
 
@@ -45,6 +46,7 @@ for idx in tqdm(range(0,num_trajs)):
     first_collision_state = -1
 
     for i in tqdm(range(0,len(traj),step)):
+    # for i in range(0,len(traj),step):
         plt.xlim(-11,11)
         plt.ylim(-11,11)
         plt.gca().set_xticks([])
@@ -70,6 +72,9 @@ for idx in tqdm(range(0,num_trajs)):
         circle = plt.Circle((goal[0],goal[1]),goal_radius,color='green')
         plt.gca().add_patch(circle)
 
+        next_state_index = min(len(traj)-1,((int(i*simulation_step/planning_time)+1)*int(planning_time/simulation_step)+1))
+        plt.scatter(traj[next_state_index,0],traj[next_state_index,1],color='purple',marker='o')
+
         plt.plot(traj[:,0],traj[:,1],color='black')
 
         if continue_plotting:
@@ -81,14 +86,17 @@ for idx in tqdm(range(0,num_trajs)):
                             robot_dims[0],robot_dims[1],
                             edgecolor='purple',facecolor='purple',angle=180.*traj[i,2]/np.pi)
             plt.gca().add_patch(rect)
+            
         else:
             break
         continue_plotting = (continue_plotting and traj[max(0,i),-1] == 1)
 
         plt.text(6.0,9.0,"t =: "+f"{(i*simulation_step): .1f}"+"s",fontsize=10)
-        plt.title("DIRT_Replan_NoPrescience")
+        plt.title("DIRT_Replan_Prescience")
         plt.savefig(data_dir+str(i)+".png",bbox_inches='tight')
         plt.clf()
+
+        vels = np.array([np.linalg.norm(traj[i,-2:]) for i in range(traj.shape[0])])
 
     fnames = [Image.open(data_dir+str(i)+".png") for i in range(0,first_collision_state+1,step)]
     fnames[0].save(data_dir+'output_'+str(idx)+'.gif',format='GIF',append_images=fnames[1:],
