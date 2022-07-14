@@ -22,7 +22,7 @@ namespace prx
 
 		void set_cost_map(double ** cost_map, double delta_x, double delta_y, int , int , double);
 
-		virtual void compute_stopping_maneuver(space_point_t, double) override final;
+		virtual void compute_stopping_maneuver(space_point_t, double&) override final;
 
 
 		virtual void compute_derivative() override final;
@@ -37,6 +37,8 @@ namespace prx
 	private:
 		std::vector<double> lower_bound = {-11,-11,-3.15,-.7,-.7};
 		std::vector<double> upper_bound = {11,11,3.15,.7,.7};
+		std::vector<double> ctrl_lower_bound = {-.2,-.2};
+		std::vector<double> ctrl_upper_bound = {.2,.2};
 		friend system_factory_t;
 	};
 

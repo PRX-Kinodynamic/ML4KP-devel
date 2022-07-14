@@ -122,7 +122,7 @@ namespace prx
 	}
 
 
-	void default_stopping_control(space_point_t& s,std::shared_ptr<system_group_t> sg, double t)
+	void default_stopping_control(space_point_t& s,std::shared_ptr<system_group_t> sg, double& t)
 	{
 		sg ->compute_stopping_maneuver(s,t);
 	}

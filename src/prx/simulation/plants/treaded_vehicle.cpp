@@ -15,7 +15,7 @@ namespace prx
 		al=ar=0;
 		control_memory = {&al,&ar};
 		input_control_space = new space_t("EE",control_memory,"TreadedControl");
-		input_control_space->set_bounds({-.2,-.2},{.2,.2});
+		input_control_space->set_bounds(ctrl_lower_bound,ctrl_upper_bound);
 
 		dx=dy=dtheta=0;
 		derivative_memory = {&dx,&dy,&dtheta,&al,&ar};
@@ -38,9 +38,31 @@ namespace prx
 
 	}
 
-	void treaded_vehicle_t::compute_stopping_maneuver(space_point_t start_state, double time)
+	void treaded_vehicle_t::compute_stopping_maneuver(space_point_t start_state, double& time)
 	{
 		std::vector<double> desired_acceleration = {-start_state -> at(3)/time, -start_state -> at(4)/time};
+		double max_time_required = time;
+		double multiplier = 1.0/simulation_step;
+		
+		for (int i = 0; i < input_control_space->get_dimension(); i++)
+		{
+			if (desired_acceleration[i] < ctrl_lower_bound[0])
+			{
+				desired_acceleration[i] = ctrl_lower_bound[0];
+			}
+			else if (desired_acceleration[i] > ctrl_upper_bound[0])
+			{
+				desired_acceleration[i] = ctrl_upper_bound[0];
+			}
+			max_time_required = simulation_step * std::ceil(multiplier*std::max(max_time_required, -start_state -> at(3+i)/desired_acceleration[i]));
+		}
+
+		if (max_time_required > time)
+		{
+			desired_acceleration = {-start_state -> at(3)/max_time_required, -start_state -> at(4)/max_time_required};
+			time = max_time_required;
+		}
+
 		input_control_space->copy_from_vector(desired_acceleration);
 	}
 

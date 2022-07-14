@@ -26,7 +26,7 @@ namespace prx
 		void propagate(int steps, space_point_t control = nullptr, trajectory_t* traj = nullptr);
 
 
-		void compute_stopping_maneuver(space_point_t start_state, double time);
+		void compute_stopping_maneuver(space_point_t start_state, double& time);
 		inline space_t* get_state_space()
 		{
 			return state_space;
