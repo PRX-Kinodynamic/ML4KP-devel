@@ -86,7 +86,7 @@ namespace prx
 			{
 				default_expand(s, plans, trajs, bn, sg, sample_plan, propagate);
 			};
-			stopping_control = [sg,this](space_point_t& s, double t)
+			stopping_control = [sg,this](space_point_t& s, double& t)
 			{
 				default_stopping_control(s, sg, t);
 			};
