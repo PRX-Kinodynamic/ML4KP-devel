@@ -168,7 +168,7 @@ namespace prx
 				std::advance(e_iter,old_size-1);
 				std::advance(const_e_iter,old_size-1);
 			}
-			max_count = new_size;
+			max_count = std::max(max_count,new_size);
 		}
 
 		template<class node_type,class edge_type>
@@ -180,6 +180,7 @@ namespace prx
 			}
 			auto node = *v_iter;
 			node->index = vertex_id_counter;
+			node->added_to_metric = false;
 			node->parent = vertex_id_counter;
 			v_index_map[vertex_id_counter] = node;
 			vertex_id_counter++;
@@ -224,6 +225,11 @@ namespace prx
 			return edge_count;
 		}
 
+		unsigned get_max_count() const
+		{
+			return max_count;
+		}
+
 		bool is_leaf(node_index_t v)
 		{
 			return (v_index_map[v]->get_children().size()==0);
@@ -238,7 +244,6 @@ namespace prx
 		~tree_t();
 
 		edge_index_t add_edge(node_index_t from, node_index_t to);
-		edge_index_t add_safety_edge(node_index_t from, node_index_t to);
 
 		unsigned get_depth(node_index_t v);
 

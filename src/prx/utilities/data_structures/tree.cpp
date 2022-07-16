@@ -38,28 +38,6 @@ namespace prx
 		return edge->index;
 	}
 
-	edge_index_t tree_t::add_safety_edge(node_index_t from, node_index_t to)
-	{
-		prx_assert(v_index_map[to]->parent==v_index_map[from]->parent,"The node with index ["<<from<<"] does not have the same parent as ["<<to<<"] instead: ["<<v_index_map[to]<<"].");
-		prx_assert(edge_count!=max_count,"There would now be more edges than vertices in the tree. This cannot happen.");
-
-		v_index_map[from]->children.insert(v_index_map[from]->children.begin(),to);
-		v_index_map[to]->parent = from;
-
-		auto edge = *e_iter;
-		edge->index = edge_id_counter;
-		edge->source = from;
-		edge->target = to;
-		e_index_map[edge_id_counter]=edge;
-		edge_id_counter++;
-		e_iter++;
-		const_e_iter++;
-		edge_count++;
-		v_index_map[to]->parent_edge = edge->index;
-
-		return edge->index;
-	}
-
 	unsigned tree_t::get_depth(node_index_t v)
 	{
 		if(v_index_map[v]->parent==v)
@@ -78,6 +56,7 @@ namespace prx
 		prx_assert(v_index_map[v]->children.size()==0,"Can only remove a vertex if it doesn't have any children.");
 		v_index_map[v_index_map[v]->parent]->children.remove(v);
 		edge_index_t e = v_index_map[v]->parent_edge;
+		if (v_index_map[v]->parent==v) e = -1;
 
 		auto temp_v = v_index_map[v];
 		temp_v->parent=temp_v->index;
@@ -89,6 +68,8 @@ namespace prx
 		*v_iter = temp_v;
 		vertex_count--;
 
+		// This is the old root that is being removed.
+		if (e == -1) return;
 		auto temp_e = e_index_map[e];
 		auto e_iterator = std::find(edge_list.begin(),e_iter,temp_e);
 		e_index_map[e] = nullptr;

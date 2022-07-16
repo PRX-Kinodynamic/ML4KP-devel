@@ -3,7 +3,7 @@
 namespace prx
 {
 
-        replanner_t::replanner_t(const std::string& name,rrt_specification_t* spec) : full_solution_trajectory(spec->state_space)
+        replanner_t::replanner_t(const std::string& name, dirt_replan_specification_t* spec) : full_solution_trajectory(spec->state_space)
         {
             planner_name = name;
             reset();
@@ -31,7 +31,7 @@ namespace prx
             sim = wm;
         }
 
-        void replanner_t::link_planner(rrt_t* _planner, rrt_specification_t* spec, rrt_query_t* query)
+        void replanner_t::link_planner(dirt_replan_t* _planner, dirt_replan_specification_t* spec, dirt_replan_query_t* query)
         {
             planner = _planner;
             rrt_spec = spec;
@@ -63,6 +63,9 @@ namespace prx
                 // Perform the planning cycle.
                 perform_single_planning_cycle();
 
+                node_index_t best_index = planner->get_best_node_index();
+                planner->tree_retain(best_index);
+
                 tree_visualization.clear();
                 if (rrt_query -> get_visualization)
                     for (auto e : rrt_query -> tree_visualization)
@@ -88,7 +91,7 @@ namespace prx
                     if(!rrt_query->goal_check(final_state))
                     {
                         // prx_throw("This has not been dealt with.");
-                        std::cout << "Falling back. " << rrt_query -> solution_traj.size() << std::endl;
+                        std::cout << "Solution too short. Falling back. " << rrt_query -> solution_traj.size() << std::endl;
                         safety_time = planning_time - rrt_query -> solution_cost;
                         rrt_spec -> stopping_control(final_state, safety_time);
                         rrt_query->solution_plan.append_onto_back(safety_time);
@@ -133,7 +136,8 @@ namespace prx
                 state_space -> copy_point(rrt_query -> start_state, next_execution_state);
                 rrt_query -> start_time += planning_time;
 
-            } while (continue_planning && current_cycle < max_replanning_cycles);
+            } while (continue_planning && current_cycle <= max_replanning_cycles);
             full_solution_trajectory.copy_onto_back(final_state);
+            planner -> reset();
         }
 }

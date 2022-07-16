@@ -40,11 +40,14 @@ namespace prx
 		prx_assert(rrt_query!=nullptr,"DIRT received an incorrect query type.");
 		dirt_replan_query = dynamic_cast<dirt_replan_query_t*>(query);
 		prx_assert(dirt_replan_query!=nullptr,"DIRT received an incorrect query type.");
+		std::cout << tree.num_vertices() << std::endl;
+		if (tree.num_vertices() != 0) std::cout << "Check: " << !state_space->equal_points(tree.get_vertex_as<rrt_node_t>(start_vertex)->point,rrt_query->start_state) << std::endl;
 		if(tree.num_vertices()==0 || !state_space->equal_points(tree.get_vertex_as<rrt_node_t>(start_vertex)->point,rrt_query->start_state) )
 		{
+			std::cout << "Clearing the tree..." << std::endl;
 			//clear existing data structure
 			metric->clear();
-			tree.clear();
+			tree.purge();
 
 			start_vertex = tree.add_vertex<dirt_replan_node_t,rrt_edge_t>();
 			goal_vertex = start_vertex;
@@ -166,7 +169,7 @@ namespace prx
 				{
                     if ((plans[i]->duration() + closest_node->checkpoint_time) > horizon)
                     {
-                        plans[i]->reduce_last_control(plans[i]->duration() + closest_node->checkpoint_time - horizon);
+                        plans[i]->reduce_last_control(round(multiplier*(plans[i]->duration() + closest_node->checkpoint_time - horizon))*simulation_step);
                         propagate(closest_node->point,*plans[i],*trajs[i]);
                     }
                     if (plans[i]->duration() > 0)
@@ -355,13 +358,15 @@ namespace prx
 		{
 			stopping_traj = new trajectory_t(state_space);
 			stopping_plan = new plan_t(control_space);
-			unsigned last_safe_state_index = multiplier * (dirt_replan_query->start_time + planning_time - closest_node->checkpoint_time);
+			unsigned last_safe_state_index = std::round(multiplier * (dirt_replan_query->start_time + planning_time - closest_node->checkpoint_time));
 			last_safe_state = state_space -> clone_point(eg.second->at(last_safe_state_index));
 			// Compute the stopping maneuver.
 			dirt_spec->stopping_control(last_safe_state, safety_time);
 			stopping_plan->append_onto_back(safety_time);
 			control_space->copy_to_point(stopping_plan->back().control);
 			control_space->enforce_bounds(stopping_plan->back().control);
+			// Check for the next planning cycle.
+			// stopping_plan->append_onto_back(planning_time);
 			propagate(last_safe_state,*stopping_plan,*stopping_traj);
 			bool valid = false;
 			if (dirt_spec->use_prescience)
@@ -407,7 +412,7 @@ namespace prx
 			prx_throw("Tried adding a node that is not valid at its checkpoint time. This shouldn't happen");
 		}
 
-        if (closest_node->is_safe && new_tree_node->cost_to_go < best_cost)
+        if (closest_node->is_safe && new_tree_node->cost_to_go < best_cost && new_tree_node->checkpoint_time >= dirt_replan_query->start_time + planning_time)
         // if (new_tree_node->cost_to_go < best_cost)
         {
             best_cost = new_tree_node->cost_to_go;
@@ -474,6 +479,7 @@ namespace prx
 				current_solution_time = timer.measure();
 				current_solution_iters = iteration_count;
 				goal_vertex = node_index;
+				best_node = goal_vertex;
 				std::cout <<"[dirt] Found new goal: "<<state_space->print_point(new_tree_node->point,3);
 				std::cout <<" cost:"<<new_tree_node->cost_to_come;
 				std::cout<< " time:" << current_solution_time;
@@ -505,12 +511,12 @@ namespace prx
 	void dirt_replan_t::_reset()
 	{
 		//clear the stuff
-		tree.purge();
-		if(metric!=nullptr)
-		{
-			delete metric;
-			metric = nullptr;
-		}
+		// tree.purge();
+		// if(metric!=nullptr)
+		// {
+		// 	delete metric;
+		// 	metric = nullptr;
+		// }
 
 	}
 
@@ -524,6 +530,8 @@ namespace prx
 			node_index_t current_index = goal_vertex;
 			while(current_index!=start_vertex)
 			{
+				auto node = get_vertex(current_index);
+				std::cout << current_index << " " << state_space->print_point(node->point,4) << " " << node->is_safe << " " << " " << node->checkpoint_time << " " << node->safety_time << std::endl;
 				node_indices.push_front(current_index);
 				current_index = tree[current_index]->get_parent();
 			}
@@ -547,7 +555,7 @@ namespace prx
 			while(current_index!=start_vertex)
 			{
 				auto node = get_vertex(current_index);
-				std::cout << state_space->print_point(node->point,4) << " " << node->is_safe << " " << " " << node->checkpoint_time << " " << node->safety_time << std::endl;
+				std::cout << current_index << " " << state_space->print_point(node->point,4) << " " << node->is_safe << " " << " " << node->checkpoint_time << " " << node->safety_time << std::endl;
 				node_indices.push_front(current_index);
 				current_index = tree[current_index]->get_parent();
 			}
@@ -578,6 +586,110 @@ namespace prx
 		}
     }
 
+	void dirt_replan_t::tree_retain(node_index_t new_root)
+	{
+		std::cout << "Retaining tree with best index " << new_root << std::endl;
+		auto root = tree.get_vertex_as<dirt_replan_node_t>(new_root);
+		// If the new root is the goal, and it lies before the next execution cycle ends,
+		// then we have found a solution. So we can stop.
+		if (new_root == goal_vertex && root->checkpoint_time <= dirt_replan_query->start_time + planning_time) return;
+
+		node_index_t parent_index = new_root;
+		std::deque<node_index_t> node_indices;
+		auto node = get_vertex(parent_index);
+		while(parent_index!=start_vertex && node->checkpoint_time > dirt_replan_query->start_time + planning_time)
+		{
+			node_indices.push_back(parent_index);
+			parent_index = tree[parent_index]->get_parent();
+			node = get_vertex(parent_index);
+		}
+		node_indices.push_back(parent_index);
+
+		trajectory_t edge_traj(state_space);
+		plan_t edge_plan(control_space);
+		trajectory_t* add_traj = new trajectory_t(state_space);
+		plan_t* add_plan = new plan_t(control_space);
+		unsigned new_node_index = 0;
+
+		auto new_vertex = tree.add_vertex<dirt_replan_node_t, rrt_edge_t>();
+		auto new_node = tree.get_vertex_as<dirt_replan_node_t>(new_vertex);
+
+		// Pop the actual root.
+		node_indices.pop_back();
+		// Extract the node at the planning time.
+		edge_traj += *tree.get_edge_as<rrt_edge_t>(tree[node_indices.back()]->get_parent_edge())->traj;
+		edge_plan += *tree.get_edge_as<rrt_edge_t>(tree[node_indices.back()]->get_parent_edge())->plan;
+
+		// If the parent is before the planning time, we need to add a new node to the tree
+		if (!double_equals(node->checkpoint_time, dirt_replan_query->start_time + planning_time))
+		{
+			new_node_index = round(multiplier*(dirt_replan_query->start_time + planning_time - node->checkpoint_time));
+			new_node_index = std::min(new_node_index, edge_traj.size()-1);
+			prx_assert(new_node_index != 0, "The new node index is 0. This should not happen.");
+			prx_assert(new_node_index < edge_traj.size(), "The new node index is greater than the size of the trajectory. This should not happen."
+			<< " New node index: " << new_node_index << " Trajectory size: " << edge_traj.size()
+			<< " Next time: " << dirt_replan_query->start_time + planning_time << " Checkpoint time: " << node->checkpoint_time);
+			new_node->point = state_space->clone_point(edge_traj.at(new_node_index));
+			
+			for (unsigned i = new_node_index; i < edge_traj.size(); i++)
+			{
+				add_traj->copy_onto_back(edge_traj.at(i));
+			}
+			add_plan->append_onto_back((add_traj->size()-1)*simulation_step);
+			control_space->copy_point(add_plan->back().control,edge_plan.back().control);
+		}
+		// If the parent is exactly at the planning time, no additional processing required
+		else
+		{
+			new_node->point = state_space->clone_point(node->point);
+			
+			for (unsigned i = new_node_index; i < edge_traj.size(); i++)
+			{
+				add_traj->copy_onto_back(edge_traj.at(i));
+			}
+			add_plan->append_onto_back((add_traj->size()-1)*simulation_step);
+			control_space->copy_point(add_plan->back().control,edge_plan.back().control);
+		}
+
+		auto next_node = get_vertex(node_indices.back());
+		prx_assert(state_space->equal_points(next_node->point, edge_traj.back()), "The new node is not the same as the next node.");
+
+		new_node->cost_to_come = dirt_replan_query -> start_time + planning_time;
+		new_node->checkpoint_time = dirt_replan_query->start_time + planning_time;
+		new_node->cost_to_go = h(new_node->point,dirt_replan_query->goal_state);
+		new_node->blossom_number = dirt_spec->blossom_number;
+		new_node->is_safe = true;
+		new_node->dir_radius = node->dir_radius;
+		new_node->safety_time = node->safety_time;
+		new_node->bridge = false;
+		if (!dirt_replan_query->goal_check(tree.get_vertex_as<dirt_replan_node_t>(goal_vertex)->point))
+		{
+			goal_vertex = new_vertex;
+		}
+
+
+		prune_tree(start_vertex, node_indices.back(), true);
+
+		std::cout << "Making node " << new_vertex << " as the new root of the planning tree." << std::endl;
+		std::cout << "Its child is: " << node_indices.back() << std::endl;
+		std::cout << state_space->print_point(new_node->point, 4) << std::endl;
+		tree.transplant(node_indices.back(), new_vertex);
+		auto add_edge = tree.get_edge_as<rrt_edge_t>(tree[node_indices.back()]->get_parent_edge());
+		add_edge->plan = std::make_shared<plan_t>(*add_plan);
+		add_edge->traj = std::make_shared<trajectory_t>(*add_traj);
+
+		prune_tree(start_vertex, node_indices.back(), true);
+		metric->add_node(new_node.get());
+		prx_assert(metric->get_nr_nodes()==tree.num_vertices(), "The number of nodes in the metric does not match the number of nodes in the tree.");
+
+		start_vertex = new_vertex;
+
+		previous_child = best_node;
+		best_node = new_vertex;
+		best_cost = new_node->cost_to_go;
+		child_extension = true;
+	}
+
 	void dirt_replan_t::prune_tree(node_index_t v, node_index_t new_root, bool delete_flag)
 	{
 		auto node = get_vertex(v);
@@ -592,32 +704,25 @@ namespace prx
 		{
 			prune_tree(child, new_root, res);
 		}
-		if (res && is_leaf(v))
+		if (res)
 		{
-			if(!node->bridge)
+			if (is_leaf(v))
 			{
-				// if (v == goal_vertex) goal_vertex = start_vertex;
-				metric->remove_node(node);
-				node->bridge = true;
-			}
-			for(int man_index=0;man_index<node->indices.size();man_index++)
-			{
-				delete node->edge_generators[node->indices[man_index]].first;
-				delete node->edge_generators[node->indices[man_index]].second;
-			}
-			node->edge_generators.clear();
-			node->indices.clear();
+				if(!node->bridge)
+				{
+					metric->remove_node(node);
+					node->bridge = true;
+				}
+				for(int man_index=0;man_index<node->indices.size();man_index++)
+				{
+					delete node->edge_generators[node->indices[man_index]].first;
+					delete node->edge_generators[node->indices[man_index]].second;
+				}
+				node->edge_generators.clear();
+				node->indices.clear();
 
-			//remove the node
-			tree.remove_vertex(v);
-		}
-		else
-		{
-			if(!node->bridge)
-			{
-				// if (v == goal_vertex) goal_vertex = start_vertex;
-				metric->remove_node(node);
-				node->bridge = true;
+				//remove the node
+				tree.remove_vertex(v);
 			}
 		}
 	}

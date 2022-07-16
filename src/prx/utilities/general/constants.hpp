@@ -48,6 +48,12 @@ namespace prx
 	}
 
 	static inline
+	bool double_equals( double a, double b, double epsilon = PRX_EPSILON )
+	{
+		return std::fabs(a - b) < epsilon;
+	}
+
+	static inline
 	vector_t heatmap_value(double val)
 	{
 		const std::vector<double> r_vals = {165,215,244,253,254,224,171,116,69,49};

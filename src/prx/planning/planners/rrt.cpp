@@ -28,7 +28,7 @@ namespace prx
 		state_space = rrt_spec->state_space;
 		sample_point = state_space->make_point();
 		control_space = rrt_spec->control_space;
-		metric = new graph_nearest_neighbors_t(distance_function);
+		if (metric == nullptr) metric = new graph_nearest_neighbors_t(distance_function);
 		//we now have spaces and necessary functions
 	}
 

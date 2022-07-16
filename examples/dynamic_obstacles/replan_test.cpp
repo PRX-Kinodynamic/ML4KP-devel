@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
             step_state = replanner.full_solution_trajectory.at(i);
             fout << ss -> print_point(step_state,4) 
             << "," << dirt_spec.valid_state(step_state) << std::endl;
-            if(!dirt_spec.valid_state(step_state)) std::cout << "Detected collison at " 
+            if(!dirt_spec.valid_state(step_state)) std::cout << "Detected collision at " 
             << i*simulation_step << std::endl;
         }
         fout.close();
