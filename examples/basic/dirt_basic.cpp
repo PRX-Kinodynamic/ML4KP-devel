@@ -9,6 +9,12 @@
 
 #include <fstream>
 
+#include "prx/planning/planner_statistics.hpp"
+#include "prx/simulation/system_factory.hpp"
+
+
+
+
 using namespace prx;
 
 int main(int argc, char* argv[])
@@ -92,32 +98,106 @@ int main(int argc, char* argv[])
     dirt.preprocess();
     dirt.link_and_setup_query(&dirt_query);
 
-    condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>()); //'
+    //condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>()); //'
+    condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<double>()/600.0); 
+    
+    
+    std::ofstream fout;
+    //For statistics
+    int stats_runs = 10; //params["planner_runs"].as<int>();
+		for (int i = 0; i < stats_runs; i++)
+		{				
+			PRX_DEBUG_PRINT
+			dirt.link_and_setup_spec(&dirt_spec);
+			PRX_DEBUG_PRINT
+			dirt.preprocess();
+			PRX_DEBUG_PRINT
+			dirt.link_and_setup_query(&dirt_query);
+			PRX_DEBUG_PRINT
+			
+			PRX_DEBUG_PRINT
+			planner_statistics_t stats;
+			stats.link_planner(&dirt);
+			stats.link_criterion(&checker);
+			PRX_DEBUG_PRINT
+			//stats.repeat_data_gathering(stats_iterations);
+			stats.repeat_data_gathering(600);
+			std::string full_filename = lib_path+params["data_output_folder"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";
+			std::cout << full_filename << std::endl;
+			fout.open(full_filename);
+			fout<<stats.serialize() << std::endl;
+			fout.close();
 
-    dirt.resolve_query(&checker);
-    dirt.fulfill_query(); 
+			//if(get_visualization)
+			if(true)
+			{
+				dirt.fulfill_query();
+				std::string vis_body = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+				three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
+
+				for(auto& traj : dirt_query.tree_visualization)
+				{
+					vis_group->add_vis_infos(info_geometry_t::LINE, traj, vis_body, context.first->get_state_space());
+				}
+
+				if (dirt_query.solution_cost > 0)
+				// if (dirt_query.solution_plan.duration() > 0)
+				{
+					vis_group->add_vis_infos(info_geometry_t::FULL_LINE, dirt_query.solution_traj, vis_body, context.first->get_state_space(),"0x00ffff");
+					double timestamp=0;
+					for(auto state : dirt_query.solution_traj)
+					{
+						context.first->get_state_space()->copy_from_point(state);
+						vis_group->snapshot_state(timestamp);
+						timestamp+=simulation_step;
+					}
+				}
+				else
+				{
+					double timestamp=0;
+					context.first->get_state_space()->copy_from_point(dirt_query.start_state);
+					vis_group->snapshot_state(timestamp);
+					timestamp+=simulation_step;
+				}
+				vis_group->output_html(params["output_html"].as<std::string>()+"_"+std::to_string(i)+".html");
+				delete vis_group;
+			}
+			dirt_query.clear_outputs();
+			dirt.reset();
+		}
+    
+    
+    
+    
+    
+    
+    
+    
+	
+    //*dirt.resolve_query(&checker);
+    //*dirt.fulfill_query(); 
 
     params.print();
         
     // TODO: Add function to visualization to replace tree_to_txt
     // tree_to_txt(dirt_query);
         
-    three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
+    //*three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
     // TODO: Add function to visualization to replace tree_to_html
     // tree_to_html(vis_group, dirt_query, context.first -> get_state_space());
 
-    std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
-    auto ss = context.first -> get_state_space();
+    //*std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+    //*auto ss = context.first -> get_state_space();
 
-    vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
+    //*vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
 
-    vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, dirt_query.solution_traj, body_name, ss);
+    //*vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, dirt_query.solution_traj, body_name, ss);
 
-    vis_group -> add_animation(dirt_query.solution_traj, ss, dirt_query.start_state);
+    //*vis_group -> add_animation(dirt_query.solution_traj, ss, dirt_query.start_state);
 
-    vis_group -> output_html("output.html");
+    //*vis_group -> output_html("output.html");
 
-    delete vis_group;
+    //*delete vis_group;
 
     std::cout<<"End of program"<<std::endl;
 }

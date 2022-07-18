@@ -7,7 +7,7 @@ plant: !file "plants/unicycle_fo_v0.yaml"
 #obstacles_file: "environments/kmp_benchmark/unicycle_fo/kink_0.yaml"
 
 # bugtrap
-#obstacles_file: "environments/kmp_benchmark/unicycle_fo/bugtrap_0.yaml"
+obstacles_file: "environments/kmp_benchmark/unicycle_fo/bugtrap_0.yaml"
 
 # parallel_park
 #obstacles_file: "environments/kmp_benchmark/unicycle_fo/parallelpark_0.yaml"
@@ -17,13 +17,13 @@ plant: !file "plants/unicycle_fo_v0.yaml"
 
 
 # wall 2
-obstacles_file: "environments/kmp_benchmark/unicycle_fo/wall_2.yaml"
+#obstacles_file: "environments/kmp_benchmark/unicycle_fo/wall_2.yaml"
 
 planner_runs: 10
-use_pruning: true
+use_pruning: false
 condition_check: "time"
-planner_iterations: 300
-statistics_iterations: 30
+planner_iterations: 60
+statistics_iterations: 600
 
 
 #planner_runs: 10

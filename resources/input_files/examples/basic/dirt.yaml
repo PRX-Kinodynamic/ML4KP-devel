@@ -14,6 +14,14 @@ pruning: true
 visualize: true
 
 checker_type: time
-checker_value: 10
+#checker_value: 10
+checker_value: 60
 
 goal_region_radius: 0.5
+
+# adding below for mem leak testing
+data_output_folder: "out/kmp_benchmark/"
+planner_name: "dirt_random"
+
+
+output_html: "out"

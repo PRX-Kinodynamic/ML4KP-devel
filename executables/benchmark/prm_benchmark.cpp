@@ -34,8 +34,8 @@ int main(int argc, char* argv[])
 		simulation_step = params["simulation_step"].as<double>();
 
 		//Planner parameters
-		int planner_iterations = params["planner_iterations"].as<int>();
-		int stats_iterations = params["statistics_iterations"].as<int>();
+		double planner_iterations = params["planner_iterations"].as<int>();
+		double stats_iterations = params["statistics_iterations"].as<int>();
 		int random_seed = params["random_seed"].as<int>();
 		init_random(random_seed);
 		//params.print();
@@ -96,12 +96,12 @@ int main(int argc, char* argv[])
 		
 		
 		
-		dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
+		/*dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
         {
             std::vector <double> diff = {a->at(0)-b->at(0),a->at(1)-b->at(1),
             norm_angle_pi(a->at(2)-b->at(2))};
 
-			if (params["/plant/name"].as<std::string>() == "SO_unicycle")
+			if (plant_name == "SO_unicycle")
 			{
 				diff.push_back(a->at(3)-b->at(3));
 				diff.push_back(a->at(4)-b->at(4));
@@ -112,8 +112,15 @@ int main(int argc, char* argv[])
                 accum += v*v;
             }
             return sqrt(accum);
-        };
+        };*/
+        
+        //dirt_spec.distance_function = std::bind(&space_t::euclidean_2d, std::placeholders::_3, 0, std::placeholders::_4, ss -> get_dimension());
 
+	dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
+	{
+	  return space_t::euclidean_2d(a, b, 0, a -> get_dim());
+	};
+		
         dirt_spec.h = [&](space_point_t a, space_point_t b)
         {
             return prm.get_closest_cost(a) / 0.5;
