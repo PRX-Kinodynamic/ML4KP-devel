@@ -191,6 +191,7 @@ class NoisyTimeMap:
         self.ss.copy_to_point(self.end_state)
         return self.end_state.to_list()
     
+
     def pendulum_lqr(self, X):
 
         self.ss.copy_point_from_vector(self.start_state,X)
@@ -223,6 +224,85 @@ class NoisyTimeMap:
         self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
         # print("After propagate: ", self.end_state)
         return self.end_state.to_list()
+
+    def pendulum_tbc(self, X):
+
+        self.ss.copy_point_from_vector(self.start_state,X)
+        if self.x_0_noise is not None:
+            self.x_0_noise.add_noise(self.start_state)
+        self.ss.copy_from_point(self.start_state)
+        self.ss.enforce_bounds()
+
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
+        if self.controller == None:
+            u_min = self.cs.get_lower_bound(0);
+            u_equ = 0;
+            u_max = self.cs.get_upper_bound(0);
+
+            self.set_of_ctrls = [[u_min, u_equ, u_max]];
+            self.controller = prx.bang_bang(self.noisy_plant, self.set_of_ctrls, "bang_bang")
+            self.controller.set_control(0)
+
+            self.fout_roa = open(prx.out_path + self.params["out_dir"].as_string() + "/" + self.params["system_name"].as_string() + "_traj" + self.params["file_name_suffix"].as_string(), "w", buffering=2^10)
+
+            # filename = "/Users/Gary/Downloads/pend_TBC_ctrl.csv"
+            filename = prx.input_path + "/pend_TBC_ctrl.csv"
+            self.ctrl_dict = {}
+            with open(filename, 'r') as opened_file:
+                for line in opened_file:
+                    line_as_str = list(map(float, line.split(' ')))
+                    box = (line_as_str[2], line_as_str[3], line_as_str[4], line_as_str[5])
+                    self.ctrl_dict[box] = line_as_str[6]
+
+
+  
+        total_time = self.duration
+        if self.t_noise is not None:
+            total_time = self.t_noise.add_noise(total_time) 
+
+
+
+        self.checker.set_check_value(total_time)
+        self.checker.reset()
+        
+        self.traj.clear()
+
+        self.traj.copy_onto_back(self.ss)
+        while True:
+
+            ctrl_num = 2
+            for box in self.ctrl_dict:
+                x_l = box[0]
+                y_l = box[1]
+                x_u = box[2]
+                y_u = box[3]
+
+                if x_l <= float(self.traj.back()[0]) < x_u:
+                    if y_l <= float(self.traj.back()[1]) <= y_u:
+                        ctrl_num = int(self.ctrl_dict[box])
+                        break
+            self.controller.set_control(ctrl_num)
+            self.controller.compute_controls()
+
+            self.plant.propagate(self.simulation_step)
+            # self.ss.copy_to_point(self.start_state)
+            self.traj.copy_onto_back(self.ss)
+
+            if self.checker.check():
+                break;
+
+        past_state = self.traj[0]
+        for state in self.traj:
+            if prx.space_t.euclidean_2d(past_state, state) < 1:
+                self.fout_roa.write(str(state) + "\n")
+                past_state = state
+            else:
+                self.fout_roa.write("\n")
+                past_state = state
+        self.fout_roa.write("\n")
+        return self.traj.back().to_list() 
 
     def pendulum_bang_bang(self, X, ctrl_num = 2):
 
