@@ -63,8 +63,8 @@ namespace prx
                 // Perform the planning cycle.
                 perform_single_planning_cycle();
 
-                node_index_t best_index = planner->get_best_node_index();
-                planner->tree_retain(best_index);
+                // node_index_t best_index = planner->get_best_node_index();
+                // planner->tree_retain(best_index);
 
                 tree_visualization.clear();
                 if (rrt_query -> get_visualization)

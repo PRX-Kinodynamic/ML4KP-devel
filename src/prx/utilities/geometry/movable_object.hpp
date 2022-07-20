@@ -43,7 +43,7 @@ namespace prx
 			{
 				auto body = c.second;
 				body -> setIdentity();
-				body->linear() = (quaternion_t(0,0,0,1).toRotationMatrix());
+				body->linear() = (quaternion_t(cos(new_position[3]/2),0,0,sin(new_position[3]/2)).toRotationMatrix());
 				body->translation() = (vector_t(new_position[0],new_position[1],new_position[2]));
 			}
 		}

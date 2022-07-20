@@ -6,19 +6,39 @@
 #include "prx/planning/planner_statistics.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
+#include "prx/simulation/loaders/dynamic_obstacle_loader.hpp"
 
+#ifdef __cpp_lib_filesystem
+    #include <filesystem.hpp>
+    namespace fs = std::filesystem;
+#else
+    #define _LIBCPP_NO_EXPERIMENTAL_DEPRECATION_WARNING_FILESYSTEM
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;
+#endif
 #include <fstream>
 
 using namespace prx;
 
 int main(int argc, char* argv[])
 {
-    auto params = param_loader("examples/dynamic_obstacles/dynamic_obstacles_test.yaml");
+    std::string params_file;
+    if (argc <= 1)
+    {
+        params_file = "examples/dynamic_obstacles/replan_test.yaml";
+        // prx_throw("The planner evaluation executable needs a parameter file!");
+    }
+    else 
+    {
+        params_file = std::string(argv[1]);
+    }
 
+    param_loader params(params_file);
     simulation_step = params["simulation_step"].as<double>();
     init_random(params["random_seed"].as<int>());
 
-    auto obstacles = load_obstacles(params["environment"].as<>());
+    // auto obstacles = load_obstacles(params["environment"].as<>());
+    auto obstacles = load_dynamic_obstacles(params["environment"].as<>());
     std::vector<std::shared_ptr<movable_object_t>> obstacle_list = obstacles.second;
     std::vector<std::string> obstacle_names = obstacles.first;
         
@@ -43,7 +63,7 @@ int main(int argc, char* argv[])
     dirt_spec.h = [&](const space_point_t& s, const space_point_t& s2)
     {
         // Custom h function: ( eucledian distance from s to s2 ) / (max velocity)
-        return space_t::euclidean_2d(s, s2) / max_vel;
+        return space_t::euclidean_2d(s, s2, 0, 3) / max_vel;
     };
 
     dirt_spec.use_prescience = params["prescience"].as<bool>();
@@ -107,6 +127,11 @@ int main(int argc, char* argv[])
     condition_check_t checker(params["checker_type"].as<>(), 0.1 * params["checker_value"].as<double>()); 
     int num_trials = params["num_trials"].as<int>();
 
+    if (!fs::exists(out_path + params["output_dir"].as<std::string>()))
+    {
+        fs::create_directory(out_path + params["output_dir"].as<std::string>());
+    }
+
     for (int i = 0; i < num_trials; i++)
     {
         dirt.reset();
@@ -119,7 +144,7 @@ int main(int argc, char* argv[])
         planner_statistics_t stats;
         stats.link_planner(&dirt);
         stats.link_criterion(&checker);
-        stats.repeat_data_gathering(10);
+        stats.repeat_data_gathering(10,false);
 
         dirt.fulfill_query();
 
@@ -133,6 +158,7 @@ int main(int argc, char* argv[])
 
         fname = out_path + params["output_dir"].as<std::string>() + "/" +
                     "trajectory_" + std::to_string(i) + ".txt";
+        std::cout << fname << std::endl;
         fout.open(fname);
 
         for (unsigned i = 0; i < dirt_query.solution_traj.size(); i++)
@@ -140,7 +166,7 @@ int main(int argc, char* argv[])
             sim -> update_all_obstacle_poses(i*simulation_step);
             auto step_state = dirt_query.solution_traj.at(i);
             fout << context.first -> get_state_space() -> print_point(step_state,4) 
-            << "," << dirt_spec.valid_state(step_state) << std::endl;
+            << "," << dirt_spec.valid_state(step_state) << "," << dirt_spec.time_valid_state(step_state,i*simulation_step) << std::endl;
         }
         fout.close();
     }
