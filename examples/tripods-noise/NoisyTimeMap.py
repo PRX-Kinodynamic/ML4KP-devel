@@ -245,7 +245,7 @@ class NoisyTimeMap:
             self.controller = prx.bang_bang(self.noisy_plant, self.set_of_ctrls, "bang_bang")
             self.controller.set_control(0)
 
-            self.fout_roa = open(prx.out_path + self.params["out_dir"].as_string() + "/" + self.params["system_name"].as_string() + "_traj" + self.params["file_name_suffix"].as_string(), "w", buffering=2^10)
+            # self.fout_roa = open(prx.out_path + self.params["out_dir"].as_string() + "/" + self.params["system_name"].as_string() + "_traj" + self.params["file_name_suffix"].as_string(), "w", buffering=2^10)
 
             # filename = "/Users/Gary/Downloads/pend_TBC_ctrl.csv"
             filename = prx.input_path + "/pend_TBC_ctrl.csv"
@@ -293,15 +293,15 @@ class NoisyTimeMap:
             if self.checker.check():
                 break;
 
-        past_state = self.traj[0]
-        for state in self.traj:
-            if prx.space_t.euclidean_2d(past_state, state) < 1:
-                self.fout_roa.write(str(state) + "\n")
-                past_state = state
-            else:
-                self.fout_roa.write("\n")
-                past_state = state
-        self.fout_roa.write("\n")
+        # past_state = self.traj[0]
+        # for state in self.traj:
+        #     if prx.space_t.euclidean_2d(past_state, state) < 1:
+        #         self.fout_roa.write(str(state) + "\n")
+        #         past_state = state
+        #     else:
+        #         self.fout_roa.write("\n")
+        #         past_state = state
+        # self.fout_roa.write("\n")
         return self.traj.back().to_list() 
 
     def pendulum_bang_bang(self, X, ctrl_num = 2):
