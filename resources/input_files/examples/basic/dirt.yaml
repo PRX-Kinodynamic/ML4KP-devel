@@ -1,27 +1,42 @@
 planner: "AORRT"
 
-random_seed: 231192
-simulation_step: 0.1
+#random_seed: 231192
+#simulation_step: 0.1
 
-environment: "environments/simple_obstacle.yaml"
+#environment: "environments/simple_obstacle.yaml"
+environment: "environments/kmp_benchmark/unicycle_fo/bugtrap_0.yaml"
+
 plant: !file "plants/two_dim_pt.yaml"
+
+
 # plant: !file "plants/treaded_vehicle.yaml"
 # plant: !file "plants/fo_treaded_vehicle.yaml"
 
 blossom: 5
-pruning: true
+pruning: false
 
 visualize: true
 
-checker_type: time
-#checker_value: 10
-checker_value: 60
+checker_type: iterations
+checker_value: 1000
 
-goal_region_radius: 0.5
+#goal_region_radius: 0.5
+goal_region_radius: 0.1
 
-# adding below for mem leak testing
+
+# adding below for mem leak testing (stats gathering)
 data_output_folder: "out/kmp_benchmark/"
 planner_name: "dirt_random"
-
-
 output_html: "out"
+
+
+#added for kmp_benchmark executable
+simulation_step: 0.1
+random_seed: 0
+obstacles_file: "environments/kmp_benchmark/unicycle_fo/bugtrap_0.yaml"
+
+planner_runs: 1
+use_pruning: false
+condition_check: "iterations"
+planner_iterations: 1000
+statistics_iterations: 600

@@ -28,7 +28,8 @@ namespace prx
 		derivative_space = new space_t("EE",derivative_memory,"XdotYdot");
 
 		const std::string shape = "cylinder";
-		const double tdpt_size = 0.5;
+		//const double tdpt_size = 0.5;
+		const double tdpt_size = 0.2;
 		if(shape=="sphere")
 		{
 			geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::SPHERE);

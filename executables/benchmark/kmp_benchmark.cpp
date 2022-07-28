@@ -9,11 +9,13 @@
 
 
 #include <fstream>
+#include <time.h>
 
 using namespace prx;
 
 int main(int argc, char* argv[])
 {
+    time_t begin, end;
     try
 	{
 		std::string params_file;
@@ -93,7 +95,7 @@ int main(int argc, char* argv[])
         };*/
         
         //dirt_spec.distance_function = std::bind(&space_t::euclidean_2d, _3, 0, _4, ss -> get_dimension());
-
+	
 	dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
 	{
 	  return space_t::euclidean_2d(a, b, 0, a -> get_dim());
@@ -102,18 +104,33 @@ int main(int argc, char* argv[])
 	
         dirt_spec.h = [&,dirt_spec](space_point_t a, space_point_t b)
         {
-            return dirt_spec.distance_function(a,b) / 0.5;
+            return space_t::euclidean_2d(a, b, 0, a -> get_dim()) / 0.5;
+            //return dirt_spec.distance_function(a,b) / 0.5;
         };
 
         dirt_query.goal_check = [&,dirt_spec](space_point_t s)
         {
-            return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
+            return space_t::euclidean_2d(s,dirt_query.goal_state) < dirt_query.goal_region_radius;
+            //return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
         };
         
-		condition_check_t checker(params["condition_check"].as<std::string>(),  planner_iterations/stats_iterations);
+		//condition_check_t checker(params["condition_check"].as<std::string>(),  planner_iterations/stats_iterations);
+		condition_check_t checker(params["condition_check"].as<std::string>(),  planner_iterations);
 		std::ofstream fout;
+		
+		
+		
+		
+		dirt.link_and_setup_spec(&dirt_spec);
 
-		int stats_runs = params["planner_runs"].as<int>();
+		dirt.preprocess();
+
+		dirt.link_and_setup_query(&dirt_query);
+		
+		
+		dirt.resolve_query(&checker);
+		
+		/*int stats_runs = params["planner_runs"].as<int>();
 		for (int i = 0; i < stats_runs; i++)
 		{				
 			PRX_DEBUG_PRINT
@@ -129,8 +146,12 @@ int main(int argc, char* argv[])
 			stats.link_planner(&dirt);
 			stats.link_criterion(&checker);
 			PRX_DEBUG_PRINT
+			time(&begin);
 			stats.repeat_data_gathering(stats_iterations);
-
+			time(&end);
+			
+			time_t el = end - begin;
+			std::cout << "elapsed" << el <<std::endl;
 			std::string full_filename = lib_path+params["data_output_folder"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";
 			std::cout << full_filename << std::endl;
 			fout.open(full_filename);
@@ -172,7 +193,7 @@ int main(int argc, char* argv[])
 			}
 			dirt_query.clear_outputs();
 			dirt.reset();
-		}
+		}*/
 	}
 	catch(const prx_assert_t& e)
 	{

@@ -9,6 +9,8 @@ plant: !file "plants/unicycle_fo_v0.yaml"
 # bugtrap
 obstacles_file: "environments/kmp_benchmark/unicycle_fo/bugtrap_0.yaml"
 
+
+
 # parallel_park
 #obstacles_file: "environments/kmp_benchmark/unicycle_fo/parallelpark_0.yaml"
 
@@ -19,10 +21,10 @@ obstacles_file: "environments/kmp_benchmark/unicycle_fo/bugtrap_0.yaml"
 # wall 2
 #obstacles_file: "environments/kmp_benchmark/unicycle_fo/wall_2.yaml"
 
-planner_runs: 10
+planner_runs: 1
 use_pruning: false
 condition_check: "time"
-planner_iterations: 60
+planner_iterations: 30
 statistics_iterations: 600
 
 
@@ -36,5 +38,24 @@ statistics_iterations: 600
 data_output_folder: "out/kmp_benchmark/"
 planner_name: "dirt_random"
 
+
 visualize: true
 output_html: "out"
+
+#added for dirt_basic example
+environment: "environments/kmp_benchmark/unicycle_fo/bugtrap_0.yaml"
+planner: "AORRT"
+goal_region_radius: 0.1
+blossom: 5
+pruning: false
+visualize: true
+
+checker_type: time
+
+checker_value: 30
+
+
+
+
+
+

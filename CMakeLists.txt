@@ -37,6 +37,14 @@ set(EIGEN3_INCLUDE_DIR "/usr/include/boost/compute/interop/eigen")
 include_directories("$ENV{EIGEN3_INCLUDE_DIR}")
 
 
+#FOR GPROF
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pg")
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -pg")
+
+
+
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
@@ -91,6 +99,26 @@ if(BUILD_TESTS)
 	add_subdirectory(tests)
 endif(BUILD_TESTS)
 	# ${PROJECT_SOURCE_DIR}/tests/*.cpp
+
+
+#GPERF SECTION STARTS
+
+set (Gperftools_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake_modules/")
+find_package(Gperftools REQUIRED)
+
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl")
+#SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl")
+#SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl")
+
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -no-as-needed")
+#SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -no-as-needed")
+#SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -no-as-needed")
+
+#add_link_options(-lprofiler)
+
+SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
+
+#GPERF ENDS
 
 
 # file(GLOB_RECURSE EXAMPLE_FILES
