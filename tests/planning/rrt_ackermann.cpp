@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE( rrt_ackermann_test )
     params["out_dir"] = prx::lib_path + "/out/unit_tests/";
     params["out_file"] = "/rrt_ackermann.txt";
     params["visualize"] = false;
-    params["random_seed"] = 921123;
+    params["random_seed"] = std::random_device()();
 
 
     // 1 for collecting the "original" sample. 2 for the collecting a new sample and test against 1
@@ -52,17 +52,17 @@ BOOST_AUTO_TEST_CASE( rrt_ackermann_test )
         exit(-1);
     }
 
-    // Data recolected on 20/05/2021
+    // Data recolected on 29/07/2022 -> After some changes on random.cpp
     // header,                   time     , iters, nodes      , solution_cost, solution_time, solution_iters
-    // Sample_mean,              0.961343 , 10000, 4175.83    , 3.33488      , 0.624769     , 6436.93
-    // Sample_variance,          0.0423443, 0    , 1.20872e+06, 0.83074      , 0.111148     , 7.62279e+06
-    // Sample_standard_deviation,0.205777 , 0    , 1099.42    , 0.91145      , 0.333388     , 2760.94
-    params["sample_1"]["nodes"]["mean"]             = 4175.83;
-    params["sample_1"]["nodes"]["variance"]         = 1.20872e+06;
-    params["sample_1"]["solution_cost"]["mean"]     = 3.33488;
-    params["sample_1"]["solution_cost"]["variance"]  = 0.83074;
-    params["sample_1"]["solution_iters"]["mean"]    = 6436.93;
-    params["sample_1"]["solution_iters"]["variance"] = 7.62279e+06;
+    // Sample_mean,              1.10632,    10000,  5230.97,    5.4719,     0.742294,   6854.4
+    // Sample_variance,          0.0336643,  0,      601931,     1.59777,    0.102511,   6.41978e+06
+    // Sample_standard_deviation,0.183478,   0,      775.842,    1.26403,    0.320174,   2533.73
+    params["sample_1"]["nodes"]["mean"]              = 5230.97;
+    params["sample_1"]["nodes"]["variance"]          = 601931;
+    params["sample_1"]["solution_cost"]["mean"]      = 5.4719;
+    params["sample_1"]["solution_cost"]["variance"]  = 1.59777;
+    params["sample_1"]["solution_iters"]["mean"]     = 6854.4;
+    params["sample_1"]["solution_iters"]["variance"] = 6.41978e+06;
 
 
     // if (! fs::exists(params["out_dir"].as<>()) )
