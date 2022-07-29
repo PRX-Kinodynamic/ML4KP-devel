@@ -9,6 +9,10 @@
 
 namespace prx
 {
+    namespace random
+    {
+        static std::uniform_real_distribution<double> uniform_zero_one(0.0, std::nextafter(1.0, std::numeric_limits<double>::max()));
+    }
     // This might not be the best way to have a generator
     extern std::mt19937_64 global_generator;
 

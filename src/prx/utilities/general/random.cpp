@@ -8,12 +8,16 @@ namespace prx
 
 	void init_random(int seed)
 	{
+		srand(seed);
 		global_generator.seed(seed);
 	}
 
 	double uniform_random()
 	{
-		double val = global_generator()*1.0 / global_generator.max();
+		// double val = rand()*1.0 / RAND_MAX;
+		// double val = static_cast<double>(global_generator()) / static_cast<double>(global_generator.max());
+		// double val = global_generator()*1.0 / global_generator.max();
+		const double val = ::prx::random::uniform_zero_one(global_generator);
 		return val;
 	}
 
@@ -21,14 +25,18 @@ namespace prx
 	{
 		// TODO: This implementation is problematic if (max - min) > std::::numeric_limits<double>::max() 
 		// ==> change to use std::uniform_real_distribution?
-		
-		double val = (((double)global_generator() / (double)global_generator.max()) * (max - min)) + min;
+		// double val = (((double)rand() / (double)RAND_MAX) * (max - min)) + min;
+		const double val = ::prx::random::uniform_zero_one(global_generator) * (max - min) + min;
+		// double val = ((static_cast<double>(global_generator()) / static_cast<double>(global_generator.max())) * (max - min)) + min;
+		// std::uniform_real_distribution<double> dist(min, max);
+		// return dist(global_generator);
 		return val;
 	}
 
 	int uniform_int_random(int min, int max)
 	{
-		int val = (global_generator() % (max + 1 - min)) + min;
+		int val = (rand() % (max + 1 - min)) + min;
+		// int val = (global_generator() % (max + 1 - min)) + min;
 		return val;
 	}
 
