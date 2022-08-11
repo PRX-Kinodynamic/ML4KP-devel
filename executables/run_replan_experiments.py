@@ -25,25 +25,43 @@ with open(original_yaml_path, 'r') as stream:
 del planner_params["plant"]
 planner_params["num_trials"] = 30
 
-planning_times = [2.5, 3.5, 5.0]
-horizons = [5.0, 10.0]
+planning_time = 2.0
+horizon = 5.0
 
-for pt in tqdm(planning_times):
-    for h in horizons:
-        if pt < h:
-            planner_params["planning_time"] = pt
-            planner_params["horizon"]       = h
-            planner_params["max_replanning_cycles"] = int(100/pt)
+for i in range(20):
+    planner_params["planning_time"] = planning_time
+    planner_params["horizon"] = horizon
 
-            planner_params["output_dir"] = "dynamic/prescience/" + str(pt) + "_" + str(h)
+    planner_params["environment"] = "environments/test_dynamic_box/box_"+str(i)+".yaml"
+    planner_params["output_dir"] = "dynamic/evaluation/"+str(i)
 
-            with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml', 'w') as f:
-                yaml.safe_dump(planner_params, f, sort_keys=False)
-                f.write("plant: !file \"plants/treaded_vehicle.yaml\"\n")
+    with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml', 'w') as f:
+        yaml.safe_dump(planner_params, f, sort_keys=False)
+        f.write("plant: !file \"plants/treaded_vehicle.yaml\"\n")
+    
+    cmd = [os.environ["DIRTMP_PATH"]+"bin/examples/dynamic_obstacles/replan_test","examples/test.yaml"]
+    popen = subprocess.Popen(cmd)
+    time.sleep(1)
+
+
+# planning_times = [2.0]
+# horizons = [5.0, 10.0]
+
+# for pt in tqdm(planning_times):
+#     for h in horizons:
+#         if pt < h:
+#             planner_params["planning_time"] = pt
+#             planner_params["horizon"]       = h
+#             planner_params["max_replanning_cycles"] = int(100/pt)
+
+#             planner_params["output_dir"] = "dynamic/prescience/" + str(pt) + "_" + str(h)
+
+#             with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml', 'w') as f:
+#                 yaml.safe_dump(planner_params, f, sort_keys=False)
+#                 f.write("plant: !file \"plants/treaded_vehicle.yaml\"\n")
             
-            cmd = [os.environ["DIRTMP_PATH"]+"bin/examples/dynamic_obstacles/replan_test","examples/test.yaml"]
-            popen = subprocess.Popen(cmd)
-            time.sleep(1)
-            # popen.wait()
+#             cmd = [os.environ["DIRTMP_PATH"]+"bin/examples/dynamic_obstacles/replan_test","examples/test.yaml"]
+#             popen = subprocess.Popen(cmd)
+#             time.sleep(1)
 
 print("Done!")
