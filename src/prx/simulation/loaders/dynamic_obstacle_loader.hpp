@@ -63,7 +63,7 @@ namespace prx
             obstacle_names.push_back(name);
 
             double func_multiplier = geom["multiplier"].as<double>();
-            obstacle_list.back() -> position_function.init("const", func_multiplier, geom_position,geom_rotation);
+            obstacle_list.back() -> position_function.init("triangle", func_multiplier, geom_position,geom_rotation);
         }
 
         // unsigned num_boxes = uniform_int_random(dynamic_geometries_list["min_bodies"].as<int>(),dynamic_geometries_list["max_bodies"].as<int>());

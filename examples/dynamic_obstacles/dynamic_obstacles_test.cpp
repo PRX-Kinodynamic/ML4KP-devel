@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     std::string params_file;
     if (argc <= 1)
     {
-        params_file = "examples/dynamic_obstacles/replan_test.yaml";
+        params_file = "examples/dynamic_obstacles/dynamic_obstacles_test.yaml";
         // prx_throw("The planner evaluation executable needs a parameter file!");
     }
     else 
@@ -119,10 +119,22 @@ int main(int argc, char* argv[])
     auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
     context.first -> get_state_space() -> set_bounds(lower_bounds, upper_bounds);
 
-    context.first -> get_state_space() -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
-    context.first -> get_state_space() -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
-    
+    if (!params.exists("start_state") || !params.exists("goal_state"))
+    {
+        context.first -> get_state_space() -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
+        context.first -> get_state_space() -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
+    }
+    else
+    {
+        context.first -> get_state_space() -> copy_point_from_vector(dirt_query.start_state, params["start_state"].as<std::vector<double>>());
+        context.first -> get_state_space() -> copy_point_from_vector(dirt_query.goal_state, params["goal_state"].as<std::vector<double>>());
+    }
     dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
+
+    dirt_query.goal_check = [&](const space_point_t& s)
+    {
+        return space_t::euclidean_2d(s, dirt_query.goal_state, 0, 5) < dirt_query.goal_region_radius;
+    };
 
     condition_check_t checker(params["checker_type"].as<>(), 0.1 * params["checker_value"].as<double>()); 
     int num_trials = params["num_trials"].as<int>();
@@ -167,6 +179,16 @@ int main(int argc, char* argv[])
             auto step_state = dirt_query.solution_traj.at(i);
             fout << context.first -> get_state_space() -> print_point(step_state,4) 
             << "," << dirt_spec.valid_state(step_state) << "," << dirt_spec.time_valid_state(step_state,i*simulation_step) << std::endl;
+        }
+        fout.close();
+
+        fname = out_path + params["output_dir"].as<std::string>() + "/" +
+                    "infos_" + std::to_string(i) + ".txt";
+        fout.open(fname);
+        fout << sim -> get_world_infos_header() << std::endl;
+        for (unsigned i = 0; i < dirt_query.solution_traj.size(); i++)
+        {
+            fout << sim -> get_world_infos(i*simulation_step) << std::endl;
         }
         fout.close();
     }

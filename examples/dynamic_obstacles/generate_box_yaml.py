@@ -1,3 +1,4 @@
+from random import random
 import yaml 
 import os 
 import numpy as np 
@@ -5,10 +6,14 @@ import argparse
 import subprocess
 import time
 
-fname_prefix = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/train_dynamic_box/"
 
-def write_yaml(idx):
-    np.random.seed(idx)
+def write_yaml(idx,test_seed=False):
+    if test_seed:
+        np.random.seed(idx + 210896)
+        fname_prefix = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/test_dynamic_box/"
+    else:
+        np.random.seed(idx)
+        fname_prefix = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/train_dynamic_box/"
     fname = fname_prefix+"box_"+str(idx)+".yaml"
 
     yaml_to_dump = {}
@@ -110,10 +115,13 @@ yaml.SafeLoader.add_constructor("!file",fname_constructor)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_files", type=int, default=10)
-    parser.add_argument("--run-planner", action="store_true")
+    parser.add_argument("--run_planner", action="store_true")
+    parser.add_argument("--test", action="store_true")
+        
     args  = parser.parse_args()
+
     for i in range(0,args.num_files):
-        write_yaml(i)
+        write_yaml(i,args.test)
 
     if args.run_planner:
         original_yaml_path = os.environ["DIRTMP_PATH"]+"resources/input_files/examples/dynamic_obstacles/dynamic_obstacles_test.yaml"
@@ -129,8 +137,12 @@ if __name__ == "__main__":
         planner_params["num_trials"] = 1
 
         for i in range(0,args.num_files):
-            planner_params["environment"] = "environments/train_dynamic_box/box_"+str(i)+".yaml"
-            planner_params["output_dir"] = "dynamic/prescience_data/" + str(i)
+            if not args.test:
+                planner_params["environment"] = "environments/train_dynamic_box/box_"+str(i)+".yaml"
+                planner_params["output_dir"] = "dynamic/prescience_data/train_5_vel/" + str(i)
+            else:
+                planner_params["environment"] = "environments/test_dynamic_box/box_"+str(i)+".yaml"
+                planner_params["output_dir"] = "dynamic/prescience_data/test_5_vel/" + str(i)
 
             with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml', 'w') as f:
                 yaml.safe_dump(planner_params, f, sort_keys=False)

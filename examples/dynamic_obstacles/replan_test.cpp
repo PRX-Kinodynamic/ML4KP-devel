@@ -5,6 +5,7 @@
 #include "prx/planning/replanners/replanner.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
+#include "prx/simulation/loaders/dynamic_obstacle_loader.hpp"
 #include "prx/visualization/three_js_group.hpp"
 
 #ifdef __cpp_lib_filesystem
@@ -36,7 +37,8 @@ int main(int argc, char* argv[])
     simulation_step = params["simulation_step"].as<double>();
     init_random(params["random_seed"].as<int>());
 
-    auto obstacles = load_obstacles(params["environment"].as<>());
+    // auto obstacles = load_obstacles(params["environment"].as<>());
+    auto obstacles = load_dynamic_obstacles(params["environment"].as<>());
     std::vector<std::shared_ptr<movable_object_t>> obstacle_list = obstacles.second;
     std::vector<std::string> obstacle_names = obstacles.first;
         
@@ -117,6 +119,10 @@ int main(int argc, char* argv[])
     
     dirt_query.goal_region_radius = params["goal_radius"].as<double>();
     dirt_query.get_visualization = false;
+    dirt_query.goal_check = [&](const space_point_t& s)
+    {
+        return space_t::euclidean_2d(s, dirt_query.goal_state, 0, 5) < dirt_query.goal_region_radius;
+    };
 
     std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 
@@ -155,6 +161,16 @@ int main(int argc, char* argv[])
         }
         fout.close();
         output_progress_bar(1.0 * j/params["num_trials"].as<int>());
+
+        fname = out_path + params["output_dir"].as<std::string>() + "/" +
+                    "infos_" + std::to_string(j) + ".txt";
+        fout.open(fname);
+        fout << sim -> get_world_infos_header() << std::endl;
+        for (unsigned i = 0; i < dirt_query.solution_traj.size(); i++)
+        {
+            fout << sim -> get_world_infos(i*simulation_step) << std::endl;
+        }
+        fout.close();
 
         // vis_group -> add_vis_infos(info_geometry_t::LINE, replanner.tree_visualization, body_name, ss);
         // vis_group -> output_html(params["output_dir"].as<std::string>() + "/"+"output_"+std::to_string(j)+".html");

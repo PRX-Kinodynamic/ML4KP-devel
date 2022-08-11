@@ -9,7 +9,7 @@ environment:
       rotation: 1.4474318641575123
     multiplier: 1.2779016793106455
     name: box_0
-    position_function: const
+    position_function: triangle
   - collision_geometry:
       dims: [0.3829822045816045, 0.4863483965884495, 0.2]
       material: red
@@ -19,7 +19,7 @@ environment:
       rotation: 0.7871593720155905
     multiplier: 1.4562213891780535
     name: box_1
-    position_function: const
+    position_function: triangle
   - collision_geometry:
       dims: [0.18740390724299627, 0.3165951558635862, 0.2]
       material: red
@@ -29,7 +29,7 @@ environment:
       rotation: 0.47916633901195194
     multiplier: 1.4732069194045143
     name: box_2
-    position_function: const
+    position_function: triangle
   - collision_geometry:
       dims: [0.45789638676378774, 0.34984054369851353, 0.2]
       material: red
@@ -39,7 +39,7 @@ environment:
       rotation: 0.17692375497979887
     multiplier: 1.2794365852138416
     name: box_3
-    position_function: const
+    position_function: triangle
   - collision_geometry:
       dims: [0.17576283107218474, 0.46413578997517446, 0.2]
       material: red
@@ -49,7 +49,7 @@ environment:
       rotation: 0.12689388974434015
     multiplier: 1.0044381949876038
     name: box_4
-    position_function: const
+    position_function: triangle
   - collision_geometry:
       dims: [0.3842268207214361, 0.13679111742863334, 0.2]
       material: red
@@ -59,7 +59,7 @@ environment:
       rotation: 0.21722120334248646
     multiplier: 1.4440305884223712
     name: box_5
-    position_function: const
+    position_function: triangle
   - collision_geometry:
       dims: [0.2440244266406355, 0.37129338271111767, 0.2]
       material: red
@@ -69,7 +69,7 @@ environment:
       rotation: 0.2771814578200667
     multiplier: 1.0831361745929549
     name: box_6
-    position_function: const
+    position_function: triangle
   - collision_geometry:
       dims: [0.4428673136208451, 0.23364576256177672, 0.2]
       material: red
@@ -79,7 +79,7 @@ environment:
       rotation: 1.26510535016785
     multiplier: 1.3287222694933105
     name: box_7
-    position_function: const
+    position_function: triangle
   - collision_geometry:
       dims: [0.2729481118238698, 0.1709173195416568, 0.2]
       material: red
@@ -89,7 +89,7 @@ environment:
       rotation: 1.4815693166974757
     multiplier: 1.3949114258163928
     name: box_8
-    position_function: const
+    position_function: triangle
   - collision_geometry:
       dims: [0.3879992918685796, 0.29702293808859337, 0.2]
       material: red
@@ -99,7 +99,7 @@ environment:
       rotation: 1.0632985801584436
     multiplier: 1.1320622908971902
     name: box_9
-    position_function: const
+    position_function: triangle
   - collision_geometry:
       dims: [0.4353922979268573, 0.3942587631269099, 0.2]
       material: red
@@ -109,7 +109,7 @@ environment:
       rotation: 0.6325869644018108
     multiplier: 1.3392560181188702
     name: box_10
-    position_function: const
+    position_function: triangle
   geometries:
   - collision_geometry:
       dims: [21, 0.5, 0.2]

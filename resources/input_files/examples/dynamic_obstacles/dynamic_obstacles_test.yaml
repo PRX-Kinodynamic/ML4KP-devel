@@ -15,7 +15,10 @@ prescience: true
 checker_type: time
 checker_value: 10.0
 
-goal_region_radius: 0.1
+goal_region_radius: 1.0
 
 num_trials: 1
 output_dir: "dynamic/prescience_test"
+
+start_state: [-9.0, 0.0, 0.0, 0.0, 0.0]
+goal_state: [9.0, 0.0, 0.0, 0.0, 0.0]

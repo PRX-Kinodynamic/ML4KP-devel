@@ -119,6 +119,39 @@ namespace prx
 			return obstacle -> get_object_pose();
 		}
 
+		inline std::string get_world_infos(double time)
+		{
+			std::stringstream out(std::stringstream::out);
+
+			out << time;
+
+			for (auto o : obstacles)
+			{
+				auto result = o.second->position_function(time);
+				for (auto r : result)
+				{
+					out << "," << std::fixed << std::setprecision(4) << r;
+				}
+			}
+
+			return out.str();
+		}
+
+		inline std::string get_world_infos_header()
+		{
+			std::stringstream out(std::stringstream::out);
+
+			out << "time";
+
+			for (auto o : obstacles)
+			{
+				out << "," << o.first << "_x," << o.first << "_y," << o.first << "_z,"
+					<< o.first << "_rot," << o.first << "_vel";
+			}
+
+			return out.str();
+		}
+
 		inline void update_all_obstacle_poses(double time)
 		{
 			for (auto it : obstacles)

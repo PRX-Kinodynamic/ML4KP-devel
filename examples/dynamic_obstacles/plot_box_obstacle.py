@@ -1,9 +1,11 @@
 from pickletools import optimize
+from time import time
 import numpy as np 
 import os
 import subprocess
 import yaml
 import matplotlib.pyplot as plt 
+import pandas as pd
 from matplotlib.patches import Rectangle
 from tqdm import tqdm
 from PIL import Image
@@ -18,22 +20,17 @@ class Obstacle:
         self.last_reset_time = 0
         self.diag_len = 0
         self.name = name
+        self.poses = []
     
     def set_box_dims(self,box_dims):
         self.box_dims = box_dims
         self.diag_len = 0.25 * np.sqrt(box_dims[0]**2 + box_dims[1]**2) 
     
-    def f(self,sim_time):
-        res = np.copy(self.init_pos)
-        while (self.last_reset_time > 0 and sim_time >= self.last_reset_time):
-            sim_time -= self.last_reset_time
-        res[0] += self.vel * np.cos(self.orn) * (sim_time)
-        res[1] += self.vel * np.sin(self.orn) * (sim_time)
-        if (res[0] < -10 or res[0] > 10 or res[1] < -10 or res[1] > 10):
-            res[0] = self.init_pos[0]
-            res[1] = self.init_pos[1]
-            if (self.last_reset_time < 1e-6): self.last_reset_time = sim_time
-        return res
+    def set_f(self,world_info):
+        self.poses = np.vstack([world_info[self.name+"_x"],world_info[self.name+"_y"]])
+
+    def f(self,time_idx):
+        return self.poses[:,time_idx]
 
 robot_dims = [0.508,0.430]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
@@ -61,8 +58,12 @@ for obstacle in obstacles_yml:
 plt.figure(figsize=(8,8))
 for idx in tqdm(range(0,num_trajs)):
     traj = np.loadtxt(data_dir+"trajectory_"+str(idx)+".txt",delimiter=",")
+    obs_infos = pd.read_csv(data_dir+"infos_"+str(idx)+".txt",delimiter=",")
     continue_plotting = True
     first_collision_state = -1
+
+    for obstacle in obstacles:
+        obstacle.set_f(obs_infos)
 
     for i in tqdm(range(0,len(traj),step)):
         plt.xlim(-11,11)
@@ -80,11 +81,9 @@ for idx in tqdm(range(0,num_trajs)):
                 plt.gca().add_patch(rect)
         
         for obstacle in obstacles:
-            box_center = obstacle.f(i*simulation_step)
+            box_center = obstacle.f(i)
             plt.text(box_center[0],box_center[1],
                     obstacle.name,fontsize=10)
-            # box_corner = np.array([box_center[0]-obstacle.diag_len * np.cos(0.25*np.pi+obstacle.orn),
-                                #    box_center[1]-obstacle.diag_len * np.sin(0.25*np.pi+obstacle.orn)])
             box_dims = obstacle.box_dims
             rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
                 linewidth=1,edgecolor='r',facecolor='r',angle=180. * obstacle.orn / np.pi)
