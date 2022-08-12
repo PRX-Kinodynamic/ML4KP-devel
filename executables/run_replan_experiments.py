@@ -23,7 +23,7 @@ with open(original_yaml_path, 'r') as stream:
         print(exc)
 
 del planner_params["plant"]
-planner_params["num_trials"] = 30
+planner_params["num_trials"] = 10
 
 planning_time = 2.0
 horizon = 5.0

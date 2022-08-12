@@ -7,6 +7,7 @@
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/simulation/loaders/dynamic_obstacle_loader.hpp"
 #include "prx/visualization/three_js_group.hpp"
+#include "prx/utilities/learned_modules/waypoint_predictor.hpp"
 
 #ifdef __cpp_lib_filesystem
     #include <filesystem.hpp>
@@ -129,6 +130,21 @@ int main(int argc, char* argv[])
     replanner.link_planner(&dirt,&dirt_spec,&dirt_query);
     replanner.link_world_model(sim);
 
+    bool use_waypoints = params["use_waypoint_predictor"].as<bool>();
+    std::vector<double> current_state_vec;
+    waypoint_predictor_t waypoint_predictor(params);
+
+    replanner.waypoint_function = [&](const space_point_t& s, const std::vector<double>& o_infos)
+    {
+        current_state_vec.clear();
+        ss -> copy_vector_from_point(current_state_vec, s);
+        if (use_waypoints)
+            return waypoint_predictor.get_waypoint(current_state_vec, o_infos);
+        else
+            return current_state_vec;
+    };
+        
+
     if (!fs::exists(out_path + params["output_dir"].as<std::string>()))
     {
         fs::create_directory(out_path + params["output_dir"].as<std::string>());
@@ -166,7 +182,7 @@ int main(int argc, char* argv[])
                     "infos_" + std::to_string(j) + ".txt";
         fout.open(fname);
         fout << sim -> get_world_infos_header() << std::endl;
-        for (unsigned i = 0; i < dirt_query.solution_traj.size(); i++)
+        for (unsigned i = 0; i < replanner.full_solution_trajectory.size(); i++)
         {
             fout << sim -> get_world_infos(i*simulation_step) << std::endl;
         }

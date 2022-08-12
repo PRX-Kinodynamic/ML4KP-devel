@@ -4,7 +4,7 @@ random_seed: 21081996
 simulation_step: 0.01
 
 # environment: "environments/dynamic.yaml"
-environment: "environments/test_dynamic_box/box_0.yaml"
+environment: "environments/test_dynamic_box/box_1.yaml"
 plant: !file "plants/treaded_vehicle.yaml"
 
 blossom: 5
@@ -14,6 +14,9 @@ prescience: false
 planning_time: 2.0
 horizon: 5.0
 max_replanning_cycles: 30
+
+use_waypoint_predictor: true
+waypoint_predictor: !file "networks/treaded_waypoint.yaml"
 
 goal_radius: 1.0
 

@@ -9,7 +9,7 @@ std::vector<double> extract_state(const std::vector<double>& state, const std::v
     std::vector<double> extracted_state;
     for (int i = 0; i < indices.size(); i++)
     {
-        prx_assert(indices[i] < state.size(),"Index out of bounds!");
+        prx_assert(indices[i] < state.size(),"Index " + std::to_string(indices[i]) + " out of bounds!");
         extracted_state.push_back(state[indices[i]]);
     }
     return extracted_state;

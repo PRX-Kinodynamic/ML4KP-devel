@@ -1,0 +1,4 @@
+predictor_path: "networks/treaded_waypoint.pt"
+
+state_indices: [0,1,2,3,4]
+goal_indices: [0,1,2,3,4]

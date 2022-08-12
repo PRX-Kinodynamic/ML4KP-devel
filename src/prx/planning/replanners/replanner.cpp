@@ -7,6 +7,11 @@ namespace prx
         {
             planner_name = name;
             reset();
+
+            waypoint_function = [&](const space_point_t& s, const std::vector<double>& o_infos)
+            {
+                return std::vector<double>();
+            };
         }
 
         replanner_t::~replanner_t()
@@ -39,6 +44,8 @@ namespace prx
 
             state_space = rrt_spec->state_space;
             control_space = rrt_spec->control_space;
+
+            global_goal_state = state_space -> clone_point(rrt_query->goal_state);
         }
 
         void replanner_t::resolve_query()
@@ -52,6 +59,9 @@ namespace prx
             space_point_t next_execution_state = state_space -> make_point();
             double multiplier = 1.0/simulation_step;
             double safety_time;
+
+            std::vector<double> obstacle_infos;
+
             do
             {
                 safety_time = simulation_step;
@@ -59,6 +69,22 @@ namespace prx
                 current_cycle += 1;
                 std::cout << "Cycle: " << current_cycle << " t: " << rrt_query->start_time << std::endl;
                 rrt_spec -> horizon = rrt_query -> start_time + horizon;
+
+                obstacle_infos.clear();
+
+                for (int i = 0; i < 5; i++)
+                {
+                    auto res = sim -> get_obstacle_pose("box_"+std::to_string(i),rrt_query->start_time);
+                    obstacle_infos.push_back(res.at(0));
+                    obstacle_infos.push_back(res.at(1));
+                    obstacle_infos.push_back(res.at(3));
+                    obstacle_infos.push_back(res.at(4));
+                }
+
+                auto waypt = waypoint_function(rrt_query->start_state,obstacle_infos);
+                state_space -> copy_point_from_vector(rrt_query->goal_state,waypt);
+                rrt_query->goal_region_radius = 0.1;
+                std::cout << "Planning for waypoint: " << state_space -> print_point(rrt_query->goal_state) << std::endl;
 
                 // Perform the planning cycle.
                 perform_single_planning_cycle();
@@ -127,7 +153,8 @@ namespace prx
                     continue_planning &= rrt_spec -> valid_state(step_state);
                 }
 
-                continue_planning &= !rrt_query -> goal_check(next_execution_state);
+                // continue_planning &= !rrt_query -> goal_check(next_execution_state);
+                continue_planning &= space_t::euclidean_2d(next_execution_state, global_goal_state) >= 0.5;
 
                 // Update the planning info for the next planning cycle.
                 sim -> update_all_obstacle_poses(rrt_query -> start_time);

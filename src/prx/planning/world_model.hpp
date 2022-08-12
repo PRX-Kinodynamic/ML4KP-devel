@@ -119,6 +119,13 @@ namespace prx
 			return obstacle -> get_object_pose();
 		}
 
+		inline std::vector<double> get_obstacle_pose(const std::string obstacle_name, double time)
+		{
+			prx_assert(obstacles.find(obstacle_name) != obstacles.end(), "Obstacle " << obstacle_name << " not found in world model");
+			auto obstacle = obstacles[obstacle_name];
+			return obstacle -> position_function(time);
+		}
+
 		inline std::string get_world_infos(double time)
 		{
 			std::stringstream out(std::stringstream::out);

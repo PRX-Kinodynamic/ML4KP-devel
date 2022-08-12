@@ -9,6 +9,7 @@
 
 namespace prx
 {
+    typedef std::function<std::vector<double> (const space_point_t&, const std::vector<double>&)> waypoint_function_t;
     class replanner_t
     {
     public:
@@ -43,6 +44,8 @@ namespace prx
         std::string planner_name;
         trajectory_t full_solution_trajectory;
 
+        waypoint_function_t waypoint_function;
+
         std::vector<trajectory_t> tree_visualization;
     protected:
         dirt_replan_t* planner;
@@ -51,6 +54,7 @@ namespace prx
         std::shared_ptr<world_model_t> sim;
         space_t* state_space;
         space_t* control_space;
+        space_point_t global_goal_state;
 
 
     private:
