@@ -68,12 +68,12 @@ BOOST_AUTO_TEST_CASE(test_tree_remove_vertices)
 {
   auto start = std::chrono::steady_clock::now();
   prx::tree_t tree{};
-  tree.allocate_memory<prx::tree_node_t, prx::tree_edge_t>(600'000);
+  tree.allocate_memory<prx::tree_node_t, prx::tree_edge_t>(60'000);
 
   prx::node_index_t node_index = tree.add_vertex<prx::tree_node_t, prx::tree_edge_t>();
   const std::shared_ptr<prx::tree_node_t> new_tree_node = tree.get_vertex_as<prx::tree_node_t>(node_index);
 
-  for (int i = 1; i < 500'000; ++i)
+  for (int i = 1; i < 50'000; ++i)
   {
     // Adding 499 nodes to the tree randomly
     node_index = tree.add_vertex<prx::tree_node_t, prx::tree_edge_t>();
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(test_tree_remove_vertices)
 
     const prx::edge_index_t edge_index = tree.add_edge(node_index - 1, node_index);
   }
-  for (int i = 0; i < 100'000; ++i)
+  for (int i = 0; i < 10'000; ++i)
   {
     tree.remove_vertex(node_index);
     node_index--;
@@ -89,9 +89,9 @@ BOOST_AUTO_TEST_CASE(test_tree_remove_vertices)
   auto end = std::chrono::steady_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
   std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
-  const uint64_t expected_vertices{ 400'000 };
-  const uint64_t expected_edges{ 399'999 };
-  const uint64_t expected_capacity{ 600'000 };
+  const uint64_t expected_vertices{ 40'000 };
+  const uint64_t expected_edges{ 39'999 };
+  const uint64_t expected_capacity{ 60'000 };
   BOOST_CHECK_MESSAGE(tree.num_vertices() == expected_vertices,
                       "Wrong number of vertices. Expected: " << expected_vertices << ", got " << tree.num_vertices());
   BOOST_CHECK_MESSAGE(tree.num_edges() == expected_edges,
@@ -103,12 +103,12 @@ BOOST_AUTO_TEST_CASE(test_tree_remove_marked_vertices)
 {
   auto start = std::chrono::steady_clock::now();
   prx::tree_t tree{};
-  tree.allocate_memory<prx::tree_node_t, prx::tree_edge_t>(600'000);
+  tree.allocate_memory<prx::tree_node_t, prx::tree_edge_t>(60'000);
 
   prx::node_index_t node_index = tree.add_vertex<prx::tree_node_t, prx::tree_edge_t>();
   const std::shared_ptr<prx::tree_node_t> new_tree_node = tree.get_vertex_as<prx::tree_node_t>(node_index);
 
-  for (int i = 1; i < 500'000; ++i)
+  for (int i = 1; i < 50'000; ++i)
   {
     // Adding 499 nodes to the tree randomly
     node_index = tree.add_vertex<prx::tree_node_t, prx::tree_edge_t>();
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(test_tree_remove_marked_vertices)
 
     const prx::edge_index_t edge_index = tree.add_edge(node_index - 1, node_index);
   }
-  for (int i = 0; i < 100'000; ++i)
+  for (int i = 0; i < 10'000; ++i)
   {
     tree.mark_vertex_for_removal(node_index);
     node_index--;
@@ -126,9 +126,9 @@ BOOST_AUTO_TEST_CASE(test_tree_remove_marked_vertices)
   auto end = std::chrono::steady_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
   std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
-  const uint64_t expected_vertices{ 400'000 };
-  const uint64_t expected_edges{ 399'999 };
-  const uint64_t expected_capacity{ 600'000 };
+  const uint64_t expected_vertices{ 40'000 };
+  const uint64_t expected_edges{ 39'999 };
+  const uint64_t expected_capacity{ 60'000 };
   BOOST_CHECK_MESSAGE(tree.num_vertices() == expected_vertices,
                       "Wrong number of vertices. Expected: " << expected_vertices << ", got " << tree.num_vertices());
   BOOST_CHECK_MESSAGE(tree.num_edges() == expected_edges,
