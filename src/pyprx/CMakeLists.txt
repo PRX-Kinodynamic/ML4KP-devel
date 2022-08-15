@@ -51,3 +51,4 @@ if(BUILD_FOR_BULLET)
     target_link_libraries(py${PROJECT_NAME} ${PROJECT_NAME}_bullet_sim)
 
 endif()
+
