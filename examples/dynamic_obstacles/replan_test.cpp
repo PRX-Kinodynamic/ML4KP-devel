@@ -188,6 +188,21 @@ int main(int argc, char* argv[])
         }
         fout.close();
 
+        if (use_waypoints)
+        {
+            fname = out_path + params["output_dir"].as<std::string>() + "/" +
+                "waypts_" + std::to_string(j) + ".txt";
+            fout.open(fname);
+            for (auto waypt : replanner.predicted_waypoints)
+            {
+                for (auto w : waypt)
+                {
+                    fout << w << ",";
+                }
+                fout << std::endl;
+            }
+            fout.close();
+        }
         // vis_group -> add_vis_infos(info_geometry_t::LINE, replanner.tree_visualization, body_name, ss);
         // vis_group -> output_html(params["output_dir"].as<std::string>() + "/"+"output_"+std::to_string(j)+".html");
 

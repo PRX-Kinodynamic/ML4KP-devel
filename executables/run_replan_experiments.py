@@ -28,12 +28,12 @@ planner_params["num_trials"] = 10
 planning_time = 2.0
 horizon = 5.0
 
-for i in range(20):
+for i in range(10):
     planner_params["planning_time"] = planning_time
     planner_params["horizon"] = horizon
 
     planner_params["environment"] = "environments/test_dynamic_box/box_"+str(i)+".yaml"
-    planner_params["output_dir"] = "dynamic/evaluation/"+str(i)
+    planner_params["output_dir"] = "dynamic/evaluation/greedy/"+str(i)
 
     with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml', 'w') as f:
         yaml.safe_dump(planner_params, f, sort_keys=False)

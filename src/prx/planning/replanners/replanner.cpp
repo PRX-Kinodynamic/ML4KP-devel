@@ -82,6 +82,7 @@ namespace prx
                 }
 
                 auto waypt = waypoint_function(rrt_query->start_state,obstacle_infos);
+                predicted_waypoints.push_back(waypt);
                 state_space -> copy_point_from_vector(rrt_query->goal_state,waypt);
                 rrt_query->goal_region_radius = 0.1;
                 std::cout << "Planning for waypoint: " << state_space -> print_point(rrt_query->goal_state) << std::endl;

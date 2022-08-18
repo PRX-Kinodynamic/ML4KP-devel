@@ -47,6 +47,7 @@ namespace prx
         waypoint_function_t waypoint_function;
 
         std::vector<trajectory_t> tree_visualization;
+        std::vector<std::vector<double>> predicted_waypoints;
     protected:
         dirt_replan_t* planner;
         dirt_replan_specification_t* rrt_spec;

@@ -36,12 +36,12 @@ robot_dims = [0.508,0.430]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 goal = [9.0,0.0]
 goal_radius = 0.1
-data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience_test/"
+data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/evaluation/replan/1/"
 simulation_step = 0.01
 step = int(0.1/simulation_step)
-num_trajs = 1
+num_trajs = 10
 
-environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/dynamic_box.yaml"
+environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/test_dynamic_box/box_1.yaml"
 
 with open(environment_file, 'r') as stream:
     try:
