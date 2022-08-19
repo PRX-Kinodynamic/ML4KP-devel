@@ -143,7 +143,8 @@ namespace prx
                 if (rrt_query -> solution_traj.size() <= planning_time*multiplier)
                 {
                     state_space->copy_point(final_state, rrt_query->solution_traj.back());
-                    if(!rrt_query->goal_check(final_state))
+                    // if(!rrt_query->goal_check(final_state))
+                    if (space_t::euclidean_2d(next_execution_state, global_goal_state) >= 0.5)
                     {
                         // prx_throw("This has not been dealt with.");
                         std::cout << "Solution too short. Falling back. " << rrt_query -> solution_traj.size() << std::endl;
