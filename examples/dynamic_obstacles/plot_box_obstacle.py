@@ -36,12 +36,12 @@ robot_dims = [0.508,0.430]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 goal = [9.0,0.0]
 goal_radius = 0.1
-data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/evaluation/replan/1/"
+data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/evaluation/greedy2/10/"
 simulation_step = 0.01
 step = int(0.1/simulation_step)
 num_trajs = 10
 
-environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/test_dynamic_box/box_1.yaml"
+environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/test_dynamic_box/box_10.yaml"
 
 with open(environment_file, 'r') as stream:
     try:
@@ -59,6 +59,9 @@ plt.figure(figsize=(8,8))
 for idx in tqdm(range(0,num_trajs)):
     traj = np.loadtxt(data_dir+"trajectory_"+str(idx)+".txt",delimiter=",")
     obs_infos = pd.read_csv(data_dir+"infos_"+str(idx)+".txt",delimiter=",")
+    waypts = []
+    if os.path.isfile(data_dir+"waypts_"+str(idx)+".txt"):
+        waypts = np.genfromtxt(data_dir+"waypts_"+str(idx)+".txt",delimiter=",",usecols=[0,1,2,3,4])
     continue_plotting = True
     first_collision_state = -1
 
@@ -70,6 +73,8 @@ for idx in tqdm(range(0,num_trajs)):
         plt.ylim(-11,11)
         plt.gca().set_xticks([])
         plt.gca().set_yticks([])
+        if len(waypts) > 0: 
+            plt.scatter(waypts[:,0],waypts[:,1],color='green',marker='.')
 
         obstacles_yml = env_params["environment"]["geometries"]
         for obstacle in obstacles_yml:

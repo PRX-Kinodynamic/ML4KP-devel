@@ -59,6 +59,7 @@ namespace prx
             space_point_t next_execution_state = state_space -> make_point();
             double multiplier = 1.0/simulation_step;
             double safety_time;
+            predicted_waypoints.clear();
 
             std::vector<double> obstacle_infos;
 
@@ -75,18 +76,45 @@ namespace prx
                 for (int i = 0; i < 5; i++)
                 {
                     auto res = sim -> get_obstacle_pose("box_"+std::to_string(i),rrt_query->start_time);
+                    std::cout << res.at(0) << " " << res.at(1) << " " << res.at(3) << " " << res.at(4) << std::endl;
                     obstacle_infos.push_back(res.at(0));
                     obstacle_infos.push_back(res.at(1));
                     obstacle_infos.push_back(res.at(3));
                     obstacle_infos.push_back(res.at(4));
                 }
 
-                auto waypt = waypoint_function(rrt_query->start_state,obstacle_infos);
+                std::vector<double> sorted_obstacle_idxes, sorted_obstacle_infos, obstacle_distances;
+                for (int i = 0; i < 5; i++)
+                {
+                    sorted_obstacle_idxes.push_back(i);
+                    obstacle_distances.push_back(
+                        pow(obstacle_infos.at(i*4) - rrt_query->start_state->at(0),2) +
+                        pow(obstacle_infos.at(i*4+1) - rrt_query->start_state->at(1),2)
+                    );
+                }
+
+                std::sort(sorted_obstacle_idxes.begin(),sorted_obstacle_idxes.end(),
+                    [&](int a, int b)
+                    {
+                        return obstacle_distances.at(a) < obstacle_distances.at(b);
+                    }
+                );
+
+                for (int i = 0; i < 5; i++)
+                {
+                    sorted_obstacle_infos.push_back(obstacle_infos.at(sorted_obstacle_idxes.at(i)*4));
+                    sorted_obstacle_infos.push_back(obstacle_infos.at(sorted_obstacle_idxes.at(i)*4+1));
+                    sorted_obstacle_infos.push_back(obstacle_infos.at(sorted_obstacle_idxes.at(i)*4+2));
+                    sorted_obstacle_infos.push_back(obstacle_infos.at(sorted_obstacle_idxes.at(i)*4+3));
+                }
+
+
+                // auto waypt = waypoint_function(rrt_query->start_state,obstacle_infos);
+                auto waypt = waypoint_function(rrt_query->start_state,sorted_obstacle_infos);
                 predicted_waypoints.push_back(waypt);
                 state_space -> copy_point_from_vector(rrt_query->goal_state,waypt);
                 rrt_query->goal_region_radius = 0.1;
                 std::cout << "Planning for waypoint: " << state_space -> print_point(rrt_query->goal_state) << std::endl;
-
                 // Perform the planning cycle.
                 perform_single_planning_cycle();
 

@@ -10,7 +10,7 @@ goal = np.array([9.0,0.0,0.0,0.0,0.0])
 goal_radius = 0.5
 num_trials = 10
 
-exps_dir = os.environ["DIRTMP_PATH"] + "out/dynamic/evaluation/replan/"
+exps_dir = os.environ["DIRTMP_PATH"] + "out/dynamic/evaluation/greedy2/"
 dirs = sorted(os.listdir(exps_dir))
 avg_dists = []
 success_rates = []

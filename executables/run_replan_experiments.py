@@ -23,6 +23,7 @@ with open(original_yaml_path, 'r') as stream:
         print(exc)
 
 del planner_params["plant"]
+del planner_params["waypoint_predictor"]
 planner_params["num_trials"] = 10
 
 planning_time = 2.0
@@ -38,6 +39,7 @@ for i in range(10):
     with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml', 'w') as f:
         yaml.safe_dump(planner_params, f, sort_keys=False)
         f.write("plant: !file \"plants/treaded_vehicle.yaml\"\n")
+        f.write("waypoint_predictor: !file \"networks/treaded_waypoint.yaml\"\n")
     
     cmd = [os.environ["DIRTMP_PATH"]+"bin/examples/dynamic_obstacles/replan_test","examples/test.yaml"]
     popen = subprocess.Popen(cmd)
