@@ -28,7 +28,7 @@ namespace prx
         geometries["body2"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
 		geometries["body2"]->initialize_geometry({.5,.25, 1.0});
 		geometries["body2"]->generate_collision_geometry();
-		geometries["body2"]->set_visualization_color("0xff00ff");
+		geometries["body2"]->set_visualization_color("0xffff00");
 		configurations["body2"]= std::make_shared<transform_t>();
 		configurations["body2"]->setIdentity();
 
@@ -49,14 +49,29 @@ namespace prx
 
     void trailer_car_t::update_configuration()
     {
-        prx_assert(false,"Not implemented!");
+        // prx_assert(false,"Not implemented!");
         // configurations["body1"]->setIdentity();
         // configurations["body1"]->setOrigin(tf::Vector3(x,y,0));
         // configurations["body1"]->setRotation(tf::createQuaternionFromRPY(0,0,theta0));
-
+        
+        
         // configurations["body2"]->setIdentity();
         // configurations["body2"]->setOrigin(tf::Vector3(x+L*cos(theta0),y+L*sin(theta0),0));
         // configurations["body2"]->setRotation(tf::createQuaternionFromRPY(0,0,theta1));
+        
+      	
+        configurations["body1"]->setIdentity();
+	configurations["body1"]->linear() = (quaternion_t(cos(theta0/2),0,0,sin(theta0/2)).toRotationMatrix());
+	configurations["body1"]->translation() = (vector_t(x + 0.5 * L * cos(theta0), y + 0.5 * L * sin(theta0),0));
+	
+	
+        configurations["body2"]->setIdentity();
+	configurations["body2"]->linear() = (quaternion_t(cos(theta1/2),0,0,sin(theta1/2)).toRotationMatrix());
+	configurations["body2"]->translation() = (vector_t(x - d1 * cos(theta1), y + d1 * sin(theta1),0));
+	
+        
+
+
     }
 
     void trailer_car_t::compute_derivative()
