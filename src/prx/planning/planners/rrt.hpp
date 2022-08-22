@@ -77,7 +77,7 @@ namespace prx
 			};
 			valid_check = [this,cg](trajectory_t& traj)
 			{
-				return default_valid_trajectory(traj, state_space,cg);
+				return default_valid_trajectory(traj, valid_state);
 			};
 			valid_stop_check = [this, sg, cg](space_point_t start_state,
 									plan_t* stopping_plan,

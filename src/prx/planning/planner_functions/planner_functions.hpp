@@ -55,8 +55,8 @@ namespace prx
 
 	void default_sample_plan(plan_t&, space_t*, int min_steps, int max_steps);
 
-	bool default_valid_trajectory(trajectory_t&,space_t*,std::shared_ptr<collision_group_t>);
-
+	bool default_valid_trajectory(trajectory_t& traj, valid_state_t vs);
+	
 	bool default_valid_stop(space_point_t start_state,
 					plan_t* stopping_plan,
 					trajectory_t* stopping_traj,
