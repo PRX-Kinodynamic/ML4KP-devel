@@ -113,7 +113,12 @@ namespace prx
                 auto waypt = waypoint_function(rrt_query->start_state,sorted_obstacle_infos);
                 predicted_waypoints.push_back(waypt);
                 state_space -> copy_point_from_vector(rrt_query->goal_state,waypt);
+                state_space->enforce_bounds(rrt_query->goal_state);
                 rrt_query->goal_region_radius = 0.1;
+                if (rrt_spec->distance_function(rrt_query->goal_state,global_goal_state) < 0.5)
+                {
+                    state_space -> copy_point(rrt_query->goal_state, global_goal_state);
+                }
                 std::cout << "Planning for waypoint: " << state_space -> print_point(rrt_query->goal_state) << std::endl;
                 // Perform the planning cycle.
                 perform_single_planning_cycle();
@@ -144,7 +149,7 @@ namespace prx
                 {
                     state_space->copy_point(final_state, rrt_query->solution_traj.back());
                     // if(!rrt_query->goal_check(final_state))
-                    if (space_t::euclidean_2d(next_execution_state, global_goal_state) >= 0.5)
+                    if (space_t::euclidean_2d(final_state, global_goal_state) >= 0.5)
                     {
                         // prx_throw("This has not been dealt with.");
                         std::cout << "Solution too short. Falling back. " << rrt_query -> solution_traj.size() << std::endl;

@@ -29,7 +29,7 @@ planner_params["num_trials"] = 10
 planning_time = 2.0
 horizon = 5.0
 
-for i in range(10):
+for i in range(20):
     planner_params["planning_time"] = planning_time
     planner_params["horizon"] = horizon
 
