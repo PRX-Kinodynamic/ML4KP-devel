@@ -188,6 +188,12 @@ int main(int argc, char* argv[])
         }
         fout.close();
 
+        fname = out_path + params["output_dir"].as<std::string>() + "/" +
+                    "fallbacks_" + std::to_string(j) + ".txt";
+        fout.open(fname);
+        fout << replanner.num_fallbacks << std::endl;
+        fout.close();
+
         if (use_waypoints)
         {
             fname = out_path + params["output_dir"].as<std::string>() + "/" +

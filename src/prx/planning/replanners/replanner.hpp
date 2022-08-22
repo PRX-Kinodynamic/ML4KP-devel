@@ -24,6 +24,7 @@ namespace prx
         {
             continue_planning = true;
             current_cycle = -1;
+            num_fallbacks = 0;
             tree_visualization.clear();
         }
 
@@ -48,6 +49,8 @@ namespace prx
 
         std::vector<trajectory_t> tree_visualization;
         std::vector<std::vector<double>> predicted_waypoints;
+
+        unsigned num_fallbacks;
     protected:
         dirt_replan_t* planner;
         dirt_replan_specification_t* rrt_spec;

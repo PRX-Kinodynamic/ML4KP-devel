@@ -138,6 +138,7 @@ namespace prx
                     // std::cout << state_space -> print_point(rrt_query -> start_state,4) << std::endl;
                     // Apply the fallback for the next cycle.
                     std::cout << "No solution found, falling back." << std::endl;
+                    num_fallbacks += 1;
                     rrt_spec -> stopping_control(rrt_query->start_state, safety_time);
                     rrt_query->solution_plan.append_onto_back(safety_time);
                     control_space -> copy_to_point(rrt_query -> solution_plan.back().control);
@@ -147,6 +148,7 @@ namespace prx
                 }
                 if (rrt_query -> solution_traj.size() <= planning_time*multiplier)
                 {
+                    num_fallbacks += 1;
                     state_space->copy_point(final_state, rrt_query->solution_traj.back());
                     // if(!rrt_query->goal_check(final_state))
                     if (space_t::euclidean_2d(final_state, global_goal_state) >= 0.5)
