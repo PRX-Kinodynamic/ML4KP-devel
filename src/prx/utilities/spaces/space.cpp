@@ -554,10 +554,10 @@ namespace prx
 		std::stringstream out(std::stringstream::out);
 		if( dimension > 0 )
 		{
-			out << std::fixed << std::setprecision(prec) << '<';
+			out << std::fixed << std::setprecision(prec);
 			for( unsigned i = 0; i < dimension - 1; ++i )
-				out << *addresses[i] << ',';
-			out << *addresses[dimension - 1] << '>';
+				out << *addresses[i] << ' ';
+			out << *addresses[dimension - 1] ;
 		}
 
 		return out.str();

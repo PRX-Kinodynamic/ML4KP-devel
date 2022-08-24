@@ -81,6 +81,7 @@ namespace prx
 
 		std::shared_ptr<gazebo::physics::WorldState> world_state;
 
+		ignition::fuel_tools::ServerConfig config;
 
 	};
 }

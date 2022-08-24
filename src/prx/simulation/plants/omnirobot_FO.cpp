@@ -17,7 +17,7 @@ namespace prx
 		w1=w2=w3=w4=0;
 		control_memory = {&w1,&w2,&w3,&w4};
 		input_control_space = new space_t("EEEE",control_memory,"omni_ctrl");
-		input_control_space->set_bounds({-.2, -.2, -.2, -.2},{.2, .2, .2, .2});
+		input_control_space->set_bounds({-200, -200, -200, -200},{200, 200, 200, 200});
 
 		geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
 		geometries["body"]->initialize_geometry({.23,.23,.1});

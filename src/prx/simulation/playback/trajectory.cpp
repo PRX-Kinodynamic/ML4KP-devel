@@ -222,15 +222,16 @@ namespace prx
 
 	}
 
-    void trajectory_t::to_file(const std::string file_name) const
+    void trajectory_t::to_file(const std::string file_name, const std::ios_base::openmode _mode ) const
     {
     	std::ofstream ofs_map;
-		ofs_map.open(file_name.c_str(), std::ofstream::trunc);
+		ofs_map.open(file_name.c_str(), _mode);
 
 		for (unsigned i = 0; i < num_states; ++i)
 		{
-			ofs_map << states[i] << std::endl;
+			ofs_map << states[i] << "\n";
 		}
+		ofs_map << "\n";
 
 		ofs_map.close();
     }

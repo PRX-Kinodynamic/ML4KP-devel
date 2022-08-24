@@ -99,7 +99,7 @@ namespace prx
 
         std::string print(unsigned precision=3) const;
 
-        void to_file(const std::string) const;
+        void to_file(const std::string, const std::ios_base::openmode _mode = std::ofstream::trunc) const;
     	void from_file(const std::string file_name);
 
         friend std::ostream& operator<< (std::ostream& os, const trajectory_t* obj) 

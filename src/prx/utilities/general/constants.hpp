@@ -7,6 +7,7 @@
 #include <vector>
 #include <iomanip>
 #include <algorithm>
+#include <fstream>
 
 namespace prx
 {
@@ -178,4 +179,23 @@ namespace prx
 	{
 		return (a > 0) - (a < 0);
 	}
+
+	template <typename T>  
+	void vector_to_file(const std::string file_name, const std::vector<std::vector<T>> _vec, const std::ios_base::openmode _mode )
+    {
+    	std::ofstream ofs_map;
+		ofs_map.open(file_name.c_str(), _mode);
+
+		for (auto _vec_in : _vec)
+		{	
+			for( auto e : _vec_in)
+			{
+				ofs_map << std::to_string(e) << " ";
+			}
+			ofs_map << "\n";
+		}
+		ofs_map << "\n";
+
+		ofs_map.close();
+    }
 }

@@ -13,15 +13,16 @@ state_space_upper_bound: [30, 30, 3.14159]
 
 vis_body: "body"
 
-mu_1: &MU_1 1.2166
-mu_2: &MU_2 1.1577
-mu_3: &MU_3 0.1313
-mu_4: &MU_4 1.0015
+# 1.84387 2.02953 2.00366 1.90015
+mu_1: &MU_1 2.01501
+mu_2: &MU_2 0
+mu_3: &MU_3 2.0447
+mu_4: &MU_4 0
 
-parameters: [*MU_1, *MU_2, *MU_3, *MU_4]
-
-min_ctrl: &MIN_CTRL -0.2
-max_ctrl: &MAX_CTRL 0.2
+# parameters: [*MU_1, *MU_2, *MU_3, *MU_4]
+parameters: [ 2.00808, 2.01095, 2.00763, 2.01028]
+min_ctrl: &MIN_CTRL -200
+max_ctrl: &MAX_CTRL 200
 
 control_space_lower_bound: [*MIN_CTRL, *MIN_CTRL, *MIN_CTRL, *MIN_CTRL]
 control_space_upper_bound: [*MAX_CTRL, *MAX_CTRL, *MAX_CTRL, *MAX_CTRL]
@@ -29,7 +30,7 @@ control_space_upper_bound: [*MAX_CTRL, *MAX_CTRL, *MAX_CTRL, *MAX_CTRL]
 constant_state: [5, 5, 0]
 # constant_state: [0, 0, 0]
 
-# constant_ctrl: [*MAX_CTRL,0,*MIN_CTRL,0] # +X 0
+constant_ctrl: [*MAX_CTRL,0,*MIN_CTRL,0] # +X 0
 # constant_ctrl: [*MIN_CTRL,0,*MAX_CTRL,0] # -X 1
 # constant_ctrl: [0,*MAX_CTRL,0,*MIN_CTRL] # +Y 2
 # constant_ctrl: [0,*MIN_CTRL,0,*MAX_CTRL] # -Y 3
@@ -40,7 +41,7 @@ constant_state: [5, 5, 0]
 # constant_ctrl: [*MAX_CTRL,*MIN_CTRL,*MIN_CTRL,*MAX_CTRL] # Diag: +X-Y 8
 # constant_ctrl: [*MIN_CTRL,*MAX_CTRL,*MAX_CTRL,*MIN_CTRL] # Diag: -X+Y 9
 # constant_ctrl: [*MIN_CTRL,*MAX_CTRL,*MAX_CTRL,*MIN_CTRL] # Other...
-ctrl_duration: 1
+ctrl_duration: 10
 
 error_scale: [1,1,1]
 

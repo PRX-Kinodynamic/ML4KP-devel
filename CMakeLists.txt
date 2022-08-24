@@ -13,6 +13,7 @@ set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_BULLET OFF CACHE BOOL "Set ON/TRUE for building for PyBullet")
 set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
+set(BUILD_FOR_GAZEBO ON  CACHE BOOL "SET ON/TRUE for building for Gazebo")
 
 set(BUILD_FOR_GTDYNAMICS ON CACHE BOOL "Set ON/TRUE for building tests")
 
