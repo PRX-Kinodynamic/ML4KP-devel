@@ -134,12 +134,14 @@ int main(int argc, char* argv[])
     std::vector<double> current_state_vec;
     waypoint_predictor_t waypoint_predictor(params);
 
+    std::vector<double> goal_vec = params["/plant/goal_state"].as<std::vector<double>>();
+
     replanner.waypoint_function = [&](const space_point_t& s, const std::vector<double>& o_infos)
     {
         current_state_vec.clear();
         ss -> copy_vector_from_point(current_state_vec, s);
         if (use_waypoints)
-            return waypoint_predictor.get_waypoint(current_state_vec, o_infos);
+            return waypoint_predictor.get_waypoint(current_state_vec, o_infos, goal_vec);
         else
             return current_state_vec;
     };

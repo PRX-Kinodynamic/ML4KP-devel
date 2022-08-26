@@ -77,6 +77,13 @@ class waypoint_predictor_t
                 input[0][i] = normalized_state[i];
             }
             inputs.push_back(input);
+
+            at::Tensor goal_input = torch::zeros({1,goal.size()},device);
+            for (int i = 0; i < goal.size(); i++)
+            {
+                goal_input[0][i] = goal[i];
+            }
+            inputs.push_back(goal_input);
             
             torch::Tensor output_tensor = predictor.forward(inputs).toTensor();
             std::vector<double> waypoint;
