@@ -198,5 +198,10 @@ int main(int argc, char* argv[])
             fout << sim -> get_world_infos(i*simulation_step) << std::endl;
         }
         fout.close();
+
+        fout.open(out_path + params["output_dir"].as<std::string>() + "problem.txt");
+        fout << context.first -> get_state_space() -> print_point(dirt_query.start_state,4) << std::endl;
+        fout << context.first -> get_state_space() -> print_point(dirt_query.goal_state,4) << std::endl;
+        fout.close();
     }
 }
