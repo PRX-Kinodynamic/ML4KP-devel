@@ -119,10 +119,17 @@ int main(int argc, char* argv[])
     auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
     context.first -> get_state_space() -> set_bounds(lower_bounds, upper_bounds);
 
-    if (!params.exists("start_state") || !params.exists("goal_state"))
+    if (params["sample_start_goal"].as<bool>())
     {
-        context.first -> get_state_space() -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
-        context.first -> get_state_space() -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
+        do
+        {
+            context.first -> get_state_space() -> sample(dirt_query.start_state);
+            context.first -> get_state_space() -> sample(dirt_query.goal_state);
+            dirt_query.start_state -> at(0) = uniform_random(-9.5, -8.5);
+            dirt_query.start_state -> at(1) = uniform_random(-9.5,  9.5);
+            dirt_query.goal_state  -> at(0) = uniform_random( 8.5,  9.5);
+            dirt_query.goal_state  -> at(1) = uniform_random(-9.5,  9.5);
+        } while (!dirt_spec.time_valid_state(dirt_query.start_state, 0.0) || !dirt_spec.time_valid_state(dirt_query.goal_state, 0.0));
     }
     else
     {
@@ -133,7 +140,7 @@ int main(int argc, char* argv[])
 
     dirt_query.goal_check = [&](const space_point_t& s)
     {
-        return space_t::euclidean_2d(s, dirt_query.goal_state, 0, 5) < dirt_query.goal_region_radius;
+        return space_t::euclidean_2d(s, dirt_query.goal_state, 0, 3) < dirt_query.goal_region_radius;
     };
 
     condition_check_t checker(params["checker_type"].as<>(), 0.1 * params["checker_value"].as<double>()); 

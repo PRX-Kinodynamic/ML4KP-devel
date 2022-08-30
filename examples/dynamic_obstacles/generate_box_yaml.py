@@ -115,6 +115,7 @@ yaml.SafeLoader.add_constructor("!file",fname_constructor)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_files", type=int, default=10)
+    parser.add_argument("--num_trials", type=int, default=10)
     parser.add_argument("--run_planner", action="store_true")
     parser.add_argument("--test", action="store_true")
         
@@ -137,20 +138,23 @@ if __name__ == "__main__":
         planner_params["num_trials"] = 1
 
         for i in range(0,args.num_files):
-            if not args.test:
-                planner_params["environment"] = "environments/train_dynamic_box/box_"+str(i)+".yaml"
-                planner_params["output_dir"] = "dynamic/prescience_data/train_5_vel/" + str(i)
-            else:
-                planner_params["environment"] = "environments/test_dynamic_box/box_"+str(i)+".yaml"
-                planner_params["output_dir"] = "dynamic/prescience_data/test_5_vel/" + str(i)
+            for j in range(0,args.num_trials):
+                planner_params["sample_start_goal"] = True
+                planner_params["random_seed"] = j
+                if not args.test:
+                    planner_params["environment"] = "environments/train_dynamic_box/box_"+str(i)+".yaml"
+                    planner_params["output_dir"] = "dynamic/prescience_data/train_5_vel/" + str(i) + "_" + str(j)
+                else:
+                    planner_params["environment"] = "environments/test_dynamic_box/box_"+str(i)+".yaml"
+                    planner_params["output_dir"] = "dynamic/prescience_data/test_5_vel/" + str(i) + "_" + str(j)
 
-            with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml', 'w') as f:
-                yaml.safe_dump(planner_params, f, sort_keys=False)
-                f.write("plant: !file \"plants/treaded_vehicle.yaml\"\n")
-            
-            cmd = [os.environ["DIRTMP_PATH"]+"bin/examples/dynamic_obstacles/dynamic_obstacles_test","examples/test.yaml"]
-            popen = subprocess.Popen(cmd)
-            time.sleep(1)
+                with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml', 'w') as f:
+                    yaml.safe_dump(planner_params, f, sort_keys=False)
+                    f.write("plant: !file \"plants/treaded_vehicle.yaml\"\n")
+                
+                cmd = [os.environ["DIRTMP_PATH"]+"bin/examples/dynamic_obstacles/dynamic_obstacles_test","examples/test.yaml"]
+                popen = subprocess.Popen(cmd)
+                time.sleep(1)
     
     print("Done!")
 

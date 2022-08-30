@@ -4,7 +4,7 @@ random_seed: 21081996
 simulation_step: 0.01
 
 # environment: "environments/dynamic.yaml"
-environment: "environments/test_dynamic_box/box_1.yaml"
+environment: "environments/test_dynamic_box/box_10.yaml"
 plant: !file "plants/treaded_vehicle.yaml"
 
 blossom: 5
