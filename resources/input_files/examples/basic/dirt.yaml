@@ -4,11 +4,11 @@ planner: "AORRT"
 #simulation_step: 0.1
 
 #environment: "environments/simple_obstacle.yaml"
-#environment: "environments/kmp_benchmark/unicycle_fo/bugtrap_0.yaml"
-environment: "environments/empty.yaml"
+environment: "environments/kmp_benchmark/unicycle_fo/bugtrap_0.yaml"
+#environment: "environments/empty.yaml"
 
-#plant: !file "plants/two_dim_pt.yaml"
-plant: !file "plants/trailer_car.yaml"
+plant: !file "plants/two_dim_pt.yaml"
+#plant: !file "plants/trailer_car.yaml"
 
 
 # plant: !file "plants/treaded_vehicle.yaml"
@@ -20,7 +20,7 @@ pruning: false
 visualize: true
 
 checker_type: time
-checker_value: 10
+checker_value: 300
 
 #goal_region_radius: 0.5
 goal_region_radius: 0.1
@@ -34,12 +34,12 @@ output_html: "out"
 
 
 #added for kmp_benchmark executable
-simulation_step: 0.01
+simulation_step: 0.1
 random_seed: 0
 obstacles_file: "environments/kmp_benchmark/unicycle_fo/bugtrap_0.yaml"
 
-planner_runs: 1
+planner_runs: 10
 use_pruning: false
-condition_check: "iterations"
-planner_iterations: 1000
+condition_check: "time"
+planner_iterations: 300
 statistics_iterations: 600

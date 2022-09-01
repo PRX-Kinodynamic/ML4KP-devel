@@ -3,22 +3,22 @@ path: "trailer_car"
 
 # Assume simple_obstacle environment
 #start and goal for bugtrap
-#start_state: [3.4,3,3.14,3.14]
-#goal_state:  [5.2,3,1.55,1.55]
+start_state: [3.4,3,3.14,3.14]
+goal_state:  [5.2,3,1.55,1.55]
 
 #straight forward
 #start_state: [1.4,1,0,0]
 #goal_state:  [5.2,1,0,0]
 
 #straight back
-start_state: [5.2,1,0,0]
-goal_state:  [1.4,1,0,0]
+#start_state: [5.2,1,0,0]
+#goal_state:  [1.4,1,0,0]
 
 min_steps: 10
 max_steps: 20
 
-state_space_lower_bound: [0,0,-1.57,-1.57]
-state_space_upper_bound: [6,6,1.57,1.57]
+state_space_lower_bound: [0,0,-3.15,-3.15]
+state_space_upper_bound: [6,6,3.15,3.15]
 
 control_space_lower_bound: [-.1,-1.05]
 control_space_upper_bound: [.5,1.05]

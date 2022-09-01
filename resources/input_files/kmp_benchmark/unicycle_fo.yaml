@@ -21,10 +21,10 @@ obstacles_file: "environments/kmp_benchmark/unicycle_fo/bugtrap_0.yaml"
 # wall 2
 #obstacles_file: "environments/kmp_benchmark/unicycle_fo/wall_2.yaml"
 
-planner_runs: 1
+planner_runs: 10
 use_pruning: false
 condition_check: "time"
-planner_iterations: 30
+planner_iterations: 300
 statistics_iterations: 600
 
 
@@ -52,7 +52,7 @@ visualize: true
 
 checker_type: time
 
-checker_value: 30
+checker_value: 300
 
 
 

@@ -35,9 +35,9 @@ namespace prx
 		{
 			return default_valid_state(s, state_space,cg);
 		};
-		valid_check = [state_space,cg](trajectory_t& traj)
+		valid_check = [this](trajectory_t& traj)
 		{
-			return default_valid_trajectory(traj, default_valid_state);
+			return default_valid_trajectory(traj, valid_state);
 		};
 		valid_stop_check = [sg, cg](	space_point_t start_state,
 							plan_t* stopping_plan,

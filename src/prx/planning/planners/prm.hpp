@@ -48,7 +48,7 @@ namespace prx
 			};
 			valid_check = [this,cg](trajectory_t& traj)
 			{
-				return default_valid_trajectory(traj, state_space,cg);
+				return default_valid_trajectory(traj, valid_state);
 			};
             sample_state = [this](space_point_t& s)
             {

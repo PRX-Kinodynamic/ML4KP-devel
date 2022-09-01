@@ -104,33 +104,33 @@ int main(int argc, char* argv[])
 	
         dirt_spec.h = [&,dirt_spec](space_point_t a, space_point_t b)
         {
-            return space_t::euclidean_2d(a, b, 0, a -> get_dim()) / 0.5;
-            //return dirt_spec.distance_function(a,b) / 0.5;
+            //return space_t::euclidean_2d(a, b, 0, a -> get_dim()) / 0.5;
+            return dirt_spec.distance_function(a,b) / 0.5;
         };
 
         dirt_query.goal_check = [&,dirt_spec](space_point_t s)
         {
-            return space_t::euclidean_2d(s,dirt_query.goal_state) < dirt_query.goal_region_radius;
-            //return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
+            //return space_t::euclidean_2d(s,dirt_query.goal_state) < dirt_query.goal_region_radius;
+            return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
         };
         
-		//condition_check_t checker(params["condition_check"].as<std::string>(),  planner_iterations/stats_iterations);
-		condition_check_t checker(params["condition_check"].as<std::string>(),  planner_iterations);
+		condition_check_t checker(params["condition_check"].as<std::string>(),  planner_iterations/stats_iterations);
+		//condition_check_t checker(params["condition_check"].as<std::string>(),  planner_iterations);
 		std::ofstream fout;
 		
 		
 		
 		
-		dirt.link_and_setup_spec(&dirt_spec);
+		//dirt.link_and_setup_spec(&dirt_spec);
 
-		dirt.preprocess();
+		//dirt.preprocess();
 
-		dirt.link_and_setup_query(&dirt_query);
+		//dirt.link_and_setup_query(&dirt_query);
 		
 		
-		dirt.resolve_query(&checker);
+		//dirt.resolve_query(&checker);
 		
-		/*int stats_runs = params["planner_runs"].as<int>();
+		int stats_runs = params["planner_runs"].as<int>();
 		for (int i = 0; i < stats_runs; i++)
 		{				
 			PRX_DEBUG_PRINT
@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
 			}
 			dirt_query.clear_outputs();
 			dirt.reset();
-		}*/
+		}
 	}
 	catch(const prx_assert_t& e)
 	{
