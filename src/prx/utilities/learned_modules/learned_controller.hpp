@@ -3,7 +3,7 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/learned_modules/learned_modules_utils.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"
-#include "prx/planning/planners/rrt.hpp"
+#include "prx/planning/planners/dirt.hpp"
 
 #include <torch/torch.h>
 #include <torch/script.h>
@@ -16,7 +16,7 @@ class learned_controller_t
         torch::jit::script::Module controller;
     protected:
         bool normalize_input, delta_input, debug_controller;
-        double control_duration;
+        double control_duration, max_duration;
         std::vector<double> state_upper_bounds, state_lower_bounds, control_upper_bounds, control_lower_bounds;
         std::vector<int> state_indices, goal_indices;
     public:
@@ -32,6 +32,7 @@ class learned_controller_t
         normalize_input = params["/learned_controller/normalize_input"].as<bool>();
         delta_input = params["/learned_controller/delta_input"].as<bool>();
         control_duration = params["/learned_controller/control_duration"].as<double>();
+        max_duration = params["/learned_controller/max_duration"].as<double>();
         debug_controller = params["/learned_controller/debug_controller"].as<bool>();
 
         state_lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
@@ -54,6 +55,11 @@ class learned_controller_t
         }
     }
 
+    double get_control_duration()
+    {
+        return control_duration;
+    }
+
     std::vector<double> get_control(const std::vector<double>& state)
     {
         /*
@@ -70,7 +76,8 @@ class learned_controller_t
         {
             normalized_state = extract_state(state,state_indices);
         }
-        at::Tensor input = torch::zeros({1,normalized_state.size()},device);
+        long long input_size = normalized_state.size();
+        at::Tensor input = torch::zeros({1,input_size},device);
         for (int i = 0; i < normalized_state.size(); i++)
         {
             input[0][i] = normalized_state[i];
@@ -126,7 +133,9 @@ class learned_controller_t
         {
             normalized_states[i].insert(normalized_states[i].end(),normalized_goals[i].begin(),normalized_goals[i].end());
         }
-        at::Tensor input = torch::zeros({normalized_states.size(),normalized_states[0].size()},device);
+        long long input_size_0 = normalized_states.size();
+        long long input_size_1 = normalized_states[0].size();
+        at::Tensor input = torch::zeros({input_size_0,input_size_1},device);
         for (int i = 0; i < normalized_states.size(); i++)
         {
             for (int j = 0; j < normalized_states[i].size(); j++)
@@ -185,7 +194,8 @@ class learned_controller_t
             }
             std::cout << std::endl;
         }
-        at::Tensor input = torch::zeros({1,normalized_state.size()},device);
+        long long input_size = normalized_state.size();
+        at::Tensor input = torch::zeros({1,input_size},device);
         for (int i = 0; i < normalized_state.size(); i++)
         {
             input[0][i] = normalized_state[i];
@@ -226,10 +236,15 @@ class learned_controller_t
             if (debug_controller) std::cout << sg -> get_control_space() -> print_point(query.solution_plan.back().control,4) << " " << query.solution_plan.back().duration << std::endl;
             sg -> propagate(current, query.solution_plan, step_traj);
             if (debug_controller) std::cout << sg -> get_state_space() -> print_point(step_traj.back(),4) << std::endl;
-            query.solution_traj += step_traj;
-            sg -> get_state_space() -> copy_point(current,query.solution_traj.back());
+            sg -> get_state_space() -> copy_point(current,step_traj.back());
+            for (unsigned i = 0; i < step_traj.size() - 1; i++)
+            {
+                query.solution_traj.copy_onto_back(step_traj[i]);
+            }
             time_so_far += control_duration;
+            query.solution_cost += control_duration;
         }
+        query.solution_traj.copy_onto_back(current);
         /*
         if (!query.goal_check(current))
         {
@@ -242,6 +257,41 @@ class learned_controller_t
         }
         */
     }
+
+    void fulfill_query(planner_query_t& query, rrt_specification_t& spec)
+    {
+        // @TODO for Aravind: Adapt this for the non-goal-reaching case.
+        query.solution_plan.clear();
+        query.solution_traj.clear();
+        double time_so_far = 0;
+
+        std::vector<double> state_vec, goal_vec;
+        trajectory_t step_traj(spec.state_space);
+        space_point_t current = spec.state_space -> clone_point(query.start_state);
+        spec.state_space -> copy_vector_from_point(goal_vec,query.goal_state);
+
+        while (time_so_far < max_duration && !query.goal_check(current))
+        {
+            state_vec.clear();
+            step_traj.clear();
+            query.solution_plan.clear();
+            query.solution_plan.append_onto_back(control_duration);
+            spec.state_space -> copy_vector_from_point(state_vec,current);
+            spec.control_space -> copy_point_from_vector(query.solution_plan.back().control,get_control(state_vec,goal_vec));
+            if (debug_controller) std::cout << spec.control_space -> print_point(query.solution_plan.back().control,4) << " " << query.solution_plan.back().duration << std::endl;
+            spec.propagate(current, query.solution_plan, step_traj);
+            if (debug_controller) std::cout << spec.state_space -> print_point(step_traj.back(),4) << std::endl;
+            spec.state_space -> copy_point(current,step_traj.back());
+            for (unsigned i = 0; i < step_traj.size() - 1; i++)
+            {
+                query.solution_traj.copy_onto_back(step_traj[i]);
+            }
+            time_so_far += control_duration;
+            query.solution_cost += control_duration;
+        }
+        query.solution_traj.copy_onto_back(current);
+    }
+
 };
 #else
 #endif

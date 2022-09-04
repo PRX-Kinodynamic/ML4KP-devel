@@ -75,7 +75,8 @@ class reachability_estimator_t
             
             normalized_state.insert(normalized_state.end(),normalized_goal.begin(),normalized_goal.end());
             
-            at::Tensor input = torch::zeros({1,normalized_state.size()},device);
+            long long input_size = normalized_state.size();
+            at::Tensor input = torch::zeros({1,input_size},device);
             for (int i = 0; i < normalized_state.size(); i++)
             {
                 input[0][i] = normalized_state[i];

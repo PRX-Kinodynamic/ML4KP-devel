@@ -6,6 +6,8 @@
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/utilities/general/zipped_iter.hpp"
 
+#define Malloc(type,n) (type *)malloc((n)*sizeof(type))
+
 #define PRX_DEBUG_PRINT std::cout << __PRETTY_FUNCTION__ << ": " << __LINE__ << std::endl;
 
 #define PRX_DEBUG_ITERABLE(msg, v) std::cout << "[DBG " << msg << "] "; for(auto e : v){std::cout << e << " ";}std::cout << std::endl;
