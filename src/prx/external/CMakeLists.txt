@@ -2,8 +2,10 @@
 # include_directories("${PROJECT_SOURCE_DIR}/src/prx/external")
 
 file(GLOB_RECURSE SRC_PRX_LIB_EXTERNAL_PQP  PQP/*.cpp)
-
 add_library(${PROJECT_NAME}_external ${SRC_PRX_LIB_EXTERNAL_PQP} ) 
+
+file(GLOB_RECURSE SRC_PRX_LIB_EXTERMAL_SVM svm/*.cpp)
+target_link_libraries(${PROJECT_NAME}_external ${SRC_PRX_LIB_EXTERMAL_SVM} )
 
 target_include_directories(${PROJECT_NAME}_external PUBLIC ".")
 
