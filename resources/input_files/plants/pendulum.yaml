@@ -2,7 +2,7 @@ name: "pendulum"
 path: "pendulum"
 
 # Assume empty environment... Doesn't make sense otherwise
-start_state: [1.0, 0.0]
+start_state: [3.0, -5.5]
 goal_state:  [0.0, 0.0]
 
 min_steps: 1
@@ -34,9 +34,9 @@ constant_ctrl: [0]
 
 error_scale: [1,1]
 
-length
-friction
-mass
-normalize
+# length
+# friction
+# mass
+# normalize
 
-parameters: [*LENGTH, *FRICTION, *MASS, *L2, *I1, *I2]
+# parameters: [*LENGTH, *FRICTION, *MASS, *L2, *I1, *I2]
