@@ -1,0 +1,2592 @@
+<sdf version='1.7'>
+  <model name='mecanum_simple'>
+    <link name='base_link'>
+      <inertial>
+        <pose>0.000591 0.000282 0.060435 0 -0 0</pose>
+        <mass>3.75051</mass>
+        <inertia>
+          <ixx>0.0210341</ixx>
+          <ixy>-4.48811e-18</ixy>
+          <ixz>-3.08998e-18</ixz>
+          <iyy>0.0117216</iyy>
+          <iyz>-1.20346e-17</iyz>
+          <izz>0.0237545</izz>
+        </inertia>
+      </inertial>
+      <collision name='base_link_collision'>
+        <pose>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/base_link.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='base_link_visual'>
+        <pose>0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/base_link.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='BackLeft' type='revolute'>
+      <pose relative_to='base_link'>-0.075409 -0.099718 0.015435 0 -0 0</pose>
+      <parent>base_link</parent>
+      <child>BL_TopBase1</child>
+      <axis>
+        <xyz>-1 0 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BL_TopBase1'>
+      <pose relative_to='BackLeft'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0.0222 -0 -0 0 -0 0</pose>
+        <mass>0.0837216</mass>
+        <inertia>
+          <ixx>1.72214e-05</ixx>
+          <ixy>-9.76721e-18</ixy>
+          <ixz>-3.62718e-16</ixz>
+          <iyy>2.60355e-05</iyy>
+          <iyz>3.79714e-15</iyz>
+          <izz>2.60435e-05</izz>
+        </inertia>
+      </inertial>
+      <collision name='BL_TopBase1_collision'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_TopBase1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BL_TopBase1_fixed_joint_lump__BL_TopPlate1_collision_1'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_TopPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BL_TopBase1_fixed_joint_lump__BL_Roller7_collision_2'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller7.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BL_TopBase1_fixed_joint_lump__BL_Roller2_collision_3'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller2.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BL_TopBase1_fixed_joint_lump__BL_Roller5_collision_4'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller5.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BL_TopBase1_fixed_joint_lump__BL_Roller4_collision_5'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller4.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BL_TopBase1_fixed_joint_lump__BL_Roller3_collision_6'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller3.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BL_TopBase1_fixed_joint_lump__BL_Roller1_collision_7'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BL_TopBase1_fixed_joint_lump__BL_Roller8_collision_8'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller8.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BL_TopBase1_fixed_joint_lump__BL_MC1_collision_9'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_MC1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BL_TopBase1_fixed_joint_lump__BL_BotPlate1_collision_10'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_BotPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BL_TopBase1_fixed_joint_lump__BL_Roller6_collision_11'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller6.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BL_TopBase1_visual'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_TopBase1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BL_TopBase1_fixed_joint_lump__BL_TopPlate1_visual_1'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_TopPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BL_TopBase1_fixed_joint_lump__BL_Roller7_visual_2'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller7.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BL_TopBase1_fixed_joint_lump__BL_Roller2_visual_3'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller2.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BL_TopBase1_fixed_joint_lump__BL_Roller5_visual_4'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller5.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BL_TopBase1_fixed_joint_lump__BL_Roller4_visual_5'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller4.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BL_TopBase1_fixed_joint_lump__BL_Roller3_visual_6'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller3.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BL_TopBase1_fixed_joint_lump__BL_Roller1_visual_7'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BL_TopBase1_fixed_joint_lump__BL_Roller8_visual_8'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller8.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BL_TopBase1_fixed_joint_lump__BL_MC1_visual_9'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_MC1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BL_TopBase1_fixed_joint_lump__BL_BotPlate1_visual_10'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_BotPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BL_TopBase1_fixed_joint_lump__BL_Roller6_visual_11'>
+        <pose>0.075409 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Roller6.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev65' type='revolute'>
+      <pose relative_to='BL_TopBase1'>-0.029999 1e-06 -0.023029 0 -0 0</pose>
+      <parent>BL_TopBase1</parent>
+      <child>BL_Wheel7</child>
+      <axis>
+        <xyz>-0.707107 0.707107 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BL_Wheel7'>
+      <pose relative_to='Rev65'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>4.09306e-08</ixy>
+          <ixz>-3.46225e-18</ixz>
+          <iyy>6.83605e-08</iyy>
+          <iyz>-3.08976e-18</iyz>
+          <izz>1.09291e-07</izz>
+        </inertia>
+      </inertial>
+      <collision name='BL_Wheel7_collision'>
+        <pose>0.105408 0.099717 0.007594 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel7.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BL_Wheel7_visual'>
+        <pose>0.105408 0.099717 0.007594 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel7.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev67' type='revolute'>
+      <pose relative_to='BL_TopBase1'>-0.029999 -0.016284 -0.016285 0 -0 0</pose>
+      <parent>BL_TopBase1</parent>
+      <child>BL_Wheel2</child>
+      <axis>
+        <xyz>-0.707107 0.5 -0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BL_Wheel2'>
+      <pose relative_to='Rev67'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>2.89423e-08</ixy>
+          <ixz>-2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='BL_Wheel2_collision'>
+        <pose>0.105408 0.116002 0.00085 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel2.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BL_Wheel2_visual'>
+        <pose>0.105408 0.116002 0.00085 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel2.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev68' type='revolute'>
+      <pose relative_to='BL_TopBase1'>-0.029999 -0.02303 -2e-06 0 -0 0</pose>
+      <parent>BL_TopBase1</parent>
+      <child>BL_Wheel5</child>
+      <axis>
+        <xyz>-0.707107 0 -0.707107</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BL_Wheel5'>
+      <pose relative_to='Rev68'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>1.57887e-18</ixy>
+          <ixz>-4.09306e-08</ixz>
+          <iyy>1.09291e-07</iyy>
+          <iyz>-4.3817e-18</iyz>
+          <izz>6.83605e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='BL_Wheel5_collision'>
+        <pose>0.105408 0.122748 -0.015433 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel5.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BL_Wheel5_visual'>
+        <pose>0.105408 0.122748 -0.015433 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel5.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev63' type='revolute'>
+      <pose relative_to='BL_TopBase1'>-0.029999 -0.016285 0.016283 0 -0 0</pose>
+      <parent>BL_TopBase1</parent>
+      <child>BL_Wheel4</child>
+      <axis>
+        <xyz>-0.707107 -0.5 -0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BL_Wheel4'>
+      <pose relative_to='Rev63'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-2.89423e-08</ixy>
+          <ixz>-2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>-2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='BL_Wheel4_collision'>
+        <pose>0.105408 0.116003 -0.031718 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel4.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BL_Wheel4_visual'>
+        <pose>0.105408 0.116003 -0.031718 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel4.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev64' type='revolute'>
+      <pose relative_to='BL_TopBase1'>-0.029999 -2e-06 0.023029 0 -0 0</pose>
+      <parent>BL_TopBase1</parent>
+      <child>BL_Wheel3</child>
+      <axis>
+        <xyz>-0.707107 -0.707107 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BL_Wheel3'>
+      <pose relative_to='Rev64'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-4.09306e-08</ixy>
+          <ixz>2.50722e-18</ixz>
+          <iyy>6.83605e-08</iyy>
+          <iyz>-4.4249e-18</iyz>
+          <izz>1.09291e-07</izz>
+        </inertia>
+      </inertial>
+      <collision name='BL_Wheel3_collision'>
+        <pose>0.105408 0.09972 -0.038464 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel3.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BL_Wheel3_visual'>
+        <pose>0.105408 0.09972 -0.038464 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel3.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev61' type='revolute'>
+      <pose relative_to='BL_TopBase1'>-0.029999 0.016283 0.016285 0 -0 0</pose>
+      <parent>BL_TopBase1</parent>
+      <child>BL_Wheel1</child>
+      <axis>
+        <xyz>-0.707107 -0.5 0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BL_Wheel1'>
+      <pose relative_to='Rev61'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-2.89423e-08</ixy>
+          <ixz>2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='BL_Wheel1_collision'>
+        <pose>0.105408 0.083435 -0.03172 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BL_Wheel1_visual'>
+        <pose>0.105408 0.083435 -0.03172 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev66' type='revolute'>
+      <pose relative_to='BL_TopBase1'>-0.029999 0.023029 1e-06 0 -0 0</pose>
+      <parent>BL_TopBase1</parent>
+      <child>BL_Wheel8</child>
+      <axis>
+        <xyz>-0.707107 0 0.707107</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BL_Wheel8'>
+      <pose relative_to='Rev66'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 -0 0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-4.09964e-18</ixy>
+          <ixz>4.09306e-08</ixz>
+          <iyy>1.09291e-07</iyy>
+          <iyz>-1.62376e-18</iyz>
+          <izz>6.83605e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='BL_Wheel8_collision'>
+        <pose>0.105408 0.076689 -0.015436 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel8.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BL_Wheel8_visual'>
+        <pose>0.105408 0.076689 -0.015436 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel8.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev69' type='revolute'>
+      <pose relative_to='BL_TopBase1'>-0.029999 0.016285 -0.016283 0 -0 0</pose>
+      <parent>BL_TopBase1</parent>
+      <child>BL_Wheel6</child>
+      <axis>
+        <xyz>-0.707107 0.5 0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BL_Wheel6'>
+      <pose relative_to='Rev69'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>2.89423e-08</ixy>
+          <ixz>2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>-2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='BL_Wheel6_collision'>
+        <pose>0.105408 0.083433 0.000848 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel6.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BL_Wheel6_visual'>
+        <pose>0.105408 0.083433 0.000848 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BL_Wheel6.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='BackRight' type='revolute'>
+      <pose relative_to='base_link'>0.076591 -0.099718 0.015435 0 -0 0</pose>
+      <parent>base_link</parent>
+      <child>BR_TopBase1</child>
+      <axis>
+        <xyz>-1 0 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BR_TopBase1'>
+      <pose relative_to='BackRight'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0.022095 -0 -0 0 -0 0</pose>
+        <mass>0.0837216</mass>
+        <inertia>
+          <ixx>1.72214e-05</ixx>
+          <ixy>-1.57525e-17</ixy>
+          <ixz>-6.38965e-18</ixz>
+          <iyy>2.56399e-05</iyy>
+          <iyz>-1.29516e-14</iyz>
+          <izz>2.56478e-05</izz>
+        </inertia>
+      </inertial>
+      <collision name='BR_TopBase1_collision'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_TopBase1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BR_TopBase1_fixed_joint_lump__BR_TopPlate1_collision_1'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_TopPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BR_TopBase1_fixed_joint_lump__BR_Roller1_collision_2'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BR_TopBase1_fixed_joint_lump__BR_Roller2_collision_3'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller2.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BR_TopBase1_fixed_joint_lump__BR_Roller3_collision_4'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller3.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BR_TopBase1_fixed_joint_lump__BR_Roller4_collision_5'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller4.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BR_TopBase1_fixed_joint_lump__BR_Roller5_collision_6'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller5.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BR_TopBase1_fixed_joint_lump__BR_MC1_collision_7'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_MC1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BR_TopBase1_fixed_joint_lump__BR_BotPlate1_collision_8'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_BotPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BR_TopBase1_fixed_joint_lump__BR_Roller6_collision_9'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller6.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BR_TopBase1_fixed_joint_lump__BR_Roller7_collision_10'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller7.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='BR_TopBase1_fixed_joint_lump__BR_Roller8_collision_11'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller8.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BR_TopBase1_visual'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_TopBase1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BR_TopBase1_fixed_joint_lump__BR_TopPlate1_visual_1'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_TopPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BR_TopBase1_fixed_joint_lump__BR_Roller1_visual_2'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BR_TopBase1_fixed_joint_lump__BR_Roller2_visual_3'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller2.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BR_TopBase1_fixed_joint_lump__BR_Roller3_visual_4'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller3.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BR_TopBase1_fixed_joint_lump__BR_Roller4_visual_5'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller4.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BR_TopBase1_fixed_joint_lump__BR_Roller5_visual_6'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller5.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BR_TopBase1_fixed_joint_lump__BR_MC1_visual_7'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_MC1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BR_TopBase1_fixed_joint_lump__BR_BotPlate1_visual_8'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_BotPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BR_TopBase1_fixed_joint_lump__BR_Roller6_visual_9'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller6.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BR_TopBase1_fixed_joint_lump__BR_Roller7_visual_10'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller7.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='BR_TopBase1_fixed_joint_lump__BR_Roller8_visual_11'>
+        <pose>-0.076591 0.099718 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Roller8.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev144' type='revolute'>
+      <pose relative_to='BR_TopBase1'>0.029999 -2e-06 0.023029 0 -0 0</pose>
+      <parent>BR_TopBase1</parent>
+      <child>BR_Wheel1</child>
+      <axis>
+        <xyz>0.707107 -0.707107 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BR_Wheel1'>
+      <pose relative_to='Rev144'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>4.09306e-08</ixy>
+          <ixz>3.93532e-18</ixz>
+          <iyy>6.83605e-08</iyy>
+          <iyz>1.75166e-18</iyz>
+          <izz>1.09291e-07</izz>
+        </inertia>
+      </inertial>
+      <collision name='BR_Wheel1_collision'>
+        <pose>-0.10659 0.09972 -0.038464 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BR_Wheel1_visual'>
+        <pose>-0.10659 0.09972 -0.038464 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev153' type='revolute'>
+      <pose relative_to='BR_TopBase1'>0.029999 0.016283 0.016285 0 -0 0</pose>
+      <parent>BR_TopBase1</parent>
+      <child>BR_Wheel2</child>
+      <axis>
+        <xyz>0.707107 -0.5 0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BR_Wheel2'>
+      <pose relative_to='Rev153'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>2.89423e-08</ixy>
+          <ixz>-2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='BR_Wheel2_collision'>
+        <pose>-0.10659 0.083435 -0.03172 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel2.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BR_Wheel2_visual'>
+        <pose>-0.10659 0.083435 -0.03172 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel2.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev154' type='revolute'>
+      <pose relative_to='BR_TopBase1'>0.029999 0.023029 1e-06 0 -0 0</pose>
+      <parent>BR_TopBase1</parent>
+      <child>BR_Wheel3</child>
+      <axis>
+        <xyz>0.707107 0 0.707107</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BR_Wheel3'>
+      <pose relative_to='Rev154'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 -0 0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>3.93362e-18</ixy>
+          <ixz>-4.09306e-08</ixz>
+          <iyy>1.09291e-07</iyy>
+          <iyz>-1.75166e-18</iyz>
+          <izz>6.83605e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='BR_Wheel3_collision'>
+        <pose>-0.10659 0.076689 -0.015436 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel3.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BR_Wheel3_visual'>
+        <pose>-0.10659 0.076689 -0.015436 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel3.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev155' type='revolute'>
+      <pose relative_to='BR_TopBase1'>0.029999 0.016285 -0.016283 0 -0 0</pose>
+      <parent>BR_TopBase1</parent>
+      <child>BR_Wheel4</child>
+      <axis>
+        <xyz>0.707107 0.5 0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BR_Wheel4'>
+      <pose relative_to='Rev155'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-2.89423e-08</ixy>
+          <ixz>-2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>-2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='BR_Wheel4_collision'>
+        <pose>-0.10659 0.083433 0.000848 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel4.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BR_Wheel4_visual'>
+        <pose>-0.10659 0.083433 0.000848 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel4.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev156' type='revolute'>
+      <pose relative_to='BR_TopBase1'>0.029999 1e-06 -0.023029 0 -0 0</pose>
+      <parent>BR_TopBase1</parent>
+      <child>BR_Wheel5</child>
+      <axis>
+        <xyz>0.707107 0.707107 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BR_Wheel5'>
+      <pose relative_to='Rev156'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-4.09306e-08</ixy>
+          <ixz>-3.93553e-18</ixz>
+          <iyy>6.83605e-08</iyy>
+          <iyz>1.75188e-18</iyz>
+          <izz>1.09291e-07</izz>
+        </inertia>
+      </inertial>
+      <collision name='BR_Wheel5_collision'>
+        <pose>-0.10659 0.099717 0.007594 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel5.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BR_Wheel5_visual'>
+        <pose>-0.10659 0.099717 0.007594 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel5.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev157' type='revolute'>
+      <pose relative_to='BR_TopBase1'>0.029999 -0.016284 -0.016285 0 -0 0</pose>
+      <parent>BR_TopBase1</parent>
+      <child>BR_Wheel6</child>
+      <axis>
+        <xyz>0.707107 0.5 -0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BR_Wheel6'>
+      <pose relative_to='Rev157'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-2.89423e-08</ixy>
+          <ixz>2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='BR_Wheel6_collision'>
+        <pose>-0.10659 0.116002 0.00085 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel6.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BR_Wheel6_visual'>
+        <pose>-0.10659 0.116002 0.00085 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel6.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev158' type='revolute'>
+      <pose relative_to='BR_TopBase1'>0.029999 -0.02303 -2e-06 0 -0 0</pose>
+      <parent>BR_TopBase1</parent>
+      <child>BR_Wheel7</child>
+      <axis>
+        <xyz>0.707107 0 -0.707107</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BR_Wheel7'>
+      <pose relative_to='Rev158'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 0 0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-3.93701e-18</ixy>
+          <ixz>4.09306e-08</ixz>
+          <iyy>1.09291e-07</iyy>
+          <iyz>-1.75209e-18</iyz>
+          <izz>6.83605e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='BR_Wheel7_collision'>
+        <pose>-0.10659 0.122748 -0.015433 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel7.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BR_Wheel7_visual'>
+        <pose>-0.10659 0.122748 -0.015433 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel7.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev159' type='revolute'>
+      <pose relative_to='BR_TopBase1'>0.029999 -0.016285 0.016283 0 -0 0</pose>
+      <parent>BR_TopBase1</parent>
+      <child>BR_Wheel8</child>
+      <axis>
+        <xyz>0.707107 -0.5 -0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='BR_Wheel8'>
+      <pose relative_to='Rev159'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>2.89423e-08</ixy>
+          <ixz>2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>-2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='BR_Wheel8_collision'>
+        <pose>-0.10659 0.116003 -0.031718 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel8.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='BR_Wheel8_visual'>
+        <pose>-0.10659 0.116003 -0.031718 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/BR_Wheel8.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='FrontLeft' type='revolute'>
+      <pose relative_to='base_link'>-0.075409 0.100282 0.015435 0 -0 0</pose>
+      <parent>base_link</parent>
+      <child>FL_TopBase1</child>
+      <axis>
+        <xyz>-1 0 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FL_TopBase1'>
+      <pose relative_to='FrontLeft'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0.0222 -0 -0 0 -0 0</pose>
+        <mass>0.0837216</mass>
+        <inertia>
+          <ixx>1.72214e-05</ixx>
+          <ixy>-1.61552e-17</ixy>
+          <ixz>7.99775e-18</ixz>
+          <iyy>2.60355e-05</iyy>
+          <iyz>1.29474e-14</iyz>
+          <izz>2.60435e-05</izz>
+        </inertia>
+      </inertial>
+      <collision name='FL_TopBase1_collision'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_TopBase1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FL_TopBase1_fixed_joint_lump__FL_TopPlate1_collision_1'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_TopPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FL_TopBase1_fixed_joint_lump__FL_MC1_collision_2'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_MC1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FL_TopBase1_fixed_joint_lump__FL_BotPlate1_collision_3'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_BotPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FL_TopBase1_fixed_joint_lump__FL_Roller1_collision_4'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FL_TopBase1_fixed_joint_lump__FL_Roller2_collision_5'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller2.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FL_TopBase1_fixed_joint_lump__FL_Roller3_collision_6'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller3.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FL_TopBase1_fixed_joint_lump__FL_Roller4_collision_7'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller4.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FL_TopBase1_fixed_joint_lump__FL_Roller5_collision_8'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller5.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FL_TopBase1_fixed_joint_lump__FL_Roller6_collision_9'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller6.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FL_TopBase1_fixed_joint_lump__FL_Roller7_collision_10'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller7.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FL_TopBase1_fixed_joint_lump__FL_Roller8_collision_11'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller8.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FL_TopBase1_visual'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_TopBase1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FL_TopBase1_fixed_joint_lump__FL_TopPlate1_visual_1'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_TopPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FL_TopBase1_fixed_joint_lump__FL_MC1_visual_2'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_MC1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FL_TopBase1_fixed_joint_lump__FL_BotPlate1_visual_3'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_BotPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FL_TopBase1_fixed_joint_lump__FL_Roller1_visual_4'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FL_TopBase1_fixed_joint_lump__FL_Roller2_visual_5'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller2.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FL_TopBase1_fixed_joint_lump__FL_Roller3_visual_6'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller3.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FL_TopBase1_fixed_joint_lump__FL_Roller4_visual_7'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller4.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FL_TopBase1_fixed_joint_lump__FL_Roller5_visual_8'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller5.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FL_TopBase1_fixed_joint_lump__FL_Roller6_visual_9'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller6.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FL_TopBase1_fixed_joint_lump__FL_Roller7_visual_10'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller7.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FL_TopBase1_fixed_joint_lump__FL_Roller8_visual_11'>
+        <pose>0.075409 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Roller8.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev160' type='revolute'>
+      <pose relative_to='FL_TopBase1'>-0.029999 0.016285 0.016283 0 -0 0</pose>
+      <parent>FL_TopBase1</parent>
+      <child>FL_Wheel1</child>
+      <axis>
+        <xyz>-0.707107 0.5 -0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FL_Wheel1'>
+      <pose relative_to='Rev160'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>2.89423e-08</ixy>
+          <ixz>-2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='FL_Wheel1_collision'>
+        <pose>0.105408 -0.116567 -0.031718 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FL_Wheel1_visual'>
+        <pose>0.105408 -0.116567 -0.031718 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev169' type='revolute'>
+      <pose relative_to='FL_TopBase1'>-0.029999 1e-06 0.023029 0 -0 0</pose>
+      <parent>FL_TopBase1</parent>
+      <child>FL_Wheel2</child>
+      <axis>
+        <xyz>-0.707107 0.707107 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FL_Wheel2'>
+      <pose relative_to='Rev169'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>4.09306e-08</ixy>
+          <ixz>5.51757e-18</ixz>
+          <iyy>6.83605e-08</iyy>
+          <iyz>1.3417e-18</iyz>
+          <izz>1.09291e-07</izz>
+        </inertia>
+      </inertial>
+      <collision name='FL_Wheel2_collision'>
+        <pose>0.105408 -0.100283 -0.038464 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel2.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FL_Wheel2_visual'>
+        <pose>0.105408 -0.100283 -0.038464 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel2.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev170' type='revolute'>
+      <pose relative_to='FL_TopBase1'>-0.029999 -0.016284 0.016285 0 -0 0</pose>
+      <parent>FL_TopBase1</parent>
+      <child>FL_Wheel3</child>
+      <axis>
+        <xyz>-0.707107 0.5 0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FL_Wheel3'>
+      <pose relative_to='Rev170'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>2.89423e-08</ixy>
+          <ixz>2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>-2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='FL_Wheel3_collision'>
+        <pose>0.105408 -0.083998 -0.03172 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel3.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FL_Wheel3_visual'>
+        <pose>0.105408 -0.083998 -0.03172 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel3.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev171' type='revolute'>
+      <pose relative_to='FL_TopBase1'>-0.029999 -0.02303 1e-06 0 -0 0</pose>
+      <parent>FL_TopBase1</parent>
+      <child>FL_Wheel4</child>
+      <axis>
+        <xyz>-0.707107 0 0.707107</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FL_Wheel4'>
+      <pose relative_to='Rev171'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-5.5091e-18</ixy>
+          <ixz>4.09306e-08</ixz>
+          <iyy>1.09291e-07</iyy>
+          <iyz>-1.39252e-18</iyz>
+          <izz>6.83605e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='FL_Wheel4_collision'>
+        <pose>0.105408 -0.077252 -0.015436 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel4.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FL_Wheel4_visual'>
+        <pose>0.105408 -0.077252 -0.015436 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel4.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev172' type='revolute'>
+      <pose relative_to='FL_TopBase1'>-0.029999 -0.016285 -0.016283 0 -0 0</pose>
+      <parent>FL_TopBase1</parent>
+      <child>FL_Wheel5</child>
+      <axis>
+        <xyz>-0.707107 -0.5 0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FL_Wheel5'>
+      <pose relative_to='Rev172'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-2.89423e-08</ixy>
+          <ixz>2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='FL_Wheel5_collision'>
+        <pose>0.105408 -0.083997 0.000848 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel5.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FL_Wheel5_visual'>
+        <pose>0.105408 -0.083997 0.000848 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel5.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev173' type='revolute'>
+      <pose relative_to='FL_TopBase1'>-0.029999 -2e-06 -0.023029 0 -0 0</pose>
+      <parent>FL_TopBase1</parent>
+      <child>FL_Wheel6</child>
+      <axis>
+        <xyz>-0.707107 -0.707107 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FL_Wheel6'>
+      <pose relative_to='Rev173'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-4.09306e-08</ixy>
+          <ixz>-5.49131e-18</ixz>
+          <iyy>6.83605e-08</iyy>
+          <iyz>1.52868e-18</iyz>
+          <izz>1.09291e-07</izz>
+        </inertia>
+      </inertial>
+      <collision name='FL_Wheel6_collision'>
+        <pose>0.105408 -0.10028 0.007594 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel6.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FL_Wheel6_visual'>
+        <pose>0.105408 -0.10028 0.007594 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel6.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev174' type='revolute'>
+      <pose relative_to='FL_TopBase1'>-0.029999 0.016283 -0.016285 0 -0 0</pose>
+      <parent>FL_TopBase1</parent>
+      <child>FL_Wheel7</child>
+      <axis>
+        <xyz>-0.707107 -0.5 -0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FL_Wheel7'>
+      <pose relative_to='Rev174'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-2.89423e-08</ixy>
+          <ixz>-2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>-2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='FL_Wheel7_collision'>
+        <pose>0.105408 -0.116565 0.00085 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel7.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FL_Wheel7_visual'>
+        <pose>0.105408 -0.116565 0.00085 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel7.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev175' type='revolute'>
+      <pose relative_to='FL_TopBase1'>-0.029999 0.023029 -2e-06 0 -0 0</pose>
+      <parent>FL_TopBase1</parent>
+      <child>FL_Wheel8</child>
+      <axis>
+        <xyz>-0.707107 0 -0.707107</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FL_Wheel8'>
+      <pose relative_to='Rev175'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 -0 0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>5.49216e-18</ixy>
+          <ixz>-4.09306e-08</ixz>
+          <iyy>1.09291e-07</iyy>
+          <iyz>-1.30443e-18</iyz>
+          <izz>6.83605e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='FL_Wheel8_collision'>
+        <pose>0.105408 -0.123311 -0.015433 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel8.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FL_Wheel8_visual'>
+        <pose>0.105408 -0.123311 -0.015433 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FL_Wheel8.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='FrontRight' type='revolute'>
+      <pose relative_to='base_link'>0.076591 0.100282 0.015435 0 -0 0</pose>
+      <parent>base_link</parent>
+      <child>FR_TopBase1</child>
+      <axis>
+        <xyz>-1 0 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FR_TopBase1'>
+      <pose relative_to='FrontRight'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0.0222 -0 -0 0 -0 0</pose>
+        <mass>0.0837216</mass>
+        <inertia>
+          <ixx>1.72214e-05</ixx>
+          <ixy>7.67033e-18</ixy>
+          <ixz>-3.62388e-16</ixz>
+          <iyy>2.60355e-05</iyy>
+          <iyz>-3.79719e-15</iyz>
+          <izz>2.60435e-05</izz>
+        </inertia>
+      </inertial>
+      <collision name='FR_TopBase1_collision'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_TopBase1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FR_TopBase1_fixed_joint_lump__FR_TopPlate1_collision_1'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_TopPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FR_TopBase1_fixed_joint_lump__FR_MC1_collision_2'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_MC1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FR_TopBase1_fixed_joint_lump__FR_BotPlate1_collision_3'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_BotPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FR_TopBase1_fixed_joint_lump__FR_Roller1_collision_4'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FR_TopBase1_fixed_joint_lump__FR_Roller2_collision_5'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller2.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FR_TopBase1_fixed_joint_lump__FR_Roller4_collision_6'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller4.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FR_TopBase1_fixed_joint_lump__FR_Roller3_collision_7'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller3.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FR_TopBase1_fixed_joint_lump__FR_Roller5_collision_8'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller5.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FR_TopBase1_fixed_joint_lump__FR_Roller6_collision_9'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller6.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FR_TopBase1_fixed_joint_lump__FR_Roller7_collision_10'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller7.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name='FR_TopBase1_fixed_joint_lump__FR_Roller8_collision_11'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller8.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FR_TopBase1_visual'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_TopBase1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FR_TopBase1_fixed_joint_lump__FR_TopPlate1_visual_1'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_TopPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FR_TopBase1_fixed_joint_lump__FR_MC1_visual_2'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_MC1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FR_TopBase1_fixed_joint_lump__FR_BotPlate1_visual_3'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_BotPlate1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FR_TopBase1_fixed_joint_lump__FR_Roller1_visual_4'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FR_TopBase1_fixed_joint_lump__FR_Roller2_visual_5'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller2.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FR_TopBase1_fixed_joint_lump__FR_Roller4_visual_6'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller4.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FR_TopBase1_fixed_joint_lump__FR_Roller3_visual_7'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller3.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FR_TopBase1_fixed_joint_lump__FR_Roller5_visual_8'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller5.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FR_TopBase1_fixed_joint_lump__FR_Roller6_visual_9'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller6.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FR_TopBase1_fixed_joint_lump__FR_Roller7_visual_10'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller7.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name='FR_TopBase1_fixed_joint_lump__FR_Roller8_visual_11'>
+        <pose>-0.076591 -0.100282 -0.015435 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Roller8.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev78' type='revolute'>
+      <pose relative_to='FR_TopBase1'>0.029999 0.016283 -0.016285 0 -0 0</pose>
+      <parent>FR_TopBase1</parent>
+      <child>FR_Wheel1</child>
+      <axis>
+        <xyz>0.707107 -0.5 -0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FR_Wheel1'>
+      <pose relative_to='Rev78'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>2.89423e-08</ixy>
+          <ixz>2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>-2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='FR_Wheel1_collision'>
+        <pose>-0.10659 -0.116565 0.00085 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel1.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FR_Wheel1_visual'>
+        <pose>-0.10659 -0.116565 0.00085 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel1.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev82' type='revolute'>
+      <pose relative_to='FR_TopBase1'>0.029999 0.023029 -2e-06 0 -0 0</pose>
+      <parent>FR_TopBase1</parent>
+      <child>FR_Wheel2</child>
+      <axis>
+        <xyz>0.707107 0 -0.707107</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FR_Wheel2'>
+      <pose relative_to='Rev82'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 -0 0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-2.91041e-18</ixy>
+          <ixz>4.09306e-08</ixz>
+          <iyy>1.09291e-07</iyy>
+          <iyz>-2.89008e-18</iyz>
+          <izz>6.83605e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='FR_Wheel2_collision'>
+        <pose>-0.10659 -0.123311 -0.015433 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel2.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FR_Wheel2_visual'>
+        <pose>-0.10659 -0.123311 -0.015433 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel2.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev83' type='revolute'>
+      <pose relative_to='FR_TopBase1'>0.029999 0.016285 0.016283 0 -0 0</pose>
+      <parent>FR_TopBase1</parent>
+      <child>FR_Wheel4</child>
+      <axis>
+        <xyz>0.707107 0.5 -0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FR_Wheel4'>
+      <pose relative_to='Rev83'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-2.89423e-08</ixy>
+          <ixz>2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='FR_Wheel4_collision'>
+        <pose>-0.10659 -0.116567 -0.031718 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel4.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FR_Wheel4_visual'>
+        <pose>-0.10659 -0.116567 -0.031718 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel4.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev85' type='revolute'>
+      <pose relative_to='FR_TopBase1'>0.029999 1e-06 0.023029 0 -0 0</pose>
+      <parent>FR_TopBase1</parent>
+      <child>FR_Wheel3</child>
+      <axis>
+        <xyz>0.707107 0.707107 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FR_Wheel3'>
+      <pose relative_to='Rev85'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-4.09306e-08</ixy>
+          <ixz>1.12147e-18</ixz>
+          <iyy>6.83605e-08</iyy>
+          <iyz>-3.88449e-18</iyz>
+          <izz>1.09291e-07</izz>
+        </inertia>
+      </inertial>
+      <collision name='FR_Wheel3_collision'>
+        <pose>-0.10659 -0.100283 -0.038464 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel3.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FR_Wheel3_visual'>
+        <pose>-0.10659 -0.100283 -0.038464 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel3.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev84' type='revolute'>
+      <pose relative_to='FR_TopBase1'>0.029999 -0.016284 0.016285 0 -0 0</pose>
+      <parent>FR_TopBase1</parent>
+      <child>FR_Wheel5</child>
+      <axis>
+        <xyz>0.707107 0.5 0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FR_Wheel5'>
+      <pose relative_to='Rev84'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>-2.89423e-08</ixy>
+          <ixz>-2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>-2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='FR_Wheel5_collision'>
+        <pose>-0.10659 -0.083998 -0.03172 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel5.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FR_Wheel5_visual'>
+        <pose>-0.10659 -0.083998 -0.03172 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel5.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev81' type='revolute'>
+      <pose relative_to='FR_TopBase1'>0.029999 -0.02303 1e-06 0 -0 0</pose>
+      <parent>FR_TopBase1</parent>
+      <child>FR_Wheel6</child>
+      <axis>
+        <xyz>0.707107 0 0.707107</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FR_Wheel6'>
+      <pose relative_to='Rev81'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 0 0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>3.35425e-18</ixy>
+          <ixz>-4.09306e-08</ixz>
+          <iyy>1.09291e-07</iyy>
+          <iyz>-2.00069e-18</iyz>
+          <izz>6.83605e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='FR_Wheel6_collision'>
+        <pose>-0.10659 -0.077252 -0.015436 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel6.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FR_Wheel6_visual'>
+        <pose>-0.10659 -0.077252 -0.015436 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel6.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev80' type='revolute'>
+      <pose relative_to='FR_TopBase1'>0.029999 -0.016285 -0.016283 0 -0 0</pose>
+      <parent>FR_TopBase1</parent>
+      <child>FR_Wheel7</child>
+      <axis>
+        <xyz>0.707107 -0.5 0.5</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FR_Wheel7'>
+      <pose relative_to='Rev80'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 -0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>2.89423e-08</ixy>
+          <ixz>-2.89423e-08</ixz>
+          <iyy>8.88257e-08</iyy>
+          <iyz>2.04653e-08</iyz>
+          <izz>8.88257e-08</izz>
+        </inertia>
+      </inertial>
+      <collision name='FR_Wheel7_collision'>
+        <pose>-0.10659 -0.083997 0.000848 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel7.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FR_Wheel7_visual'>
+        <pose>-0.10659 -0.083997 0.000848 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel7.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='Rev79' type='revolute'>
+      <pose relative_to='FR_TopBase1'>0.029999 -2e-06 -0.023029 0 -0 0</pose>
+      <parent>FR_TopBase1</parent>
+      <child>FR_Wheel8</child>
+      <axis>
+        <xyz>0.707107 -0.707107 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='FR_Wheel8'>
+      <pose relative_to='Rev79'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>-0 0 -0 0 -0 0</pose>
+        <mass>0.00200708</mass>
+        <inertia>
+          <ixx>6.83605e-08</ixx>
+          <ixy>4.09306e-08</ixy>
+          <ixz>-5.12434e-18</ixz>
+          <iyy>6.83605e-08</iyy>
+          <iyz>-1.65955e-18</iyz>
+          <izz>1.09291e-07</izz>
+        </inertia>
+      </inertial>
+      <collision name='FR_Wheel8_collision'>
+        <pose>-0.10659 -0.10028 0.007594 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel8.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name='FR_Wheel8_visual'>
+        <pose>-0.10659 -0.10028 0.007594 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>0.001 0.001 0.001</scale>
+            <uri>meshes/FR_Wheel8.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

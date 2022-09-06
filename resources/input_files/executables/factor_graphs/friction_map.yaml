@@ -1,0 +1,18 @@
+random_seed: 231192
+simulation_step: 0.01
+
+environment: "environments/empty.yaml"
+# plant: !file "plants/pendulum.yaml"
+# plant: !file "plants/acrobot.yaml"
+# plant: !file "plants/omnibot_FO.yaml"
+plant: !file "plants/omnibot_mecanum_FO.yaml"
+
+visualize: true
+data_dir: /Users/Gary/pracsys/ML4KP-devel/out/omnibot_trajs/gazebo/
+
+checker_type: iterations
+checker_value: 500
+
+plan_to_execute: plan_7.txt
+out_suffix: 7
+max_iterations: 100

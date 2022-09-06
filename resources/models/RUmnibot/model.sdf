@@ -1,0 +1,157 @@
+<?xml version='1.0'?>
+<sdf version='1.5'>
+
+  <model name="RUmnibot">
+    <model name="Chassis">
+      <pose>0 0 0.05 0 0 0</pose>
+      <link name='Chassis'>
+        <frame name="Chassis_frame">
+          <pose>0 0 0 0 0 0</pose>
+        </frame>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size> .23 .26 .1 </size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size> .23 .26 .1 </size>
+            </box>
+          </geometry>
+        </visual>
+        <inertial>
+          <inertia>
+            <ixx>0.1939999999999999999</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.1572499999999999999</iyy>
+            <iyz>0</iyz>
+            <izz>0.3012499999999999999</izz>
+          </inertia>
+          <mass> 10 </mass>
+        </inertial>
+      </link>
+    </model>
+
+    <model name="OmniWheel1">
+      <include>
+        <uri>model://Omniwheel</uri>
+      </include>
+      <pose>0.14 0 0 0 1.57079632679 0 0 </pose>
+    </model>
+
+    <model name="OmniWheel2">
+      <include>
+        <uri>model://Omniwheel</uri>
+      </include>
+      <pose>0 0.14 0 1.57079632679 0 3.14159265359 </pose>
+    </model>
+
+    <model name="OmniWheel3">
+      <include>
+        <uri>model://Omniwheel</uri>
+      </include>
+      <pose>-.14 0 0 1.57079632679 0 -1.57079632679 </pose>
+    </model>
+
+    <model name="OmniWheel4">
+      <include>
+        <uri>model://Omniwheel</uri>
+      </include>
+      <pose>0 -0.14 0 1.57079632679 0 0 </pose>
+    </model>
+
+    <joint name='joint_chassis_omniwheel_1' type='revolute'>
+      <parent>Chassis::Chassis</parent>
+      <child>OmniWheel1::Omniwheel::axis</child>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <!-- <use_parent_model_frame>true</use_parent_model_frame> -->
+        <limit>
+          <lower>-1.79769e+308</lower>
+          <upper>1.79769e+308</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+          <damping>0</damping>
+          <friction>0</friction>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <joint name='joint_chassis_omniwheel_2' type='revolute'>
+      <parent>Chassis::Chassis</parent>
+      <child>OmniWheel2::Omniwheel::axis</child>
+      <pose frame=''>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <!-- <use_parent_model_frame>true</use_parent_model_frame> -->
+        <limit>
+          <lower>-1.79769e+308</lower>
+          <upper>1.79769e+308</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+          <damping>0</damping>
+          <friction>0</friction>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <joint name='joint_chassis_omniwheel_3' type='revolute'>
+      <parent>Chassis::Chassis</parent>
+      <child>OmniWheel3::Omniwheel::axis</child>
+      <pose frame=''>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-1.79769e+308</lower>
+          <upper>1.79769e+308</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+          <damping>0</damping>
+          <friction>0</friction>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <joint name='joint_chassis_omniwheel_4' type='revolute'>
+      <parent>Chassis::Chassis</parent>
+      <child>OmniWheel4::Omniwheel::axis</child>
+      <pose frame=''>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-1.79769e+308</lower>
+          <upper>1.79769e+308</upper>
+          <effort>-1</effort>
+          <velocity>-1</velocity>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+          <damping>0</damping>
+          <friction>0</friction>
+        </dynamics>
+      </axis>
+    </joint>
+
+  </model>
+</sdf>
+
+
+    

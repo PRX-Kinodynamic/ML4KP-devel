@@ -1,0 +1,72 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <world name="default">
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- A ground plane -->
+    <include>
+      <name> tile_0 </name>
+      <uri>model://ground_friction_1</uri>
+      <pose> 0 1 0 0 0 0 </pose>
+    </include>
+
+    <include>
+      <name> tile_1 </name>
+      <uri>model://ground_friction_2</uri>
+      <pose> 1 0 0 0 0 0 </pose>
+    </include>
+
+    <include>
+      <name> tile_2 </name>
+      <uri>model://ground_friction_3</uri>
+      <pose> -1 0 0 0 0 0 </pose>
+    </include>
+
+    <include>
+      <name> tile_3 </name>
+      <uri>model://ground_friction_4</uri>
+      <pose> 0 -1 0 0 0 0 </pose>
+    </include>
+
+    <include>
+      <name> tile_4 </name>
+      <uri>model://ground_friction_1</uri>
+      <pose> 0 0 0 0 0 0 </pose>
+    </include>
+
+    <include>
+      <name> tile_5 </name>
+      <uri>model://ground_friction_1</uri>
+      <pose> 1 1 0 0 0 0 </pose>
+    </include>
+
+    <include>
+      <name> tile_6 </name>
+      <uri>model://ground_friction_2</uri>
+      <pose> 1 -1 0 0 0 0 </pose>
+    </include>
+
+    <include>
+      <name> tile_7 </name>
+      <uri>model://ground_friction_3</uri>
+      <pose> -1 -1 0 0 0 0 </pose>
+    </include>
+
+    <include>
+      <name> tile_8 </name>
+      <uri>model://ground_friction_4</uri>
+      <pose> -1 1 0 0 0 0 </pose>
+    </include>
+
+    <include>
+      <uri>model://RUmnibot</uri>
+      <!-- <uri>model://mecanum_simple</uri> -->
+      <pose> 0 0 .04 0 0 0 </pose>
+    </include>
+
+  </world>
+</sdf>
