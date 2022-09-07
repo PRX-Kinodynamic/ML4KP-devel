@@ -1,4 +1,5 @@
 #pragma once
+#ifndef BULLET_NOT_BUILT
 
 #include "prx/utilities/defs.hpp"
 #include "prx/bullet_sim/bullet_defs.hpp"
@@ -13,3 +14,4 @@ namespace prx
 	// TODO: Add a way to load from different path
   std::pair<std::vector<std::string>,std::vector<std::shared_ptr<movable_object_t>>> load_obstacles(std::string obstacles_file,std::shared_ptr<bullet_simulator_t> sim);
 }
+#endif

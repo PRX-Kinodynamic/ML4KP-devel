@@ -52,8 +52,8 @@ int main(int argc, char* argv[])
         auto sg = context.first;
 
         const int num_trajectories = params["num_trajectories"].as<int>();
-        const double max_duration  = params["max_duration"].as<double>();
-        const double control_duration = params["control_duration"].as<double>();
+        const double max_duration  = params["/learned_controller/max_duration"].as<double>();
+        const double control_duration = params["/learned_controller/control_duration"].as<double>();
 
         rrt_specification_t rrt_spec(context.first,context.second);
 

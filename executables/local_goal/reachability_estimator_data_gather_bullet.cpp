@@ -1,4 +1,4 @@
-#ifndef TORCH_NOT_BUILT
+#if !defined(TORCH_NOT_BUILT) && !defined(BULLET_NOT_BUILT)
 #include "prx/utilities/defs.hpp"
 #include "prx/bullet_sim/bullet_simulator.hpp"
 #include "prx/bullet_sim/plants/plants.hpp"

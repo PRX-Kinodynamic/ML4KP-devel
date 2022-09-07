@@ -14,6 +14,8 @@ class reachable_region_vertex_t
     protected:
     unsigned num_trajectories;
     bool sample_around;
+    bool validate;
+    double validate_accuracy_access, validate_accuracy_depart;
 
     public:
     reachable_region_vertex_t() {}
@@ -28,6 +30,9 @@ class reachable_region_vertex_t
     {
         num_trajectories = params["num_trajectories"].as<unsigned>();
         sample_around = params["sample_around"].as<bool>();
+        validate = params["validate"].as<bool>();
+
+        validate_accuracy_access = validate_accuracy_depart = 0.0;
     
         access_classifier.init(params);
         depart_classifier.init(params);
@@ -43,6 +48,22 @@ class reachable_region_vertex_t
         return point;
     }
 
+    double get_access_validation_accuracy()
+    {
+        return validate_accuracy_access;
+    }
+
+    double get_depart_validation_accuracy()
+    {
+        return validate_accuracy_depart;
+    }
+
+    bool construct_vertex(space_point_t point, rrt_specification_t& spec)
+    {
+        this -> point = spec.state_space -> clone_point(point);
+        return true;
+    }
+
     bool construct_vertex(space_point_t point, learned_controller_t controller, rrt_query_t planner_query, rrt_specification_t planner_spec)
     {
         this->point = planner_spec.state_space -> clone_point(point);
@@ -52,9 +73,11 @@ class reachable_region_vertex_t
         space_point_t current = planner_spec.state_space -> make_point();
         std::vector<double> row;
 
-        std::vector<std::vector<double>> access_data, depart_data;
-        std::vector<double> access_labels, depart_labels;
+        std::vector<std::vector<double>> access_data, depart_data, access_data_val, depart_data_val;
+        std::vector<double> access_labels, depart_labels, access_labels_val, depart_labels_val;
 
+        if (validate) num_trajectories *= 1.2;
+        
         planner_spec.state_space -> copy_point(planner_query.start_state,point);
         for (int i = 0; i < num_trajectories; i++)
         {
@@ -75,8 +98,16 @@ class reachable_region_vertex_t
                     planner_spec.state_space -> copy_point(current,planner_query.solution_traj[j]);
                     row.clear();
                     planner_spec.state_space -> copy_vector_from_point(row, current);
-                    access_data.push_back(row);
-                    access_labels.push_back(0);
+                    if (validate && uniform_random() < 0.2)
+                    {
+                        depart_data_val.push_back(row);
+                        depart_labels_val.push_back(0);
+                    }
+                    else
+                    {
+                        depart_data.push_back(row);
+                        depart_labels.push_back(0);
+                    }
                 }
                 continue;
             }
@@ -89,8 +120,16 @@ class reachable_region_vertex_t
                 {
                     row.clear();
                     planner_spec.state_space -> copy_vector_from_point(row, current);
-                    depart_data.push_back(row);
-                    depart_labels.push_back(1);
+                    if (validate && uniform_random() > 0.8)
+                    {
+                        depart_data_val.push_back(row);
+                        depart_labels_val.push_back(1);
+                    }
+                    else
+                    {
+                        depart_data.push_back(row);
+                        depart_labels.push_back(1);
+                    }
                 }
                 else
                 {
@@ -99,8 +138,16 @@ class reachable_region_vertex_t
                         planner_spec.state_space -> copy_point(current,planner_query.solution_traj[k]);
                         row.clear();
                         planner_spec.state_space -> copy_vector_from_point(row, current);
-                        depart_data.push_back(row);
-                        depart_labels.push_back(0);
+                        if (validate && uniform_random() > 0.8)
+                        {
+                            depart_data.push_back(row);
+                            depart_labels.push_back(0);
+                        }
+                        else
+                        {
+                            depart_data.push_back(row);
+                            depart_labels.push_back(0);
+                        }
                     }
                     break;
                 }
@@ -119,6 +166,18 @@ class reachable_region_vertex_t
         }
 
         depart_classifier.train(depart_data, depart_labels);
+
+        if (validate)
+        {
+            for (unsigned i = 0; i < depart_data_val.size(); i++)
+            {
+                if (depart_classifier.predict(depart_data_val[i]) == depart_labels_val[i])
+                {
+                    validate_accuracy_depart += 1.0;
+                }
+            }
+            validate_accuracy_depart /= depart_data_val.size();
+        }
 
         planner_spec.state_space -> copy_point(planner_query.goal_state,point);
         for (int i = 0; i < num_trajectories; i++)
@@ -140,8 +199,16 @@ class reachable_region_vertex_t
                     planner_spec.state_space -> copy_point(current,planner_query.solution_traj[j]);
                     row.clear();
                     planner_spec.state_space -> copy_vector_from_point(row, current);
-                    access_data.push_back(row);
-                    access_labels.push_back(0);
+                    if (validate && uniform_random() > 0.8)
+                    {
+                        access_data_val.push_back(row);
+                        access_labels_val.push_back(0);
+                    }
+                    else
+                    {
+                        access_data.push_back(row);
+                        access_labels.push_back(0);
+                    }
                 }
                 continue;
             }
@@ -154,8 +221,16 @@ class reachable_region_vertex_t
                 {
                     row.clear();
                     planner_spec.state_space -> copy_vector_from_point(row, current);
-                    access_data.push_back(row);
-                    access_labels.push_back(1);
+                    if (validate && uniform_random() > 0.8)
+                    {
+                        access_data_val.push_back(row);
+                        access_labels_val.push_back(1);
+                    }
+                    else
+                    {
+                        access_data.push_back(row);
+                        access_labels.push_back(1);
+                    }
                 }
                 else
                 {
@@ -164,8 +239,16 @@ class reachable_region_vertex_t
                         planner_spec.state_space -> copy_point(current,planner_query.solution_traj[k]);
                         row.clear();
                         planner_spec.state_space -> copy_vector_from_point(row, current);
-                        access_data.push_back(row);
-                        access_labels.push_back(0);
+                        if (validate && uniform_random() > 0.8)
+                        {
+                            access_data_val.push_back(row);
+                            access_labels_val.push_back(0);
+                        }
+                        else
+                        {
+                            access_data.push_back(row);
+                            access_labels.push_back(0);
+                        }
                         if (k == 0) break;
                     }
                     break;
@@ -186,6 +269,20 @@ class reachable_region_vertex_t
         }
 
         access_classifier.train(access_data, access_labels);
+        
+        if (validate)
+        {
+            for (unsigned i = 0; i < access_data_val.size(); i++)
+            {
+                if (access_classifier.predict(access_data_val[i]) == access_labels_val[i])
+                {
+                    validate_accuracy_access += 1.0;
+                }
+            }
+            validate_accuracy_access /= access_data_val.size();
+        }
+        
+        if (access_classifier.get_accuracy() < 0.8 || depart_classifier.get_accuracy() < 0.8) return false;
 
         if (all_same_depart || all_same_access) return false;
 

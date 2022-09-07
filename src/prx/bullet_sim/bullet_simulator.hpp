@@ -1,5 +1,5 @@
 #pragma once
-
+#ifndef BULLET_NOT_BUILT
 #include "prx/utilities/defs.hpp"
 #include "prx/simulation/simulator.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
@@ -91,3 +91,4 @@ namespace prx
 
 	};
 }
+#endif

@@ -1,4 +1,4 @@
-#if !defined(TORCH_NOT_BUILT) && !defined(BULL_NOT_BUILT)
+#if !defined(TORCH_NOT_BUILT) && !defined(BULLET_NOT_BUILT)
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/learned_modules/learned_expand.hpp"
 #include "prx/planning/planners/dirt.hpp"

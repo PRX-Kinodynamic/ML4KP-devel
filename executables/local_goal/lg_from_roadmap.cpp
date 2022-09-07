@@ -1,11 +1,14 @@
 #ifndef TORCH_NOT_BUILT
 #include "prx/utilities/defs.hpp"
-#include "prx/utilities/learned_modules/learned_expand.hpp"
 #include "prx/simulation/plants/plants.hpp"
+#include "prx/utilities/learned_modules/learned_controller.hpp"
+#include "prx/utilities/learned_modules/reachable_region_roadmap.hpp"
+#include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/planning/planners/dirt.hpp"
 #include "prx/planning/planner_statistics.hpp"
-#include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/visualization/three_js_group.hpp"
+
+#include <fstream>
 
 using namespace prx;
 
@@ -16,7 +19,7 @@ int main(int argc, char* argv[])
         std::string params_file;
         if (argc <= 1)
         {
-            prx_throw("The planner evaluation executable needs a parameter file!");
+            prx_throw("This executable needs a parameter file!");
         }
         else 
         {
@@ -25,12 +28,10 @@ int main(int argc, char* argv[])
         
         param_loader params(params_file);
         params.print();
+        timer_t timer; 
         simulation_step = params["simulation_step"].as<double>();
         int random_seed = params["random_seed"].as<int>();
         init_random(random_seed);
-
-        learned_controller_t controller(params);
-        double horizon = params["max_steps"].as<double>();
 
         auto obstacles = load_obstacles(params["environment"].as<std::string>());
         auto obstacle_list = obstacles.second;
@@ -39,7 +40,6 @@ int main(int argc, char* argv[])
         std::string plant_name = params["/plant/name"].as<std::string>();
         std::string plant_path = params["/plant/path"].as<std::string>();
         auto plant = system_factory_t::create_system(plant_name,plant_path);
-        prx_assert(plant != nullptr, "Plant is nullptr!");
 
         std::vector<double> lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
         std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
@@ -53,82 +53,12 @@ int main(int argc, char* argv[])
         auto cs = context.first->get_control_space();
         auto sg = context.first;
 
-        dirt_t dirt("dirt");
         dirt_specification_t dirt_spec(context.first,context.second);
-        dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
-        dirt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
-        dirt_spec.blossom_number = params["blossom_number"].as<int>();
-        dirt_spec.use_pruning = false;
-
-        // Define distance function, heuristi function here
-
         dirt_query_t dirt_query(ss,cs);
-        dirt_query.start_state = context.first->get_state_space()->make_point();
-		dirt_query.goal_state = context.first->get_state_space()->make_point();
-		std::vector <double> start_state_vec = params["/plant/start_state"].as<std::vector<double>>();
-        std::vector <double> goal_state_vec = params["/plant/goal_state"].as<std::vector<double>>();
+        dirt_query.start_state = ss -> make_point();
+        dirt_query.goal_state  = ss -> make_point();
+        dirt_query.get_visualization = true;
 
-        //define graph 
-        std::vector <double> n1 {0, 7.5, PRX_PI/2};
-        std::vector <double> n2 {0, -7.5, PRX_PI/2};
-        std::vector <double> n3 {goal_state_vec[0], goal_state_vec[1], goal_state_vec[2]};
-        std::vector <std::vector <double>> nodes {n1, n2, n3};
-
-        std::vector <std::pair <int,int>> edge_list 
-            {std::make_pair(0,1), std::make_pair(1,0)};
-
-        std::vector <double> weight_list {25.0, 25};
-
-        for(int i=0; i<nodes.size()-1; i++){
-            std::vector <double> node = nodes[i];
-            node.push_back(0); node.push_back(0);
-            dirt_query.clear_outputs();
-            context.first->get_state_space()->copy_point_from_vector(dirt_query.start_state,node);
-            context.first->get_state_space()->copy_point_from_vector(dirt_query.goal_state,goal_state_vec);
-            controller.fulfill_query(dirt_query,sg,horizon);
-
-            if (dirt_spec.valid_check(dirt_query.solution_traj))
-            {
-                edge_list.push_back(std::make_pair(i, nodes.size()-1));
-                weight_list.push_back(dirt_query.solution_traj.size()/100.0);
-
-                dirt_query.solution_traj.print();
-                // ofs.close();
-            }
-        }
-
-        //all-pairs shortest path lengths
-        int V = 3;
-        double INF = 100000;
-        std::vector <std::vector <double>> dist (V, std::vector <double> {INF});
-
-        for(int i=0; i<edge_list.size(); i++){
-            std::pair <int, int> edge = edge_list[i];
-            dist[edge.first][edge.second] = weight_list[i];
-        }
-        for(int i=0; i<V; i++){
-            dist[i][i] = 0;
-        }
-
-        //Run Floyd-Warshall Algorithm to get all pairs shortest pathas
-        for (int k = 0; k < V; k++) {
-            // Pick all vertices as source one by one
-            for (int i = 0; i < V; i++) {
-                // Pick all vertices as destination for the
-                // above picked source
-                for (int j = 0; j < V; j++) {
-                    // If vertex k is on the shortest path from
-                    // i to j, then update the value of
-                    // dist[i][j]
-                    if (dist[i][j] > (dist[i][k] + dist[k][j])
-                        && (dist[k][j] != INF
-                            && dist[i][k] != INF))
-                        dist[i][j] = dist[i][k] + dist[k][j];
-                }
-            }
-        }
-
-        // Define goal check function here
         dirt_query.goal_region_radius = params["goal_radius"].as<double>();
 
         dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
@@ -143,81 +73,134 @@ int main(int argc, char* argv[])
             return sqrt(accum);
         };
 
-        dirt_query.goal_check = [&,ss](space_point_t point)
+        learned_controller_t controller(params);
+
+        dirt_query.goal_check = [&,dirt_spec,ss](space_point_t s)
         {
-            return dirt_spec.distance_function(point, dirt_query.goal_state) 
-                < dirt_query.goal_region_radius;
+            return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
         };
+
+        reachable_region_roadmap_t rrr(params);
+        double roadmap_time_taken = 0.0;
+        timer.reset();
+
+        rrr.build_roadmap(dirt_query, dirt_spec, controller);
+
+        std::cout << "Finished constructing the graph." << std::endl;
+
+        bool is_connected = rrr.is_connected();
+        while (!is_connected)
+        {
+            rrr.refine_roadmap(dirt_spec);
+            is_connected = rrr.is_connected();
+        }
+
+        roadmap_time_taken += timer.measure();
+        std::cout << "Time taken for roadmap construction: " << roadmap_time_taken << std::endl;
+
+        dirt_t dirt("dirt");
+        dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
+        dirt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
+        dirt_spec.blossom_number = 1;
+        dirt_spec.use_pruning = false;
+
+        std::vector<double> s = params["/plant/start_state"].as<std::vector<double>>();
+        std::vector<double> g = params["/plant/goal_state"].as<std::vector<double>>();
+        ss -> copy_point_from_vector(dirt_query.start_state,s);
+        ss -> copy_point_from_vector(dirt_query.goal_state,g);
+
+        auto s_nn = rrr.get_nearest_accessible_node(dirt_query.start_state, dirt_spec);
+        auto g_nn = rrr.add_goal(dirt_query.goal_state, dirt_spec, dirt_query, controller);
+        ss -> copy_point_from_vector(dirt_query.start_state,s);
+        ss -> copy_point_from_vector(dirt_query.goal_state,g);
+
+        prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
         
-        auto get_local_goal = [&](std::vector <double> current_state_vec)
+        std::cout << "Nearest accessible node to start: " << s_nn << std::endl;
+
+        auto path = rrr.get_shortest_path(s_nn,g_nn);
+        for (auto p: path)
         {
-            std::vector <std::pair<double, int>> f_values;
-            for(int i=0; i<V; i++){
-                //compute g_value
-                std::vector <double> node = nodes[i];
-                double g_value = 0;
-                for(int i=0; i<2; i++){
-                    double diff = current_state_vec[i]-node[i];
-                    g_value += diff*diff;
-                }
-                g_value = sqrt(g_value)*0.7;
+            std::cout << p << " ";
+        }
+        std::cout << std::endl;
 
-                double h_value = dist[i].back();
+        // dirt_query_t controller_query(ss,cs);
+        // controller_query.start_state = ss -> make_point();
+        // controller_query.goal_state  = ss -> make_point();
+        // controller_query.goal_region_radius = params["goal_radius"].as<double>();
+        // controller_query.goal_check = [&,dirt_spec,ss](space_point_t s)
+        // {
+        //     return dirt_spec.distance_function(s,dirt_query.goal_state) < controller_query.goal_region_radius; 
+        // };
 
-                double f_value = g_value + h_value;
-                f_values.push_back(std::make_pair(f_value, i));
-            }
-            std::sort(f_values.begin(), f_values.end());
-
-            std::vector <double> selected_node = nodes[f_values[0].second];
-
-            std::vector <double> lg_prediction {selected_node[0], selected_node[1],
-                selected_node[2], 0, 0};
-            return lg_prediction;
-        };
-
-        double control_duration = 1.0;
+        space_point_t lg = ss -> make_point();
         dirt_spec.expand = [&](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn, bool blossom_expand)
         {
-            plans.clear();
-            trajs.clear();
-            std::vector <double> current_state_vec;
             if (blossom_expand)
             {
-                sg->get_state_space()->copy_vector_from_point(current_state_vec,s);
+                std::vector<std::vector<double>> current_states;
+                std::vector<std::vector<double>> local_goals;
 
-                // Get local goal prediction.
-                std::vector<double> lg_prediction = get_local_goal(current_state_vec);
-                
-                // Get controller prediction
-                std::vector<double> controller_prediction = controller.get_control(current_state_vec, lg_prediction);
-                
-                trajectory_t traj(sg->get_state_space());
-                plan_t plan(sg->get_control_space());
+                std::vector<double> current_state;
+                ss -> copy_vector_from_point(current_state,s);
+                std::vector<double> local_goal;
 
-                plan.append_onto_back(control_duration);
-                sg->get_control_space()->copy_point_from_vector(plan.back().control,controller_prediction);
+                auto nn = rrr.get_lowest_cost_accessible_node(s, dirt_spec);
+                if (nn == -1)
+                {
+                    local_goal.clear();
+                    ss -> sample(lg);
+                    ss -> copy_vector_from_point(local_goal,lg);
+                    current_states.push_back(current_state);
+                    local_goals.push_back(local_goal);
+                }
+                else
+                {
+                    ss -> copy_point(lg,rrr.get_point(nn));
 
-                sg->propagate(s,plan,traj);
+                    // ss -> copy_point(controller_query.goal_state,lg);
+                    // ss -> copy_point(controller_query.start_state,s);
 
-                plans.push_back(new plan_t(plan));
-                trajs.push_back(new trajectory_t(traj));
+                    // controller_query.clear_outputs();
+                    // controller.fulfill_query(controller_query,dirt_spec);
+                    // if (dirt_spec.valid_check(controller_query.solution_traj))
+                    // {
+                    //     plans.push_back(new plan_t(controller_query.solution_plan));
+                    //     trajs.push_back(new trajectory_t(controller_query.solution_traj));
+                    //     return;
+                    // }
+
+                    ss -> copy_vector_from_point(local_goal,lg);
+                    current_states.push_back(current_state);
+                    local_goals.push_back(local_goal);
+                }
+
+                auto controls = controller.get_controls(current_states,local_goals);
+
+                trajectory_t traj(ss);
+                plan_t plan(cs);
+
+                for (int i = 0; i < bn; i++)
+                {
+                    traj.clear(); plan.clear();
+                    plan.append_onto_back(controller.get_control_duration());
+                    cs -> copy_point_from_vector(plan.back().control,controls[i]);
+                    dirt_spec.propagate(s,plan,traj);
+                    plans.push_back(new plan_t(plan));
+                    trajs.push_back(new trajectory_t(traj));
+                }
             }
-
             else
             {
-                sample_plan_t sample_plan;
-                propagate_t propagate;
-                default_expand(s,plans,trajs,bn,sg,sample_plan,propagate);
+                default_expand(s,plans,trajs,bn,sg,dirt_spec.sample_plan,dirt_spec.propagate);
             }
         };
 
-        int stats_runs = params["stats_runs"].as<int>();
-        condition_check_t checker(params["checker_type"].as<std::string>(),params["checker_value"].as<double>());
-        double stats_iters = params["stats_iters"].as<double>();
         std::ofstream fout;
 
-        for( int i = 0; i < stats_runs; ++i )
+        condition_check_t checker("time",1);
+        for (int i = 0; i < 10; i++)
         {
             dirt.link_and_setup_spec(&dirt_spec);
             dirt.preprocess();
@@ -226,27 +209,41 @@ int main(int argc, char* argv[])
             planner_statistics_t stats;
             stats.link_planner(&dirt);
             stats.link_criterion(&checker);
-            stats.repeat_data_gathering(stats_iters);
+            stats.repeat_data_gathering(10);
 
-            std::string full_filename = output_path+params["output_dir"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";
+            std::string full_filename = output_path+params["output_dir"].as<std::string>()+std::to_string(i)+".txt";
 			fout.open(full_filename);
 			fout<<stats.serialize() << std::endl;
 			fout.close();
 
-            // TODO: Add visualization code here.
-            if (true)
-            {
-                dirt.fulfill_query();
-                std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
-                three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
-                vis_group->add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss, "0x000000");
-                vis_group->output_html(params["output_dir"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".html");
-                delete vis_group;
-            }
+            // dirt.fulfill_query();
 
-            dirt.reset();
+            // three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
+            // std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+            // vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
+            // vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, dirt_query.solution_traj, body_name, ss);
+            // vis_group -> add_animation(dirt_query.solution_traj, ss, dirt_query.start_state);
+            // vis_group -> output_html("output.html");
+            // delete vis_group;
+
             dirt_query.clear_outputs();
+            dirt.reset();
         }
+
+        
+
+        // Output graph to file.
+        std::string vertex_fname = output_path + "vertices.txt";
+        std::string edge_fname = output_path + "/edges.txt";
+
+        std::ofstream vertex_file(vertex_fname);
+        std::ofstream edge_file(edge_fname);
+
+        vertex_file << rrr.print_vertices(ss) << std::endl;
+        edge_file << rrr.print_edges() << std::endl;
+
+        vertex_file.close();
+        edge_file.close();
     }
     catch(const prx_assert_t& e) 
     {

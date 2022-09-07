@@ -33,6 +33,12 @@ namespace prx
 		void reset();
 
 		/**
+		 * @brief Report that a new solution has been found.
+		 * @details The planner calls this function when it has found a new solution.
+		 */
+		void report_new_solution();
+
+		/**
 		 * @brief Check if condition is satisfied.
 		 * @details Check if condition is satisfied.
 		 * @return True if satisfied, false if not.
@@ -93,6 +99,11 @@ namespace prx
 		 * @brief Which type of condition to check. 0 for iterations, 1 for time.
 		 */
 		unsigned condition_type;
+
+		/**
+		 * @brief A counter for solutions.
+		 */
+		long unsigned solution_counter;
 
 	};
 }

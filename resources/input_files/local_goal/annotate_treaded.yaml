@@ -2,22 +2,25 @@ random_seed: 210896
 simulation_step: 0.1
 
 # environment: "environments/narrow.yaml"
-# environment: "environments/simple_warehouse.yaml"
+# environment: "environments/maze.yaml"
+environment: "environments/simple_warehouse.yaml"
 # environment: "environments/city.yaml"
-environment: "environments/rrt_star_obstacles.yaml"
+# environment: "environments/rrt_star_obstacles.yaml"
 
 plant: !file "plants/treaded_vehicle.yaml"
 
 use_learned_controller: true
 learned_controller: !file "networks/treaded_vehicle_controller.yaml"
-use_learned_region: false
 
 goal_radius: 0.5
 
 num_trajectories: 100
 sample_around: true
 verify_edge: true
+validate: true
 num_failures: 100
 termination_classifier: !file "networks/svm_classifier.yaml"
 
 debug: false
+
+output_dir: "test_results/rrr/"

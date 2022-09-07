@@ -16,6 +16,7 @@ class termination_classifier_t
     protected:
     bool normalize_input;
     std::vector<double> upper_bounds, lower_bounds;
+    double accuracy;
 
     public:
     termination_classifier_t(param_loader params)
@@ -35,6 +36,11 @@ class termination_classifier_t
         free(prob_test.x);
         free(x_space_train);
         free(x_space_test);
+    }
+
+    double get_accuracy()
+    {
+        return accuracy;
     }
 
     void init(param_loader params)
@@ -61,6 +67,7 @@ class termination_classifier_t
 
     void train(std::vector<std::vector<double>> data, std::vector<double> labels)
     {
+        accuracy = 0.0;
         prob_train.l = data.size();
         prob_train.y = Malloc(double,prob_train.l);
         prob_train.x = Malloc(struct svm_node *,prob_train.l);
@@ -93,7 +100,6 @@ class termination_classifier_t
 
         model = svm_train(&prob_train, &param);
 
-        double accuracy = 0.0;
         for (int i = 0; i < prob_train.l; ++i)
         {
             double prediction = svm_predict(model, prob_train.x[i]);
@@ -101,7 +107,9 @@ class termination_classifier_t
                 accuracy++;
         }
 
-        std::cout << "Training accuracy: " << accuracy / prob_train.l << std::endl;
+        accuracy /= prob_train.l;
+
+        std::cout << "Training accuracy: " << accuracy << std::endl;
     }
 
     bool predict (std::vector<double> data)

@@ -1,4 +1,4 @@
-#if !defined(TORCH_NOT_BUILT) && !defined(BULL_NOT_BUILT)
+#if !defined(TORCH_NOT_BUILT) && !defined(BULLET_NOT_BUILT)
 #include "prx/utilities/defs.hpp"
 #include "prx/bullet_sim/bullet_simulator.hpp"
 #include "prx/bullet_sim/plants/plants.hpp"
@@ -288,7 +288,7 @@ int main(int argc, char* argv[])
 #else
 int main() 
 {
-    prx_throw("Torch and Bullet are not built. Cannot run this program.");
+    // prx_throw("Torch and Bullet are not built. Cannot run this program.");
     return -1;
 }
 #endif

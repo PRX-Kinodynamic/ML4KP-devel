@@ -2,7 +2,7 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/utilities/learned_modules/learned_controller.hpp"
-#include "prx/utilities/learned_modules/reachable_region_vertex.hpp"
+#include "prx/utilities/learned_modules/reachable_region_roadmap.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/planning/planners/dirt.hpp"
 
@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
         
         param_loader params(params_file);
         params.print();
+        timer_t timer; 
         simulation_step = params["simulation_step"].as<double>();
         int random_seed = params["random_seed"].as<int>();
         init_random(random_seed);
@@ -76,286 +77,129 @@ int main(int argc, char* argv[])
             return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
         };
 
-        std::unordered_map<unsigned, reachable_region_vertex_t*> vertices;
-        std::unordered_map<unsigned, std::vector<unsigned>> edges;
-        unsigned vertex_counter = 0;
-        bool verify_edge = params["verify_edge"].as<bool>();
+        reachable_region_roadmap_t rrr(params);
+        double roadmap_time_taken = 0.0;
+        timer.reset();
 
-        const int max_failures = 1000;
-        int failures = 0;
+        rrr.build_roadmap(dirt_query, dirt_spec, controller);
 
-        space_point_t pt = ss -> make_point();
-        std::vector<double> pt_vec;
+        std::cout << "Finished constructing the graph." << std::endl;
 
-        do
+        bool is_connected = rrr.is_connected();
+        while (!is_connected)
         {
-            // Sample a free state.
-            do
+            rrr.refine_roadmap(dirt_spec);
+            is_connected = rrr.is_connected();
+        }
+
+        roadmap_time_taken += timer.measure();
+        std::cout << "Time taken for roadmap construction: " << roadmap_time_taken << std::endl;
+        
+        rrr.get_validation_accuracy();
+        /*
+        std::vector<double> s = params["/plant/start_state"].as<std::vector<double>>();
+        std::vector<double> g = params["/plant/goal_state"].as<std::vector<double>>();
+        ss -> copy_point_from_vector(dirt_query.start_state,s);
+        ss -> copy_point_from_vector(dirt_query.goal_state,g);
+
+        dirt_t dirt("dirt");
+        dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
+        dirt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
+        dirt_spec.blossom_number = 5;
+        dirt_spec.use_pruning = false;
+
+        condition_check_t checker("solutions",1);
+
+        double time_taken = 0.0;
+        timer.reset();
+        auto s_nn = rrr.get_nearest_accessible_node(dirt_query.start_state, dirt_spec);
+        auto d_nn = rrr.get_nearest_departable_node(dirt_query.goal_state, dirt_spec);
+
+        prx_assert(s_nn != -1 && d_nn != -1, "Could not find a start or goal node!");
+        
+        std::cout << "Nearest accessible node to start: " << s_nn << std::endl;
+        std::cout << "Nearest departable node to goal: " << d_nn << std::endl;
+
+        auto path = rrr.get_shortest_path(s_nn,d_nn);
+        for (auto v : path)
+        {
+            std::cout << v << " ";
+        }
+        std::cout << std::endl;
+
+        trajectory_t full_traj(ss);
+        space_point_t current = ss -> make_point();
+
+        for (int i = 0; i <= path.size(); i++)
+        {
+            if (i == 0)
             {
-                ss -> sample(pt);
-            } while (!dirt_spec.valid_state(pt));
-            pt_vec.clear();
-            ss -> copy_vector_from_point(pt_vec,pt);
-
-            std::vector<unsigned> a_indices, d_indices;
-
-            for (auto v : vertices)
-            {
-                auto region = v.second;
-
-                if (region -> is_accessible_from(pt_vec))
-                    a_indices.push_back(v.first);
-
-                if (region -> can_depart_to(pt_vec))
-                    d_indices.push_back(v.first);
-            }
-
-            if (a_indices.size() == 0 || d_indices.size() == 0)
-            {
-                // Create a new region
-                auto region = new reachable_region_vertex_t(params);
-                bool success = region -> construct_vertex(pt, controller, dirt_query, dirt_spec);
-                if (!success) 
+                ss -> copy_point(dirt_query.goal_state,rrr.get_point(path[i]));
+                std::cout << "Start: " << ss -> print_point(dirt_query.start_state,2) << std::endl;
+                std::cout << "Goal: " << ss -> print_point(dirt_query.goal_state,2) << std::endl;
+                controller.fulfill_query(dirt_query, dirt_spec);
+                if (!dirt_spec.valid_check(dirt_query.solution_traj))
                 {
-                    delete region;
-                    failures++;
-                    continue;
+                    dirt_query.clear_outputs();
+                    dirt.reset();
+                    checker.reset();
+                    dirt.link_and_setup_spec(&dirt_spec);
+                    dirt.preprocess();
+                    dirt.link_and_setup_query(&dirt_query);
+                    dirt.resolve_query(&checker);
+                    dirt.fulfill_query();
+                    if (dirt_query.solution_traj.size() ==0) break;
                 }
-                vertices.insert(std::make_pair(vertex_counter,region));
-                std::cout << "Added new vertex " << vertex_counter << " " << ss -> print_point(pt) << std::endl;
-                vertex_counter++;
-                continue;
+            }
+            else if (i < path.size())
+            {
+                ss -> copy_point(dirt_query.start_state, full_traj.back());
+                ss -> copy_point(dirt_query.goal_state,rrr.get_point(path[i]));
+                std::cout << "Start: " << ss -> print_point(dirt_query.start_state,2) << std::endl;
+                std::cout << "Goal: " << ss -> print_point(dirt_query.goal_state,2) << std::endl;
+                controller.fulfill_query(dirt_query, dirt_spec);
+                if (!dirt_spec.valid_check(dirt_query.solution_traj))
+                {
+                    dirt_query.clear_outputs();
+                    dirt.reset();
+                    checker.reset();
+                    dirt.link_and_setup_spec(&dirt_spec);
+                    dirt.preprocess();
+                    dirt.link_and_setup_query(&dirt_query);
+                    dirt.resolve_query(&checker);
+                    dirt.fulfill_query();
+                    if (dirt_query.solution_traj.size() ==0) break;
+                }
             }
             else
             {
-                // Check if any two indices a_index in a_indices and d_index in d_indices are connected.
-                bool connected = false;
-                for (auto a_index : a_indices)
+                ss -> copy_point(dirt_query.start_state, full_traj.back());
+                ss -> copy_point_from_vector(dirt_query.goal_state,g);
+                std::cout << "Start: " << ss -> print_point(dirt_query.start_state,2) << std::endl;
+                std::cout << "Goal: " << ss -> print_point(dirt_query.goal_state,2) << std::endl;
+                controller.fulfill_query(dirt_query, dirt_spec);
+                if (!dirt_spec.valid_check(dirt_query.solution_traj))
                 {
-                    for (auto d_index : d_indices)
-                    {
-                        if (edges.find(a_index) != edges.end())
-                        {
-                            if (std::find(edges[a_index].begin(),edges[a_index].end(),d_index) != edges[a_index].end())
-                            {
-                                connected = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (connected) break;
-                }
-
-                if (!connected)
-                {
-                    // Pick a_index and d_index from a_indices and d_indices respectively.
-                    unsigned a_index = a_indices[uniform_int_random(0,a_indices.size()-1)];
-                    unsigned d_index = d_indices[uniform_int_random(0,d_indices.size()-1)];
-                    
-                    // Verify that an edge is possible.
-                    if (verify_edge)
-                    {
-                        auto d_region_pt = vertices[d_index] -> get_point();
-                        auto a_region_pt = vertices[a_index] -> get_point();
-
-                        dirt_query.clear_outputs();
-                        ss -> copy_point(dirt_query.start_state,d_region_pt);
-                        ss -> copy_point(dirt_query.goal_state,pt);
-                        controller.fulfill_query(dirt_query, dirt_spec);
-
-                        if (!dirt_spec.valid_check(dirt_query.solution_traj))
-                        {
-                            failures++;
-                            continue;
-                        }
-
-                        ss -> copy_point(dirt_query.start_state,dirt_query.solution_traj.back());
-                        ss -> copy_point(dirt_query.goal_state,a_region_pt);
-                        dirt_query.clear_outputs();
-                        controller.fulfill_query(dirt_query, dirt_spec);
-
-                        if (!dirt_spec.valid_check(dirt_query.solution_traj))
-                        {
-                            failures++;
-                            continue;
-                        }
-                    }
-                    
-                    // Create a new region.
-                    auto region = new reachable_region_vertex_t(params);
-                    bool success = region -> construct_vertex(pt, controller, dirt_query, dirt_spec);
-                    if (!success) 
-                    {
-                        delete region;
-                        failures++;
-                        continue;
-                    }
-                    vertices.insert(std::make_pair(vertex_counter,region));
-                    std::cout << "Added new vertex " << vertex_counter << " " << ss -> print_point(pt) << std::endl;
-
-                    // Add edge between d_index and vertex_counter.
-                    if (edges.find(d_index) == edges.end())
-                    {
-                        edges.insert(std::make_pair(d_index,std::vector<unsigned>()));
-                    }
-                    edges[d_index].push_back(vertex_counter);
-
-                    // Add edge between vertex_counter and a_index.
-                    if (edges.find(vertex_counter) == edges.end())
-                    {
-                        edges.insert(std::make_pair(vertex_counter,std::vector<unsigned>()));
-                    }
-                    edges[vertex_counter].push_back(a_index);
-
-                    std::cout << "Added new edge " << d_index << " " << vertex_counter << std::endl;
-                    std::cout << "Added new edge " << vertex_counter << " " << a_index << std::endl;
-                    
-                    vertex_counter++;
-                    
-                    continue;
-                }
-                else
-                {
-                    // Find closest node in d_indices to pt.
-                    double min_dist_d = std::numeric_limits<double>::infinity();
-                    unsigned min_index_d = -1;
-                    for (auto d_index : d_indices)
-                    {
-                        auto d_region_pt = vertices[d_index] -> get_point();
-                        double dist = dirt_spec.distance_function(d_region_pt,pt);
-                        if (dist < min_dist_d)
-                        {
-                            min_dist_d = dist;
-                            min_index_d = d_index;
-                        }
-                    }
-
-                    // Find closest node in a_indices to pt.
-                    double min_dist_a = std::numeric_limits<double>::infinity();
-                    unsigned min_index_a = -1;
-                    for (auto a_index : a_indices)
-                    {
-                        auto a_region_pt = vertices[a_index] -> get_point();
-                        double dist = dirt_spec.distance_function(a_region_pt,pt);
-                        if (dist < min_dist_a && a_index != min_index_d)
-                        {
-                            min_dist_a = dist;
-                            min_index_a = a_index;
-                        }
-                    }
-
-                    // @aravind: What does this mean?
-                    if (min_index_a == -1 || min_index_d == -1)
-                    {
-                        failures++;
-                        continue;
-                    }
-
-                    // Check if edge between min_index_d and min_index_a exists.
-                    bool edge_exists = false;
-                    if (edges.find(min_index_d) != edges.end())
-                    {
-                        if (std::find(edges[min_index_d].begin(),edges[min_index_d].end(),min_index_a) != edges[min_index_d].end())
-                        {
-                            edge_exists = true;
-                        }
-                    }
-
-                    if (edge_exists) 
-                    {
-                        failures++;
-                        continue;
-                    }
-
-                    auto d_region_pt = vertices[min_index_d] -> get_point();
-                    auto a_region_pt = vertices[min_index_a] -> get_point();
-
                     dirt_query.clear_outputs();
-                    ss -> copy_point(dirt_query.start_state,d_region_pt);
-                    ss -> copy_point(dirt_query.goal_state,a_region_pt);
-                    controller.fulfill_query(dirt_query, dirt_spec);
-                    if (dirt_spec.valid_check(dirt_query.solution_traj))
-                    {
-                        // Add edge between min_index_d and min_index_a.
-                        if (edges.find(min_index_d) == edges.end())
-                        {
-                            edges.insert(std::make_pair(min_index_d,std::vector<unsigned>()));
-                        }
-                        edges[min_index_d].push_back(min_index_a);
-
-                        std::cout << "Added new edge " << min_index_d << " " << min_index_a << std::endl;
-                    }
-                    else
-                    {
-                        if (verify_edge)
-                        {
-                            // Attempt to connect via pt.
-                            dirt_query.clear_outputs();
-                            ss -> copy_point(dirt_query.start_state,d_region_pt);
-                            ss -> copy_point(dirt_query.goal_state,pt);
-                            controller.fulfill_query(dirt_query, dirt_spec);
-                            
-                            if (!dirt_spec.valid_check(dirt_query.solution_traj))
-                            {
-                                failures++;
-                                continue;
-                            }
-
-                            ss -> copy_point(dirt_query.start_state,dirt_query.solution_traj.back());
-                            ss -> copy_point(dirt_query.goal_state,a_region_pt);
-                            dirt_query.clear_outputs();
-                            controller.fulfill_query(dirt_query, dirt_spec);
-
-                            if (!dirt_spec.valid_check(dirt_query.solution_traj))
-                            {
-                                failures++;
-                                continue;
-                            }
-                        }
-
-                        // Create a new region.
-                        auto region = new reachable_region_vertex_t(params);
-                        bool success = region -> construct_vertex(pt, controller, dirt_query, dirt_spec);
-                        if (!success) 
-                        {
-                            delete region;
-                            failures++;
-                            continue;
-                        }
-                        vertices.insert(std::make_pair(vertex_counter,region));
-                        std::cout << "Added new vertex " << vertex_counter << " " << ss -> print_point(pt) << std::endl;
-
-                        // Add edge between min_index_d and vertex_counter.
-                        if (edges.find(min_index_d) == edges.end())
-                        {
-                            edges.insert(std::make_pair(min_index_d,std::vector<unsigned>()));
-                        }
-                        edges[min_index_d].push_back(vertex_counter);
-
-                        // Add edge between vertex_counter and min_index_a.
-                        if (edges.find(vertex_counter) == edges.end())
-                        {
-                            edges.insert(std::make_pair(vertex_counter,std::vector<unsigned>()));
-                        }
-                        edges[vertex_counter].push_back(min_index_a);
-
-                        std::cout << "Added new edge " << min_index_d << " " << vertex_counter << std::endl;
-                        std::cout << "Added new edge " << vertex_counter << " " << min_index_a << std::endl;
-
-                        vertex_counter++;
-
-                        continue;
-                    }
-                    
+                    dirt.reset();
+                    checker.reset();
+                    dirt.link_and_setup_spec(&dirt_spec);
+                    dirt.preprocess();
+                    dirt.link_and_setup_query(&dirt_query);
+                    dirt.resolve_query(&checker);
+                    dirt.fulfill_query();
+                    if (dirt_query.solution_traj.size() ==0) break;
                 }
             }
 
-            failures++;
-            
-        } while (failures < max_failures);
+            full_traj += dirt_query.solution_traj;
+            dirt_query.clear_outputs();
+        }
+        time_taken += timer.measure();
+        std::cout << "Time: " << std::fixed << std::setprecision(16) <<
+         time_taken << std::endl;
+         */
 
-        std::cout << "Finished constructing the graph." << std::endl;
-        
         // Output graph to file.
         std::string vertex_fname = output_path + "vertices.txt";
         std::string edge_fname = output_path + "/edges.txt";
@@ -363,19 +207,8 @@ int main(int argc, char* argv[])
         std::ofstream vertex_file(vertex_fname);
         std::ofstream edge_file(edge_fname);
 
-        for (auto v : vertices)
-        {
-            auto region = v.second;
-            vertex_file << v.first << "," << region -> print_point(ss) << std::endl;
-
-            if (edges.find(v.first) != edges.end())
-            {
-                for (auto e : edges[v.first])
-                {
-                    edge_file << v.first << "," << e << std::endl;
-                }
-            }
-        }
+        vertex_file << rrr.print_vertices(ss) << std::endl;
+        edge_file << rrr.print_edges() << std::endl;
 
         vertex_file.close();
         edge_file.close();

@@ -150,7 +150,7 @@ namespace prx
 				new_edge->plan = std::make_shared<plan_t>(plan);
 				new_edge->traj = std::make_shared<trajectory_t>(traj);
 
-				update_goal(node_index);
+				update_goal(node_index, condition);
 
 			}
 			iteration_count++;
@@ -236,7 +236,7 @@ namespace prx
 
 	}
 
-	void aorrt_t::update_goal(node_index_t node_index)
+	void aorrt_t::update_goal(node_index_t node_index, condition_check_t* condition)
 	{	
 		auto new_tree_node = tree.get_vertex_as<aorrt_node_t>(node_index);
 		auto tree_edge = tree.get_edge_as<aorrt_edge_t>(new_tree_node -> get_parent_edge());
@@ -245,6 +245,7 @@ namespace prx
 		// if(distance_function(aorrt_query->goal_state, traj.back()) < aorrt_query->goal_region_radius
 		if(aorrt_query->goal_check( pt ) && c_new < Y_min_cost)
 		{
+			condition -> report_new_solution();
 			// statics
 			current_solution = c_new;
 			current_solution_time = timer.measure();
