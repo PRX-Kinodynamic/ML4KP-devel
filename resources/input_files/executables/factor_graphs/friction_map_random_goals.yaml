@@ -1,0 +1,13 @@
+random_seed: 231192
+simulation_step: 0.01
+
+environment: "environments/empty.yaml"
+plant: !file "plants/omnibot_mecanum_FO.yaml"
+
+visualize: true
+goal_region_radius: 0.25
+
+checker_type: iterations
+checker_value: 5000
+
+num_trajs: 6
