@@ -2,7 +2,9 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/utilities/learned_modules/learned_controller.hpp"
-#include "prx/utilities/learned_modules/reachable_region_roadmap.hpp"
+// #include "prx/utilities/learned_modules/reachable_region_roadmap.hpp"
+#include "prx/utilities/learned_modules/ground_truth_roadmap.hpp"
+#include "prx/utilities/learned_modules/access_roadmap.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/planning/planners/dirt.hpp"
 #include "prx/planning/planner_statistics.hpp"
@@ -80,20 +82,14 @@ int main(int argc, char* argv[])
             return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
         };
 
-        reachable_region_roadmap_t rrr(params);
+        // reachable_region_roadmap_t rrr(params);
+        // ground_truth_roadmap_t rrr;
+        access_roadmap_t rrr(params);
         double roadmap_time_taken = 0.0;
         timer.reset();
 
         rrr.build_roadmap(dirt_query, dirt_spec, controller);
-
         std::cout << "Finished constructing the graph." << std::endl;
-
-        bool is_connected = rrr.is_connected();
-        while (!is_connected)
-        {
-            rrr.refine_roadmap(dirt_spec);
-            is_connected = rrr.is_connected();
-        }
 
         roadmap_time_taken += timer.measure();
         std::cout << "Time taken for roadmap construction: " << roadmap_time_taken << std::endl;
@@ -109,7 +105,9 @@ int main(int argc, char* argv[])
         ss -> copy_point_from_vector(dirt_query.start_state,s);
         ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
-        auto s_nn = rrr.get_nearest_accessible_node(dirt_query.start_state, dirt_spec);
+        ss -> copy_point_from_vector(dirt_query.start_state,s);
+        auto s_nn = rrr.add_start(dirt_query.start_state, dirt_spec, dirt_query, controller);
+        ss -> copy_point_from_vector(dirt_query.goal_state,g);
         auto g_nn = rrr.add_goal(dirt_query.goal_state, dirt_spec, dirt_query, controller);
         ss -> copy_point_from_vector(dirt_query.start_state,s);
         ss -> copy_point_from_vector(dirt_query.goal_state,g);
@@ -119,20 +117,20 @@ int main(int argc, char* argv[])
         std::cout << "Nearest accessible node to start: " << s_nn << std::endl;
 
         auto path = rrr.get_shortest_path(s_nn,g_nn);
-        for (auto p: path)
+        for (auto v : path)
         {
-            std::cout << p << " ";
+            std::cout << v << " ";
         }
         std::cout << std::endl;
 
-        // dirt_query_t controller_query(ss,cs);
-        // controller_query.start_state = ss -> make_point();
-        // controller_query.goal_state  = ss -> make_point();
-        // controller_query.goal_region_radius = params["goal_radius"].as<double>();
-        // controller_query.goal_check = [&,dirt_spec,ss](space_point_t s)
-        // {
-        //     return dirt_spec.distance_function(s,dirt_query.goal_state) < controller_query.goal_region_radius; 
-        // };
+        dirt_query_t controller_query(ss,cs);
+        controller_query.start_state = ss -> make_point();
+        controller_query.goal_state  = ss -> make_point();
+        controller_query.goal_region_radius = params["goal_radius"].as<double>();
+        controller_query.goal_check = [&,dirt_spec,ss](space_point_t s)
+        {
+            return dirt_spec.distance_function(s,dirt_query.goal_state) < controller_query.goal_region_radius; 
+        };
 
         space_point_t lg = ss -> make_point();
         dirt_spec.expand = [&](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn, bool blossom_expand)
@@ -146,11 +144,16 @@ int main(int argc, char* argv[])
                 ss -> copy_vector_from_point(current_state,s);
                 std::vector<double> local_goal;
 
-                auto nn = rrr.get_lowest_cost_accessible_node(s, dirt_spec);
+                // auto nn = rrr.get_best_node(s,controller_query, dirt_spec, controller);
+                auto nn = rrr.get_best_node(s,dirt_spec);
+                // int nn = -1;
                 if (nn == -1)
                 {
                     local_goal.clear();
-                    ss -> sample(lg);
+                    do
+                    {
+                        ss -> sample(lg);
+                    } while (!dirt_spec.valid_state(lg));
                     ss -> copy_vector_from_point(local_goal,lg);
                     current_states.push_back(current_state);
                     local_goals.push_back(local_goal);
@@ -158,19 +161,6 @@ int main(int argc, char* argv[])
                 else
                 {
                     ss -> copy_point(lg,rrr.get_point(nn));
-
-                    // ss -> copy_point(controller_query.goal_state,lg);
-                    // ss -> copy_point(controller_query.start_state,s);
-
-                    // controller_query.clear_outputs();
-                    // controller.fulfill_query(controller_query,dirt_spec);
-                    // if (dirt_spec.valid_check(controller_query.solution_traj))
-                    // {
-                    //     plans.push_back(new plan_t(controller_query.solution_plan));
-                    //     trajs.push_back(new trajectory_t(controller_query.solution_traj));
-                    //     return;
-                    // }
-
                     ss -> copy_vector_from_point(local_goal,lg);
                     current_states.push_back(current_state);
                     local_goals.push_back(local_goal);

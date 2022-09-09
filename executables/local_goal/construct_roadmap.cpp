@@ -3,6 +3,8 @@
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/utilities/learned_modules/learned_controller.hpp"
 #include "prx/utilities/learned_modules/reachable_region_roadmap.hpp"
+#include "prx/utilities/learned_modules/ground_truth_roadmap.hpp"
+#include "prx/utilities/learned_modules/access_roadmap.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/planning/planners/dirt.hpp"
 
@@ -77,7 +79,10 @@ int main(int argc, char* argv[])
             return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
         };
 
-        reachable_region_roadmap_t rrr(params);
+        // reachable_region_roadmap_t rrr(params);
+        int max_failures = params["num_failures"].as<int>();
+        ground_truth_roadmap_t rrr;
+        rrr.set_max_failures(max_failures);
         double roadmap_time_taken = 0.0;
         timer.reset();
 
@@ -86,21 +91,18 @@ int main(int argc, char* argv[])
         std::cout << "Finished constructing the graph." << std::endl;
 
         bool is_connected = rrr.is_connected();
-        while (!is_connected)
-        {
-            rrr.refine_roadmap(dirt_spec);
-            is_connected = rrr.is_connected();
-        }
+        // while (!is_connected)
+        // {
+        //     rrr.refine_roadmap(dirt_spec);
+        //     is_connected = rrr.is_connected();
+        // }
 
         roadmap_time_taken += timer.measure();
         std::cout << "Time taken for roadmap construction: " << roadmap_time_taken << std::endl;
         
-        rrr.get_validation_accuracy();
-        /*
+        // rrr.get_validation_accuracy();
         std::vector<double> s = params["/plant/start_state"].as<std::vector<double>>();
         std::vector<double> g = params["/plant/goal_state"].as<std::vector<double>>();
-        ss -> copy_point_from_vector(dirt_query.start_state,s);
-        ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
         dirt_t dirt("dirt");
         dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
@@ -112,21 +114,21 @@ int main(int argc, char* argv[])
 
         double time_taken = 0.0;
         timer.reset();
-        auto s_nn = rrr.get_nearest_accessible_node(dirt_query.start_state, dirt_spec);
-        auto d_nn = rrr.get_nearest_departable_node(dirt_query.goal_state, dirt_spec);
+        ss -> copy_point_from_vector(dirt_query.start_state,s);
+        auto s_nn = rrr.add_start(dirt_query.start_state, dirt_spec, dirt_query, controller);
+        ss -> copy_point_from_vector(dirt_query.goal_state,g);
+        auto g_nn = rrr.add_goal(dirt_query.goal_state, dirt_spec, dirt_query, controller);
 
-        prx_assert(s_nn != -1 && d_nn != -1, "Could not find a start or goal node!");
+        prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
         
-        std::cout << "Nearest accessible node to start: " << s_nn << std::endl;
-        std::cout << "Nearest departable node to goal: " << d_nn << std::endl;
-
-        auto path = rrr.get_shortest_path(s_nn,d_nn);
+        auto path = rrr.get_shortest_path(s_nn,g_nn);
         for (auto v : path)
         {
             std::cout << v << " ";
         }
         std::cout << std::endl;
 
+        /*
         trajectory_t full_traj(ss);
         space_point_t current = ss -> make_point();
 

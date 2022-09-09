@@ -23,4 +23,4 @@ termination_classifier: !file "networks/svm_classifier.yaml"
 
 debug: false
 
-output_dir: "test_results/rrr/"
+output_dir: "test_results/classify-roadmap/"

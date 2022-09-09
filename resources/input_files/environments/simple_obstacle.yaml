@@ -11,5 +11,5 @@ environment:
           dims: [ 3, 3, 2]
           material: 0x0015ff
         config:
-          position: [10, 10, 1]
+          position: [0, 0, 1]
           orientation: [0,0,0,1]

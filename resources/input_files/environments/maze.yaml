@@ -4,147 +4,165 @@ environment:
       position: [0,0,0.1]
       orientation: [0,0,0,1]
     geometries:
-      -   
-        name: block_1
+      -
+        name: o1
         collision_geometry:
           type: box
-          dims: [3, 15, 0.2]
+          dims: [ .1, 2, 0.2]
           material: 0x0015ff
         config:
-          position: [-9, 0, 0.1]
+          position: [2, 4, 0.2]
           orientation: [0,0,0,1]
       -
-        name: block_1_bottom
+        name: o2
         collision_geometry:
           type: box
-          dims: [3, 1.5, 0.2]
+          dims: [ .1, 2, 0.2]
           material: 0x0015ff
         config:
-          position: [-9, -8.75, 0.1]
-          orientation: [0,0,0,1]
-      -
-        name: block_1_top
+          position: [4, 3, 0.1]
+          orientation: [0,0,0,1]   
+      -    
+        name: o3
         collision_geometry:
           type: box
-          dims: [3, 3, 0.2]
+          dims: [2, .1, 0.2]
           material: 0x0015ff
         config:
-          position: [-9, 10.5, 0.1]
+          position: [3, 2, 0.1]
           orientation: [0,0,0,1]
-      -
-        name: block_2
+      -    
+        name: o4
         collision_geometry:
           type: box
-          dims: [3,15, 0.2]
+          dims: [2, .1, 0.2]
+          material: 0x0015ff
+        config:
+          position: [2, 0, 0.1]
+          orientation: [0,0,0,1]
+      -    
+        name: o5
+        collision_geometry:
+          type: box
+          dims: [.1, 4, 0.2]
+          material: 0x0015ff
+        config:
+          position: [3, -2, 0.1]
+          orientation: [0,0,0,1]
+      -    
+        name: o6
+        collision_geometry:
+          type: box
+          dims: [2, .1, 0.2]
+          material: 0x0015ff
+        config:
+          position: [2, -4, 0.1]
+          orientation: [0,0,0,1]
+      -    
+        name: o7
+        collision_geometry:
+          type: box
+          dims: [.1, 2, 0.2]
+          material: 0x0015ff
+        config:
+          position: [-2, -4, 0.1]
+          orientation: [0,0,0,1]
+      -    
+        name: o8
+        collision_geometry:
+          type: box
+          dims: [2, .1, 0.2]
+          material: 0x0015ff
+        config:
+          position: [-1, -3, 0.1]
+          orientation: [0,0,0,1]
+      -    
+        name: o9
+        collision_geometry:
+          type: box
+          dims: [4, .1, 0.2]
+          material: 0x0015ff
+        config:
+          position: [-1, -2, 0.1]
+          orientation: [0,0,0,1]
+      -    
+        name: o10
+        collision_geometry:
+          type: box
+          dims: [.1, 4, 0.2]
           material: 0x0015ff
         config:
           position: [-3, 0, 0.1]
           orientation: [0,0,0,1]
-      - 
-        name: block_2_bottom
+      -    
+        name: o11
         collision_geometry:
           type: box
-          dims: [3,1.5, 0.2]
+          dims: [2, .1, 0.2]
           material: 0x0015ff
         config:
-          position: [-3, -8.75, 0.1]
+          position: [-1, 0, 0.1]
           orientation: [0,0,0,1]
-      -
-        name: block_2_top
+      -    
+        name: o12
         collision_geometry:
           type: box
-          dims: [3,3, 0.2]
+          dims: [2, .1, 0.2]
           material: 0x0015ff
         config:
-          position: [-3, 9.5, 0.1]
+          position: [-2, 2, 0.1]
           orientation: [0,0,0,1]
-      -
-        name: block_3
+      -    
+        name: o13
         collision_geometry:
           type: box
-          dims: [3,15, 0.2]
+          dims: [.1, 4, 0.2]
           material: 0x0015ff
         config:
-          position: [3, 0, 0.1]
+          position: [0, 2, 0.1]
           orientation: [0,0,0,1]
-      -
-        name: block_3_top
+      -    
+        name: o14
         collision_geometry:
           type: box
-          dims: [3,3, 0.2]
+          dims: [2, .1, 0.2]
           material: 0x0015ff
         config:
-          position: [3, 9.5, 0.1]
-          orientation: [0,0,0,1]
-      -
-        name: block_3_bottom
-        collision_geometry:
-          type: box
-          dims: [3,1.5, 0.2]
-          material: 0x0015ff
-        config:
-          position: [3, -8.75, 0.1]
-          orientation: [0,0,0,1]
-      -
-        name: block_4
-        collision_geometry:
-          type: box
-          dims: [3,15, 0.2]
-          material: 0x0015ff
-        config:
-          position: [9, 0, 0.1]
-          orientation: [0,0,0,1]
-      -
-        name: block_4_top
-        collision_geometry:
-          type: box
-          dims: [3,3, 0.2]
-          material: 0x0015ff
-        config:
-          position: [9, 9.5, 0.1]
-          orientation: [0,0,0,1]
-      -
-        name: block_4_bottom
-        collision_geometry:
-          type: box
-          dims: [3,1.5, 0.2]
-          material: 0x0015ff
-        config:
-          position: [9, -8.75, 0.1]
+          position: [-1, 4, 0.1]
           orientation: [0,0,0,1]
       -
         name: bb_left
         collision_geometry:
           type: box
-          dims: [ .1, 28, 0.2]
+          dims: [ .1, 10, 0.2]
           material: 0x0015ff
         config:
-          position: [-14, 0, 0.1]
+          position: [-5, 0, 0.1]
           orientation: [0,0,0,1]
       -
         name: bb_right
         collision_geometry:
           type: box
-          dims: [ .1, 28,  0.2]
+          dims: [ .1, 10,  0.2]
           material: 0x0015ff
         config:
-          position: [14, 0, 0.1]
+          position: [5, 0, 0.1]
           orientation: [0,0,0,1]
       -
         name: bb_top
         collision_geometry:
           type: box
-          dims: [ 28, .1, 0.2]
+          dims: [ 10, .1, 0.2]
           material: 0x0015ff
         config:
-          position: [0, 14, 0.1]
+          position: [0, 5, 0.1]
           orientation: [0,0,0,1]
       -
         name: bb_bottom
         collision_geometry:
           type: box
-          dims: [ 28, .1, 0.2]
+          dims: [ 10, .1, 0.2]
           material: 0x0015ff
         config:
-          position: [0, -14, 0.1]
+          position: [0, -5, 0.1]
           orientation: [0,0,0,1]
