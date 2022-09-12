@@ -1,0 +1,13 @@
+random_seed: 11101993
+simulation_step: 0.01
+
+environment: "environments/empty.yaml"
+plant: !file "plants/1d_quadrotor.yaml"
+# plant: !file "plants/acrobot.yaml"
+
+visualize: true
+
+checker_type: time
+checker_value: 1
+
+goal_region_radius: 0.5

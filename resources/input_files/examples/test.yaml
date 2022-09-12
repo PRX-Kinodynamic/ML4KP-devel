@@ -1,0 +1,27 @@
+debug: false
+environment: environments/simple_warehouse.yaml
+goal_radius: 0.5
+goal_state:
+- -6.886817885696858
+- -12.684582205679916
+- 0.8696357275991495
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+max_steps: 100
+num_trajectories: 10
+output_id: 0
+random_seed: 0
+simulation_step: 0.1
+start_state:
+- 13.383720108910161
+- -0.2699874591003777
+- -1.6466329500570664
+- 0.0
+- 0.0
+- 0.0
+- 0.0
+use_learned_controller: true
+plant: !file "plants/segway.yaml"
+learned_controller: !file "networks/segway.yaml"

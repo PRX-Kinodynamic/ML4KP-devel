@@ -1,0 +1,5 @@
+name: "ducted_fan"
+path: "ducted_fan"
+
+start_state: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+goal_state:  [5.0, 5.0, 0.0, 0.0, 0.0, 0.0]

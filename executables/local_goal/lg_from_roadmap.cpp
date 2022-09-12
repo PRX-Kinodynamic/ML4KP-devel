@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
         
         param_loader params(params_file);
         params.print();
-        timer_t timer; 
+        prx::timer_t timer; 
         simulation_step = params["simulation_step"].as<double>();
         int random_seed = params["random_seed"].as<int>();
         init_random(random_seed);

@@ -9,8 +9,8 @@ namespace prx
 
 		state_memory = {&x,&y,&yaw,&dx,&dy,&dyaw,&sid};
         state_space = new space_t("EEREEEI",state_memory,"XYZRPYdxdydzdrdpdyaId");
-        state_bounds_l = {-10,-10,-3.15,-20,-20,-20,0};
-        state_bounds_u = {10,10,3.15,20,20,20,PRX_INFINITY};
+        state_bounds_l = {-14,-14,-3.15,-20,-20,-20,0};
+        state_bounds_u = {14,14,3.15,20,20,20,PRX_INFINITY};
         state_space->set_bounds(state_bounds_l, state_bounds_u);
 
 		lf=rf=lr=rr=0;
@@ -43,6 +43,8 @@ namespace prx
         basePosition[0] = state_space -> at(0);
         basePosition[1] = state_space -> at(1);
 		basePosition[2] = 0.2;
+		baseRotation[0] = 0;
+		baseRotation[1] = 0;
         baseRotation[2] = state_space -> at(2);
         bullet_simulator_t::get_quaternion_from_euler(baseOrientation, baseRotation);
 

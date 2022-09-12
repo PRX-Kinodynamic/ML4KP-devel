@@ -213,7 +213,7 @@ class learned_controller_t
         return denormalize_control(control,control_lower_bounds,control_upper_bounds);
     }
     
-    void fulfill_query(planner_query_t& query, std::shared_ptr<system_group_t> sg, int horizon)
+    void fulfill_query(planner_query_t& query, std::shared_ptr<system_group_t> sg)
     {
         // @TODO for Aravind: Adapt this for the non-goal-reaching case.
         query.solution_plan.clear();
@@ -225,7 +225,7 @@ class learned_controller_t
         space_point_t current = sg -> get_state_space() -> clone_point(query.start_state);
         sg -> get_state_space() -> copy_vector_from_point(goal_vec,query.goal_state);
 
-        while (time_so_far < horizon && !query.goal_check(current))
+        while (time_so_far < max_duration && !query.goal_check(current))
         {
             state_vec.clear();
             step_traj.clear();

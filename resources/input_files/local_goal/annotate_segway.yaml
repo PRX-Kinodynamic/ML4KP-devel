@@ -1,16 +1,19 @@
 random_seed: 0
-simulation_step: 0.01
+simulation_step: 0.1
 
-environment: "environments/bug_trap.yaml"
+environment: "environments/simple_warehouse.yaml"
 plant: !file "plants/segway.yaml"
 
 use_learned_controller: true
 learned_controller: !file "networks/segway.yaml"
 max_steps: 100
 
+start_state: [2.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+goal_state:  [9.5, 9.5, 0.0, 0.0, 0.0, 0.0, 0.0]
+
 goal_radius: 0.5
 
-output_dir: "lg_segway_warehouse/"
+output_id: 0
 num_trajectories: 10
 
 debug: false

@@ -8,5 +8,6 @@ normalize_input: false
 delta_input: true
 
 control_duration: 1.0
+max_duration: 30.0
 
 debug_controller: false
