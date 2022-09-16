@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
     const int y{ std::get<1>(e) };
     // std::cout << x << " " << y << std::endl;
 
-    auto symbol = symbol_factory_t::create_symbol(gen_symbol_str(x, y), x, y);
+    auto symbol = prx::symbol_factory_t::create_symbol(gen_symbol_str(x, y), x, y);
     // std::cout << prx::key_formatter(symbol) << std::endl;
     init_vals.insert(symbol, param_guess);
   }
