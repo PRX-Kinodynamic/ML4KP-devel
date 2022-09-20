@@ -1,0 +1,17 @@
+planner: "AORRT"
+
+random_seed: 231192
+simulation_step: 0.1
+
+environment: "environments/BARN.yaml"
+plant: !file "plants/omnirobot_mecanum_FO.yaml"
+
+blossom: 5
+pruning: false
+
+visualize: true
+
+checker_type: time
+checker_value: 30
+
+goal_region_radius: 0.1

@@ -1,0 +1,14 @@
+name: "omnirobot_mecanum_FO"
+path: "omnirobot_mecanum_FO"
+
+# Assume BARN environment
+start_state: [-0.975, 4.075, 1.57]
+goal_state:  [-0.825, 9.725, 1.57]
+
+min_steps: 1 
+max_steps: 50
+
+state_space_lower_bound: [-4.5, 0.0, -3.15]
+state_space_upper_bound: [ 0.0, 10.0, 3.15]
+
+vis_body: "body"
