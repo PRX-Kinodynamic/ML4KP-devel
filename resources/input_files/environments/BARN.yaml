@@ -1,0 +1,4435 @@
+environment:
+  geometries:
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 0.075
+      - 0.5
+    name: unit_cylinder_0
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.225
+      - 0.075
+      - 0.5
+    name: unit_cylinder_1
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.375
+      - 0.075
+      - 0.5
+    name: unit_cylinder_2
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.525
+      - 0.075
+      - 0.5
+    name: unit_cylinder_3
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.675
+      - 0.075
+      - 0.5
+    name: unit_cylinder_4
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.825
+      - 0.075
+      - 0.5
+    name: unit_cylinder_5
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.975
+      - 0.075
+      - 0.5
+    name: unit_cylinder_6
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.125
+      - 0.075
+      - 0.5
+    name: unit_cylinder_7
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.275
+      - 0.075
+      - 0.5
+    name: unit_cylinder_8
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.425
+      - 0.075
+      - 0.5
+    name: unit_cylinder_9
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.575
+      - 0.075
+      - 0.5
+    name: unit_cylinder_10
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.725
+      - 0.075
+      - 0.5
+    name: unit_cylinder_11
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.875
+      - 0.075
+      - 0.5
+    name: unit_cylinder_12
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.025
+      - 0.075
+      - 0.5
+    name: unit_cylinder_13
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.175
+      - 0.075
+      - 0.5
+    name: unit_cylinder_14
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.325
+      - 0.075
+      - 0.5
+    name: unit_cylinder_15
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.475
+      - 0.075
+      - 0.5
+    name: unit_cylinder_16
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.625
+      - 0.075
+      - 0.5
+    name: unit_cylinder_17
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.775
+      - 0.075
+      - 0.5
+    name: unit_cylinder_18
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.925
+      - 0.075
+      - 0.5
+    name: unit_cylinder_19
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.075
+      - 0.075
+      - 0.5
+    name: unit_cylinder_20
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.225
+      - 0.075
+      - 0.5
+    name: unit_cylinder_21
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.375
+      - 0.075
+      - 0.5
+    name: unit_cylinder_22
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.525
+      - 0.075
+      - 0.5
+    name: unit_cylinder_23
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.675
+      - 0.075
+      - 0.5
+    name: unit_cylinder_24
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.825
+      - 0.075
+      - 0.5
+    name: unit_cylinder_25
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 0.075
+      - 0.5
+    name: unit_cylinder_26
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.125
+      - 0.075
+      - 0.5
+    name: unit_cylinder_27
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 0.075
+      - 0.5
+    name: unit_cylinder_28
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 0.075
+      - 0.5
+    name: unit_cylinder_29
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 0.225
+      - 0.5
+    name: unit_cylinder_30
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 0.225
+      - 0.5
+    name: unit_cylinder_31
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 0.375
+      - 0.5
+    name: unit_cylinder_32
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 0.375
+      - 0.5
+    name: unit_cylinder_33
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 0.525
+      - 0.5
+    name: unit_cylinder_34
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 0.525
+      - 0.5
+    name: unit_cylinder_35
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 0.675
+      - 0.5
+    name: unit_cylinder_36
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 0.675
+      - 0.5
+    name: unit_cylinder_37
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 0.825
+      - 0.5
+    name: unit_cylinder_38
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 0.825
+      - 0.5
+    name: unit_cylinder_39
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 0.975
+      - 0.5
+    name: unit_cylinder_40
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 0.975
+      - 0.5
+    name: unit_cylinder_41
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 1.125
+      - 0.5
+    name: unit_cylinder_42
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 1.125
+      - 0.5
+    name: unit_cylinder_43
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 1.275
+      - 0.5
+    name: unit_cylinder_44
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 1.275
+      - 0.5
+    name: unit_cylinder_45
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 1.425
+      - 0.5
+    name: unit_cylinder_46
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 1.425
+      - 0.5
+    name: unit_cylinder_47
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 1.575
+      - 0.5
+    name: unit_cylinder_48
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 1.575
+      - 0.5
+    name: unit_cylinder_49
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 1.725
+      - 0.5
+    name: unit_cylinder_50
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 1.725
+      - 0.5
+    name: unit_cylinder_51
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 1.875
+      - 0.5
+    name: unit_cylinder_52
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 1.875
+      - 0.5
+    name: unit_cylinder_53
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 2.025
+      - 0.5
+    name: unit_cylinder_54
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 2.025
+      - 0.5
+    name: unit_cylinder_55
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 2.175
+      - 0.5
+    name: unit_cylinder_56
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 2.175
+      - 0.5
+    name: unit_cylinder_57
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 2.325
+      - 0.5
+    name: unit_cylinder_58
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 2.325
+      - 0.5
+    name: unit_cylinder_59
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 2.475
+      - 0.5
+    name: unit_cylinder_60
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 2.475
+      - 0.5
+    name: unit_cylinder_61
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 2.625
+      - 0.5
+    name: unit_cylinder_62
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 2.625
+      - 0.5
+    name: unit_cylinder_63
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 2.775
+      - 0.5
+    name: unit_cylinder_64
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 2.775
+      - 0.5
+    name: unit_cylinder_65
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 2.925
+      - 0.5
+    name: unit_cylinder_66
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 2.925
+      - 0.5
+    name: unit_cylinder_67
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 3.075
+      - 0.5
+    name: unit_cylinder_68
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 3.075
+      - 0.5
+    name: unit_cylinder_69
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 3.225
+      - 0.5
+    name: unit_cylinder_70
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 3.225
+      - 0.5
+    name: unit_cylinder_71
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 3.375
+      - 0.5
+    name: unit_cylinder_72
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 3.375
+      - 0.5
+    name: unit_cylinder_73
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 3.525
+      - 0.5
+    name: unit_cylinder_74
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 3.525
+      - 0.5
+    name: unit_cylinder_75
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 3.675
+      - 0.5
+    name: unit_cylinder_76
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 3.675
+      - 0.5
+    name: unit_cylinder_77
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 3.825
+      - 0.5
+    name: unit_cylinder_78
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 3.825
+      - 0.5
+    name: unit_cylinder_79
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 3.975
+      - 0.5
+    name: unit_cylinder_80
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 3.975
+      - 0.5
+    name: unit_cylinder_81
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 4.125
+      - 0.5
+    name: unit_cylinder_82
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 4.125
+      - 0.5
+    name: unit_cylinder_83
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 4.275
+      - 0.5
+    name: unit_cylinder_84
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 4.275
+      - 0.5
+    name: unit_cylinder_85
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 4.425
+      - 0.5
+    name: unit_cylinder_86
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 4.425
+      - 0.5
+    name: unit_cylinder_87
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 4.575
+      - 0.5
+    name: unit_cylinder_88
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 4.575
+      - 0.5
+    name: unit_cylinder_89
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 4.725
+      - 0.5
+    name: unit_cylinder_90
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 4.725
+      - 0.5
+    name: unit_cylinder_91
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 4.875
+      - 0.5
+    name: unit_cylinder_92
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 4.875
+      - 0.5
+    name: unit_cylinder_93
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 5.025
+      - 0.5
+    name: unit_cylinder_94
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 5.025
+      - 0.5
+    name: unit_cylinder_95
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 5.175
+      - 0.5
+    name: unit_cylinder_96
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 5.325
+      - 0.5
+    name: unit_cylinder_97
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 5.475
+      - 0.5
+    name: unit_cylinder_98
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 5.625
+      - 0.5
+    name: unit_cylinder_99
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 5.775
+      - 0.5
+    name: unit_cylinder_100
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 5.925
+      - 0.5
+    name: unit_cylinder_101
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 6.075
+      - 0.5
+    name: unit_cylinder_102
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 6.225
+      - 0.5
+    name: unit_cylinder_103
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 6.375
+      - 0.5
+    name: unit_cylinder_104
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 6.525
+      - 0.5
+    name: unit_cylinder_105
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 6.675
+      - 0.5
+    name: unit_cylinder_106
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 6.825
+      - 0.5
+    name: unit_cylinder_107
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 6.975
+      - 0.5
+    name: unit_cylinder_108
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 7.125
+      - 0.5
+    name: unit_cylinder_109
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 7.275
+      - 0.5
+    name: unit_cylinder_110
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 7.425
+      - 0.5
+    name: unit_cylinder_111
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 7.575
+      - 0.5
+    name: unit_cylinder_112
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 7.725
+      - 0.5
+    name: unit_cylinder_113
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 7.875
+      - 0.5
+    name: unit_cylinder_114
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 8.025
+      - 0.5
+    name: unit_cylinder_115
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 8.175
+      - 0.5
+    name: unit_cylinder_116
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 8.325
+      - 0.5
+    name: unit_cylinder_117
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 8.475
+      - 0.5
+    name: unit_cylinder_118
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 8.625
+      - 0.5
+    name: unit_cylinder_119
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 8.775
+      - 0.5
+    name: unit_cylinder_120
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 8.925
+      - 0.5
+    name: unit_cylinder_121
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 9.075
+      - 0.5
+    name: unit_cylinder_122
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 9.225
+      - 0.5
+    name: unit_cylinder_123
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 9.375
+      - 0.5
+    name: unit_cylinder_124
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.425
+      - 9.525
+      - 0.5
+    name: unit_cylinder_125
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 5.775
+      - 0.5
+    name: unit_cylinder_126
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 5.925
+      - 0.5
+    name: unit_cylinder_127
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 6.075
+      - 0.5
+    name: unit_cylinder_128
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 6.225
+      - 0.5
+    name: unit_cylinder_129
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 7.125
+      - 0.5
+    name: unit_cylinder_130
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 7.275
+      - 0.5
+    name: unit_cylinder_131
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 7.875
+      - 0.5
+    name: unit_cylinder_132
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 8.025
+      - 0.5
+    name: unit_cylinder_133
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 8.625
+      - 0.5
+    name: unit_cylinder_134
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 8.775
+      - 0.5
+    name: unit_cylinder_135
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 9.225
+      - 0.5
+    name: unit_cylinder_136
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.275
+      - 9.375
+      - 0.5
+    name: unit_cylinder_137
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.125
+      - 5.925
+      - 0.5
+    name: unit_cylinder_138
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.125
+      - 6.075
+      - 0.5
+    name: unit_cylinder_139
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.125
+      - 7.275
+      - 0.5
+    name: unit_cylinder_140
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.125
+      - 7.875
+      - 0.5
+    name: unit_cylinder_141
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.125
+      - 8.775
+      - 0.5
+    name: unit_cylinder_142
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.125
+      - 8.925
+      - 0.5
+    name: unit_cylinder_143
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.125
+      - 9.075
+      - 0.5
+    name: unit_cylinder_144
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -4.125
+      - 9.225
+      - 0.5
+    name: unit_cylinder_145
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 5.175
+      - 0.5
+    name: unit_cylinder_146
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 5.325
+      - 0.5
+    name: unit_cylinder_147
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 5.925
+      - 0.5
+    name: unit_cylinder_148
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 6.075
+      - 0.5
+    name: unit_cylinder_149
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 6.675
+      - 0.5
+    name: unit_cylinder_150
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 6.825
+      - 0.5
+    name: unit_cylinder_151
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 7.275
+      - 0.5
+    name: unit_cylinder_152
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 7.425
+      - 0.5
+    name: unit_cylinder_153
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 7.575
+      - 0.5
+    name: unit_cylinder_154
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 7.725
+      - 0.5
+    name: unit_cylinder_155
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 7.875
+      - 0.5
+    name: unit_cylinder_156
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 8.925
+      - 0.5
+    name: unit_cylinder_157
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.975
+      - 9.075
+      - 0.5
+    name: unit_cylinder_158
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.825
+      - 5.175
+      - 0.5
+    name: unit_cylinder_159
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.825
+      - 5.925
+      - 0.5
+    name: unit_cylinder_160
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.825
+      - 6.075
+      - 0.5
+    name: unit_cylinder_161
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.825
+      - 6.225
+      - 0.5
+    name: unit_cylinder_162
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.825
+      - 6.675
+      - 0.5
+    name: unit_cylinder_163
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.825
+      - 6.825
+      - 0.5
+    name: unit_cylinder_164
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.825
+      - 7.725
+      - 0.5
+    name: unit_cylinder_165
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.825
+      - 7.875
+      - 0.5
+    name: unit_cylinder_166
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.675
+      - 5.925
+      - 0.5
+    name: unit_cylinder_167
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.675
+      - 6.075
+      - 0.5
+    name: unit_cylinder_168
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.675
+      - 6.225
+      - 0.5
+    name: unit_cylinder_169
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.525
+      - 5.325
+      - 0.5
+    name: unit_cylinder_170
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.525
+      - 5.475
+      - 0.5
+    name: unit_cylinder_171
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.525
+      - 5.625
+      - 0.5
+    name: unit_cylinder_172
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.525
+      - 5.925
+      - 0.5
+    name: unit_cylinder_173
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.525
+      - 6.075
+      - 0.5
+    name: unit_cylinder_174
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.375
+      - 5.475
+      - 0.5
+    name: unit_cylinder_175
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.375
+      - 6.075
+      - 0.5
+    name: unit_cylinder_176
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.375
+      - 6.675
+      - 0.5
+    name: unit_cylinder_177
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.375
+      - 6.825
+      - 0.5
+    name: unit_cylinder_178
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.225
+      - 6.675
+      - 0.5
+    name: unit_cylinder_179
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.075
+      - 5.775
+      - 0.5
+    name: unit_cylinder_180
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.075
+      - 5.925
+      - 0.5
+    name: unit_cylinder_181
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.075
+      - 6.075
+      - 0.5
+    name: unit_cylinder_182
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.075
+      - 7.725
+      - 0.5
+    name: unit_cylinder_183
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -3.075
+      - 8.625
+      - 0.5
+    name: unit_cylinder_184
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.925
+      - 5.925
+      - 0.5
+    name: unit_cylinder_185
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.925
+      - 6.075
+      - 0.5
+    name: unit_cylinder_186
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.925
+      - 7.575
+      - 0.5
+    name: unit_cylinder_187
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.925
+      - 7.725
+      - 0.5
+    name: unit_cylinder_188
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.925
+      - 7.875
+      - 0.5
+    name: unit_cylinder_189
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.925
+      - 8.625
+      - 0.5
+    name: unit_cylinder_190
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.925
+      - 8.775
+      - 0.5
+    name: unit_cylinder_191
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.775
+      - 5.925
+      - 0.5
+    name: unit_cylinder_192
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.775
+      - 6.075
+      - 0.5
+    name: unit_cylinder_193
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.775
+      - 7.575
+      - 0.5
+    name: unit_cylinder_194
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.775
+      - 7.725
+      - 0.5
+    name: unit_cylinder_195
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.775
+      - 8.475
+      - 0.5
+    name: unit_cylinder_196
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.775
+      - 8.625
+      - 0.5
+    name: unit_cylinder_197
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.775
+      - 8.775
+      - 0.5
+    name: unit_cylinder_198
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.625
+      - 5.625
+      - 0.5
+    name: unit_cylinder_199
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.625
+      - 5.925
+      - 0.5
+    name: unit_cylinder_200
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.625
+      - 6.075
+      - 0.5
+    name: unit_cylinder_201
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.625
+      - 7.575
+      - 0.5
+    name: unit_cylinder_202
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.625
+      - 8.475
+      - 0.5
+    name: unit_cylinder_203
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.475
+      - 5.475
+      - 0.5
+    name: unit_cylinder_204
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.475
+      - 5.625
+      - 0.5
+    name: unit_cylinder_205
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.475
+      - 9.225
+      - 0.5
+    name: unit_cylinder_206
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.475
+      - 9.375
+      - 0.5
+    name: unit_cylinder_207
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.325
+      - 9.075
+      - 0.5
+    name: unit_cylinder_208
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.325
+      - 9.225
+      - 0.5
+    name: unit_cylinder_209
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.325
+      - 9.375
+      - 0.5
+    name: unit_cylinder_210
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.325
+      - 9.525
+      - 0.5
+    name: unit_cylinder_211
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.175
+      - 9.225
+      - 0.5
+    name: unit_cylinder_212
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.175
+      - 9.375
+      - 0.5
+    name: unit_cylinder_213
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.175
+      - 9.525
+      - 0.5
+    name: unit_cylinder_214
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.025
+      - 6.975
+      - 0.5
+    name: unit_cylinder_215
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.025
+      - 7.125
+      - 0.5
+    name: unit_cylinder_216
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.025
+      - 7.275
+      - 0.5
+    name: unit_cylinder_217
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.025
+      - 7.425
+      - 0.5
+    name: unit_cylinder_218
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.025
+      - 9.225
+      - 0.5
+    name: unit_cylinder_219
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -2.025
+      - 9.375
+      - 0.5
+    name: unit_cylinder_220
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.875
+      - 7.125
+      - 0.5
+    name: unit_cylinder_221
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.875
+      - 7.275
+      - 0.5
+    name: unit_cylinder_222
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.875
+      - 7.425
+      - 0.5
+    name: unit_cylinder_223
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.875
+      - 9.375
+      - 0.5
+    name: unit_cylinder_224
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.575
+      - 8.775
+      - 0.5
+    name: unit_cylinder_225
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.425
+      - 5.925
+      - 0.5
+    name: unit_cylinder_226
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.425
+      - 6.075
+      - 0.5
+    name: unit_cylinder_227
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.425
+      - 8.775
+      - 0.5
+    name: unit_cylinder_228
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.275
+      - 5.775
+      - 0.5
+    name: unit_cylinder_229
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.275
+      - 5.925
+      - 0.5
+    name: unit_cylinder_230
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.275
+      - 6.075
+      - 0.5
+    name: unit_cylinder_231
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.275
+      - 6.225
+      - 0.5
+    name: unit_cylinder_232
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.275
+      - 8.025
+      - 0.5
+    name: unit_cylinder_233
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.275
+      - 8.175
+      - 0.5
+    name: unit_cylinder_234
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.275
+      - 8.925
+      - 0.5
+    name: unit_cylinder_235
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.125
+      - 5.925
+      - 0.5
+    name: unit_cylinder_236
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -1.125
+      - 8.025
+      - 0.5
+    name: unit_cylinder_237
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.375
+      - 9.075
+      - 0.5
+    name: unit_cylinder_238
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.225
+      - 6.075
+      - 0.5
+    name: unit_cylinder_239
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.225
+      - 6.225
+      - 0.5
+    name: unit_cylinder_240
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.225
+      - 6.375
+      - 0.5
+    name: unit_cylinder_241
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.225
+      - 7.425
+      - 0.5
+    name: unit_cylinder_242
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.225
+      - 7.575
+      - 0.5
+    name: unit_cylinder_243
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.225
+      - 8.925
+      - 0.5
+    name: unit_cylinder_244
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.225
+      - 9.075
+      - 0.5
+    name: unit_cylinder_245
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.225
+      - 9.225
+      - 0.5
+    name: unit_cylinder_246
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 5.175
+      - 0.5
+    name: unit_cylinder_247
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 5.325
+      - 0.5
+    name: unit_cylinder_248
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 5.475
+      - 0.5
+    name: unit_cylinder_249
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 5.625
+      - 0.5
+    name: unit_cylinder_250
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 5.775
+      - 0.5
+    name: unit_cylinder_251
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 5.925
+      - 0.5
+    name: unit_cylinder_252
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 6.075
+      - 0.5
+    name: unit_cylinder_253
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 6.225
+      - 0.5
+    name: unit_cylinder_254
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 6.375
+      - 0.5
+    name: unit_cylinder_255
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 6.525
+      - 0.5
+    name: unit_cylinder_256
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 6.675
+      - 0.5
+    name: unit_cylinder_257
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 6.825
+      - 0.5
+    name: unit_cylinder_258
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 6.975
+      - 0.5
+    name: unit_cylinder_259
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 7.125
+      - 0.5
+    name: unit_cylinder_260
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 7.275
+      - 0.5
+    name: unit_cylinder_261
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 7.425
+      - 0.5
+    name: unit_cylinder_262
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 7.575
+      - 0.5
+    name: unit_cylinder_263
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 7.725
+      - 0.5
+    name: unit_cylinder_264
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 7.875
+      - 0.5
+    name: unit_cylinder_265
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 8.025
+      - 0.5
+    name: unit_cylinder_266
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 8.175
+      - 0.5
+    name: unit_cylinder_267
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 8.325
+      - 0.5
+    name: unit_cylinder_268
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 8.475
+      - 0.5
+    name: unit_cylinder_269
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 8.625
+      - 0.5
+    name: unit_cylinder_270
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 8.775
+      - 0.5
+    name: unit_cylinder_271
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 8.925
+      - 0.5
+    name: unit_cylinder_272
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 9.075
+      - 0.5
+    name: unit_cylinder_273
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 9.225
+      - 0.5
+    name: unit_cylinder_274
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 9.375
+      - 0.5
+    name: unit_cylinder_275
+  - collision_geometry:
+      height: 1.0
+      material: red
+      radius: 0.075
+      type: cylinder
+    config:
+      orientation:
+      - 0
+      - 0
+      - 0
+      - 1
+      position:
+      - -0.075
+      - 9.525
+      - 0.5
+    name: unit_cylinder_276
+  type: obstacle
