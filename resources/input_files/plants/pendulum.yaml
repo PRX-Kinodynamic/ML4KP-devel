@@ -2,7 +2,7 @@ name: "pendulum"
 path: "pendulum"
 
 # Assume empty environment... Doesn't make sense otherwise
-start_state: [3.0, 0.0]
+start_state: [3.14159, 0.0]
 goal_state:  [0.0, 0.0]
 
 min_steps: 1
@@ -19,9 +19,16 @@ ending_upper_bound: [ 3.14159,  6.28318]
 control_space_lower_bound: [-0.6371781908344007]
 control_space_upper_bound: [0.6371781908344007]
 
+length: &length 0.5
+friction: &friction 0.1
+mass: &mass 0.15
+normalize: &normalize 1
+
+parameters: [*length,*friction,*mass,*normalize]
 
 vis_body: "ball"
 
+lqr_R: [1]
 lqr_Q: [1,1]
 
 controller_path: "examples/tripods/lc/pendulum.pt"
