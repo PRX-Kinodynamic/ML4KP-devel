@@ -14,7 +14,8 @@ pruning: false
 
 visualize: true
 
-checker_type: time
-checker_value: 30
+planning_time: 60
 
 goal_region_radius: 0.5
+
+output_dir: "bench/dirt_benchmr"

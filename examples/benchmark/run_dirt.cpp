@@ -5,8 +5,17 @@
 #include "prx/visualization/three_js_group.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
+#include "prx/planning/planner_statistics.hpp"
 
 #include <fstream>
+#ifdef __cpp_lib_filesystem
+    #include <filesystem.hpp>
+    namespace fs = std::filesystem;
+#else
+    #define _LIBCPP_NO_EXPERIMENTAL_DEPRECATION_WARNING_FILESYSTEM
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;
+#endif
 
 using namespace prx;
 
@@ -33,6 +42,18 @@ int main(int argc, char* argv[])
     dirt_t dirt(params["planner"].as<>());
     dirt_specification_t dirt_spec(context.first,context.second);
 
+    dirt_spec.distance_function = [&](const space_point_t& s1, const space_point_t& s2)
+    {
+        return space_t::euclidean_2d(s1, s2, 0, 3);
+    };
+
+    double maxvel = params["/plant/max_vel"].as<double>();
+    assert(maxvel > 0);
+    dirt_spec.h = [&](const space_point_t& s, const space_point_t& s2)
+    {
+        return space_t::euclidean_2d(s, s2, 0, 2) / maxvel;
+    };
+
     dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
     dirt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
     dirt_spec.blossom_number = params["blossom"].as<int>();
@@ -50,23 +71,50 @@ int main(int argc, char* argv[])
     context.first -> get_state_space() -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
     
     dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
+
+    dirt_query.goal_check = [&](const space_point_t& s)
+    {
+        return dirt_spec.distance_function(s, dirt_query.goal_state) < dirt_query.goal_region_radius;
+    };
+
     dirt_query.get_visualization = params["visualize"].as<bool>();
 
-    dirt.link_and_setup_spec(&dirt_spec);
-    dirt.preprocess();
-    dirt.link_and_setup_query(&dirt_query);
+    const int stats_runs = 10;
+    condition_check_t checker("time", 1.0);
+    const int num_calls = params["planning_time"].as<int>();
 
-    condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>()); //'
+    if (!fs::exists(output_path + params["output_dir"].as<>()))
+        fs::create_directory(output_path + params["output_dir"].as<>());
 
-    dirt.resolve_query(&checker);
-    dirt.fulfill_query(); 
 
-    three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
-    std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
-    auto ss = context.first -> get_state_space();
-    vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
-    vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, dirt_query.solution_traj, body_name, ss);
-    vis_group -> add_animation(dirt_query.solution_traj, ss, dirt_query.start_state);
-    vis_group -> output_html("output.html");
-    delete vis_group;
+    for (int i = 0; i < stats_runs; i++)
+    {
+        dirt.link_and_setup_spec(&dirt_spec);
+        dirt.preprocess();
+        dirt.link_and_setup_query(&dirt_query);
+
+        planner_statistics_t stats;
+        stats.link_planner(&dirt);
+        stats.link_criterion(&checker);
+        stats.repeat_data_gathering(num_calls, false);
+
+        std::string fname = output_path + params["output_dir"].as<>()+"/" + std::to_string(i) + ".txt";
+        std::ofstream out(fname);
+        out << stats.serialize();
+        out.close();
+
+        dirt.reset();
+        dirt_query.clear_outputs();
+        
+        output_progress_bar (1.0 * i/stats_runs);
+    }
+
+    // three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
+    // std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+    // auto ss = context.first -> get_state_space();
+    // vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
+    // vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, dirt_query.solution_traj, body_name, ss);
+    // vis_group -> add_animation(dirt_query.solution_traj, ss, dirt_query.start_state);
+    // vis_group -> output_html("output.html");
+    // delete vis_group;
 }

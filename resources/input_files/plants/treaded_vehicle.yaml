@@ -5,7 +5,7 @@ path: "treaded_vehicle"
 start_state: [-5.0, -5.0, 1.57, 0.0, 0.0]
 goal_state:  [ 5.0, -5.0,-1.57, 0.0, 0.0]
 
-min_steps: 1
+min_steps: 5
 max_steps: 20
 
 # state_space_lower_bound: [-10,-10,-3.14159,-.7,-.7]
@@ -15,3 +15,5 @@ state_space_lower_bound: [-6, -6, -3.15, -.7, -.7]
 state_space_upper_bound: [ 6,  5,  3.15,  .7,  .7]
 
 vis_body: "body"
+
+max_vel: 1.0
