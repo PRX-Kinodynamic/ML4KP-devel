@@ -1,6 +1,6 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/planning/world_model.hpp"
-#include "prx/planning/planners/dirt.hpp"
+#include "prx/planning/planners/sst.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/visualization/three_js_group.hpp"
 #include "prx/utilities/general/param_loader.hpp"
@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-        params = param_loader("examples/benchmark/run_dirt.yaml");
+        params = param_loader("examples/benchmark/run_sst.yaml");
     }
 
     simulation_step = params["simulation_step"].as<double>();
@@ -44,48 +44,42 @@ int main(int argc, char* argv[])
     prx_assert(plant != nullptr, "Plant is nullptr!");
 
     world_model_t world_model({plant},{obstacle_list});
-    world_model.create_context("dirt_context",{plant_name},{obstacle_names});
-    auto context = world_model.get_context("dirt_context");
+    world_model.create_context("sst_context",{plant_name},{obstacle_names});
+    auto context = world_model.get_context("sst_context");
 
-    dirt_t dirt(params["planner"].as<>());
-    dirt_specification_t dirt_spec(context.first,context.second);
+    sst_t sst(params["planner"].as<>());
+    sst_specification_t sst_spec(context.first,context.second);
 
-    dirt_spec.distance_function = [&](const space_point_t& s1, const space_point_t& s2)
+    sst_spec.distance_function = [&](const space_point_t& s1, const space_point_t& s2)
     {
         return space_t::euclidean_2d(s1, s2, 0, 2);
     };
 
-    double maxvel = params["/plant/max_vel"].as<double>();
-    assert(maxvel > 0);
-    dirt_spec.h = [&](const space_point_t& s, const space_point_t& s2)
-    {
-        return space_t::euclidean_2d(s, s2, 0, 2) / maxvel;
-    };
+    sst_spec.delta_near        = params["delta_near"].as<double>();
+    sst_spec.delta_drain       = params["delta_drain"].as<double>();
 
-    dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
-    dirt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
-    dirt_spec.blossom_number = params["blossom"].as<int>();
-    dirt_spec.use_pruning = params["pruning"].as<bool>();
+    sst_spec.min_control_steps = params["/plant/min_steps"].as<int>();
+    sst_spec.max_control_steps = params["/plant/max_steps"].as<int>();
 
-    dirt_query_t dirt_query(context.first->get_state_space(),context.first->get_control_space());
-    dirt_query.start_state = context.first->get_state_space()->make_point();
-    dirt_query.goal_state  = context.first->get_state_space()->make_point();
+    sst_query_t sst_query(context.first->get_state_space(),context.first->get_control_space());
+    sst_query.start_state = context.first->get_state_space()->make_point();
+    sst_query.goal_state  = context.first->get_state_space()->make_point();
 
     auto lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
     auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
     context.first -> get_state_space() -> set_bounds(lower_bounds, upper_bounds);
 
-    context.first -> get_state_space() -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
-    context.first -> get_state_space() -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
+    context.first -> get_state_space() -> copy_point_from_vector(sst_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
+    context.first -> get_state_space() -> copy_point_from_vector(sst_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
     
-    dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
+    sst_query.goal_region_radius = params["goal_region_radius"].as<double>();
 
-    dirt_query.goal_check = [&](const space_point_t& s)
+    sst_query.goal_check = [&](const space_point_t& s)
     {
-        return space_t::euclidean_2d(s, dirt_query.goal_state, 0, s->size()) < dirt_query.goal_region_radius;
+        return space_t::euclidean_2d(s, sst_query.goal_state, 0, s->size()) < sst_query.goal_region_radius;
     };
 
-    dirt_query.get_visualization = params["visualize"].as<bool>();
+    sst_query.get_visualization = params["visualize"].as<bool>();
 
     const int stats_runs = 10;
     condition_check_t checker("time", 1.0);
@@ -97,12 +91,12 @@ int main(int argc, char* argv[])
 
     for (int i = 0; i < stats_runs; i++)
     {
-        dirt.link_and_setup_spec(&dirt_spec);
-        dirt.preprocess();
-        dirt.link_and_setup_query(&dirt_query);
+        sst.link_and_setup_spec(&sst_spec);
+        sst.preprocess();
+        sst.link_and_setup_query(&sst_query);
 
         planner_statistics_t stats;
-        stats.link_planner(&dirt);
+        stats.link_planner(&sst);
         stats.link_criterion(&checker);
         stats.repeat_data_gathering(num_calls, false);
 
@@ -111,9 +105,9 @@ int main(int argc, char* argv[])
         out << stats.serialize();
         out.close();
 
-        // dirt.fulfill_query();
-        dirt.reset();
-        dirt_query.clear_outputs();
+        // sst.fulfill_query();
+        sst.reset();
+        sst_query.clear_outputs();
         
         output_progress_bar (1.0 * i/stats_runs);
     }
@@ -121,9 +115,9 @@ int main(int argc, char* argv[])
     // three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
     // std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
     // auto ss = context.first -> get_state_space();
-    // vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
-    // vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, dirt_query.solution_traj, body_name, ss);
-    // vis_group -> add_animation(dirt_query.solution_traj, ss, dirt_query.start_state);
+    // vis_group -> add_vis_infos(info_geometry_t::LINE, sst_query.tree_visualization, body_name, ss);
+    // vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, sst_query.solution_traj, body_name, ss);
+    // vis_group -> add_animation(sst_query.solution_traj, ss, sst_query.start_state);
     // vis_group -> output_html("output.html");
     // delete vis_group;
 }

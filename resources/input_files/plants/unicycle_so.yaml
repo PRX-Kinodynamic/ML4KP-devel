@@ -1,0 +1,16 @@
+name: "SO_unicycle"
+path: "SO_unicycle"
+
+# Assume simple_obstacle environment
+start_state: [0.5, 4.0, 1.55, 0, 0]
+goal_state:  [5.5, 4.0, 1.55, 0, 0]
+
+min_steps: 1
+max_steps: 10
+
+state_space_lower_bound: [ 0,  0, -3.15, -.5, -.5]
+state_space_upper_bound: [ 6,  6,  3.15,  .5,  .5]
+
+vis_body: "body"
+
+max_vel: 0.5

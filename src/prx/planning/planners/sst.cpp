@@ -201,7 +201,7 @@ namespace prx
 			get_witness(witness)->set = false;
 
 			//remove the node
-			tree.remove_vertex(v);
+			tree.mark_vertex_for_removal(v);
 		}
 	}
 
