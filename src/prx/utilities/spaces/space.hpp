@@ -23,7 +23,7 @@ namespace prx
 
 	class space_snapshot_t 
 	{
-	public:
+		public:
 		
 		typedef std::vector<double>::iterator iterator;
 		typedef std::vector<double>::const_iterator const_iterator;
@@ -68,7 +68,17 @@ namespace prx
 		 * @return Dimensionality of the space snapshot.
 		*/
 		inline const
-		int get_dim()
+		unsigned int size()
+		{
+			return memory.size();
+		}
+
+		/**
+		 * @brief Gets the dimensionality of the space snapshot.
+		 * @return Dimensionality of the space snapshot.
+		*/
+		inline const
+		unsigned int get_dim()
 		{
 			return memory.size();
 		}
@@ -134,20 +144,20 @@ namespace prx
         {
         	for (auto e : obj.memory)
         	{
-        		os << std::setprecision(2) << std::fixed << e << " ";
+        		os << e << " ";
         	}
         	// os << std::endl;
         	return os;
         }
 
-	protected:
+		protected:
 
 		const space_t* const parent;
 
 		std::vector<double> memory;
 
 		friend class space_t;
-	private:
+		private:
 		space_snapshot_t():parent(nullptr){memory.clear();}
 	};
 
@@ -233,23 +243,58 @@ namespace prx
 		 */
 		// void point_addition(const space_point_t& pt1, const space_point_t& pt2, const space_point_t& pt_res);
 
-		bool equal_points(const space_point_t& point1,const space_point_t& point2);
+		bool equal_points(const space_point_t& point1,const space_point_t& point2) const;
 
-		void copy_to_point(const space_point_t& point) const;
-		void copy_from_point(const space_point_t& point) const;
-		void copy_point(const space_point_t& destination,const space_point_t& source) const;
-		void copy_to_vector(std::vector<double>& destination) const;
-		void copy_from_vector(const std::vector<double>& source);
+		/**
+		 * @brief      Copy current state to a Eigen::VectorXd.
+		 *
+		 * @param[in]  Vector to copy the current space memory to.
+		 */
+		virtual void copy_to_vector(Eigen::VectorXd& _v) const;
+
+		/**
+		 * @brief      Copy from a Eigen::VectorXd.
+		 *
+		 * @param[in]  Vector to copy from.
+		 */
+		virtual void copy_from_vector(const Eigen::VectorXd& _v) const;
+
+		/**
+		 * @brief      Copy from a std::vector<double>
+		 *
+		 * @param[in]  Vector to copy from.
+		 */
+		// void copy_from_vector(const std::vector<double>& source) const;
+
+		/**
+		 * @brief      Copy current memory of the space to the given space point
+		 *
+		 * @param[in/out]  point  The point to copy to.
+		 */
+		virtual void copy_to_point(const space_point_t& point) const;
+
+		virtual void copy_from_point(const space_point_t& point) const;
+		virtual void copy_point(const space_point_t& destination,const space_point_t& source) const;
+		
+		/**
+		 * @brief      Copy current memory of the space to the given vector
+		 *
+		 * @param      destination  The std::vector to copy to
+		 */
+		virtual void copy_to_vector(std::vector<double>& destination) const;
+		virtual void copy_from_vector(const std::vector<double>& source);
 
 		void copy_point_from_vector(const space_point_t& destination, const std::vector<double>& source) const;
+		void copy_point_from_vector(const space_point_t& destination, Eigen::Ref<Eigen::VectorXd> source) const;
 		void copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const;
+		void copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, const space_point_t& source) const;
 
 		inline unsigned int get_dimension() const {return dimension;}
 
 		void enforce_bounds(const space_point_t& point) const;
 		void enforce_bounds() const;
 		bool satisfies_bounds(const space_point_t& point) const;
-		void sample(const space_point_t& point) const;
+		virtual void sample(const space_point_t& point) const;
 
 		inline std::string get_space_name() const
 		{
@@ -267,7 +312,25 @@ namespace prx
 			return at(index);
 		}
 
+		inline double get_lower_bound(unsigned i) const
+		{
+			prx_assert(i < dimension, "Error: Trying to get bound for " << i << " that is higher than state dimension " << dimension << ".");
+			return *lower_bounds[i];
+		}
+
+		inline double get_upper_bound(unsigned i) const
+		{
+			prx_assert(i < dimension, "Error: Trying to get bound for " << i << " that is higher than state dimension " << dimension << ".");
+			return *upper_bounds[i];
+		}
+
 		std::vector<std::pair<double,double>> get_bounds() const;
+
+		std::vector<double> get_upper_bounds() const;
+		
+		std::vector<double> get_lower_bounds() const;
+		
+		void print_bounds() const;
 
 		void integrate(const space_point_t& point,const space_t* derivative,double delta_t);
 		void integrate(const space_t* derivative,double delta_t);
@@ -277,6 +340,12 @@ namespace prx
 		std::string print_point(const space_point_t& point, unsigned prec = 25) const;
 
 		std::string print_memory(unsigned prec = 25) const;
+
+		friend std::ostream& operator<< (std::ostream& os, const space_t& obj) 
+        {
+        	os << obj.print_memory(3);
+        	return os;
+        }
 
 		static double l1_norm(const space_point_t& p1)
 		{	
@@ -329,7 +398,7 @@ namespace prx
 			return std::sqrt(std::accumulate(zipped.begin(), zipped.end(), 0.0, fn));
 		}
 
-		static double lp_norm(const space_point_t& p1, double p)
+		static double lp_norm(const space_point_t& p1, const double p)
 		{
 			auto fn = [&](double accum, double e)
 			{
@@ -337,40 +406,89 @@ namespace prx
 			};
 
 			return std::pow(std::accumulate(p1 -> begin(), p1 -> end(), 0.0, fn), 1.0/p);
+
+			
 		}
 
 		static double lp_norm(const space_point_t& p1, const space_point_t& p2, const double p)
 		{
-			// int i = 0;
-			auto fn = [&p](double accum, std::tuple<space_snapshot_t::iterator, space_snapshot_t::iterator>& e)
-			{	
-				double e1, e2;
-				std::tie(e1, e2) = unzip(e);
-				// return accum + std::pow(e - (*p2)[i++], p);
-				return accum + std::pow(e1 - e2, p);
-			};
-			auto zipped = zip_iters(p1, p2);
 
-			return std::pow(std::accumulate(zipped.begin(), zipped.end(), 0.0, fn), 1.0/p);
+			double e1, e2;
+			double accum = 0;
+			for (auto e : zip_iters(p1, p2) )
+			{
+				std::tie(e1, e2) = unzip(e);
+				accum += std::pow(e1 - e2, p);
+
+			}
+			return std::pow(accum, 1.0/p);
 		}
 
+		/**
+		 * @brief      Compute the euclidean distance between two points using dimensions
+		 *             [i_{begin}, i_{end}). \sqrt{ (p1[i_{begin}] - p2[i_{begin}])^2 }
+		 *             
+		 *
+		 * @param[in]  p1     First point
+		 * @param[in]  p2     Second point
+		 * @param[in]  i_begin  Start dimention, default is 0. 
+		 * @param[in]  i_end    Stopping dimension, default is 2.
+		 *
+		 * @return     { description_of_the_return_value }
+		 */
 		static double euclidean_2d(const space_point_t& p1, const space_point_t& p2, int start = 0, int end = 2)
 		{
-			// int i = start;
-			auto fn = [](double accum, std::tuple<space_snapshot_t::iterator, space_snapshot_t::iterator>& e)
+			double e1, e2;
+			double accum = 0;
+			int i = start;
+			for (auto e : zip_iters(p1, p2) )
 			{
-				double e1, e2;
+				if (i < start) continue;
+				if (i >= end) break;
 				std::tie(e1, e2) = unzip(e);
-
-				return accum + std::pow(e1 - e2, 2.0);
-			};
-
-			auto zipped = zip_iters(p1, p2);
-
-			return std::sqrt(std::accumulate(zipped.begin() + start, zipped.begin() + end, 0.0, fn));
+				accum += std::pow(e1 - e2, 2.0);
+				i += 1;
+			}
+			return std::sqrt(accum);
 		}
 
+		static double euclidean_distance(const space_t* s, const space_point_t& p2)
+		{
+			double accum = 0;
+			for (int i = 0; i < s -> get_dimension(); ++i)
+			{
+				accum += std::pow( (*p2)[i] - s -> at(i), 2);
+			}
+
+			return std::sqrt(accum);
+		}
+
+
+
+
+
+
 	protected:
+		space_t(const space_t* other)
+		{
+			dimension = other -> dimension;
+			for (int i = 0; i < dimension; ++i)
+			{
+				addresses.push_back(other -> addresses[i]);
+				lower_bounds.push_back(other -> lower_bounds[i]);
+				upper_bounds.push_back(other -> upper_bounds[i]);
+				topology.push_back(other -> topology[i]);
+			}
+
+			// addresses = other -> addresses;
+			// lower_bounds = other -> lower_bounds;
+			// upper_bounds = other -> upper_bounds;
+			space_name = other -> space_name;
+			// topology = other -> topology;
+			owned_values = false;
+			// std::cout << "space_name: " << space_name << std::endl;
+		}
+
 		unsigned dimension;
 		std::vector<double*> addresses;
 		std::vector<double*> lower_bounds;
