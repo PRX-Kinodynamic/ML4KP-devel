@@ -202,4 +202,4 @@ void tree_t::transplant(node_index_t root, node_index_t new_parent)
   edge->source = new_parent;
 }
 
-}  // namespace prx 
+}  // namespace prx
