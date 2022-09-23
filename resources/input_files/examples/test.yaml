@@ -1,0 +1,11 @@
+planner: DIRT
+random_seed: 210896
+simulation_step: 0.1
+environment: environments/warehouse_benchmr.yaml
+blossom: 5
+pruning: false
+visualize: true
+planning_time: 60
+goal_region_radius: 1.0
+output_dir: bench/dirt_treaded_vehicle
+plant: !file "plants/treaded_vehicle.yaml"

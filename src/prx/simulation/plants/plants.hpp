@@ -13,3 +13,5 @@
 #include "prx/simulation/plants/quadrotor_1d.hpp"
 #include "prx/simulation/plants/quadrotor_2d.hpp"
 #include "prx/simulation/plants/omnirobot_mecanum_FO.hpp"
+#include "prx/simulation/plants/unicycle_fo.hpp"
+#include "prx/simulation/plants/unicycle_so.hpp"
