@@ -1,0 +1,21 @@
+planner: "AORRT"
+
+random_seed: 210896
+simulation_step: 0.1
+
+# environment: "environments/BARN.yaml"
+# plant: !file "plants/omnirobot_mecanum_FO.yaml"
+
+environment: "environments/warehouse_benchmr.yaml"
+plant: !file "plants/treaded_vehicle.yaml"
+
+blossom: 5
+pruning: false
+
+visualize: true
+
+planning_time: 60
+
+goal_region_radius: 0.5
+
+output_dir: "bench/aorrt_benchmr"
