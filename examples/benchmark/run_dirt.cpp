@@ -52,15 +52,15 @@ int main(int argc, char* argv[])
 
     dirt_spec.distance_function = [&](const space_point_t& s1, const space_point_t& s2)
     {
-        return space_t::euclidean_2d(s1, s2, 0, 2);
+        return space_t::euclidean_2d(s1, s2, 0, 5);
     };
 
-    double maxvel = params["/plant/max_vel"].as<double>();
-    assert(maxvel > 0);
-    dirt_spec.h = [&](const space_point_t& s, const space_point_t& s2)
-    {
-        return space_t::euclidean_2d(s, s2, 0, 2) / maxvel;
-    };
+    // double maxvel = params["/plant/max_vel"].as<double>();
+    // assert(maxvel > 0);
+    // dirt_spec.h = [&](const space_point_t& s, const space_point_t& s2)
+    // {
+    //     return space_t::euclidean_2d(s, s2, 0, 5) / maxvel;
+    // };
 
     dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
     dirt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
@@ -84,6 +84,42 @@ int main(int argc, char* argv[])
     {
         return space_t::euclidean_2d(s, dirt_query.goal_state, 0, s->size()) < dirt_query.goal_region_radius;
     };
+
+    if (plant_name == "Acrobot")
+    {
+        dirt_spec.distance_function = [&](const space_point_t& s1, const space_point_t& s2)
+        {
+            double cost = 0;
+            double s1a0 = s1->at(0) + PRX_PI;
+            double s1a1 = s1->at(1) + PRX_PI;
+            double s2a0 = s2->at(0) + PRX_PI;
+            double s2a1 = s2->at(1) + PRX_PI;
+
+            double s1a2 = s1->at(2);
+            double s1a3 = s1->at(3);
+            double s2a2 = s2->at(2);
+            double s2a3 = s2->at(3);
+
+            double a0 = std::min(std::abs(s1a0 - s2a0), 2 * PRX_PI - std::abs(s1a0 - s2a0));
+            double a1 = std::min(std::abs(s1a1 - s2a1), 2 * PRX_PI - std::abs(s1a1 - s2a1));
+            double a2 = s1a2 - s2a2;
+            double a3 = s1a3 - s2a3;
+
+            cost += a0 * a0 + a1 * a1 + a2 * a2 + a3 * a3;
+            return std::sqrt(cost);
+        };
+
+        dirt_spec.h = [&](const space_point_t& s1, const space_point_t& s2)
+        {
+            return dirt_spec.distance_function(s1, s2) / 1.0;
+        };
+
+        dirt_query.goal_check = [&](const space_point_t& s)
+        {
+            return dirt_spec.distance_function(s, dirt_query.goal_state) < dirt_query.goal_region_radius;
+        };
+
+    }
 
     dirt_query.get_visualization = params["visualize"].as<bool>();
 

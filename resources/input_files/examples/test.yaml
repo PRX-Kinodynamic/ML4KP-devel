@@ -1,11 +1,11 @@
-planner: DIRT
+planner: SST
 random_seed: 210896
 simulation_step: 0.1
-environment: environments/warehouse_benchmr.yaml
-blossom: 5
-pruning: false
+environment: environments/kmp_benchmark/unicycle_fo/kink_0.yaml
+delta_near: 0.2
+delta_drain: 0.1
 visualize: true
-planning_time: 60
-goal_region_radius: 1.0
-output_dir: bench/dirt_treaded_vehicle
-plant: !file "plants/treaded_vehicle.yaml"
+planning_time: 300
+goal_region_radius: 0.2
+output_dir: bench/sst_unicycle_so
+plant: !file "plants/unicycle_so.yaml"

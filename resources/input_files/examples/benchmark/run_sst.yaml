@@ -1,16 +1,19 @@
 planner: "SST"
 
 random_seed: 210896
-simulation_step: 0.1
+simulation_step: 0.01
 
-environment: "environments/BARN.yaml"
-plant: !file "plants/omnirobot_mecanum_FO.yaml"
+# environment: "environments/BARN.yaml"
+# plant: !file "plants/omnirobot_mecanum_FO.yaml"
 
 # environment: "environments/warehouse_benchmr.yaml"
 # plant: !file "plants/fo_treaded_vehicle.yaml"
 
 # environment: "environments/kmp_benchmark/unicycle_fo/kink_0.yaml"
 # plant: !file "plants/unicycle_fo_v0.yaml"
+
+environment: "environments/acrobot.yaml"
+plant: !file "plants/acrobot.yaml"
 
 delta_near: 0.2
 delta_drain: 0.1
@@ -19,6 +22,6 @@ visualize: true
 
 planning_time: 10
 
-goal_region_radius: 0.1
+goal_region_radius: 0.5
 
-output_dir: "bench/sst_barn"
+output_dir: "bench/sst_acrobot"
