@@ -12,7 +12,8 @@ simulation_step: 0.01
 # environment: "environments/kmp_benchmark/unicycle_fo/kink_0.yaml"
 # plant: !file "plants/unicycle_fo_v0.yaml"
 
-environment: "environments/acrobot.yaml"
+environment: "environments/acrobot_4_obstacles.yaml"
+# environment: "environments/acrobot.yaml"
 plant: !file "plants/acrobot.yaml"
 
 delta_near: 0.2
@@ -22,6 +23,6 @@ visualize: true
 
 planning_time: 10
 
-goal_region_radius: 0.5
+goal_region_radius: 0.25
 
 output_dir: "bench/sst_acrobot"

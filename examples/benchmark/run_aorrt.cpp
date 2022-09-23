@@ -21,7 +21,15 @@ using namespace prx;
 
 int main(int argc, char* argv[])
 {
-  auto params = param_loader("examples/benchmark/run_aorrt.yaml", argc, argv);
+  param_loader params;
+  if (argc > 1)
+  {
+    params = param_loader(argv[1]);
+  }
+  else
+  {
+    params = param_loader("examples/benchmark/run_dirt.yaml");
+  }
 
   simulation_step = params["simulation_step"].as<double>();
   init_random(params["random_seed"].as<int>());
