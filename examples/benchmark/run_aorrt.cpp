@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 
   aorrt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
   aorrt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
-  aorrt_spec.blossom_number = params["blossom"].as<int>();
+  aorrt_spec.blossom_number = 1;
 
   aorrt_query_t aorrt_query(context.first->get_state_space(), context.first->get_control_space());
   aorrt_query.start_state = context.first->get_state_space()->make_point();

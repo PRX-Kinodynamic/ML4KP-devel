@@ -1,14 +1,16 @@
 planner: "AORRT"
 
 random_seed: 231192
-simulation_step: 0.1
+simulation_step: 0.01
 
-environment: "environments/simple_obstacle.yaml"
+# environment: "environments/simple_obstacle.yaml"
+environment: "environments/acrobot_4_obstacles.yaml"
 # plant: !file "plants/two_dim_pt.yaml"
 # plant: !file "plants/treaded_vehicle.yaml"
 # plant: !file "plants/fo_treaded_vehicle.yaml"
 # plant: !file "plants/racecar_mini.yaml"
-plant: !file "plants/rally_car.yaml"
+# plant: !file "plants/rally_car.yaml"
+plant: !file "plants/acrobot.yaml"
 
 visualize: true
 
