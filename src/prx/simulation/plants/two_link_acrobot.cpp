@@ -15,7 +15,7 @@ namespace prx
 		_tau=0;
 		control_memory = {&_tau};
 		input_control_space = new space_t("E",control_memory,"Torque");
-		input_control_space->set_bounds({-7},{7});
+		input_control_space->set_bounds({-14},{14});
 
 		_theta1dotdot=_theta2dotdot=0;
 		derivative_memory = {&_theta1dot,&_theta2dot,&_theta1dotdot,&_theta2dotdot};

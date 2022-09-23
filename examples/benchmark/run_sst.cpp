@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 
     sst_spec.distance_function = [&](const space_point_t& s1, const space_point_t& s2)
     {
-        return space_t::euclidean_2d(s1, s2, 0, 2);
+        return space_t::euclidean_2d(s1, s2, 0, 5);
     };
 
     sst_spec.delta_near        = params["delta_near"].as<double>();
@@ -78,6 +78,37 @@ int main(int argc, char* argv[])
     {
         return space_t::euclidean_2d(s, sst_query.goal_state, 0, s->size()) < sst_query.goal_region_radius;
     };
+
+    if (plant_name == "Acrobot")
+    {
+        sst_spec.distance_function = [&](const space_point_t& s1, const space_point_t& s2)
+        {
+            double cost = 0;
+            double s1a0 = s1->at(0) + PRX_PI;
+            double s1a1 = s1->at(1) + PRX_PI;
+            double s2a0 = s2->at(0) + PRX_PI;
+            double s2a1 = s2->at(1) + PRX_PI;
+
+            double s1a2 = s1->at(2);
+            double s1a3 = s1->at(3);
+            double s2a2 = s2->at(2);
+            double s2a3 = s2->at(3);
+
+            double a0 = std::min(std::abs(s1a0 - s2a0), 2 * PRX_PI - std::abs(s1a0 - s2a0));
+            double a1 = std::min(std::abs(s1a1 - s2a1), 2 * PRX_PI - std::abs(s1a1 - s2a1));
+            double a2 = s1a2 - s2a2;
+            double a3 = s1a3 - s2a3;
+
+            cost += a0 * a0 + a1 * a1 + a2 * a2 + a3 * a3;
+            return std::sqrt(cost);
+        };
+
+        sst_query.goal_check = [&](const space_point_t& s)
+        {
+            return sst_spec.distance_function(s, sst_query.goal_state) < sst_query.goal_region_radius;
+        };
+
+    }
 
     sst_query.get_visualization = params["visualize"].as<bool>();
 
