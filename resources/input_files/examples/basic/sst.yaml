@@ -3,10 +3,16 @@ planner: "AORRT"
 random_seed: 231192
 simulation_step: 0.1
 
-environment: "environments/simple_obstacle.yaml"
-plant: !file "plants/two_dim_pt.yaml"
+# environment: "environments/simple_obstacle.yaml"
+# plant: !file "plants/two_dim_pt.yaml"
 # plant: !file "plants/treaded_vehicle.yaml"
 # plant: !file "plants/fo_treaded_vehicle.yaml"
+
+# environment: "environments/warehouse_benchmr.yaml"
+# plant: !file "plants/fo_treaded_vehicle.yaml"
+
+environment: "environments/kmp_benchmark/unicycle_so/kink.yaml"
+plant: !file "plants/unicycle_so.yaml"
 
 # This values need tunning
 delta_near: 1.1

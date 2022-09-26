@@ -12,9 +12,21 @@ environment: "environments/acrobot_4_obstacles.yaml"
 # plant: !file "plants/rally_car.yaml"
 plant: !file "plants/acrobot.yaml"
 
+# environment: "environments/kmp_benchmark/unicycle_so/kink.yaml"
+# plant: !file "plants/unicycle_so.yaml"
+
+# environment: "environments/BARN.yaml"
+# plant: !file "plants/omnirobot_mecanum_FO.yaml"
+
+# environment: "environments/warehouse_benchmr.yaml"
+# plant: !file "plants/fo_treaded_vehicle.yaml"
+
+# environment: "environments/warehouse_benchmr.yaml"
+# plant: !file "plants/treaded_vehicle.yaml"
+
 visualize: true
 
 checker_type: time
-checker_value: 10
+checker_value: 100
 
-goal_region_radius: 0.5
+goal_region_radius: 0.1

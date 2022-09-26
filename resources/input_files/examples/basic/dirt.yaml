@@ -3,8 +3,12 @@ planner: "AORRT"
 random_seed: 231192
 simulation_step: 0.1
 
-environment: "environments/simple_obstacle.yaml"
-plant: !file "plants/two_dim_pt.yaml"
+environment: "environments/warehouse_benchmr.yaml"
+# environment: "environments/BARN.yaml"
+# plant: !file "plants/omnirobot_mecanum_FO.yaml"
+plant: !file "plants/fo_treaded_vehicle.yaml"
+# environment: "environments/simple_obstacle.yaml"
+# plant: !file "plants/two_dim_pt.yaml"
 # plant: !file "plants/treaded_vehicle.yaml"
 # plant: !file "plants/fo_treaded_vehicle.yaml"
 

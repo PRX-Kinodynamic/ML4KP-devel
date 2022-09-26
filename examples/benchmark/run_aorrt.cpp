@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
   }
   else
   {
-    params = param_loader("examples/benchmark/run_dirt.yaml");
+    params = param_loader("examples/benchmark/run_aorrt.yaml");
   }
 
   simulation_step = params["simulation_step"].as<double>();
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 
   aorrt_query.get_visualization = params["visualize"].as<bool>();
 
-  const int stats_runs = 10;
+  const int stats_runs = 1;
   condition_check_t checker("time", 1.0);
   const int num_calls = params["planning_time"].as<int>();
 
@@ -91,6 +91,9 @@ int main(int argc, char* argv[])
 
   for (int i = 0; i < stats_runs; i++)
   {
+    aorrt.reset();
+    aorrt_query.clear_outputs();
+
     aorrt.link_and_setup_spec(&aorrt_spec);
     aorrt.preprocess();
     aorrt.link_and_setup_query(&aorrt_query);
@@ -105,18 +108,14 @@ int main(int argc, char* argv[])
     out << stats.serialize();
     out.close();
 
-    aorrt.reset();
-    aorrt_query.clear_outputs();
-
     output_progress_bar(1.0 * i / stats_runs);
   }
-
-  // three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
-  // std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
-  // auto ss = context.first -> get_state_space();
-  // vis_group -> add_vis_infos(info_geometry_t::LINE, aorrt_query.tree_visualization, body_name, ss);
-  // vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, aorrt_query.solution_traj, body_name, ss);
-  // vis_group -> add_animation(aorrt_query.solution_traj, ss, aorrt_query.start_state);
-  // vis_group -> output_html("output.html");
-  // delete vis_group;
+  three_js_group_t* vis_group = new three_js_group_t({ plant }, { obstacle_list });
+  std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+  auto ss = context.first->get_state_space();
+  vis_group->add_vis_infos(info_geometry_t::LINE, aorrt_query.tree_visualization, body_name, ss);
+  vis_group->add_detailed_vis_infos(info_geometry_t::FULL_LINE, aorrt_query.solution_traj, body_name, ss);
+  vis_group->add_animation(aorrt_query.solution_traj, ss, aorrt_query.start_state);
+  vis_group->output_html("output.html");
+  delete vis_group;
 }
