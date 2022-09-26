@@ -85,15 +85,22 @@ class access_roadmap_t
         }
     }
 
-    node_index_t get_best_node(space_point_t s, rrt_specification_t& spec)
+    int get_best_node(space_point_t s, rrt_specification_t& spec)
     {
-        spec.state_space -> copy_point(pt, s);
+        pt = spec.state_space -> clone_point(s);
         spec.state_space -> copy_vector_from_point(pt_vec, pt);
+
+        // @TODO: Standardize this.
+        while (pt_vec.size() > 3) pt_vec.pop_back();
+
         for (auto v_idx : path)
         {
             auto v = vertices[v_idx];
 
-            if (v -> is_accessible_from(pt_vec)) return v_idx;
+            if (v -> is_accessible_from(pt_vec))
+            {
+                return v_idx;
+            }
         }
 
         return -1;
@@ -182,6 +189,11 @@ class access_roadmap_t
 
             node_index_t index = tokens[0];
             tokens.erase(tokens.begin());
+            while (tokens.size() < spec.state_space -> get_dimension())
+            {
+                // Just pad with zeros.
+                tokens.push_back(0);
+            }
             spec.state_space -> copy_point_from_vector(pt, tokens);
 
             std::string classifier_fname = data_dir + "/classifier_data_" + std::to_string(index) + ".txt";

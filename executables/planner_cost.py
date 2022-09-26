@@ -50,7 +50,7 @@ def analyze_quality(exps_dir,planner,max_time=10,num_trials=10):
 	return out_x, out_y
 
 if __name__ == "__main__":
-	exps_dir = "/Users/aravind/Code/ML4KP-devel/out/test_results"
+	exps_dir = "/Users/aravind/Code/ML4KP-devel/out/results_segway"
 	planners = []
 	for item in sorted(os.listdir(exps_dir)):
 		if item[0] != '.': planners.append(item)
@@ -59,18 +59,18 @@ if __name__ == "__main__":
 	plot_data_x = {}
 	plot_data_y = {}
 	for planner in planners:
-		plot_data_x[planner], plot_data_y[planner] = analyze_quality(exps_dir,planner)
+		plot_data_x[planner], plot_data_y[planner] = analyze_quality(exps_dir,planner,60)
 	
 	plt.figure(figsize=(8,8))
 	plt.rc('xtick',labelsize=16)
 	plt.rc('ytick',labelsize=16)
 	plt.grid()
 	for i, planner in enumerate(planners):
-		plt.plot(plot_data_x[planner],plot_data_y[planner],label=planner,marker=markers[i],markevery=1)
+		plt.plot(plot_data_x[planner],plot_data_y[planner],label=planner,marker=markers[i],markevery=10)
 	plt.legend(loc="upper right",prop={'size':16})
 	plt.title("Solution Quality",fontsize=16)
 	plt.xlabel("Time (s)",fontsize=16)
 	plt.ylabel("Cost",fontsize=16)
 	plot_start = 0.0
-	plt.xlim(plot_start,10)
+	plt.xlim(plot_start,60)
 	plt.show()

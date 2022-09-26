@@ -70,6 +70,11 @@ int main(int argc, char* argv[])
         }
         std::cout << std::endl;
 
+        std::vector<double> point = {-12.5, 10.0, -1.57};
+        space_point_t pt = ss -> make_point();
+        ss -> copy_point_from_vector(pt, point);
+        auto nn = access_roadmap.get_best_node(pt,dirt_spec);
+        std::cout << "Nearest node: " << nn << std::endl;
     }
     catch(const prx_assert_t& e) 
     {

@@ -4,6 +4,11 @@
 #include "prx/bullet_sim/plants/plants.hpp"
 #include "prx/bullet_sim/collision_checking/collision_checker.hpp"
 #include "prx/bullet_sim/bullet_simulator.hpp"
+#include "prx/planning/planner_statistics.hpp"
+#include "prx/utilities/learned_modules/learned_controller.hpp"
+#include "prx/utilities/learned_modules/access_roadmap.hpp"
+
+#include <fstream>
 
 using namespace prx;
 
@@ -89,12 +94,97 @@ int main(int argc, char* argv[])
         dirt_spec.blossom_number = 1;
         dirt_spec.use_pruning = false;
 
+        learned_controller_t controller(params);
+        access_roadmap_t access_roadmap(params);
+        std::string roadmap_dir = "/Users/aravind/Downloads/out";
+        bool success = access_roadmap.build_roadmap_from_file(roadmap_dir, dirt_spec);
+        if (!success) 
+        {
+            prx_throw("Could not build roadmap from file!");
+        }
+        auto path = access_roadmap.get_shortest_path(59,60);
+        std::cout << "Path: " << std::endl;
+        for (auto v: path)
+        {
+            std::cout << v << " ";
+        }
+        std::cout << std::endl;
+
+        space_point_t lg = ss -> make_point();
+        dirt_spec.expand = [&](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn, bool blossom_expand)
+        {
+            if (blossom_expand)
+            {
+                std::vector<std::vector<double>> current_states;
+                std::vector<std::vector<double>> local_goals;
+
+                std::vector<double> current_state;
+                ss -> copy_vector_from_point(current_state,s);
+                std::vector<double> local_goal;
+
+                auto nn = access_roadmap.get_best_node(s,dirt_spec);
+                // int nn = -1;
+                if (nn == -1)
+                {
+                    local_goal.clear();
+                    ss -> sample(lg);
+                    ss -> copy_vector_from_point(local_goal,lg);
+                    current_states.push_back(current_state);
+                    local_goals.push_back(local_goal);
+                }
+                else
+                {
+                    ss -> copy_point(lg,access_roadmap.get_point(nn));
+                    ss -> copy_vector_from_point(local_goal,lg);
+                    current_states.push_back(current_state);
+                    local_goals.push_back(local_goal);
+                }
+
+                auto controls = controller.get_controls(current_states,local_goals);
+
+                trajectory_t traj(ss);
+                plan_t plan(cs);
+
+                for (int i = 0; i < bn; i++)
+                {
+                    traj.clear(); plan.clear();
+                    plan.append_onto_back(controller.get_control_duration());
+                    cs -> copy_point_from_vector(plan.back().control,controls[i]);
+                    dirt_spec.propagate(s,plan,traj);
+                    plans.push_back(new plan_t(plan));
+                    trajs.push_back(new trajectory_t(traj));
+                }
+            }
+            else
+            {
+                default_expand(s,plans,trajs,bn,sg,dirt_spec.sample_plan,dirt_spec.propagate);
+            }
+        };
+
         
-        condition_check_t checker("time",60);
-        dirt.link_and_setup_spec(&dirt_spec);
-        dirt.preprocess();
-        dirt.link_and_setup_query(&dirt_query);
-        dirt.resolve_query(&checker);
+        condition_check_t checker("time",1);
+        std::string output_dir = output_path + params["output_dir"].as<std::string>();
+
+        for (int i = 0; i < 10; i++)
+        {
+            dirt.link_and_setup_spec(&dirt_spec);
+            dirt.preprocess();
+            dirt.link_and_setup_query(&dirt_query);
+
+            planner_statistics_t stats;
+            stats.link_planner(&dirt);
+            stats.link_criterion(&checker);
+            stats.repeat_data_gathering(60);  //take out for vis
+            std::string full_filename = output_dir + std::to_string(i) + ".txt";
+            std::ofstream fout;
+            
+            fout.open(full_filename);
+            fout<<stats.serialize() << std::endl;
+            fout.close();
+
+            dirt_query.clear_outputs();
+            dirt.reset();
+        }
     }
     catch(const prx_assert_t& e)
 	{

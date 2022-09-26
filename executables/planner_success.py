@@ -47,26 +47,27 @@ def analyze_success_rates(exps_dir,planner,max_time=10,num_trials=10):
 	return out_x, out_y
 
 if __name__ == "__main__":
-    exps_dir = "/Users/aravind/Code/ML4KP-devel/out/test_results"
-    planners = []
-    for item in sorted(os.listdir(exps_dir)):
-        if item[0] != '.': planners.append(item)
-    markers = ["^","s","*","o",".","P"]
+	exps_dir = "/Users/aravind/Code/ML4KP-devel/out/results_segway/"
+	planners = []
+	for item in sorted(os.listdir(exps_dir)):
+		if item[0] != '.': planners.append(item)
+	markers = ["^","s","*","o",".","P"]
 
-    plot_data_x = {}
-    plot_data_y = {}
-    for planner in planners:
-        plot_data_x[planner], plot_data_y[planner] = analyze_success_rates(exps_dir,planner)
+	plot_data_x = {}
+	plot_data_y = {}
+	for planner in planners:
+		plot_data_x[planner], plot_data_y[planner] = analyze_success_rates(exps_dir,planner,60)
 
-    plt.figure(figsize=(8,8))
-    plt.rc('xtick',labelsize=16)
-    plt.rc('ytick',labelsize=16)
-    plt.grid()
-    for i, planner in enumerate(planners):
-        plt.plot(plot_data_x[planner],plot_data_y[planner],label=planner,marker=markers[i],markevery=100)
-    plt.legend(loc="lower right",prop={'size':16})
-    plt.xlabel("Time (s)",fontsize=16)
-    plt.ylabel("Success Rate",fontsize=16)
-    plt.title("Success Rate",fontsize=16)
-    plt.ylim(0,1)
-    plt.show()
+	plt.figure(figsize=(8,8))
+	plt.rc('xtick',labelsize=16)
+	plt.rc('ytick',labelsize=16)
+	plt.grid()
+	for i, planner in enumerate(planners):
+		plt.plot(plot_data_x[planner],plot_data_y[planner],label=planner,marker=markers[i],markevery=1000)
+	plt.legend(loc="lower right",prop={'size':16})
+	plt.xlabel("Time (s)",fontsize=16)
+	plt.ylabel("Success Rate",fontsize=16)
+	plt.title("Success Rate",fontsize=16)
+	plt.ylim(0,1)
+	plt.xlim(0,60)
+	plt.show()

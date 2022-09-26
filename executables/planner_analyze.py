@@ -7,8 +7,8 @@ def load_data(fname):
 	return times, iters, costs
 
 if __name__ == "__main__":
-    exps_dir = "/Users/aravind/Code/ML4KP-devel/out/test_results"
-    max_time = 10
+    exps_dir = "/Users/aravind/Code/ML4KP-devel/out/results_segway"
+    max_time = 60
     planners = []
     for item in sorted(os.listdir(exps_dir)):
         if item[0] != '.': planners.append(item)
@@ -33,7 +33,7 @@ if __name__ == "__main__":
             
             # Find final cost
             for j in range(times.shape[0]-1,-1,-1):
-                if times[j] <= 10.0 and costs[j] != 0.0:
+                if times[j] <= max_time and costs[j] != 0.0:
                     final_solution_costs.append(costs[j])
                     break
         
