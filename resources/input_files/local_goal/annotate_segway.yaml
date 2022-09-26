@@ -1,14 +1,15 @@
 random_seed: 0
-simulation_step: 0.1
+simulation_step: 0.01
 
 environment: "environments/simple_warehouse.yaml"
+# environment: "environments/narrow.yaml"
 plant: !file "plants/segway.yaml"
 
 use_learned_controller: true
 learned_controller: !file "networks/segway.yaml"
 max_steps: 100
 
-start_state: [2.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+start_state: [-5.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 goal_state:  [9.5, 9.5, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 goal_radius: 0.5

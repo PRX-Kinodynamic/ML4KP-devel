@@ -65,6 +65,15 @@ namespace prx
 	std::string replace_first(std::string &input, const std::string& to_replace, const std::string& replace_with);
 
 	/**
+	 * @brief Splits a string into a vector of strings based on a delimiter.
+	 * @param s The string to be split.
+	 * @param delimiter The delimiter to split the string on.
+	 * @return A vector of strings.
+	 */
+
+	std::vector<std::string> string_split(const std::string& s, char delimiter);
+
+	/**
 	 * @brief Test if one string is the prefix of an input string.
 	 * @param test_string The string that needs to be checked if it is a prefix.
 	 * @param input The input string which needs to be checked.

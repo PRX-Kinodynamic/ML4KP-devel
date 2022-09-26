@@ -8,7 +8,7 @@ goal_state:  [20.0, 20.0, 0.0]
 min_steps: 1
 max_steps: 50
 
-state_space_lower_bound: [-10,-10,-3.14159]
-state_space_upper_bound: [30,30,3.14159]
+state_space_lower_bound: [-15,-15,-3.14159]
+state_space_upper_bound: [15,15,3.14159]
 
 vis_body: "body"

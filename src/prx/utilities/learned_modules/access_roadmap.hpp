@@ -143,6 +143,83 @@ class access_roadmap_t
         edges[s].push_back(e);
     }
 
+    bool add_vertex(node_index_t index, access_vertex_t* v)
+    {
+        if (vertices.find(index) == vertices.end())
+        {
+            vertices[index] = v;
+            return true;
+        }
+        return false;
+    }
+
+    bool build_roadmap_from_file(std::string data_dir, rrt_specification_t& spec)
+    {
+        std::string vertices_file = data_dir + "/vertices.txt";
+        std::string edges_file = data_dir + "/edges.txt";
+
+        std::ifstream v_file(vertices_file);
+        std::ifstream e_file(edges_file);
+
+        if (!v_file.is_open() || !e_file.is_open())
+        {
+            std::cout << "Could not open files for reading." << std::endl;
+            return false;
+        }
+
+        std::string line;
+        space_point_t pt = spec.state_space -> make_point();
+
+        while (std::getline(v_file, line))
+        {
+            std::stringstream ss(line);
+            std::string item;
+            std::vector<double> tokens;
+            while (std::getline(ss, item, ','))
+            {
+                tokens.push_back(std::stod(item));
+            }
+
+            node_index_t index = tokens[0];
+            tokens.erase(tokens.begin());
+            spec.state_space -> copy_point_from_vector(pt, tokens);
+
+            std::string classifier_fname = data_dir + "/classifier_data_" + std::to_string(index) + ".txt";
+            auto v = new access_vertex_t(*params_ptr);
+            bool success = v -> construct_vertex(pt, spec, classifier_fname);
+  
+            success &= add_vertex(index, v);
+            if (!success)
+            {
+                std::cout << "Could not add vertex " << index << std::endl;
+                return false;
+            }
+        }
+
+        v_file.close();
+
+        while (std::getline(e_file, line))
+        {
+            std::stringstream ss(line);
+            std::string item;
+            std::vector<double> tokens;
+            while (std::getline(ss, item, ','))
+            {
+                tokens.push_back(std::stod(item));
+            }
+
+            node_index_t s = tokens[0];
+            node_index_t t = tokens[1];
+            double cost = tokens[2];
+
+            add_edge(s, t, cost);
+        }
+
+        e_file.close();
+
+        return true;
+    }
+
     void build_roadmap(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
     {
         pt = spec.state_space -> make_point();

@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
         // Write trajectory to a file
         std::string output_id = params["output_id"].as<std::string>();
         std::ofstream traj_file;
-        traj_file.open(output_path+"trajectory_"+output_id".txt");
+        traj_file.open(output_path+"trajectory.txt");
         traj_file << rrt_query.solution_traj.print(4) << std::endl;
         traj_file.close();
     }

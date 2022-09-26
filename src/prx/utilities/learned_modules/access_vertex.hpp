@@ -3,6 +3,8 @@
 #include "prx/utilities/learned_modules/termination_classifier.hpp"
 #include "prx/utilities/learned_modules/learned_controller.hpp"
 
+#include <fstream>
+
 using namespace prx;
 
 class access_vertex_t
@@ -52,7 +54,71 @@ class access_vertex_t
         return validate_accuracy_access;
     }
 
-     bool construct_vertex(space_point_t point, learned_controller_t controller, rrt_query_t planner_query, rrt_specification_t planner_spec)
+    bool construct_vertex(space_point_t point, rrt_specification_t planner_spec, std::string data_fname)
+    {
+        this->point = planner_spec.state_space -> clone_point(point);
+
+        std::cout << "Constructing vertex for: " << point << std::endl;
+
+        // Read classifier data from a comma separated file. 
+        // Each line is a data point, and each column is a feature.
+        // The last column is the label.
+        std::ifstream data_file(data_fname);
+
+        if(!data_file.is_open()) return false;
+
+        std::string line;
+        std::vector<double> data_point;
+        std::vector<std::vector<double>> access_data, access_data_val;
+        std::vector<double> access_labels, access_labels_val;
+
+        while(std::getline(data_file, line))
+        {
+            std::vector<std::string> data_point_raw = string_split(line, ',');
+            data_point.clear();
+            // Convert all the data points to doubles
+            for(auto& s : data_point_raw)
+            {
+                data_point.push_back(std::stod(s));
+            }
+
+            if (validate && uniform_random() < 0.2)
+            {
+                access_labels_val.push_back(data_point.back());
+                data_point.pop_back();
+                access_data_val.push_back(data_point);
+            }
+            else
+            {
+                access_labels.push_back(data_point.back());
+                data_point.pop_back();
+                access_data.push_back(data_point);
+            }
+        }
+
+        data_file.close();
+
+        access_classifier.train(access_data, access_labels);
+        if (validate)
+        {
+            for (unsigned i = 0; i < access_data_val.size(); i++)
+            {
+                if (access_classifier.predict(access_data_val[i]) == access_labels_val[i])
+                {
+                    validate_accuracy_access += 1.0;
+                }
+            }
+            validate_accuracy_access /= access_data_val.size();
+        }
+        
+        std::cout << "Validation accuracy: " << validate_accuracy_access << std::endl;
+
+        if (access_classifier.get_accuracy() < 0.8) return false;
+
+        return true;
+    }
+
+    bool construct_vertex(space_point_t point, learned_controller_t controller, rrt_query_t planner_query, rrt_specification_t planner_spec)
     {
         this->point = planner_spec.state_space -> clone_point(point);
 

@@ -4,6 +4,8 @@
 
 #include "prx/external/svm/svm.h"
 
+using namespace prx;
+
 class termination_classifier_t
 {
     private:

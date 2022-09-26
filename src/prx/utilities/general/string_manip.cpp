@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <iostream>
+#include <vector>
+#include <sstream>
 
 namespace prx
 {
@@ -27,6 +29,18 @@ namespace prx
 			return std::make_pair(
 					path.substr(0, first_slash),
 					path.substr(first_slash + 1, path.npos));
+	}
+
+	std::vector<std::string> string_split(const std::string& s, char delimiter)
+	{
+		std::vector<std::string> tokens;
+		std::string token;
+		std::istringstream tokenStream(s);
+		while (std::getline(tokenStream, token, delimiter))
+		{
+			tokens.push_back(token);
+		}
+		return tokens;
 	}
 	
 	bool reverse_string_compare(const std::string& str1,const std::string& str2)

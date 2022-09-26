@@ -4,10 +4,12 @@ simulation_step: 0.1
 # environment: "environments/narrow.yaml"
 # environment: "environments/maze.yaml"
 environment: "environments/simple_warehouse.yaml"
+# environment: "environments/warehouse_benchmr.yaml"
 # environment: "environments/city.yaml"
 # environment: "environments/rrt_star_obstacles.yaml"
 
-plant: !file "plants/treaded_vehicle.yaml"
+# plant: !file "plants/treaded_vehicle.yaml"
+plant: !file "plants/fo_treaded_vehicle.yaml"
 
 use_learned_controller: true
 learned_controller: !file "networks/treaded_vehicle_controller.yaml"
