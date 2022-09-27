@@ -126,31 +126,44 @@ int main(int argc, char* argv[])
   {
     ofs_goals << i << " " << goals[i][0] << " " << goals[i][1] << " " << goals[i][2] << std::endl;
   }
-  ss->copy_from_vector(goals[0]);
 
-  ss->copy_to_point(rrt_query.start_state);
+  space_point_t start_state = ss->make_point();
+  ss->copy_point_from_vector(start_state, goals[0]);
 
+  std::shared_ptr<custom_controller_t> omnibot_controller =
+      std::make_shared<custom_controller_t>(plant, "omnibot_controller");
+
+  const double l_a = .11;
+  const double l_b = .10;
+  const double l_ab = l_a + l_b;
+
+  Eigen::Matrix4d inverse;
+  inverse << -1.0 / (4.0 * l_ab), 1.0 / (4.0 * l_ab), 1.0 / 4.0, 1.0 / (4.0 * l_ab), 1.0 / (4.0 * l_ab), -1.0 / 4.0,
+      -1.0 / (4.0 * l_ab), 1.0 / (4.0 * l_ab), -1.0 / 4.0, 1.0 / (4.0 * l_ab), 1.0 / (4.0 * l_ab), 1.0 / 4.0;
+
+  // clang-format off
+  omnibot_controller -> custom_control_function = [](const space_point_t& goal, space_point_t& control) 
+  {
+    PRX_NOT_IMPLEMENTED
+  };
+  // clang-format on
   trajectory_t traj_real(ss);
   for (int i = 0; i < num_trajs; ++i)
   {
-    ss->copy_point_from_vector(rrt_query.goal_state, goals[(i + 1) % goals.size()]);
-
     write_to_file = true;
 
-    for (auto state : rrt_query.solution_traj)
-    {
-      ofs_trajs << simulation_step << " " << state << " " << i << "\n";
-      // ss->copy_from_point(state);
-      // world_model.world_change_function();
-    }
-    sg->propagate(rrt_query.start_state, rrt_query.solution_plan, traj_real);
+    // for (auto state : rrt_query.solution_traj)
+    // {
+    //   ofs_trajs << simulation_step << " " << state << " " << i << "\n";
+    // }
+    sg->propagate(start_state, rrt_query.solution_plan, traj_real);
     for (auto state : traj_real)
     {
       ofs_traj_real << simulation_step << " " << state << " " << i << "\n";
     }
     write_to_file = false;
 
-    ss->copy_point(rrt_query.start_state, rrt_query.solution_traj.back());
+    ss->copy_point(start_state, traj_real);
 
     ofs_trajs << "\n";
     checker.reset();
