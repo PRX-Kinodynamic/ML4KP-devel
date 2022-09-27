@@ -8,6 +8,7 @@ file(GLOB_RECURSE TESTS_FILES
 	${PROJECT_SOURCE_DIR}/tests/simulation/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/utilities/*.cpp
+	${PROJECT_SOURCE_DIR}/tests/external/*.cpp
 	)
 
 foreach(f ${TESTS_FILES})
