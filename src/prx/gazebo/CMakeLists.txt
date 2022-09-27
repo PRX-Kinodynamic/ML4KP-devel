@@ -4,6 +4,7 @@ if(BUILD_FOR_GAZEBO)
 
 	# find_package(Protobuf REQUIRED)
 	# find_package(gazebo REQUIRED)
+    find_package(TBB 4.4 COMPONENTS tbb tbbmalloc)
 
 	# set(PRX_GZ_LIBRARIES)
 	# define_property(GLOBAL PROPERTY PRX_GZ_INCLUDE_DIRS
@@ -49,6 +50,7 @@ if(BUILD_FOR_GAZEBO)
 	target_link_libraries(${PROJECT_NAME}_gz PUBLIC ${PRX_GZ_LIBRARIES})
 	target_link_libraries(${PROJECT_NAME}_gz PUBLIC ${PROJECT_NAME}_utilities )
 	target_link_libraries(${PROJECT_NAME}_gz PUBLIC ${PROJECT_NAME}_simulation )
+	target_link_libraries(${PROJECT_NAME}_gz PUBLIC tbb tbbmalloc)
 	# message("GAZEBO_LIBRARIES: ${GAZEBO_LIBRARIES}")
 
 endif(BUILD_FOR_GAZEBO)

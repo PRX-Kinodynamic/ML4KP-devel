@@ -27,6 +27,8 @@
 #include "prx/gtdynamics/planning/trajectory_optimizer.hpp"
 #include "prx/gtdynamics/utilities/utilities_functions.hpp"
 #include "prx/gtdynamics/planning/initialization_trajs_fg.hpp"
+#include "prx/simulation/controllers/custom_controller.hpp"
+
 namespace fs = std::filesystem;
 using namespace prx;
 
@@ -110,29 +112,10 @@ int main(int argc, char* argv[])
     }
   };
 
-  // for (double x = 0; x < 10.0; x += 0.1)
-  // {
-  //   for (double y = 0; y < 10.0; y += 0.1)
-  //   {
-  //     for (double th = -M_PI; th < M_PI; th += 0.05)
-  //     {
-  //       ss->copy_from_vector({ x, y, th });
-  //       mecanum_fm();
-  //     }
-  //   }
-  // }
+  std::shared_ptr<custom_controller_t> controller = std::make_shared<custom_controller_t>(plant, "custom_ctrl");
+  controller->custom_control_function = [](const space_point_t& goal, space_point_t& control) {
 
-  rrt_t rrt("rrt");
-  rrt_specification_t rrt_spec(context.first, context.second);
-  rrt_spec.min_control_steps = params["plant"]["min_steps"].as<int>();
-  rrt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
-
-  rrt_query_t rrt_query(context.first->get_state_space(), context.first->get_control_space());
-  rrt_query.start_state = context.first->get_state_space()->make_point();
-  rrt_query.goal_state = context.first->get_state_space()->make_point();
-
-  rrt_query.goal_region_radius = params["goal_region_radius"].as<double>();
-  rrt_query.get_visualization = false;
+  };
 
   condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());
 
@@ -152,12 +135,6 @@ int main(int argc, char* argv[])
   {
     ss->copy_point_from_vector(rrt_query.goal_state, goals[(i + 1) % goals.size()]);
 
-    rrt.link_and_setup_spec(&rrt_spec);
-    rrt.preprocess();
-    rrt.link_and_setup_query(&rrt_query);
-    rrt.resolve_query(&checker);
-    rrt.fulfill_query();
-
     write_to_file = true;
 
     for (auto state : rrt_query.solution_traj)
@@ -175,16 +152,7 @@ int main(int argc, char* argv[])
 
     ss->copy_point(rrt_query.start_state, rrt_query.solution_traj.back());
 
-    // do
-    // {
-    //   friction_map_gt();
-    //   plant->propagate(simulation_step);
-
-    //   ofs_plans << simulation_step << " " << cs_pt << "\n";
-    // } while (!checker.check());
     ofs_trajs << "\n";
     checker.reset();
-    rrt.reset();
-    // ofs_plans << "\n";
   }
 }
