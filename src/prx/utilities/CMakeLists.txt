@@ -10,5 +10,10 @@ target_include_directories(${PROJECT_NAME}_utilities PUBLIC ".")
 
 set_target_properties(${PROJECT_NAME}_utilities PROPERTIES COMPILE_FLAGS "-Wno-deprecated")
 
+if (APPLE)
+	list(APPEND YAML_CPP_LIBRARIES yaml-cpp)
+endif(APPLE)
+
 target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${PROJECT_NAME}_external )
-target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES} )
+# target_link_libraries(${PROJECT_NAME}_utilities ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES} )
+target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES})

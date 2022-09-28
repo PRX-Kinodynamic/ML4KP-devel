@@ -7,7 +7,7 @@ if (${Python_VERSION_MAJOR} EQUAL 3)
     # set(Python_ADDITIONAL_VERSIONS 3.9)
     find_package(PythonLibs 3 REQUIRED)
 
-    set(Python_versions_nums 3.9 3.8 3.7 3.6 3.5 3.4 3 )
+    set(Python_versions_nums 3.10 3.9 3.8 3.7 3.6 3.5 3.4 3 )
         # message(STATUS "PYTHONLIBS_VERSION_STRING=${PYTHONLIBS_VERSION_STRING}") 
     foreach(PYVER IN LISTS Python_versions_nums)
         string(COMPARE GREATER ${PYTHONLIBS_VERSION_STRING} ${PYVER} FOUND_PY_VERSION)

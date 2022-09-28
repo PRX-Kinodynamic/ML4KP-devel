@@ -5,6 +5,8 @@ file(GLOB_RECURSE SRC_PRX_LIB_EXTERNAL_PQP  PQP/*.cpp)
 
 add_library(${PROJECT_NAME}_external ${SRC_PRX_LIB_EXTERNAL_PQP} ) 
 
+target_include_directories(${PROJECT_NAME}_external PUBLIC "qhull/src")
+
 target_include_directories(${PROJECT_NAME}_external PUBLIC ".")
 add_subdirectory(qhull)
 # Silencing all warning for the external (non-prx) code
