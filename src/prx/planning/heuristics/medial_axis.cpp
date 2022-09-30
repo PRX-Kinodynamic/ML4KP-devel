@@ -92,8 +92,8 @@ void medial_axis_t::add_obstacles_to_graph()
         pt.push_back(j);
         auto node_index = obstacles_graph.add_vertex<undirected_node_t, undirected_edge_t>();
         auto node = obstacles_graph.get_vertex_as<undirected_node_t>(node_index);
-        node->point() = state_space->make_point();
-        state_space->copy_point_from_vector(node->point(), pt);
+        node->point = state_space->make_point();
+        state_space->copy_point_from_vector(node->point, pt);
         metric_obstacles->add_node(node.get());
       }
     }
@@ -107,8 +107,8 @@ void medial_axis_t::add_obstacles_to_graph()
     pt.push_back(-1);
     auto node_index = obstacles_graph.add_vertex<undirected_node_t, undirected_edge_t>();
     auto node = obstacles_graph.get_vertex_as<undirected_node_t>(node_index);
-    node->point() = state_space->make_point();
-    state_space->copy_point_from_vector(node->point(), pt);
+    node->point = state_space->make_point();
+    state_space->copy_point_from_vector(node->point, pt);
     metric_obstacles->add_node(node.get());
 
     pt.clear();
@@ -116,8 +116,8 @@ void medial_axis_t::add_obstacles_to_graph()
     pt.push_back(cols());
     node_index = obstacles_graph.add_vertex<undirected_node_t, undirected_edge_t>();
     node = obstacles_graph.get_vertex_as<undirected_node_t>(node_index);
-    node->point() = state_space->make_point();
-    state_space->copy_point_from_vector(node->point(), pt);
+    node->point = state_space->make_point();
+    state_space->copy_point_from_vector(node->point, pt);
     metric_obstacles->add_node(node.get());
   }
   for (int i = -1; i < cols() + 1; ++i)
@@ -127,16 +127,16 @@ void medial_axis_t::add_obstacles_to_graph()
     pt.push_back(i);
     auto node_index = obstacles_graph.add_vertex<undirected_node_t, undirected_edge_t>();
     auto node = obstacles_graph.get_vertex_as<undirected_node_t>(node_index);
-    node->point() = state_space->make_point();
-    state_space->copy_point_from_vector(node->point(), pt);
+    node->point = state_space->make_point();
+    state_space->copy_point_from_vector(node->point, pt);
     metric_obstacles->add_node(node.get());
     pt.clear();
     pt.push_back(rows());
     pt.push_back(i);
     node_index = obstacles_graph.add_vertex<undirected_node_t, undirected_edge_t>();
     node = obstacles_graph.get_vertex_as<undirected_node_t>(node_index);
-    node->point() = state_space->make_point();
-    state_space->copy_point_from_vector(node->point(), pt);
+    node->point = state_space->make_point();
+    state_space->copy_point_from_vector(node->point, pt);
     metric_obstacles->add_node(node.get());
   }
 }
@@ -181,8 +181,8 @@ void medial_axis_t::set_sknw(const std::string nodes_file, const std::string edg
     }
     auto node_index = graph.add_vertex<undirected_node_t, undirected_edge_t>();
     auto node = graph.get_vertex_as<undirected_node_t>(node_index);
-    node->point() = state_space->make_point();
-    state_space->copy_point_from_vector(node->point(), pt);
+    node->point = state_space->make_point();
+    state_space->copy_point_from_vector(node->point, pt);
     metric_close->add_node(node.get());
     nodes[index] = node_index;
     set_as_node(std::floor(pt.at(0)), std::floor(pt.at(1)), node_index);
@@ -209,11 +209,11 @@ void medial_axis_t::set_sknw(const std::string nodes_file, const std::string edg
       node_1 = graph.get_vertex_as<undirected_node_t>(n1);
       node_2 = graph.get_vertex_as<undirected_node_t>(n2);
       if (edge1_index + 1 == edge2_index || edge1_index == edge2_index ||
-          has_direct_line_of_sight(node_1->point(), node_2->point(), los_clearance))
+          has_direct_line_of_sight(node_1->point, node_2->point, los_clearance))
       {
         auto edge_index = graph.add_edge(n1, n2);
         auto new_edge = graph.get_edge_as<undirected_edge_t>(edge_index);
-        new_edge->set_value(df_ma(node_1->point(), node_2->point()));
+        new_edge->set_value(df_ma(node_1->point, node_2->point));
         for (int i = edge1_index; i < edge2_index; ++i)
         {
           nodes_edges[edge_index] = std::make_pair(node_1->get_index(), node_2->get_index());
@@ -234,14 +234,14 @@ void medial_axis_t::set_sknw(const std::string nodes_file, const std::string edg
         // candidate) / 2), "Can't connect nodes!");
         auto node_index = graph.add_vertex<undirected_node_t, undirected_edge_t>();
         auto node = graph.get_vertex_as<undirected_node_t>(node_index);
-        node->point() = state_space->make_point();
+        node->point = state_space->make_point();
 
         std::vector<double> v = { edge_pts[middle].real(), edge_pts[middle].imag() };
         // unset_edge(edge_pts[middle].real(), edge_pts[middle].imag());
         set_as_node(edge_pts[middle].real(), edge_pts[middle].imag(), node_index);
         next_node_id++;
         // std::cout << v[0] << " " << v[1] << std::endl;
-        state_space->copy_point_from_vector(node->point(), v);
+        state_space->copy_point_from_vector(node->point, v);
         metric_close->add_node(node.get());
 
         add_new_node(n1, node_index, edge1_index, middle);
@@ -289,7 +289,7 @@ void medial_axis_t::add_goal_to_graph()
 
   goal_index = graph.add_vertex<undirected_node_t, undirected_edge_t>();
   auto goal_node = graph.get_vertex_as<undirected_node_t>(goal_index);
-  goal_node->point() = goal;
+  goal_node->point = goal;
   metric_close->add_node(goal_node.get());
   set_as_node(std::floor(goal->at(0)), std::floor(goal->at(1)), goal_index);
   // set_as_node(pt, goal_index);
@@ -298,17 +298,17 @@ void medial_axis_t::add_goal_to_graph()
   {
     auto node = static_cast<undirected_node_t*>(n);
 
-    if (is_obstacle(node->point()->at(0), node->point()->at(1)))
+    if (is_obstacle(node->point->at(0), node->point->at(1)))
       continue;
-    if (node->point()->at(0) == goal->at(0) && node->point()->at(1) == goal->at(1))
+    if (node->point->at(0) == goal->at(0) && node->point->at(1) == goal->at(1))
       continue;
-    if (has_direct_line_of_sight(goal, node->point(), los_clearance))
+    if (has_direct_line_of_sight(goal, node->point, los_clearance))
     {
       auto edge_index = graph.add_edge(goal_index, node->get_index());
       auto new_edge = graph.get_edge_as<undirected_edge_t>(edge_index);
-      new_edge->set_value(df_ma(goal, node->point()));
-      create_edges(node->point(), goal, node->get_index(), edge_index);
-      set_as_node(std::floor(node->point()->at(0)), std::floor(node->point()->at(1)), node->get_index());
+      new_edge->set_value(df_ma(goal, node->point));
+      create_edges(node->point, goal, node->get_index(), edge_index);
+      set_as_node(std::floor(node->point->at(0)), std::floor(node->point->at(1)), node->get_index());
       edges_list[node->get_index()].push_back(edge_index);
       edges_list[goal_index].push_back(edge_index);
     }
@@ -545,8 +545,8 @@ void medial_axis_t::find_medial_axis()
 
     auto node_index = graph.add_vertex<undirected_node_t, undirected_edge_t>();
     auto node = graph.get_vertex_as<undirected_node_t>(node_index);
-    node->point() = state_space->make_point();
-    state_space->copy_point_from_vector(node->point(), { pt.real(), pt.imag() });
+    node->point = state_space->make_point();
+    state_space->copy_point_from_vector(node->point, { pt.real(), pt.imag() });
 
     metric_close->add_node(node.get());
     nodes_visited.insert(node_index);
@@ -606,7 +606,7 @@ void medial_axis_t::compute_close_vector(int i, int j)
   for (int i = 0; i < 5; ++i)
   {
     node = static_cast<undirected_node_t*>(metric_obstacles->single_query(pt));
-    aux_dist = df_ma(node->point(), pt);
+    aux_dist = df_ma(node->point, pt);
 
     if (aux_dist <= min_dist)
     {
@@ -624,10 +624,10 @@ void medial_axis_t::compute_close_vector(int i, int j)
   for (auto n : vec_nodes)
   {
     node = static_cast<undirected_node_t*>(n);
-    dist_aux = df_ma(node->point(), pt);
+    dist_aux = df_ma(node->point, pt);
     if (dist_aux == min_dist)
     {
-      v2 = std::complex<double>(node->point()->at(0), node->point()->at(1));
+      v2 = std::complex<double>(node->point->at(0), node->point->at(1));
       MA_DEBUG(i, j, 181, 350, "v1: " << v1 << " v2: " << v2 << " v3: " << v3);
       if (v3 != -(v1 - v2))
       {
@@ -688,7 +688,7 @@ void medial_axis_t::compute_far_vector(int i, int j)
     std::function<void(undirected_node_t*)> insert_nodes = [&](undirected_node_t* ni) {
       if (vec_nodes.count(ni->get_index()) > 0)
         return;
-      if (has_direct_line_of_sight(pt, ni->point(), los_clearance))
+      if (has_direct_line_of_sight(pt, ni->point, los_clearance))
       {
         vec_nodes.insert(ni->get_index());
         vec_close.push_back(static_cast<proximity_node_t*>(ni));
@@ -712,11 +712,11 @@ void medial_axis_t::compute_far_vector(int i, int j)
       //  << " dist: " << df_ma(pt, node -> point));
       if (n == get_node_id(i, j))
         continue;
-      if (df_ma(pt, node->point()) + node->get_cost_to_go() < best_cost)  // &&
+      if (df_ma(pt, node->point) + node->get_cost_to_go() < best_cost)  // &&
       {
-        best_cost = df_ma(pt, node->point()) + node->get_cost_to_go();
+        best_cost = df_ma(pt, node->point) + node->get_cost_to_go();
 
-        v2 = std::complex<double>(node->point()->at(0), node->point()->at(1));
+        v2 = std::complex<double>(node->point->at(0), node->point->at(1));
 
         vector_computed = true;
       }
@@ -731,13 +731,13 @@ void medial_axis_t::compute_far_vector(int i, int j)
       {
         node = graph.get_vertex_as<undirected_node_t>(n);
         // node = static_cast<undirected_node_t*>(n);
-        if (df_ma(pt, node->point()) + node->get_cost_to_go() < best_cost &&
-            has_direct_line_of_sight(pt, node->point(), 0.0))
+        if (df_ma(pt, node->point) + node->get_cost_to_go() < best_cost &&
+            has_direct_line_of_sight(pt, node->point, 0.0))
         {
-          best_cost = df_ma(pt, node->point()) + node->get_cost_to_go();
+          best_cost = df_ma(pt, node->point) + node->get_cost_to_go();
           // v2(0) = node -> point -> at(0);
           // v2(1) = node -> point -> at(1);
-          v2 = std::complex<double>(node->point()->at(0), node->point()->at(1));
+          v2 = std::complex<double>(node->point->at(0), node->point->at(1));
           vector_computed = true;
         }
       }
@@ -749,7 +749,7 @@ void medial_axis_t::compute_far_vector(int i, int j)
       auto node_ptr = static_cast<undirected_node_t*>(metric_close->single_query(pt));
       // v2(0) = node -> point -> at(0);
       // v2(1) = node -> point -> at(1);
-      v2 = std::complex<double>(node_ptr->point()->at(0), node_ptr->point()->at(1));
+      v2 = std::complex<double>(node_ptr->point->at(0), node_ptr->point->at(1));
     }
   }
   // MA_DEBUG(i, j,389, 77, "v2: " << v2);
@@ -823,7 +823,7 @@ void medial_axis_t::compute_close_vector_field()
 
   for (int i = 0; i < obstacles_graph.num_vertices(); ++i)
   {
-    auto pt = obstacles_graph[i]->point();
+    auto pt = obstacles_graph[i]->point;
     std::complex<double> p(pt->at(0), pt->at(1));
     // std::cout << "obstacle: " << p << std::endl;
     // cells.push_back(std::complex<double>(pt -> at(0), pt -> at(1)));
@@ -992,7 +992,7 @@ std::vector<std::complex<double>> medial_axis_t::blossom(int i, int j, int n, do
     {
       auto neighbor = graph.get_vertex_as<undirected_node_t>(ni);
 
-      ma_pt next(neighbor->point()->at(0), neighbor->point()->at(1));
+      ma_pt next(neighbor->point->at(0), neighbor->point->at(1));
 
       // if (has_direct_line_of_sight(pt, neighbor -> point, 0))
       get_vectors(next);
@@ -1050,7 +1050,7 @@ std::vector<std::complex<double>> medial_axis_t::blossom(int i, int j, int n, do
 
         pt->at(0) = a.real();
         pt->at(1) = a.imag();
-        if (has_direct_line_of_sight(pt, other->point(), 0))
+        if (has_direct_line_of_sight(pt, other->point, 0))
         {
           r.push_back(vectors[v] - start);
           break;
@@ -1058,7 +1058,7 @@ std::vector<std::complex<double>> medial_axis_t::blossom(int i, int j, int n, do
       }
     }
 
-    if (has_direct_line_of_sight(pt, other->point(), 0))
+    if (has_direct_line_of_sight(pt, other->point, 0))
     {
       r.push_back(vectors[v] - start);
     }
