@@ -77,164 +77,178 @@ BOOST_AUTO_TEST_CASE(rrt_ackermann_test)
   prx::init_random(params["random_seed"].as<double>());
   prx::statistics_t stats;
   std::string header;
-  for (int i = 0; i < params["total_runs"].as<int>(); ++i)
-  {
-    std::vector<std::shared_ptr<prx::movable_object_t> > obstacle_list;
-    std::vector<std::string> obstacles_names;
 
-    prx::transform_t obstacle_pose;
-    for (int i = 0; i < 10; ++i)
+  int failed_runs{ 0 };
+  int max_failed_runs{ 3 };
+  bool success_test{ true };
+  while (failed_runs < max_failed_runs)
+  {
+    success_test = true;
+    for (int i = 0; i < params["total_runs"].as<int>(); ++i)
     {
-      double x = prx::uniform_random(10.0, 30.0);
-      double y = prx::uniform_random(0.0, 20.0);
+      std::vector<std::shared_ptr<prx::movable_object_t> > obstacle_list;
+      std::vector<std::string> obstacles_names;
+
+      prx::transform_t obstacle_pose;
+      for (int i = 0; i < 10; ++i)
+      {
+        double x = prx::uniform_random(10.0, 30.0);
+        double y = prx::uniform_random(0.0, 20.0);
+
+        obstacle_pose.setIdentity();
+        obstacle_pose.translation() = (prx::vector_t(x, y, 0.5));
+
+        double w = prx::uniform_random(0.5, 1.5);
+        double h = prx::uniform_random(0.5, 1.5);
+        std::string name = "box_" + std::to_string(i);
+        obstacle_list.push_back(create_obstacle(new prx::box_t(name, w, h, 1, obstacle_pose)));
+        obstacles_names.push_back(name);
+      }
 
       obstacle_pose.setIdentity();
-      obstacle_pose.translation() = (prx::vector_t(x, y, 0.5));
 
-      double w = prx::uniform_random(0.5, 1.5);
-      double h = prx::uniform_random(0.5, 1.5);
-      std::string name = "box_" + std::to_string(i);
-      obstacle_list.push_back(create_obstacle(new prx::box_t(name, w, h, 1, obstacle_pose)));
-      obstacles_names.push_back(name);
+      obstacles_names.push_back("lower_bound");
+      obstacle_pose.translation() = (prx::vector_t(20, 0., 0.5));
+      obstacle_list.push_back(create_obstacle(new prx::box_t(obstacles_names.back(), 40, 0.1, 1, obstacle_pose)));
+
+      obstacles_names.push_back("upper_bound");
+      obstacle_pose.translation() = (prx::vector_t(20, 20, 0.5));
+      obstacle_list.push_back(create_obstacle(new prx::box_t(obstacles_names.back(), 40, 0.1, 1, obstacle_pose)));
+
+      obstacles_names.push_back("right_bound");
+      obstacle_pose.translation() = (prx::vector_t(0., 10, 0.5));
+      obstacle_list.push_back(create_obstacle(new prx::box_t(obstacles_names.back(), 0.1, 20, 1, obstacle_pose)));
+
+      obstacles_names.push_back("left_bound");
+      obstacle_pose.translation() = (prx::vector_t(40, 10, 0.5));
+      obstacle_list.push_back(create_obstacle(new prx::box_t(obstacles_names.back(), 0.1, 20, 1, obstacle_pose)));
+
+      auto plant_name = "Ackermann_FO";
+      auto plant = prx::system_factory_t::create_system(plant_name, plant_name);
+
+      prx::world_model_t world_model({ plant }, { obstacle_list });
+      world_model.create_context("context", { plant_name }, { obstacles_names });
+      auto context = world_model.get_context("context");
+
+      prx::rrt_t rrt("RRT");
+      prx::rrt_specification_t rrt_spec(context.first, context.second);
+
+      auto ctrl_pt = context.first->get_control_space()->make_point();
+
+      int min_steps = params["min_steps"].as<int>();
+      int max_steps = params["max_steps"].as<int>();
+
+      rrt_spec.min_control_steps = min_steps;
+      rrt_spec.max_control_steps = max_steps;
+
+      prx::rrt_query_t rrt_query(context.first->get_state_space(), context.first->get_control_space());
+      rrt_query.start_state = context.first->get_state_space()->make_point();
+      rrt_query.goal_state = context.first->get_state_space()->make_point();
+
+      std::vector<double> lower_bounds = { 0, 0, -PRX_PI };
+      std::vector<double> upper_bounds = { 40, 20, PRX_PI };
+      context.first->get_state_space()->set_bounds(lower_bounds, upper_bounds);
+
+      std::vector<double> start_state = { 5, 10, 0 };
+      std::vector<double> goal_state = { 35, 10, 0 };
+      context.first->get_state_space()->copy_point_from_vector(rrt_query.start_state, start_state);
+      context.first->get_state_space()->copy_point_from_vector(rrt_query.goal_state, goal_state);
+
+      rrt_query.goal_region_radius = 0.5;
+      rrt_query.get_visualization = params["visualize"].as<bool>();
+
+      rrt.link_and_setup_spec(&rrt_spec);
+      rrt.preprocess();
+      rrt.link_and_setup_query(&rrt_query);
+
+      // prx::condition_check_t checker("iterations", 10'000);
+      prx::condition_check_t checker(params["checker_type"].as<>(),
+                                     params["checker_value"].as<int>());  //'
+
+      prx::planner_statistics_t pl_stats;
+      pl_stats.link_planner(&rrt);
+      pl_stats.link_criterion(&checker);
+      pl_stats.repeat_data_gathering(params["stats_step_size"].as<double>(), false);
+
+      auto s = rrt.get_statistics();
+      stats.add_sample(s);
+      if (i == 0)
+      {
+        header = pl_stats.serialize_header();
+        // fout << header;
+      }
+      // fout << pl_stats.serialize();
+
+      if (params["visualize"].as<bool>())
+      {
+        rrt.fulfill_query();
+
+        prx::three_js_group_t* vis_group = new prx::three_js_group_t({ plant }, { obstacle_list });
+
+        std::string body_name = "Ackermann_FO/body";
+
+        auto ss = context.first->get_state_space();
+
+        vis_group->add_vis_infos(prx::info_geometry_t::LINE, rrt_query.tree_visualization, body_name, ss);
+
+        vis_group->add_detailed_vis_infos(prx::info_geometry_t::FULL_LINE, rrt_query.solution_traj, body_name, ss);
+
+        vis_group->add_animation(rrt_query.solution_traj, ss, rrt_query.start_state);
+
+        vis_group->output_html("rrt_test_output.html");
+
+        delete vis_group;
+      }
     }
-
-    obstacle_pose.setIdentity();
-
-    obstacles_names.push_back("lower_bound");
-    obstacle_pose.translation() = (prx::vector_t(20, 0., 0.5));
-    obstacle_list.push_back(create_obstacle(new prx::box_t(obstacles_names.back(), 40, 0.1, 1, obstacle_pose)));
-
-    obstacles_names.push_back("upper_bound");
-    obstacle_pose.translation() = (prx::vector_t(20, 20, 0.5));
-    obstacle_list.push_back(create_obstacle(new prx::box_t(obstacles_names.back(), 40, 0.1, 1, obstacle_pose)));
-
-    obstacles_names.push_back("right_bound");
-    obstacle_pose.translation() = (prx::vector_t(0., 10, 0.5));
-    obstacle_list.push_back(create_obstacle(new prx::box_t(obstacles_names.back(), 0.1, 20, 1, obstacle_pose)));
-
-    obstacles_names.push_back("left_bound");
-    obstacle_pose.translation() = (prx::vector_t(40, 10, 0.5));
-    obstacle_list.push_back(create_obstacle(new prx::box_t(obstacles_names.back(), 0.1, 20, 1, obstacle_pose)));
-
-    auto plant_name = "Ackermann_FO";
-    auto plant = prx::system_factory_t::create_system(plant_name, plant_name);
-
-    prx::world_model_t world_model({ plant }, { obstacle_list });
-    world_model.create_context("context", { plant_name }, { obstacles_names });
-    auto context = world_model.get_context("context");
-
-    prx::rrt_t rrt("RRT");
-    prx::rrt_specification_t rrt_spec(context.first, context.second);
-
-    auto ctrl_pt = context.first->get_control_space()->make_point();
-
-    int min_steps = params["min_steps"].as<int>();
-    int max_steps = params["max_steps"].as<int>();
-
-    rrt_spec.min_control_steps = min_steps;
-    rrt_spec.max_control_steps = max_steps;
-
-    prx::rrt_query_t rrt_query(context.first->get_state_space(), context.first->get_control_space());
-    rrt_query.start_state = context.first->get_state_space()->make_point();
-    rrt_query.goal_state = context.first->get_state_space()->make_point();
-
-    std::vector<double> lower_bounds = { 0, 0, -PRX_PI };
-    std::vector<double> upper_bounds = { 40, 20, PRX_PI };
-    context.first->get_state_space()->set_bounds(lower_bounds, upper_bounds);
-
-    std::vector<double> start_state = { 5, 10, 0 };
-    std::vector<double> goal_state = { 35, 10, 0 };
-    context.first->get_state_space()->copy_point_from_vector(rrt_query.start_state, start_state);
-    context.first->get_state_space()->copy_point_from_vector(rrt_query.goal_state, goal_state);
-
-    rrt_query.goal_region_radius = 0.5;
-    rrt_query.get_visualization = params["visualize"].as<bool>();
-
-    rrt.link_and_setup_spec(&rrt_spec);
-    rrt.preprocess();
-    rrt.link_and_setup_query(&rrt_query);
-
-    // prx::condition_check_t checker("iterations", 10'000);
-    prx::condition_check_t checker(params["checker_type"].as<>(),
-                                   params["checker_value"].as<int>());  //'
-
-    prx::planner_statistics_t pl_stats;
-    pl_stats.link_planner(&rrt);
-    pl_stats.link_criterion(&checker);
-    pl_stats.repeat_data_gathering(params["stats_step_size"].as<double>(), false);
-
-    auto s = rrt.get_statistics();
-    stats.add_sample(s);
-    if (i == 0)
+    // fout.close();
+    if (params["sample_gathering"].as<int>() == 1)
     {
-      header = pl_stats.serialize_header();
-      // fout << header;
+      std::cout << "header," << header;
+      std::cout << stats.serialize() << std::endl;
     }
-    // fout << pl_stats.serialize();
-
-    if (params["visualize"].as<bool>())
+    else if (params["sample_gathering"].as<int>() == 2)
     {
-      rrt.fulfill_query();
+      auto f_test = [](double v1, double v2, double f_upper, double f_lower) {
+        double F = v1 / v2;
 
-      prx::three_js_group_t* vis_group = new prx::three_js_group_t({ plant }, { obstacle_list });
-
-      std::string body_name = "Ackermann_FO/body";
-
-      auto ss = context.first->get_state_space();
-
-      vis_group->add_vis_infos(prx::info_geometry_t::LINE, rrt_query.tree_visualization, body_name, ss);
-
-      vis_group->add_detailed_vis_infos(prx::info_geometry_t::FULL_LINE, rrt_query.solution_traj, body_name, ss);
-
-      vis_group->add_animation(rrt_query.solution_traj, ss, rrt_query.start_state);
-
-      vis_group->output_html("rrt_test_output.html");
-
-      delete vis_group;
+        // H0: the two variances are equal (\sigma_1 == \sigma_2)
+        // Rejected if
+        // F < F_{1−\alpha/2,N1−1,N2−1} or
+        // F > F_{\alpha/2,N1−1,N2−1}
+        // BOOST_CHECK_MESSAGE(!((F < f_lower) || (F > f_upper)), "H0: Equal variance REJECTED");
+        return !((F < f_lower) || (F > f_upper));
+      };
+      std::cout << "header," << header;
+      std::cout << stats.serialize() << std::endl;
+      //   0     1       2        3               4               5
+      // time, iters, nodes, solution_cost, solution_time, solution_iters
+      auto mu2 = stats.sample_mean();
+      auto sigma2 = stats.sample_variance();
+      // Using \alpha = 0.05
+      // N1 = 121
+      // N2 = 11
+      double v1, v2;
+      double f_upper = 3.14;
+      double f_lower = 1.0 / 2.16;
+      std::cout << "Checking nodes variances" << std::endl;
+      v1 = params["/sample_1/nodes/variance"].as<double>();
+      v2 = sigma2[2];
+      success_test &= f_test(v1, v2, f_upper, f_lower);
+      std::cout << "Checking solution_cost variances" << std::endl;
+      v1 = params["/sample_1/solution_cost/variance"].as<double>();
+      v2 = sigma2[3];
+      success_test &= f_test(v1, v2, f_upper, f_lower);
+      std::cout << "Checking solution_iters variances" << std::endl;
+      v1 = params["/sample_1/solution_iters/variance"].as<double>();
+      v2 = sigma2[5];
+      success_test &= f_test(v1, v2, f_upper, f_lower);
     }
+    if (success_test)
+      break;
+    failed_runs++;
   }
-  // fout.close();
-  if (params["sample_gathering"].as<int>() == 1)
-  {
-    std::cout << "header," << header;
-    std::cout << stats.serialize() << std::endl;
-  }
-  else if (params["sample_gathering"].as<int>() == 2)
-  {
-    auto f_test = [](double v1, double v2, double f_upper, double f_lower) {
-      double F = v1 / v2;
+  BOOST_CHECK_MESSAGE(failed_runs < max_failed_runs, "H0: Equal variance REJECTED");
 
-      // H0: the two variances are equal (\sigma_1 == \sigma_2)
-      // Rejected if
-      // F < F_{1−\alpha/2,N1−1,N2−1} or
-      // F > F_{\alpha/2,N1−1,N2−1}
-      BOOST_CHECK_MESSAGE(!((F < f_lower) || (F > f_upper)), "H0: Equal variance REJECTED");
-    };
-    std::cout << "header," << header;
-    std::cout << stats.serialize() << std::endl;
-    //   0     1       2        3               4               5
-    // time, iters, nodes, solution_cost, solution_time, solution_iters
-    auto mu2 = stats.sample_mean();
-    auto sigma2 = stats.sample_variance();
-    // Using \alpha = 0.05
-    // N1 = 121
-    // N2 = 11
-    double v1, v2;
-    double f_upper = 3.14;
-    double f_lower = 1.0 / 2.16;
-    std::cout << "Checking nodes variances" << std::endl;
-    v1 = params["/sample_1/nodes/variance"].as<double>();
-    v2 = sigma2[2];
-    f_test(v1, v2, f_upper, f_lower);
-    std::cout << "Checking solution_cost variances" << std::endl;
-    v1 = params["/sample_1/solution_cost/variance"].as<double>();
-    v2 = sigma2[3];
-    f_test(v1, v2, f_upper, f_lower);
-    std::cout << "Checking solution_iters variances" << std::endl;
-    v1 = params["/sample_1/solution_iters/variance"].as<double>();
-    v2 = sigma2[5];
-    f_test(v1, v2, f_upper, f_lower);
-  }
   // std::cout << "sample mean: " << stats.sample_mean() << std::endl;
   // std::cout << "sample variance: " << stats.sample_variance() << std::endl;
   // std::cout << "sample std dev: " << stats.sample_standard_deviation() <<
