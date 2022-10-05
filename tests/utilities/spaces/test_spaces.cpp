@@ -142,3 +142,58 @@ BOOST_AUTO_TEST_CASE(test_space_norms)
 
   BOOST_CHECK(prx::space_t::euclidean_2d(pt_sp2, pt_sp1) == std::sqrt(1 + 4));
 }
+
+BOOST_AUTO_TEST_CASE(test_space_copy_to_and_copy_from_point)
+{
+  double x, y, theta;
+  x = y = theta = 1;
+  std::vector<double*> address_1 = { &x, &y, &theta };
+  prx::space_t space_1("EER", address_1, "space_1");
+
+  prx::space_point_t pt_sp1 = space_1.make_point();
+
+  space_1.copy_to_point(pt_sp1);
+  prx::space_point_t pt_sp2 = space_1.clone_point(pt_sp1);
+  BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
+  (*pt_sp1)[0] = 10;
+  (*pt_sp1)[1] = 20;
+  (*pt_sp1)[2] = 3;
+  space_1.copy_from(pt_sp1);
+  space_1.copy_to(pt_sp2);
+  BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
+  (*pt_sp1)[0] = -10;
+  (*pt_sp1)[1] = -20;
+  (*pt_sp1)[2] = -3;
+  space_1.copy(pt_sp2, pt_sp1);
+
+  BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
+}
+
+BOOST_AUTO_TEST_CASE(test_space_copy)
+{
+  double x, y, theta;
+  x = y = theta = 1;
+  std::vector<double*> address_1 = { &x, &y, &theta };
+  prx::space_t space_1("EER", address_1, "space_1");
+
+  prx::space_point_t pt_sp1 = space_1.make_point();
+  prx::space_point_t pt_sp2 = space_1.make_point();
+
+  // prx::space_point_t <- std::initializer_list
+  space_1.copy(pt_sp1, { 2, 5, 1 });
+  BOOST_CHECK((*pt_sp1)[0] == 2 && (*pt_sp1)[1] == 5 && (*pt_sp1)[2] == 1);
+
+  // prx::space_point_t <- std::vector
+  std::vector<double> v = { -2, -5, -1 };
+  space_1.copy(pt_sp2, v);
+  BOOST_CHECK((*pt_sp2)[0] == -2 && (*pt_sp2)[1] == -5 && (*pt_sp2)[2] == -1);
+
+  // std::vector <- prx::space_point_t
+  space_1.copy(v, pt_sp1);
+  BOOST_CHECK(v[0] == 2 && v[1] == 5 && v[2] == 1);
+
+  // prx::space_point_t <- prx::space_point_t
+  BOOST_CHECK(!space_1.equal_points(pt_sp1, pt_sp2));
+  space_1.copy(pt_sp1, pt_sp2);
+  BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
+}
