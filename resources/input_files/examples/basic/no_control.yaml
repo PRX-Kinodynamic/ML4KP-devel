@@ -1,0 +1,13 @@
+random_seed: 231192
+simulation_step: 0.01
+
+environment: "environments/empty.yaml"
+plant: !file "plants/pendulum.yaml"
+# plant: !file "plants/acrobot.yaml"
+
+visualize: true
+
+checker_type: sim_time
+checker_value: 3
+
+goal_region_radius: 0.5

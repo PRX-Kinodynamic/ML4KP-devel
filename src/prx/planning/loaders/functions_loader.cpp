@@ -5,7 +5,7 @@
 namespace prx
 {
 	// planner_functions_t* create_planner_functions(	std::string planner_context,
-	// 												world_model_t<>* wm,
+	// 												world_model_t* wm,
 	// 												param_loader pl)
 	// {
 	// 	std::string planner_function_name = pl["planner_function_name"].as<std::string>();

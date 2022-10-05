@@ -12,6 +12,10 @@
 
 namespace prx
 {
+	extern double simulation_step;
+	
+	typedef std::function<bool ()> custom_check_t;
+
 	// TODO: Add condition of "Return at first solution found"
 	/**
 	 * @brief A class which checks if a condition is met.
@@ -25,6 +29,8 @@ namespace prx
 	{
 	public:
 		condition_check_t(std::string type, double check );
+		
+		condition_check_t(custom_check_t _custom_check);
 
 		/**
 		 * @brief Resets the internal counts and timers.
@@ -72,7 +78,38 @@ namespace prx
 			return condition_check;
 		}
 
+		void set_check_value(const double _condition_check)
+		{
+			condition_check = _condition_check;
+		}
+
+		void add_condition(condition_check_t* _cond);
+
+		std::vector<std::string> get_available_types()
+		{
+			std::vector<std::string> v;
+			for (auto str : available_types)
+			{
+				v.push_back(str.first);
+			}
+			return v;
+		}
+
+		void print_available_types()
+		{
+			auto v = get_available_types();
+			std::cout << "[condition_check_t] Available types:" << std::endl;
+			for (auto s : v)
+			{
+				std::cout << "\t" << s << std::endl;
+			}
+
+		}
+
 	protected:
+		condition_check_t() : iteration_counter(0), sim_time_accum(0){};
+
+		// condition_check_t(const condition_check_t&) = default ;
 
 		/**
 		 * @brief The timer used for checking times.
@@ -93,6 +130,21 @@ namespace prx
 		 * @brief Which type of condition to check. 0 for iterations, 1 for time.
 		 */
 		unsigned condition_type;
+
+		/**
+		 * @brief The accumulator for simulation time.
+		 */
+		double sim_time_accum;
+
+		/**
+		 * @brief Function to use for custom check condition. When return true, check() returns true .
+		 */
+		custom_check_t custom_check;
+
+		std::vector<condition_check_t*> others;
+
+		static std::map<std::string, unsigned> available_types;
+			
 
 	};
 }

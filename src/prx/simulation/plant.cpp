@@ -16,10 +16,19 @@ namespace prx
 
 	plant_t::~plant_t()
 	{
-		if(derivative_space!=nullptr)
-		{
-			delete derivative_space;
+		// PRX_DEBUG_PRINT
+		// std::cout << "derivative_space: " << derivative_space << std::endl;
+
+		if (owned_values)
+		{	
+			if(derivative_space!=nullptr)
+			{
+		// PRX_DEBUG_PRINT
+				delete derivative_space;
+			}
+			// derivative_space = nullptr;
 		}
+		// PRX_DEBUG_PRINT
 	}
 
 	void plant_t::set_integrator(integrator_t::integrators integrator_choice)

@@ -1,0 +1,10 @@
+random_seed: 11101993
+simulation_step: 0.01
+
+plant: !file "plants/lander_LD.yaml"
+
+goal_region_radius: 0.1
+
+duration: 5
+state_increment: 0.01
+system_name: "lander_LD"

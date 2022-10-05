@@ -35,9 +35,9 @@ namespace prx
 		{
 			return default_valid_state(s, state_space,cg);
 		};
-		valid_check = [state_space,cg](trajectory_t& traj)
+		valid_check = [&](trajectory_t& traj)
 		{
-			return default_valid_trajectory(traj, state_space,cg);
+			return default_valid_trajectory(traj, valid_state);
 		};
 		valid_stop_check = [sg, cg](	space_point_t start_state,
 							plan_t* stopping_plan,
@@ -81,18 +81,31 @@ namespace prx
 		control_space->sample(plan.back().control);
 	}
 
-	bool default_valid_trajectory(trajectory_t& traj, space_t* ss,std::shared_ptr<collision_group_t> cg)
+	bool default_valid_trajectory(trajectory_t& traj, valid_state_t valid_state )
 	{
    
 	  	for(auto&& s : traj)
 	    {
-	      	if (!default_valid_state(s,ss,cg))
+	      	if (!valid_state(s))
 			{
 		  		return false;
 			}
 	    }
 	  	return true;
 	}
+
+	// bool default_valid_trajectory(trajectory_t& traj, space_t* ss,std::shared_ptr<collision_group_t> cg )
+	// {
+   
+	//   	for(auto&& s : traj)
+	//     {
+	//       	if (!default_valid_state(s,ss,cg))
+	// 		{
+	// 	  		return false;
+	// 		}
+	//     }
+	//   	return true;
+	// }
 
 
 	bool default_valid_stop(space_point_t start_state,
@@ -130,13 +143,21 @@ namespace prx
 		// std::cout << stopping_plan->print() << std::endl;
 		// Get trajectory
 		sg->propagate(start_state, *stopping_plan, *stopping_traj);
-		return default_valid_trajectory(*stopping_traj, ss, cg);
+
+		valid_state_t vs = [&](space_point_t& s)
+		{
+			return default_valid_state(s, ss, cg);
+		};
+
+		return default_valid_trajectory(*stopping_traj, vs);
 	}
 
 	bool default_valid_state(space_point_t& s,space_t* ss,std::shared_ptr<collision_group_t> cg)
 	{
 		ss->copy_from_point(s);
-		if(cg->in_collision() || !ss->satisfies_bounds(s))
+		// For TRIPODS ackermann_lc
+		if(cg->in_collision())
+		// if(cg->in_collision() || !ss->satisfies_bounds(s))
 		{
 			return false;
 		}
@@ -213,10 +234,21 @@ namespace prx
 		return R * R / 300.0;
 	}
 
-	bool default_goal_check(const space_point_t& p, const space_point_t& goal, const double rad)
+	bool default_goal_check(const space_point_t& p, const space_point_t& goal, const double rad, const bool full_dim)
 	{
 		prx_assert(rad > 0, "default_goal_check: radius has to be grater than zero!")
-		return space_t::euclidean_2d(p, goal) < rad;
+		int end = full_dim ? p -> size() : 2; 
+		return space_t::euclidean_2d(p, goal, 0, end) < rad;
 	}
+
+	custom_check_t create_default_goal_check(const space_t* space, const space_point_t goal, const double rad )
+	{
+		custom_check_t f = [space, goal, rad]()
+		{
+			return prx::space_t::euclidean_distance(space, goal) < rad;
+		};
+		return f;
+	}
+
 
 }

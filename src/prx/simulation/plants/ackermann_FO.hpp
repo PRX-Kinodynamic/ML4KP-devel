@@ -1,6 +1,7 @@
 #pragma once
 
 #include "prx/simulation/plant.hpp"
+#include "prx/simulation/plants/types/linear_time_variant.hpp"
 
 #include <Eigen/Dense>
 #include <Eigen/Core>
@@ -33,7 +34,7 @@ namespace prx
 		double V;
 
 		// Distance between front and back wheels
-		double L = 1.5; 
+		double L = 1; 
 
 		const double max_delta_deg = 60;
 		const double max_delta_rad = max_delta_deg * PRX_PI / 180.0;
@@ -47,5 +48,5 @@ namespace prx
 }
 
 PRX_REGISTER_SYSTEM(ackermann_FO, Ackermann_FO)
-PRX_REGISTER_VELOCITY_FN(Ackermann_FO, [](system_ptr_t s){return s -> input_control_space -> get_bounds()[1].second;})
+PRX_REGISTER_VELOCITY_FN(Ackermann_FO, [](system_ptr_t s){return s -> get_control_space() -> get_bounds()[1].second;})
 

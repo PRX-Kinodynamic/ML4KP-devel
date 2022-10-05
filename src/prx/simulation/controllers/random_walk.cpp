@@ -12,10 +12,10 @@ namespace prx
 	{
 		if(fmod(counter,50.0)<.5)
 		{
-			get_control_space() -> sample(set_points[0]);
+			get_control_space() -> sample((*set_points)[0]);
 		}
 		// auto bounds = input_control_space->get_bounds();
-		get_control_space() -> copy_from_point(set_points[0]);
+		get_control_space() -> copy_from_point((*set_points)[0]);
 		// controller_t::compute_control();
 	}
 

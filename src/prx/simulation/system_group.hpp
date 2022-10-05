@@ -3,10 +3,11 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/simulation/system.hpp"
 // #include "prx/simulation/simulator.hpp"
+#include "prx/simulation/controller.hpp"
+#include "prx/planning/condition_check.hpp"
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/simulation/collision_checking/collision_checker.hpp"
-
 namespace prx
 {
 	class simulator_t;
@@ -25,6 +26,9 @@ namespace prx
 		
 		void propagate(int steps, space_point_t control = nullptr, trajectory_t* traj = nullptr);
 
+		void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, space_point_t result);
+
+		void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, trajectory_t& result);
 
 		void compute_stopping_maneuver(space_point_t start_state, std::vector<double>&, std::vector<double>&);
 		inline space_t* get_state_space()

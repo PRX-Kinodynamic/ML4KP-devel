@@ -26,11 +26,7 @@ namespace prx
 		simulator_t(plant_type _sim_type) 
 			: sim_type(_sim_type)
 		{
-PRX_DEBUG_PRINT
-			system_groups = std::make_shared<system_group_manager_t>();
-PRX_DEBUG_PRINT
-PRX_DEBUG_PRINT
-			
+			system_groups = std::make_shared<system_group_manager_t>();	
 		}
 
 		~simulator_t() = default;

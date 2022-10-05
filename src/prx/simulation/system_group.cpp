@@ -79,6 +79,41 @@ namespace prx
 		state_space->copy_to_point(result);
 	}
 
+	void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
+		condition_check_t& cond_check, space_point_t result)
+	{
+		state_space -> copy_from_point(start_state);
+		propagate_step p_step;
+
+		int i = 0;
+		do
+		{
+			ctrl -> compute_controls(); 
+			propagate_once(propagate_step::MIDDLE_STEP, nullptr);
+		}
+		while( !cond_check.check() );
+
+		state_space -> copy_to_point(result);
+	}
+
+	void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, 
+										condition_check_t& cond_check, trajectory_t& result)
+	{
+		state_space -> copy_from_point(start_state);
+		propagate_step p_step;
+
+		int i = 0;
+		do
+		{
+			ctrl -> compute_controls(); 
+			propagate_once(propagate_step::MIDDLE_STEP, nullptr);
+			result.copy_onto_back(state_space);
+		}
+		while( !cond_check.check() );
+
+		// state_space -> copy_to_point(result);
+	}
+
 	void system_group_t::propagate(space_point_t start_state, const plan_t& plan, trajectory_t& traj)
 	{
 		state_space->copy_from_point(start_state);

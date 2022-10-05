@@ -1,6 +1,7 @@
 #pragma once
 
 #include "prx/simulation/plant.hpp"
+#include "prx/simulation/plants/types/linear_time_variant.hpp"
 
 namespace prx 
 {

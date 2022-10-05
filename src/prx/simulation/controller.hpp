@@ -8,6 +8,8 @@
 
 namespace prx
 {
+	class controller_t;
+
 	// TODO: Change name?
 	// Desired states/points
 	// Objective
@@ -15,7 +17,7 @@ namespace prx
 	// local_goal
 	class set_points_t
 	{
-	public:
+		public:
 		set_points_t(const space_t* _space)
 		{
 			space = _space;
@@ -37,23 +39,36 @@ namespace prx
 			return set_points[index];
 
 		}
-	private:
-		std::vector<space_point_t> set_points;
-		const space_t* space;
+		private:
+			set_points_t(){};
+			std::vector<space_point_t> set_points;
+			const space_t* space;
+			friend controller_t;
 	};
 
-	class controller_t
+	typedef std::shared_ptr<controller_t> controller_ptr_t;
+
+	class controller_t : public std::enable_shared_from_this<controller_t>
 	{
-	public:
-		controller_t(system_ptr_t _plant, std::string _name = "base_controller") : set_points(_plant -> get_state_space())
+		public:
+		controller_t(const controller_t& other) = default;
+
+		controller_t(system_ptr_t _plant, std::string _name = "base_controller") 
+			// : set_points(_plant -> get_state_space())
 		{
 			plant = _plant;
 			name = _name;
-			// set_points = set_points_t(plant -> get_state_space());
+			// set_points = std::make_shared<set_points_t>(plant -> get_state_space());
 		}
 		virtual ~controller_t();
 
 		virtual void compute_controls()=0;
+
+		void compute_controls(space_point_t& u)
+		{
+			compute_controls();
+			get_control_space() -> copy_to_point(u);
+		}
 
 		// wrapper functions for better readability
 		
@@ -61,6 +76,7 @@ namespace prx
 		{
 			return plant -> get_state_space();
 		}
+		
 		inline const space_t* get_control_space() const
 		{
 			return plant -> get_control_space();
@@ -90,15 +106,31 @@ namespace prx
 			plan = std::make_shared<plan_t>(get_control_space());
 		}
 
-		set_points_t set_points;
+		virtual void set_goal(space_point_t _goal)
+		{
+			plant -> get_state_space() -> copy_point(goal, _goal);
+		}
 
 
+		std::shared_ptr<controller_t> get_ptr() 
+		{
+        	return shared_from_this();
+    	}
 
-	protected:
-		
+		protected:
+			controller_t(const controller_ptr_t& other)
+			{
+				plant = other -> plant;
+				name = other -> name;
+				goal = other -> goal;
+				plan = other -> plan;
+				set_points = other -> set_points;
+			};
 		system_ptr_t plant;
 		std::string name;
 
+		std::shared_ptr<set_points_t> set_points;
+		space_point_t goal;
 		std::shared_ptr<plan_t> plan; // Control sequence
 
 	};

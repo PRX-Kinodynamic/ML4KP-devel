@@ -1,43 +1,88 @@
-
-
 #include "prx/utilities/defs.hpp"
 #include "prx/planning/condition_check.hpp"
 
 namespace prx
 {
-	condition_check_t::condition_check_t(std::string type, double check )
+	std::map<std::string, unsigned> condition_check_t::available_types {
+			{"iterations", 0},
+			{"time", 1},
+			{"sim_time", 2},
+			{"custom", 3}
+			};
+
+	condition_check_t::condition_check_t(std::string type, double check ) 
+		: condition_check_t()
 	{
 		condition_check = check;
-		if(type=="iterations")
-			condition_type = 0;
-		else if(type=="time")
-			condition_type = 1;
-		else
+		condition_type = available_types[type];
+		// if(type=="iterations")
+		// 	condition_type = 0;
+		// else if(type=="time")
+		// 	condition_type = 1;
+		// else if(type=="sim_time")
+		// 	condition_type = 2;
+		if (condition_type > 2)
 		{
 			prx_throw("Condition type is invalid!");
 		}
-		iteration_counter=0;
+		// iteration_counter=0;
+		// sim_time_accum = 0;
 	}
+
+	condition_check_t::condition_check_t(custom_check_t _custom_check)
+		: condition_check_t()
+	{
+		condition_type = available_types["custom"];
+		custom_check = _custom_check;
+	}
+
+	void condition_check_t::add_condition(condition_check_t* _cond)
+	{
+		others.push_back(_cond);
+	}
+
 	void condition_check_t::reset()
 	{
 		timer.reset();
 		iteration_counter = 0;
+		sim_time_accum = 0;
+
+		for (auto c : others)
+		{
+			c -> reset();
+		}
 	}
 
 	bool condition_check_t::check()
 	{
 		++iteration_counter;
-		if(condition_type==0)
+		sim_time_accum += simulation_step;
+
+		switch (condition_type)
 		{
-			if(iteration_counter>=condition_check)
-				return true;
+			case 0: 
+				if(iteration_counter>=condition_check)
+					return true;
+					break;
+			case 1: 
+				if(timer.measure()>=condition_check)
+					return true;
+					break;
+			case 2:
+				if (sim_time_accum >= condition_check)
+					return true;
+					break;
+			case 3:
+				if ( custom_check() )
+					return true;
+					break;
+			default:
+				prx_throw("Problem with condition_check type");
 		}
-		else if(condition_type==1)
+
+		for (auto c : others)
 		{
-			if(timer.measure()>=condition_check)
-			{
-				return true;
-			}
+			if ( c -> check() ) return true;
 		}
 		return false;
 	}	

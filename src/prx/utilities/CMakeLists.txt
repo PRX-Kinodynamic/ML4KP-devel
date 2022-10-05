@@ -15,4 +15,5 @@ if (APPLE)
 endif(APPLE)
 
 target_link_libraries(${PROJECT_NAME}_utilities INTERFACE ${PROJECT_NAME}_external )
-target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES} )
+# target_link_libraries(${PROJECT_NAME}_utilities ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES} )
+target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES})

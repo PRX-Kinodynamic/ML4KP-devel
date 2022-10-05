@@ -26,17 +26,21 @@ namespace prx
 		input_control_space = nullptr;
 		pathname = path;
 		system_type = plant_type::ANALYTICAL;
+		owned_values = true;
 	}
 
 	system_t::~system_t()
 	{
-		if(state_space!=nullptr)
+		if (owned_values)
 		{
-			delete state_space;
-		}
-		if(input_control_space!=nullptr)
-		{
-			delete input_control_space;
+			if(state_space!=nullptr)
+			{
+				delete state_space;
+			}
+			if(input_control_space!=nullptr)
+			{
+				delete input_control_space;
+			}
 		}
 		parent_system.reset();
 	}

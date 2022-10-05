@@ -20,6 +20,7 @@ namespace prx
 	class three_js_group_t
 	{
 	public:
+		three_js_group_t ( const three_js_group_t& ) = default;
 		three_js_group_t(const std::vector<system_ptr_t>& in_plants,const std::vector<std::shared_ptr<movable_object_t>>& in_obstacles={});
 		~three_js_group_t();
 

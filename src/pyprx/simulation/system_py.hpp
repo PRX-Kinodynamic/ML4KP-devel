@@ -39,6 +39,9 @@ struct system_wrap : prx::system_t, wrapper<prx::system_t>
 	prx::space_t*   get_system_wrap_input_control_space(){return prx::system_t::input_control_space;}
 	void 	   		set_system_wrap_input_control_space(prx::space_t* val){prx::system_t::input_control_space = val;}
 
+	prx::space_t*   get_system_wrap_parameter_space(){return prx::system_t::parameter_space;}
+	void 	   		set_system_wrap_parameter_space(prx::space_t* val){prx::system_t::parameter_space = val;}
+
 };
 
 void set_simulation_step(double ss)
@@ -46,18 +49,25 @@ void set_simulation_step(double ss)
 	prx::simulation_step = ss;
 }
 
+double get_simulation_step()
+{
+	return prx::simulation_step;
+}
+
 void pyprx_simulation_system_py()
 {
 
-	scope().attr("simulation_step") = prx::simulation_step;
+	// scope().attr("simulation_step") = prx::simulation_step;
 	def("set_simulation_step", &set_simulation_step);
+	def("get_simulation_step", &get_simulation_step);
 
 	class_<system_wrap, boost::noncopyable>("system", init<std::string>())
         // .def("__init__", make_constructor(&init_as_ptr<system_wrap, std::string>, default_call_policies()))
 		// .def("__init__", make_constructor(&system_wrap, default_call_policies(), (arg("path")) ))
         // .def("__init__", make_constructor(&fromAxisAngle, default_call_policies(),(arg("axis"),  arg("angle"))))
 		.def("get_state_space", &prx::system_t::get_state_space, return_internal_reference<>())
-		.def("get_control_space", &prx::system_t::get_state_space, return_internal_reference<>())
+		.def("get_control_space", &prx::system_t::get_control_space, return_internal_reference<>())
+		.def("get_parameter_space", &prx::system_t::get_parameter_space, return_internal_reference<>())
 	 	.def("add_system", pure_virtual(&prx::system_t::add_system))
 	 	.def("propagate", pure_virtual(&system_wrap::propagate))
 	 	.def("propagate", &system_wrap::propagate_2)
@@ -71,6 +81,8 @@ void pyprx_simulation_system_py()
       	.def("set_state_space", &system_wrap::set_system_wrap_state_space, return_internal_reference<>())
       	.def("get_input_control_space", &system_wrap::get_system_wrap_input_control_space, return_internal_reference<>())
       	.def("set_input_control_space", &system_wrap::set_system_wrap_input_control_space, return_internal_reference<>())
+	 	.def("get_parameter_space", &system_wrap::get_system_wrap_parameter_space, return_internal_reference<>())
+      	.def("set_parameter_space", &system_wrap::set_system_wrap_parameter_space, return_internal_reference<>())
 	 	// .def("", &prx::system_t::)
 	 	// .def("", &prx::system_t::)
 	 	// .def("", &prx::system_t::)
