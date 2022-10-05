@@ -1,0 +1,13 @@
+random_seed: 11101993
+simulation_step: 0.1
+
+environment: "environments/empty.yaml"
+plant: !file "plants/mountain_car.yaml"
+use_obstacle: false
+
+visualize: false
+
+checker_type: time
+checker_value: 10
+
+goal_region_radius: 0.1

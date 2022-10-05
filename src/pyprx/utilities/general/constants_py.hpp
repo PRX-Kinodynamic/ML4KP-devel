@@ -15,5 +15,6 @@ void pyprx_utilities_general_constants()
 	scope().attr("models_path") = prx::models_path;
 	scope().attr("input_path")  = prx::input_path;
 	scope().attr("js_path") 	= prx::js_path;
+	scope().attr("out_path") 	= prx::out_path;
 
 }

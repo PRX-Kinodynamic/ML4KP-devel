@@ -4,7 +4,8 @@
 namespace prx
 {
 
-	pendulum_t::pendulum_t(const std::string& path) : ltv_t(path)
+	pendulum_t::pendulum_t(const std::string& path) 
+		: plant_t(path)
 	{
 		_theta1=_theta1dot=0;
 		state_memory = {&_theta1,&_theta1dot};
@@ -97,8 +98,11 @@ namespace prx
 
 	}
 
-	bool pendulum_t::linearize()
+	bool pendulum_t::linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D, space_point_t xt, space_point_t ut, double epsilon)
 	{
+		if ( xt != nullptr && ut != nullptr &&
+			 xt -> at(0) != 0 && xt -> at(1) != 0 ) return false;
+
 		compute_inertia();
 
 		A.resize(2,2);
@@ -109,60 +113,32 @@ namespace prx
 
         B << 0., 1. / inertia;
 
-  //       std::cout << "A: " << A << std::endl;
-  //   	std::cout << "B: " << B << std::endl;
         if (normalize != 0)
         {
-
-            // self.normalization = [np.array(norm, dtype=config.np_dtype)
-            //                       for norm in normalization]
-            // self.inv_norm = [norm ** -1 for norm in self.normalization]
         	auto ss_ub = state_space -> get_upper_bounds();
         	auto cs_ub = input_control_space -> get_upper_bounds();
         	Tx.diagonal() << ss_ub[0], ss_ub[1];
         	Tu.diagonal() << cs_ub[0];
         	Tx_inv.diagonal() << (1.0 / ss_ub[0]), (1.0 / ss_ub[1]);
         	Tu_inv.diagonal() << (1.0 / cs_ub[0]);
-        	// auto Tu = map(np.diag, self.normalization)
-         //    Tx_inv, Tu_inv = map(np.diag, self.inv_norm)
-      //   	std::cout << "Tx: " << Tx.diagonal() << std::endl;
-    		// std::cout << "Tu: " << Tu.diagonal() << std::endl;
-
-      //   	std::cout << "Tx_inv: " << Tx_inv.diagonal() << std::endl;
-    		// std::cout << "Tu_inv: " << Tu_inv.diagonal() << std::endl;
 
             A = Tx_inv * A * Tx;
             B = Tx_inv * B * Tu;
 
         }
-//         std::cout << "A: " << A << std::endl;
-//     	std::cout << "B: " << B << std::endl;
-// PRX_DEBUG_PRINT
-//         // discretize();
-// PRX_DEBUG_PRINT
 
-        // if self.normalization is not None:
-        //     Tx, Tu = map(np.diag, self.normalization)
-        //     Tx_inv, Tu_inv = map(np.diag, self.inv_norm)
-
-        //     A = np.linalg.multi_dot((Tx_inv, A, Tx))
-        //     B = np.linalg.multi_dot((Tx_inv, B, Tu))
-
-        // sys = signal.StateSpace(A, B, np.eye(2), np.zeros((2, 1)))
-        // sysd = sys.to_discrete(self.dt)
-        // 
         return true;
 	}
 
-    bool pendulum_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
-    {
-    	if ( xt -> at(0) == 0 && xt -> at(1) == 0 )
-    	{
-    		// PRX_DEBUG_PRINT
-    		return linearize();
-    	}
-    	// PRX_DEBUG_PRINT
-		return ltv_t::linearize(xt, ut, epsilon);
-    }
+  //   bool pendulum_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
+  //   {
+  //   	return true;
+  //   	// return (xt -> at(0) == 0 && xt -> at(1) == 0 );
+  // //   	if ( xt -> at(0) == 0 && xt -> at(1) == 0 )
+  // //   	{
+  // //   		return linearize();
+  // //   	}
+		// // return false;
+  //   }
 
 }

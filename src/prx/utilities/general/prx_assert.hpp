@@ -7,12 +7,13 @@
 #include <iostream>
 #include <execinfo.h>
 
+#define PRX_COLOR_NORMAL "\033[0m"
+#define PRX_COLOR_RED "\033[31m"
+#define PRX_COLOR_GREEN "\033[32m"
+#define PRX_COLOR_YELLOW "\033[33m"
+
 namespace prx
 {
-// #define COLOR_NORMAL "\033[0m"
-//  	#define COLOR_RED "\033[31m"
-//  	#define COLOR_GREEN "\033[32m"
-//  	#define COLOR_YELLOW "\033[33m"
 class prx_assert_t : public std::exception
 {
 private:

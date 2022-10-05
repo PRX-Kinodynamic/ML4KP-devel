@@ -29,7 +29,7 @@ namespace prx
         configurations["body"]= std::make_shared<transform_t>();
         configurations["body"]->setIdentity();
 
-        set_integrator(integrator_t::kEULER);
+        set_integrator(integrator_t::kRK4);
     }
 
     quadrotor_1d_t::~quadrotor_1d_t()

@@ -155,7 +155,9 @@ namespace prx
 	bool default_valid_state(space_point_t& s,space_t* ss,std::shared_ptr<collision_group_t> cg)
 	{
 		ss->copy_from_point(s);
-		if(cg->in_collision() || !ss->satisfies_bounds(s))
+		// For TRIPODS ackermann_lc
+		if(cg->in_collision())
+		// if(cg->in_collision() || !ss->satisfies_bounds(s))
 		{
 			return false;
 		}
@@ -232,10 +234,21 @@ namespace prx
 		return R * R / 300.0;
 	}
 
-	bool default_goal_check(const space_point_t& p, const space_point_t& goal, const double rad)
+	bool default_goal_check(const space_point_t& p, const space_point_t& goal, const double rad, const bool full_dim)
 	{
 		prx_assert(rad > 0, "default_goal_check: radius has to be grater than zero!")
-		return space_t::euclidean_2d(p, goal) < rad;
+		int end = full_dim ? p -> size() : 2; 
+		return space_t::euclidean_2d(p, goal, 0, end) < rad;
 	}
+
+	custom_check_t create_default_goal_check(const space_t* space, const space_point_t goal, const double rad )
+	{
+		custom_check_t f = [space, goal, rad]()
+		{
+			return prx::space_t::euclidean_distance(space, goal) < rad;
+		};
+		return f;
+	}
+
 
 }

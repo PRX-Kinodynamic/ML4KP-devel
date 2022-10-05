@@ -8,7 +8,7 @@
 
 namespace prx
 {
-	class ackermann_FO : public ltv_t
+	class ackermann_FO : public plant_t
 	{
 	public:
 		ackermann_FO(const std::string& path);

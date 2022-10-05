@@ -4,6 +4,7 @@ simulation_step: 0.01
 environment: "environments/empty.yaml"
 plant: !file "plants/pendulum.yaml"
 # plant: !file "plants/acrobot.yaml"
+use_obstacle: false
 
 visualize: true
 
@@ -15,4 +16,4 @@ checker_value: 500
 
 goal_region_radius: 0.5
 
-controller_path: "examples/tripods/controllers/Pendulum.pt"
+controller_path: "examples/tripods/lc/pendulum.pt"

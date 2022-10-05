@@ -1,9 +1,12 @@
 random_seed: 231192
 simulation_step: 0.01
 
-environment: "environments/empty.yaml"
+# environment: "environments/empty.yaml"
+environment: "environments/pendulum_one_obstacle.yaml"
 plant: !file "plants/pendulum.yaml"
 # plant: !file "plants/acrobot.yaml"
+# plant: !file "plants/quadrotor_1d.yaml"
+# plant: !file "plants/lander_LD.yaml"
 
 visualize: true
 

@@ -33,27 +33,28 @@ using namespace boost::python;
 //     }
 
 // };
-bool linearize_0(std::shared_ptr<prx::ltv_t> ltv)
+bool linearize_0(std::shared_ptr<prx::ltv_t> _ltv)
 {
 
-    return std::static_pointer_cast<prx::lti_t>(ltv) -> linearize();
+    return _ltv -> linearize();
+    // return std::static_pointer_cast<prx::lti_t>(ltv) -> linearize();
 }
 
-bool linearize_2(prx::ltv_t* ltv, prx::space_point_t xt, prx::space_point_t ut)
+bool linearize_2(std::shared_ptr<prx::ltv_t> _ltv, prx::space_point_t xt, prx::space_point_t ut)
 {
-    return ltv -> linearize(xt, ut);
+    return _ltv -> linearize(xt, ut);
 }
 
-bool linearize_3(prx::ltv_t* ltv, prx::space_point_t xt, prx::space_point_t ut, double epsilon)
+bool linearize_3(std::shared_ptr<prx::ltv_t> _ltv, prx::space_point_t xt, prx::space_point_t ut, double epsilon)
 {
-    return ltv -> linearize(xt, ut, epsilon);
+    return _ltv -> linearize(xt, ut, epsilon);
 }
 
 void pyprx_simulation_plants_types_ltv()
 {
     // class_<ltv_wrap, std::shared_ptr<ltv_wrap>, bases<prx::lti_t>, boost::noncopyable>("ltv", no_init)
    	class_<prx::ltv_t, std::shared_ptr<prx::ltv_t>, bases<prx::lti_t>, boost::noncopyable>("ltv", no_init)
-      // .def("__init__", make_constructor(&init_as_ptr<prx::lti_t, std::string>, default_call_policies(), (arg("path")) ))
+      .def("__init__", make_constructor(&init_as_ptr<prx::lti_t, prx::system_ptr_t>, default_call_policies(), (arg("_sys_ptr")) ))
       // .def("__init__", make_constructor(&init_as_ptr<prx::lti_t, const lti_t&>, default_call_policies(), (arg("other"))))
       .def("linearize", &linearize_0)
       .def("linearize", &linearize_2)

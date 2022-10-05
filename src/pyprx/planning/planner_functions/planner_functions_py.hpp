@@ -62,4 +62,7 @@ void pyprx_planning_planner_functions_py()
         .def("__call__", &prx::expand_t::operator() )
         .def("wrap", &create_function<prx::expand_t, void, prx::space_point_t&, std::vector<prx::plan_t*>&, std::vector<prx::trajectory_t*>&, int, bool>).staticmethod("wrap")
         ;
+
+    def("create_default_goal_check", &prx::create_default_goal_check);
+
 }

@@ -4,7 +4,8 @@
 namespace prx
 {
 
-	two_link_acrobot_t::two_link_acrobot_t(const std::string& path) : ltv_t(path)
+	two_link_acrobot_t::two_link_acrobot_t(const std::string& path) 
+		: plant_t(path)
 	{
 		_theta1=_theta2=_theta1dot=_theta2dot=0;
 		state_memory = {&_theta1,&_theta2,&_theta1dot,&_theta2dot};
@@ -234,6 +235,10 @@ namespace prx
 
 	bool two_link_acrobot_t::linearize()
 	{
+		if ( xt != nullptr && ut != nullptr &&
+    		 xt -> at(0) != PRX_PI && xt -> at(1) != 0 && xt -> at(2) != 0 && xt -> at(3) != 0)
+				return false;
+			
 		constexpr double q1 = PRX_PI;
     	constexpr double q2 = 0;
     	constexpr double dq1 = 0;

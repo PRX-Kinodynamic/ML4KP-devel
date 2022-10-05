@@ -87,6 +87,8 @@ int main(int argc, char* argv[])
 
     // std::cout << "Q:\n" << Q << std::endl;
     Eigen::MatrixXd R = Eigen::MatrixXd::Identity(cs_dim, cs_dim);
+    auto r_vec = params["/plant/lqr_R"].as<std::vector<double>>();
+    for (int i = 0; i < cs_dim; ++i) R(i,i) = r_vec[i];
 
     Eigen::VectorXd v_goal(ss_dim);
     ss -> copy_vector_from_point(v_goal, goal_state);
@@ -94,7 +96,7 @@ int main(int argc, char* argv[])
     lqr.set_goal(v_goal);
     lqr.compute_K();
     Eigen::MatrixXd K = lqr.get_K();
-    // std::cout << "K: " << K << std::endl;
+    std::cout << "K: " << K << std::endl;
     
     std::ofstream fout_trajs;
     std::ofstream fout_roa;

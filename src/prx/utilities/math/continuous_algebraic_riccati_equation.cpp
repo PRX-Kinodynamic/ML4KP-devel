@@ -42,6 +42,9 @@ namespace prx
             iteration++;
         } while (iteration < max_iterations && relative_norm > PRX_EPSILON);
 
+//        This seems to not be available in Eigen < 3.4... but the check is usefull
+//        prx_assert( !std::isnan(Z.template maxCoeff<Eigen::PropagateNaN>()), "CARE: Matrix contains NaNs!" );
+
         Eigen::MatrixXd W11 = Z.block(0, 0, n, n);
         Eigen::MatrixXd W12 = Z.block(0, n, n, n);
         Eigen::MatrixXd W21 = Z.block(n, 0, n, n);
@@ -55,7 +58,8 @@ namespace prx
 
         Eigen::JacobiSVD<Eigen::MatrixXd> svd(lhs, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
-        return svd.solve(rhs);
+        auto svd_sol = svd.solve(rhs);
+        return svd_sol;
     }
 }
 

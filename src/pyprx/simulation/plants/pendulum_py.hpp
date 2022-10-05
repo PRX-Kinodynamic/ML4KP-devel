@@ -8,7 +8,7 @@ using namespace boost::python;
 
 void pyprx_simulation_plants_pendulum()
 {
-    class_<prx::pendulum_t, std::shared_ptr<prx::pendulum_t>, bases<prx::ltv_t>>("pendulum", no_init)
+    class_<prx::pendulum_t, std::shared_ptr<prx::pendulum_t>, bases<prx::plant_t>>("pendulum", no_init)
         .def("__init__", make_constructor(&create_system_ptr<prx::pendulum_t>, default_call_policies(), (arg("path"))))
         // .def("propagate", &prx::pendulum_t::propagate)
         // .def("update_configuration", &prx::pendulum_t::update_configuration)

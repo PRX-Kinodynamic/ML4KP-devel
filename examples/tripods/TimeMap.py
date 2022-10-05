@@ -38,9 +38,22 @@ class TimeMap:
         prx.set_simulation_step(self.simulation_step)
         prx.init_random(params["random_seed"].as_int())
 
-        obstacles = prx.load_obstacles(params["environment"].as_string())
-        obstacle_list = obstacles.objects
-        obstacle_names = obstacles.names
+        obstacle_list = []
+        obstacle_names = []
+        if params["use_obstacle"].as_bool() and system_type == "ackermann_lc":
+            obs_pose = prx.transform()
+            obs_pose.setIdentity()
+            obs_pose.translation(prx.vector(5.,0.,1.))
+            box = prx.box.create_obstacle("box",3.,3.,2.,obs_pose)
+            obstacle_list = [box]
+            obstacle_names = ["box"]
+
+        # For some reason the below code doesn't work.
+        # 
+        # obstacles = prx.load_obstacles(params["environment"].as_string())
+        # obstacle_list = obstacles.objects
+        # obstacle_names = obstacles.names
+        # 
 
         plant_name = params["/plant/name"].as_string()
         plant_path = params["/plant/path"].as_string()
@@ -114,7 +127,7 @@ class TimeMap:
             u_goal[0] = 0
             u_goal[1] = 1
 
-            self.plant.linearize(self.goal_state, u_goal)
+            # self.plant.linearize(self.goal_state, u_goal)
 
             Q = prx.matrix.Identity(ss_dim, ss_dim)
             R = prx.matrix.Identity(cs_dim, cs_dim)
@@ -124,7 +137,7 @@ class TimeMap:
                 Q[i, i] = q_vec[i]
 
             self.lqr = prx.lqr(self.plant, Q, R, "LQR")
-            self.lqr.set_goal(self.goal_state)
+            self.lqr.set_goal(self.goal_state, u_goal)
             self.lqr.compute_K()
 
         if system_type == "ackermann_lc":
@@ -151,7 +164,46 @@ class TimeMap:
             torch.manual_seed(params["random_seed"].as_int())
             self.radius = params["goal_region_radius"].as_float()
 
+        print("Before create controller")
+        if system_type == "mountain_car_lc":
+            controller_path = prx.lib_path
+            controller_path += params["/plant/controller_path"].as_string()
+            self.controller = torch.load(controller_path,map_location=torch.device('cpu'))
+            self.controller.eval()
+            torch.manual_seed(params["random_seed"].as_int())
+
         params.print()
+    
+    def mountain_car_lc(self, X):
+        self.ss.copy_from_vector(X)
+        self.ss.copy_to_point(self.start_state)
+
+        ctrl_input = torch.zeros(1, 2)
+
+        duration_so_far = 0
+        ctrl = [0]
+        while duration_so_far <= self.time_step and self.start_state[0] < 0.5:
+        # while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 2) > self.radius:
+            ctrl_input[0, 0] = self.start_state[0]
+            ctrl_input[0, 1] = self.start_state[1]
+
+            with torch.no_grad():
+                ctrl_output = self.controller(ctrl_input)[0].cpu()
+
+            # ctrl = [-0.6371781908344007 + ((ctrl_output + 1.)*0.6371781908344007)]
+            ctrl = np.array([-.4 + ((ctrl_output + 1.)*0.8)],dtype=np.float64)
+            # ctrl = np.array(ctrl_output,dtype=np.float64)
+
+            self.ctrl_pt[0] = ctrl[0]
+            self.cs.copy_from_point(self.ctrl_pt)
+            self.cs.enforce_bounds()
+            self.plant.propagate(self.simulation_step)
+            self.ss.copy_to_point(self.start_state)
+
+            duration_so_far += self.simulation_step
+
+        self.ss.copy_to_point(self.end_state)
+        return [self.end_state[0], self.end_state[1]]
 
     def pendulum_lc(self, X):
         self.ss.copy_from_vector(X)
@@ -190,11 +242,11 @@ class TimeMap:
         self.ss.copy_to_point(self.start_state)
 
         if self.lqr == None:
-            self.plant.linearize(self.goal_state, self.u_goal)
             self.Q = prx.matrix.Identity(2, 2)
             self.R = prx.matrix.Identity(1, 1)
             self.lqr = prx.lqr(self.plant, self.Q, self.R, "LQR")
-            self.lqr.set_goal(self.goal_state)
+            self.lqr.set_goal(self.goal_state, self.u_goal)
+            # self.lqr.set_goal(self.goal_state)
             self.lqr.compute_K()
             self.K = self.lqr.get_K()
             #self.ps[1] = self.params["/plant/friction"].as_float()
@@ -216,7 +268,7 @@ class TimeMap:
         self.ss.copy_to_point(self.start_state)
 
         if self.lqr == None:
-            self.plant.linearize()
+            # self.plant.linearize()
             self.Q = prx.matrix.Identity(4, 4)
             self.Q[0, 0] = 10
             self.Q[1, 1] = 10
@@ -324,6 +376,8 @@ class TimeMap:
         duration_so_far = 0
 
         while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 3) > self.radius:
+            if not prx.default_valid_state(self.start_state,self.ss,self.context.collision_group):
+                return self.start_state.to_list(), False
             ctrl_input[0, 0] = self.start_state[0]
             ctrl_input[0, 1] = self.start_state[1]
             ctrl_input[0, 2] = self.start_state[2]
@@ -347,7 +401,7 @@ class TimeMap:
             duration_so_far += 0.1
 
         self.ss.copy_to_point(self.end_state)
-        return [self.end_state[0], self.end_state[1], self.end_state[2]]
+        return [self.end_state[0], self.end_state[1], self.end_state[2]], True
 
     def ackermann_lqr(self, X):
         self.ss.copy_from_vector(X)

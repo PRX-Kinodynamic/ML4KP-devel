@@ -87,7 +87,6 @@ add_subdirectory(src/prx/visualization)
 add_subdirectory(src/prx/gtdynamics)
 
 if (BUILD_FOR_PYTHON)
-	enable_testing()
 	add_subdirectory(src/pyprx)
 endif()
 

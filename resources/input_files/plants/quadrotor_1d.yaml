@@ -1,0 +1,28 @@
+name: "1D_Quadrotor"
+path: "1D_Quadrotor"
+
+start_state: [0.1, 0.0]
+goal_state:  [0.0, 0.0]
+
+min_steps: 1
+max_steps: 50
+
+state_space_lower_bound: [-10, -1]
+state_space_upper_bound: [ 10,  1]
+
+starting_lower_bound: [-10, -1]
+ending_upper_bound: [ 10,  1]
+# state_space_lower_bound: [-7, -6.28318]
+# state_space_upper_bound: [7,  6.28318]
+
+control_space_lower_bound: [-50]
+control_space_upper_bound: [ 50]
+
+vis_body: "body"
+
+lqr_Q: [100,10]
+lqr_R: [0.01]
+
+# controller_path: "examples/tripods/lc/pendulum.pt"
+# controller_path: "examples/tripods/lc/pendulum_deterministic.pt"
+# controller_path: "examples/tripods/controllers/Pendulum.pt"

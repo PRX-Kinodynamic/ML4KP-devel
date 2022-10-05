@@ -25,9 +25,9 @@ if __name__ == "__main__":
 	# Safety check
 	print("simulation_step:", simulation_step)
 
-	obstacles = prx.load_obstacles(params["environment"].as_string())
-	obstacle_list = obstacles.objects
-	obstacle_names = obstacles.names
+	obstacles = prx.obstacle_loader(params["environment"].as_string())
+	obstacle_list = obstacles.get_obstacles()
+	obstacle_names = obstacles.get_names()
 
 	plant_name = params["/plant/name"].as_string()
 	plant_path = params["/plant/path"].as_string()
@@ -46,7 +46,7 @@ if __name__ == "__main__":
 	cs = context.system_group.get_control_space()
 	ps = plant.get_parameter_space()
 
-	ps[1] = params["/plant/friction"].as_float()
+	# ps[1] = params["/plant/friction"].as_float() 
 	# print(ps.print_memory())
 
 	lower_bounds = params["/plant/state_space_lower_bound"].as_float_vector()
@@ -70,14 +70,10 @@ if __name__ == "__main__":
 	solution_traj = prx.trajectory(ss)
 
 	solution_traj.copy_onto_back(ss)
-	# plant.__class__ = prx.pendulum
-	# print(repr(plant))
-	plant.linearize()
+	# plant.linearize()
 
 	Q = prx.matrix.Identity(2,2)
 	R = prx.matrix.Identity(1,1)
-	print("Q:", Q)
-	print("R:", R)
 
 	ss_dim = ss.get_dimension()
 
@@ -85,12 +81,12 @@ if __name__ == "__main__":
 	for i in range(ss_dim):
 		v_goal[i] = goal_state[i]
 	lqr = prx.lqr(plant, Q, R, "LQR");
-	print("v_goal:", v_goal)
+	# print("v_goal:", v_goal)
 	
 	lqr.set_goal(v_goal);
 	lqr.compute_K();
-	K = lqr.get_K();
-	print("K:", K)
+	# K = lqr.get_K();
+	# print("K:", K)
 	# simulating a do{}while()
 	print("start_state:", start_state)
 	while True:

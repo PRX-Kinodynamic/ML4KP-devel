@@ -1,7 +1,8 @@
 random_seed: 231192
 simulation_step: 0.01
 
-environment: "environments/empty.yaml"
+# environment: "environments/empty.yaml"
+environment: "environments/simple_obstacle.yaml"
 plant: !file "plants/ackermann_FO.yaml"
 
 visualize: false

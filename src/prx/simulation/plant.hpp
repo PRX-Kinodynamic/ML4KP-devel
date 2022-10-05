@@ -46,17 +46,37 @@ namespace prx
 
         virtual void set_state_space_bounds(const std::vector<double>& lower,const std::vector<double>& upper) override;
 
-        space_t* get_derivative_space()
+        virtual inline space_t* get_derivative_space()
         {
         	return derivative_space;
         }
-
+        
 		space_t* derivative_space;
-		std::vector<double*> derivative_memory;
 
 		static int registred_plants;
 		
 		virtual void compute_derivative()=0;
+
+	protected:
+
+		plant_t(const system_ptr_t other)
+			: system_t(other),
+			  movable_object_t(other -> get_pathname())
+		{
+			auto _plant = std::dynamic_pointer_cast<plant_t>(other);
+			prx_assert(_plant != nullptr, "Problem casting to a plant_t");
+			derivative_space = _plant -> derivative_space;
+			// derivative_memory = other -> derivative_memory;
+			integrator = _plant -> integrator;
+			derivative_state = _plant -> derivative_state;
+
+			for (int i = 0; i < derivative_space -> get_dimension(); ++i)
+			{
+				derivative_memory.push_back(_plant -> derivative_memory[i]);
+			}
+		}
+
+		std::vector<double*> derivative_memory;
 
 		void compute_derivative(Eigen::VectorXd x, Eigen::VectorXd u)
 		{

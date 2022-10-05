@@ -119,7 +119,30 @@ void  copy_eigen_vector_from_point(prx::space_t* s, Eigen::VectorXd destination,
 // double    (prx::space_t::*lp_norm_2)(const prx::space_point_t& p1, const double p)    = &prx::space_t::lp_norm;
 // static double (prx::space_t::*l1_norm_1)(const prx::space_point_t&) = &prx::space_t::l1_norm;
 // static double (prx::space_t::*l1_norm_2)(const prx::space_point_t&, const prx::space_point_t&) = &prx::space_t::l1_norm;
+struct space_memory_py
+{
+    space_memory_py(int size) : mem(size, 0)
+    {
+        for (int i = 0; i < size; ++i)
+        {
+            mem_ptr.push_back( &(mem[0] ) );
+        }
+    }
 
+    const std::vector<double*> get_addresses() const
+    {
+        return mem_ptr;
+    }
+
+    private:
+        std::vector<double> mem;
+        std::vector<double*> mem_ptr;
+};
+
+prx::space_t* space_constructor_py(const std::string& topo, const space_memory_py& sm, const std::string& name)
+{
+    return new prx::space_t(topo, sm.get_addresses(), name);
+}
 
 void pyprx_utilities_spaces_space()
 {
@@ -153,10 +176,14 @@ void pyprx_utilities_spaces_space()
         // .def("__setattr__", &set_distance_function).staticmethod("__setattr__")
         ;
 
+    class_<space_memory_py>("space_memory", init<int>())
+        // .def("get_addresses", &space_memory_py::get_addresses)
+        ;
 
    	class_<prx::space_t, std::shared_ptr<prx::space_t>>("space_t", init<std::string, std::vector<double*>, std::string>())
         .def("__init__", make_constructor(&init_as_ptr<prx::space_t,std::string,std::vector<double*>&>, default_call_policies(), (args("topology"), args("addresses")) ))
         .def("__init__", make_constructor(&init_as_ptr<prx::space_t,const std::vector<const prx::space_t*>&>, default_call_policies(), (args("spaces")) ))
+        .def("__init__", make_constructor(&space_constructor_py, default_call_policies()))
         .def("set_bounds", &prx::space_t::set_bounds)
         .def("make_point", &prx::space_t::make_point)
         .def("clone_point", &prx::space_t::clone_point)
@@ -185,6 +212,8 @@ void pyprx_utilities_spaces_space()
         .def("get_space_name", &prx::space_t::get_space_name)
         .def("get_lower_bounds", &prx::space_t::get_lower_bounds)
         .def("get_upper_bounds", &prx::space_t::get_upper_bounds)
+        .def("get_lower_bound", &prx::space_t::get_lower_bound)
+        .def("get_upper_bound", &prx::space_t::get_upper_bound)
         .def("get_bounds", &prx::space_t::get_bounds)
         .def("integrate", integrate_0)
         .def("integrate", integrate_1)

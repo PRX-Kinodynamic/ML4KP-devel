@@ -15,6 +15,14 @@ namespace prx
 			lti_t(const lti_t& other) = default;
 			lti_t(std::string _path);
 
+			lti_t(const system_ptr_t& _sys_ptr)
+				: plant_t(_sys_ptr)
+			{
+				auto _plant = std::dynamic_pointer_cast<plant_t>(_sys_ptr);
+				prx_assert(_plant != nullptr, "Problem casting to a plant_t");
+				plant = _plant;
+			}
+
 			virtual ~lti_t();
 
 			/**
@@ -25,8 +33,8 @@ namespace prx
 			 */
 			virtual bool linearize()
 			{
-				prx_throw("No implementation of lti_t::linearize()!");
-				return false;
+				return plant -> linearize(A, B, C, D);
+				// return true;
 			}
 
 			/**
@@ -80,48 +88,28 @@ namespace prx
 			 */
 			void discretize();
 
-			inline
-			space_t* get_state_space()
-			{
-				return state_space;
-				// return lti_stt_space;
-			}
-
-			inline
-			space_t* get_control_space()
-			{
-				return input_control_space;
-				// return lti_ctr_space;
-			}
-
-			inline
-			space_t* get_derivative_space()
-			{
-				return derivative_space;
-				// return lti_ctr_space;
-			}
-
 			Eigen::MatrixXd get_A() const {return A;};
 			Eigen::MatrixXd get_B() const {return B;};
 			Eigen::MatrixXd get_C() const {return C;};
 			Eigen::MatrixXd get_D() const {return D;};
 
-
-		protected:
+			virtual void update_configuration() override
+			{
+				plant -> update_configuration();
+			}
 
 			// virtual void compute_derivative() override
 			// {
 			// 	linear_derivative();
 			// }
 			
-			// space_t* lti_stt_space;
-			// space_t* lti_ctr_space;
+		protected:
+			std::shared_ptr<plant_t> plant;
 
 			Eigen::VectorXd x;
 			Eigen::VectorXd u;
 
 			Eigen::VectorXd xd;
-
 
 			Eigen::MatrixXd A;
 			Eigen::MatrixXd B;

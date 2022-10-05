@@ -1,10 +1,12 @@
 random_seed: 11101993
 simulation_step: 0.01
 
-environment: "environments/empty.yaml"
+# environment: "environments/empty.yaml"
+# environment: "environments/simple_obstacle.yaml"
 # plant: !file "plants/pendulum.yaml"
 # plant: !file "plants/acrobot.yaml"
 plant: !file "plants/ackermann_FO.yaml"
+use_obstacle: true
 
 controller_path: "examples/tripods/lc/ackermann_l_deterministic.pt"
 
