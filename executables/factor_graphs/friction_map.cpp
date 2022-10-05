@@ -1,22 +1,15 @@
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <utility>
+
 #include <boost/algorithm/string/join.hpp>
 #include <boost/optional.hpp>
 
-#include "prx/utilities/defs.hpp"
-
-#include "prx/simulation/plants/plants.hpp"
-#include "prx/simulation/system_factory.hpp"
-#include "prx/simulation/playback/trajectory.hpp"
-#include "prx/simulation/loaders/obstacle_loader.hpp"
-
-#include "prx/planning/world_model.hpp"
-#include "prx/simulation/system_group.hpp"
-#include "prx/planning/planner_statistics.hpp"
-#include "prx/planning/loaders/planner_loader.hpp"
-#include "prx/visualization/three_js_group.hpp"
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Eigen>
 
 #include "prx/gtdynamics/defs.hpp"
 #include "prx/gtdynamics/utilities/fg_logger.hpp"
@@ -24,7 +17,21 @@
 #include "prx/gtdynamics/planning/trajectory_optimizer.hpp"
 #include "prx/gtdynamics/utilities/utilities_functions.hpp"
 #include "prx/gtdynamics/planning/initialization_trajs_fg.hpp"
-#include <filesystem>
+
+#include "prx/planning/loaders/planner_loader.hpp"
+#include "prx/planning/planner_statistics.hpp"
+#include "prx/planning/world_model.hpp"
+
+#include "prx/simulation/loaders/obstacle_loader.hpp"
+#include "prx/simulation/plants/plants.hpp"
+#include "prx/simulation/playback/trajectory.hpp"
+#include "prx/simulation/system_factory.hpp"
+#include "prx/simulation/system_group.hpp"
+
+#include "prx/utilities/defs.hpp"
+
+#include "prx/visualization/three_js_group.hpp"
+
 namespace fs = std::filesystem;
 using namespace prx;
 
