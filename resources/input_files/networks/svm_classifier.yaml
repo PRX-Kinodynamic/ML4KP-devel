@@ -1,4 +1,4 @@
-normalize_input: true
+normalize_input: false
 
 gamma: 10.0
 C: 100.0

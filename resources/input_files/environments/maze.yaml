@@ -1,168 +1,360 @@
 environment:
-    type: obstacle
-    root_configuration:
-      position: [0,0,0.1]
-      orientation: [0,0,0,1]
-    geometries:
-      -
-        name: o1
-        collision_geometry:
-          type: box
-          dims: [ .1, 2, 0.2]
-          material: 0x0015ff
-        config:
-          position: [2, 4, 0.2]
-          orientation: [0,0,0,1]
-      -
-        name: o2
-        collision_geometry:
-          type: box
-          dims: [ .1, 2, 0.2]
-          material: 0x0015ff
-        config:
-          position: [4, 3, 0.1]
-          orientation: [0,0,0,1]   
-      -    
-        name: o3
-        collision_geometry:
-          type: box
-          dims: [2, .1, 0.2]
-          material: 0x0015ff
-        config:
-          position: [3, 2, 0.1]
-          orientation: [0,0,0,1]
-      -    
-        name: o4
-        collision_geometry:
-          type: box
-          dims: [2, .1, 0.2]
-          material: 0x0015ff
-        config:
-          position: [2, 0, 0.1]
-          orientation: [0,0,0,1]
-      -    
-        name: o5
-        collision_geometry:
-          type: box
-          dims: [.1, 4, 0.2]
-          material: 0x0015ff
-        config:
-          position: [3, -2, 0.1]
-          orientation: [0,0,0,1]
-      -    
-        name: o6
-        collision_geometry:
-          type: box
-          dims: [2, .1, 0.2]
-          material: 0x0015ff
-        config:
-          position: [2, -4, 0.1]
-          orientation: [0,0,0,1]
-      -    
-        name: o7
-        collision_geometry:
-          type: box
-          dims: [.1, 2, 0.2]
-          material: 0x0015ff
-        config:
-          position: [-2, -4, 0.1]
-          orientation: [0,0,0,1]
-      -    
-        name: o8
-        collision_geometry:
-          type: box
-          dims: [2, .1, 0.2]
-          material: 0x0015ff
-        config:
-          position: [-1, -3, 0.1]
-          orientation: [0,0,0,1]
-      -    
-        name: o9
-        collision_geometry:
-          type: box
-          dims: [4, .1, 0.2]
-          material: 0x0015ff
-        config:
-          position: [-1, -2, 0.1]
-          orientation: [0,0,0,1]
-      -    
-        name: o10
-        collision_geometry:
-          type: box
-          dims: [.1, 4, 0.2]
-          material: 0x0015ff
-        config:
-          position: [-3, 0, 0.1]
-          orientation: [0,0,0,1]
-      -    
-        name: o11
-        collision_geometry:
-          type: box
-          dims: [2, .1, 0.2]
-          material: 0x0015ff
-        config:
-          position: [-1, 0, 0.1]
-          orientation: [0,0,0,1]
-      -    
-        name: o12
-        collision_geometry:
-          type: box
-          dims: [2, .1, 0.2]
-          material: 0x0015ff
-        config:
-          position: [-2, 2, 0.1]
-          orientation: [0,0,0,1]
-      -    
-        name: o13
-        collision_geometry:
-          type: box
-          dims: [.1, 4, 0.2]
-          material: 0x0015ff
-        config:
-          position: [0, 2, 0.1]
-          orientation: [0,0,0,1]
-      -    
-        name: o14
-        collision_geometry:
-          type: box
-          dims: [2, .1, 0.2]
-          material: 0x0015ff
-        config:
-          position: [-1, 4, 0.1]
-          orientation: [0,0,0,1]
-      -
-        name: bb_left
-        collision_geometry:
-          type: box
-          dims: [ .1, 10, 0.2]
-          material: 0x0015ff
-        config:
-          position: [-5, 0, 0.1]
-          orientation: [0,0,0,1]
-      -
-        name: bb_right
-        collision_geometry:
-          type: box
-          dims: [ .1, 10,  0.2]
-          material: 0x0015ff
-        config:
-          position: [5, 0, 0.1]
-          orientation: [0,0,0,1]
-      -
-        name: bb_top
-        collision_geometry:
-          type: box
-          dims: [ 10, .1, 0.2]
-          material: 0x0015ff
-        config:
-          position: [0, 5, 0.1]
-          orientation: [0,0,0,1]
-      -
-        name: bb_bottom
-        collision_geometry:
-          type: box
-          dims: [ 10, .1, 0.2]
-          material: 0x0015ff
-        config:
-          position: [0, -5, 0.1]
-          orientation: [0,0,0,1]
+  dynamic_geometries: []
+  geometries:
+  - collision_geometry:
+      dims: [21, 0.5, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [0, 10.25, 0]
+    dynamic: false
+    name: upper
+  - collision_geometry:
+      dims: [21, 0.5, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [0, -10.25, 0]
+    dynamic: false
+    name: lower
+  - collision_geometry:
+      dims: [0.5, 21, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [10.25, 0, 0]
+    dynamic: false
+    name: right
+  - collision_geometry:
+      dims: [0.5, 21, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-10.25, 0, 0]
+    dynamic: false
+    name: left
+  - collision_geometry:
+      dims: [0.8233674934350079, 0.5044594371528031, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-0.3845175347759344, -2.2656377178430027, 0.1]
+    name: box_0
+  - collision_geometry:
+      dims: [0.776695310026154, 0.7006077688986947, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-7.247654659682099, 2.8192853491687035, 0.1]
+    name: box_1
+  - collision_geometry:
+      dims: [0.7042176871220431, 0.5081807984130595, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-8.914482818702655, 5.997023061084928, 0.1]
+    name: box_2
+  - collision_geometry:
+      dims: [0.8159005006641664, 0.5963530287836111, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [2.4238853963446445, -4.209178730524165, 0.1]
+    name: box_3
+  - collision_geometry:
+      dims: [0.9742458143156338, 0.6875249829331291, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [6.4341370104064275, -6.500791177937247, 0.1]
+    name: box_4
+  - collision_geometry:
+      dims: [0.8635560781680098, 0.671874006563754, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-5.208099073565162, 0.712845342253619, 0.1]
+    name: box_5
+  - collision_geometry:
+      dims: [0.9580489546391233, 0.9476571723424161, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [2.6678222284226827, -9.302344926192221, 0.1]
+    name: box_6
+  - collision_geometry:
+      dims: [0.5597630001983673, 0.8762576173275082, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-8.219861702909892, -0.37784953257932585, 0.1]
+    name: box_7
+  - collision_geometry:
+      dims: [0.6423680972009069, 0.7398154591340004, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-0.7249600642418947, 6.720447262866394, 0.1]
+    name: box_8
+  - collision_geometry:
+      dims: [0.9827406822378648, 0.968477716148127, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-3.98956124808886, 2.4460350237902055, 0.1]
+    name: box_9
+  - collision_geometry:
+      dims: [0.9174132986675901, 0.665105056674999, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-1.0013725373976623, -3.8241654847311572, 0.1]
+    name: box_10
+  - collision_geometry:
+      dims: [0.7995666091669887, 0.7598364170830187, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [6.573550484048745, 5.730822802393298, 0.1]
+    name: box_11
+  - collision_geometry:
+      dims: [0.9575440354266124, 0.8343167842640365, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [1.5444872047444118, 5.2365587757916305, 0.1]
+    name: box_12
+  - collision_geometry:
+      dims: [0.7783884924697492, 0.7485060950487714, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-4.365261008720909, -4.452162277698781, 0.1]
+    name: box_13
+  - collision_geometry:
+      dims: [0.7752620298138162, 0.8926695860807718, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-2.4701242000413632, -5.886050212842688, 0.1]
+    name: box_14
+  - collision_geometry:
+      dims: [0.6853771905545594, 0.9622416117730764, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [0.8220944904754912, 1.5492010478700422, 0.1]
+    name: box_15
+  - collision_geometry:
+      dims: [0.7592297283760052, 0.5147459484738013, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-3.3815445038550624, -6.373346828452123, 0.1]
+    name: box_16
+  - collision_geometry:
+      dims: [0.843925780519148, 0.6270211091839847, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-9.060415861199939, 2.7681364947344314, 0.1]
+    name: box_17
+  - collision_geometry:
+      dims: [0.5782647273398112, 0.9261302894461643, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-9.337733281101983, -2.573557344110153, 0.1]
+    name: box_18
+  - collision_geometry:
+      dims: [0.8863307687504834, 0.5309714918426338, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [2.1774549202338527, -3.1571575058527257, 0.1]
+    name: box_19
+  - collision_geometry:
+      dims: [0.6267587678280822, 0.6823255210895711, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [9.027086965802503, -6.7187682509270115, 0.1]
+    name: box_20
+  - collision_geometry:
+      dims: [0.9353216643320656, 0.6831074727966233, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-8.312887334001058, -2.063612092904414, 0.1]
+    name: box_21
+  - collision_geometry:
+      dims: [0.6262352478596935, 0.6689272414349026, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [0.7986409528239129, -5.591571776800071, 0.1]
+    name: box_22
+  - collision_geometry:
+      dims: [0.6994675815884112, 0.6158906370524573, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [6.55773910617199, 8.048435508926353, 0.1]
+    name: box_23
+  - collision_geometry:
+      dims: [0.5069277946729163, 0.5662129168316551, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [0.3104696466903949, 8.048935979301618, 0.1]
+    name: box_24
+  - collision_geometry:
+      dims: [0.5492282164724129, 0.8002694244678623, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [4.916257573322609, -6.061047877918857, 0.1]
+    name: box_25
+  - collision_geometry:
+      dims: [0.5933325528852069, 0.9152580032461826, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-8.259582568960528, 6.7154354774404545, 0.1]
+    name: box_26
+  - collision_geometry:
+      dims: [0.6848668739799508, 0.6553262936388031, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-7.562175276042091, 1.0554638290136804, 0.1]
+    name: box_27
+  - collision_geometry:
+      dims: [0.7005632277497915, 0.5244971175593267, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-6.9092104753902746, -0.6690480691824785, 0.1]
+    name: box_28
+  - collision_geometry:
+      dims: [0.781021577847425, 0.5812039020170933, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [6.2099311749609605, -7.890028309538768, 0.1]
+    name: box_29
+  - collision_geometry:
+      dims: [0.9560680619103019, 0.8779915860430294, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-0.2874570263570959, -5.265404170406541, 0.1]
+    name: box_30
+  - collision_geometry:
+      dims: [0.8388318043875949, 0.8950427636495963, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [6.13015418432478, 1.8924570815652881, 0.1]
+    name: box_31
+  - collision_geometry:
+      dims: [0.8006164760103558, 0.9650227708071317, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-0.36856958049061816, -5.229836103915108, 0.1]
+    name: box_32
+  - collision_geometry:
+      dims: [0.8932297402634306, 0.5541595959646362, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [0.44683091024499255, 9.806193053505435, 0.1]
+    name: box_33
+  - collision_geometry:
+      dims: [0.9417793741865896, 0.7915879791488236, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [9.503866107765756, -6.3499937041064936, 0.1]
+    name: box_34
+  - collision_geometry:
+      dims: [0.601878347263895, 0.9137444053469257, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-9.337559866003726, -3.728175156106772, 0.1]
+    name: box_35
+  - collision_geometry:
+      dims: [0.6614779358387411, 0.8616482123003215, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [7.815530344763214, -3.189985243866394, 0.1]
+    name: box_36
+  - collision_geometry:
+      dims: [0.8481430940870689, 0.9596485430514006, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-5.320328965553218, -5.657103894677588, 0.1]
+    name: box_37
+  - collision_geometry:
+      dims: [0.8482624030855992, 0.6522965297486445, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [2.199521724271463, 4.241158529673108, 0.1]
+    name: box_38
+  - collision_geometry:
+      dims: [0.8488833583190263, 0.6728120178223128, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [3.01162438158779, 2.8826081394641854, 0.1]
+    name: box_39
+  type: obstacle

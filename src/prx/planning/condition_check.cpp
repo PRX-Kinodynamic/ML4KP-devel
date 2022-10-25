@@ -19,6 +19,7 @@ namespace prx
 			prx_throw("Condition type is invalid!");
 		}
 		iteration_counter=0;
+		reset();
 	}
 	
 	void condition_check_t::report_new_solution()

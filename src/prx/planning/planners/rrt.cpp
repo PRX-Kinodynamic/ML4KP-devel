@@ -261,4 +261,20 @@ namespace prx
 				std::cout<< " nodes:" << metric->get_nr_nodes() <<std::endl;
 	}
 
+	double rrt_t::get_branching_factor()
+	{
+		// Count the # of non-leaf nodes
+		int non_leaf_nodes = 0;
+		auto iter_bounds = tree.vertices();
+		for(auto iter = iter_bounds.first; iter!=iter_bounds.second; iter++)
+		{
+			// Call is_leaf() on each node index
+			if (!tree.is_leaf((*iter)->get_index()))
+			{
+				non_leaf_nodes++;
+			}
+		}
+		return (double) tree.num_edges()/ (double) non_leaf_nodes;
+	}
+
 }

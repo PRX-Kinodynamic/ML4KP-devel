@@ -1,19 +1,15 @@
 random_seed: 210896
+# random_seed: 101193
 simulation_step: 0.1
 
-# environment: "environments/narrow.yaml"
-# environment: "environments/maze.yaml"
-environment: "environments/simple_warehouse.yaml"
-# environment: "environments/warehouse_benchmr.yaml"
-# environment: "environments/city.yaml"
-# environment: "environments/rrt_star_obstacles.yaml"
+environment: "environments/landmark.yaml"
 
-# plant: !file "plants/treaded_vehicle.yaml"
-plant: !file "plants/fo_treaded_vehicle.yaml"
+plant: !file "plants/treaded_vehicle.yaml"
 
 use_learned_controller: true
 learned_controller: !file "networks/treaded_vehicle_controller.yaml"
 
+random_local_goal: true
 goal_radius: 0.5
 
 num_trajectories: 100
@@ -23,6 +19,9 @@ validate: true
 num_failures: 100
 termination_classifier: !file "networks/svm_classifier.yaml"
 
+start_state: [3.3333,-8.5000,0.0000,0.0000,0.0000]
+goal_state:  [ 3.3333,8.5000,0.0000,0.0000,0.0000]
+
 debug: false
 
-output_dir: "test_results/classify-roadmap/"
+output_dir: "1026/"

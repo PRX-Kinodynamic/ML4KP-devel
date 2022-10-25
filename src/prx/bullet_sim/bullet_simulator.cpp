@@ -3,7 +3,6 @@
 
 namespace prx
 {
-
 	bullet_simulator_t::bullet_simulator_t() 
 		: simulator_t(plant_type::BULLET)
 	{
@@ -34,7 +33,7 @@ namespace prx
 
 		this -> setGravity(btVector3(0,0,-9.8));
 
-		lineArgs->m_lineWidth = 2.0;
+		lineArgs->m_lineWidth = 100.0;
 		lineArgs->m_colorRGB[1] = lineArgs->m_colorRGB[2] = 0;	
 	  	
 		this -> setRealTimeSimulation(false);
@@ -126,43 +125,6 @@ namespace prx
 		cg -> update_collisions();
 	}
 
-	void bullet_simulator_t::reset_simulation_with_obstacles(std::string obstacles_file)
-	{
-		this -> resetSimulation();
-		this -> setGravity(btVector3(0,0,-9.8));
-
-		allowed_collisions.clear();
-
-		for (auto f : urdf_paths)
-		{
-			std::cout << "f: " << f.first << std::endl;
-			int body_id = this -> loadURDF(f.first);
-			if (!f.second) allowed_collisions.push_back(body_id);
-		}
-
-		obstacle_loader(obstacles_file);
-
-		robot_ids.clear();
-
-		for (auto s_pair : this -> systems)
-		{
-			auto s = s_pair.second;
-
-			auto sb = std::dynamic_pointer_cast<bullet_plant_t>(s);
-			sb -> reset();
-			sb -> update_from_bullet(true);
-			robot_ids.push_back(sb->uniqueId);
-			// TODO: Add exclusions between the system and the plane.
-		}
-
-		PRX_DEBUG_PRINT
-		for (auto i : allowed_collisions) std::cout << "Allowed collision: " << i << std::endl;
-		for (auto i : robot_ids) std::cout << "Robot id: " << i << std::endl;
-
-
-		cg -> update_collisions();
-	}
-
 	void bullet_simulator_t::set_collision_group(bullet_collision_group_ptr_t cg_)
 	{
 		cg = cg_;
@@ -212,22 +174,25 @@ namespace prx
 		}
 	}
   
-	void bullet_simulator_t::visualize_trajectories(const std::vector<trajectory_t> trajs)
+	void bullet_simulator_t::visualize_trajectories(const std::vector<trajectory_t> trajs, unsigned step)
 	{
 		std::cout << "Number of trajectories = " << trajs.size() << std::endl;
 		btVector3 targetPos;
 		targetPos[0] = targetPos[1] = targetPos[2] = 0;
 		this -> resetDebugVisualizerCamera(4.0,-90.4,180.1,targetPos);		
 		this -> restoreStateFromMemory(0);
+		unsigned counter = 0;
 		for (auto traj : trajs)
 		{
-  			for (int i = 1; i < traj.size()-1; i++)
+  			for (int i = 1; i < traj.size()-1; i+=step)
 			{
 				unsigned idx = i;
 				double* startLine = new double[3]{traj[idx]->at(0),traj[idx]->at(1),0.2};
 				double* endLine = new double[3]{traj[idx+1]->at(0),traj[idx+1]->at(1),0.2};
 				this ->addUserDebugLine(startLine,endLine,*lineArgs);
 			}
+			counter++;
+			output_progress_bar(1.0 * counter/trajs.size());
 		}
 	}
 
@@ -264,6 +229,7 @@ namespace prx
 	void bullet_simulator_t::execute_traj(bullet_plant_ptr_t sys, trajectory_t traj)
   	{
 		btVector3 targetPos;
+		unsigned state_id_idx = sys->get_state_space()->get_dimension() - 1;
 		targetPos[0] = targetPos[1] = targetPos[2] = 0;
 		this -> resetDebugVisualizerCamera(15.0,-90.4,180.1,targetPos);	
     	this -> restoreStateFromMemory(0);
@@ -271,8 +237,7 @@ namespace prx
     	{
       		usleep(8000);
       		space_point_t point = traj[(unsigned)i];
-      		int inpt;
-      		this -> restoreStateFromMemory(sys -> get_state_id());
+      		this -> restoreStateFromMemory(point->at(state_id_idx));
     	}
 	}
 
@@ -315,62 +280,6 @@ namespace prx
 		// void b3Clock::usleep(int microSeconds)
 		b3Clock::usleep(one_second * duration);
 
-	}
-
-	void bullet_simulator_t::obstacle_loader(std::string obstacles_file)
-    {
-		param_loader obstacle_loader(obstacles_file);
-		auto geometries_list = obstacle_loader["environment"]["geometries"];
-
-		for (auto geom : geometries_list)
-		{
-			std::string name = geom["name"].as<std::string>();
-			auto geom_transform = geom["config"];
-			auto geom_position = geom_transform["position"].as<std::vector<double>>();
-			auto geom_orientation = geom_transform["orientation"].as<std::vector<double>>();
-			transform_t obstacle_pose;
-			obstacle_pose.linear() = quaternion_t(geom_orientation[3],geom_orientation[0],geom_orientation[1],geom_orientation[2]).toRotationMatrix();
-			obstacle_pose.translation() = vector_t(geom_position[0],geom_position[1],geom_position[2]);
-			auto geom_params = geom["collision_geometry"];
-			auto geom_type = geom_params["type"].as<std::string>();
-			int shapeType=-1;
-
-			b3RobotSimulatorCreateVisualShapeArgs args_v;
-			b3RobotSimulatorCreateCollisionShapeArgs args_c;			
-			btVector3 basePosition;
-			basePosition[0]=geom_position[0];
-			basePosition[1]=geom_position[1];
-			basePosition[2]=geom_position[2];
-			btQuaternion baseOrientation(geom_orientation[3],geom_orientation[0],geom_orientation[1],geom_orientation[2]);
-
-			if (geom_type == "box")
-			{
-				auto dims = geom_params["dims"].as<std::vector<double>>();
-				shapeType=GEOM_BOX;	
-				args_v.m_halfExtents[0]=dims[0]/2;
-				args_v.m_halfExtents[1]=dims[1]/2;
-				args_v.m_halfExtents[2]=dims[2]/2;
-				args_c.m_halfExtents[0]=dims[0]/2;
-				args_c.m_halfExtents[1]=dims[1]/2;
-				args_c.m_halfExtents[2]=dims[2]/2;
-			}
-			
-			else
-			{
-				prx_throw("Obstacle loader can't load an obstacle of type: "<<geom_type);
-			}
-
-			args_v.m_shapeType=shapeType;
-			args_c.m_shapeType=shapeType;
-			
-			b3RobotSimulatorCreateMultiBodyArgs args_mb;
-			args_mb.m_baseVisualShapeIndex = this->createVisualShape(shapeType, args_v);			 
-			args_mb.m_baseCollisionShapeIndex = this->createCollisionShape(shapeType, args_c);
-			args_mb.m_basePosition=basePosition;			  
-			args_mb.m_baseOrientation=baseOrientation;
-			auto res = this->createMultiBody(args_mb);		
-			if (res == -1) PRX_DEBUG_PRINT	  
-		}
 	}
 
 }

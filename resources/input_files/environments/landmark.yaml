@@ -1,0 +1,71 @@
+environment:
+  geometries:
+  - collision_geometry:
+      dims: [21, 0.5, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [0, 10.25, 0]
+    dynamic: false
+    name: upper
+  - collision_geometry:
+      dims: [21, 0.5, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [0, -10.25, 0]
+    dynamic: false
+    name: lower
+  - collision_geometry:
+      dims: [0.5, 21, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [10.25, 0, 0]
+    dynamic: false
+    name: right
+  - collision_geometry:
+      dims: [0.5, 21, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-10.25, 0, 0]
+    dynamic: false
+    name: left
+  - collision_geometry:
+      dims: [1.0, 5.413060052519937, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-3.333333333333333, 4.293469973740032, 0.0]
+    name: vertical_0_a
+  - collision_geometry:
+      dims: [1.0, 6.586939947480063, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-3.333333333333333, -3.7065300262599683, 0.0]
+    name: vertical_0_b
+  - collision_geometry:
+      dims: [1.0, 7.9643245027775755, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [3.333333333333334, 3.0178377486112122, 0.0]
+    name: vertical_1_a
+  - collision_geometry:
+      dims: [1.0, 4.0356754972224245, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [3.333333333333334, -4.982162251388788, 0.0]
+    name: vertical_1_b
+  type: obstacle

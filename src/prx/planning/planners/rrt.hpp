@@ -148,6 +148,14 @@ namespace prx
 
 		virtual void print_statistics();
 
+		virtual double get_branching_factor();
+
+		double get_current_solution()  { return current_solution; }
+
+		double get_current_solution_time()  { return current_solution_time; }
+
+		int get_current_solution_iters()  { return current_solution_iters; }
+
 		virtual std::vector<std::string> get_statistics_header() override;
 		virtual std::vector<double> get_statistics() override;
 	protected:

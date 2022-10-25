@@ -39,7 +39,7 @@ namespace prx
 		// What about collisions between robots?
 		void add_urdf(std::string urdf_path, bool collision_contact=false);
 
-		void visualize_trajectories(const std::vector<trajectory_t> trajs);
+		void visualize_trajectories(const std::vector<trajectory_t> trajs, unsigned step = 1);
 
 		void print_trajectories(const std::vector<trajectory_t> trajs);
 
@@ -48,10 +48,6 @@ namespace prx
 		virtual void step_simulation(propagate_step step) override final;
 
 		virtual void reset_simulation() override final;
-
-		void reset_simulation_with_obstacles(std::string obstacles_file);
-
-		void obstacle_loader(std::string obstacles_file);
 
 		static
 		void get_euler_from_quaternion(btVector3& rpy2, const btQuaternion& quat);

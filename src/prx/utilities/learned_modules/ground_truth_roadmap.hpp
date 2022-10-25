@@ -13,6 +13,7 @@ struct ground_truth_edge_t
 {
     node_index_t end;
     double cost;
+    trajectory_t* traj;
 };
 
 class ground_truth_roadmap_t
@@ -32,8 +33,10 @@ class ground_truth_roadmap_t
         double cost;
 
         std::vector<node_index_t> a_indices, d_indices;
+        std::unordered_map<node_index_t, double> a_costs, d_costs;
 
     public:
+        std::vector<space_point_t> verification_set;
         ground_truth_roadmap_t() : max_failures(100), num_failures(0), vertex_counter(0) {}
         ~ground_truth_roadmap_t() {}
     
@@ -41,10 +44,31 @@ class ground_truth_roadmap_t
 
     space_point_t get_point(node_index_t index) { return vertices[index]->point; }
     
+    void run_verification(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
+    {
+        std::vector<unsigned> points_to_remove;
+
+        for (unsigned i = 0; i < verification_set.size(); i++)
+        {
+            spec.state_space -> copy_point(pt, verification_set[i]);
+            get_indices(query, spec, controller);
+            if (a_indices.size() > 1 && d_indices.size() > 1)     
+                points_to_remove.push_back(i);
+        }
+
+        for (int i = points_to_remove.size() - 1; i >= 0; i--)
+        {
+            verification_set.erase(verification_set.begin() + points_to_remove[i]);
+        }
+    }
+    
     void get_indices(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
     {
         a_indices.clear();
         d_indices.clear();
+
+        a_costs.clear();
+        d_costs.clear();
 
         for (auto v : vertices)
         {
@@ -56,6 +80,7 @@ class ground_truth_roadmap_t
             if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
             {
                 a_indices.push_back(v.first);
+                a_costs[v.first] = query.solution_traj.size();
             }
             
             query.clear_outputs();
@@ -68,6 +93,7 @@ class ground_truth_roadmap_t
             if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
             {
                 d_indices.push_back(v.first);
+                d_costs[v.first] = query.solution_traj.size();
             }
 
             query.clear_outputs();
@@ -186,11 +212,21 @@ class ground_truth_roadmap_t
         edges[s].push_back(e);
     }
     
-    void build_roadmap(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
+    void build_roadmap(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, bool verify = false)
     {
         pt = spec.state_space -> make_point();
         do
         {
+            if (verify)
+            {
+                run_verification(query, spec, controller);
+                std::cout << "Size of verification set: " << verification_set.size() << std::endl;
+                if (verification_set.size() == 0)
+                {
+                    std::cout << "All nodes are verified." << std::endl;
+                    break;
+                }
+            }
             do
             {
                 spec.sample_state(pt);
@@ -211,13 +247,15 @@ class ground_truth_roadmap_t
 
                 for (auto a : a_indices)
                 {
-                    cost = spec.distance_function(vertices[a] -> point, pt);
+                    // cost = spec.distance_function(vertices[a] -> point, pt);
+                    cost = a_costs[a];
                     add_edge(vertex_counter, a, cost);
                 }
 
                 for (auto d : d_indices)
                 {
-                    cost = spec.distance_function(vertices[d] -> point, pt);
+                    // cost = spec.distance_function(vertices[d] -> point, pt);
+                    cost = d_costs[d];
                     add_edge(d, vertex_counter, cost);
                 }
 
@@ -247,6 +285,7 @@ class ground_truth_roadmap_t
                             {
                                 spec.state_space -> copy_point(query.start_state, query.solution_traj.back());
                                 spec.state_space -> copy_point(query.goal_state, vertices[a] -> point);
+                                trajectory_t buffer_traj(query.solution_traj);
                                 query.clear_outputs();
 
                                 controller.fulfill_query(query, spec);
@@ -261,10 +300,12 @@ class ground_truth_roadmap_t
                                         vertex_created = true;
                                         vertex_counter++;
                                     }
-                                    cost = spec.distance_function(vertices[d] -> point, pt);
+                                    // cost = spec.distance_function(vertices[d] -> point, pt);
+                                    cost = d_costs[d];
                                     add_edge(d, vertex_counter-1, cost);
 
-                                    cost = spec.distance_function(vertices[a] -> point, pt);
+                                    // cost = spec.distance_function(vertices[a] -> point, pt);
+                                    cost = a_costs[a];
                                     add_edge(vertex_counter-1, a, cost);
 
                                     changed_graph = true;
@@ -288,6 +329,27 @@ class ground_truth_roadmap_t
     void remove_edge(node_index_t s, node_index_t t)
     {
         edges[s].erase(std::remove_if(edges[s].begin(), edges[s].end(), [t](ground_truth_edge_t e) { return e.end == t; }), edges[s].end());
+    }
+
+    void remove_vertex(node_index_t v)
+    {
+        for (auto e : edges[v])
+        {
+            remove_edge(e.end, v);
+        }
+        // Locate the vertex in other vertices' edges.
+        for (auto e : edges)
+        {
+            for (auto edge : e.second)
+            {
+                if (edge.end == v)
+                {
+                    remove_edge(e.first, v);
+                }
+            }
+        }
+        edges.erase(v);
+        vertices.erase(v);
     }
 
     std::string print_vertices(space_t* space)
@@ -366,7 +428,8 @@ class ground_truth_roadmap_t
 
         for (auto d : d_indices)
         {
-            cost = spec.distance_function(vertices[d] -> point, pt);
+            // cost = spec.distance_function(vertices[d] -> point, pt);
+            cost = d_costs[d];
             add_edge(d, vertex_counter, cost);
         }
 
@@ -394,7 +457,8 @@ class ground_truth_roadmap_t
 
         for (auto a : a_indices)
         {
-            cost = spec.distance_function(vertices[a] -> point, pt);
+            // cost = spec.distance_function(vertices[a] -> point, pt);
+            cost = a_costs[a];
             add_edge(vertex_counter, a, cost);
         }
 

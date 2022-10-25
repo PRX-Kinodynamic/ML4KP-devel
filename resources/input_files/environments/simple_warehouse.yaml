@@ -29,7 +29,7 @@ environment:
           dims: [3, 3, 0.2]
           material: 0x0015ff
         config:
-          position: [-9, 10.5, 0.1]
+          position: [-9, 11, 0.1]
           orientation: [0,0,0,1]
       -
         name: block_2

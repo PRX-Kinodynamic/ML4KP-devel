@@ -2,7 +2,7 @@ random_seed: 210896
 simulation_step: 0.01
 
 environment: "environments/simple_warehouse.yaml"
-# environment: "environments/narrow.yaml"
+# environment: "environments/L_passage.yaml"
 plant: !file "plants/segway.yaml"
 
 use_learned_controller: true
@@ -20,4 +20,4 @@ termination_classifier: !file "networks/svm_classifier.yaml"
 
 debug: false
 
-output_dir: "results_segway/roadmap/"
+output_dir: "1003/10int/"

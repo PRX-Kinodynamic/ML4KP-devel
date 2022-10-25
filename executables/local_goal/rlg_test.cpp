@@ -51,21 +51,22 @@ int main(int argc, char* argv[])
 
         learned_controller_t controller(params);
         double duration = params["/learned_controller/control_duration"].as<double>();
+        bool use_random_local_goal = params["random_local_goal"].as<bool>();
 
         dirt_t dirt("dirt");
 
         dirt_specification_t dirt_spec(context.first,context.second);
-        dirt_spec.min_control_steps = params["/learned_controller/control_duration"].as<double>()/simulation_step;
-        dirt_spec.max_control_steps = params["/learned_controller/control_duration"].as<double>()/simulation_step;
-        dirt_spec.blossom_number = params["blossom_number"].as<int>();
+        dirt_spec.min_control_steps = params["/plant/min_steps"].as<double>()/simulation_step;
+        dirt_spec.max_control_steps = params["/plant/max_steps"].as<double>()/simulation_step;
+        dirt_spec.blossom_number = 1;
         dirt_spec.use_pruning = false;
         space_point_t sample_point = ss -> make_point();
 
         dirt_query_t dirt_query(ss,cs);
         dirt_query.start_state = ss -> make_point();
-        ss -> copy_point_from_vector(dirt_query.start_state,params["/plant/start_state"].as<std::vector<double>>());
+        ss -> copy_point_from_vector(dirt_query.start_state,params["start_state"].as<std::vector<double>>());
         dirt_query.goal_state = ss -> make_point();
-        ss -> copy_point_from_vector(dirt_query.goal_state,params["/plant/goal_state"].as<std::vector<double>>());
+        ss -> copy_point_from_vector(dirt_query.goal_state,params["goal_state"].as<std::vector<double>>());
         
         dirt_query.get_visualization = true;
         dirt_query.goal_region_radius = params["goal_radius"].as<double>();
@@ -90,7 +91,7 @@ int main(int argc, char* argv[])
 
         dirt_spec.expand = [&](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn, bool blossom_expand)
         {
-            if (blossom_expand)
+            if (blossom_expand && use_random_local_goal)
             {
                 std::vector<std::vector<double>> current_states;
                 std::vector<std::vector<double>> local_goals;
@@ -129,9 +130,11 @@ int main(int argc, char* argv[])
             }
         };
 
-        int stats_runs = params["stats_runs"].as<int>();
-        condition_check_t checker(params["checker_type"].as<std::string>(),params["checker_value"].as<double>());
-        double stats_iters = params["stats_iters"].as<double>();
+        // int stats_runs = params["stats_runs"].as<int>();
+        // condition_check_t checker(params["checker_type"].as<std::string>(),params["checker_value"].as<double>());
+        // double stats_iters = params["stats_iters"].as<double>();
+        int stats_runs = 1;
+        condition_check_t checker("solutions",1);
         std::ofstream fout;
 
         for( int i = 0; i < stats_runs; ++i )
@@ -140,15 +143,18 @@ int main(int argc, char* argv[])
             dirt.preprocess();
             dirt.link_and_setup_query(&dirt_query);
 
-            planner_statistics_t stats;
-            stats.link_planner(&dirt);
-            stats.link_criterion(&checker);
-            stats.repeat_data_gathering(stats_iters);
+            dirt.resolve_query(&checker);
+            dirt.fulfill_query();
 
-            std::string full_filename = output_path+params["output_dir"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";
-			fout.open(full_filename);
-			fout<<stats.serialize() << std::endl;
-			fout.close();
+            // planner_statistics_t stats;
+            // stats.link_planner(&dirt);
+            // stats.link_criterion(&checker);
+            // stats.repeat_data_gathering(stats_iters);
+
+            // std::string full_filename = output_path+params["output_dir"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";
+			// fout.open(full_filename);
+			// fout<<stats.serialize() << std::endl;
+			// fout.close();
 
             // TODO: Add visualization code here.
             // if (true)

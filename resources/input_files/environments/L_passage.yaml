@@ -22,7 +22,7 @@ environment:
         config:
           position: [-3, 2, 0]
           orientation: [0,0,0,1]
-      -	  
+      -
         name: block_1
         collision_geometry:
           type: box
