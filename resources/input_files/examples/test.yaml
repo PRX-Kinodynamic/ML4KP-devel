@@ -1,27 +1,28 @@
 debug: false
-environment: environments/simple_warehouse.yaml
+environment: environments/landmark.yaml
 goal_radius: 0.5
 goal_state:
-- -6.886817885696858
-- -12.684582205679916
-- 0.8696357275991495
+- 6.0
+- 8.5
 - 0.0
 - 0.0
 - 0.0
-- 0.0
-max_steps: 100
-num_trajectories: 10
-output_id: 0
-random_seed: 0
+num_failures: 100
+num_trajectories: 100
+output_dir: 1026/medium/170/
+random_local_goal: true
+random_seed: 210896
+sample_around: true
 simulation_step: 0.1
 start_state:
-- 13.383720108910161
-- -0.2699874591003777
-- -1.6466329500570664
-- 0.0
+- 6.0
+- -8.5
 - 0.0
 - 0.0
 - 0.0
 use_learned_controller: true
-plant: !file "plants/segway.yaml"
-learned_controller: !file "networks/segway.yaml"
+validate: true
+verify_edge: true
+plant: !file "plants/treaded_vehicle.yaml"
+learned_controller: !file "networks/treaded_vehicle_controller.yaml"
+termination_classifier: !file "networks/svm_classifier.yaml"

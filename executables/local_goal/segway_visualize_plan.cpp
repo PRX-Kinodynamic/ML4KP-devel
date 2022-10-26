@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
         dirt_query.goal_state  = ss -> make_point();
         ss -> copy_to_point(dirt_query.start_state);
         ss -> copy_point_from_vector(dirt_query.goal_state,gv);
-        dirt_query.get_visualization = false;
+        dirt_query.get_visualization = true;
 
         dirt_query.goal_region_radius = params["goal_radius"].as<double>();
 
@@ -98,20 +98,21 @@ int main(int argc, char* argv[])
         
         
         access_roadmap_t access_roadmap(params);
-        std::string roadmap_dir = output_path + "roadmap_10";
-        bool success = access_roadmap.build_roadmap_from_file(roadmap_dir, dirt_spec);
-        if (!success) 
-        {
-            prx_throw("Could not build roadmap from file!");
-        }
-        auto path = access_roadmap.get_shortest_path(75,76);
-        std::cout << "Path: " << std::endl;
-        for (auto v: path)
-        {
-            std::cout << v << " ";
-        }
-        std::cout << std::endl;
+        // std::string roadmap_dir = "/Users/aravind/Downloads/roadmap_segway_warehouse/";
+        // bool success = access_roadmap.build_roadmap_from_file(roadmap_dir, dirt_spec);
+        // if (!success) 
+        // {
+        //     prx_throw("Could not build roadmap from file!");
+        // }
+        // auto path = access_roadmap.get_shortest_path(17,18);
+        // std::cout << "Path: " << std::endl;
+        // for (auto v: path)
+        // {
+        //     std::cout << v << " ";
+        // }
+        // std::cout << std::endl;
 
+        /*
         space_point_t lg = ss -> make_point();
         dirt_spec.expand = [&](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn, bool blossom_expand)
         {
@@ -124,8 +125,8 @@ int main(int argc, char* argv[])
                 ss -> copy_vector_from_point(current_state,s);
                 std::vector<double> local_goal;
 
-                auto nn = access_roadmap.get_best_node(s,dirt_spec);
-                // int nn = -1;
+                // auto nn = access_roadmap.get_best_node(s,dirt_spec);
+                int nn = -1;
                 if (nn == -1)
                 {
                     local_goal.clear();
@@ -162,30 +163,35 @@ int main(int argc, char* argv[])
                 default_expand(s,plans,trajs,bn,sg,dirt_spec.sample_plan,dirt_spec.propagate);
             }
         };
+        */
+
         
-        condition_check_t checker("time",1);
-        std::string output_dir = output_path + params["output_dir"].as<std::string>();
+        condition_check_t checker("time",60);
 
-        for (int i = 0; i < 10; i++)
-        {
-            dirt.link_and_setup_spec(&dirt_spec);
-            dirt.preprocess();
-            dirt.link_and_setup_query(&dirt_query);
+        dirt.link_and_setup_spec(&dirt_spec);
+        dirt.preprocess();
+        dirt.link_and_setup_query(&dirt_query);
+        dirt.resolve_query(&checker);
+        dirt.fulfill_query();
 
-            planner_statistics_t stats;
-            stats.link_planner(&dirt);
-            stats.link_criterion(&checker);
-            stats.repeat_data_gathering(60);  //take out for vis
-            std::string full_filename = output_dir + std::to_string(i) + ".txt";
-            std::ofstream fout;
-            
-            fout.open(full_filename);
-            fout<<stats.serialize() << std::endl;
-            fout.close();
+        std::vector<trajectory_t> trajs;
+        trajs.push_back(dirt_query.solution_traj);
+        sim -> visualize_trajectories(trajs);
 
-            dirt_query.clear_outputs();
-            dirt.reset();
-        }
+        // if (dirt_query.solution_traj.size() > 0)
+        // {
+        //     const unsigned playback_loops = 100;
+
+        //     for (int i = 0; i < playback_loops; i++)
+        //     {
+        //         sim -> execute_traj(plant,dirt_query.solution_traj);
+        //     }
+        // }
+
+       
+
+        // Sleep for a really long time
+        sleep(1000000);
     }
     catch(const prx_assert_t& e)
 	{

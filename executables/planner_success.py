@@ -47,7 +47,8 @@ def analyze_success_rates(exps_dir,planner,max_time=10,num_trials=10):
 	return out_x, out_y
 
 if __name__ == "__main__":
-	exps_dir = "/Users/aravind/Code/ML4KP-devel/out/results_segway/"
+	# exps_dir = "/Users/aravind/Code/ML4KP-devel/out/1003/"
+	exps_dir = "/Users/aravind/Code/ML4KP-devel/out/results_segway_warehouse"
 	planners = []
 	for item in sorted(os.listdir(exps_dir)):
 		if item[0] != '.': planners.append(item)

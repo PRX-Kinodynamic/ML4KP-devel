@@ -56,14 +56,14 @@ if __name__ == "__main__":
 
     if run:
         sr = ScriptRunner()
-        landmarks = np.loadtxt(os.environ["DIRTMP_PATH"]+"out/landmarks.txt",delimiter=",")
+        landmarks = np.loadtxt(os.environ["DIRTMP_PATH"]+"out/1026/"+mode+"/landmarks.txt",delimiter=",")
         counter = 0
         for i in tqdm(range(landmarks.shape[0])):
-            for j in range(i+1,landmarks.shape[0]):
-                if i != j and np.linalg.norm(landmarks[i]-landmarks[j]) >= 5.0:
-                    sr.run(landmarks[i],landmarks[j],mode,counter)
-                    counter += 1
-                    time.sleep(0.1)
+            s = landmarks[i,:5]
+            g = landmarks[i,5:]
+            sr.run(s,g,mode,counter)
+            counter += 1
+            time.sleep(0.1)
     else:
         environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/landmark.yaml"
         with open(environment_file, 'r') as f:

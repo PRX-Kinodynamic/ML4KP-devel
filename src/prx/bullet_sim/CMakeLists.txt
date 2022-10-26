@@ -4,7 +4,7 @@
 # Right now it has to be done manually, the following code needs to be 
 # corrected to use the bullet submodule.
 option(USE_BULLET_SUBMODULE "Check submodules during build" OFF)
-if(APPLE OR USE_BULLET_SUBMODULE)
+if(USE_BULLET_SUBMODULE)
 	# According to this thread: https://pybullet.org/Bullet/phpBB3/viewtopic.php?f=9&t=9443&p=31841&hilit=link+mac#p31841
 	# is bad idea to link bullet... aka don't link a linkable library 
 	# instead add bullet as part of your sources

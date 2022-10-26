@@ -24,4 +24,4 @@ goal_state:  [ 3.3333,8.5000,0.0000,0.0000,0.0000]
 
 debug: false
 
-output_dir: "1026/"
+output_dir: "1026/medium/"

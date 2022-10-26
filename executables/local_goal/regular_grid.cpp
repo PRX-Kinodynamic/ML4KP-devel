@@ -18,25 +18,6 @@
 
 using namespace prx;
 
-std::vector<std::vector<double>> read_comma_separated_file(const std::string& path, const std::string& delimiter = ",")
-{
-    std::ifstream file(path);
-    std::vector<std::vector<double>> dataset;
-    std::string line = "";
-    while (std::getline(file, line))
-    {
-        std::vector<double> row;
-        std::stringstream ss(line);
-        std::string cell;
-        while (std::getline(ss, cell, delimiter[0]))
-        {
-            row.push_back(std::stod(cell));
-        }
-        dataset.push_back(row);
-    }
-    return dataset;
-}
-
 int main(int argc, char* argv[])
 {
     try
@@ -59,6 +40,7 @@ int main(int argc, char* argv[])
         init_random(random_seed);
 
         auto obstacles = load_obstacles(params["environment"].as<std::string>());
+        param_loader obstacles_file(params["environment"].as<std::string>());
         auto obstacle_list = obstacles.second;
         auto obstacle_names = obstacles.first;
 
@@ -180,8 +162,11 @@ int main(int argc, char* argv[])
         std::string landmarks_file = out_path + "landmarks.txt";
         fout.open(landmarks_file);
         
-        auto landmarks = read_comma_separated_file(output_path + "landmarks.txt");
-        std::cout << landmarks.size() << std::endl;
+        // auto landmarks = read_comma_separated_file(output_path + "landmarks.txt");
+        // std::cout << landmarks.size() << std::endl;
+
+        PRX_DEBUG_PRINT
+        auto landmarks = obstacles_file["/environment/landmarks"].as<std::vector<std::vector<double>>>();
 
         for (int i = 0; i < landmarks.size(); i++)
         {

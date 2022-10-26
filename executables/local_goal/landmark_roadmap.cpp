@@ -2,9 +2,7 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/utilities/learned_modules/learned_controller.hpp"
-// #include "prx/utilities/learned_modules/reachable_region_roadmap.hpp"
 #include "prx/utilities/learned_modules/ground_truth_roadmap.hpp"
-#include "prx/utilities/learned_modules/access_roadmap.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/planning/planners/dirt.hpp"
 #include "prx/planning/planner_statistics.hpp"
@@ -12,7 +10,35 @@
 
 #include <fstream>
 
+#ifdef __cpp_lib_filesystem
+    #include <filesystem.hpp>
+    namespace fs = std::filesystem;
+#else
+    #define _LIBCPP_NO_EXPERIMENTAL_DEPRECATION_WARNING_FILESYSTEM
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;
+#endif
+
 using namespace prx;
+
+std::vector<std::vector<double>> read_comma_separated_file(const std::string& path, const std::string& delimiter = ",")
+{
+    std::ifstream file(path);
+    std::vector<std::vector<double>> dataset;
+    std::string line = "";
+    while (std::getline(file, line))
+    {
+        std::vector<double> row;
+        std::stringstream ss(line);
+        std::string cell;
+        while (std::getline(ss, cell, delimiter[0]))
+        {
+            row.push_back(std::stod(cell));
+        }
+        dataset.push_back(row);
+    }
+    return dataset;
+}
 
 int main(int argc, char* argv[])
 {
@@ -88,24 +114,41 @@ int main(int argc, char* argv[])
         dirt_spec.blossom_number = 1;
         dirt_spec.use_pruning = false;
 
-        std::vector<double> s = params["/plant/start_state"].as<std::vector<double>>();
-        std::vector<double> g = params["/plant/goal_state"].as<std::vector<double>>();
+        std::vector<double> s = params["start_state"].as<std::vector<double>>();
+        std::vector<double> g = params["goal_state"].as<std::vector<double>>();
         ss -> copy_point_from_vector(dirt_query.start_state,s);
         ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
-        // reachable_region_roadmap_t rrr(params);
+        std::ofstream fout;
+        std::string output_dir = params["output_dir"].as<std::string>();
+        std::string out_path = output_path + output_dir;
+        
         ground_truth_roadmap_t rrr;
+        
+        std::string points_fname = out_path + "points.txt";
+        std::vector<std::vector<double>> dataset = read_comma_separated_file(points_fname);
+        space_point_t current = ss -> make_point();
+        for (auto row: dataset)
+        {
+            ss -> copy_point_from_vector(current,row);
+            rrr.verification_set.push_back(ss -> clone_point(current));
+        }
+
+        int verification_set_size = rrr.verification_set.size();
+        // std::cout << "Verification set size: " << verification_set_size << std::endl;
         int max_failures = params["num_failures"].as<int>();
         rrr.set_max_failures(max_failures);
-        // access_roadmap_t rrr(params);
-        double roadmap_time_taken = 0.0;
         timer.reset();
-
-        rrr.build_roadmap(dirt_query, dirt_spec, controller);
-        std::cout << "Finished constructing the graph." << std::endl;
-
-        roadmap_time_taken += timer.measure();
-        std::cout << "Time taken for roadmap construction: " << roadmap_time_taken << std::endl;
+        rrr.build_roadmap(dirt_query, dirt_spec, controller, false);
+        double time_taken = timer.measure_reset();
+        // rrr.run_verification(dirt_query, dirt_spec, controller);
+        // std::cout << "Verification set size: " << rrr.verification_set.size() << std::endl;
+        
+        // If the output directory does not exist, create it
+        if (!fs::exists(out_path))
+        {
+            fs::create_directory(out_path);
+        }
 
         ss -> copy_point_from_vector(dirt_query.start_state,s);
         auto s_nn = rrr.add_start(dirt_query.start_state, dirt_spec, dirt_query, controller);
@@ -114,17 +157,14 @@ int main(int argc, char* argv[])
         ss -> copy_point_from_vector(dirt_query.start_state,s);
         ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
-        // /*
+        std::cout << ss -> print_point(dirt_query.start_state) << std::endl;
+        std::cout << ss -> print_point(dirt_query.goal_state) << std::endl;
+
         prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
         
         std::cout << "Nearest accessible node to start: " << s_nn << std::endl;
 
         auto path = rrr.get_shortest_path(s_nn,g_nn);
-        for (auto v : path)
-        {
-            std::cout << v << " ";
-        }
-        std::cout << std::endl;
 
         dirt_query_t controller_query(ss,cs);
         controller_query.start_state = ss -> make_point();
@@ -148,8 +188,6 @@ int main(int argc, char* argv[])
                 std::vector<double> local_goal;
 
                 auto nn = rrr.get_best_node(s,controller_query, dirt_spec, controller);
-                // auto nn = rrr.get_best_node(s,dirt_spec);
-                // int nn = -1;
                 if (nn == -1)
                 {
                     local_goal.clear();
@@ -189,11 +227,8 @@ int main(int argc, char* argv[])
                 default_expand(s,plans,trajs,bn,sg,dirt_spec.sample_plan,dirt_spec.propagate);
             }
         };
-        // */
 
-        std::ofstream fout;
-
-        // condition_check_t checker("time",1);
+        
         condition_check_t checker("solutions",1);
         for (int i = 0; i < 1; i++)
         {
@@ -201,45 +236,56 @@ int main(int argc, char* argv[])
             dirt.preprocess();
             dirt.link_and_setup_query(&dirt_query);
 
-            // planner_statistics_t stats;
-            // stats.link_planner(&dirt);
-            // stats.link_criterion(&checker);
-            // stats.repeat_data_gathering(10);
-
-            // std::string full_filename = output_path+params["output_dir"].as<std::string>()+std::to_string(i)+".txt";
-			// fout.open(full_filename);
-			// fout<<stats.serialize() << std::endl;
-			// fout.close();
-
             dirt.resolve_query(&checker);
             dirt.fulfill_query();
+
+            std::string full_filename = out_path + "solution.txt";
+            fout.open(full_filename);
+            fout << dirt.get_current_solution() << std::endl;
+            fout << dirt.get_current_solution_time() << std::endl;
+            fout << dirt.get_current_solution_iters() << std::endl;
+            fout << dirt.get_branching_factor() << std::endl;
+            // fout << 1.0 * rrr.verification_set.size() / verification_set_size << std::endl;
+            fout << time_taken << std::endl;
+            fout.close();
+
+            std::string traj_fname = out_path + "traj.txt";
+            fout.open(traj_fname);
+            fout << dirt_query.solution_traj.print() << std::endl;
+            fout.close();
 
             three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
             std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
             vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
             vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, dirt_query.solution_traj, body_name, ss);
             vis_group -> add_animation(dirt_query.solution_traj, ss, dirt_query.start_state);
-            vis_group -> output_html("output.html");
+            vis_group -> output_html(output_dir+"output.html");
             delete vis_group;
 
             dirt_query.clear_outputs();
             dirt.reset();
         }
 
-        
-
         // Output graph to file.
-        std::string vertex_fname = output_path + "vertices.txt";
-        std::string edge_fname = output_path + "/edges.txt";
+        std::string vertex_fname = out_path + "vertices.txt";
+        std::string edge_fname = out_path + "edges.txt";
+        std::string unverified_fname = out_path + "unverified.txt";
 
         std::ofstream vertex_file(vertex_fname);
         std::ofstream edge_file(edge_fname);
+        std::ofstream unverified_file(unverified_fname);
 
         vertex_file << rrr.print_vertices(ss) << std::endl;
         edge_file << rrr.print_edges() << std::endl;
 
+        for (auto s : rrr.verification_set)
+        {
+            unverified_file << ss -> print_point(s) << std::endl;
+        }
+
         vertex_file.close();
         edge_file.close();
+        unverified_file.close();
     }
     catch(const prx_assert_t& e) 
     {

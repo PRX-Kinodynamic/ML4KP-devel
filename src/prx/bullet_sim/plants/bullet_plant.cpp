@@ -36,7 +36,8 @@ namespace prx
 		std::cout << "Purging all non inital states..." << std::endl;
 		for (int i = 1; i < lastSavedId; i++)
 		{
-			sim->removeStateFromMemory(i);
+			prx_warn("For some reason, removeStateFromMemory does not work!");
+			// sim->removeStateFromMemory(i);
 		} 
 		lastSavedId=0;
 		std::cout << "Finished purging." << std::endl;
