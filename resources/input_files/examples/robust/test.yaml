@@ -1,9 +1,10 @@
-random_seed: 210896
+# random_seed: 210896
+random_seed: 101193
 simulation_step: 0.1
 
 plant: !file "plants/two_dim_pt.yaml"
 environment: "environments/empty.yaml"
 
-goal_region_radius: 0.5
+goal_region_radius: 1.0
 
 output_dir: "robust/"

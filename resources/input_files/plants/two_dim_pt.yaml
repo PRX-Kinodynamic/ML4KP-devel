@@ -2,8 +2,8 @@ name: "2D_Point"
 path: "2D_Point"
 
 # Assume simple_obstacle environment
-start_state: [-5.0, 0.0]
-goal_state:  [ 5.0,0.0]
+start_state: [-8.0, 0.0]
+goal_state:  [ 8.0,0.0]
 
 min_steps: 1
 max_steps: 20

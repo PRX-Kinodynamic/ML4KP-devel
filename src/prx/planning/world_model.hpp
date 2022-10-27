@@ -23,7 +23,6 @@ namespace prx
 		explicit world_model_t(const std::vector<system_ptr_t>& all_systems,const std::vector<std::shared_ptr<movable_object_t>>& all_obstacles)
 			: simulator_t(plant_type::ANALYTICAL)
 		{
-			PRX_DEBUG_PRINT
 
 			collision_groups = std::make_shared<collision_checker_t>();
 			

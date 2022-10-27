@@ -1,6 +1,5 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/planning/world_model.hpp"
-#include "prx/planning/planners/rrt.hpp"
 #include "prx/simulation/plants/plants.hpp"
 
 #include "prx/utilities/general/param_loader.hpp"
@@ -41,9 +40,10 @@ int main(int argc, char* argv[])
     auto ss = sg -> get_state_space();
     auto cs = sg -> get_control_space();
 
-    rrt_t rrt("rrt");
-    rrt_specification_t rrt_spec(context.first,context.second);
+    particle_rrt_t rrt("rrt");
+    particle_rrt_specification_t rrt_spec(context.first,context.second);
 
+    /*
     rrt_spec.propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj)
     {
         // Add some noise to the plan's control.
@@ -105,4 +105,5 @@ int main(int argc, char* argv[])
     }
 
     std::cout << "Success rate: " << end_states.size() / (double)num_rollouts << std::endl;
+    */
 }

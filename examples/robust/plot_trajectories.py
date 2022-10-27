@@ -4,15 +4,15 @@ from matplotlib.patches import Circle
 import os 
 
 out_dir = os.environ["DIRTMP_PATH"] + "out/robust/"
-goal_state = [5., 0.]
-goal_radius = 0.5
+goal_state = [8., 0.]
+goal_radius = 1.0
 
 plt.figure(figsize=(8, 8))
-plt.xlim(-8,8)
-plt.ylim(-8,8)
+plt.xlim(-10,10)
+plt.ylim(-10,10)
 
 # Plot goal
-plt.gca().add_patch(Circle(goal_state, goal_radius, color='g', alpha=0.5))
+plt.gca().add_patch(Circle(goal_state, goal_radius, color='g', alpha=0.75))
 
 end_points = []
 
