@@ -4,6 +4,7 @@
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/planning/condition_check.hpp"
+#include "prx/planning/planner_functions/planner_functions.hpp"
 
 namespace prx
 {
@@ -12,10 +13,6 @@ namespace prx
      * @authors Zakary Littlefield
      */
     
-	// TODO: Don't like this being here and not in planner_functions... ideas?
-	typedef std::function<bool (space_point_t&)> goal_check_t;
-
-
 	class planner_specification_t
 	{
 	public:

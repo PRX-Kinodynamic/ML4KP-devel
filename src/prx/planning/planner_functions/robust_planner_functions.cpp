@@ -2,12 +2,12 @@
 
 namespace prx
 {
-    void default_propagate_particles(std::vector<space_point_t>& pts, plan_t& plan, std::vector<trajectory_t*>& trajs, std::shared_ptr<system_group_t> sg)
+    void default_propagate_particles(std::vector<space_point_t>& pts, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, std::shared_ptr<system_group_t> sg)
     {
         for (unsigned i = 0; i < pts.size(); ++i)
         {
             trajs.push_back(new trajectory_t(sg->get_state_space()));
-            sg->propagate(pts[i], plan, *trajs[i]);
+            sg -> propagate(pts[i], *plans[i], *trajs[i]);
         }
     }
 
@@ -25,5 +25,15 @@ namespace prx
     void default_compute_reachable_set(const std::vector<space_point_t>& pts, reachable_set_t& rs, space_t* state_space)
     {
         prx_throw("Not implemented");
+    }
+
+    bool default_particles_goal_check(std::vector<space_point_t>& particles, goal_check_t goal_check)
+    {
+        for (unsigned i = 0; i < particles.size(); ++i)
+        {
+            if (!goal_check(particles[i]))
+                return false;
+        }
+        return true;
     }
 }

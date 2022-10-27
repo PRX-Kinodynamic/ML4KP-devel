@@ -8,6 +8,8 @@
 #include "prx/utilities/data_structures/convex_hull.hpp"
 #include "prx/planning/planners/particle_rrt.hpp"
 
+#include "prx/visualization/three_js_group.hpp"
+
 #include <fstream>
 
 using namespace prx;
@@ -43,8 +45,22 @@ int main(int argc, char* argv[])
     particle_rrt_t rrt("rrt");
     particle_rrt_specification_t rrt_spec(context.first,context.second);
 
-    /*
-    rrt_spec.propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj)
+    rrt_spec.propagate_particles = [sg](std::vector<space_point_t>& pts, std::vector<plan_t*> plans, std::vector<trajectory_t*>& trajs)
+    {
+        for (auto p = plans.begin(); p != plans.end(); ++p)
+        {
+            for (auto c = (*p) -> begin(); c != (*p) -> end(); ++c)
+            {
+                for (unsigned i = 0; i < c -> control -> get_dim(); ++i)
+                {
+                    c -> control -> at(i) += uniform_random(-0.1,0.1);
+                }
+            }
+        }
+        default_propagate_particles(pts,plans,trajs,sg);
+    };
+
+     rrt_spec.propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj)
     {
         // Add some noise to the plan's control.
         for (auto p = plan.begin(); p != plan.end(); ++p)
@@ -61,7 +77,8 @@ int main(int argc, char* argv[])
     rrt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
     rrt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
 
-    rrt_query_t rrt_query(ss, cs);
+    particle_rrt_query_t rrt_query(ss, cs);
+    rrt_query.get_visualization = true;
     rrt_query.start_state = ss -> make_point();
     rrt_query.goal_state  = ss -> make_point();
 
@@ -74,9 +91,15 @@ int main(int argc, char* argv[])
     rrt.preprocess();
     rrt.link_and_setup_query(&rrt_query);
 
-    condition_check_t checker("time", 5.0);
+    condition_check_t checker("time", 10.0);
     rrt.resolve_query(&checker);
     rrt.fulfill_query(); 
+
+    three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
+    std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+    vis_group -> add_vis_infos(info_geometry_t::LINE, rrt_query.tree_visualization, body_name, ss);
+    vis_group -> output_html("output.html");
+    delete vis_group;
 
     std::vector<trajectory_t*> trajectories;
     const int num_rollouts = 100;
@@ -105,5 +128,4 @@ int main(int argc, char* argv[])
     }
 
     std::cout << "Success rate: " << end_states.size() / (double)num_rollouts << std::endl;
-    */
 }

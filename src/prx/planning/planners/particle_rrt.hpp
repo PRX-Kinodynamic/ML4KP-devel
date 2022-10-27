@@ -40,14 +40,25 @@ namespace prx
         public:
         particle_rrt_specification_t(std::shared_ptr<system_group_t> sg,std::shared_ptr<collision_group_t> cg) : rrt_specification_t(sg,cg)
         {
-            prx_throw("Not implemented yet");
+            num_particles = 10;
+
+            propagate_particles = [&](std::vector<space_point_t>& pts, std::vector<plan_t*> plans, std::vector<trajectory_t*>& trajs)
+            {
+                default_propagate_particles(pts,plans,trajs, sg);
+            };
+
+            valid_particles = [&](const std::vector<space_point_t>& pts)
+            {
+                return default_valid_particles(pts, sg->get_state_space(), cg);
+            };
         }
 
         virtual ~particle_rrt_specification_t(){}
 
+        unsigned num_particles;
+
         propagate_particles_t propagate_particles;
         valid_particles_t valid_particles;
-        compute_reachable_set_t compute_reachable_set;
     };
 
     class particle_rrt_query_t : public rrt_query_t
@@ -55,7 +66,10 @@ namespace prx
         public:
         particle_rrt_query_t(space_t* state_space, space_t* control_space) : rrt_query_t(state_space,control_space)
         {
-            prx_throw("Not implemented yet");
+            goal_check_particles = [&](std::vector<space_point_t>& pts)
+            {
+                return default_particles_goal_check(pts,goal_check);
+            };
         }
 
         virtual ~particle_rrt_query_t(){}
@@ -74,7 +88,8 @@ namespace prx
 		virtual bool _preprocess() override;
 		virtual bool _link_and_setup_query(planner_query_t* query) override;
 		virtual void _resolve_query(condition_check_t* condition) override;
-		virtual void _reset() override;
+		virtual void _fulfill_query() override;
+        virtual void _reset() override;
 
         virtual void update_goal(node_index_t node_index) override final;
 
@@ -83,7 +98,8 @@ namespace prx
 
         propagate_particles_t propagate_particles;
         valid_particles_t valid_particles;
-        compute_reachable_set_t compute_reachable_set;
+
+        int num_particles;
 
         private:
         tree_t nominal_tree;

@@ -6,8 +6,7 @@
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 
-#include "prx/utilities/data_structures/convex_hull.hpp"
-#include "prx/planning/planners/particle_rrt.hpp"
+#include "prx/visualization/three_js_group.hpp"
 
 #include <fstream>
 
@@ -62,6 +61,7 @@ int main(int argc, char* argv[])
     rrt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
 
     rrt_query_t rrt_query(ss, cs);
+    rrt_query.get_visualization = true;
     rrt_query.start_state = ss -> make_point();
     rrt_query.goal_state  = ss -> make_point();
 
@@ -77,6 +77,15 @@ int main(int argc, char* argv[])
     condition_check_t checker("time", 5.0);
     rrt.resolve_query(&checker);
     rrt.fulfill_query(); 
+
+    three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
+    std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+    vis_group -> add_vis_infos(info_geometry_t::LINE, rrt_query.tree_visualization, body_name, ss);
+    vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, rrt_query.solution_traj, body_name, ss);
+    vis_group -> add_animation(rrt_query.solution_traj, ss, rrt_query.start_state);
+
+    vis_group -> output_html("output.html");
+    delete vis_group;
 
     std::vector<trajectory_t*> trajectories;
     const int num_rollouts = 100;

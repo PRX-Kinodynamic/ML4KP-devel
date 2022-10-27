@@ -19,7 +19,8 @@ namespace prx
 
         propagate_particles = rrt_spec->propagate_particles;
         valid_particles = rrt_spec->valid_particles;
-        compute_reachable_set = rrt_spec->compute_reachable_set;
+
+        num_particles = rrt_spec->num_particles;
     }
     bool particle_rrt_t::_preprocess()
     {
@@ -48,7 +49,10 @@ namespace prx
             // Add start state to particle tree.
             node_index_t start_particle_vertex = tree.add_vertex<particle_rrt_node_t,particle_rrt_edge_t>();
             auto start_particle_node = tree.get_vertex_as<particle_rrt_node_t>(start_particle_vertex);
-            start_particle_node->points.push_back(state_space->clone_point(rrt_query->start_state));
+            for (int i = 0; i < num_particles; i++)
+            {
+                start_particle_node->points.push_back(state_space->clone_point(rrt_query->start_state));
+            }
 
             // Add the mapping.
             nominal_to_particle[start_vertex] = start_particle_vertex;
@@ -70,7 +74,6 @@ namespace prx
             // Sample a node.
             sample_state(sample_point);
             // Find the nearest node.
-            // TODO: Implement the actual particle RRT selection.
             auto closest_node = static_cast<rrt_node_t*>(metric->single_query(sample_point));
             node_index_t closest_node_index = closest_node->get_index();
             node_index_t closest_particle_index = nominal_to_particle[closest_node_index];
@@ -78,6 +81,7 @@ namespace prx
 
             std::vector<plan_t*> plans;
 			std::vector<trajectory_t*> trajs;
+            std::vector<plan_t*> particle_plans;
             std::vector<trajectory_t*> particle_trajs;
             expand(closest_node->point, plans, trajs, 1, false);
             plan_t plan(*plans.front());
@@ -86,26 +90,35 @@ namespace prx
             new_cost = closest_node->cost_to_come + edge_cost;
             if (goal_vertex == start_vertex || new_cost < current_solution)
             {
+                for (int i = 0; i < num_particles; i++)
+                {
+                    particle_plans.push_back(new plan_t(plan));
+                }
                 // Now propagate the particles;
-                propagate_particles(closest_particle_node->points, plan, particle_trajs);
+                propagate_particles(closest_particle_node->points, particle_plans, particle_trajs);
 
+                // TODO: Change this to traj check?
                 std::vector<space_point_t> end_states;
                 for (auto t : particle_trajs)
                 {
-                    end_states.push_back(t->back());
+                    end_states.push_back(state_space->clone_point(t->back()));
                 }
 
                 if (valid_particles(end_states))
                 {
                     auto nominal_node_index = nominal_tree.add_vertex<rrt_node_t,rrt_edge_t>();
                     auto nominal_node = nominal_tree.get_vertex_as<rrt_node_t>(nominal_node_index);
-                    nominal_node->point = state_space->clone_point(sample_point);
+                    nominal_node->point = state_space->clone_point(traj.back());
                     nominal_node->cost_to_come = new_cost;
                     metric->add_node(nominal_node.get());
 
                     auto particle_node_index = tree.add_vertex<particle_rrt_node_t,particle_rrt_edge_t>();
                     auto particle_node = tree.get_vertex_as<particle_rrt_node_t>(particle_node_index);
-                    particle_node->points = end_states;
+                    // particle_node->points = end_states;
+                    for (auto s : end_states)
+                    {
+                        particle_node->points.push_back(state_space->clone_point(s));
+                    }   
 
                     edge_index_t edge_index = nominal_tree.add_edge(closest_node_index, nominal_node_index);
                     auto edge = nominal_tree.get_edge_as<rrt_edge_t>(edge_index);
@@ -149,6 +162,43 @@ namespace prx
 				std::cout<< " iter:" << current_solution_iters;
 				std::cout<< " nodes:" << metric->get_nr_nodes() <<std::endl;
                 // TODO: Implement BNB
+            }
+        }
+    }
+
+    void particle_rrt_t::_fulfill_query()
+    {
+        if (goal_vertex != start_vertex)
+        {
+            rrt_query->solution_cost = nominal_tree.get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come;
+            std::deque<node_index_t> node_indices;
+            node_index_t current_index = goal_vertex;
+            while (current_index != start_vertex)
+            {
+                node_indices.push_front(current_index);
+                current_index = nominal_tree[current_index]->get_parent();
+            }
+
+            rrt_query->solution_plan = *nominal_tree.get_edge_as<rrt_edge_t>(nominal_tree[node_indices[0]]->get_parent_edge())->plan;
+			rrt_query->solution_traj = *nominal_tree.get_edge_as<rrt_edge_t>(nominal_tree[node_indices[0]]->get_parent_edge())->traj;
+
+			for(int i=1;i<node_indices.size();i++)
+			{
+				rrt_query->solution_traj.resize(rrt_query->solution_traj.size()-1);
+				rrt_query->solution_plan += *nominal_tree.get_edge_as<rrt_edge_t>(nominal_tree[node_indices[i]]->get_parent_edge())->plan;
+				rrt_query->solution_traj += *nominal_tree.get_edge_as<rrt_edge_t>(nominal_tree[node_indices[i]]->get_parent_edge())->traj;
+			}
+        }
+        else
+        {
+            rrt_query->solution_cost = 0;
+        }
+        if (rrt_query->get_visualization)
+        {
+            auto iter_bounds = nominal_tree.edges();
+            for (auto iter = iter_bounds.first; iter != iter_bounds.second; ++iter)
+            {
+                rrt_query->tree_visualization.push_back(*nominal_tree.get_edge_as<rrt_edge_t>((*iter)->get_index())->traj);
             }
         }
     }
