@@ -21,13 +21,13 @@ namespace prx
 		v=theta=0;
 		control_memory = {&v,&theta};
 		input_control_space = new space_t("ER",control_memory,"VTheta");
-		input_control_space->set_bounds({0.3,-3.14},{1,3.14});
+		input_control_space->set_bounds({0.0,-3.14},{1,3.14});
 
 		dx=dy=0;
 		derivative_memory = {&dx,&dy};
 		derivative_space = new space_t("EE",derivative_memory,"XdotYdot");
 
-		const std::string shape = "cylinder";
+		const std::string shape = "sphere";
 		const double tdpt_size = 0.5;
 		if(shape=="sphere")
 		{

@@ -164,8 +164,8 @@ namespace prx
 
         for(const space_point_t& st : *this)
         {
-            out << counter << ": [" << state_space->print_point(st, precision)
-                    << "]" << std::endl;
+            out << state_space->print_point(st, precision)
+                    << std::endl;
             counter++;
         }
         return out.str();
