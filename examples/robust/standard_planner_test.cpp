@@ -109,7 +109,19 @@ int main(int argc, char* argv[])
     {
         std::string filename = out_path + output_dir + "trajectory_" + std::to_string(i) + ".txt";
         std::ofstream out(filename);
-        out << trajectories[i] -> print();
+        for (unsigned j = 0; j < trajectories[i]->size(); j++)
+        {
+            ss -> copy_point(end_state, trajectories[i]->at(j));
+            if (rrt_spec.valid_state(end_state))
+            {
+                out << ss -> print_point(end_state, 5) << std::endl;
+            }
+            else
+            {
+                out << ss -> print_point(end_state, 5) << std::endl;
+                break;
+            }
+        }
         out.close();
     }
 
