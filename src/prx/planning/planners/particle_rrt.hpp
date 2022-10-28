@@ -51,6 +51,10 @@ namespace prx
             {
                 return default_valid_particles(pts, sg->get_state_space(), cg);
             };
+            valid_trajectories = [&](const std::vector<trajectory_t*>& trajs)
+            {
+                return default_valid_trajectories(trajs, valid_check);
+            };
         }
 
         virtual ~particle_rrt_specification_t(){}
@@ -59,6 +63,7 @@ namespace prx
 
         propagate_particles_t propagate_particles;
         valid_particles_t valid_particles;
+        valid_trajectories_t valid_trajectories;
     };
 
     class particle_rrt_query_t : public rrt_query_t
@@ -98,6 +103,7 @@ namespace prx
 
         propagate_particles_t propagate_particles;
         valid_particles_t valid_particles;
+        valid_trajectories_t valid_trajectories;
 
         int num_particles;
 

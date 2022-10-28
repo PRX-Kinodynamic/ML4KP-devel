@@ -22,6 +22,16 @@ namespace prx
         return true;
     }
 
+    bool default_valid_trajectories(const std::vector<trajectory_t*>& trajs, valid_trajectory_t valid_traj)
+    {
+        for (unsigned i = 0; i < trajs.size(); ++i)
+        {
+            if (!valid_traj(*trajs[i]))
+                return false;
+        }
+        return true;
+    }
+
     void default_compute_reachable_set(const std::vector<space_point_t>& pts, reachable_set_t& rs, space_t* state_space)
     {
         prx_throw("Not implemented");

@@ -37,3 +37,12 @@ environment:
         config:
           position: [10.25,0, 0]
           orientation: [0, 0, 0, 1]
+      -
+        name: center
+        collision_geometry: 
+          type: box
+          material: red 
+          dims: [5,5,.2]
+        config:
+          position: [0,0,0]
+          orientation: [0, 0, 0, 1]

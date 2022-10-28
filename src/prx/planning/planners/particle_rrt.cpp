@@ -19,6 +19,7 @@ namespace prx
 
         propagate_particles = rrt_spec->propagate_particles;
         valid_particles = rrt_spec->valid_particles;
+        valid_trajectories = rrt_spec->valid_trajectories;
 
         num_particles = rrt_spec->num_particles;
     }
@@ -97,14 +98,7 @@ namespace prx
                 // Now propagate the particles;
                 propagate_particles(closest_particle_node->points, particle_plans, particle_trajs);
 
-                // TODO: Change this to traj check?
-                std::vector<space_point_t> end_states;
-                for (auto t : particle_trajs)
-                {
-                    end_states.push_back(state_space->clone_point(t->back()));
-                }
-
-                if (valid_particles(end_states))
+                if (valid_trajectories(particle_trajs))
                 {
                     auto nominal_node_index = nominal_tree.add_vertex<rrt_node_t,rrt_edge_t>();
                     auto nominal_node = nominal_tree.get_vertex_as<rrt_node_t>(nominal_node_index);
@@ -114,11 +108,10 @@ namespace prx
 
                     auto particle_node_index = tree.add_vertex<particle_rrt_node_t,particle_rrt_edge_t>();
                     auto particle_node = tree.get_vertex_as<particle_rrt_node_t>(particle_node_index);
-                    // particle_node->points = end_states;
-                    for (auto s : end_states)
+                    for (auto t : particle_trajs)
                     {
-                        particle_node->points.push_back(state_space->clone_point(s));
-                    }   
+                        particle_node->points.push_back(state_space->clone_point(t->back()));
+                    }
 
                     edge_index_t edge_index = nominal_tree.add_edge(closest_node_index, nominal_node_index);
                     auto edge = nominal_tree.get_edge_as<rrt_edge_t>(edge_index);

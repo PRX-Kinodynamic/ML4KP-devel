@@ -1,15 +1,31 @@
 import numpy as np 
 import matplotlib.pyplot as plt
-from matplotlib.patches import Circle
+from matplotlib.patches import Circle, Rectangle
 import os 
+import yaml
 
 out_dir = os.environ["DIRTMP_PATH"] + "out/robust/"
 goal_state = [8., 0.]
 goal_radius = 1.0
+environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/empty.yaml"
+
+with open(environment_file, 'r') as stream:
+    try:
+        env_params = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        print(exc)
+obstacles = env_params["environment"]["geometries"]
 
 plt.figure(figsize=(8, 8))
-plt.xlim(-10,10)
-plt.ylim(-10,10)
+plt.xlim(-11,11)
+plt.ylim(-11,11)
+
+for obstacle in obstacles:
+    box_center = obstacle["config"]["position"][:2]
+    box_dims = obstacle["collision_geometry"]["dims"][:2]
+    rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
+    linewidth=1,edgecolor='r',facecolor='r')
+    plt.gca().add_patch(rect)
 
 # Plot goal
 plt.gca().add_patch(Circle(goal_state, goal_radius, color='g', alpha=0.75))
