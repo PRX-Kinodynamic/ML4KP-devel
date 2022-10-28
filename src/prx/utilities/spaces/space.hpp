@@ -231,7 +231,7 @@ namespace prx
 		 * @param point3 Resulting point
 		 * 
 		 */
-		// void point_addition(const space_point_t& pt1, const space_point_t& pt2, const space_point_t& pt_res);
+		// void add_points(const space_point_t& pt1, const space_point_t& pt2, const space_point_t& pt_res);
 
 		bool equal_points(const space_point_t& point1,const space_point_t& point2);
 

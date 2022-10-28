@@ -15,7 +15,7 @@ namespace prx
     {
         rrt_t::_link_and_setup_spec(spec);
         rrt_spec = dynamic_cast<particle_rrt_specification_t*>(spec);
-        prx_assert(rrt_spec!=nullptr,"particleRT received an incorrect specification.");
+        prx_assert(rrt_spec!=nullptr,"particleRRT received an incorrect specification.");
 
         propagate_particles = rrt_spec->propagate_particles;
         valid_particles = rrt_spec->valid_particles;
@@ -32,7 +32,7 @@ namespace prx
     bool particle_rrt_t::_link_and_setup_query(planner_query_t* query)
     {
         rrt_query = dynamic_cast<particle_rrt_query_t*>(query);
-        prx_assert(rrt_query!=nullptr,"particleRT received an incorrect query type.");
+        prx_assert(rrt_query!=nullptr,"particleRRT received an incorrect query type.");
         if(tree.num_vertices()==0 || !state_space->equal_points(tree.get_vertex_as<rrt_node_t>(start_vertex)->point,rrt_query->start_state) )
         {
             //clear existing data structure
@@ -102,7 +102,13 @@ namespace prx
                 {
                     auto nominal_node_index = nominal_tree.add_vertex<rrt_node_t,rrt_edge_t>();
                     auto nominal_node = nominal_tree.get_vertex_as<rrt_node_t>(nominal_node_index);
-                    nominal_node->point = state_space->clone_point(traj.back());
+                    
+                    nominal_node->point = state_space -> make_point();
+                    for (int i = 0; i < num_particles; i++)
+                    {
+                        nominal_node->point->add_multiply(1.0/num_particles, particle_trajs[i]->back());
+                    }
+
                     nominal_node->cost_to_come = new_cost;
                     metric->add_node(nominal_node.get());
 
@@ -173,13 +179,10 @@ namespace prx
             }
 
             rrt_query->solution_plan = *nominal_tree.get_edge_as<rrt_edge_t>(nominal_tree[node_indices[0]]->get_parent_edge())->plan;
-			rrt_query->solution_traj = *nominal_tree.get_edge_as<rrt_edge_t>(nominal_tree[node_indices[0]]->get_parent_edge())->traj;
 
 			for(int i=1;i<node_indices.size();i++)
 			{
-				rrt_query->solution_traj.resize(rrt_query->solution_traj.size()-1);
 				rrt_query->solution_plan += *nominal_tree.get_edge_as<rrt_edge_t>(nominal_tree[node_indices[i]]->get_parent_edge())->plan;
-				rrt_query->solution_traj += *nominal_tree.get_edge_as<rrt_edge_t>(nominal_tree[node_indices[i]]->get_parent_edge())->traj;
 			}
         }
         else

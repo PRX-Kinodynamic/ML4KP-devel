@@ -191,15 +191,15 @@ namespace prx
 		return true;
 	}
 
-	// void point_addition(const space_point_t& pt1, const space_point_t& pt2, const space_point_t& pt_res)
+	// void space_t::add_points(const space_point_t& pt1, const space_point_t& pt2, const space_point_t& pt_res)
 	// {
-	// 	prx_assert(pt1->parent->space_name==space_name,"Point and space have different names: "<<point->parent->space_name<<" and "<<space_name);
-	// 	prx_assert(pt2->parent->space_name==space_name,"Point and space have different names: "<<point->parent->space_name<<" and "<<space_name);
-	// 	prx_assert(pt_res->parent->space_name==space_name,"Point and space have different names: "<<point->parent->space_name<<" and "<<space_name);
+	// 	prx_assert(pt1->parent->space_name==space_name,"Point and space have different names: "<<pt1->parent->space_name<<" and "<<space_name);
+	// 	prx_assert(pt2->parent->space_name==space_name,"Point and space have different names: "<<pt2->parent->space_name<<" and "<<space_name);
+	// 	prx_assert(pt_res->parent->space_name==space_name,"Point and space have different names: "<<pt_res->parent->space_name<<" and "<<space_name);
 		
 	// 	for(unsigned i=0;i<dimension;++i)
 	// 	{
-	// 		pt_res -> memory[i] = pt1 -> memory
+	// 		pt_res -> memory[i] = pt1 -> memory[i] + pt2 -> memory[i];
 	// 	}
 	// }
 
