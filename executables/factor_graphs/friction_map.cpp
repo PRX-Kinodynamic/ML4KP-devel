@@ -11,12 +11,12 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigen>
 
-#include "prx/gtdynamics/defs.hpp"
-#include "prx/gtdynamics/utilities/fg_logger.hpp"
-#include "prx/gtdynamics/planning/trajectory_fg.hpp"
-#include "prx/gtdynamics/planning/trajectory_optimizer.hpp"
-#include "prx/gtdynamics/utilities/utilities_functions.hpp"
-#include "prx/gtdynamics/planning/initialization_trajs_fg.hpp"
+#include "prx/factor_graphs/defs.hpp"
+#include "prx/factor_graphs/utilities/fg_logger.hpp"
+#include "prx/factor_graphs/planning/trajectory_fg.hpp"
+#include "prx/factor_graphs/planning/trajectory_optimizer.hpp"
+#include "prx/factor_graphs/utilities/utilities_functions.hpp"
+#include "prx/factor_graphs/planning/initialization_trajs_fg.hpp"
 
 #include "prx/planning/loaders/planner_loader.hpp"
 #include "prx/planning/planner_statistics.hpp"
@@ -89,138 +89,140 @@ int main(int argc, char* argv[])
   //     files[entry.path().stem()] += 1;
   //   }
   // }
-
+  // std::vector<std::string> plan_files;
+  // std::vector<std::string> traj_files;
   std::vector<plan_t> plans{};
-  PRX_DEBUG_PRINT
-
-  // plan_t plan(cs);
-  std::ifstream ifs_plan("mecanum_analytical_plan.txt");
-  std::string line;
-  auto aux_cs = cs->make_point();
-  double dt;
-  plans.emplace_back(cs);
-  while (std::getline(ifs_plan, line))
+  std::vector<trajectory_t> trajs{};
+  const int total_files = params["total_files"].as<int>();
+  for (int i = 0; i < total_files; ++i)
   {
-    PRX_DEBUG_PRINT
-    if (line.size() < 2)
-    {
-      PRX_DEBUG_PRINT
-      plans.emplace_back(cs);
-    }
-    else
-    {
-      const char sep = ' ';
-      std::istringstream iss(line);
-      std::string token;
-      int i = 0;
-      std::string ctrl = "";
-      while (std::getline(iss, token, sep))
-      {
-        if (i == 0)
-        {
-          // time_prev = time;
-          dt = std::stod(token);
-          // dt = time - time_prev;
-        }
-        else
-        {
-          (*aux_cs)[i - 1] = std::stod(token);
-        }
-        i++;
-      }
-      // std::cout << "ctrl:" << ctrl << std::endl;
-      // cs->copy_point_from_string(aux, ctrl, sep);
-      plans.back().copy_onto_back(aux_cs, dt);
-    }
+    std::string plan_file{ out_path + "friction_maps/omnirobot_mecanum_fixed_goals_plan_" + std::to_string(i) +
+                           ".txt" };
+    std::string traj_file{ out_path + "friction_maps/omnirobot_mecanum_fixed_goals_traj_" + std::to_string(i) +
+                           ".txt" };
+
+    plans.emplace_back(cs);
+    trajs.emplace_back(ss);
+
+    plans.back().from_file(plan_file);
+    trajs.back().from_file(traj_file);
   }
+
+  // std::ifstream ifs_plan("mecanum_analytical_plan.txt");
+  // std::string line;
+  // auto aux_cs = cs->make_point();
+  // double dt;
+  // plans.emplace_back(cs);
+  // while (std::getline(ifs_plan, line))
+  // {
+  //   PRX_DEBUG_PRINT
+  //   if (line.size() < 2)
+  //   {
+  //     PRX_DEBUG_PRINT
+  //     plans.emplace_back(cs);
+  //   }
+  //   else
+  //   {
+  //     const char sep = ' ';
+  //     std::istringstream iss(line);
+  //     std::string token;
+  //     int i = 0;
+  //     std::string ctrl = "";
+  //     while (std::getline(iss, token, sep))
+  //     {
+  //       if (i == 0)
+  //       {
+  //         // time_prev = time;
+  //         dt = std::stod(token);
+  //         // dt = time - time_prev;
+  //       }
+  //       else
+  //       {
+  //         (*aux_cs)[i - 1] = std::stod(token);
+  //       }
+  //       i++;
+  //     }
+  //     // std::cout << "ctrl:" << ctrl << std::endl;
+  //     // cs->copy_point_from_string(aux, ctrl, sep);
+  //     plans.back().copy_onto_back(aux_cs, dt);
+  //   }
+  // }
   // sg->propagate(start_state, plan, solution_traj);
 
-  std::vector<trajectory_t> trajs{};
+  // std::vector<trajectory_t> trajs{};
 
   // trajs.emplace_back(ss);
-  std::ifstream ifs_traj("mecanum_analytical_trajs.txt");
-  auto aux_ss = ss->make_point();
+  // std::ifstream ifs_traj("mecanum_analytical_trajs.txt");
+  // auto aux_ss = ss->make_point();
 
-  trajs.emplace_back(ss);
-  while (std::getline(ifs_traj, line))
-  {
-    if (line.size() < 2)
-    {
-      trajs.emplace_back(ss);
-    }
-    else
-    {
-      const char sep = ' ';
-      std::istringstream iss(line);
-      std::string token;
-      int i = 0;
-      std::string state = "";
-      while (std::getline(iss, token, sep))
-      {
-        if (i == 0)
-        {
-          // time_prev = time;
-          dt = std::stod(token);
-          // dt = time - time_prev;
-        }
-        else if (i < 4)
-        {
-          state += token + sep;
-        }
-        i++;
-      }
-      // std::cout << "state:" << state << std::endl;
-      ss->copy_point_from_string(aux_ss, state, sep);
-      for (int i = 0; i < ss->get_dimension(); ++i)
-      {
-        (*aux_ss)[i] += uniform_random(-0.1, 0.1);
-      }
-      trajs.back().copy_onto_back(aux_ss);
-    }
-  }
+  // trajs.emplace_back(ss);
+  // while (std::getline(ifs_traj, line))
+  // {
+  //   if (line.size() < 2)
+  //   {
+  //     trajs.emplace_back(ss);
+  //   }
+  //   else
+  //   {
+  //     const char sep = ' ';
+  //     std::istringstream iss(line);
+  //     std::string token;
+  //     int i = 0;
+  //     std::string state = "";
+  //     while (std::getline(iss, token, sep))
+  //     {
+  //       if (i == 0)
+  //       {
+  //         // time_prev = time;
+  //         dt = std::stod(token);
+  //         // dt = time - time_prev;
+  //       }
+  //       else if (i < 4)
+  //       {
+  //         state += token + sep;
+  //       }
+  //       i++;
+  //     }
+  //     // std::cout << "state:" << state << std::endl;
+  //     ss->copy_point_from_string(aux_ss, state, sep);
+  //     for (int i = 0; i < ss->get_dimension(); ++i)
+  //     {
+  //       (*aux_ss)[i] += uniform_random(-0.1, 0.1);
+  //     }
+  //     trajs.back().copy_onto_back(aux_ss);
+  //   }
+  // }
   // sg->propagate(start_state, plan, solution_traj);
   // return solution_traj;
-  auto dm = gtsam::noiseModel::Isotropic::Sigma(ss_dim, 1e0);
+  auto dm = gtsam::noiseModel::Isotropic::Sigma(ss_dim, 1);
 
   std::function<std::string(int, int)> gen_symbol_str = [](const int x, const int y) { return "param_symbol"; };
 
-  const double scale{ 20 };
+  const double scale{ params["scale"].as<double>() };
 
   std::set<std::pair<int, int>> grid;
   gtsam::NonlinearFactorGraph graph;
   int f_count = 0;
+  int increment = 100;
   for (int i = 0; i < trajs.size(); ++i)
   {
     trajectory_t traj{ trajs[i] };
     plan_t plan{ plans[i] };
-    // std::tie(traj, plan) = prx::unzip(traj_plan);
-    // if (f_count > 20)
-    // {
-    //   break;
-    // }
-    // f_count++;
-    // // std::cout << f.first << "\t" << f.second << std::endl;
-    // if (f.second == 2)
-    // {
-    //   auto traj = file_to_traj(path + f.first + ".txt");
-    //   auto plan = file_to_plan(path + f.first + ".csg");
 
-    // double t = 0;
-
-    for (unsigned i = 0; i < traj.size(); ++i)
+    increment = uniform_int_random(100, 250);
+    for (unsigned i = 0; i < traj.size(); i += increment)
     {
-      if (i < traj.size() - 1)
+      if (i < traj.size() - increment - 1)
       {
-        const int x = scale * traj[i]->to_vector()[0];
-        const int y = scale * traj[i]->to_vector()[1];
+        const int x = scale * traj[i]->vector<>()[0];
+        const int y = scale * traj[i]->vector<>()[1];
         grid.emplace(x, y);
-        graph.add(propagation_factor_1_t(dm, traj[i]->to_vector(), traj[i + 1]->to_vector(),
-                                         plan.at(i).control->to_vector(),
-                                         Eigen::Vector<double, 1>{ plan.at(i).duration },
+        graph.add(propagation_factor_1_t(dm, traj[i]->vector<>(), traj[i + increment]->vector<>(),
+                                         plan[i].control->vector<>(),
+                                         Eigen::Vector<double, 1>{ plan[i].duration * increment },
                                          symbol_factory_t::create_symbol(gen_symbol_str(x, y), x, y), sg));
       }
     }
-    // }
   }
   for (auto e : grid)
   {
@@ -242,12 +244,13 @@ int main(int argc, char* argv[])
   lm_params.setMaxIterations(params["max_iterations"].as<int>());
   lm_params.setRelativeErrorTol(1e-9);
   lm_params.setAbsoluteErrorTol(1e-9);
+  lm_params.setLogFile(out_path + "friction_maps/lm_params_log.txt");
 
   gtsam::Values init_vals;
 
   for (auto e : grid)
   {
-    Eigen::VectorXd param_guess = Eigen::VectorXd::Ones(ps->get_dimension()) * uniform_random(0.5, 1.5);
+    Eigen::VectorXd param_guess = Eigen::VectorXd::Ones(ps->get_dimension());  // * uniform_random(0.5, 1.5);
     const int x{ std::get<0>(e) };
     const int y{ std::get<1>(e) };
     // std::cout << x << " " << y << std::endl;
@@ -261,7 +264,7 @@ int main(int argc, char* argv[])
   auto results = optimizer.optimize();
 
   std::ofstream friction_map_file;
-  friction_map_file.open("friction_map.txt");
+  friction_map_file.open(out_path + "friction_maps/friction_map.txt");
 
   for (auto e : grid)
   {

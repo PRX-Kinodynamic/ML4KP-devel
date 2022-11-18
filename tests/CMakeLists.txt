@@ -33,7 +33,7 @@ endforeach()
 
 
 
-if(BUILD_FOR_GTDYNAMICS)
+if(BUILD_FOR_FACTOR_GRAPHS)
 	file(GLOB_RECURSE TESTS_FILES_GTDYN
 		${PROJECT_SOURCE_DIR}/tests/gtdynamics/*.cpp
 	)
@@ -46,7 +46,7 @@ if(BUILD_FOR_GTDYNAMICS)
 		target_link_libraries(${fname} ${PROJECT_NAME}_visualization )
 		target_link_libraries(${fname} ${PROJECT_NAME}_simulation )
 		target_link_libraries(${fname} ${PROJECT_NAME}_planning )
-		target_link_libraries(${fname} ${PROJECT_NAME}_gtdynamics )
+		target_link_libraries(${fname} ${PROJECT_NAME}_factor_graphs )
 
 		if(BUILD_FOR_BULLET)
 			target_link_libraries(${fname} ${PROJECT_NAME}_bullet_sim )
@@ -55,4 +55,4 @@ if(BUILD_FOR_GTDYNAMICS)
 		add_test(NAME ${fname}_test COMMAND ${fname})
 	endforeach()
 
-endif(BUILD_FOR_GTDYNAMICS)
+endif(BUILD_FOR_FACTOR_GRAPHS)

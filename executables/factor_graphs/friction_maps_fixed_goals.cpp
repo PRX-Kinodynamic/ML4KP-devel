@@ -21,13 +21,15 @@
 
 #include "prx/visualization/three_js_group.hpp"
 
-#include "prx/gtdynamics/defs.hpp"
-#include "prx/gtdynamics/utilities/fg_logger.hpp"
-#include "prx/gtdynamics/planning/trajectory_fg.hpp"
-#include "prx/gtdynamics/planning/trajectory_optimizer.hpp"
-#include "prx/gtdynamics/utilities/utilities_functions.hpp"
-#include "prx/gtdynamics/planning/initialization_trajs_fg.hpp"
+#include "prx/factor_graphs/defs.hpp"
+#include "prx/factor_graphs/utilities/fg_logger.hpp"
+#include "prx/factor_graphs/planning/trajectory_fg.hpp"
+#include "prx/factor_graphs/planning/trajectory_optimizer.hpp"
+#include "prx/factor_graphs/utilities/utilities_functions.hpp"
+#include "prx/factor_graphs/planning/initialization_trajs_fg.hpp"
+
 #include "prx/simulation/controllers/custom_controller.hpp"
+#include "prx/simulation/plants/types/noisy_plant.hpp"
 
 namespace fs = std::filesystem;
 using namespace prx;
@@ -47,7 +49,8 @@ int main(int argc, char* argv[])
   auto obstacle_list = obstacles.second;
   auto obstacle_names = obstacles.first;
 
-  auto plant = system_factory_t::create_system(plant_name, plant_path);
+  auto system = system_factory_t::create_system(plant_name, plant_path);
+  auto plant = std::dynamic_pointer_cast<plant_t>(system);
   world_model_t world_model({ plant }, {});
   world_model.create_context("context", { plant_name }, {});
   PRX_DEBUG_PRINT
@@ -62,6 +65,7 @@ int main(int argc, char* argv[])
   const auto ps_dim = ps->get_dimension();
   prx_assert(ps != nullptr, "Parameter space is null!!!");
 
+  PRX_DEBUG_PRINT
   ss->set_bounds({ 0.0, 0.0, -M_PI }, { 10.0, 10.0, M_PI });
 
   auto cs_lb = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
@@ -76,50 +80,67 @@ int main(int argc, char* argv[])
   // ofs_frmap.open("mecanum_friction_map_gt.txt", std::ofstream::trunc);
   ofs_frmap.open("mecanum_friction_map_fixed_goals.txt", std::ofstream::trunc);
   auto friction_map_gt = [&](const double x, const double y) {
-    const double friction{ x / 10.0 + y / 10.0 };
+    // const double friction{ x / 10.0 + y / 10.0 };
+    double friction = 1;
+    if (y < 4)
+    {
+      friction = 2 * y / 4;
+    }
+    else if (y < 6)
+    {
+      friction = 2;
+    }
+    else
+    {
+      friction = 2 * (10 - y) / 4;
+    }
     return friction;
   };
 
+  PRX_DEBUG_PRINT
   bool write_to_file = false;
   world_model.world_change_function = [&]() {
+    const double x{ ss->at(0) };
+    const double y{ ss->at(1) };
+    const double th{ ss->at(2) };
+    const double l_a{ 0.11 };
+    const double l_b{ 0.10 };
+    const double x1{ x + l_a * std::cos(th) - l_b * std::sin(th) };
+    const double y1{ y + l_a * std::sin(th) + l_b * std::cos(th) };
+    const double x2{ x + (-l_a) * std::cos(th) - l_b * std::sin(th) };
+    const double y2{ y + (-l_a) * std::sin(th) + l_b * std::cos(th) };
+    const double x3{ x + l_a * std::cos(th) - (-l_b) * std::sin(th) };
+    const double y3{ y + l_a * std::sin(th) + (-l_b) * std::cos(th) };
+    const double x4{ x + (-l_a) * std::cos(th) - (-l_b) * std::sin(th) };
+    const double y4{ y + (-l_a) * std::sin(th) + (-l_b) * std::cos(th) };
+    Eigen::Vector4d friction_params{ friction_map_gt(x1, y1), friction_map_gt(x2, y2), friction_map_gt(x3, y3),
+                                     friction_map_gt(x4, y4) };
+    ps->copy_from(friction_params);
+
     if (write_to_file)
     {
-      const double x{ ss->at(0) };
-      const double y{ ss->at(1) };
-      const double th{ ss->at(2) };
-      const double l_a{ 0.11 };
-      const double l_b{ 0.10 };
-      const double x1{ x + l_a * std::cos(th) - l_b * std::sin(th) };
-      const double y1{ y + l_a * std::sin(th) + l_b * std::cos(th) };
-      const double x2{ x + (-l_a) * std::cos(th) - l_b * std::sin(th) };
-      const double y2{ y + (-l_a) * std::sin(th) + l_b * std::cos(th) };
-      const double x3{ x + l_a * std::cos(th) - (-l_b) * std::sin(th) };
-      const double y3{ y + l_a * std::sin(th) + (-l_b) * std::cos(th) };
-      const double x4{ x + (-l_a) * std::cos(th) - (-l_b) * std::sin(th) };
-      const double y4{ y + (-l_a) * std::sin(th) + (-l_b) * std::cos(th) };
-      Eigen::Vector4d friction_params{ friction_map_gt(x1, y1), friction_map_gt(x2, y2), friction_map_gt(x3, y3),
-                                       friction_map_gt(x4, y4) };
-      ps->copy_from_vector(friction_params);
-
       ofs_frmap << x1 << " " << y1 << " " << friction_params[0] << std::endl;
       ofs_frmap << x2 << " " << y2 << " " << friction_params[1] << std::endl;
       ofs_frmap << x3 << " " << y3 << " " << friction_params[2] << std::endl;
       ofs_frmap << x4 << " " << y4 << " " << friction_params[3] << std::endl;
     }
-    else
-    {
-      ps->copy_from_vector({ 1, 1, 1, 1 });
-    }
+    // else
+    // {
+    //   ps->copy_from({ 1, 1, 1, 1 });
+    // }
   };
 
-  std::shared_ptr<custom_controller_t> controller = std::make_shared<custom_controller_t>(plant, "custom_ctrl");
-  controller->custom_control_function = [](const space_point_t& goal, space_point_t& control) {
-
-  };
-
+  // for (double i = 0; i < 10; i += 0.01)
+  // {
+  //   for (double j = 0; j < 10; j += 0.01)
+  //   {
+  //     ss->copy_from(std::vector{ i, j, 0.0 });
+  //     world_model.world_change_function();
+  //   }
+  // }
+  // return 0;
   condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());
 
-  const int num_trajs{ params["num_trajs"].as<int>() };
   std::vector<std::vector<double>> goals = { { 1, 1, 0 }, { 9, 9, 0 }, { 9, 1, 0 },
                                              { 1, 9, 0 }, { 5, 1, 0 }, { 5, 9, 0 } };
   for (int i = 0; i < goals.size(); ++i)
@@ -137,35 +158,104 @@ int main(int argc, char* argv[])
   const double l_b = .10;
   const double l_ab = l_a + l_b;
 
-  Eigen::Matrix4d inverse;
-  inverse << -1.0 / (4.0 * l_ab), 1.0 / (4.0 * l_ab), 1.0 / 4.0, 1.0 / (4.0 * l_ab), 1.0 / (4.0 * l_ab), -1.0 / 4.0,
-      -1.0 / (4.0 * l_ab), 1.0 / (4.0 * l_ab), -1.0 / 4.0, 1.0 / (4.0 * l_ab), 1.0 / (4.0 * l_ab), 1.0 / 4.0;
+  PRX_DEBUG_PRINT
+  Eigen::MatrixXd inverse(4, 3);
+  inverse << -1.0 / (4.0 * l_ab), 1.0 / (4.0 * l_ab), 1.0 / 4.0,  // no-lint
+      1.0 / (4.0 * l_ab), 1.0 / (4.0 * l_ab), -1.0 / 4.0,         // no-lint
+      -1.0 / (4.0 * l_ab), 1.0 / (4.0 * l_ab), -1.0 / 4.0,        // no-lint
+      1.0 / (4.0 * l_ab), 1.0 / (4.0 * l_ab), 1.0 / 4.0;          // no-lint
 
-  // clang-format off
-  omnibot_controller -> custom_control_function = [](const space_point_t& goal, space_point_t& control) 
+  Eigen::Vector3d current_state_vec;
+  const double frequency{ params["frequency"].as<double>() };
+  double curr_freq{ 0 };
+
+  auto n_plant = new prx::noisy_plant_t<prx::gaussian_noise_t>(plant, 0, 0.01);
+  auto n_ss = n_plant->get_state_space();
+
+  const bool noisy_plant{ params["noisy_plant"].as<bool>() };
+  const space_t* ss_curr;
+  if (noisy_plant)
   {
-    PRX_NOT_IMPLEMENTED
+    ss_curr = n_ss;
+  }
+  else
+  {
+    ss_curr = ss;
+  }
+  Eigen::Vector4d U{ Eigen::Vector4d::Zero() };
+  // clang-format off
+  omnibot_controller -> custom_control_function = [&](const space_point_t& goal, const space_point_t& control) 
+  {
+    curr_freq += simulation_step;
+    ss_curr -> copy_to(current_state_vec);
+    const Eigen::Vector3d xd{ goal->vector<>() - current_state_vec};
+    if (xd.norm() < 0.25)
+    {
+      // plan.append_onto_back(simulation_step);
+      // cs->copy(plan.back().control, Eigen::Vector4d::Zero());
+      U =  Eigen::Vector4d::Zero();
+    }
+    else if (curr_freq >= frequency)
+    {
+      U = (inverse * xd).normalized() * 128;
+    // std::cout << "goal: " << goal->vector<>().transpose() << std::endl;
+    // std::cout << "x: " << current_state_vec.transpose() << "\t|xd|: " << xd.norm() << std::endl;
+    // std::cout << "condition: " << checker << std::endl;
+    //   std::cout << "U: " << U.transpose() << std::endl;
+      // cs -> copy(control, U);
+      // plan.append_onto_back(simulation_step);
+      // cs->copy(plan.back().control, U);
+      curr_freq = 0;
+    }
+
+    cs -> copy(control, U);
+
+    // std::cout << "x: " << x << "\t"
   };
   // clang-format on
   trajectory_t traj_real(ss);
+  trajectory_t accum_traj(ss);
+  const int num_trajs{ params["num_trajs"].as<int>() };
+
+  PRX_DEBUG_PRINT
   for (int i = 0; i < num_trajs; ++i)
   {
-    write_to_file = true;
+    curr_freq = 0;
+    traj_real.clear();
+    checker.reset();
+    omnibot_controller->get_plan()->clear();
 
-    // for (auto state : rrt_query.solution_traj)
-    // {
-    //   ofs_trajs << simulation_step << " " << state << " " << i << "\n";
-    // }
-    sg->propagate(start_state, rrt_query.solution_plan, traj_real);
+    std::vector<double> goal_vec = goals[(i + 1) % goals.size()];
+    PRX_DEBUG_ITERABLE(goal_vec);
+    omnibot_controller->set_goal(goal_vec);
+    // write_to_file = true;
+
+    sg->propagate(start_state, omnibot_controller, checker, traj_real);
+    accum_traj += traj_real;
     for (auto state : traj_real)
     {
       ofs_traj_real << simulation_step << " " << state << " " << i << "\n";
     }
-    write_to_file = false;
+    // write_to_file = false;
 
-    ss->copy_point(start_state, traj_real);
+    traj_real.to_file(out_path + "friction_maps/omnirobot_mecanum_fixed_goals_traj_" + std::to_string(i) + ".txt");
+    omnibot_controller->get_plan()->to_file(out_path + "friction_maps/omnirobot_mecanum_fixed_goals_plan_" +
+                                            std::to_string(i) + ".txt");
 
-    ofs_trajs << "\n";
-    checker.reset();
+    ss->copy(start_state, goal_vec);
+
+    ofs_traj_real << "\n";
   }
+
+  std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+
+  three_js_group_t* vis_group = new three_js_group_t({ plant }, { obstacle_list });
+
+  vis_group->add_detailed_vis_infos(info_geometry_t::LINE, traj_real, body_name, ss);
+
+  vis_group->add_animation(traj_real, ss, start_state);
+
+  vis_group->output_html("fixed_goals.html");
+
+  delete vis_group;
 }

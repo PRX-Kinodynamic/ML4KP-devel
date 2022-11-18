@@ -4,7 +4,7 @@ file(GLOB EXECUTABLES_FACTOR_GRAPHS_FILES
 set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/factor_graphs )
 	
 
-if(BUILD_FOR_GTDYNAMICS)
+if(BUILD_FOR_FACTOR_GRAPHS)
 	find_package( OpenCV REQUIRED )
 	include_directories( ${OpenCV_INCLUDE_DIRS} )
 	# add_executable( DisplayImage DisplayImage.cpp )
@@ -17,7 +17,7 @@ if(BUILD_FOR_GTDYNAMICS)
 			${PROJECT_NAME}_simulation 
 			${PROJECT_NAME}_planning 	
 			${PROJECT_NAME}_visualization 
-			${PROJECT_NAME}_gtdynamics
+			${PROJECT_NAME}_factor_graphs
 			)
 		if(BUILD_FOR_BULLET)
 			target_link_libraries(${F_EXEC} ${PROJECT_NAME}_bullet_sim )
@@ -27,4 +27,4 @@ if(BUILD_FOR_GTDYNAMICS)
 		endif(BUILD_FOR_TORCH)
 		target_link_libraries( ${F_EXEC} ${OpenCV_LIBS} )
 	endforeach()
-endif(BUILD_FOR_GTDYNAMICS)
+endif(BUILD_FOR_FACTOR_GRAPHS)
