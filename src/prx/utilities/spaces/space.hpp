@@ -59,10 +59,13 @@ public:
     return memory[index];
   }
 
-  space_snapshot_t(const space_t* const in_parent, unsigned dim) : parent(in_parent)
-  {
-    memory.resize(dim);
-  }
+  space_snapshot_t(const space_t* const in_parent);
+  space_snapshot_t(const space_t* const in_parent, std::size_t dim);
+  //   : parent(in_parent), memory(dim), map_vector(memory.data(), dim, 1)
+  // {
+  //   // new (&map_vector) Eigen::Map<Eigen::MatrixXd>(memory.data(), dim, 1);
+  //   // memory.resize(dim);
+  // }
 
   /**
    * @brief Gets the dimensionality of the space snapshot.
@@ -159,14 +162,25 @@ public:
     return os;
   }
 
-  Eigen::VectorXd to_vector()
+  inline Eigen::Map<Eigen::VectorXd> vector() const
   {
-    Eigen::VectorXd v(memory.size());
-    for (int i = 0; i < memory.size(); ++i)
-    {
-      v[i] = memory[i];
-    }
-    return v;
+    return map_vector;
+  }
+
+  inline Eigen::Map<Eigen::VectorXd>& vector()
+  {
+    return map_vector;
+  }
+
+  template <typename Vector_t = Eigen::VectorXd>
+  inline Eigen::VectorXd vector()
+  {
+    // Eigen::VectorXd v(memory.size());
+    // for (int i = 0; i < memory.size(); ++i)
+    // {
+    //   v[i] = memory[i];
+    // }
+    return Vector_t{ map_vector };
   }
 
 protected:
@@ -174,13 +188,16 @@ protected:
 
   std::vector<double> memory;
 
+  Eigen::Map<Eigen::VectorXd> map_vector;
+  // Eigen::VectorXd map_vector;
+
   friend class space_t;
 
 private:
-  space_snapshot_t() : parent(nullptr)
-  {
-    memory.clear();
-  }
+  // space_snapshot_t() : parent(nullptr)
+  // {
+  //   memory.clear();
+  // }
 };
 
 typedef std::function<double(const space_point_t&, const space_point_t&)> distance_function_t;
@@ -211,6 +228,8 @@ public:
   space_t(const std::vector<const space_t*>& spaces);
 
   ~space_t();
+
+  inline virtual void operator()() const {};
 
   void set_bounds(const std::vector<double>& lower, const std::vector<double>& upper);
 
@@ -263,7 +282,7 @@ public:
    * @param point3 Resulting point
    *
    */
-  bool equal_points(const space_point_t& point1, const space_point_t& point2);
+  bool equal_points(const space_point_t& point1, const space_point_t& point2) const;
 
   /**
    * @brief      Copy current state to a Eigen::VectorXd.
@@ -271,13 +290,6 @@ public:
    * @param[in]  Vector to copy the current space memory to.
    */
   virtual void copy_to_vector(Eigen::VectorXd& _v) const;
-
-  /**
-   * @brief      Copy from a Eigen::VectorXd.
-   *
-   * @param[in]  Vector to copy from.
-   */
-  virtual void copy_from_vector(const Eigen::VectorXd& _v) const;
 
   /**
    * @brief      Copy from a std::vector<double>
@@ -292,16 +304,16 @@ public:
   void copy_to_vector(std::vector<double>& destination) const;
   void copy_from_vector(const std::vector<double>& source);
 
-  void copy_point_from_vector(const space_point_t& destination, const std::vector<double>& source) const;
-  void copy_point_from_vector(const space_point_t& destination, const Eigen::VectorXd& source) const;
+  void copy_point_from_vector(space_point_t& destination, const std::vector<double>& source) const;
+  void copy_point_from_vector(space_point_t& destination, const Eigen::VectorXd& source) const;
   void copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const;
   void copy_vector_from_point(Eigen::VectorXd& destination, const space_point_t& source) const;
 
   void copy_point_from_string(const space_point_t& destination, const std::string source, char sep = ' ') const;
 
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F, std::enable_if_t<(std::is_pointer<F>{} || prx::utils::is_shared_ptr<F>{}), bool> = true>
-  void copy(T& to, const F& from) const
+  template <typename T, typename F, std::enable_if_t<prx::utils::is_ptr_type<T>{}, bool> = true,
+            std::enable_if_t<prx::utils::is_ptr_type<F>{}, bool> = true>
+  void copy(const T& to, const F& from) const
   {
     prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
                                                                       << typeid(decltype(*from)).name() << " ( "
@@ -315,9 +327,9 @@ public:
     }
   }
 
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F, std::enable_if_t<!(std::is_pointer<F>{} || prx::utils::is_shared_ptr<F>{}), bool> = true>
-  void copy(T& to, const F& from) const
+  template <typename T, typename F, std::enable_if_t<prx::utils::is_ptr_type<T>{}, bool> = true,
+            std::enable_if_t<!prx::utils::is_ptr_type<F>{}, bool> = true>
+  void copy(const T& to, const F& from) const
   {
     prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
                                                                      << typeid(decltype(from)).name() << " ( "
@@ -325,14 +337,15 @@ public:
     prx_assert(to->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
                                                                     << typeid(decltype(*to)).name() << " ( "
                                                                     << to->size() << " )");
+
     for (int i = 0; i < from.size(); ++i)
     {
-      to->at(i) = from.at(i);
+      (*to)[i] = from[i];
     }
   }
 
-  template <typename T, std::enable_if_t<!(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F, std::enable_if_t<(std::is_pointer<F>{} || prx::utils::is_shared_ptr<F>{}), bool> = true>
+  template <typename T, typename F, std::enable_if_t<!prx::utils::is_ptr_type<T>{}, bool> = true,
+            std::enable_if_t<prx::utils::is_ptr_type<F>{}, bool> = true>
   void copy(T& to, const F& from) const
   {
     prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
@@ -343,31 +356,30 @@ public:
                                                                    << " )");
     for (int i = 0; i < from->size(); ++i)
     {
-      to.at(i) = from->at(i);
+      to[i] = (*from)[i];
     }
   }
 
-  template <typename T, std::enable_if_t<!(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F, std::enable_if_t<!(std::is_pointer<F>{} || prx::utils::is_shared_ptr<F>{}), bool> = true>
+  template <typename T, typename F, std::enable_if_t<!prx::utils::is_ptr_type<T>{}, bool> = true,
+            std::enable_if_t<!prx::utils::is_ptr_type<F>{}, bool> = true>
   void copy(T& to, const F& from) const
   {
-    prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                     << typeid(decltype(from)).name() << " ( "
-                                                                     << from.size() << " )");
     prx_assert(to.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
                                                                    << typeid(decltype(to)).name() << " ( " << to.size()
                                                                    << " )");
+    prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
+                                                                     << typeid(decltype(from)).name() << " ( "
+                                                                     << from.size() << " )");
     for (int i = 0; i < from.size(); ++i)
     {
-      to.at(i) = from.at(i);
+      to[i] = from[i];
     }
   }
 
   // Explicit std::initializer_list copy is needed due to the § 14.8.2.5/5 C++11 standard
   // (std::initializer_list is a non-deduced context for a template argument)
   // No need for [T=prx::space_point_t] since we know from is initializer_list
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F>
+  template <typename T, typename F, std::enable_if_t<prx::utils::is_ptr_type<T>{}, bool> = true>
   inline void copy(T& to, const std::initializer_list<F> from) const
   {
     prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
@@ -377,8 +389,8 @@ public:
     copy(to, aux_vector);
   }
 
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true>
-  void copy_from(const T& from)
+  template <typename T, std::enable_if_t<prx::utils::is_ptr_type<T>{}, bool> = true>
+  inline void copy_from(const T& from) const
   {
     prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
                                                                       << typeid(decltype(*from)).name() << " ( "
@@ -394,22 +406,39 @@ public:
     {
       *addresses[i] = from->at(i);
     }
+    this->operator()();
   }
 
-  template <typename T, std::enable_if_t<!std::is_pointer<T>{} && !prx::utils::is_shared_ptr<T>{}, bool> = true>
-  void copy_from(const T& from)
+  template <typename T>
+  inline void copy_from(const std::initializer_list<T>& from) const
   {
-    prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                      << typeid(decltype(from)).name() << " ( "
-                                                                      << from.size() << " )");
+    prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
+                                                                     << typeid(decltype(from)).name() << " ( "
+                                                                     << from.size() << " )");
+    std::vector<T> aux_vector = from;
+    copy_from(from);
+  }
+
+  template <typename T, std::enable_if_t<!prx::utils::is_ptr_type<T>{}, bool> = true>
+  inline void copy_from(const T& from) const
+  {
+    prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
+                                                                     << typeid(decltype(from)).name() << " ( "
+                                                                     << from.size() << " )");
+    // std::cout << " ";
     for (int i = 0; i < from.size(); ++i)
     {
-      *addresses[i] = from.at(i);
+      *addresses[i] = from[i];
+      // std::cout << *addresses[i] << " ";
     }
+    // std::cout << "A: " << (*addresses[0]) << " ";
+    // std::cout << (*this) << " ";
+    this->operator()();
+    // std::cout << (*this) << " ";
   }
 
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true>
-  void copy_to(T& to) const
+  template <typename T, std::enable_if_t<prx::utils::is_ptr_type<T>{}, bool> = true>
+  void copy_to(const T& to) const
   {
     prx_assert(to->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
                                                                     << typeid(decltype(*to)).name() << " ( "
@@ -421,23 +450,36 @@ public:
                  "Point is of space ( " << aux->parent->space_name << " ), but space is ( " << space_name << ").");
     }
 
+    this->operator()();
     for (int i = 0; i < to->size(); ++i)
     {
       to->at(i) = *addresses[i];
     }
   }
 
-  template <typename T, std::enable_if_t<!(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true>
+  template <typename T, std::enable_if_t<!prx::utils::is_ptr_type<T>{}, bool> = true>
   void copy_to(T& to) const
   {
     prx_assert(to.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
                                                                    << typeid(decltype(to)).name() << " ( " << to.size()
                                                                    << " )");
 
+    this->operator()();
     for (int i = 0; i < to.size(); ++i)
     {
-      to.at(i) = *addresses[i];
+      to[i] = *addresses[i];
     }
+  }
+
+  /**
+   * @brief      Copy from a Eigen::VectorXd.
+   *
+   * @param[in]  Vector to copy from.
+   */
+  virtual void copy_from_vector(const Eigen::VectorXd& _v)
+  {
+    PRX_DEPRECIATED;
+    copy_from(_v);
   }
 
   const inline std::size_t size() const
@@ -503,7 +545,7 @@ public:
 
   friend std::ostream& operator<<(std::ostream& os, const space_t& obj)
   {
-    os << obj.print_memory(3);
+    os << obj.print_memory(5);
     return os;
   }
 
@@ -613,12 +655,12 @@ public:
     return std::min((2 * PRX_PI) - std::fabs(a0 - a1), std::fabs(a0 - a1));
   }
 
-  topology_t topology_at(unsigned i)
+  topology_t topology_at(const std::size_t& i) const
   {
     return topology[i];
   };
 
-  void difference(space_point_t s0, space_point_t s1, space_point_t res)
+  void difference(const space_point_t& s0, const space_point_t& s1, const space_point_t& res) const
   {
     for (int i = 0; i < dimension; ++i)
     {

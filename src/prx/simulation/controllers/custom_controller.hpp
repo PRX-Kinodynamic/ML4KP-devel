@@ -10,26 +10,28 @@ class custom_controller_t : public controller_t
 {
 public:
   // template<class S>
-  custom_controller_t(std::shared_ptr<plant_t> plant, std::string name) : controller_t(plant, name), _plant(plant)
+  custom_controller_t(std::shared_ptr<plant_t> plant_in, std::string name) : controller_t(plant_in, name)
   {
-    x_goal = _plant->get_state_space()->make_point();
-    u_goal = _plant->get_control_space()->make_point();
+    control_pt = plant_in->get_control_space()->make_point();
   }
 
-  virtual ~custom_controller_t();
+  virtual ~custom_controller_t()
+  {
+  }
 
   virtual void compute_controls() override
   {
-    custom_control_function(x_goal, u_goal);
+    custom_control_function(goal, control_pt);
+    plant->get_control_space()->copy_from(control_pt);
+    plan->append_onto_back(simulation_step, true);
   }
 
-  std::function<void(const space_point_t&, space_point_t&)> custom_control_function =
-      [](const space_point_t& goal, space_point_t& control) { PRX_NOT_IMPLEMENTED };
+  std::function<void(const space_point_t&, const space_point_t&)> custom_control_function =
+      [](const space_point_t& goal, const space_point_t& control) { PRX_NOT_IMPLEMENTED };
 
 protected:
-  space_point_t x_goal;
-  space_point_t u_goal;
+  space_point_t control_pt;
 
-  std::shared_ptr<plant_t> _plant;
+  // std::shared_ptr<plant_t> _plant;
 };
 }  // namespace prx

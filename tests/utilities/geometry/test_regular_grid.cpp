@@ -7,7 +7,8 @@
 BOOST_AUTO_TEST_CASE(one_dim_simple_test)
 {
   const std::size_t DIM{ 1 };
-  prx::regular_grid_t<int, DIM> grid;
+  const std::vector<std::pair<double, double>> bounds{ std::make_pair(-10.0, 10.0) };
+  prx::regular_grid_t<int, DIM> grid(bounds, 20);
 
   const int expected_value{ 5 };
   const double cell{ 5.0 };
@@ -48,7 +49,8 @@ BOOST_AUTO_TEST_CASE(one_dim_mapping_test)
 BOOST_AUTO_TEST_CASE(one_dim_value_test)
 {
   const std::size_t DIM{ 1 };
-  prx::regular_grid_t<std::pair<int, double>, DIM> grid{};
+  const std::vector<std::pair<double, double>> bounds{ std::make_pair(-10.0, 10.0) };
+  prx::regular_grid_t<std::pair<int, double>, DIM> grid{ bounds, 20 };
 
   const std::pair<int, double> expected_value{ 3, M_PI };
   const double cell{ 5.0 };

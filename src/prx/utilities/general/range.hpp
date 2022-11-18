@@ -87,6 +87,10 @@ public:
 
     bool operator==(const range_iterator_t& other)
     {
+      // return other.m_ptr->_last->_current >=
+      //        m_ptr->_end;  // no-lint
+      // other.m_ptr->_current >= m_ptr->_last->_current;    // no-lint
+
       return m_ptr->_current == other.m_ptr->_current &&      // no-lint
              m_ptr->_increment == other.m_ptr->_increment &&  // no-lint
              m_ptr->_last == other.m_ptr->_last;

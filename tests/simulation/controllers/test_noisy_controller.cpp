@@ -7,6 +7,7 @@
 #include "prx/simulation/controllers/noisy_controller.hpp"
 #include "prx/simulation/plants/two_link_acrobot.hpp"
 #include "prx/simulation/plants/two_dimensional_point.hpp"
+
 template <typename T>
 void check(prx::system_ptr_t plant)
 {

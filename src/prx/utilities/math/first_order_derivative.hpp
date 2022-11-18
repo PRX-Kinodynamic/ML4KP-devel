@@ -9,6 +9,8 @@ namespace prx
 namespace math
 {
 // Based on: https://geometrictools.com/Documentation/FiniteDifferences.pdf
+
+// The error of the derivative is: O(h^{s-1}).
 using S = uint8_t;
 using I_min = int8_t;
 using D = int8_t;
@@ -21,7 +23,7 @@ struct first_order_derivative_table_t
   static constexpr approximation_row_t approximation_table(S s, I_min i_min)
   {
     // clang-format off
-  	//		  	     								   D  -4  -3  -2  -1   0   1   2   3   4
+  	//		  	     								                     D  -4  -3  -2  -1   0   1   2   3   4
     if (s == 2 && i_min ==  0) return std::make_tuple( 1,  0,  0,  0,  0, -1,  1,  0,  0,  0);
     if (s == 2 && i_min == -1) return std::make_tuple( 1,  0,  0,  0, -1,  1,  0,  0,  0,  0);
     // --------------------------------------------------------------------------------------
@@ -44,7 +46,7 @@ struct first_order_derivative_table_t
   // clang-format on
 };  // namespace math
 
-template <class Function, typename InputState, S Evaluations, I_min MinDifference>
+template <class Function, typename InputState, S Evaluations, I_min MinDifference = 0>
 class first_order_derivative_t
 {
   using Scalar = typename InputState::Scalar;
@@ -58,13 +60,18 @@ class first_order_derivative_t
 
 public:
   first_order_derivative_t() = delete;
-  first_order_derivative_t(const Function& _model, const double _h = 0.01)
+  // first_order_derivative_t(const double _h) : h(_h), epsilon_matrix(_h * epsilon_matrix_t::Identity())
+  // {
+  //   // Need to mark if model has been implemented...
+  // }
+
+  first_order_derivative_t(Function& _model, const double _h = 0.01)
     : model(_model), h(_h), epsilon_matrix(_h * epsilon_matrix_t::Identity())
   {
   }
-  output_matrix_t operator()(const InputState& state)
+
+  output_matrix_t operator()(const InputState& state) const
   {
-    // std::cout << "approximation_row( " << Evaluations << ", " << MinDifference << "):\t";
     const D d{ std::get<0>(approximation_row) };
     const N_i n1{ std::get<1>(approximation_row) };
     const N_i n2{ std::get<2>(approximation_row) };
@@ -80,37 +87,38 @@ public:
     output_matrix_t derivative{};
     for (int i = 0; i < NInputs; ++i)
     {
-      const InputState F1 = evaluate<n1, 1 - 5>(state, i, InputState::Zero());
-      const InputState F2 = evaluate<n2, 2 - 5>(state, i, F1);
-      const InputState F3 = evaluate<n3, 3 - 5>(state, i, F2);
-      const InputState F4 = evaluate<n4, 4 - 5>(state, i, F3);
-      const InputState F5 = evaluate<n5, 5 - 5>(state, i, F4);
-      const InputState F6 = evaluate<n6, 6 - 5>(state, i, F5);
-      const InputState F7 = evaluate<n7, 7 - 5>(state, i, F6);
-      const InputState F8 = evaluate<n8, 8 - 5>(state, i, F7);
-      const InputState F9 = evaluate<n9, 9 - 5>(state, i, F8);
+      const OutputState F1 = evaluate<n1, 1 - 5>(state, i, OutputState::Zero());
+      const OutputState F2 = evaluate<n2, 2 - 5>(state, i, F1);
+      const OutputState F3 = evaluate<n3, 3 - 5>(state, i, F2);
+      const OutputState F4 = evaluate<n4, 4 - 5>(state, i, F3);
+      const OutputState F5 = evaluate<n5, 5 - 5>(state, i, F4);
+      const OutputState F6 = evaluate<n6, 6 - 5>(state, i, F5);
+      const OutputState F7 = evaluate<n7, 7 - 5>(state, i, F6);
+      const OutputState F8 = evaluate<n8, 8 - 5>(state, i, F7);
+      const OutputState F9 = evaluate<n9, 9 - 5>(state, i, F8);
 
       derivative.col(i) = F9 / (d * h);
     }
     return derivative;
   }
 
+  Function model;
+
 private:
   static constexpr approximation_row_t approximation_row{ first_order_derivative_table_t::approximation_table(
       Evaluations, MinDifference) };
 
-  template <N_i n_i, int i, std::enable_if_t<(n_i != 0), bool> = true>
-  inline InputState evaluate(InputState input, int h_i, const InputState& AccumSum)
+  template <N_i n_i, int hi, std::enable_if_t<(n_i != 0), bool> = true>
+  inline OutputState evaluate(const InputState& input, const int col_i, const OutputState& AccumSum) const
   {
-    return AccumSum + n_i * model(input + i * epsilon_matrix.col(h_i));
+    return AccumSum + n_i * model(input + hi * epsilon_matrix.col(col_i));
   }
-  template <N_i n_i, int i, std::enable_if_t<(n_i == 0), bool> = true>
-  inline InputState evaluate(InputState input, int h_i, const InputState& AccumSum)
+  template <N_i n_i, int hi, std::enable_if_t<(n_i == 0), bool> = true>
+  inline OutputState evaluate(const InputState& input, const int col_i, const OutputState& AccumSum) const
   {
     return AccumSum;
   }
 
-  Function model;
   double h;
   epsilon_matrix_t epsilon_matrix;
 };

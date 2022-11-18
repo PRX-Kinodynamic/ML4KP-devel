@@ -16,10 +16,7 @@ public:
   using hash_function_t = range_hash_combine_t<std::array<int, dimension>, dimension>;
   using const_iterator = typename std::unordered_map<key_t, value_t, hash_function_t>::const_iterator;
 
-  regular_grid_t()
-  {
-    std::fill(lambda.begin(), lambda.end(), 1);
-  }
+  regular_grid_t() = delete;
   /**
    * @brief      Constructs a new instance of grid from bounds and size of grid
    *
@@ -30,7 +27,7 @@ public:
    * @tparam     Ts      Arithmetic types. Either one value or dimension total values
    */
   template <class... Ts, std::enable_if_t<(sizeof...(Ts) == 1), bool> = true>
-  regular_grid_t(const std::vector<std::pair<double, double>> bounds, Ts... divisions)
+  regular_grid_t(const std::vector<std::pair<double, double>> bounds, Ts... divisions) : _bounds(bounds)
   {
     prx_assert(bounds.size() == dimension, "Dimension must be: " << dimension << "; got: " << bounds.size());
     std::array<int, dimension> size{};
@@ -41,14 +38,14 @@ public:
   }
 
   template <class... Ts, std::enable_if_t<(sizeof...(Ts) > 1 && sizeof...(Ts) == dimension), bool> = true>
-  regular_grid_t(const std::vector<std::pair<double, double>> bounds, Ts... divisions)
+  regular_grid_t(const std::vector<std::pair<double, double>> bounds, Ts... divisions) : _bounds(bounds)
   {
     prx_assert(bounds.size() == dimension, "Dimension must be: " << dimension << "; got: " << bounds.size());
     std::array<int, dimension> size{ divisions... };
     compute_lambda(size, bounds);
   }
 
-  regular_grid_t(const regular_grid_t<value_t, dimension>& other)
+  regular_grid_t(const regular_grid_t<value_t, dimension>& other) : _bounds(other._bounds)
   {
     for (auto cell : other)
     {
@@ -208,7 +205,7 @@ public:
 
   // Get "real" coordinates corresponding to the map. Note that since multiple coordinates are mapped to the same key,
   // we cannot retrive the "original" value passed to the grid, only \textit{a} value associated to the key.
-  std::array<double, dimension> unmap(const key_t& key)
+  std::array<double, dimension> unmap(const key_t& key) const
   {
     std::array<double, dimension> raw_val{};
     for (int i = 0; i < dimension; ++i)
@@ -219,12 +216,14 @@ public:
   }
 
 private:
-  key_t mapping(std::array<double, dimension> raw_key)
+  const std::vector<std::pair<double, double>> _bounds;
+
+  key_t mapping(std::array<double, dimension> raw_key) const
   {
     std::array<int, dimension> key{};
     for (int i = 0; i < dimension; ++i)
     {
-      key[i] = lambda[i] * raw_key[i];
+      key[i] = lambda[i] * std::max(std::min(raw_key[i], _bounds[i].second), _bounds[i].first);
     }
     return key;
   }

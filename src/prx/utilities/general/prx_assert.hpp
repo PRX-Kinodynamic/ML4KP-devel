@@ -132,11 +132,15 @@ public:
   }
 };
 
+#define prx_static_assert(EXPRESSION, MESSAGE)                                                                         \
+  if (!(EXPRESSION))                                                                                                   \
+  {                                                                                                                    \
+    std::static_assert(#EXPRESSION, "[" << __PRETTY_FUNCTION__ << "] " << MESSAGE);                                    \
+  }
 #define prx_assert(EXPRESSION, MESSAGE)                                                                                \
   if (!(EXPRESSION))                                                                                                   \
   {                                                                                                                    \
-    throw prx::prx_assert_t(#EXPRESSION, __FILE__, __LINE__,                                                           \
-                            (prx::prx_assert_t::stream_t() << "[" << __PRETTY_FUNCTION__ << "] " << MESSAGE));         \
+    throw prx::prx_assert_t(#EXPRESSION, __FILE__, __LINE__, (prx::prx_assert_t::stream_t() << MESSAGE));              \
   }
 #define prx_throw(MESSAGE)                                                                                             \
   {                                                                                                                    \

@@ -14,9 +14,9 @@ BOOST_AUTO_TEST_CASE(paths_test)
 
 BOOST_AUTO_TEST_CASE(are_approx_equal_decimals_test)
 {
-  BOOST_CHECK((prx::are_approx_equal<double, double>(M_PI, PRX_PI, PRX_EPSILON)));
-  BOOST_CHECK((prx::are_approx_equal<double, float>(M_PI, PRX_PI, PRX_EPSILON)));
-  BOOST_CHECK((prx::are_approx_equal<double, int>(M_PI, 3, 0.2)));
+  BOOST_CHECK((prx::are_approx_equal<double>(M_PI, PRX_PI, PRX_EPSILON)));
+  BOOST_CHECK((prx::are_approx_equal<float>(M_PI, PRX_PI, PRX_EPSILON)));
+  BOOST_CHECK((prx::are_approx_equal<double>(M_PI, 3, 0.2)));
 }
 
 BOOST_AUTO_TEST_CASE(are_approx_equal_std_vector_test)

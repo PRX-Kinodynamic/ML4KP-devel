@@ -1,7 +1,7 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/planning/world_model.hpp"
 #include "prx/simulation/plants/plants.hpp"
-#include "prx/planning/condition_check.hpp"
+#include "prx/simulation/general/condition_check.hpp"
 #include "prx/visualization/three_js_group.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     ofs_frmap << x << " " << y << " " << friction_params.transpose() << std::endl;
   };
 
-  const int num_trajs{ 25 };
+  const int num_trajs{ 10 };
   auto cs_pt = cs->make_point();
   auto ss_pt = ss->make_point();
   for (int i = 0; i < num_trajs; ++i)

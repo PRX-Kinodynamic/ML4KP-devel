@@ -6,11 +6,18 @@
 
 namespace prx
 {
-space_snapshot_t::space_snapshot_t(const space_t* const in_parent) : parent(in_parent)
+space_snapshot_t::space_snapshot_t(const space_t* const in_parent)
+  : parent(in_parent)
+  , memory(in_parent->get_dimension())
+  // , map_vector(in_parent->get_dimension())
+  , map_vector(memory.data(), in_parent->get_dimension(), 1)
 {
-  memory.resize(in_parent->get_dimension());
+  // new (&map_vector) Eigen::Map<Eigen::MatrixXd>(memory.data(), in_parent->get_dimension(), 1);
+  // memory.resize(in_parent->get_dimension());
 }
-
+space_snapshot_t::space_snapshot_t(const space_t* const in_parent, std::size_t dim) : space_snapshot_t(in_parent)
+{
+}
 space_t::space_t(const std::string& topo, const std::vector<double*>& ads, const std::string& name)
 {
   owned_values = true;
@@ -70,35 +77,6 @@ space_t::space_t(const std::vector<const space_t*>& spaces)
   topology.clear();
   space_name = "";
 
-<<<<<<< HEAD
-		for(auto space : spaces)
-		{
-			if(space!=nullptr && space->addresses.size()!=0)
-			{
-				for(auto val : space->addresses)
-				{
-					addresses.push_back(val);
-				}
-				for(auto val : space->topology)
-				{
-					topology.push_back(val);
-				}
-				for(auto val : space->lower_bounds)
-				{
-					lower_bounds.push_back(val);
-				}
-				for(auto val : space->upper_bounds)
-				{
-					upper_bounds.push_back(val);
-				}
-				if( !space_name.empty() )
-					space_name += "|";
-				space_name += space->space_name;
-			}
-		}
-		dimension = addresses.size();
-	}
-=======
   for (auto space : spaces)
   {
     if (space != nullptr && space->addresses.size() != 0)
@@ -142,9 +120,7 @@ space_t::~space_t()
       delete d;
     }
   }
-  // PRX_DEBUG_PRINT
 }
->>>>>>> main
 
 void space_t::set_bounds(const std::vector<double>& lower, const std::vector<double>& upper)
 {
@@ -187,8 +163,6 @@ void space_t::point_union(const space_point_t& p1, const space_point_t& p2, cons
              "Points dimension must add to this space dimension: " << p1->get_dim() << " + " << p2->get_dim()
                                                                    << " != " << dimension);
 
-  // auto new_point = make_point();
-
   for (unsigned i = 0; i < p1->get_dim(); ++i)
   {
     pu->memory[i] = p1->memory[i];
@@ -198,7 +172,6 @@ void space_t::point_union(const space_point_t& p1, const space_point_t& p2, cons
   {
     pu->memory[p1->get_dim() + i] = p2->memory[i];
   }
-  // return new_point;
 }
 
 void space_t::split_point(const space_point_t& ps_to_split, const space_point_t& ps1, const space_point_t& ps2)
@@ -235,20 +208,6 @@ bool space_t::equal_points(const space_point_t& point1, const space_point_t& poi
   return true;
 }
 
-// void point_addition(const space_point_t& pt1, const space_point_t& pt2, const space_point_t& pt_res)
-// {
-// 	prx_assert(pt1->parent->space_name==space_name,"Point and space have different names:
-// "<<point->parent->space_name<<" and "<<space_name); 	prx_assert(pt2->parent->space_name==space_name,"Point and space
-// have different names: "<<point->parent->space_name<<" and "<<space_name);
-// 	prx_assert(pt_res->parent->space_name==space_name,"Point and space have different names:
-// "<<point->parent->space_name<<" and "<<space_name);
-
-// 	for(unsigned i=0;i<dimension;++i)
-// 	{
-// 		pt_res -> memory[i] = pt1 -> memory
-// 	}
-// }
-
 void space_t::copy_to_vector(Eigen::VectorXd& _v) const
 {
   prx_assert(_v.size() == dimension, "Vector and space must have the same dimensions.");
@@ -257,38 +216,6 @@ void space_t::copy_to_vector(Eigen::VectorXd& _v) const
     _v[i] = *addresses[i];
   }
 }
-
-<<<<<<< HEAD
-	// void space_t::copy_from_vector(const std::vector<double>& source) const
-	// {
-	// 	prx_assert(source.size() == dimension, "Vector and space must have the same dimensions.");
-	// 	for(unsigned i=0;i<dimension;++i)
-	// 	{
-	// 		// _v[i]=*addresses[i];
-	// 		*addresses[i] = source[i];
-	// 	}
-	// }
-=======
-void space_t::copy_from_vector(const Eigen::VectorXd& _v) const
-{
-  prx_assert(_v.size() == dimension, "Vector and space must have the same dimensions.");
-  for (unsigned i = 0; i < dimension; ++i)
-  {
-    // _v[i]=*addresses[i];
-    *addresses[i] = _v[i];
-  }
-}
->>>>>>> main
-
-// void space_t::copy_from_vector(const std::vector<double>& source) const
-// {
-// 	prx_assert(source.size() == dimension, "Vector and space must have the same dimensions.");
-// 	for(unsigned i=0;i<dimension;++i)
-// 	{
-// 		// _v[i]=*addresses[i];
-// 		*addresses[i] = source[i];
-// 	}
-// }
 
 void space_t::copy_to_point(const space_point_t& point) const
 {
@@ -343,7 +270,7 @@ void space_t::copy_from_vector(const std::vector<double>& source)
   }
 }
 
-void space_t::copy_point_from_vector(const space_point_t& destination, const std::vector<double>& source) const
+void space_t::copy_point_from_vector(space_point_t& destination, const std::vector<double>& source) const
 {
   prx_assert(destination->parent->space_name == space_name,
              "Point and space have different names: " << destination->parent->space_name << " and " << space_name);
@@ -356,28 +283,12 @@ void space_t::copy_point_from_vector(const space_point_t& destination, const std
   enforce_bounds(destination);
 }
 
-void space_t::copy_point_from_vector(const space_point_t& destination, Eigen::Ref<Eigen::VectorXd> source) const
+void space_t::copy_point_from_vector(space_point_t& destination, const Eigen::VectorXd& source) const
 {
-  prx_assert(destination->parent->dimension == source.size(),
-             "Point and vector have different sizes: " << destination->parent->dimension << " and " << source.size());
-  for (unsigned i = 0; i < dimension; ++i)
-  {
-    destination->memory[i] = source[i];
-  }
-  enforce_bounds(destination);
+  PRX_DEPRECIATED
+  copy(destination, source);
 }
 
-<<<<<<< HEAD
-	void space_t::copy_point_from_vector(const space_point_t& destination, const Eigen::VectorXd& source) const
-	{
-		prx_assert(destination->parent->dimension==source.size(),"Point and vector have different sizes: "<<destination->parent->dimension<<" and "<<source.size());
-		for(unsigned i=0;i<dimension;++i)
-		{
-			destination->memory[i]=source[i];
-		}
-		enforce_bounds(destination);
-	}
-=======
 void space_t::copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const
 {
   prx_assert(source->parent->space_name == space_name,
@@ -387,137 +298,29 @@ void space_t::copy_vector_from_point(std::vector<double>& destination, const spa
     destination.push_back(source->memory[i]);
   }
 }
->>>>>>> main
 
-void space_t::copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, const space_point_t& source) const
+void space_t::copy_vector_from_point(Eigen::VectorXd& destination, const space_point_t& source) const
 {
-  prx_assert(source->parent->space_name == space_name,
-             "Point and space have different names: " << source->parent->space_name << " and " << space_name);
-  prx_assert(destination.size() == dimension,
-             "Vector and point have different sizes - Vector: " << destination.size() << ", point:" << dimension);
-  for (unsigned i = 0; i < dimension; ++i)
-  {
-    destination[i] = source->memory[i];
-  }
+  PRX_DEPRECIATED
+  copy(destination, source);
 }
 
-<<<<<<< HEAD
-	void space_t::copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const
-	{
-		prx_assert(source->parent->space_name==space_name,"Point and space have different names: "<<source->parent->space_name<<" and "<<space_name);
-		for(unsigned i=0;i<dimension;++i)
-		{
-			destination.push_back(source->memory[i]);
-		}
-	}
-	
-	void space_t::copy_vector_from_point(Eigen::VectorXd& destination, const space_point_t& source) const
-	{
-		prx_assert(source->parent->space_name==space_name,"Point and space have different names: "<<source->parent->space_name<<" and "<<space_name);
-		prx_assert(destination.size() == dimension,"Vector and point have different sizes - Vector: "<< destination.size() <<", point:"<<dimension);
-		for(unsigned i=0;i<dimension;++i)
-		{
-			destination[i] = source->memory[i];
-		}
-	}
+void space_t::copy_point_from_string(const space_point_t& destination, const std::string source, char sep) const
+{
+  std::istringstream ss(source);
+  std::string token;
+  int i = 0;
+  while (std::getline(ss, token, sep))
+  {
+    prx_assert(i <= destination->parent->dimension, "Point and source string have different sizes - Point: "
+                                                        << destination->parent->dimension << ", string: " << i);
+    (*destination)[i] = std::stod(token);
+    i++;
+  }
+  prx_assert(destination->parent->dimension == i, "Point and source string have different sizes - Point: "
+                                                      << destination->parent->dimension << ", string: " << i);
+}
 
-	void space_t::copy_point_from_string(const space_point_t& destination, const std::string source, char sep) const
-	{
-		std::istringstream ss(source);
-		std::string token;
-		int i = 0;
-		while(std::getline(ss, token, sep)) 
-		{
-			prx_assert(i <= destination->parent->dimension, 
-				"Point and source string have different sizes - Point: "<< destination->parent->dimension <<", string: "<< i);
-			(*destination)[i] = std::stod(token);
-			i++;
-
-		}
-		prx_assert(destination->parent->dimension == i, 
-			"Point and source string have different sizes - Point: "<< destination->parent->dimension <<", string: "<< i);
-	}
-
-	void space_t::enforce_bounds(const space_point_t& point) const
-	{
-		prx_assert(point->parent->space_name==space_name,"Point and space have different names: "<<point->parent->space_name<<" and "<<space_name);
-		for(unsigned i=0;i<dimension;i++)
-		{
-			double& p = point->memory[i];
-			if(topology[i]==topology_t::ROTATIONAL)
-			{
-        		p = norm_angle_pi(p, *lower_bounds[i], *upper_bounds[i]);
-			}
-			else
-			{
-				p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
-			}
-			// if(p<*lower_bounds[i])
-			// {
-			// 	p=*lower_bounds[i];
-			// }
-			// if(p>*upper_bounds[i])
-			// {
-			// 	p=*upper_bounds[i];
-			// }
-		}
-	}
-	void space_t::enforce_bounds() const
-	{
-		for(unsigned i=0;i<dimension;i++)
-		{
-			double& p = (*addresses[i]);
-			if(topology[i]==topology_t::ROTATIONAL)
-			{
-				p = norm_angle_pi(p, *lower_bounds[i], *upper_bounds[i]);
-			}
-			else
-			{
-				p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
-			}
-			// if(p<*lower_bounds[i])
-			// {
-			// 	p=*lower_bounds[i];
-			// }
-			// if(p>*upper_bounds[i])
-			// {
-			// 	p=*upper_bounds[i];
-			// }
-		}
-	}
-	bool space_t::satisfies_bounds(const space_point_t& point) const
-	{
-		prx_assert(point->parent->space_name==space_name,"Point and space have different names: "<<point->parent->space_name<<" and "<<space_name);
-		// printf("point: (%.3f, %.3f, %.3f)\n", 
-				// point -> at(0), point -> at(1), point -> at(2));
-		for(unsigned i=0;i<dimension;i++)
-		{
-			double& p = point->memory[i];
-			if(p<*lower_bounds[i])
-			{
-				// printf("%d - lower bound: %.3f, val: %.3f\n", i, *lower_bounds[i], p );
-				return false;
-			}
-			if(p>*upper_bounds[i])
-			{
-				// printf("%d - upper bound: %.3f, val: %.3f\n", i, *lower_bounds[i], p );
-				return false;
-			}
-		}
-		return true;
-	}
-	void space_t::sample(const space_point_t& point) const
-	{
-		prx_assert(point->parent->space_name==space_name,
-			"Point and space have different names: "<<point->parent->space_name<<" and "<<space_name);
-		for(unsigned i=0;i<dimension;i++)
-		{
-			point->memory[i] = uniform_random(*lower_bounds[i],*upper_bounds[i]);
-			if(topology[i]==topology_t::DISCRETE)
-				point->memory[i] = round(point->memory[i]);
-		}
-	}
-=======
 void space_t::enforce_bounds(const space_point_t& point) const
 {
   prx_assert(point->parent->space_name == space_name,
@@ -533,14 +336,6 @@ void space_t::enforce_bounds(const space_point_t& point) const
     {
       p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
     }
-    // if(p<*lower_bounds[i])
-    // {
-    // 	p=*lower_bounds[i];
-    // }
-    // if(p>*upper_bounds[i])
-    // {
-    // 	p=*upper_bounds[i];
-    // }
   }
 }
 void space_t::enforce_bounds() const
@@ -556,16 +351,9 @@ void space_t::enforce_bounds() const
     {
       p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
     }
-    // if(p<*lower_bounds[i])
-    // {
-    // 	p=*lower_bounds[i];
-    // }
-    // if(p>*upper_bounds[i])
-    // {
-    // 	p=*upper_bounds[i];
-    // }
   }
 }
+
 bool space_t::satisfies_bounds(const space_point_t& point) const
 {
   prx_assert(point->parent->space_name == space_name,
@@ -588,6 +376,7 @@ bool space_t::satisfies_bounds(const space_point_t& point) const
   }
   return true;
 }
+
 void space_t::sample(const space_point_t& point) const
 {
   prx_assert(point->parent->space_name == space_name,
@@ -609,7 +398,6 @@ std::vector<std::pair<double, double>> space_t::get_bounds() const
   }
   return bounds;
 }
->>>>>>> main
 
 std::vector<double> space_t::get_upper_bounds() const
 {
@@ -693,7 +481,7 @@ void space_t::interpolate(const space_point_t& point1, const space_point_t& poin
   {
     if (topology[i] == topology_t::ROTATIONAL)
     {
-      if (std::fabs(point1->memory[i] - point2->memory[i]) < PRX_PI)
+      if (std::fabs(point1->memory[i] - point2->memory[i]) <= PRX_PI)
       {
         result->memory[i] = (1 - t) * point1->memory[i] + t * point2->memory[i];
       }
@@ -718,41 +506,10 @@ void space_t::interpolate(const space_point_t& point1, const space_point_t& poin
   }
 }
 
-<<<<<<< HEAD
-		for(unsigned i=0;i<dimension;i++)
-		{
-			if(topology[i]==topology_t::ROTATIONAL)
-			{
-				if(std::fabs(point1->memory[i]-point2->memory[i])<=PRX_PI)
-				{
-					result->memory[i]=(1-t)*point1->memory[i] + t*point2->memory[i];
-				}
-				else
-				{
-					if(point1->memory[i]<point2->memory[i])
-						result->memory[i] = point2->memory[i] + (1-t)*(point1->memory[i] - point2->memory[i] + 2*PRX_PI);
-					else
-						result->memory[i] = point1->memory[i] + t*(2*PRX_PI - point1->memory[i]+point2->memory[i]);
-				}
-				result->memory[i] = norm_angle_pi(result->memory[i], *lower_bounds[i], *upper_bounds[i]);
-			}
-			else if(topology[i]==topology_t::DISCRETE)
-			{
-				if(t==1)
-					result->memory[i] = (int)point2->memory[i];
-				else
-					result->memory[i] = (int)point1->memory[i];
-			}
-			else
-				result->memory[i] = (1-t)*point1->memory[i] + t*point2->memory[i];
-		}
-	}
-=======
 std::string space_t::print_point(const space_point_t& point, unsigned prec) const
 {
   prx_assert(point->parent->space_name == space_name,
              "Point and space have different names: " << point->parent->space_name << " and " << space_name);
->>>>>>> main
 
   std::stringstream out(std::stringstream::out);
   if (dimension > 0)
@@ -779,67 +536,6 @@ std::string space_t::print_memory(unsigned prec) const
     out << *addresses[dimension - 1] << '>';
   }
 
-<<<<<<< HEAD
-	std::string space_t::print_memory(unsigned prec) const
-	{
-		std::stringstream out(std::stringstream::out);
-		if( dimension > 0 )
-		{
-			out << std::fixed << std::setprecision(prec);
-			for( unsigned i = 0; i < dimension - 1; ++i )
-				out << *addresses[i] << ' ';
-			out << *addresses[dimension - 1] ;
-		}
-
-		return out.str();
-	}
-
-	// void space_t::linearize(const Eigen::Ref<Eigen::VectorXd>, Eigen::Ref<Eigen::MatrixXd>, double epsilon = 1e-3)
-	// {
-	// 	if (A.rows() != dimension || A.cols() != dimension) A.resize(dimension, dimension);
-	// 	if (x.size() == 0) 
- //    	{
- //    		x.resize(ss_dim);
- //    		x_plus.resize(ss_dim);
- //    		x_minus.resize(ss_dim);
- //    		xd_plus.resize(ss_dim);
- //    		xd_minus.resize(ss_dim);
- //    	}
-	// 	get_state_space() -> copy_vector_from_point(x, xt);
-    	
-	// 	for (int i=0; i < ss_dim; i++) 
- //  		{
-	// 		x_plus  = x;// + simulation_step;
-	// 		x_minus = x;// - simulation_step;
-	// 		x_plus(i) += epsilon;
-	// 		x_minus(i) -= epsilon;
-
-	// 		// std::cout << "x: " << x.transpose() << std::endl;
-	// 		// std::cout << "x_plus: "  << x_plus.transpose() << std::endl;
-	// 		// std::cout << "x_minus: " << x_minus.transpose() << std::endl;
-
-	// 		get_state_space() -> copy_from_vector(x_plus);
-	// 		propagate(epsilon);
-	// 		// get_state_space() -> copy_to_vector(xd_plus);
-	// 		get_derivative_space() -> copy_to_vector(xd_plus);
-
-	// 		get_state_space() -> copy_from_vector(x_minus);
-	// 		propagate(epsilon);
-	// 		// get_state_space() -> copy_to_vector(xd_minus);
-	// 		get_derivative_space() -> copy_to_vector(xd_minus);
-
-	// 		// std::cout << "xd_plus: "  << xd_plus.transpose() << std::endl;
-	// 		// std::cout << "xd_minus: " << xd_minus.transpose() << std::endl;
-	// 		// std::cout << "DIFF: " << (( xd_plus - xd_minus) / ( 2. * epsilon ) ).transpose() << std::endl;
-
- //    		A.col(i) = ( xd_plus - xd_minus) / ( 2. * epsilon );
-
-	// 	}
-	// }
-
-}
-=======
   return out.str();
 }
 }  // namespace prx
->>>>>>> main
