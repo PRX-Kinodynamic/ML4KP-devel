@@ -1,4 +1,5 @@
 random_seed: 231192
+# random_seed: 921123
 simulation_step: 0.01
 
 environment: "environments/empty.yaml"
@@ -8,15 +9,21 @@ environment: "environments/empty.yaml"
 plant: !file "plants/omnibot_mecanum_FO.yaml"
 
 visualize: true
-data_dir: /Users/Gary/pracsys/ML4KP-devel/out/omnibot_trajs/gazebo/
 
 checker_type: iterations
-checker_value: 500
+checker_value: 50000
+# checker_value: 500
+# checker_value: 5
+goal_region_radius: 0.125
 
-plan_to_execute: plan_7.txt
-out_suffix: 7
-max_iterations: 100
+noisy_plant: false
+frequency: 0.1
+num_trajs: 10
+initial_goal: 0
 
-total_files: 5
+# fg_state_increment: 100
 
-scale: 5
+initial_friction: 1.0
+
+# noise_var: 0.5
+noise_var: 0.0

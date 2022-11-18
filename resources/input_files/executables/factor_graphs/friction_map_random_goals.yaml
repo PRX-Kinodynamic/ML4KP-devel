@@ -8,6 +8,11 @@ visualize: true
 goal_region_radius: 0.25
 
 checker_type: iterations
-checker_value: 5000
+checker_value: 50000
 
 num_trajs: 6
+
+frequency: 0.01
+
+noisy_plant: true
+
