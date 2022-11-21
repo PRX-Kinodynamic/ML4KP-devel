@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     roa_file_name = prx.out_path + TM.params["out_dir"].as_string() + "/" + sys_name + TM.params["file_name_suffix"].as_string()
     fout_roa = open(roa_file_name, "w", buffering=2^10)
-
+    print("Output file: ", roa_file_name)
     for _ in tqdm(range(total_states)):
         
         fout_roa.write(str(pt))
