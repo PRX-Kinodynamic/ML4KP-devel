@@ -4,7 +4,13 @@ path: "car_like"
 start_state: [-8., 0., 0., 0.0, 0.0]
 goal_state:  [ 8., 0., 0., 0.0, 0.0]
 
+state_space_lower_bound: [-10,-10,-3.15,-1.0472,-.2]
+state_space_upper_bound: [ 10, 10, 3.15, 1.0472, .7]
+
 control_space_lower_bound: [-.5,-.2]
 control_space_upper_bound: [ .5, .2]
+
+min_steps: 5
+max_steps: 15
 
 vis_body: "body"

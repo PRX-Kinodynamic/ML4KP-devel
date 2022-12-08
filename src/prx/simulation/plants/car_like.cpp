@@ -15,7 +15,8 @@ namespace prx
 
         control_memory = {&dphi,&dv};
         input_control_space = new space_t("EE",control_memory,"CarLikeControl");
-        
+        input_control_space -> set_bounds({-PRX_PI/3,-0.2},{PRX_PI/3,0.2});
+
         geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
         geometries["body"]->initialize_geometry({.9,.6,.25});
         geometries["body"]->generate_collision_geometry();
