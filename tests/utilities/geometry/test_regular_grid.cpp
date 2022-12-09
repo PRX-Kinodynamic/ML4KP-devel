@@ -111,3 +111,99 @@ BOOST_AUTO_TEST_CASE(multimatch_test)
 
   // Check that random points in each cell return the expected values.
 }
+
+BOOST_AUTO_TEST_CASE(populate_regular_grid)
+{
+  const std::size_t DIM{ 2 };
+  using value_t = int;
+  using grid_t = prx::regular_grid_t<value_t, DIM>;
+  using Container = std::vector<double>;
+  // Grid in 2D of environment [0,9]x[0,9]
+  const std::vector<std::pair<double, double>> bounds{ std::make_pair(0.0, 9.0), std::make_pair(0.0, 10.0) };
+  // Grid has 2^3 cells: 3 divisions in each dimension
+  prx::regular_grid_t<value_t, DIM> grid{ bounds, 3 };
+  std::function<int(const Container&)> initializer = [](const Container& k) { return -1; };
+  grid.populate_grid(initializer);
+
+  const value_t expected_value{ -1 };
+  for (int i = 0; i < 100; ++i)
+  {
+    const double x03{ prx::uniform_random(0.0, 3.0) };
+    const double x36{ prx::uniform_random(3.0, 6.0) };
+    const double x69{ prx::uniform_random(3.0, 9.0) };
+    const double y03{ prx::uniform_random(0.0, 3.0) };
+    const double y36{ prx::uniform_random(3.0, 6.0) };
+    const double y69{ prx::uniform_random(3.0, 9.0) };
+
+    const value_t x03y03{ grid(x03, y03) };
+    const value_t x03y36{ grid(x03, y36) };
+    const value_t x03y69{ grid(x03, y69) };
+
+    const value_t x36y03{ grid(x36, y03) };
+    const value_t x36y36{ grid(x36, y36) };
+    const value_t x36y69{ grid(x36, y69) };
+
+    const value_t x69y03{ grid(x69, y03) };
+    const value_t x69y36{ grid(x69, y36) };
+    const value_t x69y69{ grid(x69, y69) };
+
+    BOOST_REQUIRE_MESSAGE(x03y03 == -1, "At (" << x03 << "," << y03 << ") - expected: " << -1 << "; got:" << x03y03);
+    BOOST_REQUIRE_MESSAGE(x03y36 == -1, "At (" << x03 << "," << y36 << ") - expected: " << -1 << "; got:" << x03y36);
+    BOOST_REQUIRE_MESSAGE(x03y69 == -1, "At (" << x03 << "," << y69 << ") - expected: " << -1 << "; got:" << x03y69);
+
+    BOOST_REQUIRE_MESSAGE(x36y03 == -1, "At (" << x36 << "," << y03 << ") - expected: " << -1 << "; got:" << x36y03);
+    BOOST_REQUIRE_MESSAGE(x36y36 == -1, "At (" << x36 << "," << y36 << ") - expected: " << -1 << "; got:" << x36y36);
+    BOOST_REQUIRE_MESSAGE(x36y69 == -1, "At (" << x36 << "," << y69 << ") - expected: " << -1 << "; got:" << x36y69);
+
+    BOOST_REQUIRE_MESSAGE(x69y03 == -1, "At (" << x69 << "," << y03 << ") - expected: " << -1 << "; got:" << x69y03);
+    BOOST_REQUIRE_MESSAGE(x69y36 == -1, "At (" << x69 << "," << y36 << ") - expected: " << -1 << "; got:" << x69y36);
+    BOOST_REQUIRE_MESSAGE(x69y69 == -1, "At (" << x69 << "," << y69 << ") - expected: " << -1 << "; got:" << x69y69);
+  }
+}
+BOOST_AUTO_TEST_CASE(populate_regular_grid_constant)
+{
+  // Almost same test as populate_regular_grid, just using a constant value_t instead of an initializer function
+  const std::size_t DIM{ 2 };
+  using value_t = int;
+  using grid_t = prx::regular_grid_t<value_t, DIM>;
+  // Grid in 2D of environment [0,9]x[0,9]
+  const std::vector<std::pair<double, double>> bounds{ std::make_pair(0.0, 9.0), std::make_pair(0.0, 10.0) };
+  // Grid has 2^3 cells: 3 divisions in each dimension
+  prx::regular_grid_t<value_t, DIM> grid{ bounds, 3 };
+  grid.populate_grid(-1);
+
+  const value_t expected_value{ -1 };
+  for (int i = 0; i < 100; ++i)
+  {
+    const double x03{ prx::uniform_random(0.0, 3.0) };
+    const double x36{ prx::uniform_random(3.0, 6.0) };
+    const double x69{ prx::uniform_random(3.0, 9.0) };
+    const double y03{ prx::uniform_random(0.0, 3.0) };
+    const double y36{ prx::uniform_random(3.0, 6.0) };
+    const double y69{ prx::uniform_random(3.0, 9.0) };
+
+    const value_t x03y03{ grid(x03, y03) };
+    const value_t x03y36{ grid(x03, y36) };
+    const value_t x03y69{ grid(x03, y69) };
+
+    const value_t x36y03{ grid(x36, y03) };
+    const value_t x36y36{ grid(x36, y36) };
+    const value_t x36y69{ grid(x36, y69) };
+
+    const value_t x69y03{ grid(x69, y03) };
+    const value_t x69y36{ grid(x69, y36) };
+    const value_t x69y69{ grid(x69, y69) };
+
+    BOOST_REQUIRE_MESSAGE(x03y03 == -1, "At (" << x03 << "," << y03 << ") - expected: " << -1 << "; got:" << x03y03);
+    BOOST_REQUIRE_MESSAGE(x03y36 == -1, "At (" << x03 << "," << y36 << ") - expected: " << -1 << "; got:" << x03y36);
+    BOOST_REQUIRE_MESSAGE(x03y69 == -1, "At (" << x03 << "," << y69 << ") - expected: " << -1 << "; got:" << x03y69);
+
+    BOOST_REQUIRE_MESSAGE(x36y03 == -1, "At (" << x36 << "," << y03 << ") - expected: " << -1 << "; got:" << x36y03);
+    BOOST_REQUIRE_MESSAGE(x36y36 == -1, "At (" << x36 << "," << y36 << ") - expected: " << -1 << "; got:" << x36y36);
+    BOOST_REQUIRE_MESSAGE(x36y69 == -1, "At (" << x36 << "," << y69 << ") - expected: " << -1 << "; got:" << x36y69);
+
+    BOOST_REQUIRE_MESSAGE(x69y03 == -1, "At (" << x69 << "," << y03 << ") - expected: " << -1 << "; got:" << x69y03);
+    BOOST_REQUIRE_MESSAGE(x69y36 == -1, "At (" << x69 << "," << y36 << ") - expected: " << -1 << "; got:" << x69y36);
+    BOOST_REQUIRE_MESSAGE(x69y69 == -1, "At (" << x69 << "," << y69 << ") - expected: " << -1 << "; got:" << x69y69);
+  }
+}

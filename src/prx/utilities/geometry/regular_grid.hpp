@@ -54,6 +54,48 @@ public:
     lambda = other.lambda;
   }
 
+  void populate_grid(const value_t& initial_value)
+  {
+    using Container = std::vector<double>;
+    std::function<value_t(const Container&)> initializer = [&initial_value](const Container&) { return initial_value; };
+    populate_grid(initializer);
+  }
+
+  template <class Container>
+  void populate_grid(std::function<value_t(const Container&)>& initializer)
+  {
+    // def state_increment(space_point, step_inc, lower_bounds, upper_bounds):
+    std::array<double, dimension> pt;
+    std::array<double, dimension> lower_bounds;
+    std::array<double, dimension> upper_bounds;
+    std::array<double, dimension> steps;
+    for (int i = 0; i < dimension; ++i)
+    {
+      pt[i] = _bounds[i].first;
+      lower_bounds[i] = _bounds[i].first;
+      upper_bounds[i] = _bounds[i].second;
+      steps[i] = get_cell_length(i);
+      PRX_DEBUG_VAR_1(steps[i]);
+    }
+    int i = 0;
+    do
+    {
+      memory[mapping(pt)] = initializer(Container{ pt.begin(), pt.end() });
+
+      // for (i = 0; i < dimension; ++i)
+      // {
+      //   const double step_inc{ get_cell_length(i) };
+      //   pt[i] = pt[i] + step_inc;
+
+      //   if (pt[i] <= upper_bounds[i])
+      //   {
+      //     break;
+      //   }
+      //   pt[i] = lower_bounds[i];
+      // }
+    } while (state_space_step(pt, steps, dimension, lower_bounds, upper_bounds));
+  }
+
   const_iterator begin() const noexcept
   {
     return memory.begin();
@@ -86,20 +128,25 @@ public:
   /**
    * @brief      Function call operator. Values_in are used to generate a key associated to a value.
    *
-   * @param[in]  values_in  The values associated to the stored element. As many arguments as the dimension of the grid
-   * (as a grid would imply).
+   * @param[in]  values_in  The values associated to the stored element. As many arguments as the dimension of the
+   * grid (as a grid would imply).
    *
    * @tparam     Ts         Types - as many doubles as dimension of the grid
    *
    * @return     The value_t associated with the cell of this grid.
    */
   template <class... Ts>
-  value_t operator()(Ts... values_in) const
+  const value_t operator()(const Ts... values_in) const
   {
     static_assert(sizeof...(values_in) == dimension, "[Dimension mismatch] regular_grid_t::operator().");
     std::array<double, dimension> values{ values_in... };
-
-    return memory[mapping(values)];
+    const key_t key{ mapping(values) };
+    if (memory.find(key) == memory.end())
+    {
+      PRX_DEBUG_ITERABLE(values);
+      prx_throw("regular_grid_t - key not found!");
+    }
+    return memory.at(key);
   }
 
   template <class... Ts>
@@ -107,7 +154,6 @@ public:
   {
     static_assert(sizeof...(values_in) == dimension, "[Dimension mismatch] regular_grid_t::operator().");
     std::array<double, dimension> values{ values_in... };
-
     return memory[mapping(values)];
   }
 
@@ -205,9 +251,10 @@ public:
 
   // Get "real" coordinates corresponding to the map. Note that since multiple coordinates are mapped to the same key,
   // we cannot retrive the "original" value passed to the grid, only \textit{a} value associated to the key.
-  std::array<double, dimension> unmap(const key_t& key) const
+  template <typename Ret>
+  const Ret unmap_key(const key_t& key) const
   {
-    std::array<double, dimension> raw_val{};
+    Ret raw_val{};
     for (int i = 0; i < dimension; ++i)
     {
       raw_val[i] = key[i] / lambda[i];
@@ -215,9 +262,43 @@ public:
     return raw_val;
   }
 
-private:
-  const std::vector<std::pair<double, double>> _bounds;
+  template <typename Ret, class... Ts>
+  const Ret unmap(const Ts... values_in) const
+  {
+    std::array<double, dimension> values{ values_in... };
 
+    return unmap_key<Ret>(mapping(values));
+  }
+
+  inline double get_cell_length(const std::size_t& dim_at) const
+  {
+    return 1.0 / lambda[dim_at];
+  }
+
+  inline std::pair<double, double> bounds(const std::size_t i) const
+  {
+    return _bounds[i];
+  }
+
+  // ToDO: make this varadic
+  template <class... Ts>
+  inline bool in_bounds(const Ts... values_in) const
+  {
+    bool ans = true;
+    // value_t& operator()(const Ts... values_in)
+    // {
+    static_assert(sizeof...(values_in) == dimension, "[Dimension mismatch] regular_grid_t::operator().");
+    std::array<double, dimension> values{ values_in... };
+    for (int i = 0; i < dimension; ++i)
+    {
+      ans &= _bounds[i].first <= values[i];
+      ans &= values[i] <= _bounds[i].second;
+    }
+    // return memory[mapping(values)];
+    return ans;
+  }
+
+private:
   key_t mapping(std::array<double, dimension> raw_key) const
   {
     std::array<int, dimension> key{};
@@ -236,6 +317,7 @@ private:
     }
   }
 
+  const std::vector<std::pair<double, double>> _bounds;
   std::unordered_map<key_t, value_t, hash_function_t> memory;
 
   std::array<double, dimension> lambda{};
