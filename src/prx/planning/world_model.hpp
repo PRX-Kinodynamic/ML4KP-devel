@@ -8,15 +8,10 @@
 #define system_group first
 #define collision_group second
 
-#define system_group first
-#define collision_group second
-
-#define system_group first
-#define collision_group second
-
 namespace prx
 {
-typedef std::pair<std::shared_ptr<system_group_t>, std::shared_ptr<collision_group_t>> world_model_context;
+using world_model_context_t = std::pair<std::shared_ptr<system_group_t>, std::shared_ptr<collision_group_t>>;
+using world_model_context = std::pair<std::shared_ptr<system_group_t>, std::shared_ptr<collision_group_t>>;
 
 class world_model_t : public simulator_t
 {
@@ -36,14 +31,20 @@ public:
     }
   }
 
-  // world_model_t(const std::vector<system_ptr_t>& all_systems,const std::vector<std::shared_ptr<movable_object_t>>&
-  // all_obstacles) 	: world_model_t<system_group_manager_t, collision_checker_t>(all_systems, all_obstacles)
-  // 	{};
-
   ~world_model_t(){
     // delete system_groups;
     // delete collision_groups;
   };
+
+  static std::shared_ptr<system_group_t> get_system_group(const world_model_context& context)
+  {
+    return context.first;
+  }
+
+  static std::shared_ptr<collision_group_t> get_collision_group(const world_model_context& context)
+  {
+    return context.second;
+  }
 
   inline world_model_context get_context(const std::string& context_name)
   {
@@ -95,6 +96,7 @@ public:
     for (auto s : this->systems)
     {
       s.second->propagate(simulation_step, step);
+      s.second->get_state_space()->enforce_bounds();
     }
     // system_groups -> propagate(step);
     // int steps = (int)((duration / simulation_step) + .1);

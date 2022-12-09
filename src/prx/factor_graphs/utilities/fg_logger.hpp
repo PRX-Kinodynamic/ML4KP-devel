@@ -10,10 +10,6 @@
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-#define GET_FACTOR_NAME_MACRO(FACTOR_CLASS, FACTOR, NAME)                                                              \
-  if (dynamic_cast<FACTOR_CLASS*>(FACTOR.get()))                                                                       \
-    return NAME;
-
 namespace prx
 {
 typedef std::function<bool(const gtsam::Factor* /* Factor */, double /* whitenedError */, size_t /* index */)>

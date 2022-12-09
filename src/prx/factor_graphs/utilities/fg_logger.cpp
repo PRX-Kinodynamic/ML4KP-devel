@@ -2,21 +2,21 @@
 
 namespace prx
 {
-std::string get_factor_name(const gtsam::NonlinearFactorGraph::sharedFactor& factor)
+std::string get_factor_name(const gtsam::NonlinearFactorGraph::sharedFactor& factor_ptr)
 {
   // if (std::dynamic_pointer_cast<goal_distance_factor_t>(factor))
-  GET_FACTOR_NAME_MACRO(goal_distance_factor_t, factor, "goal_factor")
-  GET_FACTOR_NAME_MACRO(bang_bang_factor_t, factor, "bang_bang_factor_t")
-  GET_FACTOR_NAME_MACRO(propagation_factor_t, factor, "propagation_factor")
-  GET_FACTOR_NAME_MACRO(propagation_factor_4_t, factor, "propagation_factor")
-  GET_FACTOR_NAME_MACRO(propagation_factor_1_t, factor, "propagation_factor")
-  GET_FACTOR_NAME_MACRO(space_limit_factor_t, factor, "space_limit_factor")
-  GET_FACTOR_NAME_MACRO(kinetic_energy_factor_t, factor, "kinetic_energy_factor")
-  GET_FACTOR_NAME_MACRO(potential_energy_factor_t, factor, "potential_energy_factor")
-  GET_FACTOR_NAME_MACRO(state_propagation_factor_t, factor, "state_propagation_factor")
-  GET_FACTOR_NAME_MACRO(gtsam::PriorFactor<Eigen::VectorXd>, factor, "prior_factor")
-
-  return "no_factor_name";
+  // GET_FACTOR_NAME_MACRO(goal_distance_factor_t, factor, "goal_factor")
+  // GET_FACTOR_NAME_MACRO(bang_bang_factor_t, factor, "bang_bang_factor_t")
+  // GET_FACTOR_NAME_MACRO(propagation_factor_t, factor, "propagation_factor")
+  // GET_FACTOR_NAME_MACRO(propagation_factor_4_t, factor, "propagation_factor")
+  // GET_FACTOR_NAME_MACRO(propagation_factor_1_t, factor, "propagation_factor")
+  // // GET_FACTOR_NAME_MACRO(space_limit_factor_t<>, factor, "space_limit_factor")
+  // GET_FACTOR_NAME_MACRO(kinetic_energy_factor_t, factor, "kinetic_energy_factor")
+  // GET_FACTOR_NAME_MACRO(potential_energy_factor_t, factor, "potential_energy_factor")
+  // GET_FACTOR_NAME_MACRO(state_propagation_factor_t, factor, "state_propagation_factor")
+  // GET_FACTOR_NAME_MACRO(gtsam::PriorFactor<Eigen::VectorXd>, factor, "prior_factor")
+  // const gtsam::NonlinearFactor factor{ *factor_ptr };
+  return typeid(factor_ptr).name();
 }
 
 void fg_logger_t::add_graph_errors(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& values,

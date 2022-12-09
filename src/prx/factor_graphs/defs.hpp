@@ -4,6 +4,10 @@
 #include "prx/factor_graphs/utilities/symbols_factory.hpp"
 #include "prx/factor_graphs/utilities/utilities_functions.hpp"
 
+#define GET_FACTOR_NAME_MACRO(FACTOR_CLASS, FACTOR, NAME)                                                              \
+  if (dynamic_cast<FACTOR_CLASS*>(FACTOR.get()))                                                                       \
+    return NAME;
+
 PRX_REGISTER_SYMBOL(goal_symbol, "Xg", 0, 0)
 PRX_REGISTER_SYMBOL(start_state_symbol, "X0", 0, 0)
 PRX_REGISTER_SYMBOL(state_symbol, "Xi", 0, 0)
@@ -11,3 +15,5 @@ PRX_REGISTER_SYMBOL(control_symbol, "Ui", 0, 0)
 PRX_REGISTER_SYMBOL(time_symbol, "ti", 0, 0)
 PRX_REGISTER_SYMBOL(param_symbol, "TH", 0, 0)
 PRX_REGISTER_SYMBOL(param_symbol_X, "Tx", 0, 0)
+PRX_REGISTER_SYMBOL(weight_symbol, "Wi", 0, 0)
+PRX_REGISTER_SYMBOL(work_space_symbol, "Om", 0, 0)  // \Omega
