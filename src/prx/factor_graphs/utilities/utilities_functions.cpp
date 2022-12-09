@@ -131,10 +131,9 @@ void values_to_plan_and_traj(const gtsam::Values& vals, trajectory_t* traj, plan
   traj->clear();
   plan->clear();
 
-  int ti = 0;
-
   // X, U \in [0, T)
-  for (double t_elapsed = 0; ti < total_steps; ti++, t_elapsed += simulation_step)
+  int ti = 0;
+  for (; ti < total_steps; ti++)
   {
     auto xs = symbol_factory_t::create_symbol("state_symbol", ti);
     auto us = symbol_factory_t::create_symbol("control_symbol", ti);

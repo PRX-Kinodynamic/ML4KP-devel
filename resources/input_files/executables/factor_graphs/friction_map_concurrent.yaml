@@ -1,5 +1,5 @@
-random_seed: 231192
-# random_seed: 921123
+# random_seed: 231192
+random_seed: 921123
 simulation_step: 0.01
 
 environment: "environments/empty.yaml"
@@ -18,7 +18,7 @@ goal_region_radius: 0.125
 
 noisy_plant: false
 frequency: 0.1
-num_trajs: 10
+num_trajs: 25
 initial_goal: 0
 
 # fg_state_increment: 100

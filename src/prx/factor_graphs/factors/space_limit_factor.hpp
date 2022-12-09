@@ -22,13 +22,13 @@ namespace prx
 /**
  * space_limit_factor_t is a class which enforces limits to states
  */
-class space_limit_factor_t : public gtsam::NoiseModelFactor1<Eigen::VectorXd>
+template <Eigen::Index DIM>
+class space_limit_factor_t : public gtsam::NoiseModelFactor1<Eigen::Vector<double, DIM>>
 {
-private:
+  using state_t = Eigen::Vector<double, DIM>;
   using This = space_limit_factor_t;
-  using Base = gtsam::NoiseModelFactor1<Eigen::VectorXd>;
-  const space_t* ss;
-  double epsilon;
+  using Base = gtsam::NoiseModelFactor1<state_t>;
+  using partial_fn = std::function<state_t(const state_t&)>;
 
 public:
   /**
@@ -38,12 +38,18 @@ public:
    * @param lower_limit joint lower limit
    * @param upper_limit joint upper limit
    */
-  space_limit_factor_t(gtsam::Key q_key, const gtsam::noiseModel::Base::shared_ptr& cost_model, const space_t* _ss,
+  space_limit_factor_t(gtsam::Key q_key, const gtsam::noiseModel::Base::shared_ptr& cost_model, const space_t* ss,
                        double _epsilon = 0.001)
     : Base(cost_model, q_key)
+    , _upper_bound(Eigen::VectorXd::Zero(ss->get_dimension()))
+    , _lower_bound(Eigen::VectorXd::Zero(ss->get_dimension()))
+    , _derivative(0.01)
   {
-    ss = _ss;
+    _ss = ss;
     epsilon = _epsilon;
+    ss->copy(_upper_bound, _ss->get_upper_bounds());
+    ss->copy(_lower_bound, _ss->get_lower_bounds());
+    _derivative.model = [&](const state_t& xi) { return compute_error(xi); };
   }
 
   virtual ~space_limit_factor_t()
@@ -56,53 +62,36 @@ public:
    *
    * @param q joint value
    */
-  gtsam::Vector evaluateError(const Eigen::VectorXd& q,
-                              boost::optional<gtsam::Matrix&> H_q = boost::none) const override
+  Eigen::VectorXd evaluateError(const state_t& state, boost::optional<gtsam::Matrix&> H_q = boost::none) const override
   {
-    auto ss_dim = ss->get_dimension();
-    Eigen::VectorXd error = Eigen::VectorXd::Zero(ss_dim);
-    Eigen::MatrixXd H_qp = Eigen::MatrixXd::Zero(ss_dim, ss_dim);
+    // const std::size_t ss_dim{ _ss->get_dimension() };
+    // Eigen::VectorXd error = Eigen::VectorXd::Zero(ss_dim);
+    // Eigen::MatrixXd H_qp = Eigen::MatrixXd::Zero(ss_dim, ss_dim);
 
-    // std::cout << "q: " << q.transpose() << std::endl;
-    for (int i = 0; i < ss_dim; ++i)
-    {
-      auto q = ss->at(i);
-      // TODO: incorporate limits in angles... e.i ackermann steering
-      if (ss->topology_at(i) == space_t::topology_t::ROTATIONAL)
-      {
-        // if (H_q) *H_q = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
-        H_qp(i, i) = 0;
-        error[i] = 0;
-      }
-      else  // TODO: Other topologies?
-      {
-        if (q < ss->get_lower_bound(i) - epsilon)
-        {
-          // std::cout << "LOWER: " << q << "\tbound: " << ss -> get_lower_bound(i) << std::endl;
-          H_qp(i, i) = -1;
-          // if (H_q) *H_q = -1 * Eigen::MatrixXd::Identity(ss_dim, ss_dim);
-          error[i] = ss->get_lower_bound(i) - q;
-        }
-        else if (q <= ss->get_upper_bound(i) + epsilon)
-        {
-          // std::cout << "IN BOUNDS" << std::endl;
-          H_qp(i, i) = 0;
-          // if (H_q) *H_q = Eigen::MatrixXd::Zero(ss_dim, ss_dim);
-          error[i] = 0;
-        }
-        else
-        {
-          // std::cout << "UPPER" << std::endl;
-          H_qp(i, i) = 1;
-          // if (H_q) *H_q = Eigen::MatrixXd::Identity(ss_dim, ss_dim);
-          error[i] = q - (ss->get_upper_bound(i));
-        }
-      }
-    }
+    const Eigen::VectorXd error{ compute_error(state) };
     if (H_q)
-      *H_q = H_qp;
-    // if (error.sum() > 0) std::cout << "error: " << error.transpose() << std::endl;
+    {
+      // _derivative.model = [&](const Eigen::VectorXd& xi) { return compute_error(xi); };
+      *H_q = _derivative(state);
+    }
     return error;
+  }
+
+  Eigen::VectorXd compute_error(const Eigen::VectorXd& state) const
+  {
+    // const std::size_t ss_dim{ _ss->get_dimension() };
+
+    // The return of this is a weird type... Eigen::Array of X bools? auto takes care of that...
+    auto less = _lower_bound.array() > state.array();
+    auto greater = state.array() > _upper_bound.array();
+
+    // The rest are const vects
+    const state_t diff_lower{ state - _lower_bound };
+    const state_t diff_upper{ state - _upper_bound };
+    const state_t res_lower{ diff_lower.array() * less.template cast<double>() };
+    const state_t res_upper{ diff_upper.array() * greater.template cast<double>() };
+    const state_t res{ res_lower + res_upper };
+    return res;
   }
 
   //// @return a deep copy of this factor
@@ -119,15 +108,11 @@ public:
   }
 
 private:
-  // /// Serialization function
-  // friend class boost::serialization::access;
-  // template <class ARCHIVE>
-  // void serialize(ARCHIVE &ar, const unsigned int version) {  // NOLINT
-  //   ar &boost::serialization::make_nvp(
-  //       "NoiseModelFactor1", boost::serialization::base_object<Base>(*this));
-  //   ar &low_;
-  //   ar &high_;
-  // }
+  const space_t* _ss;
+  double epsilon;
+  state_t _upper_bound;
+  state_t _lower_bound;
+  mutable math::first_order_derivative_t<partial_fn, state_t, 4> _derivative;
 };
 
 }  // namespace prx

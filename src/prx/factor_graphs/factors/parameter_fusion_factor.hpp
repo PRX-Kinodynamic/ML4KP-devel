@@ -15,121 +15,102 @@ namespace prx
 {
 namespace fg
 {
-template <Eigen::Index X_DIM, Eigen::Index THETA_DIM>
-class parameter_fusion_factor_t
-  : public gtsam::NoiseModelFactor5<Eigen::Vector<double, X_DIM + THETA_DIM>, Eigen::Vector<double, X_DIM + THETA_DIM>,
-                                    Eigen::Vector<double, X_DIM + THETA_DIM>, Eigen::Vector<double, X_DIM + THETA_DIM>,
-                                    Eigen::Vector<double, X_DIM + THETA_DIM>>
+template <Eigen::Index THETA_DIM>
+class parameter_fusion_factor_t : public gtsam::NoiseModelFactor
 {
-  template <typename T, Eigen::Index DIM>
-  using partial_fn = std::function<Eigen::Vector<double, DIM>(const T&)>;
-  using x_vector_t = Eigen::Vector<double, X_DIM>;
-  using value_t = Eigen::Vector<double, THETA_DIM>;
-  using Base = gtsam::NoiseModelFactor5<value_t, value_t, value_t, value_t, value_t>;
+  using derivative_ff = std::function<Eigen::Vector<double, THETA_DIM>(const Eigen::Vector<double, THETA_DIM>&)>;
+  using theta_t = Eigen::Vector<double, THETA_DIM>;
+  using weight_t = Eigen::Vector<double, THETA_DIM>;
+  // using Base = gtsam::NoiseModelFactor5<value_t, value_t, value_t, value_t, value_t>;
 
 public:
-  parameter_fusion_factor_t(gtsam::Key th0_key, gtsam::Key th1_key, gtsam::Key th2_key, gtsam::Key th3_key,
-                            gtsam::Key thX_key, const gtsam::noiseModel::Base::shared_ptr& cost_model,
-                            const x_vector_t& X_th0, const x_vector_t& X_th1, const x_vector_t& X_th2,
-                            const x_vector_t& X_th3, const x_vector_t& X_thx)
-    : Base(cost_model, th0_key, th1_key, th2_key, th3_key, thX_key)
-    , derivative_th0(partial_th0, 0.01)
-    , derivative_th1(partial_th1, 0.01)
-    , derivative_th2(partial_th2, 0.01)
-    , derivative_th3(partial_th3, 0.01)
-    , derivative_thX(partial_thX, 0.01)
-    , _X_th0(X_th0)
-    , _X_th1(X_th1)
-    , _X_th2(X_th2)
-    , _X_th3(X_th3)
-    , _X_thX(X_thX)
+  // Container of keys.
+  template <typename Container>
+  parameter_fusion_factor_t(const gtsam::noiseModel::Base::shared_ptr& cost_model, Container theta_keys,
+                            Container weight_keys, gtsam::Key key_theta_t)
+    : gtsam::NoiseModelFactor(cost_model, merge_container<std::vector<gtsam::Key>>(theta_keys, weight_keys))
+    , _key_theta_t(key_theta_t)
+    , _theta_keys(theta_keys)
+    , _weight_keys(weight_keys)
+    , derivative_thp(0.01)
+    , derivative_thetas(0.01)
+    , derivative_weights(0.01)
   {
+    keys_.push_back(key_theta_t);
   }
 
   virtual ~parameter_fusion_factor_t()
   {
   }
 
-  virtual Eigen::VectorXd evaluateError(const value_t& th0, const value_t& th1, const value_t& th2, const value_t& th3,
-                                        const value_t& thX, boost::optional<Eigen::MatrixXd&> H1 = boost::none,
-                                        boost::optional<Eigen::MatrixXd&> H2 = boost::none,
-                                        boost::optional<Eigen::MatrixXd&> H3 = boost::none,
-                                        boost::optional<Eigen::MatrixXd&> H4 = boost::none,
-                                        boost::optional<Eigen::MatrixXd&> H5 = boost::none) const override
+  Eigen::VectorXd unwhitenedError(const gtsam::Values& values,
+                                  boost::optional<std::vector<Eigen::MatrixXd>&> H = boost::none) const override
   {
-    auto error = compute_error(th0, th1, th2, th3, thX);
-    if (H1)
+    Eigen::VectorXd error{ Eigen::VectorXd::Zero(THETA_DIM) };
+    if (this->active(values))
     {
-      derivative_th0.model = [&](const value_t& _th0) { return compute_error(_th0, th1, th2, th3, thX); };
-      *H1 = derivative_th0(th0);
-    }
+      gtsam::Key key_th, key_w;
+      std::vector<theta_t> theta_values;
+      std::vector<weight_t> weight_values;
+      const theta_t th_t{ values.at<theta_t>(_key_theta_t) };
+      for (std::size_t i = 0; i < _theta_keys.size(); ++i)
+      {
+        std::tie(key_th, key_w) = std::make_tuple(_theta_keys[i], _weight_keys[i]);
+        theta_values.push_back(values.at<theta_t>(key_th));
+        weight_values.push_back(values.at<weight_t>(key_w));
+      }
+      error = compute_error(th_t, theta_values, weight_values);
+      if (H)
+      {
+        derivative_thp.model = [&](const theta_t& th_tp) { return compute_error(th_tp, theta_values, weight_values); };
+        (*H)[0] = derivative_thp(theta_values[0]);
 
-    if (H2)
-    {
-      derivative_th1.model = [&](const value_t& _th1) { return compute_error(th0, _th1, th2, th3, thX); };
-      *H2 = derivative_th1(th1);
-    }
+        const std::size_t half_hs{ ((*H).size() - 1) / 2 };
+        for (int i = 1; i < half_hs; ++i)
+        {
+          derivative_thetas.model = [&](const theta_t& th_change) {
+            std::vector<theta_t> tv{ theta_values };
+            tv[i] = th_change;
+            return compute_error(th_t, tv, weight_values);
+          };
+          (*H)[i] = derivative_thetas(theta_values[i]);
 
-    if (H3)
-    {
-      derivative_th2.model = [&](const value_t& _th2) { return compute_error(th0, th1, _th2, th3, thX); };
-      *H3 = derivative_th2(th0);
+          derivative_weights.model = [&](const weight_t& w_change) {
+            std::vector<weight_t> wv{ weight_values };
+            wv[i] = w_change;
+            return compute_error(th_t, theta_values, wv);
+          };
+          (*H)[i + half_hs] = derivative_weights(weight_values[i]);
+        }
+      }
     }
-
-    if (H4)
-    {
-      derivative_th3.model = [&](const value_t& _th3) { return compute_error(th0, th1, th2, _th3, thX); };
-      *H4 = derivative_th3(th3);
-    }
-
-    if (H5)
-    {
-      derivative_thX.model = [&](const value_t& _thX) { return compute_error(th0, th1, th2, th3, _thX); };
-      *H5 = derivative_thX(thX);
-    }
-
     return error;
   }
 
-  double th_dist(const x_value_t& thi, const x_value_t& thX) const
+  Eigen::VectorXd compute_error(const theta_t& th_t, const std::vector<theta_t> thetas,
+                                const std::vector<weight_t> weights) const
   {
-    return (thi - thX).squaredNorm();
-  }
-
-  Eigen::VectorXd compute_error(const value_t& th0, const value_t& th1, const value_t& th2, const value_t& th3,
-                                const value_t& thX) const
-  {
-    const double dX0{ th_dist(_X_th0, _X_thX) };
-    const double dX1{ th_dist(_X_th1, _X_thX) };
-    const double dX2{ th_dist(_X_th2, _X_thX) };
-    const double dX3{ th_dist(_X_th3, _X_thX) };
-
-    Eigen::VectorXd error(Eigen::VectorXd::Zero(THETA_DIM));
-    error += (th0.tail(THETA_DIM) - thX.tail(THETA_DIM)) / dX0;
-    error += (th1.tail(THETA_DIM) - thX.tail(THETA_DIM)) / dX1;
-    error += (th2.tail(THETA_DIM) - thX.tail(THETA_DIM)) / dX2;
-    error += (th3.tail(THETA_DIM) - thX.tail(THETA_DIM)) / dX3;
-    return error;
+    theta_t th_i;
+    weight_t w_i;
+    theta_t th_pt{ theta_t::Zero() };
+    // for (auto th_w : prx::zip_iters(thetas, weights))
+    for (std::size_t i = 0; i < thetas.size(); ++i)
+    {
+      std::tie(th_i, w_i) = std::make_tuple(thetas[i], weights[i]);
+      // std::tie(th_i, w_i) = prx::unzip(th_w);
+      th_pt += th_i.cwiseProduct(w_i);
+    }
+    return th_t - th_pt;
   }
 
 private:
-  x_vector_t _X_th0;
-  x_vector_t _X_th1;
-  x_vector_t _X_th2;
-  x_vector_t _X_th3;
-  x_vector_t _X_thX;
+  gtsam::Key _key_theta_t;
+  std::vector<gtsam::Key> _theta_keys;
+  std::vector<gtsam::Key> _weight_keys;
 
-  partial_fn<value_t, THETA_DIM> partial_th0;
-  partial_fn<value_t, THETA_DIM> partial_th1;
-  partial_fn<value_t, THETA_DIM> partial_th2;
-  partial_fn<value_t, THETA_DIM> partial_th3;
-  partial_fn<value_t, THETA_DIM> partial_thX;
-
-  mutable math::first_order_derivative_t<partial_fn<value_t, THETA_DIM>, value_t, 4> derivative_th0;
-  mutable math::first_order_derivative_t<partial_fn<value_t, THETA_DIM>, value_t, 4> derivative_th1;
-  mutable math::first_order_derivative_t<partial_fn<value_t, THETA_DIM>, value_t, 4> derivative_th2;
-  mutable math::first_order_derivative_t<partial_fn<value_t, THETA_DIM>, value_t, 4> derivative_th3;
-  mutable math::first_order_derivative_t<partial_fn<value_t, THETA_DIM>, value_t, 4> derivative_thX;
+  mutable math::first_order_derivative_t<derivative_ff, theta_t, 4> derivative_thp;
+  mutable math::first_order_derivative_t<derivative_ff, theta_t, 4> derivative_thetas;
+  mutable math::first_order_derivative_t<derivative_ff, weight_t, 4> derivative_weights;
 };
 
 }  // namespace fg
