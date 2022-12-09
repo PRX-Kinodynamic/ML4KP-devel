@@ -13,8 +13,6 @@ state_space_upper_bound: [ 3.14159,  6.28318]
 
 starting_lower_bound: [-3.14159, -6.28318]
 ending_upper_bound: [ 3.14159,  6.28318]
-# state_space_lower_bound: [-7, -6.28318]
-# state_space_upper_bound: [7,  6.28318]
 
 control_space_lower_bound: [-0.6371781908344007]
 control_space_upper_bound: [0.6371781908344007]

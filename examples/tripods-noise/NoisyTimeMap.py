@@ -191,7 +191,6 @@ class NoisyTimeMap:
         self.ss.copy_to_point(self.end_state)
         return self.end_state.to_list()
     
-
     def pendulum_lqr(self, X):
 
         self.ss.copy_point_from_vector(self.start_state,X)
@@ -400,4 +399,35 @@ class NoisyTimeMap:
         self.checker.reset()
         self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
         # print("1) Start:", self.start_state,"\tEnd:", self.end_state)
+        return self.end_state.to_list()
+
+    def acrobot_lqr(self, X):
+        self.ss.copy_point_from_vector(self.start_state,X)
+        if self.x_0_noise is not None:
+            self.x_0_noise.add_noise(self.start_state)
+        self.ss.copy_from_point(self.start_state)
+        self.ss.enforce_bounds()
+
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
+        if self.controller == None:
+            self.Q = prx.matrix.Identity(4, 4)
+            self.Q[0,0] = 10
+            self.Q[1,1] = 10
+            self.Q[2,2] = 1
+            self.Q[3,3] = 1
+            self.R = prx.matrix.Identity(1, 1)
+            self.controller_base = prx.lqr(self.noisy_plant, self.Q, self.R, "LQR")
+            self.controller_base.set_goal(self.goal_state, self.u_goal)
+            self.controller_base.compute_K()
+            self.get_noisy_controller()
+  
+        total_time = self.duration
+        if self.t_noise is not None:
+            total_time = self.t_noise.add_noise(total_time) 
+
+        self.checker.set_check_value(total_time)
+        self.checker.reset()
+        self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
         return self.end_state.to_list()

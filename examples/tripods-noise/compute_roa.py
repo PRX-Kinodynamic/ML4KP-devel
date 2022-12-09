@@ -27,8 +27,6 @@ def print_state(state):
 
 
 if __name__ == "__main__":
-
-
     TM = NoisyTimeMap.NoisyTimeMap("examples/tripods/compute_roa.yaml")
     TM.params.print()
     lower_bounds = TM.ss.get_lower_bounds()
