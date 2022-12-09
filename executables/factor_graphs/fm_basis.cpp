@@ -26,14 +26,15 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/geometry/regular_grid.hpp"
 #include "prx/utilities/general/range.hpp"
+#include "prx/utilities/math/first_order_derivative.hpp"
 
 #include "prx/visualization/three_js_group.hpp"
 
 #include "prx/factor_graphs/defs.hpp"
 #include "prx/factor_graphs/utilities/fg_logger.hpp"
-#include "prx/factor_graphs/planning/initialization_trajs_fg.hpp"
-#include "prx/factor_graphs/planning/trajectory_fg.hpp"
-#include "prx/factor_graphs/planning/trajectory_optimizer.hpp"
+// #include "prx/factor_graphs/planning/initialization_trajs_fg.hpp"
+// #include "prx/factor_graphs/planning/trajectory_fg.hpp"
+// #include "prx/factor_graphs/planning/trajectory_optimizer.hpp"
 #include "prx/factor_graphs/factors/parameter_fusion_factor.hpp"
 
 #include "prx/factor_graphs/utilities/utilities_functions.hpp"
@@ -43,7 +44,7 @@
 
 namespace fs = std::filesystem;
 using namespace prx;
-using friction_vector_t = Eigen::Vector<double, 3>;
+using friction_vector_t = Eigen::Vector<double, 1>;
 // using friction_vector_t = Eigen::Vector4d;
 
 gtsam::LevenbergMarquardtParams fg_params()
@@ -64,6 +65,58 @@ gtsam::LevenbergMarquardtParams fg_params()
   // lm_params.setLogFile(log_file);
 
   return lm_params;
+}
+
+template <class thetas_grid_t>
+gtsam::NonlinearFactorGraph find_closest_thetas(const std::size_t& t, const prx_symbol_t& xt_symbol,
+                                                const prx_symbol_t& param_t, const Eigen::Vector3d& x_in,
+                                                const thetas_grid_t& thetas_grid, gtsam::Values& values)
+{
+  std::vector<Eigen::Vector2d> xi;
+  xi.emplace_back(x_in[0], x_in[1]);
+  xi.emplace_back(x_in[0] + thetas_grid.get_cell_length(0), x_in[1]);
+  xi.emplace_back(x_in[0], x_in[1] + thetas_grid.get_cell_length(1));
+  xi.emplace_back(x_in[0] + thetas_grid.get_cell_length(0), x_in[1] + thetas_grid.get_cell_length(1));
+
+  std::vector<Eigen::Vector2d> loc_thetas;
+  loc_thetas.push_back(thetas_grid.template unmap<Eigen::Vector2d>(xi[0][0], xi[0][1]));
+  loc_thetas.push_back(thetas_grid.template unmap<Eigen::Vector2d>(xi[1][0], xi[1][1]));
+  loc_thetas.push_back(thetas_grid.template unmap<Eigen::Vector2d>(xi[2][0], xi[2][1]));
+  loc_thetas.push_back(thetas_grid.template unmap<Eigen::Vector2d>(xi[3][0], xi[3][1]));
+
+  std::vector<gtsam::Key> weights;
+  std::vector<gtsam::Key> thetas;
+  auto ff_nm = gtsam::noiseModel::Isotropic::Sigma(1, 1e0);
+  auto pf_nm = gtsam::noiseModel::Isotropic::Sigma(1, 1e0);
+
+  gtsam::NonlinearFactorGraph graph;
+  PRX_DEBUG_PRINT;
+  for (int i = 0; i < 4; ++i)
+  {
+    if (xi[i][0] > 3 || xi[i][1] > 3)
+      continue;
+    const prx_symbol_t theta_i{ thetas_grid(xi[i][0], xi[i][1]).first };
+    const prx_symbol_t work_space_symbol{ thetas_grid(xi[i][0], xi[i][1]).second };
+    // auto work_space_symbol = symbol_factory_t::create_symbol("work_space_symbol", i);
+    auto weight_symbol = symbol_factory_t::create_symbol("weight_symbol", t, i);
+    thetas.push_back(theta_i);
+    weights.push_back(weight_symbol);
+    auto function_3factor = [=](const Eigen::Vector3d& x1, const Eigen::Vector2d& x2) {
+      Eigen::Vector2d xw(x1[0], x1[1]);
+      double dist = (loc_thetas[0] - xw).norm();
+      dist += (loc_thetas[1] - xw).norm();
+      dist += (loc_thetas[2] - xw).norm();
+      dist += (loc_thetas[3] - xw).norm();
+      return friction_vector_t((x2 - xw).norm() / dist);
+    };
+    values.insert_or_assign(weight_symbol, function_3factor(x_in, loc_thetas[i]));
+    graph.add(fg::function_3factor_t<1, 3, 2>(ff_nm, weight_symbol, xt_symbol, work_space_symbol, function_3factor));
+    // auto function_2factor = [=](const Eigen::Vector2d& x1) { return loc_thetas[i]; };
+    // values.insert_or_assign(work_space_symbol, function_2factor(loc_thetas[i]));
+    // graph.add(fg::function_2factor_t<1, 2>(ff_nm, work_space_symbol, theta_i, function_2factor));
+  }
+  graph.add(fg::parameter_fusion_factor_t<1>(pf_nm, thetas, weights, param_t));
+  return graph;
 }
 
 template <typename grid1_t, typename grid2_t, typename log_t, typename Priors, typename Ids>
@@ -116,7 +169,7 @@ gtsam::NonlinearFactorGraph compute_thetas_graph(const double x_max, const doubl
       {
         const prx_symbol_t theta_simbol{ symbol_factory_t::create_symbol("param_symbol", grid(x, y)) };
         theta_graph.add(
-            space_limit_factor_t(theta_simbol, gtsam::noiseModel::Isotropic::Sigma(ps->get_dimension(), 1e0), ps));
+            space_limit_factor_t<1>(theta_simbol, gtsam::noiseModel::Isotropic::Sigma(ps->get_dimension(), 1e0), ps));
         Eigen::VectorXd theta{ Eigen::VectorXd::Ones(3) };
         if (results.exists(theta_simbol))
         {
@@ -199,20 +252,59 @@ int main(int argc, char* argv[])
   // const std::vector<std::pair<double, double>> env_bounds{ std::make_pair(0.0, 3.0), std::make_pair(0.0, 3.0) };
   const int divisions{ 10 };
   const std::vector<std::pair<double, double>> env_bounds{ std::make_pair(0.0, x_max), std::make_pair(0.0, y_max) };
-  // prx::regular_grid_t<double, 2> gt_grid{ env_bounds, divisions };
-  // init_ground_truth_grid(gt_grid, x_max, y_max, divisions);
+  prx::regular_grid_t<friction_vector_t, 2> frictions_grid{ env_bounds, divisions };
+  prx::regular_grid_t<std::pair<prx_symbol_t, prx_symbol_t>, 2> thetas_grid{ env_bounds, divisions };
 
+  const double initial_friction{ params["initial_friction"].as<double>() };
+  const Eigen::VectorXd initial_friction_vec{ friction_vector_t::Ones() * initial_friction };
+
+  using Container2D = std::vector<double>;
+  std::function<friction_vector_t(const Container2D&)> friction_grid_initializer = [&](const Container2D&) {
+    return initial_friction_vec;
+  };
+
+  gtsam::NonlinearFactorGraph thetas_workspace_graph;
+  gtsam::Values thetas_workspace_values;
+  auto workspace_theta_noise_model = gtsam::noiseModel::Isotropic::Sigma(1, 1e0);
+  std::function<std::pair<prx_symbol_t, prx_symbol_t>(const Container2D&)> thetas_grid_initializer =
+      [&](const Container2D& xy) {
+        const int x{ static_cast<int>(xy[0]) };
+        const int y{ static_cast<int>(xy[1]) };
+        const prx_symbol_t param_symbol{ symbol_factory_t::create_symbol("param_symbol", x, y) };
+        const prx_symbol_t work_space_symbol{ symbol_factory_t::create_symbol("work_space_symbol", x, y) };
+
+        auto function_2factor = [=](const Eigen::Vector2d& x1) {
+          return friction_vector_t(Eigen::Vector2d(x, y).norm());
+        };
+        thetas_workspace_values.insert_or_assign(work_space_symbol,
+                                                 Eigen::VectorXd(function_2factor(Eigen::Vector2d::Zero())));
+        thetas_workspace_values.insert_or_assign(param_symbol, initial_friction_vec);
+        thetas_workspace_graph.add(fg::function_2factor_t<1, 2>(workspace_theta_noise_model, param_symbol,
+                                                                work_space_symbol, function_2factor));
+        return std::make_pair(param_symbol, work_space_symbol);
+      };
+
+  frictions_grid.populate_grid(friction_grid_initializer);
+  thetas_grid.populate_grid(thetas_grid_initializer);
+  // std::cout << "thetas_grid: " << std::endl;
+  // for (auto cell : thetas_grid)
+  // {
+  //   std::cout << "[";
+  //   for (int i = 0; i < 2; ++i)
+  //   {
+  //     std::cout << thetas_grid.template unmap_key<Eigen::Vector2d>(cell.first)[i];
+  //     if (i < 2 - 1)
+  //       std::cout << ", ";
+  //   }
+  //   std::cout << "]: " << prx::key_formatter(cell.second.first) << "\n";
+  // }
+  // exit(0);
   auto gt_grid = [&](const double x, const double y) {
-    // const double friction{ x / 10.0 + y / 10.0 };
     double friction = 1;
     if (y < 1.5)
     {
       friction = 2 * y / 1.5;
     }
-    // else if (y < 2)
-    // {
-    //   friction = 2;
-    // }
     else
     {
       friction = 2 * (y_max - y) / 1.5;
@@ -220,8 +312,7 @@ int main(int argc, char* argv[])
     return friction;
   };
 
-  prx::regular_grid_t<friction_vector_t, 2> frictions_grid{ env_bounds, divisions };
-
+  PRX_DEBUG_PRINT;
   bool write_to_file = false;
   // bool real_friction = true;
   Eigen::Vector4d fg_friction_maps;
@@ -236,7 +327,7 @@ int main(int argc, char* argv[])
     x1 = x2 = x3 = x4 = x;
     y1 = y2 = y3 = y4 = y;
 
-    friction_params = friction_vector_t{ x1, y1, gt_grid(x1, y1) };
+    friction_params = friction_vector_t{ gt_grid(x1, y1) };
 
     if (write_to_file)
     {
@@ -258,16 +349,14 @@ int main(int argc, char* argv[])
     }
     else
     {
-      friction_params = friction_vector_t{ x, y, gt_grid(x, y) };
-      // friction_params[1] = gt_grid(x, y);
-      // friction_params[2] = gt_grid(x, y);
-      // friction_params[3] = gt_grid(x, y);
+      friction_params = friction_vector_t{ gt_grid(x, y) };
     }
     // std::cout << x << ", " << y << "\tfriction_params: " << friction_params.transpose() << std::endl;
     ps->copy_from(friction_params.tail(1));
     ps->enforce_bounds();
   };
 
+  PRX_DEBUG_PRINT;
   write_to_file = true;
   world_model.world_change_function = ground_truth_world;
   const double grid_stepping{ 1.0 / static_cast<double>(divisions) };
@@ -346,6 +435,7 @@ int main(int argc, char* argv[])
   };
   // clang-format on
 
+  PRX_DEBUG_PRINT;
   trajectory_t traj_real(ss);
   trajectory_t traj_fg(ss);
   trajectory_t accum_traj(ss);
@@ -362,6 +452,7 @@ int main(int argc, char* argv[])
   condition_check_t check_goal_reached(cc);
   checker.add_condition(&check_goal_reached);
 
+  PRX_DEBUG_PRINT;
   // Factor graphs
   // gtsam::NonlinearFactorGraph graph;
   // gtsam::NonlinearFactorGraph graph_theta;
@@ -369,24 +460,26 @@ int main(int argc, char* argv[])
   gtsam::Values init_vals;
   gtsam::Values results;
 
-  prx::regular_grid_t<int, 2> fg_grid{ env_bounds, divisions };
+  prx::regular_grid_t<prx_symbol_t, 2> fg_grid{ env_bounds, divisions };
   int cell_number{ 0 };
   for (double x = 0; x < x_max; x += grid_stepping)
   {
     for (double y = 0; y < y_max; y += grid_stepping)
     {
       fg_grid(x, y) = cell_number;
-      frictions_grid(x, y) = friction_vector_t::Ones() * params["initial_friction"].as<double>();
+      // frictions_grid(x, y) = friction_vector_t::Ones() * params["initial_friction"].as<double>();
       cell_number++;
     }
   }
 
+  PRX_DEBUG_PRINT;
   std::unordered_map<prx_symbol_t, Eigen::MatrixXd> theta_priors;
 
-  gtsam::NonlinearFactorGraph graph_theta{ compute_thetas_graph(x_max, y_max, grid_stepping, fg_grid, frictions_grid,
-                                                                ps, results, init_vals, friction_map_logger, -1,
-                                                                theta_priors) };
+  // gtsam::NonlinearFactorGraph graph_theta{ compute_thetas_graph(x_max, y_max, grid_stepping, fg_grid, frictions_grid,
+  //                                                               ps, results, init_vals, friction_map_logger, -1,
+  //                                                               theta_priors) };
 
+  PRX_DEBUG_PRINT;
   const int increment = static_cast<int>(frequency / simulation_step);
   std::cout << "increment: " << increment << std::endl;
   auto x_sigma = gtsam::noiseModel::Isotropic::Sigma(ss_dim, 1e-3);
@@ -395,6 +488,7 @@ int main(int argc, char* argv[])
   auto t_dm = gtsam::noiseModel::Isotropic::Sigma(1, 1e-3);
   auto p_cm = gtsam::noiseModel::Isotropic::Sigma(3, 1e0);
 
+  PRX_DEBUG_PRINT;
   fg::formatter_t graph_formatter;
 
   fg_logger_t lg(out_path + "friction_maps/fg_concurrent_log.txt", ' ', "-");
@@ -402,6 +496,7 @@ int main(int argc, char* argv[])
   int fg_iters{ 0 };
   space_point_t start_state = ss->make_point();
   const int initial_goal{ params["initial_goal"].as<int>() };
+  PRX_DEBUG_PRINT;
   for (int i = initial_goal; i < num_trajs; ++i)
   {
     std::cout << "Going into trajectory: " << i << "..." << std::endl;
@@ -424,7 +519,6 @@ int main(int argc, char* argv[])
 
     std::cout << "start_state: " << start_state << std::endl;
 
-    PRX_DEBUG_PRINT
     // real_friction = true;
     world_model.world_change_function = ground_truth_world;
     sg->propagate(start_state, omnibot_controller, checker, traj_real);
@@ -432,82 +526,81 @@ int main(int argc, char* argv[])
     std::cout << "traj_real: " << traj_real.size() << std::endl;
     const plan_t plan{ *(omnibot_controller->get_plan()) };
     std::cout << "plan size: " << plan.size() << std::endl;
-    gtsam::NonlinearFactorGraph graph_trajs;
-    std::set<prx_symbol_t> thetas_used;
+
+    gtsam::NonlinearFactorGraph trajectory_graph;
+    gtsam::Values trajectory_values;
+
+    gtsam::NonlinearFactorGraph weights_graph;
+    gtsam::Values weights_values;
+    // std::set<prx_symbol_t> thetas_used; 3.03112 0.676059
+    PRX_DEBUG_PRINT;
     for (unsigned xi = 0; xi < traj_real.size(); xi += increment)
     {
       if (xi < traj_real.size() - increment - 1)
       {
-        const double x{ traj_real[xi]->vector()[0] };
-        const double y{ traj_real[xi]->vector()[1] };
-        const double x1{ traj_real[xi + increment]->vector()[0] };
-        const double y1{ traj_real[xi + increment]->vector()[1] };
+        const Eigen::Vector3d x0{ traj_real[xi]->vector() };
+        const Eigen::Vector3d x1{ traj_real[xi + increment]->vector() };
+        // const double y0{ traj_real[xi]->vector()[1] };
+        // const double x1{ traj_real[xi + increment]->vector()[0] };
+        // const double y1{ traj_real[xi + increment]->vector()[1] };
 
         auto state_symbol = symbol_factory_t::create_symbol("state_symbol", i, xi);
         auto next_state_symbol = symbol_factory_t::create_symbol("state_symbol", i, xi + increment);
         auto control_symbol = symbol_factory_t::create_symbol("control_symbol", i, xi);
         auto time_symbol = symbol_factory_t::create_symbol("time_symbol", i, xi);
-        auto param_symbol_0 = symbol_factory_t::create_symbol("param_symbol", fg_grid(x, y));
-        auto param_symbol_1 = symbol_factory_t::create_symbol("param_symbol", fg_grid(x + grid_stepping, y));
-        auto param_symbol_2 = symbol_factory_t::create_symbol("param_symbol", fg_grid(x, y + grid_stepping));
-        auto param_symbol_3 =
-            symbol_factory_t::create_symbol("param_symbol", fg_grid(x + grid_stepping, y + grid_stepping));
-        auto param_symbol_X = symbol_factory_t::create_symbol("param_symbol_X", i, xi);
+        auto param_symbol = symbol_factory_t::create_symbol("param_symbol_X", i, xi);
 
-        thetas_used.insert(param_symbol_0);
-        thetas_used.insert(param_symbol_1);
-        thetas_used.insert(param_symbol_2);
-        thetas_used.insert(param_symbol_3);
         Eigen::VectorXd t_vec{ (Eigen::VectorXd(1) << plan[xi].duration * increment).finished() };
-        graph_trajs.addPrior(state_symbol, traj_real[xi]->vector<>(), x_sigma);
-        graph_trajs.addPrior(control_symbol, plan[xi].control->vector<>(), cs_dm);
-        graph_trajs.addPrior(time_symbol, t_vec, t_dm);
+        trajectory_graph.addPrior(state_symbol, traj_real[xi]->vector<>(), x_sigma);
+        trajectory_graph.addPrior(control_symbol, plan[xi].control->vector<>(), cs_dm);
+        trajectory_graph.addPrior(time_symbol, t_vec, t_dm);
 
-        init_vals.insert(state_symbol, traj_real[xi]->vector<>());
-        init_vals.insert(control_symbol, plan[xi].control->vector<>());
-        init_vals.insert(time_symbol, t_vec);
-        init_vals.insert(param_symbol_X, (Eigen::VectorXd(1) << 1).finished());
+        trajectory_values.insert(state_symbol, traj_real[xi]->vector<>());
+        trajectory_values.insert(control_symbol, plan[xi].control->vector<>());
+        trajectory_values.insert(time_symbol, t_vec);
+        trajectory_values.insert(param_symbol, (Eigen::VectorXd(1) << 1).finished());
 
         if (xi + increment >= traj_real.size() - increment - 1)
         {
-          graph_trajs.addPrior(next_state_symbol, traj_real[xi + increment]->vector<>(), x_sigma);
-          init_vals.insert(next_state_symbol, traj_real[xi + increment]->vector<>());
+          trajectory_graph.addPrior(next_state_symbol, traj_real[xi + increment]->vector<>(), x_sigma);
+          trajectory_values.insert(next_state_symbol, traj_real[xi + increment]->vector<>());
         }
-        graph_trajs.add(propagation_factor_5_t<3, 4, 3>(state_symbol, next_state_symbol, control_symbol, time_symbol,
-                                                        param_symbol_X, dm, sg));
+        trajectory_graph.add(propagation_factor_5_t<3, 4, 3>(state_symbol, next_state_symbol, control_symbol,
+                                                             time_symbol, param_symbol, dm, sg));
 
-        graph_trajs.add(fg::parameter_fusion_factor_t<2, 1>(param_symbol_0, param_symbol_1, param_symbol_2,
-                                                            param_symbol_3, param_symbol_X, p_cm));
-
-        // graph_trajs.add(propagation_factor_1_t(dm, traj_real[xi]->vector<>(), traj_real[xi +
-        // increment]->vector<>(),
-        //                                  plan.at(xi).control->vector<>(),
-        //                                  Eigen::Vector<double, 1>{ plan.at(xi).duration * increment },
-        //                                  symbol_factory_t::create_symbol("param_symbol", fg_grid(x, y)), sg));
-
-        // }
+        weights_graph.add(find_closest_thetas(xi, state_symbol, param_symbol, x0, thetas_grid, weights_values));
+        weights_graph.add(find_closest_thetas(xi, state_symbol, param_symbol, x1, thetas_grid, weights_values));
       }
     }
+    PRX_DEBUG_PRINT;
+
     gtsam::NonlinearFactorGraph graph;
-    graph.add(graph_theta);
-    graph.add(graph_trajs);
+    // graph.add(graph_theta);
+    graph.add(thetas_workspace_graph);
+    graph.add(trajectory_graph);
+    graph.add(weights_graph);
+    gtsam::Values values;
+    values.insert_or_assign(thetas_workspace_values);
+    values.insert_or_assign(trajectory_values);
+    values.insert_or_assign(weights_values);
+
     world_model.world_change_function = fg_world;
     std::cout << "Graph: " << graph.size() << std::endl;
-    gtsam::LevenbergMarquardtOptimizer optimizer(graph, init_vals, lm_params);
+    gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
     auto results = fg_utilities::optimize_and_log(optimizer, lm_params, lg, fg_iters);
 
     graph.saveGraph(fg_graph_file, results, prx::key_formatter, graph_formatter);
-    gtsam::Marginals marginals{ graph_trajs, results };
-    for (auto theta_u : thetas_used)
-    {
-      // std::cout << prx::key_formatter(theta_u) << " Inf: " << marginals.marginalInformation(theta_u)
-      //           << " Cov: " << marginals.marginalCovariance(theta_u) << std::endl;
-      theta_priors[theta_u] = marginals.marginalCovariance(theta_u);
-    }
+    // gtsam::Marginals marginals{ graph_trajs, results };
+    // for (auto theta_u : thetas_used)
+    // {
+    //   // std::cout << prx::key_formatter(theta_u) << " Inf: " << marginals.marginalInformation(theta_u)
+    //   //           << " Cov: " << marginals.marginalCovariance(theta_u) << std::endl;
+    //   theta_priors[theta_u] = marginals.marginalCovariance(theta_u);
+    // }
     fg_iters += optimizer.iterations();
 
-    graph_theta = compute_thetas_graph(x_max, y_max, grid_stepping, fg_grid, frictions_grid, ps, results, init_vals,
-                                       friction_map_logger, fg_iters, theta_priors);
+    // graph_theta = compute_thetas_graph(x_max, y_max, grid_stepping, fg_grid, frictions_grid, ps, results, init_vals,
+    //                                    friction_map_logger, fg_iters, theta_priors);
 
     std::cout << "init_vals size: " << init_vals.size() << std::endl;
     world_model.world_change_function = ground_truth_world;

@@ -13,8 +13,8 @@
 
 #include "prx/factor_graphs/defs.hpp"
 #include "prx/factor_graphs/utilities/fg_logger.hpp"
-#include "prx/factor_graphs/planning/trajectory_fg.hpp"
-#include "prx/factor_graphs/planning/trajectory_optimizer.hpp"
+// #include "prx/factor_graphs/planning/trajectory_fg.hpp"
+// #include "prx/factor_graphs/planning/trajectory_optimizer.hpp"
 #include "prx/factor_graphs/utilities/utilities_functions.hpp"
 #include "prx/factor_graphs/planning/initialization_trajs_fg.hpp"
 
@@ -229,8 +229,8 @@ int main(int argc, char* argv[])
     const int x{ std::get<0>(e) };
     const int y{ std::get<1>(e) };
     // std::cout << x << " " << y << std::endl;
-    graph.add(space_limit_factor_t(symbol_factory_t::create_symbol(gen_symbol_str(x, y), x, y),
-                                   gtsam::noiseModel::Isotropic::Sigma(ps_dim, 1e0), ps));
+    graph.add(space_limit_factor_t<1>(symbol_factory_t::create_symbol(gen_symbol_str(x, y), x, y),
+                                      gtsam::noiseModel::Isotropic::Sigma(ps_dim, 1e0), ps));
   }
 
   PRX_DEBUG_PRINT

@@ -32,8 +32,8 @@
 #include "prx/factor_graphs/defs.hpp"
 #include "prx/factor_graphs/utilities/fg_logger.hpp"
 #include "prx/factor_graphs/planning/initialization_trajs_fg.hpp"
-#include "prx/factor_graphs/planning/trajectory_fg.hpp"
-#include "prx/factor_graphs/planning/trajectory_optimizer.hpp"
+// #include "prx/factor_graphs/planning/trajectory_fg.hpp"
+// #include "prx/factor_graphs/planning/trajectory_optimizer.hpp"
 
 #include "prx/factor_graphs/utilities/utilities_functions.hpp"
 #include "prx/factor_graphs/utilities/formatter.hpp"
@@ -94,7 +94,7 @@ void compute_grid_error(const grid1_t& frictions_grid, const grid2_t& gt_grid, l
   // std::cout << error_grid << std::endl;
   for (auto cell : gt_grid)
   {
-    auto unmap_vals = gt_grid.unmap(cell.first);
+    auto unmap_vals = gt_grid.template unmap_key<Eigen::Vector2d>(cell.first);
     const prx_symbol_t theta_simbol{ symbol_factory_t::create_symbol("param_symbol",
                                                                      ids(unmap_vals[0], unmap_vals[1])) };
     if (priors.find(theta_simbol) == priors.end())
@@ -136,7 +136,7 @@ gtsam::NonlinearFactorGraph compute_thetas_graph(const double x_max, const doubl
       {
         const prx_symbol_t theta_simbol{ symbol_factory_t::create_symbol("param_symbol", grid(x, y)) };
         theta_graph.add(
-            space_limit_factor_t(theta_simbol, gtsam::noiseModel::Isotropic::Sigma(ps->get_dimension(), 1e0), ps));
+            space_limit_factor_t<1>(theta_simbol, gtsam::noiseModel::Isotropic::Sigma(ps->get_dimension(), 1e0), ps));
         Eigen::VectorXd theta{ Eigen::VectorXd::Ones(ps->get_dimension()) };
         if (results.exists(theta_simbol))
         {
@@ -379,10 +379,10 @@ int main(int argc, char* argv[])
   const int num_trajs{ params["num_trajs"].as<int>() };
 
   space_point_t goal = ss->make_point();
-  condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());
+  condition_check_t checker("sim_time", 1);
   auto cc = create_default_goal_check(ss, goal, goal_region_radius);
-  condition_check_t check_goal_reached(cc);
-  checker.add_condition(&check_goal_reached);
+  // condition_check_t check_goal_reached(cc);
+  // checker.add_condition(&check_goal_reached);
 
   // Factor graphs
   // gtsam::NonlinearFactorGraph graph;
@@ -430,25 +430,27 @@ int main(int argc, char* argv[])
   int fg_iters{ 0 };
   space_point_t start_state = ss->make_point();
   const int initial_goal{ params["initial_goal"].as<int>() };
+  ss->copy(start_state, goals[initial_goal % goals.size()]);
   for (int i = initial_goal; i < num_trajs; ++i)
   {
     std::cout << "Going into trajectory: " << i << "..." << std::endl;
 
     compute_grid_error(frictions_grid, gt_grid, grid_error_lg, fg_iters, theta_priors, fg_grid);
     curr_freq = frequency;
+
     traj_real.clear();
     traj_fg.clear();
     checker.reset();
     omnibot_controller->get_plan()->clear();
 
-    // i = initial_goal;
-    ss->copy(start_state, goals[i % goals.size()]);
-    n_ss->add_noise(start_state);
-    // n_ss->copy(start_state, goals[i]);
-    // ss->copy_from(goals[i]);
-    // n_ss->copy_to(start_state);
-    ss->copy(goal, goals[(i + 1) % goals.size()]);
-    omnibot_controller->set_goal(goal);
+    ss->copy_from(start_state);
+    if (cc())
+    {
+      // ss->copy(start_state, goals[i % goals.size()]);
+      // n_ss->add_noise(start_state);
+      ss->copy(goal, goals[(i + 1) % goals.size()]);
+      omnibot_controller->set_goal(goal);
+    }
 
     std::cout << "start_state: " << start_state << std::endl;
 
@@ -537,6 +539,7 @@ int main(int argc, char* argv[])
     sg->propagate(start_state, plan, traj_fg);
     std::cout << "traj_fg: " << traj_fg.size() << std::endl;
     traj_fg.to_file(traj_fg_file, std::ofstream::app);
+    ss->copy(start_state, traj_real.back());
 
     accum_traj += traj_real;
     accum_plan += plan;

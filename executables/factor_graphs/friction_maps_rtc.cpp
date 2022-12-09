@@ -32,8 +32,8 @@
 #include "prx/factor_graphs/defs.hpp"
 #include "prx/factor_graphs/utilities/fg_logger.hpp"
 #include "prx/factor_graphs/planning/initialization_trajs_fg.hpp"
-#include "prx/factor_graphs/planning/trajectory_fg.hpp"
-#include "prx/factor_graphs/planning/trajectory_optimizer.hpp"
+// #include "prx/factor_graphs/planning/trajectory_fg.hpp"
+// #include "prx/factor_graphs/planning/trajectory_optimizer.hpp"
 
 #include "prx/factor_graphs/utilities/utilities_functions.hpp"
 #include "prx/factor_graphs/utilities/formatter.hpp"
@@ -96,7 +96,7 @@ void compute_grid_error(const grid1_t& frictions_grid, const grid2_t& gt_grid, l
   // std::cout << error_grid << std::endl;
   for (auto cell : gt_grid)
   {
-    auto unmap_vals = gt_grid.unmap(cell.first);
+    auto unmap_vals = gt_grid.template unmap_key<Eigen::Vector2d>(cell.first);
     const prx_symbol_t theta_simbol{ symbol_factory_t::create_symbol("param_symbol",
                                                                      ids(unmap_vals[0], unmap_vals[1])) };
     if (priors.find(theta_simbol) == priors.end())
@@ -138,7 +138,7 @@ gtsam::NonlinearFactorGraph compute_thetas_graph(const double x_max, const doubl
       {
         const prx_symbol_t theta_simbol{ symbol_factory_t::create_symbol("param_symbol", grid(x, y)) };
         theta_graph.add(
-            space_limit_factor_t(theta_simbol, gtsam::noiseModel::Isotropic::Sigma(ps->get_dimension(), 1e0), ps));
+            space_limit_factor_t<1>(theta_simbol, gtsam::noiseModel::Isotropic::Sigma(ps->get_dimension(), 1e0), ps));
         Eigen::VectorXd theta{ Eigen::VectorXd::Ones(ps->get_dimension()) };
         if (results.exists(theta_simbol))
         {

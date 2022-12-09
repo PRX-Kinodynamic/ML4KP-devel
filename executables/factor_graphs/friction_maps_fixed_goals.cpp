@@ -23,8 +23,8 @@
 
 #include "prx/factor_graphs/defs.hpp"
 #include "prx/factor_graphs/utilities/fg_logger.hpp"
-#include "prx/factor_graphs/planning/trajectory_fg.hpp"
-#include "prx/factor_graphs/planning/trajectory_optimizer.hpp"
+// #include "prx/factor_graphs/planning/trajectory_fg.hpp"
+// #include "prx/factor_graphs/planning/trajectory_optimizer.hpp"
 #include "prx/factor_graphs/utilities/utilities_functions.hpp"
 #include "prx/factor_graphs/planning/initialization_trajs_fg.hpp"
 
