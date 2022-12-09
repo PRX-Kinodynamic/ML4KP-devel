@@ -79,13 +79,13 @@ public:
 
   inline plan_step_t operator[](std::size_t index) const
   {
-    prx_assert(index < num_steps, "Trying to access plan outside of bounds.");
+    prx_assert(index < num_steps, "Trying to access plan[ " << index << "] outside of bounds ( " << num_steps << ").");
     return steps[index];
   }
 
   inline plan_step_t& operator[](std::size_t index)
   {
-    prx_assert(index < num_steps, "Trying to access plan outside of bounds.");
+    prx_assert(index < num_steps, "Trying to access plan[ " << index << "] outside of bounds ( " << num_steps << ").");
     return steps[index];
   }
 
