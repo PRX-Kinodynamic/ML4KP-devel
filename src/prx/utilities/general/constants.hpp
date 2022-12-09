@@ -232,4 +232,65 @@ struct range_hash_combine_t
   }
 };
 
+// ToDo: Use In2... (variadic) to handle multiple containers.
+template <typename Container, typename In1, typename In2>
+static Container merge_container(const In1& in1, const In2& in2)
+{
+  Container container(in1.begin(), in1.end());
+  container.insert(container.end(), in2.begin(), in2.end());
+  return container;
+}
+template <typename Container, typename In1, typename... InRest>
+static Container merge_container(const In1& in1, InRest... in_rest)
+{
+  Container container(in1.begin(), in1.end());
+  const Container merged{ merge_container<Container>(in_rest...) };
+  container.insert(container.end(), merged.begin(), merged.end());
+  return container;
+}
+
+/**
+ * @brief      Given a state space, repeated calls to this function will step through all the space. Every call to this
+ *             function the state is incremented by step. This can be though of handling a state as a number and
+ *             increasing a digit in each call but starting from the right for simplicity: 0xAF00 + step = 0xA010
+ *
+ * 							Example usage: \\ no-lint
+ * 							state <- lower bound;
+ * 							do{
+ *             		Amazing code here
+ *             } while(state_space_step(state, step, ...))
+ *
+ * @param      state        The state to step over
+ * @param[in]  step         The step per dimension
+ * @param[in]  dimension    The dimension of the state space
+ * @param[in]  lower_bound  The lower bound
+ * @param[in]  upper_bound  The upper bound
+ *
+ * @tparam     State        An object representing the state and accessable through operator[] (i.e state[i])
+ * @tparam     Steps 				A container of size dimension. This allows each dimension to be step at different rate.
+ * @tparam     Bound        A container of size dimension representing a bound of the space.
+ */
+template <typename State, typename Steps, typename Bound>
+static bool state_space_step(State& state, const Steps steps, const std::size_t& dimension, const Bound lower_bound,
+                             const Bound upper_bound)
+{
+  for (int i = 0; i < dimension; ++i)
+  {
+    state[i] = state[i] + steps[i];
+
+    if (state[i] <= upper_bound[i])
+    {
+      return true;
+    }
+    state[i] = lower_bound[i];
+  }
+  return false;
+}
+
+template <typename State, typename Bound>
+static bool state_space_step(State& state, const double step, const std::size_t& dimension, const Bound lower_bound,
+                             const Bound upper_bound)
+{
+  return state_space_step(state, std::vector<double>(dimension, step), lower_bound, upper_bound);
+}
 }  // namespace prx
