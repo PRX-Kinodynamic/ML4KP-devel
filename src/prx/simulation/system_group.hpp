@@ -22,9 +22,44 @@ public:
   void propagate(space_point_t start_state, const std::shared_ptr<controller_t>& ctrl, double duration, plan_t& plan,
                  trajectory_t& traj);
 
-  void propagate(space_point_t start_state, const plan_t& plan, space_point_t result);
+  template <typename State>
+  void propagate(State start_state, const plan_t& plan, State result)
+  {
+    propagate_step p_step;
+    state_space->copy_from(start_state);
 
-  void propagate(space_point_t start_state, const plan_t& plan, trajectory_t& traj);
+    for (const plan_step_t& step : plan)
+    {
+      int steps = (int)((step.duration / simulation_step) + .1);
+      // int i = 0;
+      if (steps > 0)
+      {
+        propagate(steps, step.control);
+      }
+    }
+    state_space->copy_to(result);
+  }
+
+  template <typename State>
+  void propagate(State start_state, const plan_t& plan, trajectory_t& traj)
+  {
+    propagate_step p_step;
+    traj.clear();
+
+    state_space->copy_from(start_state);
+    traj.copy_onto_back(state_space);
+    for (const plan_step_t& step : plan)
+    {
+      // std::cout << "step: " << step << std::endl;
+      int steps = (int)((step.duration / simulation_step) + .1);
+      // int i = 0;
+      if (steps > 0)
+      {
+        // std::cout << step.control << std::endl;
+        propagate(steps, step.control, &traj);
+      }
+    }
+  }
 
   void propagate(int steps, space_point_t control = nullptr, trajectory_t* traj = nullptr);
 

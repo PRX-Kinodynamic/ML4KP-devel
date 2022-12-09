@@ -124,29 +124,22 @@ void trajectory_t::clear()
   num_states = 0;
 }
 
-void trajectory_t::copy_onto_back(space_point_t state)
-{
-  if ((num_states + 1) >= max_num_states)
-  {
-    increase_buffer();
+// void trajectory_t::copy_onto_back(space_point_t state)
+// {
+//   if ((num_states + 1) >= max_num_states)
+//   {
+//     increase_buffer();
 
-    end_iterator = states.begin();
-    const_end_iterator = states.begin();
-    std::advance(end_iterator, num_states);
-    std::advance(const_end_iterator, num_states);
-  }
-  state_space->copy_point(*end_iterator, state);
-  ++end_iterator;
-  ++const_end_iterator;
-  ++num_states;
-}
-
-void trajectory_t::copy_onto_back(const Eigen::Ref<Eigen::VectorXd> v_state)
-{
-  PRX_NOT_IMPLEMENTED
-  // state_space -> copy_from_vector(v_state);
-  // copy_onto_back(state_space);
-}
+//     end_iterator = states.begin();
+//     const_end_iterator = states.begin();
+//     std::advance(end_iterator, num_states);
+//     std::advance(const_end_iterator, num_states);
+//   }
+//   state_space->copy(*end_iterator, state);
+//   ++end_iterator;
+//   ++const_end_iterator;
+//   ++num_states;
+// }
 
 void trajectory_t::copy_onto_back(const space_t* space)
 {

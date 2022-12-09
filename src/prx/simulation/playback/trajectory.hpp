@@ -93,8 +93,25 @@ public:
   bool operator!=(const trajectory_t& t);
 
   void clear();
-  void copy_onto_back(space_point_t state);
-  void copy_onto_back(const Eigen::Ref<Eigen::VectorXd> v_state);
+  // void copy_onto_back(space_point_t state);
+  template <typename State>
+  void copy_onto_back(State state)
+  {
+    if ((num_states + 1) >= max_num_states)
+    {
+      increase_buffer();
+
+      end_iterator = states.begin();
+      const_end_iterator = states.begin();
+      std::advance(end_iterator, num_states);
+      std::advance(const_end_iterator, num_states);
+    }
+    state_space->copy(*end_iterator, state);
+    ++end_iterator;
+    ++const_end_iterator;
+    ++num_states;
+  }
+  // void copy_onto_back(const Eigen::Ref<Eigen::VectorXd> v_state);
   void copy_onto_back(const space_t* space);
 
   std::string print(unsigned precision = 3) const;

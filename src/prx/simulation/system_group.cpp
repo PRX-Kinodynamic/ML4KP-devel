@@ -56,22 +56,22 @@ system_group_t::~system_group_t()
   group.clear();
 }
 
-void system_group_t::propagate(space_point_t start_state, const plan_t& plan, space_point_t result)
-{
-  propagate_step p_step;
-  state_space->copy_from(start_state);
+// void system_group_t::propagate(space_point_t start_state, const plan_t& plan, space_point_t result)
+// {
+//   propagate_step p_step;
+//   state_space->copy_from(start_state);
 
-  for (const plan_step_t& step : plan)
-  {
-    int steps = (int)((step.duration / simulation_step) + .1);
-    // int i = 0;
-    if (steps > 0)
-    {
-      propagate(steps, step.control);
-    }
-  }
-  state_space->copy_to_point(result);
-}
+//   for (const plan_step_t& step : plan)
+//   {
+//     int steps = (int)((step.duration / simulation_step) + .1);
+//     // int i = 0;
+//     if (steps > 0)
+//     {
+//       propagate(steps, step.control);
+//     }
+//   }
+//   state_space->copy_to_point(result);
+// }
 
 void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
                                space_point_t result)
@@ -109,49 +109,6 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
   // state_space -> copy_to_point(result);
 }
 
-void system_group_t::propagate(space_point_t start_state, const plan_t& plan, trajectory_t& traj)
-{
-  propagate_step p_step;
-  traj.clear();
-
-  state_space->copy_from(start_state);
-  traj.copy_onto_back(state_space);
-  for (const plan_step_t& step : plan)
-  {
-    // std::cout << "step: " << step << std::endl;
-    int steps = (int)((step.duration / simulation_step) + .1);
-    // int i = 0;
-    if (steps > 0)
-    {
-      // std::cout << step.control << std::endl;
-      propagate(steps, step.control, &traj);
-    }
-  }
-}
-
-void system_group_t::propagate(space_point_t start_state, const std::shared_ptr<controller_t>& ctrl, double duration,
-                               plan_t& plan, trajectory_t& traj)
-{
-  prx_assert(duration >= 0, "Duration cannot be negative!");
-  state_space->copy_from(start_state);
-  propagate_step p_step;
-
-  plan.clear();
-
-  traj.clear();
-  traj.copy_onto_back(state_space);
-
-  for (double i = 0; i < duration; i += simulation_step)
-  {
-    ctrl->compute_controls();
-    plan.append_onto_back(simulation_step);
-    // propagate(1, plan.back().control, &traj);
-    propagate_once(p_step, plan.back().control);
-
-    traj.copy_onto_back(state_space);
-  }
-}
-
 void system_group_t::propagate(int steps, space_point_t control, trajectory_t* traj)
 {
   propagate_step p_step;
@@ -185,6 +142,7 @@ void system_group_t::propagate_once(propagate_step step, space_point_t control)
   }
 
   sim->step_simulation(step);
+  state_space->enforce_bounds();
 }
 
 void system_group_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times,
