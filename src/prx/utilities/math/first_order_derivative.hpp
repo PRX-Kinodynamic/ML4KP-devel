@@ -60,10 +60,10 @@ class first_order_derivative_t
 
 public:
   first_order_derivative_t() = delete;
-  // first_order_derivative_t(const double _h) : h(_h), epsilon_matrix(_h * epsilon_matrix_t::Identity())
-  // {
-  //   // Need to mark if model has been implemented...
-  // }
+
+  first_order_derivative_t(const double _h = 0.01) : h(_h), epsilon_matrix(_h * epsilon_matrix_t::Identity())
+  {
+  }
 
   first_order_derivative_t(Function& _model, const double _h = 0.01)
     : model(_model), h(_h), epsilon_matrix(_h * epsilon_matrix_t::Identity())
