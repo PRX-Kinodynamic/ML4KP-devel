@@ -14,16 +14,12 @@ namespace prx
     class mujoco_simulator_t : public simulator_t
     {
         private:
-        mjModel* m;
-        mjData* d;
         mjvCamera cam;
         mjvOption opt;
         mjvScene scn;
         mjrContext con;
 
         GLFWwindow* window;
-
-        std::vector<mjJointInfo*> joint_info;
 
         public:
         mujoco_simulator_t(const std::string& model_path);
@@ -36,11 +32,17 @@ namespace prx
 
         virtual void reset_simulation() override;
 
-        // An iterator over all joint infos
-        std::pair<std::vector<mjJointInfo*>::iterator, std::vector<mjJointInfo*>::iterator> get_joint_info()
-        {
-            return std::make_pair(joint_info.begin(), joint_info.end());
-        }
+        void set_state(const MujocoState& state);
+
+        MujocoState get_state();
+
+        mjModel* m;
+        mjData* d;
+
+        std::vector<mjJointInfo*> joint_info;
+        std::vector<mjActuatorInfo*> actuator_info;
+
+        std::vector<double*> actuator_internal_state;
     };
 }
 #endif

@@ -35,4 +35,6 @@ if(APPLE)
     set_target_properties(${PROJECT_NAME}_mjsim PROPERTIES FRAMEWORK true)
 endif()
 
+# TODO: Take care of this for Linux
+
 link_directories(${PROJECT_NAME}_mjsim PUBLIC ${MJ_LIB_DIR})

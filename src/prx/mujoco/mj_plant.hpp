@@ -25,12 +25,9 @@ namespace prx
 
         virtual void update_to_mujoco(const space_point_t& point);
 
-        virtual void update_from_mujoco(const bool save_sim_state);
+        virtual void update_from_mujoco();
 
         protected:
         std::shared_ptr<mujoco_simulator_t> sim;
-        std::vector<mjtNum*> qpos;
-        std::vector<mjtNum*> qvel;
-        std::vector<mjtNum*> ctrl;
     };
 }

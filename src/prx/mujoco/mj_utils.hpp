@@ -18,16 +18,29 @@ namespace prx
         int dofadr;
     };
 
-    void get_mj_joint_info(mjModel* m, std::vector<mjJointInfo*>& joint_info);
+    struct mjActuatorInfo
+    {
+        std::string name;
+        bool limited;
+        mjtNum range[2];
+    };
 
+    void get_mj_joint_info(mjModel* m, std::vector<mjJointInfo*>& joint_info);
     std::ostream& operator<<(std::ostream& os, const mjJointInfo& info);
 
-    struct MuJoCoState
+    void get_mj_actuator_info(mjModel* m, std::vector<mjActuatorInfo*>& actuator_info);
+    std::ostream& operator<<(std::ostream& os, const mjActuatorInfo& info);
+
+    struct MujocoState
     {
+        // Check this issue: https://github.com/deepmind/mujoco/issues/270
+        // and this: https://github.com/deepmind/mujoco/issues/493
         mjtNum time;
         std::vector<mjtNum> qpos;
         std::vector<mjtNum> qvel;
         std::vector<mjtNum> act;
+        std::vector<mjtNum> ctrl;
     };
+    std::ostream& operator<<(std::ostream& os, const MujocoState& state);
 }
 #endif
