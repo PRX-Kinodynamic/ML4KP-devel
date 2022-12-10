@@ -5,8 +5,8 @@ namespace prx
 {
     mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path) : simulator_t(plant_type::MUJOCO)
     {
-        const char* full_model_path = (mj_models_path + model_path).c_str();
-        m = mj_loadXML(full_model_path, NULL, NULL, 0);
+        std::string full_model_path = mj_models_path + model_path;
+        m = mj_loadXML(full_model_path.c_str(), NULL, NULL, 0);
         if (!m) prx_throw("Error in loading model.")
         PRX_DEBUG_PRINT
         d = mj_makeData(m);
@@ -28,6 +28,12 @@ namespace prx
         mjv_makeScene(m, &scn, 1000);
         mjr_makeContext(m, &con, mjFONTSCALE_150);
 
+        get_mj_joint_info(m, joint_info);
+        for (auto& info : joint_info)
+        {
+            std::cout << *info << std::endl;
+        }
+
     }
 
     mujoco_simulator_t::~mujoco_simulator_t()
@@ -39,6 +45,25 @@ namespace prx
         mj_deleteData(d);
         mj_deleteModel(m);
         mj_deactivate();
+    }
+
+    void mujoco_simulator_t::init_simulator()
+    {
+        system_groups -> link_simulator(this);
+        std::string context_name = "mujoco_context";
+        std::vector<system_ptr_t> context_systems;
+
+        system_ptr_t system;
+        system.reset(new mujoco_plant_t("mujoco_plant"));
+        context_systems.push_back(system);
+        auto mj_ptr = std::dynamic_pointer_cast<mujoco_plant_t>(system);
+        auto sim_ptr = std::static_pointer_cast<mujoco_simulator_t>(this -> shared_ptr());
+        mj_ptr -> initialize(sim_ptr);
+        mj_ptr -> update_from_mujoco(true);
+
+        system_groups -> add_system_group(context_name, context_systems);
+
+        // Need to set up collision stuff here.
     }
 
     void mujoco_simulator_t::step_simulation(propagate_step step)

@@ -10,6 +10,8 @@ else()
 endif()
 
 file(GLOB_RECURSE SRC_PRX_LIB_MJSIM
+    mj_utils.cpp
+    mj_plant.cpp
     mj_simulator.cpp
 )
 
