@@ -1,5 +1,4 @@
 #pragma once
-
 #include "prx/utilities/general/transforms.hpp"
 
 #include <map>
@@ -33,7 +32,7 @@ namespace prx
 	const std::string js_path = lib_path + "resources/js/";
 
 	enum propagate_step { FIRST_STEP, MIDDLE_STEP, FINAL_STEP };
-	enum plant_type { ANALYTICAL, PHYSICS };
+	enum plant_type { ANALYTICAL, MUJOCO };
 
 	static inline
 	double norm_angle_pi( double angle, double min_angle = -PRX_PI, double max_angle = PRX_PI )
