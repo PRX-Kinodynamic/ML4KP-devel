@@ -99,9 +99,9 @@ int main(int argc, char* argv[])
         ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
         space_point_t current = ss -> make_point();
-        std::vector<double> xs = linspace(-10.,10.,11);
-        std::vector<double> ys = linspace(-10.,10.,11);
-        std::vector<double> ts = linspace(-PRX_PI, PRX_PI, 9);
+        std::vector<double> xs = linspace(-10.,10.,10);
+        std::vector<double> ys = linspace(-10.,10.,10);
+        std::vector<double> ts = linspace(-PRX_PI, PRX_PI, 8);
 
         trajectory_t traj(ss); plan_t plan(cs);
         std::vector<space_point_t> verification_points;
@@ -117,30 +117,9 @@ int main(int argc, char* argv[])
                     current -> at(1) = y;
                     current -> at(2) = t;
 
-                    int valid_count = 0;
-                    std::vector<double> ctrl;
-
                     if (dirt_spec.valid_state(current))
                     {
-                        for (auto p1 : ps)
-                        {
-                            for (auto p2 : ps)
-                            {
-                                ctrl = {p1,p2};
-                                traj.clear(); plan.clear();
-                                plan.append_onto_back(1.0);
-                                cs -> copy_point_from_vector(plan.back().control, ctrl);
-                                dirt_spec.propagate(current,plan,traj);
-                                if (dirt_spec.valid_check(traj))
-                                {
-                                    valid_count++;
-                                }
-                            }
-                        }
-                        if (valid_count == 9)
-                        {
-                            verification_points.push_back(ss -> clone_point(current));
-                        }
+                        verification_points.push_back(ss -> clone_point(current));
                     }
                 }
             }
@@ -159,6 +138,7 @@ int main(int argc, char* argv[])
 
         fout.close();
 
+        /*
         std::string landmarks_file = out_path + "landmarks.txt";
         fout.open(landmarks_file);
         
@@ -189,6 +169,7 @@ int main(int argc, char* argv[])
         }
 
         fout.close();
+        */
 
     }
     catch(const prx_assert_t& e) 

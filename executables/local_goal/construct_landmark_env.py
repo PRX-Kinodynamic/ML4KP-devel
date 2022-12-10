@@ -76,7 +76,7 @@ thickness = 1.0
 width = 2.0
 big_width = 3.0
 
-num_passages = 4
+num_passages = 2
 
 landmarks = []
 

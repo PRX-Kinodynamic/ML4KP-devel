@@ -2,7 +2,7 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/utilities/learned_modules/learned_controller.hpp"
-#include "prx/utilities/learned_modules/ground_truth_roadmap.hpp"
+#include "prx/utilities/learned_modules/landmark_roadmap.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/planning/planners/dirt.hpp"
 #include "prx/planning/planner_statistics.hpp"
@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
         std::string output_dir = params["output_dir"].as<std::string>();
         std::string out_path = output_path + output_dir;
         
-        ground_truth_roadmap_t rrr;
+        landmark_roadmap_t rrr;
         
         std::string points_fname = out_path + "points.txt";
         std::vector<std::vector<double>> dataset = read_comma_separated_file(points_fname);
@@ -135,12 +135,66 @@ int main(int argc, char* argv[])
         }
 
         int verification_set_size = rrr.verification_set.size();
-        // std::cout << "Verification set size: " << verification_set_size << std::endl;
-        int max_failures = params["num_failures"].as<int>();
-        rrr.set_max_failures(max_failures);
+        std::cout << "Verification set size: " << verification_set_size << std::endl;
+
         timer.reset();
-        rrr.build_roadmap(dirt_query, dirt_spec, controller, false);
+        rrr.set_stretch_factor(params["stretch_factor"].as<double>());
+        rrr.build_roadmap(dirt_query, dirt_spec, controller);
         double time_taken = timer.measure_reset();
+        std::cout << "Time taken to build roadmap: " << time_taken << std::endl;
+        std::cout << rrr.is_connected() << std::endl;
+
+
+        auto roadmap_edges = rrr.get_all_edges();
+        for (auto e : roadmap_edges)
+        {
+            std::string traj_fname = out_path + "traj_" + std::to_string(e.first) + "_" + std::to_string(e.second) + ".txt";
+            std::ofstream fout;
+            fout.open(traj_fname);
+            fout << rrr.print_edge_traj(e.first,e.second,dirt_query,dirt_spec,controller);
+            fout.close();
+        }
+        
+        space_point_t s_pt = ss -> make_point();
+        space_point_t g_pt = ss -> make_point();        
+        std::string landmark_fname = out_path + "control.txt";
+        auto control_points = read_comma_separated_file(landmark_fname);
+        unsigned counter = 0;
+        
+        for (auto p : control_points)
+        {
+            ss -> copy_point_from_vector(s_pt,p);
+            for (auto q : control_points)
+            {
+                ss -> copy_point_from_vector(g_pt,q);
+                if (dirt_spec.distance_function(s_pt,g_pt) < 0.1) continue;
+                auto s_nn = rrr.add_start(s_pt, dirt_spec, dirt_query, controller);
+                auto g_nn = rrr.add_goal(g_pt, dirt_spec, dirt_query, controller);
+                auto path = rrr.get_shortest_path(s_nn,g_nn);
+                
+                std::string output_fname = out_path + "path_" + std::to_string(counter) + ".txt";
+                // Reverse the path
+                std::reverse(path.begin(),path.end());
+                std::ofstream fout;
+                fout.open(output_fname);
+                // Iterate through pairs of nodes 
+                for (unsigned i = 0; i < path.size()-1; i++)
+                {
+                    auto e = std::make_pair(path[i],path[i+1]);
+                    fout << rrr.print_edge_traj(e.first,e.second,dirt_query,dirt_spec,controller);
+                }
+                counter++;
+
+                rrr.remove_vertex(s_nn);
+                rrr.remove_vertex(g_nn);
+            }
+
+            output_progress_bar(1.0 * counter/(control_points.size() * control_points.size()));
+
+        }
+        fout.close();
+
+        /*
         // rrr.run_verification(dirt_query, dirt_spec, controller);
         // std::cout << "Verification set size: " << rrr.verification_set.size() << std::endl;
         
@@ -265,27 +319,21 @@ int main(int argc, char* argv[])
             dirt_query.clear_outputs();
             dirt.reset();
         }
+        */
 
         // Output graph to file.
         std::string vertex_fname = out_path + "vertices.txt";
         std::string edge_fname = out_path + "edges.txt";
-        std::string unverified_fname = out_path + "unverified.txt";
 
         std::ofstream vertex_file(vertex_fname);
         std::ofstream edge_file(edge_fname);
-        std::ofstream unverified_file(unverified_fname);
 
         vertex_file << rrr.print_vertices(ss) << std::endl;
         edge_file << rrr.print_edges() << std::endl;
 
-        for (auto s : rrr.verification_set)
-        {
-            unverified_file << ss -> print_point(s) << std::endl;
-        }
-
         vertex_file.close();
         edge_file.close();
-        unverified_file.close();
+        
     }
     catch(const prx_assert_t& e) 
     {

@@ -2,6 +2,7 @@ random_seed: 210896
 # random_seed: 101193
 simulation_step: 0.1
 
+# environment: "environments/bar.yaml"
 environment: "environments/landmark.yaml"
 
 plant: !file "plants/treaded_vehicle.yaml"
@@ -17,6 +18,7 @@ sample_around: true
 verify_edge: true
 validate: true
 num_failures: 100
+stretch_factor: 3.0
 termination_classifier: !file "networks/svm_classifier.yaml"
 
 start_state: [3.3333,-8.5000,0.0000,0.0000,0.0000]
@@ -24,4 +26,4 @@ goal_state:  [ 3.3333,8.5000,0.0000,0.0000,0.0000]
 
 debug: false
 
-output_dir: "1026/medium/"
+output_dir: "1208/"

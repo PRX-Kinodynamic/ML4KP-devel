@@ -23,14 +23,14 @@ for obstacle in obstacles:
 plt.xlim(-11,11)
 plt.ylim(-11,11)
 
-# points_file = os.environ["DIRTMP_PATH"]+"out/1026/points.txt"
-points_file = os.environ["DIRTMP_PATH"]+"out/1026/unverified.txt"
 
-points = np.loadtxt(points_file,delimiter=",")
-plt.scatter(points[:,0],points[:,1],c="b")
-for i in range(points.shape[0]):
-    # Column 3 is the angle. Draw an arrow from (x,y) to (x+cos(angle),y+sin(angle))
-    plt.arrow(points[i,0],points[i,1],np.cos(points[i,2]),np.sin(points[i,2]),color="black",head_width=0.2,head_length=0.2)
+# points_file = os.environ["DIRTMP_PATH"]+"out/1114/points.txt"
+
+# points = np.loadtxt(points_file,delimiter=",")
+# plt.scatter(points[:,0],points[:,1],c="b")
+# for i in range(points.shape[0]):
+#     # Column 3 is the angle. Draw an arrow from (x,y) to (x+cos(angle),y+sin(angle))
+#     plt.arrow(points[i,0],points[i,1],np.cos(points[i,2]),np.sin(points[i,2]),color="black",head_width=0.2,head_length=0.2)
 
 '''
 vertices_fname = os.environ["DIRTMP_PATH"]+"out/vertices.txt"
