@@ -21,9 +21,6 @@ namespace prx
 	 * in the planning scene. Self-collisions are not accounted for. Online, a call to PQP
 	 * is made to query for collisions.
 	 * 
-	 * For Bullet-simulated plants the collision group just keeps track of the different plants
-	 * in the world. Internally, Bullet keeps track of collisions that haven't been excluded explicitly.
-	 * This information is queried during a collision checking call.
 	 * 
 	 * @brief <b> A class responsible for keeping track of collision information. </b>
 	 * @author Zakary Littlefield, Aravind Sivaramakrishnan, Troy McMahon

@@ -46,8 +46,3 @@ target_link_libraries(py${PROJECT_NAME} ${PROJECT_NAME}_utilities)
 target_link_libraries(py${PROJECT_NAME} ${PROJECT_NAME}_visualization)
 target_link_libraries(py${PROJECT_NAME} ${PROJECT_NAME}_simulation)
 target_link_libraries(py${PROJECT_NAME} ${PROJECT_NAME}_planning)
-if(BUILD_FOR_BULLET)
-
-    target_link_libraries(py${PROJECT_NAME} ${PROJECT_NAME}_bullet_sim)
-
-endif()

@@ -50,7 +50,7 @@ namespace prx
 		virtual void propagate(const double simulation_step, const propagate_step step)
 		{
 			// The defaul implementation is not using propagate_step
-			// Currently propagate_step is only used inside bullet
+			// Currently propagate_step is only used inside physics simulated plants
 			// It can always be overridden if necessary
 			propagate(simulation_step);
 		}

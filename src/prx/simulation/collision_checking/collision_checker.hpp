@@ -1,9 +1,6 @@
 #pragma once
 
 #include "prx/simulation/plant.hpp"
-// #ifndef BULLET_NOT_BUILT
-// #include "prx/bullet_sim/plants/bullet_plant.hpp"
-// #endif
 #include "prx/simulation/collision_checking/collision_group.hpp"
 
 #include "prx/utilities/defs.hpp"

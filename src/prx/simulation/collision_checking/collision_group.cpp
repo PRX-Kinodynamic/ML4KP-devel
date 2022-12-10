@@ -44,13 +44,6 @@ namespace prx
 			auto plant = std::dynamic_pointer_cast<plant_t>(sys);
 			if(plant)
 			{
-			  // #ifndef BULLET_NOT_BUILT
-			  // auto plant_bullet = std::dynamic_pointer_cast<bullet_t>(sys);
-			  // if(plant_bullet){
-			  //   bullet_plants.push_back(plant_bullet);
-			  // }
-			  // #endif
-     
 				std::vector<std::shared_ptr<pqp_info_t>> local_infos;
 				plants.push_back(sys);
 				auto collision_list = plant->get_collision_list();

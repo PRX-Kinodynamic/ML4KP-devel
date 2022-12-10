@@ -54,7 +54,7 @@ namespace prx
 		// QUESTION: what about separating this in two stages:
 		// 				1) add_context
 		// 				2) initialize_simulation
-		// 				With the benefit of analytical and bullet being more alike
+		// 				With the benefit of analytical and physics simulation being more alike
 		void create_context(const std::string& context_name, 
 			const std::vector<std::string>& system_names, 
 			const std::vector<std::string>& obstacle_names)
