@@ -2,7 +2,7 @@
 #ifndef MUJOCO_NOT_BUILT
 #include "prx/utilities/defs.hpp"
 
-#include "mujoco.h"
+#include "mujoco/mujoco.h"
 
 namespace prx 
 {
