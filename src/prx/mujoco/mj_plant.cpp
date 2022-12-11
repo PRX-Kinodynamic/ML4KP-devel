@@ -41,6 +41,8 @@ namespace prx
                     {
                         ss_lb.push_back(joint -> range[0]);
                         ss_ub.push_back(joint -> range[1]);
+                        ss_lb.push_back(-PRX_INFINITY);
+                        ss_ub.push_back(PRX_INFINITY);
                     }
                     else
                     {
@@ -60,11 +62,15 @@ namespace prx
                     {
                         ss_lb.push_back(joint -> range[0]);
                         ss_ub.push_back(joint -> range[1]);
+                        ss_lb.push_back(-PRX_INFINITY);
+                        ss_ub.push_back(PRX_INFINITY);
                     }
                     else
                     {
                         ss_lb.push_back(-PRX_PI);
                         ss_ub.push_back(PRX_PI);
+                        ss_lb.push_back(-PRX_INFINITY);
+                        ss_ub.push_back(PRX_INFINITY);
                     }
 
                     state_memory[idx]   = &sim -> d -> qpos[joint -> qposadr];

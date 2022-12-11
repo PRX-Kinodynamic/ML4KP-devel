@@ -39,8 +39,6 @@ namespace prx
         {
             std::cout << *info << std::endl;
         }
-
-        std::cout << "Warmstart acc: " << d -> qacc_warmstart[0] << " " << d -> qacc_warmstart[1] << std::endl;
     }
 
     mujoco_simulator_t::~mujoco_simulator_t()
@@ -64,13 +62,10 @@ namespace prx
         system.reset(new mujoco_plant_t("mujoco_plant"));
         context_systems.push_back(system);
         auto mj_ptr = std::dynamic_pointer_cast<mujoco_plant_t>(system);
-        PRX_DEBUG_PRINT
         auto sim_ptr = std::static_pointer_cast<mujoco_simulator_t>(this -> shared_ptr());
-        PRX_DEBUG_PRINT
         mj_ptr -> initialize(sim_ptr);
         mj_ptr -> update_from_mujoco();
 
-        PRX_DEBUG_PRINT
         system_groups -> add_system_group(context_name, context_systems);
 
         // Need to set up collision stuff here.
@@ -78,6 +73,11 @@ namespace prx
 
     void mujoco_simulator_t::step_simulation(propagate_step step)
     {
+        // Set the warmstart acceleration to be zero (for determinism)
+        for (int i = 0; i < m->nv; i++)
+        {
+            d -> qacc_warmstart[i] = 0;
+        }
         mj_step(m, d);
         mjrRect viewport = {0, 0, 0, 0};
         glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
