@@ -89,6 +89,7 @@ namespace prx
 		// TODO: is stepping all contexts ok?
 		virtual void step_simulation(propagate_step step) override
 		{
+			simulation_time += simulation_step;
 			for(auto s : this -> systems)
 			{
 				s.second -> propagate(simulation_step, step);

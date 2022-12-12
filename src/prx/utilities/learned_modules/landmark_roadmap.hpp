@@ -22,6 +22,7 @@ class landmark_roadmap_t
         std::unordered_map<node_index_t,landmark_vertex_t*> vertices;
         std::unordered_map<node_index_t,double> costs_to_goal;
         std::unordered_map<node_index_t, std::vector<landmark_edge_t*>> edges;
+        std::vector<std::pair<node_index_t, node_index_t>> all_edges;
         std::unordered_map<node_index_t, std::unordered_map<node_index_t, double>> distances;
         node_index_t vertex_counter, edge_counter;
         std::vector<node_index_t> path;
@@ -125,18 +126,6 @@ class landmark_roadmap_t
             query.clear_outputs();
         }
 
-        // double min_cost = PRX_INFINITY;
-        // node_index_t min_index = -1;
-
-        // for (auto i : a_indices)
-        // {
-        //     if (costs_to_goal[i] < min_cost)
-        //     {
-        //         min_cost = costs_to_goal[i];
-        //         min_index = i;
-        //     }
-        // }
-
         return -1;
     }
 
@@ -224,6 +213,7 @@ class landmark_roadmap_t
         e->cost = cost;
         edges[s].push_back(e);
         edge_counter++;
+        all_edges.push_back(std::make_pair(s, t));
     }
 
     double get_path_cost(node_index_t s, node_index_t t)
@@ -388,76 +378,49 @@ class landmark_roadmap_t
             }
         } while (unconsidered.size() > 0);
 
-        /*
-        std::vector<std::pair<node_index_t, node_index_t>> edges_to_remove;
-        for (auto a : vertices)
+        for (auto e : all_edges)
         {
-            for (auto b : vertices)
+            node_index_t a = e.first;
+            node_index_t b = e.second;
+
+            std::vector<node_index_t> in_a, out_b;
+            for (auto edge : edges[b]) out_b.push_back(edge -> end);
+            for (auto edge : edges) for (auto edge2 : edge.second) if (edge2 -> end == a) in_a.push_back(edge.first);
+
+            if (in_a.size() == 0 || out_b.size() == 0) continue;
+
+            // Temporarily set the edge cost to inf.
+            double a_b_cost = get_edge_cost(a, b);
+            for (auto edge : edges[a])
             {
-                if (!check_edge_exists(a.first, b.first)) continue;
-                // Get all nodes that have a as a child and b as a parent.
-                bool to_remove = true;
-                std::vector<node_index_t> in_a;
-                std::vector<node_index_t> out_b;
-                for (auto e : edges[b.first])
+                if (edge -> end == b)
                 {
-                    out_b.push_back(e->end);
+                    edge -> cost = PRX_INFINITY;
+                    break;
                 }
-
-                for (auto e : edges)
-                {
-                    for (auto f : e.second)
-                    {
-                        if (f->end == a.first)
-                        {
-                            in_a.push_back(e.first);
-                        }
-                    }
-                }
-
-                if (in_a.size() == 0 || out_b.size() == 0) continue;
-
-                double a_b_cost = get_edge_cost(a.first, b.first);
-                // Temporarily set the edge cost to inf.
-                for (auto e : edges[a.first])
-                {
-                    if (e->end == b.first)
-                    {
-                        e->cost = PRX_INFINITY;
-                        break;
-                    }
-                }
-
-                // Check path cost from a to b.
-                double path_cost_without = get_path_cost(a.first, b.first);
-                if (path_cost_without < stretch_factor * a_b_cost)
-                {
-                    to_remove = false;
-                }
-
-                // Reset the edge cost.
-                for (auto e : edges[a.first])
-                {
-                    if (e->end == b.first)
-                    {
-                        e->cost = a_b_cost;
-                        break;
-                    }
-                }
-                if (to_remove)
-                {
-                    std::cout << "Removing edge " << a.first << " -> " << b.first << std::endl;
-                    edges_to_remove.push_back(std::make_pair(a.first, b.first));
-                }
-
             }
-        }
 
-        for (auto e : edges_to_remove)
-        {
-            remove_edge(e.first, e.second);
+            // Check path cost from a to b.
+            double path_cost_without = get_path_cost(a, b);
+            if (path_cost_without < stretch_factor * a_b_cost)
+            {
+                std::cout << "Removing edge " << a << " -> " << b << std::endl;
+                remove_edge(a, b);
+            }
+            else
+            {
+                // Reset the edge cost.
+                for (auto edge : edges[a])
+                {
+                    if (edge -> end == b)
+                    {
+                        edge -> cost = a_b_cost;
+                        break;
+                    }
+                }
+            }
+
         }
-        */
 
         for (auto v : vertices)
         {
@@ -534,58 +497,6 @@ class landmark_roadmap_t
         // Free the memory.
         delete vertices[v];
         vertices.erase(v);
-    }
-
-    void get_all_pairs_shortest_paths()
-    {
-        // Initialize the distance matrix.
-        for (auto v : vertices)
-        {
-            for (auto vv : vertices)
-            {
-                if (v.first == vv.first)
-                {
-                    distances[v.first][vv.first] = 0;
-                }
-                else
-                {
-                    distances[v.first][vv.first] = std::numeric_limits<double>::infinity();
-                }
-            }    
-        }
-        
-        // Apply Floyd-Warshall algorithm.
-        for (auto v : vertices)
-        {
-            for (auto e : edges[v.first])
-            {
-                distances[v.first][e->end] = e->cost;
-            }
-        }
-
-        for (auto k : vertices)
-        {
-            for (auto i : vertices)
-            {
-                for (auto j : vertices)
-                {
-                    if (distances[i.first][k.first] + distances[k.first][j.first] < distances[i.first][j.first])
-                    {
-                        distances[i.first][j.first] = distances[i.first][k.first] + distances[k.first][j.first];
-                    }
-                }
-            }
-        }
-
-        // Print the distance matrix.
-        // for (auto v : vertices)
-        // {
-        //     for (auto vv : vertices)
-        //     {
-        //         std::cout << distances[v.first][vv.first] << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
     }
 
     std::string print_vertices(space_t* space)

@@ -7,6 +7,14 @@
 #include "prx/visualization/three_js_group.hpp"
 #include "prx/planning/planner_statistics.hpp"
 
+#ifdef __cpp_lib_filesystem
+    #include <boost/filesystem.hpp>
+    namespace fs = boost::filesystem;
+#else
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;
+#endif
+
 using namespace prx;
 
 int main(int argc, char* argv[])
@@ -24,6 +32,7 @@ int main(int argc, char* argv[])
             params_file = std::string(argv[1]);
         }
         
+        std::cout << "Using params file: " << params_file << std::endl;
         param_loader params(params_file);
         simulation_step = params["simulation_step"].as<double>();
         int random_seed = params["random_seed"].as<int>();
@@ -130,12 +139,16 @@ int main(int argc, char* argv[])
             }
         };
 
-        // int stats_runs = params["stats_runs"].as<int>();
-        // condition_check_t checker(params["checker_type"].as<std::string>(),params["checker_value"].as<double>());
-        // double stats_iters = params["stats_iters"].as<double>();
-        int stats_runs = 1;
+        int stats_runs = 10;
         condition_check_t checker("solutions",1);
         std::ofstream fout;
+
+        std::string output_dir = params["output_dir"].as<std::string>();
+        std::string out_path = output_path + output_dir;
+        if (!fs::exists(out_path))
+        {
+            fs::create_directory(out_path);
+        }
 
         for( int i = 0; i < stats_runs; ++i )
         {
@@ -145,6 +158,14 @@ int main(int argc, char* argv[])
 
             dirt.resolve_query(&checker);
             dirt.fulfill_query();
+
+            std::string full_fname = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
+            fout.open(full_fname);
+            fout << dirt.get_current_solution() << std::endl;
+            fout << dirt.get_current_solution_time() << std::endl;
+            fout << dirt.get_current_solution_iters() << std::endl;
+            fout << dirt.get_branching_factor() << std::endl;
+            fout.close();
 
             // planner_statistics_t stats;
             // stats.link_planner(&dirt);
@@ -157,18 +178,19 @@ int main(int argc, char* argv[])
 			// fout.close();
 
             // TODO: Add visualization code here.
-            // if (true)
-            // {
+            if (true)
+            {
             //     dirt.fulfill_query();
-            //     std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
-            //     three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
-            //     vis_group->add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss, "0x000000");
-            //     vis_group->output_html(params["output_dir"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".html");
-            //     delete vis_group;
-            // }
+                std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+                three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
+                vis_group->add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss, "0x000000");
+                vis_group->output_html(params["output_dir"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".html");
+                delete vis_group;
+            }
 
             dirt.reset();
             dirt_query.clear_outputs();
+            checker.reset();
         }
 
         // std::cout << dirt_query.tree_visualization.size() << std::endl;

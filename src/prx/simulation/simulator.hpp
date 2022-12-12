@@ -26,6 +26,7 @@ namespace prx
 		simulator_t(plant_type _sim_type) 
 			: sim_type(_sim_type)
 		{
+			simulation_time = 0;
 			system_groups = std::make_shared<system_group_manager_t>();
 		}
 
