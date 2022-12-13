@@ -425,16 +425,11 @@ public:
     prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
                                                                      << typeid(decltype(from)).name() << " ( "
                                                                      << from.size() << " )");
-    // std::cout << " ";
     for (int i = 0; i < from.size(); ++i)
     {
-      *addresses[i] = from[i];
-      // std::cout << *addresses[i] << " ";
+      *(addresses[i]) = from[i];
     }
-    // std::cout << "A: " << (*addresses[0]) << " ";
-    // std::cout << (*this) << " ";
     this->operator()();
-    // std::cout << (*this) << " ";
   }
 
   template <typename T, std::enable_if_t<prx::utils::is_ptr_type<T>{}, bool> = true>

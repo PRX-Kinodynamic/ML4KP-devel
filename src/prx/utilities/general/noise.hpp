@@ -14,12 +14,12 @@ class noise_t;
 /**
  * Gaussian noise (mean=0.0, std_dev=1.0)
  */
-typedef noise_t<std::normal_distribution<double>> gaussian_noise_t;
+using gaussian_noise_t = noise_t<std::normal_distribution<double>>;
 
 /**
  * Uniform noise, must provide (a,b) to constructor.
  */
-typedef noise_t<std::uniform_real_distribution<double>> uniform_noise_t;
+using uniform_noise_t = noise_t<std::uniform_real_distribution<double>>;
 
 template <class RandomNumberDistribution>
 class noise_t
@@ -36,6 +36,7 @@ public:
     // generator = global_generator;
   }
 
+  noise_t(const noise_t& n) = default;
   // noise_t(global_generator) : generator(global_generator)
   // {
   // }
@@ -50,7 +51,7 @@ public:
                  std::size_t end = std::numeric_limits<unsigned int>::max()) const
   {
     end = std::min(end, pt->get_dim());
-    for (int i = 0; i < pt->get_dim(); ++i)
+    for (int i = start; i < pt->get_dim(); ++i)
     {
       (*pt)[i] += rnd(generator);
     }
