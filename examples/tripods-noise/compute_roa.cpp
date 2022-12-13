@@ -1,3 +1,4 @@
+#ifndef TORCH_NOT_BUILT
 #include <iostream>
 #include <fstream>
 
@@ -316,3 +317,10 @@ int main(int argc, char* argv[])
   fout_roa.close();
   return 0;
 }
+#else
+#include "prx/utilities/defs.hpp"
+int main(int argc, char* argv[])
+{
+  PRX_NOT_IMPLEMENTED;
+}
+#endif
