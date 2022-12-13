@@ -51,7 +51,7 @@ namespace prx
 		}
 		else if(condition_type==2)
 		{
-			if(solution_counter>=condition_check || timer.measure() >= condition_check*5.0)
+			if(solution_counter>=condition_check || timer.measure() >= condition_check*30.0)
 				return true;
 		}
 		return false;

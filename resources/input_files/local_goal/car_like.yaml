@@ -10,7 +10,8 @@ plant: !file "plants/car_like.yaml"
 use_learned_controller: true
 learned_controller: !file "networks/car_like_controller.yaml"
 
-random_local_goal: true
+random_local_goal: false
+planner_name: "roadmap"
 goal_radius: 0.5
 
 num_trajectories: 100

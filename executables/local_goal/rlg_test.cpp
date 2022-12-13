@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
         simulation_step = params["simulation_step"].as<double>();
         int random_seed = params["random_seed"].as<int>();
         init_random(random_seed);
+        torch::set_num_threads(1);
 
         auto obstacles = load_obstacles(params["environment"].as<std::string>());
         auto obstacle_list = obstacles.second;
@@ -82,20 +83,18 @@ int main(int argc, char* argv[])
 
         dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
         {
-            std::vector <double> diff = {a->at(0)-b->at(0),a->at(1)-b->at(1),
-            norm_angle_pi(a->at(2)-b->at(2))};
+            return ss -> euclidean_2d(a,b,0,2);
+        };
 
-            double accum = 0.;
-            for (auto v: diff) {
-                accum += v*v;
-            }
-            return sqrt(accum);
+        dirt_spec.h = [&](space_point_t s, space_point_t d)
+        {
+            return ss -> euclidean_2d(s,d,0,2);
         };
 
         dirt_query.goal_check = [&,dirt_spec,ss](space_point_t s)
         {
-            return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
-            // return ss -> euclidean_2d(point, dirt_query.goal_state, 0, 3) < dirt_query.goal_region_radius;
+            // return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
+            return ss -> euclidean_2d(s, dirt_query.goal_state, 0, 3) < dirt_query.goal_region_radius;
         };
 
         dirt_spec.expand = [&](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn, bool blossom_expand)
@@ -140,6 +139,7 @@ int main(int argc, char* argv[])
         };
 
         int stats_runs = 10;
+        // condition_check_t checker("time",30);
         condition_check_t checker("solutions",1);
         std::ofstream fout;
 
@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
             //     dirt.fulfill_query();
                 std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
                 three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
-                vis_group->add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss, "0x000000");
+                vis_group->add_vis_infos(info_geometry_t::FULL_LINE, dirt_query.tree_visualization, body_name, ss, "0x000000");
                 vis_group->output_html(params["output_dir"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".html");
                 delete vis_group;
             }

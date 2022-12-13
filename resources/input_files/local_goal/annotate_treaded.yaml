@@ -11,6 +11,7 @@ use_learned_controller: true
 learned_controller: !file "networks/treaded_vehicle_controller.yaml"
 
 random_local_goal: true
+planner_name: "roadmap"
 goal_radius: 0.5
 
 num_trajectories: 100
@@ -21,8 +22,8 @@ num_failures: 100
 stretch_factor: 3.0
 termination_classifier: !file "networks/svm_classifier.yaml"
 
-start_state: [3.3333,-8.5000,0.0000,0.0000,0.0000]
-goal_state:  [ 3.3333,8.5000,0.0000,0.0000,0.0000]
+start_state: [-8.0, 0.0,0.0000,0.0000,0.0000]
+goal_state:  [ 8.0, 0.0,0.0000,0.0000,0.0000]
 
 debug: false
 
