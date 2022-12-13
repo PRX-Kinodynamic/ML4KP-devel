@@ -16,8 +16,8 @@ def check(plant):
 
 	for i in range(1000):
 		ss.sample(pt);
-		ss.copy_from_point(pt);
-		ns.copy_to_point(pt_n);
+		ss.copy_from(pt);
+		ns.copy_to(pt_n);
 
 		for j in range(ss.get_dimension()):
 			assert ( not ss.equal_points( pt_n, pt ) );
