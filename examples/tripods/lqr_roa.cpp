@@ -53,7 +53,6 @@ int main(int argc, char* argv[])
   auto lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
   auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
   ss->set_bounds(lower_bounds, upper_bounds);
-  PRX_DEBUG_PRINT
 
   auto cs_lb = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
   auto cs_up = params["/plant/control_space_upper_bound"].as<std::vector<double>>();

@@ -8,130 +8,98 @@
 
 namespace prx
 {
-	class controller_t;
+class controller_t;
 
-	// TODO: Change name?
-	// Desired states/points
-	// Objective
-	// Goal
-	// local_goal
-	class set_points_t
-	{
-		public:
-		set_points_t(const space_t* _space)
-		{
-			space = _space;
-		}
+typedef std::shared_ptr<controller_t> controller_ptr_t;
 
-		inline space_point_t operator[](unsigned index) const
-		{
-			prx_assert(index < set_points.size(), "Set point out of bounds. Size: " << set_points.size() << " requested: " << index);
-			return set_points[index];
-		}
+class controller_t : public std::enable_shared_from_this<controller_t>
+{
+public:
+  controller_t(const controller_t& other) = default;
 
-		inline space_point_t& operator[](unsigned index)
-		{
-			prx_warn_cond(index <= set_points.size(), "Adding " << (index - set_points.size()) << " set_points");
-			for (int i = set_points.size(); i <= index; ++i)
-			{
-				set_points.push_back( space -> make_point());
-			}
-			return set_points[index];
+  controller_t(system_ptr_t _plant, std::string _name = "base_controller")
+  {
+    plant = _plant;
+    name = _name;
+    goal = plant->get_state_space()->make_point();
+    u_goal = plant->get_control_space()->make_point();
+  }
+  virtual ~controller_t();
 
-		}
-		private:
-			set_points_t(){};
-			std::vector<space_point_t> set_points;
-			const space_t* space;
-			friend controller_t;
-	};
+  virtual void compute_controls() = 0;
 
-	typedef std::shared_ptr<controller_t> controller_ptr_t;
+  void compute_controls(space_point_t& u)
+  {
+    compute_controls();
+    get_control_space()->copy_to_point(u);
+  }
 
-	class controller_t : public std::enable_shared_from_this<controller_t>
-	{
-		public:
-		controller_t(const controller_t& other) = default;
+  // wrapper functions for better readability
 
-		controller_t(system_ptr_t _plant, std::string _name = "base_controller") 
-			// : set_points(_plant -> get_state_space())
-		{
-			plant = _plant;
-			name = _name;
-			// set_points = std::make_shared<set_points_t>(plant -> get_state_space());
-		}
-		virtual ~controller_t();
+  inline const space_t* get_state_space() const
+  {
+    return plant->get_state_space();
+  }
 
-		virtual void compute_controls()=0;
+  inline const space_t* get_control_space() const
+  {
+    return plant->get_control_space();
+  }
 
-		void compute_controls(space_point_t& u)
-		{
-			compute_controls();
-			get_control_space() -> copy_to_point(u);
-		}
+  virtual void propagate(const double simulation_step)
+  {
+    plant->propagate(simulation_step);
+  }
+  virtual void propagate(const double simulation_step, const propagate_step step)
+  {
+    plant->propagate(simulation_step, step);
+  }
 
-		// wrapper functions for better readability
-		
-		inline const space_t* get_state_space() const
-		{
-			return plant -> get_state_space();
-		}
-		
-		inline const space_t* get_control_space() const
-		{
-			return plant -> get_control_space();
-		}
+  virtual void set_plan(const plan_t& _plan)
+  {
+    plan = std::make_shared<plan_t>(_plan);
+  }
 
-		virtual void propagate(const double simulation_step)
-		{
-			plant -> propagate(simulation_step);
-		}
-		virtual void propagate(const double simulation_step, const propagate_step step)
-		{
-			plant -> propagate(simulation_step, step);
-		}
+  virtual std::shared_ptr<plan_t> get_plan()
+  {
+    return plan;
+  }
 
-		virtual void set_plan(const plan_t& _plan)
-		{
-			plan = std::make_shared<plan_t>(_plan);
-		}
+  virtual void init_plan()
+  {
+    plan = std::make_shared<plan_t>(get_control_space());
+  }
 
-		virtual std::shared_ptr<plan_t> get_plan()
-		{
-			return plan;
-		}
+  virtual void set_goal(const space_point_t& _goal)
+  {
+    plant->get_state_space()->copy(goal, _goal);
+  }
 
-		virtual void init_plan()
-		{
-			plan = std::make_shared<plan_t>(get_control_space());
-		}
+  template <typename X, typename U>
+  void set_goal(const X& x_goal, const U& u_goal)
+  {
+    plant->get_state_space()->copy(goal, x_goal);
+    plant->get_control_space()->copy(u_goal, u_goal);
+  }
 
-		virtual void set_goal(space_point_t _goal)
-		{
-			plant -> get_state_space() -> copy_point(goal, _goal);
-		}
+  std::shared_ptr<controller_t> get_ptr()
+  {
+    return shared_from_this();
+  }
 
+protected:
+  controller_t(const controller_ptr_t& other)
+  {
+    plant = other->plant;
+    name = other->name;
+    goal = other->goal;
+    plan = other->plan;
+  };
+  system_ptr_t plant;
+  std::string name;
 
-		std::shared_ptr<controller_t> get_ptr() 
-		{
-        	return shared_from_this();
-    	}
-
-		protected:
-			controller_t(const controller_ptr_t& other)
-			{
-				plant = other -> plant;
-				name = other -> name;
-				goal = other -> goal;
-				plan = other -> plan;
-				set_points = other -> set_points;
-			};
-		system_ptr_t plant;
-		std::string name;
-
-		std::shared_ptr<set_points_t> set_points;
-		space_point_t goal;
-		std::shared_ptr<plan_t> plan; // Control sequence
-
-	};
-}
+  space_point_t goal;
+  space_point_t u_goal;
+  std::shared_ptr<plan_t> plan;  // Control sequence
+};
+}  // namespace prx
