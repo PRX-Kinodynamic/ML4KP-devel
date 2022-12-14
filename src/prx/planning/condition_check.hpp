@@ -10,10 +10,12 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <functional>
 
 #include "prx/utilities/general/timer.hpp"
 
-namespace prx {
+namespace prx
+{
 extern double simulation_step;
 
 typedef std::function<bool()> custom_check_t;
@@ -27,7 +29,8 @@ typedef std::function<bool()> custom_check_t;
  *
  * @author Zakary Littlefield, Aravind Sivaramakrishnan
  */
-class condition_check_t {
+class condition_check_t
+{
 public:
   condition_check_t(std::string type, double check);
 
@@ -52,7 +55,10 @@ public:
    *
    * @return The current time.
    */
-  double time() { return timer.measure(); }
+  double time()
+  {
+    return timer.measure();
+  }
 
   /**
    * @brief Get the current iterations.
@@ -60,7 +66,10 @@ public:
    *
    * @return The current iterations.
    */
-  long unsigned iterations() { return iteration_counter; }
+  long unsigned iterations()
+  {
+    return iteration_counter;
+  }
 
   /**
    * @brief Get the max time or iterations.
@@ -68,26 +77,34 @@ public:
    *
    * @return The max time or iterations.
    */
-  long unsigned get_check_value() { return condition_check; }
+  long unsigned get_check_value()
+  {
+    return condition_check;
+  }
 
-  void set_check_value(const double _condition_check) {
+  void set_check_value(const double _condition_check)
+  {
     condition_check = _condition_check;
   }
 
-  void add_condition(condition_check_t *_cond);
+  void add_condition(condition_check_t* _cond);
 
-  std::vector<std::string> get_available_types() {
+  std::vector<std::string> get_available_types()
+  {
     std::vector<std::string> v;
-    for (auto str : available_types) {
+    for (auto str : available_types)
+    {
       v.push_back(str.first);
     }
     return v;
   }
 
-  void print_available_types() {
+  void print_available_types()
+  {
     auto v = get_available_types();
     std::cout << "[condition_check_t] Available types:" << std::endl;
-    for (auto s : v) {
+    for (auto s : v)
+    {
       std::cout << "\t" << s << std::endl;
     }
   }
@@ -128,8 +145,8 @@ protected:
    */
   custom_check_t custom_check;
 
-  std::vector<condition_check_t *> others;
+  std::vector<condition_check_t*> others;
 
   static std::map<std::string, unsigned> available_types;
 };
-} // namespace prx
+}  // namespace prx
