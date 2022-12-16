@@ -25,12 +25,20 @@ namespace prx
         std::string state_topo_string = "";
         std::string control_topo_string = "";
         std::vector<double> ss_lb, ss_ub, cs_lb, cs_ub;
+        unsigned next_qpos = 0;
         unsigned idx = 0;
-        
-        for (int i  = 0; i < sim -> joint_info.size(); i++)
+
+        for (int i = 0; i < sim -> joint_info.size(); i++)
         {
             auto joint = sim -> joint_info[i];
-            
+
+            if (joint->qposadr != next_qpos)
+            {
+                prx_throw("Joints are not in the order of qposadr...");
+            }
+
+            next_qpos++;
+
             switch(joint -> type)
             {
                 case 2:
@@ -41,8 +49,8 @@ namespace prx
                     {
                         ss_lb.push_back(joint -> range[0]);
                         ss_ub.push_back(joint -> range[1]);
-                        ss_lb.push_back(-PRX_INFINITY);
-                        ss_ub.push_back(PRX_INFINITY);
+                        ss_lb.push_back(-50.);
+                        ss_ub.push_back(50.);
                     }
                     else
                     {
@@ -62,15 +70,15 @@ namespace prx
                     {
                         ss_lb.push_back(joint -> range[0]);
                         ss_ub.push_back(joint -> range[1]);
-                        ss_lb.push_back(-PRX_INFINITY);
-                        ss_ub.push_back(PRX_INFINITY);
+                        ss_lb.push_back(-50.);
+                        ss_ub.push_back(50.);
                     }
                     else
                     {
                         ss_lb.push_back(-PRX_PI);
                         ss_ub.push_back(PRX_PI);
-                        ss_lb.push_back(-PRX_INFINITY);
-                        ss_ub.push_back(PRX_INFINITY);
+                        ss_lb.push_back(-50.);
+                        ss_ub.push_back(50.);
                     }
 
                     state_memory[idx]   = &sim -> d -> qpos[joint -> qposadr];
@@ -84,20 +92,27 @@ namespace prx
             }
         }
 
+        if (next_qpos != sim -> m -> nq)
+        {
+            std::cout << "Error: joint dims " << next_qpos << " != nq " << sim -> m -> nq << std::endl;
+            prx_throw("Exiting...");
+        }
+
         for (int i = 0; i < sim -> actuator_info.size(); i++)
         {
             auto actuator = sim -> actuator_info[i];
+            control_topo_string += "E";
+            control_memory[i] = &sim -> d -> ctrl[i];
 
             if (actuator -> limited)
             {
-                control_topo_string += "E";
                 cs_lb.push_back(actuator -> range[0]);
                 cs_ub.push_back(actuator -> range[1]);
-                control_memory[i] = &sim -> d -> ctrl[i];
             }
             else
             {
-                prx_throw("Actuator must be limited");
+                cs_lb.push_back(-1.);
+                cs_ub.push_back(1.);
             }
         }
 
@@ -114,16 +129,6 @@ namespace prx
 
     void mujoco_plant_t::compute_control()
     {
-    }
-
-    void mujoco_plant_t::update_to_mujoco(const space_point_t& point)
-    {
-
-    }
-
-    void mujoco_plant_t::update_from_mujoco()
-    {
-        
     }
 
     void mujoco_plant_t::update_configuration()

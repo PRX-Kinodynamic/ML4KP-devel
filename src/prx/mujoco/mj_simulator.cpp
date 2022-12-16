@@ -28,6 +28,11 @@ namespace prx
         mjv_makeScene(m, &scn, 1000);
         mjr_makeContext(m, &con, mjFONTSCALE_150);
 
+        if (m -> na != 0)
+        {
+            prx_throw("This system has actuator states, which is not supported right now.")
+        }
+
         get_mj_joint_info(m, joint_info);
         for (auto& info : joint_info)
         {
@@ -55,7 +60,7 @@ namespace prx
     void mujoco_simulator_t::init_simulator()
     {
         system_groups -> link_simulator(this);
-        std::string context_name = "mujoco_context";
+        std::string context_name = "mujoco";
         std::vector<system_ptr_t> context_systems;
 
         system_ptr_t system;
@@ -64,11 +69,12 @@ namespace prx
         auto mj_ptr = std::dynamic_pointer_cast<mujoco_plant_t>(system);
         auto sim_ptr = std::static_pointer_cast<mujoco_simulator_t>(this -> shared_ptr());
         mj_ptr -> initialize(sim_ptr);
-        mj_ptr -> update_from_mujoco();
 
         system_groups -> add_system_group(context_name, context_systems);
 
-        // Need to set up collision stuff here.
+        // TODO: Need to set up collision stuff here.
+        collision_groups.reset(new collision_checker_t());
+        collision_groups -> add_collision_group(context_name, context_systems, {});
     }
 
     void mujoco_simulator_t::step_simulation(propagate_step step)

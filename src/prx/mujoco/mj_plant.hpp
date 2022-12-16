@@ -23,10 +23,6 @@ namespace prx
 
         virtual void compute_control() override;
 
-        virtual void update_to_mujoco(const space_point_t& point);
-
-        virtual void update_from_mujoco();
-
         protected:
         std::shared_ptr<mujoco_simulator_t> sim;
     };
