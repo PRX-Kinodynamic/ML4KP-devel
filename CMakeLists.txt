@@ -10,6 +10,7 @@ set(BUILD_FOR_PYTHON ON CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_BULLET OFF CACHE BOOL "Set ON/TRUE for building for PyBullet")
 set(BUILD_FOR_TORCH  OFF CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
+set(PY_VERSION "3" CACHE STRING "Set ON/TRUE for building Python Bindings")
 
 # TODO: go back to c++11?
 add_definitions(-O3 -fPIC -g )
