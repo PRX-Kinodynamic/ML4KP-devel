@@ -50,6 +50,9 @@ t_noise: "uniform"
 t_noise_params: [-0.,0.]
 
 f_noise: "uniform"
+# f_noise_params: [-0.01256637061, 0.01256637061]
+# f_noise_params: [-0.006283185307, 0.006283185307]
+f_noise_params: [-0.003141592654, 0.003141592654]
 # f_noise_params: [-0.05,0.05]
-f_noise_params: [-0.01,0.01]
+# f_noise_params: [-0.01,0.01]
 # f_noise_params: [-0.,0.]
