@@ -311,9 +311,17 @@ int main(int argc, char* argv[])
   auto starting_lower_bound = params["/plant/starting_lower_bound"].as<std::vector<double>>();
   auto ending_upper_bound = params["/plant/ending_upper_bound"].as<std::vector<double>>();
 
-  const std::string roa_file_name{ prx::out_path + params["out_dir"].as<>() + "/" + system_name +
-                                   params["file_name_suffix"].as<>() };
-  // fout_roa = open(roa_file_name, "w", buffering=2^10)
+  std::vector<double> bounds{ prx::merge_container<std::vector<double>>(starting_lower_bound, ending_upper_bound) };
+  std::size_t bounds_hash{ 0 };
+
+  for (int i = 0; i < bounds.size(); ++i)
+  {
+    prx::hash_combine(bounds_hash, bounds[i]);
+  }
+
+  const std::string roa_file_name{ prx::out_path + params["out_dir"].as<>() + "/" + system_name + "_" +
+                                   std::to_string(bounds_hash) + ".txt" };
+
   std::ofstream fout_roa(roa_file_name, std::ios::binary | std::ios::trunc);
   std::cout << "Output file:\t" << roa_file_name << std::endl;
 
