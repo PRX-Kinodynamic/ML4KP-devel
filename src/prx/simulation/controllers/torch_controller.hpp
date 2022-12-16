@@ -14,10 +14,9 @@ namespace prx
 class torch_controller_t : public controller_t
 {
 public:
-  // template<class S>
-  torch_controller_t(const system_ptr_t& _sys_ptr, std::string _name, torch::DeviceType type, long long num_predictions,
-                     long long input_size, std::size_t xi_offset, std::size_t xgi_offset,
-                     const std::string network_path)
+  torch_controller_t(const system_ptr_t& _sys_ptr, std::string _name, torch::DeviceType type,
+                     const long long& num_predictions, const long long& input_size, const std::size_t& xi_offset,
+                     const std::size_t& xgi_offset, const std::string network_path)
     : controller_t(_sys_ptr, _name)
     , _num_predictions(num_predictions)
     , _torch_device(type)
@@ -28,6 +27,7 @@ public:
     // const long long udim{ static_cast<long long>(plant->get_control_space()->get_dimension()) };
     u = plant->get_control_space()->make_point();
     goal = plant->get_state_space()->make_point();
+    _state = plant->get_state_space()->make_point();
     _inputs = torch::zeros({ _num_predictions, input_size }, _torch_device);
     torch::set_num_threads(1);
     try
@@ -51,12 +51,16 @@ public:
   using controller_t::compute_controls;
   virtual void compute_controls() override
   {
-    const std::size_t x_dim{ plant->get_state_space()->get_dimension() };
+    const space_t* ss = plant->get_state_space();
+    const std::size_t x_dim{ ss->get_dimension() };
+    ss->copy_to(_state);
+    // ToDo: Right now it makes no sense to have numerous predictions since the start and goal points are the same
+    //       decide how to handle this.
     for (int i = 0; i < _num_predictions; ++i)
     {
       for (int xi = 0; xi < x_dim; ++xi)
       {
-        _inputs[i][_xi_offset + xi] = plant->get_state_space()->at(xi);
+        _inputs[i][_xi_offset + xi] = _state->at(xi);
       }
       for (int xgi = 0; xgi < x_dim; ++xgi)
       {
@@ -91,7 +95,7 @@ protected:
   std::size_t _xi_offset;
   std::size_t _xgi_offset;
   torch::jit::script::Module controller;
-  // std::vector<torch::jit::IValue> _inputs;
+  space_point_t _state;
 };
 }  // namespace prx
 #endif

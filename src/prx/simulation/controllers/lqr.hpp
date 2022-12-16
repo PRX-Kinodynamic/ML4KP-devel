@@ -54,7 +54,7 @@ public:
 
   void set_goal(Eigen::VectorXd _x_goal, Eigen::VectorXd _u_goal)
   {
-    ltv->get_control_space()->copy_point_from_vector(u, _u_goal);
+    ltv->get_control_space()->copy(u, _u_goal);
     set_goal(_x_goal);
     // X_goal = _goal;
   }
@@ -62,7 +62,7 @@ public:
   void set_goal(Eigen::VectorXd _x_goal)
   {
     X_goal = _x_goal;
-    ltv->get_state_space()->copy_point_from_vector(goal, X_goal);
+    ltv->get_state_space()->copy(goal, X_goal);
     ltv->linearize(goal, u);
   }
 

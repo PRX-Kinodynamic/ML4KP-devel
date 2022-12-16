@@ -77,7 +77,7 @@ public:
       if (!params.IsDefined())
       {
         // params.EnsureNodeExists();
-        prx_throw("Param loader - problem using " << p_key);
+        prx_throw("Param loader - problem using key: [" << p_key << "]");
       }
       // std::cout << (params.IsDefined()?"true":"false") << std::endl;
       // prx_throw_backtrace("Tried to convert to an incorrect type for: ");

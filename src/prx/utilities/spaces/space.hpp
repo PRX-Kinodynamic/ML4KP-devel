@@ -718,12 +718,6 @@ protected:
   bool owned_values;
 
   space_t(){};
-
-  // For linearization... there must be a better way to handle this
-  Eigen::VectorXd x_plus;
-  Eigen::VectorXd x_minus;
-  Eigen::VectorXd xd_plus;
-  Eigen::VectorXd xd_minus;
 };
 
 typedef std::shared_ptr<space_t> space_ptr_t;
