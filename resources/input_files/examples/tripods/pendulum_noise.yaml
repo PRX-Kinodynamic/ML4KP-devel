@@ -1,6 +1,7 @@
 random_seed: 11101993
 simulation_step: 0.01
 
+environment: "environments/empty.yaml"
 plant: !file "plants/pendulum.yaml"
 
 goal_region_radius: 0.5
