@@ -201,8 +201,42 @@ time_map_function_t pendulum_lc = [](const space_point_t& s, time_map_t& tmv)  /
     tmv.controller_base = lc;
     tmv.get_noisy_controller();
   }
+
+  // tmv.add_duration_noise();
   double total_time{ tmv.duration };
-  total_time = tmv.t_noise->add_noise(total_time);
+  // total_time = tmv.t_noise->add_noise(total_time);
+
+  tmv.checker.set_check_value(total_time);
+  tmv.checker.reset();
+  tmv.sg->propagate(tmv.start_state, tmv.controller, tmv.checker, tmv.end_state);
+  // return tmv.end_state
+};
+
+time_map_function_t ackermann_lc = [](const space_point_t& s, time_map_t& tmv)  // no-lint
+{
+  const space_t* ss = tmv._ss;
+  ss->copy_point(tmv.start_state, s);
+  tmv.x0_noise->add_noise(tmv.start_state);
+  ss->copy_from(tmv.start_state);
+  ss->enforce_bounds();
+
+  if (tmv.noisy_plant == nullptr)
+    tmv.get_noisy_system();
+
+  if (tmv.controller == nullptr)
+  {
+    const long long num_predictions{ 1 };
+    const long long input_size{ 6 };
+    const std::size_t xi_offset{ 0 };
+    const std::size_t xgi_offset{ 3 };
+    const std::string network_path{ prx::lib_path + "/examples/tripods/lc/ackermann_l.pt" };
+    auto lc = std::make_shared<torch_controller_t>(tmv.noisy_plant, "LC", torch::kCPU, num_predictions, input_size,
+                                                   xi_offset, xgi_offset, network_path);
+    lc->set_goal(tmv.goal_state);
+    tmv.controller_base = lc;
+    tmv.get_noisy_controller();
+  }
+  double total_time{ tmv.duration };
 
   tmv.checker.set_check_value(total_time);
   tmv.checker.reset();
@@ -263,6 +297,7 @@ int main(int argc, char* argv[])
 
   time_map_functions["pendulum_lqr"] = pendulum_lqr;
   time_map_functions["pendulum_lc"] = pendulum_lc;
+  time_map_functions["ackermann_lc"] = ackermann_lc;
   time_map_functions["acrobot_lqr"] = acrobot_lqr;
 
   const std::string system_name{ params["system_name"].as<>() };
