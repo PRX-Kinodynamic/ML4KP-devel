@@ -54,7 +54,10 @@ namespace prx
                     }
                     else
                     {
-                        prx_throw("Slide joint must be limited");
+                        ss_lb.push_back(-PRX_INFINITY);
+                        ss_ub.push_back(PRX_INFINITY);
+                        ss_lb.push_back(-50.);
+                        ss_ub.push_back(50.);
                     }
 
                     state_memory[idx]   = &sim -> d -> qpos[joint -> qposadr];

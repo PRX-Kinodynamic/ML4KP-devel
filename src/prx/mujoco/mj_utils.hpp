@@ -35,6 +35,7 @@ namespace prx
     {
         // Check this issue: https://github.com/deepmind/mujoco/issues/270
         // and this: https://github.com/deepmind/mujoco/issues/493
+        // and this: https://github.com/deepmind/dm_control/issues/64 
         mjtNum time;
         std::vector<mjtNum> qpos;
         std::vector<mjtNum> qvel;

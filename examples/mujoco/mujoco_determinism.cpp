@@ -5,7 +5,7 @@ using namespace prx;
 
 int main(int argc, char** argv)
 {
-    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("cartpole.xml");
+    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("reacher.xml");
     sim->init_simulator();
 
     auto context = sim -> get_context("mujoco");

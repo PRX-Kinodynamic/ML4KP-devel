@@ -1,6 +1,7 @@
 #pragma once
 #ifndef MUJOCO_NOT_BUILT
 #include "prx/simulation/simulator.hpp"
+#include "prx/simulation/playback/plan.hpp"
 #include "prx/mujoco/mj_utils.hpp"
 #include "prx/mujoco/mj_plant.hpp"
 
