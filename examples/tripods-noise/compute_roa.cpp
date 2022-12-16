@@ -337,6 +337,7 @@ int main(int argc, char* argv[])
   progress_bar_t bar(total_states, "");
   do
   {
+    line.str(std::string());
     line << tmv.start_state;
     int reached = 0;
     for (int i = 0; i < num_samples; ++i)
