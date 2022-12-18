@@ -1,0 +1,11 @@
+random_seed: 11101993
+simulation_step: 0.01
+
+plant: !file "plants/pendulum_lqr_noise.yaml"
+environment: "environments/empty.yaml"
+
+goal_region_radius: 0.1
+
+duration: 5
+state_increment: 0.1
+system_name: "pendulum_lqr"

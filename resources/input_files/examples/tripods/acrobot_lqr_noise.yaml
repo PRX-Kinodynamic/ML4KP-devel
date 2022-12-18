@@ -1,0 +1,11 @@
+random_seed: 231192
+simulation_step: 0.01
+
+plant: !file "plants/acrobot_lqr_noise.yaml"
+environment: "environments/empty.yaml"
+
+goal_region_radius: 0.1
+
+duration: 5
+state_increment: 0.5
+system_name: "acrobot_lqr"
