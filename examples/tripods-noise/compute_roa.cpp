@@ -109,6 +109,8 @@ struct time_map_t
     ut_noise_params = params["/plant/u_t_noise_params"].as<std::vector<double>>();
 
     goal_check = prx::create_default_goal_check(_ss, goal_state, params["goal_region_radius"].as<double>());
+    goal_checker = new condition_check_t(goal_check);
+    checker.add_condition(goal_checker);
   }
   void get_noisy_controller()
   {
@@ -142,6 +144,7 @@ struct time_map_t
   std::shared_ptr<noisy_uniform_controller_t> controller;
 
   condition_check_t checker;
+  condition_check_t* goal_checker;
 
   std::shared_ptr<system_group_t> sg;
   custom_check_t goal_check;
