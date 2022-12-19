@@ -311,7 +311,8 @@ int main(int argc, char* argv[])
   auto starting_lower_bound = params["/plant/starting_lower_bound"].as<std::vector<double>>();
   auto ending_upper_bound = params["/plant/ending_upper_bound"].as<std::vector<double>>();
 
-  std::vector<double> bounds{ prx::merge_container<std::vector<double>>(starting_lower_bound, ending_upper_bound) };
+  time_map_t tmv(params);
+  std::vector<double> bounds{ prx::merge_container<std::vector<double>>(tmv.f_noise_params, ending_upper_bound) };
   std::size_t bounds_hash{ 0 };
 
   for (int i = 0; i < bounds.size(); ++i)
@@ -333,7 +334,6 @@ int main(int argc, char* argv[])
   const int total_states{ get_total_states(starting_lower_bound, ending_upper_bound, step_inc) };
   std::cout << "Total states:\t" << total_states << std::endl;
 
-  time_map_t tmv(params);
   progress_bar_t bar(total_states, "");
   do
   {
