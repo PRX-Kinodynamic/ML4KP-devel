@@ -308,11 +308,18 @@ int main(int argc, char* argv[])
   auto lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
   auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
 
-  auto starting_lower_bound = params["/plant/starting_lower_bound"].as<std::vector<double>>();
-  auto ending_upper_bound = params["/plant/ending_upper_bound"].as<std::vector<double>>();
+  // auto starting_lower_bound = params["/plant/starting_lower_bound"].as<std::vector<double>>();
+  // auto ending_upper_bound = params["/plant/ending_upper_bound"].as<std::vector<double>>();
+
+  // Get the end bounds from the total number of files it will be written.
+  // One process will only do 1/total_files % of the state space
+  const int total_files{ params["total_files"].as<int>() };
+  const int file_number{ params["file_number"].as<int>() };
+  prx_assert(file_number < total_files, "File number has to be less than total_files!");
 
   time_map_t tmv(params);
-  std::vector<double> bounds{ prx::merge_container<std::vector<double>>(tmv.f_noise_params, ending_upper_bound) };
+  std::vector<double> file_nums_vec = { static_cast<double>(total_files), static_cast<double>(file_number) };
+  std::vector<double> bounds{ prx::merge_container<std::vector<double>>(tmv.f_noise_params, file_nums_vec) };
   std::size_t bounds_hash{ 0 };
 
   for (int i = 0; i < bounds.size(); ++i)
@@ -330,13 +337,24 @@ int main(int argc, char* argv[])
   std::stringstream line;
   auto g_tm = time_map_functions[system_name];
 
-  std::size_t step_num{ 0 };
-  const int total_states{ get_total_states(starting_lower_bound, ending_upper_bound, step_inc) };
+  std::size_t state_num{ 0 };
+  const int total_states{ get_total_states(lower_bounds, upper_bounds, step_inc) };
   std::cout << "Total states:\t" << total_states << std::endl;
 
+  const int states_per_file{ total_states / total_files };
+  const int initial_state_num{ states_per_file * file_number };
+  const int final_state_num{ states_per_file * (file_number + 1) };
+  PRX_DEBUG_VAR_3(states_per_file, initial_state_num, final_state_num);
   progress_bar_t bar(total_states, "");
   do
   {
+    bar.update(state_num);
+    state_num++;
+    if (state_num < initial_state_num)
+      continue;
+    if (state_num > final_state_num)
+      continue;
+
     line.str(std::string());
     line << tmv.start_state;
     int reached = 0;
@@ -353,10 +371,8 @@ int main(int argc, char* argv[])
     line << "\n";
     const std::string str{ line.str() };
     fout_roa.write(str.c_str(), str.size());
-    bar.update(step_num);
-    step_num++;
 
-  } while (state_increment(tmv.start_state, step_inc, starting_lower_bound, ending_upper_bound));
+  } while (state_increment(tmv.start_state, step_inc, lower_bounds, upper_bounds));
 
   fout_roa.close();
   return 0;

@@ -11,7 +11,7 @@ environment: "environments/empty.yaml"
 goal_region_radius: 0.1
 
 duration: 5
-state_increment: 0.1
+state_increment: 0.01
 system_name: "pendulum_lqr"
 # system_name: "pendulum_lc"
 # system_name: "ackermann_lc"
@@ -19,4 +19,7 @@ system_name: "pendulum_lqr"
 # system_name: "acrobot_lqr"
 out_dir: "roas/"
 file_name_suffix: "_test.txt"
-num_samples: 10
+num_samples: 100
+
+total_files: 10
+file_number: 0
