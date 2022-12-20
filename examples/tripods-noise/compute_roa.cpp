@@ -41,8 +41,8 @@ using prx::world_model_t;
 using uniform_noisy_plant_t = prx::noisy_plant_t<prx::uniform_noise_t>;
 // using prx::;
 
-int get_total_states(std::vector<double>& starting_lower_bound, std::vector<double>& ending_upper_bound,
-                     const double& step_inc)
+std::size_t get_total_states(std::vector<double>& starting_lower_bound, std::vector<double>& ending_upper_bound,
+                             const double& step_inc)
 {
   std::size_t total_states{ 1 };
   double l, u;
@@ -52,7 +52,7 @@ int get_total_states(std::vector<double>& starting_lower_bound, std::vector<doub
     std::tie(l, u) = prx::unzip(lu);
     total_states *= 1. + std::floor((u - l) / step_inc);
   }
-  return int(total_states);
+  return std::size_t(total_states);
 }
 
 struct time_map_t
@@ -99,7 +99,7 @@ struct time_map_t
 
     std::vector<double> noise_params;
 
-    noise_params = params["/plant/x_0_noise_params"].as<std::vector<double>>();
+    noise_params = params["/plant/x_noise_params"].as<std::vector<double>>();
     x0_noise = std::make_shared<uniform_noise_t>(noise_params[0], noise_params[1]);
 
     noise_params = params["/plant/t_noise_params"].as<std::vector<double>>();
@@ -308,11 +308,11 @@ int main(int argc, char* argv[])
 
   // space_point_t state = ss.make_point();
   const double step_inc{ params["state_increment"].as<double>() };
-  auto lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
-  auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
+  // auto lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
+  // auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
 
-  // auto starting_lower_bound = params["/plant/starting_lower_bound"].as<std::vector<double>>();
-  // auto ending_upper_bound = params["/plant/ending_upper_bound"].as<std::vector<double>>();
+  auto lower_bounds = params["/plant/starting_lower_bound"].as<std::vector<double>>();
+  auto upper_bounds = params["/plant/ending_upper_bound"].as<std::vector<double>>();
 
   // Get the end bounds from the total number of files it will be written.
   // One process will only do 1/total_files % of the state space
@@ -341,22 +341,22 @@ int main(int argc, char* argv[])
   auto g_tm = time_map_functions[system_name];
 
   std::size_t state_num{ 0 };
-  const int total_states{ get_total_states(lower_bounds, upper_bounds, step_inc) };
+  const std::size_t total_states{ get_total_states(lower_bounds, upper_bounds, step_inc) };
   std::cout << "Total states:\t" << total_states << std::endl;
 
-  const int states_per_file{ total_states / total_files };
-  const int initial_state_num{ states_per_file * file_number };
-  const int final_state_num{ states_per_file * (file_number + 1) };
+  const std::size_t states_per_file{ total_states / total_files };
+  const std::size_t initial_state_num{ states_per_file * file_number };
+  const std::size_t final_state_num{ states_per_file * (file_number + 1) };
   PRX_DEBUG_VAR_3(states_per_file, initial_state_num, final_state_num);
-  progress_bar_t bar(total_states, "");
+  progress_bar_t bar(final_state_num - initial_state_num, "");
   do
   {
-    bar.update(state_num);
     state_num++;
     if (state_num < initial_state_num)
       continue;
     if (state_num > final_state_num)
       continue;
+    bar.update(state_num - initial_state_num);
 
     line.str(std::string());
     line << tmv.start_state;

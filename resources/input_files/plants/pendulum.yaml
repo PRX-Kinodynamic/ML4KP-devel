@@ -34,25 +34,22 @@ controller_path: "examples/tripods/lc/pendulum.pt"
 # The following are new parameters. 
 # You can specify "uniform", or "none"
 # If you specify "uniform", specify in noise_params the min and max.
-x_0_noise: "uniform"
+xt_noise: "uniform"
 # x_0_noise_params: [-0.25,0.25]
-# x_0_noise_params: [-0.1,0.1]
-x_0_noise_params: [-0.,0.]
+# xt_noise_params: [-0.1,0.1]
+xt_noise_params: [-0.03141592654,0.03141592654]
+# xt_noise_params: [-0.006283185307, 0.006283185307]
+# xt_noise_params: [-0.,0.]
 
-u_t_noise: "uniform"
-# u_t_noise_params: [-0.25,0.25]
-# u_t_noise_params: [-0.1,0.1]
-u_t_noise_params: [-0.,0.]
+ut_noise: "uniform"
+# ut_noise_params: [-0.25,0.25]
+# ut_noise_params: [-0.1,0.1]
+ut_noise_params: [-0.3185890954,0.3185890954]
 
-t_noise: "uniform"
-# t_noise_params: [-0.25,0.25]
-# t_noise_params: [-0.1,0.1]
-t_noise_params: [-0.,0.]
-
-f_noise: "uniform"
+# f_noise: "uniform"
 # f_noise_params: [-0.01256637061, 0.01256637061]
 # f_noise_params: [-0.006283185307, 0.006283185307]
-f_noise_params: [-0.003141592654, 0.003141592654]
+# f_noise_params: [-0.003141592654, 0.003141592654]
 # f_noise_params: [-0.05,0.05]
 # f_noise_params: [-0.01,0.01]
 # f_noise_params: [-0.,0.]

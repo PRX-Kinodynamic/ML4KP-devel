@@ -81,10 +81,8 @@ class NoisyTimeMap:
 
         self.radius = params["goal_region_radius"].as_float()
 
-        self.x_0_noise = None 
-        self.f_noise = None 
+        self.xt_noise = None 
         self.u_t_noise = None 
-        self.t_noise = None
         self.in_collision_py = lambda : self.context.collision_group.in_collision()
 
         self.checker = prx.condition_check("sim_time" , self.duration );
@@ -95,11 +93,9 @@ class NoisyTimeMap:
         self.checker.add_condition(self.checker_gc);
         self.checker.add_condition(self.checker_obstacle);
 
-        self.x_0_noise = self.init_noise("/plant/x_0_noise", "/plant/x_0_noise_params");
-        self.u_t_noise = self.init_noise("/plant/u_t_noise", "/plant/u_t_noise_params");
-        self.t_noise   = self.init_noise("/plant/t_noise",   "/plant/t_noise_params"  );
-        self.f_noise   = self.init_noise("/plant/f_noise",   "/plant/f_noise_params"  );
-
+        # x_{t+1} = x_t + f(x_t, u(x_t+\epsilon_x) + \epsilon_u)
+        # self.xt_noise = self.init_noise("/plant/xt_noise", "/plant/xt_noise_params");
+        # self.ut_noise = self.init_noise("/plant/u_t_noise", "/plant/u_t_noise_params");
 
     def init_noise(self, noise_type_pn, noise_params_pn):
         prx_noise = None
@@ -113,9 +109,9 @@ class NoisyTimeMap:
         return prx_noise
 
     def get_noisy_system(self):
-        noise_type = self.params["/plant/f_noise"].as_string()
+        noise_type = self.params["/plant/xt_noise"].as_string()
         if noise_type == "uniform":
-            noise_params = self.params["/plant/f_noise_params"].as_float_vector()
+            noise_params = self.params["/plant/xt_noise_params"].as_float_vector()
             self.noisy_plant = prx.uniform_noisy_plant(self.plant, noise_params[0], noise_params[1]);
         elif noise_type == "None":
             self.noisy_plant = self.plant
@@ -124,9 +120,9 @@ class NoisyTimeMap:
             exit(-1)
 
     def get_noisy_controller(self):
-        noise_type = self.params["/plant/u_t_noise"].as_string()
+        noise_type = self.params["/plant/ut_noise"].as_string()
         if noise_type == "uniform":
-            noise_params = self.params["/plant/u_t_noise_params"].as_float_vector()
+            noise_params = self.params["/plant/ut_noise_params"].as_float_vector()
             self.controller = prx.noisy_uniform_controller(self.controller_base, noise_params[0], noise_params[1]);
         elif noise_type == "None":
             self.controller = self.controller_base
@@ -193,10 +189,8 @@ class NoisyTimeMap:
     
     def pendulum_lqr(self, X):
 
-        self.ss.copy_point_from_vector(self.start_state,X)
-        if self.x_0_noise is not None:
-            self.x_0_noise.add_noise(self.start_state)
-        self.ss.copy_from_point(self.start_state)
+        self.ss.copy(self.start_state,X)
+        # self.ss.copy_from(self.start_state)
         self.ss.enforce_bounds()
 
         if self.noisy_plant == None:
@@ -214,8 +208,6 @@ class NoisyTimeMap:
             #     self.controller = prx.noisy_uniform_controller
   
         total_time = self.duration
-        if self.t_noise is not None:
-            total_time = self.t_noise.add_noise(total_time) 
 
         self.checker.set_check_value(total_time)
         self.checker.reset()
