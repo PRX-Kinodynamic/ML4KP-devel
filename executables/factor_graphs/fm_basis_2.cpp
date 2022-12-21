@@ -212,8 +212,8 @@ int main(int argc, char* argv[])
   gtsam::NonlinearFactorGraph thetas_graph;
   gtsam::Values thetas_values;
   std::function<prx_symbol_t(const Container2D&)> thetas_grid_initializer = [&](const Container2D& xy) {
-    const int x{ static_cast<int>(xy[0]) };
-    const int y{ static_cast<int>(xy[1]) };
+    const int x{ static_cast<int>(xy[0] * 10) };
+    const int y{ static_cast<int>(xy[1] * 10) };
     const prx_symbol_t param_symbol{ symbol_factory_t::create_symbol("param_symbol", x, y) };
     // thetas_graph.add(param_symbol);
     thetas_values.insert_or_assign(param_symbol, initial_friction_vec);
@@ -228,6 +228,8 @@ int main(int argc, char* argv[])
   {
     thetas_container.push_back(pair.second);
   }
+
+  thetas_grid.to_file(prx::out_path + "/thetas_grid.txt", prx::key_formatter);
 
   auto gt_grid = [&](const double x, const double y) {
     double friction = 1;

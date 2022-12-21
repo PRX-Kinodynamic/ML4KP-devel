@@ -244,6 +244,26 @@ public:
     return os;
   }
 
+  template <typename FormattingFunction>
+  void to_file(const std::string filename, FormattingFunction& formatter,
+               const std::ios_base::openmode _mode = std::ofstream::trunc) const
+  {
+    std::ofstream ofs;
+    ofs.open(filename.c_str(), _mode);
+
+    for (auto cell : memory)
+    {
+      std::array<double, dimension> uk = unmap_key<std::array<double, dimension>>(cell.first);
+      for (int i = 0; i < dimension; ++i)
+      {
+        ofs << uk[i];
+        ofs << " ";
+      }
+      ofs << formatter(cell.second) << "\n";
+    }
+    ofs << std::endl;
+  }
+
   inline std::size_t size() const
   {
     return memory.size();

@@ -25,7 +25,7 @@ class friction_fusion_factor_t : public gtsam::NoiseModelFactor
   using weight_t = Eigen::Vector<double, THETA_DIM>;
   using state_t = Eigen::Vector<double, X_DIM>;
   using friction_t = Eigen::Vector<double, Friction_DIM>;
-  using partial_fn = std::function<friction_t(const friction_t&)>;
+  using partial_fn = std::function<theta_t(const friction_t&)>;
 
 public:
   template <typename Container>
@@ -51,6 +51,7 @@ public:
   Eigen::VectorXd unwhitenedError(const gtsam::Values& values,
                                   boost::optional<std::vector<Eigen::MatrixXd>&> H = boost::none) const override
   {
+    // PRX_DEBUG_PRINT;
     const std::size_t total_thetas{ keys_.size() };
     const theta_t theta_t_val{ values.at<theta_t>(_theta_t_key) };
 
@@ -58,9 +59,9 @@ public:
     friction_t weights{ friction_t::Zero() };
 
     state_t theta_i_pos{ state_t::Zero() };
+    const state_t theta_t_pos{ values.at<state_t>(_x_key) };
     for (int i = 0; i < total_thetas; ++i)
     {
-      const state_t theta_t_pos{ values.at<state_t>(_x_key) };
       th[i] = values.at<theta_t>(keys_[i])[0];  // Assuming THETA_DIM==1 for now.
 
       if (is_theta_relevant(theta_t_pos, keys_[i], theta_i_pos))
@@ -69,6 +70,7 @@ public:
       }
     }
 
+    // PRX_DEBUG_PRINT;
     const Eigen::VectorXd error{ compute_error(theta_t_val, weights, th) };
     if (H)
     {
@@ -77,11 +79,12 @@ public:
         _derivative.model = [&](const friction_t& th_) { return compute_error(theta_t_val, weights, th_); };
         auto dev = _derivative(th);
 
-        std::cout << "dev: " << dev << std::endl;
+        // std::cout << "dev: " << dev << std::endl;
         (*H)[i] = dev;
         // (*H)[i] = _derivative(th);
       }
     }
+    // PRX_DEBUG_PRINT;
     return error;
   }
 
@@ -102,6 +105,11 @@ public:
     const double x3{ theta_t_pos[0] + x_cell_length };
     const double y3{ theta_t_pos[1] + y_cell_length };
 
+    // PRX_DEBUG_VAR_1(prx::key_formatter(theta_key));
+    // PRX_DEBUG_VAR_3(x0, y0, prx::key_formatter(_theta_pos(x0, y0)));
+    // PRX_DEBUG_VAR_3(x1, y1, prx::key_formatter(_theta_pos(x1, y1)));
+    // PRX_DEBUG_VAR_3(x2, y2, prx::key_formatter(_theta_pos(x2, y2)));
+    // PRX_DEBUG_VAR_3(x3, y3, prx::key_formatter(_theta_pos(x3, y3)));
     if (_theta_pos.in_bounds(x0, y0) && _theta_pos(x0, y0) == theta_key)
     {
       theta_i_pos = _theta_pos.template unmap<state_t>(x0, y0);
@@ -144,14 +152,14 @@ public:
     return 1 - (delta_x + delta_y) / (D);
   }
 
-  Eigen::VectorXd compute_error(const theta_t& th_t, const friction_t weights, const friction_t thetas) const
+  theta_t compute_error(const theta_t& th_t, const friction_t weights, const friction_t thetas) const
   {
-    std::cout << "th_t: " << th_t[0] << std::endl;
-    std::cout << "ws: " << weights.transpose() << std::endl;
-    std::cout << "dot: " << weights.dot(thetas) << std::endl;
-    std::cout << "error: " << th_t[0] - weights.dot(thetas) << std::endl;
+    // std::cout << "th_t: " << th_t[0] << std::endl;
+    // std::cout << "ws: " << weights.transpose() << std::endl;
+    // std::cout << "dot: " << weights.dot(thetas) << std::endl;
     const theta_t error{ th_t[0] - weights.dot(thetas) };
-    return (Eigen::VectorXd(1) << error[0]).finished();
+    // std::cout << "error: " << error << std::endl;
+    return error;
     // return th_t -
     //        weights.adjoint() * thetas;  // equivalent to adjoint but returns a 1x1 Mat (1-vec) instead of a double
   }

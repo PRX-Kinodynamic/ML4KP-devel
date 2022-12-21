@@ -25,6 +25,36 @@ public:
    */
   prx_symbol_t(const std::string& s, int8_t state_idx, int64_t t);
 
+  // template <typename Container>
+  // prx_symbol_t(const std::string& s, Container& xs)
+  // {
+  //   if (s.length() > 2)
+  //   {
+  //     throw std::runtime_error("cannot use more than 2 characters in dynamics symbol");
+  //   }
+  //   if (s.length() > 1)
+  //   {
+  //     c1_ = s[0];
+  //     c2_ = s[1];
+  //   }
+  //   else if (s.length() == 1)
+  //   {
+  //     c1_ = 0;
+  //     c2_ = s[0];
+  //   }
+  //   else
+  //   {
+  //     c1_ = 0;
+  //     c2_ = 0;
+  //   }
+
+  //   std::size_t seed{ 0 };
+  //   hash_combine(seed, x0);
+  //   hash_combine(seed, x1);
+  //   state_idx_ = 0;
+  //   t_ = static_cast<int64_t>(seed);
+  // }
+
   /** Default constructor */
   prx_symbol_t();
 
