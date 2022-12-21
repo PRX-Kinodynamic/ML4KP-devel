@@ -95,7 +95,7 @@ class NoisyTimeMap:
 
         # x_{t+1} = x_t + f(x_t, u(x_t+\epsilon_x) + \epsilon_u)
         # self.xt_noise = self.init_noise("/plant/xt_noise", "/plant/xt_noise_params");
-        # self.ut_noise = self.init_noise("/plant/u_t_noise", "/plant/u_t_noise_params");
+        # self.ut_noise = self.init_noise("/plant/ut_noise", "/plant/ut_noise_params");
 
     def init_noise(self, noise_type_pn, noise_params_pn):
         prx_noise = None
@@ -135,32 +135,30 @@ class NoisyTimeMap:
 
     def pendulum_lc(self, X):
 
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
         if self.controller == None:
             controller_path = self.params["/plant/controller_path"].as_string()
             controller_path = prx.lib_path + controller_path
             self.controller = torch.load(controller_path)
             self.controller.eval()
             torch.manual_seed(self.params["random_seed"].as_int())
+            self.ut_noise = self.init_noise("/plant/ut_noise", "/plant/ut_noise_params");
 
-        self.ss.copy_point_from_vector(self.start_state,X)
-        if self.x_0_noise is not None:
-            self.x_0_noise.add_noise(self.start_state)
-        self.ss.copy_from_point(self.start_state)
-        self.ss.enforce_bounds()
+
+        # self.ss.copy(self.start_state,X)
+        self.ss.copy_from(X)
 
         ctrl_input = torch.zeros(1, 4)
 
-        duration_so_far = 0
         ctrl = [0]
 
-        total_time = self.time_step
-        if self.t_noise is not None:
-            self.t_noise.add_noise(total_time)         
+        self.checker.set_check_value(self.duration)
+        self.checker.reset()
 
-        while duration_so_far < total_time and not self.check_goal_reached(2):
-            if self.f_noise is not None:
-                self.f_noise.add_noise(self.start_state)
-            
+        while True:
+            self.noisy_plant.get_state_space().copy_to(self.start_state);
             ctrl_input[0, 0] = self.start_state[0]
             ctrl_input[0, 1] = self.start_state[1]
             ctrl_input[0, 2] = self.goal_state[0]
@@ -174,23 +172,21 @@ class NoisyTimeMap:
                                                     * 0.6371781908344007)], dtype=np.float64)
 
             self.ctrl[0] = ctrl[0]
-            if self.u_t_noise is not None:
-                self.u_t_noise.add_noise(self.ctrl)
-            self.cs.copy_from_point(self.ctrl)
+            self.ut_noise.add_noise(self.ctrl);
+            self.cs.copy_from(self.ctrl)
             self.cs.enforce_bounds()
 
             self.plant.propagate(self.simulation_step)
-            self.ss.copy_to_point(self.start_state)
 
-            duration_so_far += self.simulation_step
-
-        self.ss.copy_to_point(self.end_state)
+            if self.checker.check():
+                break;
+                
+        self.ss.copy_to(self.end_state)
         return self.end_state.to_list()
     
     def pendulum_lqr(self, X):
 
         self.ss.copy(self.start_state,X)
-        # self.ss.copy_from(self.start_state)
         self.ss.enforce_bounds()
 
         if self.noisy_plant == None:
@@ -201,19 +197,14 @@ class NoisyTimeMap:
             self.R = prx.matrix.Identity(1, 1)
             self.controller_base = prx.lqr(self.noisy_plant, self.Q, self.R, "LQR")
             self.controller_base.set_goal(self.goal_state, self.u_goal)
-            # self.controller_base.set_goal(self.goal_state)
             self.controller_base.compute_K()
             self.get_noisy_controller()
-            # if self.u_t_noise is not None:
-            #     self.controller = prx.noisy_uniform_controller
   
         total_time = self.duration
 
         self.checker.set_check_value(total_time)
         self.checker.reset()
-        # print("Before propagate: ", self.start_state)
         self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
-        # print("After propagate: ", self.end_state)
         return self.end_state.to_list()
 
     def pendulum_tbc(self, X):

@@ -45,6 +45,7 @@ ut_noise: "uniform"
 # ut_noise_params: [-0.25,0.25]
 # ut_noise_params: [-0.1,0.1]
 ut_noise_params: [-0.3185890954,0.3185890954]
+# ut_noise_params: [-0.0,0.0]
 
 # f_noise: "uniform"
 # f_noise_params: [-0.01256637061, 0.01256637061]

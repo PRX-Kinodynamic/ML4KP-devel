@@ -99,14 +99,8 @@ struct time_map_t
 
     std::vector<double> noise_params;
 
-    noise_params = params["/plant/x_noise_params"].as<std::vector<double>>();
-    x0_noise = std::make_shared<uniform_noise_t>(noise_params[0], noise_params[1]);
-
-    noise_params = params["/plant/t_noise_params"].as<std::vector<double>>();
-    t_noise = std::make_shared<uniform_noise_t>(noise_params[0], noise_params[1]);
-
-    f_noise_params = params["/plant/f_noise_params"].as<std::vector<double>>();
-    ut_noise_params = params["/plant/u_t_noise_params"].as<std::vector<double>>();
+    xt_noise_params = params["/plant/xt_noise_params"].as<std::vector<double>>();
+    ut_noise_params = params["/plant/ut_noise_params"].as<std::vector<double>>();
 
     goal_check = prx::create_default_goal_check(_ss, goal_state, params["goal_region_radius"].as<double>());
     goal_checker = new condition_check_t(goal_check);
@@ -119,7 +113,7 @@ struct time_map_t
 
   void get_noisy_system()
   {
-    noisy_plant = std::make_shared<uniform_noisy_plant_t>(plant, f_noise_params[0], f_noise_params[1]);
+    noisy_plant = std::make_shared<uniform_noisy_plant_t>(plant, xt_noise_params[0], xt_noise_params[1]);
   }
 
   double duration;
@@ -134,7 +128,7 @@ struct time_map_t
   std::shared_ptr<uniform_noise_t> x0_noise;
   std::shared_ptr<uniform_noise_t> t_noise;
 
-  std::vector<double> f_noise_params;
+  std::vector<double> xt_noise_params;
   std::vector<double> ut_noise_params;
 
   std::shared_ptr<controller_t> controller_base;
@@ -158,9 +152,8 @@ std::map<std::string, time_map_function_t> time_map_functions;
 time_map_function_t pendulum_lqr = [](const space_point_t& s, time_map_t& tmv)  // no-lint
 {
   const space_t* ss = tmv._ss;  // no-lint
-  ss->copy_point(tmv.start_state, s);
-  tmv.x0_noise->add_noise(tmv.start_state);
-  ss->copy_from(tmv.start_state);
+  ss->copy(tmv.start_state, s);
+  // ss->copy_from(tmv.start_state);
   ss->enforce_bounds();
 
   if (tmv.noisy_plant == nullptr)
@@ -177,20 +170,16 @@ time_map_function_t pendulum_lqr = [](const space_point_t& s, time_map_t& tmv)  
     tmv.get_noisy_controller();
   }
   double total_time{ tmv.duration };
-  total_time = tmv.t_noise->add_noise(total_time);
 
   tmv.checker.set_check_value(total_time);
   tmv.checker.reset();
   tmv.sg->propagate(tmv.start_state, tmv.controller, tmv.checker, tmv.end_state);
-  // return tmv.end_state
 };
 
 time_map_function_t pendulum_lc = [](const space_point_t& s, time_map_t& tmv)  // no-lint
 {
   const space_t* ss = tmv._ss;  // no-lint
   ss->copy_point(tmv.start_state, s);
-  tmv.x0_noise->add_noise(tmv.start_state);
-  ss->copy_from(tmv.start_state);
   ss->enforce_bounds();
 
   if (tmv.noisy_plant == nullptr)
@@ -205,11 +194,7 @@ time_map_function_t pendulum_lc = [](const space_point_t& s, time_map_t& tmv)  /
     tmv.get_noisy_controller();
   }
 
-  // tmv.add_duration_noise();
-  double total_time{ tmv.duration };
-  // total_time = tmv.t_noise->add_noise(total_time);
-
-  tmv.checker.set_check_value(total_time);
+  tmv.checker.set_check_value(tmv.duration);
   tmv.checker.reset();
   tmv.sg->propagate(tmv.start_state, tmv.controller, tmv.checker, tmv.end_state);
   // return tmv.end_state
@@ -322,7 +307,7 @@ int main(int argc, char* argv[])
 
   time_map_t tmv(params);
   std::vector<double> file_nums_vec = { static_cast<double>(total_files), static_cast<double>(file_number) };
-  std::vector<double> bounds{ prx::merge_container<std::vector<double>>(tmv.f_noise_params, file_nums_vec) };
+  std::vector<double> bounds{ prx::merge_container<std::vector<double>>(tmv.xt_noise_params, file_nums_vec) };
   std::size_t bounds_hash{ 0 };
 
   for (int i = 0; i < bounds.size(); ++i)
@@ -336,7 +321,6 @@ int main(int argc, char* argv[])
   std::ofstream fout_roa(roa_file_name, std::ios::binary | std::ios::trunc);
   std::cout << "Output file:\t" << roa_file_name << std::endl;
 
-  // for _ in tqdm(range(total_states)):
   std::stringstream line;
   auto g_tm = time_map_functions[system_name];
 

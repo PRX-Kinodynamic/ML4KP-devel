@@ -169,8 +169,9 @@ void py_copy_from(const prx::space_t* space, boost::python::list& py_list)
   const std::size_t dim{ space->get_dimension() };
   std::vector<double> vec_aux(dim, 0);
   prx_assert(len(py_list) >= dim, "space::copy_from expects list of size space.get_dimension() = " << dim << ".");
-  prx_warn_cond(len(py_list) > dim, "Length of list to copy from is greater than dimension of space ( "
-                                        << dim << "), dropping the greater indexes.");
+  prx_warn_cond(len(py_list) == dim, "Length of list (" << len(py_list)
+                                                        << ") to copy from is greater than dimension of space (" << dim
+                                                        << "), dropping the greater indexes.");
 
   pyobject_to_vector(vec_aux, py_list);
   space->copy_from(vec_aux);
