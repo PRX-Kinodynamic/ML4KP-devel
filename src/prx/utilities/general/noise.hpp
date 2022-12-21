@@ -31,7 +31,7 @@ public:
   // }
 
   template <class... Types>
-  noise_t(Types... args) : generator(global_generator), rnd(args...)
+  noise_t(Types... args) : rnd(args...)
   {
     // generator = global_generator;
   }
@@ -41,11 +41,11 @@ public:
   // {
   // }
 
-  void set_generator(std::mt19937_64 _gen)
-  {
-    // rnd = _rnd;
-    generator = _gen;
-  }
+  // void set_generator(std::mt19937_64 _gen)
+  // {
+  //   // rnd = _rnd;
+  //   generator = _gen;
+  // }
 
   void add_noise(const space_point_t& pt, unsigned int start = 0,
                  std::size_t end = std::numeric_limits<unsigned int>::max()) const
@@ -53,14 +53,14 @@ public:
     end = std::min(end, pt->get_dim());
     for (int i = start; i < pt->get_dim(); ++i)
     {
-      (*pt)[i] += rnd(generator);
+      (*pt)[i] += rnd(global_generator);
     }
   }
 
   template <class T, typename = std::enable_if_t<std::is_arithmetic<T>::value>>
   T add_noise(const T val) const
   {
-    return val + rnd(generator);
+    return val + rnd(global_generator);
   }
 
   void add_noise(const space_t* space) const
@@ -76,7 +76,7 @@ public:
   {
     for (int i = 0; i < container.size(); ++i)
     {
-      container[i] += rnd(generator);
+      container[i] += rnd(global_generator);
     }
   }
 
@@ -87,13 +87,13 @@ public:
     {
       for (int j = 0; j < mat.cols(); ++j)
       {
-        mat(i, j) += rnd(generator);
+        mat(i, j) += rnd(global_generator);
       }
     }
   }
 
 protected:
-  mutable std::mt19937_64 generator;
+  // mutable std::mt19937_64 generator;
   mutable RandomNumberDistribution rnd;
 };
 }  // namespace prx

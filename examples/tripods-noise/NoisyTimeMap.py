@@ -15,6 +15,9 @@ class NoisyTimeMap:
         print("System: ", self.system_name, " not supported!")
         exit(-1);
 
+    def set_seed(self, seed):
+        prx.init_random(seed)
+
     def __init__(self, parameters):
         if isinstance(parameters, str):
             params = prx.param_loader(parameters, sys.argv)
@@ -34,7 +37,7 @@ class NoisyTimeMap:
 
         self.simulation_step = params["simulation_step"].as_float()
         prx.set_simulation_step(self.simulation_step)
-        prx.init_random(params["random_seed"].as_int())
+        self.set_seed(params["random_seed"].as_int())
 
         self.obstacles = prx.obstacle_loader(params["environment"].as_string())
 
