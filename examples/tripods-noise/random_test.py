@@ -17,8 +17,9 @@ print("x_T", TM.g_func(start_state))
 TM.set_seed(112392);
 print("x_T", TM.g_func(start_state))
 
+seed_base = TM.params["random_seed"].as_int()
 def g_fix_seed(X):
-	TM.set_seed(ctypes.c_ulonglong(hash(tuple(X))).value);
+	TM.set_seed(ctypes.c_ulonglong(seed_base * hash(tuple(X))).value);
 	return TM.g_func(X)
 
 print("Fixing the seed based on the start state")
@@ -31,6 +32,14 @@ other_start_state=[0,0]
 other_start_state[0] = start_state[0] +1
 other_start_state[1] = start_state[1]
 
+print("Other x_T", g_fix_seed(other_start_state))
+print("Other x_T", g_fix_seed(other_start_state))
+
+print("Original x_T", g_fix_seed(start_state))
+print("Other x_T", g_fix_seed(other_start_state))
+
+seed_base = 38241
+print("new seed = ", seed_base)
 print("Other x_T", g_fix_seed(other_start_state))
 print("Other x_T", g_fix_seed(other_start_state))
 
