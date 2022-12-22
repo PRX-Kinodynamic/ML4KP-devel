@@ -340,7 +340,7 @@ int main(int argc, char* argv[])
     state_num++;
     if (state_num < initial_state_num)
       continue;
-    if (state_num > final_state_num)
+    if (state_num >= final_state_num)
       continue;
     bar.update(state_num - initial_state_num);
 
