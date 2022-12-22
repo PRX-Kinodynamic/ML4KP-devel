@@ -48,7 +48,8 @@ class NoisyTimeMap:
             print("Error: plant not found!")
             exit(-1)
 
-        self.wm = prx.world_model([self.plant], self.obstacles.get_obstacles())
+        ft_params = self.params["/plant/ft_noise_params"].as_float_vector();
+        self.wm = prx.uniform_noisy_world_model([self.plant], self.obstacles.get_obstacles(),ft_params[0],ft_params[1])
         self.wm.create_context("context", [plant_name], self.obstacles.get_names())
         self.context = self.wm.get_context("context")
 
@@ -176,10 +177,11 @@ class NoisyTimeMap:
 
             self.ctrl[0] = ctrl[0]
             self.ut_noise.add_noise(self.ctrl);
-            self.cs.copy_from(self.ctrl)
-            self.cs.enforce_bounds()
+            # self.cs.copy_from(self.ctrl)
+            # self.cs.enforce_bounds()
 
-            self.plant.propagate(self.simulation_step)
+            # self.plant.propagate(self.simulation_step)
+            self.context.system_group.propagate_once(prx.MIDDLE_STEP, self.ctrl)
 
             if self.checker.check():
                 break;
@@ -202,7 +204,7 @@ class NoisyTimeMap:
             self.controller_base.set_goal(self.goal_state, self.u_goal)
             self.controller_base.compute_K()
             self.get_noisy_controller()
-  
+
         total_time = self.duration
 
         self.checker.set_check_value(total_time)

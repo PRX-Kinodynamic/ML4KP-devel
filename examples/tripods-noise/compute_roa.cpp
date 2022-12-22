@@ -4,6 +4,7 @@
 
 #include "prx/planning/condition_check.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"
+#include "prx/planning/noisy_world_model.hpp"
 #include "prx/planning/world_model.hpp"
 
 #include "prx/simulation/controllers/lqr.hpp"
@@ -24,6 +25,7 @@ using prx::controller_t;
 using prx::custom_check_t;
 using prx::lqr_t;
 using prx::noisy_uniform_controller_t;
+using prx::noisy_world_model_t;
 using prx::param_loader;
 using prx::plant_t;
 using prx::progress_bar_t;
@@ -35,7 +37,6 @@ using prx::system_ptr_t;
 using prx::torch_controller_t;
 using prx::uniform_noise_t;
 using prx::world_model_t;
-// using prx::;
 // using prx::;
 
 using uniform_noisy_plant_t = prx::noisy_plant_t<prx::uniform_noise_t>;
@@ -72,7 +73,8 @@ struct time_map_t
     plant = prx::system_factory_t::create_system(plant_name, plant_path);
     prx_assert(plant != nullptr, "Plant is nullptr!");
 
-    world_model = new world_model_t({ plant }, {});
+    auto ft_noise_params = params["/plant/ft_noise_params"].as<std::vector<double>>();
+    world_model = new noisy_world_model_t<uniform_noise_t>({ plant }, {}, ft_noise_params[0], ft_noise_params[1]);
     world_model->create_context("context", { plant_name }, {});
     auto context = world_model->get_context("context");
 

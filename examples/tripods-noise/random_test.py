@@ -25,7 +25,14 @@ print("Fixing the seed based on the start state")
 print("x_T", g_fix_seed(start_state))
 print("x_T", g_fix_seed(start_state))
 
-print("Differnt state")
-start_state[0] +=  1
-print("x_T", g_fix_seed(start_state))
-print("x_T", g_fix_seed(start_state))
+print("Different state")
+
+other_start_state=[0,0]
+other_start_state[0] = start_state[0] +1
+other_start_state[1] = start_state[1]
+
+print("Other x_T", g_fix_seed(other_start_state))
+print("Other x_T", g_fix_seed(other_start_state))
+
+print("Original x_T", g_fix_seed(start_state))
+print("Other x_T", g_fix_seed(other_start_state))

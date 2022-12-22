@@ -12,8 +12,8 @@ goal_region_radius: 0.1
 
 duration: 5
 state_increment: 0.1
-system_name: "pendulum_lqr"
-# system_name: "pendulum_lc"
+# system_name: "pendulum_lqr"
+system_name: "pendulum_lc"
 # system_name: "ackermann_lc"
 # system_name: "pendulum_bang_bang"
 # system_name: "acrobot_lqr"

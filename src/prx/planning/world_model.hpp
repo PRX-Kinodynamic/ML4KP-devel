@@ -104,7 +104,7 @@ public:
     prx_throw("World model doesn't implement reset");
   }
 
-private:
+protected:
   // SGM* system_groups;
   // CC* collision_groups;
 
