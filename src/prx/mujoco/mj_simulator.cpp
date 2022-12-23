@@ -15,7 +15,7 @@ namespace prx
 
         if (!glfwInit()) prx_throw("Error in initializing GLFW.")
 
-        window = glfwCreateWindow(1200, 900, "MuJoCo", NULL, NULL);
+        window = glfwCreateWindow(600, 450, "MuJoCo", NULL, NULL);
         if (!window) prx_throw("Error in creating GLFW window.")
         glfwMakeContextCurrent(window);
         glfwSwapInterval(1);
@@ -93,12 +93,12 @@ namespace prx
             d -> qacc_warmstart[i] = 0;
         }
         mj_step(m, d);
-        mjrRect viewport = {0, 0, 0, 0};
-        glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
-        mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
-        mjr_render(viewport, &scn, &con);
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        // mjrRect viewport = {0, 0, 0, 0};
+        // glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+        // mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
+        // mjr_render(viewport, &scn, &con);
+        // glfwSwapBuffers(window);
+        // glfwPollEvents();
     }
 
     void mujoco_simulator_t::reset_simulation()

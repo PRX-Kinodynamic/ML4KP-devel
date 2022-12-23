@@ -170,7 +170,8 @@ namespace prx
 			EUCLIDEAN=0,
 			ROTATIONAL=1,
 			DISCRETE=2,
-			IDLE=3
+			IDLE=3,
+			QUATERNION=4
 		};
 
 		space_t(const std::string& topology, const std::vector<double*>& addresses, const std::string& name);

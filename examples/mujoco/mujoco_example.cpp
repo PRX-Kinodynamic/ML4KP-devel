@@ -5,7 +5,7 @@ using namespace prx;
 
 int main(int argc, char** argv)
 {
-    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("reacher.xml");
+    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("diffdrive.xml");
     sim->init_simulator();
 
     timer_t timer;

@@ -34,13 +34,43 @@ namespace prx
 
             if (joint->qposadr != next_qpos)
             {
+                std::cout << "joint: " << joint->name << std::endl;
+                std::cout << "joint->qposadr: " << joint->qposadr << " next_qpos: " << next_qpos << std::endl;
                 prx_throw("Joints are not in the order of qposadr...");
             }
 
-            next_qpos++;
-
             switch(joint -> type)
             {
+                case 0:
+                    // Free 
+                    prx_warn("This is a free joint. Setting limits arbitrarily.");
+                    // These are the qpos positions
+                    state_topo_string += "EEE";
+                    for (int i = 0; i < 3; i++)
+                    {
+                        state_memory[idx+i] = &sim -> d -> qpos[joint -> qposadr + i];
+                    }
+                    ss_lb.push_back(-10); ss_lb.push_back(-10); ss_lb.push_back(0);
+                    ss_ub.push_back( 10); ss_ub.push_back( 10); ss_ub.push_back(10);
+                    // These are the qpos rotations
+                    state_topo_string += "QQQQ";
+                    for (int i = 3; i < 7; i++)
+                    {
+                        ss_lb.push_back(-1);
+                        ss_ub.push_back(1);
+                        state_memory[idx+i+3] = &sim -> d -> qpos[joint -> qposadr + i];
+                    }
+                    // These are the qvel
+                    state_topo_string += "EEEEEE";
+                    for (int i = 0; i < 6; i++)
+                    {
+                        ss_lb.push_back(-10.);
+                        ss_ub.push_back(10.);
+                        state_memory[idx+i+7] = &sim -> d -> qvel[joint -> dofadr + i];
+                    }
+                    idx += 13;
+                    next_qpos += 7;
+                    break;
                 case 2:
                     // Slide
                     state_topo_string += "EE";
@@ -54,7 +84,7 @@ namespace prx
                     }
                     else
                     {
-                        prx_warn("Slide joint is not limited. Setting limits to (-inf, inf");
+                        prx_warn("Slide joint is not limited. Setting limits to (-inf, inf)");
                         ss_lb.push_back(-PRX_INFINITY);
                         ss_ub.push_back(PRX_INFINITY);
                         ss_lb.push_back(-50.);
@@ -64,7 +94,7 @@ namespace prx
                     state_memory[idx]   = &sim -> d -> qpos[joint -> qposadr];
                     state_memory[idx+1] = &sim -> d -> qvel[joint -> dofadr]; 
                     idx += 2;
-
+                    next_qpos++;
                     break;
                 case 3:
                     // Hinge
@@ -74,22 +104,21 @@ namespace prx
                     {
                         ss_lb.push_back(joint -> range[0]);
                         ss_ub.push_back(joint -> range[1]);
-                        ss_lb.push_back(-50.);
-                        ss_ub.push_back(50.);
+                        ss_lb.push_back(-10.);
+                        ss_ub.push_back(10.);
                     }
                     else
                     {
                         ss_lb.push_back(-PRX_PI);
                         ss_ub.push_back(PRX_PI);
-                        ss_lb.push_back(-50.);
-                        ss_ub.push_back(50.);
+                        ss_lb.push_back(-10.);
+                        ss_ub.push_back(10.);
                     }
 
                     state_memory[idx]   = &sim -> d -> qpos[joint -> qposadr];
                     state_memory[idx+1] = &sim -> d -> qvel[joint -> dofadr]; 
                     idx += 2;
-
-
+                    next_qpos++;
                     break;
                 default:
                     prx_throw("Joint type not supported (yet)");
