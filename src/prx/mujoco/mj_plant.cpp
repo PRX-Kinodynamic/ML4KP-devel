@@ -54,6 +54,7 @@ namespace prx
                     }
                     else
                     {
+                        prx_warn("Slide joint is not limited. Setting limits to (-inf, inf");
                         ss_lb.push_back(-PRX_INFINITY);
                         ss_ub.push_back(PRX_INFINITY);
                         ss_lb.push_back(-50.);

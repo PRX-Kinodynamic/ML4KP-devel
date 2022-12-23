@@ -40,6 +40,6 @@ int main(int argc, char** argv)
     while(true)
     {
         context.first -> propagate(start, plan, end);
-        usleep(int(1e8));
+        usleep(int(1e6));
     }
 }

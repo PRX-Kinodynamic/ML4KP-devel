@@ -8,7 +8,6 @@ namespace prx
         std::string full_model_path = mj_models_path + model_path;
         m = mj_loadXML(full_model_path.c_str(), NULL, NULL, 0);
         if (!m) prx_throw("Error in loading model.")
-        PRX_DEBUG_PRINT
         d = mj_makeData(m);
 
         // Get the simulation step from the model
@@ -16,7 +15,7 @@ namespace prx
 
         if (!glfwInit()) prx_throw("Error in initializing GLFW.")
 
-        window = glfwCreateWindow(800, 600, "MuJoCo", NULL, NULL);
+        window = glfwCreateWindow(1200, 900, "MuJoCo", NULL, NULL);
         if (!window) prx_throw("Error in creating GLFW window.")
         glfwMakeContextCurrent(window);
         glfwSwapInterval(1);
@@ -27,6 +26,15 @@ namespace prx
         mjr_defaultContext(&con);
         mjv_makeScene(m, &scn, 1000);
         mjr_makeContext(m, &con, mjFONTSCALE_150);
+
+        // number of generalized coordinates
+        std::cout << "nq = " << m -> nq << std::endl;
+        // number of degrees of freedom
+        std::cout << "nv = " << m -> nv << std::endl;
+        // number of actuators/controls
+        std::cout << "nu = " << m -> nu << std::endl;
+        // number of activation states
+        std::cout << "na = " << m -> na << std::endl;
 
         if (m -> na != 0)
         {
