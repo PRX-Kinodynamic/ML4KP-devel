@@ -58,7 +58,7 @@ namespace prx
                     {
                         ss_lb.push_back(-1);
                         ss_ub.push_back(1);
-                        state_memory[idx+i+3] = &sim -> d -> qpos[joint -> qposadr + i];
+                        state_memory[idx+i] = &sim -> d -> qpos[joint -> qposadr + i];
                     }
                     // These are the qvel
                     state_topo_string += "EEEEEE";
