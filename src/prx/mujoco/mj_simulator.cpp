@@ -93,12 +93,31 @@ namespace prx
             d -> qacc_warmstart[i] = 0;
         }
         mj_step(m, d);
-        // mjrRect viewport = {0, 0, 0, 0};
-        // glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
-        // mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
-        // mjr_render(viewport, &scn, &con);
-        // glfwSwapBuffers(window);
-        // glfwPollEvents();
+        mjrRect viewport = {0, 0, 0, 0};
+        glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+        mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
+        mjr_render(viewport, &scn, &con);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    bool mujoco_simulator_t::in_collision()
+    {
+        int ncon = d->ncon;
+        if (ncon > 0)
+        {
+            for (int i = 0; i < ncon; i++)
+            {
+                collision_body1 = mj_id2name(m, mjOBJ_BODY, m -> geom_bodyid[d->contact[i].geom1]);
+                collision_body2 = mj_id2name(m, mjOBJ_BODY, m -> geom_bodyid[d->contact[i].geom2]);
+                if (collision_body1.find("obs") != std::string::npos || collision_body2.find("obs") != std::string::npos)
+                {
+                    return true;
+                }
+            }
+
+        }
+        return false;
     }
 
     void mujoco_simulator_t::reset_simulation()

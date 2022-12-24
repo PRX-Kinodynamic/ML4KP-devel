@@ -166,6 +166,7 @@ namespace prx
 
     void mujoco_plant_t::update_configuration()
     {
+        mj_fwdPosition(sim -> m, sim -> d);
     }
 
     void mujoco_plant_t::compute_derivative()
