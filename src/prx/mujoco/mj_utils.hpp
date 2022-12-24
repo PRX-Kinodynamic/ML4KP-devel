@@ -1,5 +1,6 @@
 #pragma once
 #ifndef MUJOCO_NOT_BUILT
+#include <vector>
 #include "prx/utilities/defs.hpp"
 
 #include "mujoco/mujoco.h"
