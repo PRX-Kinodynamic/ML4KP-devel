@@ -22,6 +22,8 @@ namespace prx
 
         GLFWwindow* window;
 
+        std::string collision_body1, collision_body2;
+
         public:
         mujoco_simulator_t(const std::string& model_path);
 
@@ -32,6 +34,8 @@ namespace prx
         virtual void step_simulation(propagate_step step) override;
 
         virtual void reset_simulation() override;
+
+        bool in_collision();
 
         void set_state(const MujocoState& state);
 
