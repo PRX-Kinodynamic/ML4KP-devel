@@ -3,9 +3,9 @@ import os
 
 np.set_printoptions(precision=2)
 
-exps_dir = os.environ["DIRTMP_PATH"] + "out/1212/car/"
+exps_dir = os.environ["DIRTMP_PATH"] + "out/1212/treaded/"
 
-planners = ["random","rlg","roadmap"]
+planners = ["random","rlg","roadmap","classify"]
 data = []
 for planner in planners:
     for problem in sorted(os.listdir(exps_dir)):
@@ -14,8 +14,9 @@ for planner in planners:
             costs = []
             times = []
             iters = []
-            branching = []
-            if planner == "roadmap":
+            # branching = []
+            sim_times = []
+            if planner == "roadmap" or planner == "classify":
                 num_trials = 1
             else:
                 num_trials = 10
@@ -29,11 +30,12 @@ for planner in planners:
                             costs.append(dat[0])
                             times.append(dat[1])
                             iters.append(dat[2])
-                            branching.append(dat[3])
+                            sim_times.append(dat[4])
+                            # branching.append(dat[3])
                         else:
                             success.append(0)
-            data.append([planner,problem,np.mean(success),np.mean(costs),np.mean(times),np.mean(iters),np.mean(branching)])
-            print(planner,problem, np.mean(success), np.mean(costs), np.mean(times), np.mean(iters), np.mean(branching))
+            data.append([planner,problem,np.mean(success),np.mean(costs),np.mean(times),np.mean(iters),np.mean(sim_times)])
+            print(planner,problem, np.mean(success), np.mean(costs), np.mean(times), np.mean(iters), np.mean(sim_times))
 
 # Save data
 data = np.array(data)

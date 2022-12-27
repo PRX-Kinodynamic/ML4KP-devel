@@ -156,7 +156,9 @@ int main(int argc, char* argv[])
             dirt.preprocess();
             dirt.link_and_setup_query(&dirt_query);
 
+            simulation_time = 0.0;
             dirt.resolve_query(&checker);
+            double end_sim_time = simulation_time;
             dirt.fulfill_query();
 
             std::string full_fname = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
@@ -165,6 +167,7 @@ int main(int argc, char* argv[])
             fout << dirt.get_current_solution_time() << std::endl;
             fout << dirt.get_current_solution_iters() << std::endl;
             fout << dirt.get_branching_factor() << std::endl;
+            fout << end_sim_time << std::endl;
             fout.close();
 
             // planner_statistics_t stats;

@@ -3,6 +3,7 @@ out/
 build/
 include/
 lib/
+scripts/
 docs/html/
 docs/latex/
 tests/old/

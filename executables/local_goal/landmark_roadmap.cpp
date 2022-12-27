@@ -60,6 +60,7 @@ int main(int argc, char* argv[])
         simulation_step = params["simulation_step"].as<double>();
         int random_seed = params["random_seed"].as<int>();
         init_random(random_seed);
+        torch::set_num_threads(1);
 
         auto obstacles = load_obstacles(params["environment"].as<std::string>());
         auto obstacle_list = obstacles.second;
@@ -125,7 +126,7 @@ int main(int argc, char* argv[])
         
         landmark_roadmap_t rrr;
         
-        std::string points_fname = out_path + "points.txt";
+        std::string points_fname = output_path + "points.txt";
         std::vector<std::vector<double>> dataset = read_comma_separated_file(points_fname);
         space_point_t current = ss -> make_point();
         for (auto row: dataset)
@@ -145,6 +146,7 @@ int main(int argc, char* argv[])
         std::cout << rrr.is_connected() << std::endl;
 
 
+        /*
         auto roadmap_edges = rrr.get_all_edges();
         for (auto e : roadmap_edges)
         {
@@ -154,7 +156,9 @@ int main(int argc, char* argv[])
             fout << rrr.print_edge_traj(e.first,e.second,dirt_query,dirt_spec,controller);
             fout.close();
         }
+        */
         
+        /*
         space_point_t s_pt = ss -> make_point();
         space_point_t g_pt = ss -> make_point();        
         std::string landmark_fname = out_path + "control.txt";
@@ -193,11 +197,8 @@ int main(int argc, char* argv[])
 
         }
         fout.close();
+        */
 
-        /*
-        // rrr.run_verification(dirt_query, dirt_spec, controller);
-        // std::cout << "Verification set size: " << rrr.verification_set.size() << std::endl;
-        
         // If the output directory does not exist, create it
         if (!fs::exists(out_path))
         {
@@ -244,6 +245,7 @@ int main(int argc, char* argv[])
                 auto nn = rrr.get_best_node(s,controller_query, dirt_spec, controller);
                 if (nn == -1)
                 {
+                    std::cout << "No best node was found!" << std::endl;
                     local_goal.clear();
                     do
                     {
@@ -290,15 +292,18 @@ int main(int argc, char* argv[])
             dirt.preprocess();
             dirt.link_and_setup_query(&dirt_query);
 
+            simulation_time = 0.0;
             dirt.resolve_query(&checker);
+            double end_sim_time = simulation_time;
             dirt.fulfill_query();
 
-            std::string full_filename = out_path + "solution.txt";
+            std::string full_filename = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
             fout.open(full_filename);
             fout << dirt.get_current_solution() << std::endl;
             fout << dirt.get_current_solution_time() << std::endl;
             fout << dirt.get_current_solution_iters() << std::endl;
             fout << dirt.get_branching_factor() << std::endl;
+            fout << end_sim_time << std::endl;
             // fout << 1.0 * rrr.verification_set.size() / verification_set_size << std::endl;
             fout << time_taken << std::endl;
             fout.close();
@@ -313,13 +318,12 @@ int main(int argc, char* argv[])
             vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
             vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, dirt_query.solution_traj, body_name, ss);
             vis_group -> add_animation(dirt_query.solution_traj, ss, dirt_query.start_state);
-            vis_group -> output_html(output_dir+"output.html");
+            vis_group -> output_html(params["output_dir"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".html");
             delete vis_group;
 
             dirt_query.clear_outputs();
             dirt.reset();
         }
-        */
 
         // Output graph to file.
         std::string vertex_fname = out_path + "vertices.txt";

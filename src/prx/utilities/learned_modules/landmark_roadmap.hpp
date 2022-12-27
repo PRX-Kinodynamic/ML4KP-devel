@@ -13,7 +13,6 @@ struct landmark_edge_t
 {
     node_index_t end;
     double cost;
-    trajectory_t* traj;
 };
 
 class landmark_roadmap_t
@@ -23,7 +22,6 @@ class landmark_roadmap_t
         std::unordered_map<node_index_t,double> costs_to_goal;
         std::unordered_map<node_index_t, std::vector<landmark_edge_t*>> edges;
         std::vector<std::pair<node_index_t, node_index_t>> all_edges;
-        std::unordered_map<node_index_t, std::unordered_map<node_index_t, double>> distances;
         node_index_t vertex_counter, edge_counter;
         std::vector<node_index_t> path;
         std::vector<std::vector<node_index_t>> components;
@@ -46,17 +44,18 @@ class landmark_roadmap_t
     
     void set_stretch_factor(double factor) { stretch_factor = factor; }
     
-    std::vector<std::pair<node_index_t, node_index_t>> get_all_edges()
+    std::pair<std::vector<std::pair<node_index_t, node_index_t>>::iterator,std::vector<std::pair<node_index_t, node_index_t>>::iterator> get_all_edges()
     {
-        std::vector<std::pair<node_index_t, node_index_t>> all_edges;
-        for(auto& v : vertices)
+        // Re-compute all edges.
+        all_edges.clear();
+        for (auto e : edges)
         {
-            for(auto& e : edges[v.first])
+            for (auto e2 : e.second)
             {
-                all_edges.push_back(std::make_pair(v.first, e->end));
+                all_edges.push_back(std::make_pair(e.first, e2->end));
             }
         }
-        return all_edges;
+        return std::make_pair(all_edges.begin(), all_edges.end());
     }
     
     void get_indices(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
@@ -127,28 +126,6 @@ class landmark_roadmap_t
         }
 
         return -1;
-    }
-
-    node_index_t get_nearest_reachable_node(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
-    {
-        spec.state_space -> copy_point(pt, s);
-
-        get_indices(query, spec, controller);
-
-        double min_dist = PRX_INFINITY;
-        node_index_t min_index = -1;
-
-        for (auto i : a_indices)
-        {
-            double dist = spec.distance_function(vertices[i] -> point, s);
-            if (dist < min_dist)
-            {
-                min_dist = dist;
-                min_index = i;
-            }
-        }
-
-        return min_index;
     }
 
     bool check_edge_exists(node_index_t d, node_index_t a)
@@ -422,7 +399,7 @@ class landmark_roadmap_t
 
         }
 
-        for (auto v : vertices)
+        for (auto v = vertices.begin(); v != vertices.end();)
         {
             // Check if the vertex only has incoming edges.
             bool only_incoming = true;
@@ -430,7 +407,7 @@ class landmark_roadmap_t
             {
                 for (auto ee : e.second)
                 {
-                    if (ee->end == v.first)
+                    if (ee->end == v->first)
                     {
                         only_incoming = false;
                         break;
@@ -439,20 +416,36 @@ class landmark_roadmap_t
                 if (!only_incoming) break;
             }
 
-            if (only_incoming) remove_vertex(v.first);
+            if (only_incoming)
+            {
+                remove_vertex(v->first);
+                v = vertices.erase(v);
+            } 
+            else
+            {
+                ++v;
+            }
         }
 
-        for (auto v : vertices)
+        for (auto v = vertices.begin(); v != vertices.end();)
         {
             // Check if the vertex only has outgoing edges.
             bool only_outgoing = true;
-            for (auto e : edges[v.first])
+            for (auto e : edges[v->first])
             {
                 only_outgoing = false;
                 break;
             }
 
-            if (only_outgoing) remove_vertex(v.first);
+            if (only_outgoing)
+            {
+                remove_vertex(v->first);
+                v = vertices.erase(v);
+            } 
+            else
+            {
+                ++v;
+            }
         }
 
     }
@@ -466,7 +459,6 @@ class landmark_roadmap_t
                 delete *e;
                 e = edges[s].erase(e);
                 edge_counter--;
-                return;
             }
             else
             {
@@ -557,14 +549,13 @@ class landmark_roadmap_t
         v -> point = spec.state_space -> clone_point(pt);
         vertices.insert(std::make_pair(vertex_counter, v));
 
-        if (a_indices.size() == 0)
+        if (d_indices.size() == 0)
         {
             return -1;
         }
 
         for (auto d : d_indices)
         {
-            // cost = spec.distance_function(vertices[d] -> point, pt);
             cost = d_costs[d];
             add_edge(d, vertex_counter, cost);
         }
@@ -586,14 +577,13 @@ class landmark_roadmap_t
         v -> point = spec.state_space -> clone_point(pt);
         vertices.insert(std::make_pair(vertex_counter, v));
 
-        if (d_indices.size() == 0)
+        if (a_indices.size() == 0)
         {
             return -1;
         }
 
         for (auto a : a_indices)
         {
-            // cost = spec.distance_function(vertices[a] -> point, pt);
             cost = a_costs[a];
             add_edge(vertex_counter, a, cost);
         }
