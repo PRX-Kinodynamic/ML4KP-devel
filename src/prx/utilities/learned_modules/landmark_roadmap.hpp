@@ -469,7 +469,7 @@ class landmark_roadmap_t
 
     void remove_vertex(node_index_t v)
     {
-        // std::cout << "Removing vertex " << v << std::endl;
+        std::cout << "Removing vertex " << v << std::endl;
         for (auto e : edges[v])
         {
             remove_edge(e->end, v);
@@ -488,7 +488,6 @@ class landmark_roadmap_t
         edges.erase(v);
         // Free the memory.
         delete vertices[v];
-        vertices.erase(v);
     }
 
     std::string print_vertices(space_t* space)
@@ -681,6 +680,58 @@ class landmark_roadmap_t
             while (w != v);
             components.push_back(component);
         }
+    }
+
+    std::vector<std::vector<node_index_t>> get_k_shortest_paths(node_index_t s, node_index_t t, int k)
+    {
+        // Modified Dijkstra's algorithm to find k shortest paths.
+        // Maintains a priority queue of paths, where each path is a vector of nodes.
+        // Each path is assigned a cost, which is the sum of the costs of the edges in the path.
+        // The priority queue is sorted by path cost.
+        // The algorithm terminates when the priority queue is empty or when k paths have been found.
+        // The algorithm is based on the following paper:
+        // https://www.cs.cmu.edu/~avrim/451f11/lectures/lect1003.pdf
+
+        std::priority_queue<std::pair<double, std::vector<node_index_t>>, std::vector<std::pair<double, std::vector<node_index_t>>>, std::greater<std::pair<double, std::vector<node_index_t>>>> pq;
+        std::map<node_index_t, int> count;
+        std::map<node_index_t, double> dist;
+
+        for (auto v : vertices)
+        {
+            dist[v.first] = std::numeric_limits<double>::infinity();
+            count[v.first] = -1;
+        }
+
+        dist[s] = 0;
+        pq.push(std::make_pair(0, std::vector<node_index_t>{s}));
+
+        std::vector<std::vector<node_index_t>> paths;
+        while (!pq.empty() && count[t] < k)
+        {
+            std::pair<double, std::vector<node_index_t>> p = pq.top();
+            pq.pop();
+            node_index_t u = p.second.back();
+            dist[u] = p.first;
+            if (u == t)
+            {
+                std::cout << "Found path with cost " << p.first << std::endl;
+                paths.push_back(p.second);
+            }
+            count[u]++;
+            if (count[u] <= k)
+            {
+                for (auto e : edges[u])
+                {
+                    node_index_t v = e->end;
+                    double alt = dist[u] + e->cost;
+                    std::vector<node_index_t> path = p.second;
+                    path.push_back(v);
+                    pq.push(std::make_pair(alt, path));
+                }
+            }
+        }
+
+        return paths;
     }
 
     std::vector<node_index_t> get_shortest_path(node_index_t s, node_index_t g)

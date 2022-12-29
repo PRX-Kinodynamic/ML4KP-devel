@@ -47,7 +47,8 @@ int main(int argc, char* argv[])
         std::string params_file;
         if (argc <= 1)
         {
-            prx_throw("This executable needs a parameter file!");
+            // prx_throw("This executable needs a parameter file!");
+            params_file = "local_goal/car_like.yaml";
         }
         else 
         {
@@ -145,18 +146,29 @@ int main(int argc, char* argv[])
         std::cout << "Time taken to build roadmap: " << time_taken << std::endl;
         std::cout << rrr.is_connected() << std::endl;
 
+        // Output graph to file.
+        std::string vertex_fname = out_path + "vertices.txt";
+        std::string edge_fname = out_path + "edges.txt";
 
-        /*
-        auto roadmap_edges = rrr.get_all_edges();
-        for (auto e : roadmap_edges)
-        {
-            std::string traj_fname = out_path + "traj_" + std::to_string(e.first) + "_" + std::to_string(e.second) + ".txt";
-            std::ofstream fout;
-            fout.open(traj_fname);
-            fout << rrr.print_edge_traj(e.first,e.second,dirt_query,dirt_spec,controller);
-            fout.close();
-        }
-        */
+        std::ofstream vertex_file(vertex_fname);
+        std::ofstream edge_file(edge_fname);
+
+        vertex_file << rrr.print_vertices(ss) << std::endl;
+        edge_file << rrr.print_edges() << std::endl;
+
+        vertex_file.close();
+        edge_file.close();
+        
+        // auto roadmap_edges = rrr.get_all_edges();
+        // for (auto e = roadmap_edges.first; e != roadmap_edges.second; ++e)
+        // {
+        //     auto edge = *e;
+        //     std::string traj_fname = out_path + "traj_" + std::to_string(edge.first) + "_" + std::to_string(edge.second) + ".txt";
+        //     std::ofstream fout;
+        //     fout.open(traj_fname);
+        //     fout << rrr.print_edge_traj(edge.first,edge.second,dirt_query,dirt_spec,controller);
+        //     fout.close();
+        // }
         
         /*
         space_point_t s_pt = ss -> make_point();
@@ -217,8 +229,6 @@ int main(int argc, char* argv[])
 
         prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
         
-        std::cout << "Nearest accessible node to start: " << s_nn << std::endl;
-
         auto path = rrr.get_shortest_path(s_nn,g_nn);
 
         dirt_query_t controller_query(ss,cs);
@@ -227,7 +237,7 @@ int main(int argc, char* argv[])
         controller_query.goal_region_radius = params["goal_radius"].as<double>();
         controller_query.goal_check = [&,dirt_spec,ss](space_point_t s)
         {
-            return dirt_spec.distance_function(s,dirt_query.goal_state) < controller_query.goal_region_radius; 
+            return dirt_spec.distance_function(s,controller_query.goal_state) < controller_query.goal_region_radius; 
         };
 
         space_point_t lg = ss -> make_point();
@@ -245,7 +255,7 @@ int main(int argc, char* argv[])
                 auto nn = rrr.get_best_node(s,controller_query, dirt_spec, controller);
                 if (nn == -1)
                 {
-                    std::cout << "No best node was found!" << std::endl;
+                    // std::cout << "No best node was found!" << std::endl;
                     local_goal.clear();
                     do
                     {
@@ -254,6 +264,21 @@ int main(int argc, char* argv[])
                     ss -> copy_vector_from_point(local_goal,lg);
                     current_states.push_back(current_state);
                     local_goals.push_back(local_goal);
+
+                    // auto controls = controller.get_controls(current_states,local_goals);
+
+                    // trajectory_t traj(ss);
+                    // plan_t plan(cs);
+
+                    // for (int i = 0; i < bn; i++)
+                    // {
+                    //     traj.clear(); plan.clear();
+                    //     plan.append_onto_back(controller.get_control_duration());
+                    //     cs -> copy_point_from_vector(plan.back().control,controls[i]);
+                    //     dirt_spec.propagate(s,plan,traj);
+                    //     plans.push_back(new plan_t(plan));
+                    //     trajs.push_back(new trajectory_t(traj));
+                    // }
                 }
                 else
                 {
@@ -261,6 +286,8 @@ int main(int argc, char* argv[])
                     ss -> copy_vector_from_point(local_goal,lg);
                     current_states.push_back(current_state);
                     local_goals.push_back(local_goal);
+                    // plans.push_back(new  plan_t(controller_query.solution_plan));
+                    // trajs.push_back(new trajectory_t(controller_query.solution_traj));
                 }
 
                 auto controls = controller.get_controls(current_states,local_goals);
@@ -285,7 +312,9 @@ int main(int argc, char* argv[])
         };
 
         
-        condition_check_t checker("solutions",1);
+        // condition_check_t checker("solutions",1);
+        // condition_check_t checker("iterations",1);
+        condition_check_t checker("time",10);
         for (int i = 0; i < 1; i++)
         {
             dirt.link_and_setup_spec(&dirt_spec);
@@ -313,6 +342,11 @@ int main(int argc, char* argv[])
             fout << dirt_query.solution_traj.print() << std::endl;
             fout.close();
 
+            std::string plan_fname = out_path + "plan.txt";
+            fout.open(plan_fname);
+            fout << dirt_query.solution_plan.print(4) << std::endl;
+            fout.close();
+
             three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
             std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
             vis_group -> add_vis_infos(info_geometry_t::LINE, dirt_query.tree_visualization, body_name, ss);
@@ -324,19 +358,6 @@ int main(int argc, char* argv[])
             dirt_query.clear_outputs();
             dirt.reset();
         }
-
-        // Output graph to file.
-        std::string vertex_fname = out_path + "vertices.txt";
-        std::string edge_fname = out_path + "edges.txt";
-
-        std::ofstream vertex_file(vertex_fname);
-        std::ofstream edge_file(edge_fname);
-
-        vertex_file << rrr.print_vertices(ss) << std::endl;
-        edge_file << rrr.print_edges() << std::endl;
-
-        vertex_file.close();
-        edge_file.close();
         
     }
     catch(const prx_assert_t& e) 

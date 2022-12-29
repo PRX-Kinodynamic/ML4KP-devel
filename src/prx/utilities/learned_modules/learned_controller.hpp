@@ -267,6 +267,7 @@ class learned_controller_t
 
         std::vector<double> state_vec, goal_vec;
         trajectory_t step_traj(spec.state_space);
+        plan_t step_plan(spec.control_space);
         space_point_t current = spec.state_space -> clone_point(query.start_state);
         spec.state_space -> copy_vector_from_point(goal_vec,query.goal_state);
 
@@ -274,12 +275,15 @@ class learned_controller_t
         {
             state_vec.clear();
             step_traj.clear();
-            query.solution_plan.clear();
+            step_plan.clear();
+            // query.solution_plan.clear();
             query.solution_plan.append_onto_back(control_duration);
+            step_plan.append_onto_back(control_duration);
             spec.state_space -> copy_vector_from_point(state_vec,current);
             spec.control_space -> copy_point_from_vector(query.solution_plan.back().control,get_control(state_vec,goal_vec));
+            spec.control_space -> copy_point(step_plan.back().control,query.solution_plan.back().control);
             if (debug_controller) std::cout << spec.control_space -> print_point(query.solution_plan.back().control,4) << " " << query.solution_plan.back().duration << std::endl;
-            spec.propagate(current, query.solution_plan, step_traj);
+            spec.propagate(current, step_plan, step_traj);
             if (debug_controller) std::cout << spec.state_space -> print_point(step_traj.back(),4) << std::endl;
             spec.state_space -> copy_point(current,step_traj.back());
             for (unsigned i = 0; i < step_traj.size() - 1; i++)
