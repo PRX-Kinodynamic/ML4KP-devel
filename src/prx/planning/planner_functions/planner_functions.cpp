@@ -83,7 +83,6 @@ namespace prx
 
 	bool default_valid_trajectory(trajectory_t& traj, space_t* ss,std::shared_ptr<collision_group_t> cg)
 	{
-   
 	  	for(auto&& s : traj)
 	    {
 	      	if (!default_valid_state(s,ss,cg))
@@ -136,7 +135,8 @@ namespace prx
 	bool default_valid_state(space_point_t& s,space_t* ss,std::shared_ptr<collision_group_t> cg)
 	{
 		ss->copy_from_point(s);
-		if(cg->in_collision() || !ss->satisfies_bounds(s))
+		if (cg->in_collision())
+		// if(cg->in_collision() || !ss->satisfies_bounds(s))
 		{
 			return false;
 		}

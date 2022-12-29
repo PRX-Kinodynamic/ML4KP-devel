@@ -39,8 +39,8 @@ int main(int argc, char* argv[])
         return dirt_spec.state_space -> euclidean_2d(point1, point2, 2, 4);
     };
 
-    dirt_spec.min_control_steps = 25;
-    dirt_spec.max_control_steps = 100;
+    dirt_spec.min_control_steps = 0.5 * (1.0/simulation_step);
+    dirt_spec.max_control_steps = 2.0 * (1.0/simulation_step);
     dirt_spec.blossom_number = 5;
 
     dirt_query_t dirt_query(ss,cs);

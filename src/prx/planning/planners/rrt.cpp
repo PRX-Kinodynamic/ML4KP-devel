@@ -112,6 +112,7 @@ namespace prx
 			iteration_count++;
 		}
 		while(!condition->check());
+		print_statistics();
 	}
 	void rrt_t::_fulfill_query()
 	{
