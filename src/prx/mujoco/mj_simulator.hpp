@@ -2,6 +2,7 @@
 #ifndef MUJOCO_NOT_BUILT
 #include "prx/simulation/simulator.hpp"
 #include "prx/simulation/playback/plan.hpp"
+#include "prx/simulation/collision_checking/collision_checker.hpp"
 #include "prx/mujoco/mj_utils.hpp"
 #include "prx/mujoco/mj_plant.hpp"
 
@@ -21,8 +22,6 @@ namespace prx
         mjrContext con;
 
         GLFWwindow* window;
-
-        std::string collision_body1, collision_body2;
 
         public:
         mujoco_simulator_t(const std::string& model_path);
@@ -49,5 +48,45 @@ namespace prx
 
         std::vector<double*> actuator_internal_state;
     };
+
+    class mujoco_collision_group_t : public collision_group_t
+    {
+        public:
+        mujoco_collision_group_t(const std::vector<system_ptr_t>& in_plants,const std::vector<std::shared_ptr<movable_object_t>>& in_obstacles={})
+        {
+            prx_warn("Default constructor for mujoco collision group is not implemented. Please use the constructor with the mujoco simulator.");
+        }
+        mujoco_collision_group_t(const std::shared_ptr<mujoco_simulator_t>& sim)
+        {
+            this->sim = sim;
+        }
+        virtual ~mujoco_collision_group_t(){};
+
+        bool in_collision() override;
+
+        protected:
+        std::shared_ptr<mujoco_simulator_t> sim;
+        std::string collision_body1, collision_body2;
+    };
+    
+    class mujoco_collision_checker_t : public collision_checker_t
+    {
+        public:
+        mujoco_collision_checker_t(const std::shared_ptr<mujoco_simulator_t>& _sim) : collision_checker_t()
+        {
+            sim = _sim;
+        }
+        virtual ~mujoco_collision_checker_t(){};
+
+        virtual void add_collision_group(const std::string& group_name, const std::vector<system_ptr_t>& in_plants,const std::vector<std::shared_ptr<movable_object_t>>& in_obstacles) override
+        {
+            collision_groups[group_name] = std::make_shared<mujoco_collision_group_t>(sim);
+        }
+
+        protected:
+        std::shared_ptr<mujoco_simulator_t> sim;
+    };
+
+    
 }
 #endif

@@ -81,7 +81,7 @@ namespace prx
         system_groups -> add_system_group(context_name, context_systems);
 
         // TODO: Need to set up collision stuff here.
-        collision_groups.reset(new collision_checker_t());
+        collision_groups.reset(new mujoco_collision_checker_t(sim_ptr));
         collision_groups -> add_collision_group(context_name, context_systems, {});
     }
 
@@ -99,25 +99,6 @@ namespace prx
         mjr_render(viewport, &scn, &con);
         glfwSwapBuffers(window);
         glfwPollEvents();
-    }
-
-    bool mujoco_simulator_t::in_collision()
-    {
-        int ncon = d->ncon;
-        if (ncon > 0)
-        {
-            for (int i = 0; i < ncon; i++)
-            {
-                collision_body1 = mj_id2name(m, mjOBJ_BODY, m -> geom_bodyid[d->contact[i].geom1]);
-                collision_body2 = mj_id2name(m, mjOBJ_BODY, m -> geom_bodyid[d->contact[i].geom2]);
-                if (collision_body1.find("obs") != std::string::npos || collision_body2.find("obs") != std::string::npos)
-                {
-                    return true;
-                }
-            }
-
-        }
-        return false;
     }
 
     void mujoco_simulator_t::reset_simulation()
@@ -145,6 +126,25 @@ namespace prx
             s.ctrl.push_back(d->ctrl[i]);
         }
         return s;
+    }
+
+    bool mujoco_collision_group_t::in_collision()
+    {
+        int ncon = sim -> d->ncon;
+        if (ncon > 0)
+        {
+            for (int i = 0; i < ncon; i++)
+            {
+                collision_body1 = mj_id2name(sim -> m, mjOBJ_BODY, sim -> m -> geom_bodyid[sim -> d->contact[i].geom1]);
+                collision_body2 = mj_id2name(sim -> m, mjOBJ_BODY, sim -> m -> geom_bodyid[sim -> d->contact[i].geom2]);
+                if (collision_body1.find("obs") != std::string::npos ^ collision_body2.find("obs") != std::string::npos)
+                {
+                    return true;
+                }
+            }
+
+        }
+        return false;
     }
 }
 #endif

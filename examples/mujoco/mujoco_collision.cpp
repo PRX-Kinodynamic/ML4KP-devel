@@ -11,6 +11,7 @@ int main(int argc, char** argv)
     auto context = sim -> get_context("mujoco");
     auto ss = context.first -> get_state_space();
     auto cs = context.first -> get_control_space();
+    auto cg = context.second;
 
     space_point_t start = ss -> make_point();
     space_point_t end  = ss -> make_point();
@@ -19,7 +20,7 @@ int main(int argc, char** argv)
         sim -> step_simulation(propagate_step::FIRST_STEP);
     }
     ss -> copy_to_point(start);
-    std::cout << "Collision? " << sim -> in_collision() << std::endl;
+    std::cout << "Collision? " << cg -> in_collision() << std::endl;
 
     init_random(111093);
     plan_t plan(cs);
@@ -29,5 +30,5 @@ int main(int argc, char** argv)
 
     context.first -> propagate(start, plan, end);
     std::cout << ss -> print_point(end,4) << std::endl;
-    std::cout << "Collision? " <<  sim -> in_collision() << std::endl;
+    std::cout << "Collision? " <<  cg -> in_collision() << std::endl;
 }
