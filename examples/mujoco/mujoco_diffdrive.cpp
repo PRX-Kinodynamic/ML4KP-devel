@@ -9,7 +9,8 @@ int main(int argc, char* argv[])
 {
     init_random(210896);
 
-    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("diffdrive_collision.xml");
+    // std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("diffdrive_collision.xml");
+    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr.xml");
     sim->init_simulator();
 
     auto context = sim -> get_context("mujoco");
@@ -53,7 +54,7 @@ int main(int argc, char* argv[])
     rrt.preprocess();
     rrt.link_and_setup_query(&rrt_query);
 
-    condition_check_t checker("time", 30.0);
+    condition_check_t checker("time", 5.0);
     rrt.resolve_query(&checker);
     rrt.fulfill_query(); 
 
@@ -66,6 +67,10 @@ int main(int argc, char* argv[])
         fout.close();
         counter++;
     }
+
+    fout.open(output_path + "solution.txt");
+    fout << rrt_query.solution_traj.print(4);
+    fout.close();
 
     std::cout << rrt_query.solution_plan.print(4) << std::endl;
 }
