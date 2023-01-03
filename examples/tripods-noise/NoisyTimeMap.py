@@ -74,11 +74,11 @@ class NoisyTimeMap:
         self.u_goal = self.cs.make_point()
         for i in range(len(self.u_goal)): self.u_goal[i] = 0
 
-        self.ss.copy_point_from_vector(
+        self.ss.copy(
             self.start_state, params["/plant/start_state"].as_float_vector())
-        self.ss.copy_point_from_vector(
+        self.ss.copy(
             self.goal_state, params["/plant/goal_state"].as_float_vector())
-        self.ss.copy_from_point(self.start_state)
+        self.ss.copy_from(self.start_state)
 
         self.ss.print_bounds()
         self.cs.print_bounds()
@@ -389,11 +389,57 @@ class NoisyTimeMap:
         # print("1) Start:", self.start_state,"\tEnd:", self.end_state)
         return self.end_state.to_list()
 
+    def ackermann_lc(self, X):
+
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
+        if self.controller == None:
+            controller_path = self.params["/plant/controller_path"].as_string()
+            controller_path = prx.lib_path + controller_path
+            self.controller = torch.load(controller_path)
+            self.controller.eval()
+            torch.manual_seed(self.params["random_seed"].as_int())
+            self.ut_noise = self.init_noise("/plant/ut_noise", "/plant/ut_noise_params");
+
+        self.ss.copy_from(X)
+        ctrl_input = torch.zeros(1, 6)
+        ctrl = [0, 0]
+
+        duration_so_far = 0
+
+        self.checker.set_check_value(self.duration)
+        self.checker.reset()
+
+        while True:
+            self.noisy_plant.get_state_space().copy_to(self.start_state);
+            ctrl_input[0, 0] = self.start_state[0]
+            ctrl_input[0, 1] = self.start_state[1]
+            ctrl_input[0, 2] = self.start_state[2]
+            ctrl_input[0, 3] = self.goal_state[0]
+            ctrl_input[0, 4] = self.goal_state[1]
+            ctrl_input[0, 5] = self.goal_state[2]
+
+            with torch.no_grad():
+                ctrl_output = self.controller(ctrl_input)[0].cpu()
+
+            ctrl = [-np.pi/3 + ((ctrl_output[0].item() + 1)*np.pi/3),
+                    (ctrl_output[1].item() + 1)*15]
+
+            self.ctrl[0] = ctrl[0]
+            self.ctrl[1] = ctrl[1]
+
+            self.ut_noise.add_noise(self.ctrl);
+            self.context.system_group.propagate_once(prx.MIDDLE_STEP, self.ctrl)
+
+            if self.checker.check():
+                break;
+
+        self.ss.copy_to(self.end_state)
+        return self.end_state.to_list(), True
+
     def acrobot_lqr(self, X):
-        self.ss.copy_point_from_vector(self.start_state,X)
-        if self.x_0_noise is not None:
-            self.x_0_noise.add_noise(self.start_state)
-        self.ss.copy_from_point(self.start_state)
+        self.ss.copy(self.start_state,X)
         self.ss.enforce_bounds()
 
         if self.noisy_plant == None:
@@ -412,10 +458,57 @@ class NoisyTimeMap:
             self.get_noisy_controller()
   
         total_time = self.duration
-        if self.t_noise is not None:
-            total_time = self.t_noise.add_noise(total_time) 
 
         self.checker.set_check_value(total_time)
         self.checker.reset()
         self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
+        # print (self.end_state.to_list())
         return self.end_state.to_list()
+
+
+    def acrobot_lc(self,X):
+
+
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
+        if self.controller == None:
+            controller_path = self.params["/plant/controller_path"].as_string()
+            controller_path = prx.lib_path + controller_path
+            self.controller = torch.load(controller_path)
+            self.controller.eval()
+            torch.manual_seed(self.params["random_seed"].as_int())
+            self.ut_noise = self.init_noise("/plant/ut_noise", "/plant/ut_noise_params");
+
+        self.ss.copy_from(X)
+
+
+        ctrl_input = torch.zeros(1,4)
+        ctrl = [0]
+
+        self.checker.set_check_value(self.duration)
+        self.checker.reset()
+
+        while True:
+        # while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 4) > self.radius:
+            ctrl_input[0,0] = self.start_state[0]
+            ctrl_input[0,1] = self.start_state[1]
+            ctrl_input[0,2] = self.start_state[2]
+            ctrl_input[0,3] = self.start_state[3]
+        
+            with torch.no_grad():
+                ctrl_output = self.controller(ctrl_input)
+            ctrl = np.array([-14. + ((ctrl_output + 1.) * 14.)], dtype=np.float64)
+
+            self.ctrl[0] = ctrl[0]
+            self.ut_noise.add_noise(self.ctrl);
+
+            self.context.system_group.propagate_once(prx.MIDDLE_STEP, self.ctrl)
+
+            if self.checker.check():
+                break;
+
+        self.ss.copy_to(self.end_state)
+        return self.end_state.to_list()
+    
+    

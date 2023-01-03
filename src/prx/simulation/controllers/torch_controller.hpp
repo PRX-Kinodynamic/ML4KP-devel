@@ -53,7 +53,9 @@ public:
   {
     const space_t* ss = plant->get_state_space();
     const std::size_t x_dim{ ss->get_dimension() };
+    // PRX_DEBUG_VAR_1(ss->print_memory(4));
     ss->copy_to(_state);
+    // PRX_DEBUG_VAR_1(_state);
     // ToDo: Right now it makes no sense to have numerous predictions since the start and goal points are the same
     //       decide how to handle this.
     for (int i = 0; i < _num_predictions; ++i)
@@ -81,10 +83,18 @@ public:
     const std::size_t u_dim{ u_space->get_dimension() };
     for (int ui = 0; ui < u_dim; ++ui)
     {
-      to[ui] = (u_space->get_lower_bound(ui)) +
-               (_controller_output[idx][ui].item<double>() + 1) * (u_space->get_upper_bound(ui));
+      to[ui] = output_map(ui, _controller_output[idx][ui].item<double>());
+      // to[ui] = (u_space->get_lower_bound(ui)) +
+      //          (_controller_output[idx][ui].item<double>() + 1) * (u_space->get_upper_bound(ui));
     }
   }
+  std::function<double(const std::size_t, const double&)> output_map =
+      [&](const std::size_t idx, const double& ctrl)  // no-lint
+  {                                                   // no-lint
+    const space_t* u_space = plant->get_control_space();
+    const std::size_t u_dim{ u_space->get_dimension() };
+    return (u_space->get_lower_bound(idx)) + (ctrl + 1) * (u_space->get_upper_bound(idx));
+  };
 
 protected:
   space_point_t u;

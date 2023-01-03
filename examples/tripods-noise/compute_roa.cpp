@@ -63,6 +63,7 @@ struct time_map_t
   {
     simulation_step = params["simulation_step"].as<double>();
     prx::init_random(params["random_seed"].as<int>());
+    // torch::manual_seed(params["random_seed"].as<int>());
 
     // auto obstacles = load_obstacles(params["environment"].as<>());
     // std::vector<std::shared_ptr<movable_object_t>> obstacle_list = obstacles.second;
@@ -87,6 +88,10 @@ struct time_map_t
     auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
     _ss->set_bounds(lower_bounds, upper_bounds);
 
+    auto cs_lower_bounds = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
+    auto cs_upper_bounds = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
+    _cs->set_bounds(cs_lower_bounds, cs_upper_bounds);
+
     const double step_inc{ params["state_increment"].as<double>() };
 
     start_state = _ss->make_point();
@@ -94,10 +99,8 @@ struct time_map_t
     u_goal = _cs->make_point();
     end_state = _ss->make_point();
 
-    _ss->copy(start_state, params["/plant/start_state"].as<std::vector<double>>());
+    _ss->copy(start_state, params["/plant/starting_lower_bound"].as<std::vector<double>>());
     _ss->copy(goal_state, params["/plant/goal_state"].as<std::vector<double>>());
-
-    _ss->copy(start_state, lower_bounds);
 
     std::vector<double> noise_params;
 
@@ -107,6 +110,9 @@ struct time_map_t
     goal_check = prx::create_default_goal_check(_ss, goal_state, params["goal_region_radius"].as<double>());
     goal_checker = new condition_check_t(goal_check);
     checker.add_condition(goal_checker);
+
+    _ss->print_bounds();
+    _cs->print_bounds();
   }
   void get_noisy_controller()
   {
@@ -206,8 +212,6 @@ time_map_function_t ackermann_lc = [](const space_point_t& s, time_map_t& tmv)  
 {
   const space_t* ss = tmv._ss;
   ss->copy_point(tmv.start_state, s);
-  tmv.x0_noise->add_noise(tmv.start_state);
-  ss->copy_from(tmv.start_state);
   ss->enforce_bounds();
 
   if (tmv.noisy_plant == nullptr)
@@ -219,27 +223,39 @@ time_map_function_t ackermann_lc = [](const space_point_t& s, time_map_t& tmv)  
     const long long input_size{ 6 };
     const std::size_t xi_offset{ 0 };
     const std::size_t xgi_offset{ 3 };
-    const std::string network_path{ prx::lib_path + "/examples/tripods/lc/ackermann_l.pt" };
+    const std::string network_path{ prx::lib_path + "/examples/tripods/lc/ackermann_l_traced.pt" };
     auto lc = std::make_shared<torch_controller_t>(tmv.noisy_plant, "LC", torch::kCPU, num_predictions, input_size,
                                                    xi_offset, xgi_offset, network_path);
+    lc->output_map = [](const std::size_t idx, const double& ctrl)  // no-lint
+    {
+      double ctrl_map{ 0.0 };
+      if (idx == 0)
+      {
+        ctrl_map = -PRX_PI / 3.0 + ((ctrl + 1) * PRX_PI / 3.0);
+      }
+      else
+      {
+        ctrl_map = (ctrl + 1) * 15;
+      }
+      return ctrl_map;
+      // return [ -PRX_PI / 3 + ((ctrl_output[0].item() + 1) * PRX_PI / 3), (ctrl_output[1].item() + 1) * 15 ]
+    };
+
     lc->set_goal(tmv.goal_state);
     tmv.controller_base = lc;
     tmv.get_noisy_controller();
   }
-  double total_time{ tmv.duration };
 
-  tmv.checker.set_check_value(total_time);
+  tmv.checker.set_check_value(tmv.duration);
   tmv.checker.reset();
   tmv.sg->propagate(tmv.start_state, tmv.controller, tmv.checker, tmv.end_state);
-  // return tmv.end_state
+  // std::cout << "Start: " << tmv.start_state << "\tend: " << tmv.end_state << "\n";
 };
 
 time_map_function_t acrobot_lqr = [](const space_point_t& s, time_map_t& tmv)  // no-lint
 {
-  const space_t* ss = tmv._ss;  // no-lint
-  ss->copy_point(tmv.start_state, s);
-  tmv.x0_noise->add_noise(tmv.start_state);
-  ss->copy_from(tmv.start_state);
+  const space_t* ss = tmv._ss;
+  ss->copy(tmv.start_state, s);
   ss->enforce_bounds();
 
   if (tmv.noisy_plant == nullptr)
@@ -257,12 +273,11 @@ time_map_function_t acrobot_lqr = [](const space_point_t& s, time_map_t& tmv)  /
     tmv.get_noisy_controller();
   }
   double total_time{ tmv.duration };
-  total_time = tmv.t_noise->add_noise(total_time);
 
   tmv.checker.set_check_value(total_time);
   tmv.checker.reset();
   tmv.sg->propagate(tmv.start_state, tmv.controller, tmv.checker, tmv.end_state);
-  // return tmv.end_state
+  // std::cout << "Start: " << tmv.start_state << "\tend: " << tmv.end_state << "\n";
 };
 
 bool state_increment(space_point_t pt, double step_inc, std::vector<double> lower_bounds,
@@ -335,6 +350,7 @@ int main(int argc, char* argv[])
   const std::size_t final_state_num{ states_per_file * (file_number + 1) };
   PRX_DEBUG_VAR_3(states_per_file, initial_state_num, final_state_num);
   progress_bar_t bar(final_state_num - initial_state_num, "");
+  tmv._ss->copy(tmv.start_state, lower_bounds);
   do
   {
     state_num++;
@@ -357,10 +373,12 @@ int main(int argc, char* argv[])
     }
     const double succesful_samples{ reached / static_cast<double>(num_samples) };
     line << succesful_samples;
+    line << " " << tmv.end_state;
     line << "\n";
     const std::string str{ line.str() };
     fout_roa.write(str.c_str(), str.size());
 
+    // exit(0);
   } while (state_increment(tmv.start_state, step_inc, lower_bounds, upper_bounds));
 
   fout_roa.close();

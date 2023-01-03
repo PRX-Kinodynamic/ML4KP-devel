@@ -15,12 +15,12 @@ state_space_upper_bound: [100,100,3.141592653589793]
 starting_lower_bound: [-10,-10,3.141592653589793]
 ending_upper_bound: [ 10,10,3.141592653589793]
 
-control_space_lower_bound: [-1.05, 0]
+control_space_lower_bound: [-1.05, -30]
 control_space_upper_bound: [+1.05, 30]
 
 vis_body: "body"
 
-controller_path: "examples/tripods/lc/ackermann_l.pt"
+controller_path: "examples/tripods/lc/ackermann_l_traced.pt"
 
 out_dir: "out/ackermann_FO/"
 starting_lower_bound: [-10,-10,-3.141592653589793]
@@ -32,16 +32,20 @@ propagation_step: 0.1
 
 lqr_Q: [1,1,1]
 
-x_0_noise: "uniform"
-x_0_noise_params: [-0.,0.]
+xt_noise: "uniform"
+# xt_noise_params: [-0.,0.]
+xt_noise_params: [-0.003141592654, 0.003141592654]
+# xt_noise_params: []
 
-u_t_noise: "uniform"
-u_t_noise_params: [-0.,0.]
+ut_noise: "uniform"
+ut_noise_params: [-0.,0.]
+# ut_noise_params: [-0.,0.]
 
-t_noise: "uniform"
-t_noise_params: [-0.,0.]
+# t_noise: "uniform"
+# t_noise_params: [-0.,0.]
 
-f_noise: "uniform"
-# f_noise_params: [-0.01256637061, 0.01256637061]
+ft_noise: "uniform"
+# ft_noise_params: [-0.0, 0.0]
+ft_noise_params: [-0.003141592654, 0.003141592654]
 # f_noise_params: [-0.006283185307, 0.006283185307]
-f_noise_params: [-0.01, 0.01]
+# f_noise_params: [-0.01256637061, 0.01256637061]

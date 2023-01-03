@@ -175,6 +175,7 @@ void system_group_t::propagate_once(propagate_step step, space_point_t control)
   // {
   // 	s->propagate(simulation_step, step);
   // }
+  // std::cout << "ss: " << state_space->print_memory(4) << "\tctrl: " << control_space->print_memory(4) << std::endl;
   sim->step_simulation(step);
 }
 
