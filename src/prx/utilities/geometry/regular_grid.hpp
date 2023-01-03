@@ -244,6 +244,12 @@ public:
     return os;
   }
 
+  void to_file(const std::string filename, const std::ios_base::openmode _mode = std::ofstream::trunc) const
+  {
+    auto passthrough_formatter = [](const value_t& v) { return v; };
+    to_file(filename, passthrough_formatter, _mode);
+  }
+
   template <typename FormattingFunction>
   void to_file(const std::string filename, FormattingFunction& formatter,
                const std::ios_base::openmode _mode = std::ofstream::trunc) const

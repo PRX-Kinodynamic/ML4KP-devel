@@ -173,7 +173,7 @@ public:
   }
 
   template <typename Vector_t = Eigen::VectorXd>
-  inline Eigen::VectorXd vector()
+  inline Vector_t vector()
   {
     // Eigen::VectorXd v(memory.size());
     // for (int i = 0; i < memory.size(); ++i)

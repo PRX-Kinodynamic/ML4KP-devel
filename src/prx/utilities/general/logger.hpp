@@ -7,8 +7,8 @@ namespace prx
 class logger_t
 {
 public:
-  logger_t(const std::string& file_name, char separator = ' ')
-    : ofs_logger(file_name.c_str(), std::ofstream::out | std::ofstream::trunc)
+  logger_t(const std::string& filename, char separator = ' ')
+    : ofs_logger(filename.c_str(), std::ofstream::out | std::ofstream::trunc), _filename(filename)
   {
     sep = separator;
   }
@@ -35,6 +35,11 @@ public:
     log_<0>(types...);
   }
 
+  const std::string get_filename()
+  {
+    return _filename;
+  }
+
 protected:
   template <std::size_t Ix, class... Types, std::enable_if_t<Ix == sizeof...(Types), bool> = true>
   inline void log_(Types... types)
@@ -51,6 +56,7 @@ protected:
   }
 
   std::ofstream ofs_logger;
+  std::string _filename;
   char sep;
 };
 

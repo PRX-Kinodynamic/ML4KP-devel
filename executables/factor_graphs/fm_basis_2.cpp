@@ -42,7 +42,21 @@
 
 namespace fs = std::filesystem;
 using namespace prx;
-using friction_vector_t = Eigen::Vector<double, 1>;
+
+const int X_DIM{ 3 };
+const int U_DIM{ 2 };
+const int TH_DIM{ 1 };
+const int GRID_DIVISIONS{ 4 };
+const int BASIS_DIM{ (GRID_DIVISIONS + 1) * (GRID_DIVISIONS + 1) };
+
+const double x_max{ 3.0 };
+const double y_max{ 3.0 };
+
+using state_t = Eigen::Vector<double, X_DIM>;
+using friction_vector_t = Eigen::Vector<double, TH_DIM>;
+using basis_vector_t = Eigen::Vector<double, BASIS_DIM>;
+// using friction_factor_t = fg::friction_fusion_factor_t<TH_DIM, BASIS_DIM>;
+
 // using friction_vector_t = Eigen::Vector4d;
 
 gtsam::LevenbergMarquardtParams fg_params()
@@ -65,38 +79,100 @@ gtsam::LevenbergMarquardtParams fg_params()
   return lm_params;
 }
 
-template <typename grid1_t, typename grid2_t, typename log_t, typename Priors, typename Ids>
-void compute_grid_error(const grid1_t& frictions_grid, const grid2_t& gt_grid, log_t& log, const int iter,
-                        const Priors& priors, Ids& ids)
+template <typename ThetasGrid>
+basis_vector_t get_basis_vector(ThetasGrid& thetas_grid)
 {
-  // grid1_t error_grid{ frictions_grid };
-  // // std::cout << error_grid << std::endl;
-  // for (auto cell : gt_grid)
-  // {
-  //   auto unmap_vals = gt_grid.unmap(cell.first);
-  //   const prx_symbol_t theta_simbol{ symbol_factory_t::create_symbol("param_symbol",
-  //                                                                    ids(unmap_vals[0], unmap_vals[1])) };
-  //   if (priors.find(theta_simbol) == priors.end())
-  //   {
-  //     error_grid[cell.first].array() *= 0;
-  //   }
-  //   else
-  //   {
-  //     error_grid[cell.first].array() -= cell.second;
-  //   }
-  // }
-  // // std::cout << error_grid << std::endl;
-  // using error_grid_t = decltype(*(error_grid.begin()));
-  // friction_vector_t grid_error{ friction_vector_t::Zero() };
-  // grid_error = std::accumulate(error_grid.begin(), error_grid.end(), grid_error,
-  //                              [](auto a, error_grid_t& b) { return a + b.second.cwiseAbs(); });
-  // // double sqr_error = std::accumulate(error_grid.begin(), error_grid.end(), 0.0,
-  // if (grid_error.sum() > 1e100)
-  // {
-  //   std::cout << "error_grid: " << error_grid << std::endl;
-  //   std::cout << "error: " << grid_error.transpose() << std::endl;
-  // }
-  // log.log(iter, grid_error.sum());
+  basis_vector_t bv{ basis_vector_t::Zero() };
+  std::size_t i = 0;
+  for (auto pair_ : thetas_grid)
+  {
+    bv[i] = pair_.second[0];
+    i++;
+    // th[i] = values.at<theta_t>(keys_[i])[0];  // Assuming THETA_DIM==1 for now.
+  }
+  return bv;
+}
+
+template <typename WorldModel>
+void compute_friction_map(WorldModel& world_model, space_t* ss)
+{
+  const double grid_stepping{ 1.0 / static_cast<double>(GRID_DIVISIONS) };
+  for (double i = 0; i < x_max; i += 0.02)
+  {
+    for (double j = 0; j < y_max; j += 0.02)
+    {
+      ss->copy_from(std::vector{ i, j, 0.0 });
+      world_model.world_change_function();
+    }
+  }
+}
+
+double compute_weight(const state_t& theta_t_pos, const state_t& theta_i_pos, const double& length)
+{
+  const double Bx{ theta_i_pos[0] };
+  const double By{ theta_i_pos[1] };
+
+  const double Xx{ theta_t_pos[0] };
+  const double Xy{ theta_t_pos[1] };
+
+  const double delta_x{ std::fabs(Bx - Xx) };
+  const double delta_y{ std::fabs(By - Xy) };
+
+  // const double D{ std::sqrt(length * length + length * length) };
+  const double D{ length };
+  return std::max(1.0 - ((delta_x + delta_y) / D), 0.0);
+}
+
+template <typename ThetaPosGrid>
+basis_vector_t compute_weights_vector(ThetaPosGrid& pos_grid, const state_t& theta_i_pos)
+{
+  basis_vector_t weights{ basis_vector_t::Zero() };
+  const double cell_length{ pos_grid.get_cell_length(0) };
+  std::size_t i = 0;
+  for (auto pair_ : pos_grid)
+  {
+    const state_t pos_theta{ pos_grid.template unmap_key<state_t>(pair_.first) };
+    weights[i] = compute_weight(pos_theta, theta_i_pos, cell_length);
+    i++;
+  }
+  weights = weights / weights.sum();
+  return weights;
+}
+
+template <typename ThetaPosGrid>
+friction_vector_t friction_at(const double x, const double y, const basis_vector_t& thetas, ThetaPosGrid& pos_grid)
+{
+  const basis_vector_t weights{ compute_weights_vector(pos_grid, state_t(x, y, 0)) };
+  const friction_vector_t friction_vector{ weights.adjoint() * thetas };
+
+  // PRX_DEBUG_VAR_1(thetas.transpose());
+  // PRX_DEBUG_VAR_1(weights.transpose());
+  // PRX_DEBUG_VAR_1(friction_vector.transpose());
+
+  return friction_vector;
+}
+
+template <typename ThetaFrictionGrid>
+void update_friction_grid(ThetaFrictionGrid& tf_grid, basis_vector_t new_frictions)
+{
+  std::size_t i{ 0 };
+  for (auto pair_ : tf_grid)
+  {
+    tf_grid[pair_.first][0] = new_frictions[i];
+    i++;
+  }
+}
+
+template <typename FrictionGrid>
+void compute_grid_error(FrictionGrid& gt_grid, FrictionGrid& fg_grid, logger_t& log, const int iter)
+{
+  double error{ 0.0 };
+  for (auto pair_ : gt_grid)
+  {
+    error += std::fabs(gt_grid[pair_.first][0] - fg_grid[pair_.first][0]);
+    // i++;
+  }
+  log.log(iter, error);
 }
 
 template <typename Ids, typename Frictions, typename Priors>
@@ -170,37 +246,45 @@ int main(int argc, char* argv[])
   const auto ps_dim = ps->get_dimension();
   prx_assert(ps != nullptr, "Parameter space is null!!!");
 
-  const double x_max{ 3.0 };
-  const double y_max{ 3.0 };
   ss->set_bounds({ 0.0, 0.0, -M_PI }, { x_max, y_max, M_PI });
 
   auto cs_lb = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
   auto cs_up = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
   cs->set_bounds(cs_lb, cs_up);
 
-  const std::string fm_out_dir{ out_path + "friction_maps/" };
-  const std::string traj_real_file{ fm_out_dir + "fmbasis_analytical_fixed_goals_trajs_real.txt" };
-  const std::string plan_real_file{ fm_out_dir + "fmbasis_analytical_fixed_goals_plans_real.txt" };
-  const std::string traj_fg_file{ fm_out_dir + "fmbasis_analytical_fixed_goals_trajs_fg.txt" };
-  const std::string fg_graph_file{ fm_out_dir + "fmbasis_factor_graph.dot" };
+  const std::string fm_out_dir = out_path + "friction_maps/";
+  std::unordered_map<std::string, std::string> files;
+  files["traj_real_file"] = fm_out_dir + "fmbasis_trajs_real.txt";
+  files["plan_real_file"] = fm_out_dir + "fmbasis_plans_real.txt";
+  files["traj_fg_file"] = fm_out_dir + "fmbasis_trajs_fg.txt";
+  files["fg_graph_file"] = fm_out_dir + "fmbasis_factor_graph.dot";
+  files["thx_file"] = fm_out_dir + "fmbasis_factor_graph_thx.txt";
+  files["idd_friction_map"] = fm_out_dir + "fmbasis_idd_friction_map.txt";
+  files["goals"] = fm_out_dir + "fmbasis_goals.txt";
+  files["gt_friction_map"] = fm_out_dir + "fmbasis_gt_friction_map.txt";
+  files["fg_log"] = fm_out_dir + "fmbasis_fg.log";
+  files["error_grid"] = fm_out_dir + "fmbasis_error_grid.log";
+  // files["fg_log"] = fm_out_dir + "fg_concurrent.log";
 
-  std::remove(traj_real_file.c_str());
-  std::remove(plan_real_file.c_str());
-  std::remove(traj_fg_file.c_str());
-  std::remove(fg_graph_file.c_str());
+  for (auto f : files)
+  {
+    std::remove(files[f.first].c_str());
+  }
 
-  std::ofstream ofs_gt_frmap, ofs_plans, ofs_goals, ofs_traj_real;
-  ofs_goals.open(fm_out_dir + "fmbasis_analytical_fixed_goals.txt", std::ofstream::trunc);
-  ofs_gt_frmap.open(fm_out_dir + "fmbasis_friction_map_fixed_goals.txt", std::ofstream::trunc);
-  // friction_map_file.open(fm_out_dir + "concurrent_fg_friction_map.txt");
-  fg_logger_t friction_map_logger(fm_out_dir + "fmbasis_fg_friction_map.txt", ' ', "-");
+  std::ofstream ofs_gt_frmap, ofs_plans, ofs_goals, ofs_traj_real, ofs_thx;
+  ofs_goals.open(files["goals"], std::ofstream::trunc);
+  ofs_gt_frmap.open(files["gt_friction_map"], std::ofstream::trunc);
+  // fg_logger_t friction_map_logger(files["fg_log"], ' ', "-");
+
+  logger_t logger_thx(files["thx_file"]);
+  logger_t logger_idd_friction_map(files["idd_friction_map"]);
+  fg_logger_t friction_map_logger(files["fg_log"], ' ', "-");
+  logger_t grid_error_lg(files["error_grid"], ' ');
 
   // const std::vector<std::pair<double, double>> env_bounds{ std::make_pair(0.0, 3.0), std::make_pair(0.0, 3.0) };
-  const int divisions{ 10 };
   const std::vector<std::pair<double, double>> env_bounds{ std::make_pair(0.0, x_max), std::make_pair(0.0, y_max) };
-  prx::regular_grid_t<friction_vector_t, 2> frictions_grid{ env_bounds, divisions };
-  prx::regular_grid_t<prx_symbol_t, 2> thetas_grid{ env_bounds, divisions };
-
+  prx::regular_grid_t<friction_vector_t, 2> frictions_grid{ env_bounds, GRID_DIVISIONS };
+  prx::regular_grid_t<friction_vector_t, 2> ground_truth_thetas_grid{ env_bounds, GRID_DIVISIONS };
   const double initial_friction{ params["initial_friction"].as<double>() };
   const Eigen::VectorXd initial_friction_vec{ friction_vector_t::Ones() * initial_friction };
 
@@ -211,46 +295,30 @@ int main(int argc, char* argv[])
 
   gtsam::NonlinearFactorGraph thetas_graph;
   gtsam::Values thetas_values;
-  std::function<prx_symbol_t(const Container2D&)> thetas_grid_initializer = [&](const Container2D& xy) {
-    const int x{ static_cast<int>(xy[0] * 10) };
-    const int y{ static_cast<int>(xy[1] * 10) };
-    const prx_symbol_t param_symbol{ symbol_factory_t::create_symbol("param_symbol", x, y) };
-    // thetas_graph.add(param_symbol);
-    thetas_values.insert_or_assign(param_symbol, initial_friction_vec);
-    return param_symbol;
+
+  std::function<friction_vector_t(const Container2D&)> gt_thetas_grid_initializer = [&](const Container2D& xy) {
+    const double x{ xy[0] };
+    const double y{ xy[1] };
+    const double th{ 2 - std::fabs(-x + x_max * .5) / x_max - std::fabs(-y + y_max * .5) / y_max };
+    return friction_vector_t(th);
   };
 
   frictions_grid.populate_grid(friction_grid_initializer);
-  thetas_grid.populate_grid(thetas_grid_initializer);
+  ground_truth_thetas_grid.populate_grid(gt_thetas_grid_initializer);
 
-  std::vector<prx_symbol_t> thetas_container;
-  for (auto pair : thetas_grid)
-  {
-    thetas_container.push_back(pair.second);
-  }
+  auto vec_formatter = [](const friction_vector_t& f) { return f.transpose(); };
 
-  thetas_grid.to_file(prx::out_path + "/thetas_grid.txt", prx::key_formatter);
+  files["gt_thetas_grid"] = fm_out_dir + "/gt_thetas_grid.txt";
+  ground_truth_thetas_grid.to_file(files["gt_thetas_grid"], vec_formatter);
 
-  auto gt_grid = [&](const double x, const double y) {
-    double friction = 1;
-    if (y < 1.5)
-    {
-      friction = 2 * y / 1.5;
-    }
-    else
-    {
-      friction = 2 * (y_max - y) / 1.5;
-    }
-    return friction;
-  };
+  basis_vector_t real_thetas_vector{ get_basis_vector(ground_truth_thetas_grid) };
+  basis_vector_t recovered_thetas_vector{ basis_vector_t::Zero() };
 
-  PRX_DEBUG_PRINT;
   bool write_to_file = false;
-  // bool real_friction = true;
   Eigen::Vector4d fg_friction_maps;
-  // world_model.world_change_function = [&]() {
-  friction_vector_t friction_params{};
-  std::function<void()> ground_truth_world = [&]() {
+  friction_vector_t friction_params{ friction_vector_t::Zero() };
+  std::function<void()> real_world = [&]()  // no-lint
+  {
     const double x{ ss->at(0) };
     const double y{ ss->at(1) };
     const double th{ ss->at(2) };
@@ -259,49 +327,42 @@ int main(int argc, char* argv[])
     x1 = x2 = x3 = x4 = x;
     y1 = y2 = y3 = y4 = y;
 
-    friction_params = friction_vector_t{ gt_grid(x1, y1) };
-
+    friction_params = friction_at(x1, y1, real_thetas_vector, frictions_grid);
+    if (x < 0.0 || x_max < x || y < 0.0 || y_max < y)
+    {
+      friction_params = friction_vector_t::Ones();
+    }
     if (write_to_file)
     {
-      ofs_gt_frmap << friction_params.transpose() << "\n";
+      ofs_gt_frmap << x1 << " " << y1 << " " << friction_params.transpose() << std::endl;
     }
-    if (x < 0.0 || x_max < x || y < 0.0 || y_max < y)
-    {
-      friction_params = friction_vector_t::Ones();
-    }
-    ps->copy_from(friction_params.tail(1));
+    ps->copy_from(friction_params);
   };
-  std::function<void()> fg_world = [&]() {};
-  std::function<void()> testing_world = [&]() {
+  std::function<void()> fg_sim_world = [&]() {};
+  std::function<void()> recovered_world = [&]()  // no-lint
+  {
     const double x{ ss->at(0) };
     const double y{ ss->at(1) };
+    friction_params = friction_at(x, y, recovered_thetas_vector, frictions_grid);
     if (x < 0.0 || x_max < x || y < 0.0 || y_max < y)
     {
       friction_params = friction_vector_t::Ones();
     }
-    else
+    if (write_to_file)
     {
-      friction_params = friction_vector_t{ gt_grid(x, y) };
+      logger_idd_friction_map.log(x, y, friction_params.transpose());
+      // ofs_gt_frmap << x1 << " " << y1 << " " << friction_params.transpose() << std::endl;
     }
     // std::cout << x << ", " << y << "\tfriction_params: " << friction_params.transpose() << std::endl;
-    ps->copy_from(friction_params.tail(1));
+    ps->copy_from(friction_params);
     ps->enforce_bounds();
   };
 
   PRX_DEBUG_PRINT;
   write_to_file = true;
-  world_model.world_change_function = ground_truth_world;
-  const double grid_stepping{ 1.0 / static_cast<double>(divisions) };
-  for (double i = 0; i < x_max; i += 0.05)
-  {
-    for (double j = 0; j < y_max; j += 0.05)
-    {
-      ss->copy_from(std::vector{ i, j, 0.0 });
-      world_model.world_change_function();
-    }
-  }
+  world_model.world_change_function = real_world;
+  compute_friction_map(world_model, ss);
   write_to_file = false;
-  // return 0;
 
   std::vector<std::vector<double>> goals = { { 0.1 * x_max, 0.1 * y_max, 0 } };
   // std::vector<std::vector<double>> goals;  // = { { 0.1 * x_max, 0.1 * y_max, 0 }, { 0.9 * x_max, 0.9 * y_max, 0 },
@@ -367,7 +428,6 @@ int main(int argc, char* argv[])
   };
   // clang-format on
 
-  PRX_DEBUG_PRINT;
   trajectory_t traj_real(ss);
   trajectory_t traj_fg(ss);
   trajectory_t accum_traj(ss);
@@ -403,11 +463,11 @@ int main(int argc, char* argv[])
   auto t_dm = gtsam::noiseModel::Isotropic::Sigma(1, 1e-3);
   auto p_cm = gtsam::noiseModel::Isotropic::Sigma(3, 1e0);
   auto ff_nm = gtsam::noiseModel::Isotropic::Sigma(1, 1e0);
+  auto weight_nm = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e-3);
+  gtsam::SharedGaussian basis_nm = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e1);
 
   fg::formatter_t graph_formatter;
 
-  fg_logger_t lg(out_path + "friction_maps/fg_concurrent_log.txt", ' ', "-");
-  logger_t grid_error_lg(out_path + "friction_maps/fg_concurrent_error_grid_log.txt", ' ');
   int fg_iters{ 0 };
   space_point_t start_state = ss->make_point();
   const int initial_goal{ params["initial_goal"].as<int>() };
@@ -416,26 +476,23 @@ int main(int argc, char* argv[])
   {
     std::cout << "Going into trajectory: " << i << "..." << std::endl;
 
-    // compute_grid_error(frictions_grid, gt_grid, grid_error_lg, fg_iters, theta_priors, fg_grid);
+    compute_grid_error(ground_truth_thetas_grid, frictions_grid, grid_error_lg, fg_iters);
     curr_freq = frequency;
     traj_real.clear();
     traj_fg.clear();
     checker.reset();
     omnibot_controller->get_plan()->clear();
 
-    // i = initial_goal;
     ss->copy(start_state, goals[i % goals.size()]);
     n_ss->add_noise(start_state);
-    // n_ss->copy(start_state, goals[i]);
-    // ss->copy_from(goals[i]);
-    // n_ss->copy_to(start_state);
     ss->copy(goal, goals[(i + 1) % goals.size()]);
     omnibot_controller->set_goal(goal);
 
     std::cout << "start_state: " << start_state << std::endl;
+    std::cout << "goal: " << goal << std::endl;
 
     // real_friction = true;
-    world_model.world_change_function = ground_truth_world;
+    world_model.world_change_function = real_world;
     sg->propagate(start_state, omnibot_controller, checker, traj_real);
 
     std::cout << "traj_real: " << traj_real.size() << std::endl;
@@ -447,8 +504,12 @@ int main(int argc, char* argv[])
 
     gtsam::NonlinearFactorGraph weights_graph;
     gtsam::Values weights_values;
-    // std::set<prx_symbol_t> thetas_used; 3.03112 0.676059
-    PRX_DEBUG_PRINT;
+    std::unordered_map<prx_symbol_t, prx_symbol_t> thetas_used;  // 3.03112 0.676059
+                                                                 // PRX_DEBUG_PRINT;
+    auto param_symbol_basis = symbol_factory_t::create_symbol("param_symbol", 0, 0);
+    basis_vector_t big_vector = get_basis_vector(frictions_grid);
+    weights_values.insert(param_symbol_basis, big_vector);
+    weights_graph.addPrior(param_symbol_basis, big_vector, basis_nm);
     for (unsigned xi = 0; xi < traj_real.size(); xi += increment)
     {
       if (xi < traj_real.size() - increment - 1)
@@ -464,6 +525,9 @@ int main(int argc, char* argv[])
         auto control_symbol = symbol_factory_t::create_symbol("control_symbol", i, xi);
         auto time_symbol = symbol_factory_t::create_symbol("time_symbol", i, xi);
         auto param_symbol = symbol_factory_t::create_symbol("param_symbol_X", i, xi);
+        auto weights_symbol = symbol_factory_t::create_symbol("weight_symbol", i, xi);
+
+        thetas_used[param_symbol] = state_symbol;
 
         Eigen::VectorXd t_vec{ (Eigen::VectorXd(1) << plan[xi].duration * increment).finished() };
         trajectory_graph.addPrior(state_symbol, traj_real[xi]->vector<>(), x_sigma);
@@ -475,6 +539,10 @@ int main(int argc, char* argv[])
         trajectory_values.insert(time_symbol, t_vec);
         trajectory_values.insert(param_symbol, (Eigen::VectorXd(1) << 1).finished());
 
+        // basis_vector_t compute_weights_vector(ThetaPosGrid& pos_grid, const state_t& theta_i_pos)
+        const basis_vector_t weight_i{ compute_weights_vector(frictions_grid, traj_real[xi]->vector<state_t>()) };
+        weights_values.insert(weights_symbol, weight_i);
+        weights_graph.addPrior(weights_symbol, weight_i, weight_nm);
         if (xi + increment >= traj_real.size() - increment - 1)
         {
           trajectory_graph.addPrior(next_state_symbol, traj_real[xi + increment]->vector<>(), x_sigma);
@@ -482,16 +550,12 @@ int main(int argc, char* argv[])
         }
         trajectory_graph.add(propagation_factor_5_t<3, 4, 1>(state_symbol, next_state_symbol, control_symbol,
                                                              time_symbol, param_symbol, dm, sg));
-
-        weights_graph.add(fg::friction_fusion_factor_t<3, 1, 100, decltype(thetas_grid)>(
-            ff_nm, thetas_container, param_symbol, state_symbol, thetas_grid));
+        weights_graph.add(
+            fg::friction_fusion_factor_t<TH_DIM, BASIS_DIM>(ff_nm, param_symbol_basis, weights_symbol, param_symbol));
       }
     }
-    PRX_DEBUG_PRINT;
 
     gtsam::NonlinearFactorGraph graph;
-    // graph.add(graph_theta);
-    // graph.add(thetas_workspace_graph);
     graph.add(trajectory_graph);
     graph.add(weights_graph);
     gtsam::Values values;
@@ -499,45 +563,55 @@ int main(int argc, char* argv[])
     values.insert_or_assign(trajectory_values);
     values.insert_or_assign(weights_values);
 
-    world_model.world_change_function = fg_world;
+    world_model.world_change_function = fg_sim_world;
     std::cout << "Graph: " << graph.size() << std::endl;
     gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
-    auto results = fg_utilities::optimize_and_log(optimizer, lm_params, lg, fg_iters);
+    results = fg_utilities::optimize_and_log(optimizer, lm_params, friction_map_logger, fg_iters);
 
-    graph.saveGraph(fg_graph_file, results, prx::key_formatter, graph_formatter);
-    // gtsam::Marginals marginals{ graph_trajs, results };
-    // for (auto theta_u : thetas_used)
-    // {
-    //   // std::cout << prx::key_formatter(theta_u) << " Inf: " << marginals.marginalInformation(theta_u)
-    //   //           << " Cov: " << marginals.marginalCovariance(theta_u) << std::endl;
-    //   theta_priors[theta_u] = marginals.marginalCovariance(theta_u);
-    // }
+    graph.saveGraph(files["fg_graph_file"], results, prx::key_formatter, graph_formatter);
+
+    const basis_vector_t new_frictions{ results.at<basis_vector_t>(param_symbol_basis) };
+    update_friction_grid(frictions_grid, new_frictions);
+    PRX_DEBUG_VAR_1(new_frictions.transpose());
+
+    files["updated_frictions"] = fm_out_dir + "updated_frictions.txt";
+    frictions_grid.to_file(files["updated_frictions"]);
+
+    gtsam::Marginals marginals{ graph, results };
+    basis_nm->Covariance(marginals.marginalCovariance(param_symbol_basis));
+    for (auto pair_th_x : thetas_used)
+    {
+      auto th = results.at<Eigen::VectorXd>(pair_th_x.first);
+      auto x = results.at<Eigen::VectorXd>(pair_th_x.second);
+      logger_thx.log(x[0], x[1], th[0]);
+    }
+
     fg_iters += optimizer.iterations();
 
-    // graph_theta = compute_thetas_graph(x_max, y_max, grid_stepping, fg_grid, frictions_grid, ps, results, init_vals,
-    //                                    friction_map_logger, fg_iters, theta_priors);
-
     std::cout << "init_vals size: " << init_vals.size() << std::endl;
-    world_model.world_change_function = ground_truth_world;
+    world_model.world_change_function = real_world;
     sg->propagate(start_state, plan, traj_fg);
     std::cout << "traj_fg: " << traj_fg.size() << std::endl;
-    traj_fg.to_file(traj_fg_file, std::ofstream::app);
+    traj_fg.to_file(files["traj_fg_file"], std::ofstream::app);
 
     accum_traj += traj_real;
     accum_plan += plan;
   }
-  // for (auto pair : theta_priors)
-  // {
-  //   std::cout << prx::key_formatter(pair.first) << ": " << pair.second << std::endl;
-  // }
-  std::cout << "Finishing..." << std::endl;
-  // compute_grid_error(frictions_grid, gt_grid, grid_error_lg, fg_iters, theta_priors, thetas_grid);
+  // results.print("Results: ", prx::key_formatter);
 
-  std::cout << "fm_out_dir:" << fm_out_dir << "\n";
-  std::cout << "traj_real_file:" << traj_real_file << "\n";
-  std::cout << "plan_real_file:" << plan_real_file << "\n";
-  std::cout << "traj_fg_file:" << traj_fg_file << "\n";
-  std::cout << "fg_graph_file:" << fg_graph_file << "\n";
+  compute_grid_error(ground_truth_thetas_grid, frictions_grid, grid_error_lg, fg_iters);
+  world_model.world_change_function = recovered_world;
+  write_to_file = true;
+  recovered_thetas_vector = get_basis_vector(frictions_grid);
+  compute_friction_map(world_model, ss);
+  write_to_file = false;
+
+  std::cout << "Finishing...\nFiles:" << std::endl;
+
+  for (auto f : files)
+  {
+    std::cout << f.first << ": " << f.second << std::endl;
+  }
   // std::cout << "FG logger:" << lg.get_filename() << "\n";
   // std::cout << "grid_error_lg:" << grid_error_lg.get_filename() << "\n";
 
@@ -545,6 +619,6 @@ int main(int argc, char* argv[])
   // std::cout << "grid_error: " << grid_error.transpose() << std::endl;
   // This are not "Real" trajectories/plan, is all appended into one and might
   // have discontinuities. Only used for dumping into a file.
-  accum_traj.to_file(traj_real_file, std::ofstream::app);
-  accum_plan.to_file(plan_real_file, std::ofstream::app);
+  accum_traj.to_file(files["traj_real_file"], std::ofstream::app);
+  accum_plan.to_file(files["plan_real_file"], std::ofstream::app);
 }

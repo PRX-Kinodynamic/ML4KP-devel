@@ -18,7 +18,7 @@ goal_region_radius: 0.125
 
 noisy_plant: false
 frequency: 0.05
-num_trajs: 1
+num_trajs: 5
 initial_goal: 0
 
 # fg_state_increment: 100
