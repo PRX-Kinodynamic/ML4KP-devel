@@ -74,7 +74,7 @@ public:
   virtual bool linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D,
                          space_point_t xt = nullptr, space_point_t ut = nullptr, double epsilon = 1e-3)
   {
-    PRX_NOT_IMPLEMENTED
+    // PRX_NOT_IMPLEMENTED
     return false;
   };
 

@@ -1,6 +1,8 @@
 import numpy as np 
 import libpyDirtMP as prx
 import matplotlib.pyplot as plt
+from inspect import currentframe, getframeinfo
+
 
 def distance_function(a,b):
     return prx.space_t.euclidean_2d(a,b,0,2)
@@ -40,12 +42,15 @@ if __name__ == "__main__":
     u_goal = cs.make_point()
     traj = [[50.,0.]]
 
-    plant.linearize(goal_state,u_goal)
+    print(getframeinfo(currentframe()).filename, getframeinfo(currentframe()).lineno)
+    # plant.linearize(goal_state,u_goal)
     Q = prx.matrix.Identity(2, 2)
     v_goal = prx.vector.Zero(2)
     v_goal[0] = 50.
     R = prx.matrix.Identity(1, 1)
     
+    print(getframeinfo(currentframe()).filename, getframeinfo(currentframe()).lineno)
+
     lqr = prx.lqr(plant,Q,R,"LQR")
     lqr.set_goal(v_goal)
     lqr.compute_K()
