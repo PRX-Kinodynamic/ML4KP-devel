@@ -23,7 +23,7 @@ public:
                  trajectory_t& traj);
 
   template <typename State>
-  void propagate(State start_state, const plan_t& plan, State result)
+  void propagate(State& start_state, const plan_t& plan, State& result)
   {
     propagate_step p_step;
     state_space->copy_from(start_state);
@@ -37,6 +37,25 @@ public:
         propagate(steps, step.control);
       }
     }
+    state_space->copy_to(result);
+  }
+
+  template <typename State, typename Control>
+  void propagate(const State& start_state, const Control& control, const double duration, State& result)
+  {
+    propagate_step p_step;
+    state_space->copy_from(start_state);
+    control_space->copy_from(control);
+
+    // for (const plan_step_t& step : plan)
+    // {
+    int steps = (int)((duration / simulation_step) + .1);
+    // int i = 0;
+    if (steps > 0)
+    {
+      propagate(steps);
+    }
+    // }
     state_space->copy_to(result);
   }
 

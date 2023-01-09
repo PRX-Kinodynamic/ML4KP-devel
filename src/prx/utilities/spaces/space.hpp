@@ -10,7 +10,6 @@
 
 namespace prx
 {
-
 class space_t;
 class space_snapshot_t;
 typedef std::shared_ptr<space_snapshot_t> space_point_t;

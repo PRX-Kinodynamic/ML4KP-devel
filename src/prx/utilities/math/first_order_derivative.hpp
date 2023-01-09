@@ -46,6 +46,12 @@ struct first_order_derivative_table_t
   // clang-format on
 };  // namespace math
 
+// template<typename InputState, std::enable_if_t<Eigen::Dynamic, bool> = true>
+// static constexpr get_rows()
+// {
+
+// }
+
 template <class Function, typename InputState, S Evaluations, I_min MinDifference = 0>
 class first_order_derivative_t
 {
@@ -61,12 +67,20 @@ class first_order_derivative_t
 public:
   first_order_derivative_t() = delete;
 
-  first_order_derivative_t(const double _h = 0.01) : h(_h), epsilon_matrix(_h * epsilon_matrix_t::Identity())
+  first_order_derivative_t(const double _h = 0.01, const Eigen::Index n_inputs = NInputs,
+                           const Eigen::Index n_outputs = NOutputs)
+    : h(_h)
+    , epsilon_matrix(_h * epsilon_matrix_t::Identity(n_inputs, n_inputs))
+    , zero_matrix(output_matrix_t::Zero(n_outputs, n_inputs))
   {
   }
 
-  first_order_derivative_t(Function& _model, const double _h = 0.01)
-    : model(_model), h(_h), epsilon_matrix(_h * epsilon_matrix_t::Identity())
+  first_order_derivative_t(Function& _model, const double _h = 0.01, const Eigen::Index n_inputs = NInputs,
+                           const Eigen::Index n_outputs = NOutputs)
+    : model(_model)
+    , h(_h)
+    , epsilon_matrix(_h * epsilon_matrix_t::Identity(n_inputs, n_inputs))
+    , zero_matrix(output_matrix_t::Zero(n_outputs, n_inputs))
   {
   }
 
@@ -84,7 +98,7 @@ public:
     const N_i n9{ std::get<9>(approximation_row) };
     static_assert(d != 0, "Invalid approximation_table for first_order_derivative_t");
 
-    output_matrix_t derivative{};
+    output_matrix_t derivative{ zero_matrix };
     for (int i = 0; i < NInputs; ++i)
     {
       const OutputState F1 = evaluate<n1, 1 - 5>(state, i, OutputState::Zero());
@@ -121,6 +135,7 @@ private:
 
   double h;
   epsilon_matrix_t epsilon_matrix;
+  const output_matrix_t zero_matrix;
 };
 template <class Function, typename InputState, S Evaluations, I_min MinDifference>
 constexpr approximation_row_t

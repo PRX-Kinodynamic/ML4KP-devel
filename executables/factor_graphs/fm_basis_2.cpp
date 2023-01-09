@@ -71,11 +71,6 @@ gtsam::LevenbergMarquardtParams fg_params()
   lm_params.setMaxIterations(10);
   lm_params.setRelativeErrorTol(1e-6);
   lm_params.setAbsoluteErrorTol(1e-6);
-
-  // const std::string log_file{ out_path + "friction_maps/fg_concurrent_log.txt" };
-  // std::remove(log_file.c_str());
-  // lm_params.setLogFile(log_file);
-
   return lm_params;
 }
 

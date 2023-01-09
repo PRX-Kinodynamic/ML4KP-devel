@@ -215,6 +215,122 @@ private:
   space_point_t pt_x1;
 };
 
+// Implements X_{t+1} = X_t + f(X_t, U_t)
+template <Eigen::Index X_DIM, Eigen::Index U_DIM>
+class propagation_factor_XU_t
+  : public gtsam::NoiseModelFactor3<Eigen::Vector<double, X_DIM>, Eigen::Vector<double, X_DIM>,
+                                    Eigen::Vector<double, U_DIM>>
+{
+  // template <typename T, Eigen::Index DIM>
+  // using partial_fn = std::function<Eigen::Vector<double, DIM>(const T&)>;
+  using X = Eigen::Vector<double, X_DIM>;
+  using U = Eigen::Vector<double, U_DIM>;
+  using Base = gtsam::NoiseModelFactor3<Eigen::Vector<double, X_DIM>, Eigen::Vector<double, X_DIM>,
+                                        Eigen::Vector<double, U_DIM>>;
+  // static const int X_DIM = Eigen::Dynamic;
+  // static const int U_DIM = Eigen::Dynamic;
+  using X_partial_fn = std::function<X(const X&)>;
+  using U_partial_fn = std::function<X(const U&)>;
+
+public:
+  /**
+   * @brief      This implements X_{t+1} = X_t + f(X_t, U_t, \theta, \tau).
+   *             Where \theta and \tau (params and duration of propagation) are constant. The plants parameters remain
+   *             unchanged, whatever is in the parameter space is used.
+   *
+   * @param[in]  x0_key      The x_0 key
+   * @param[in]  x1_key      The x_1 key
+   * @param[in]  u0_key      The u_0 key
+   * @param[in]  time_step   The time step
+   * @param[in]  cost_model  The cost model
+   * @param[in]  sg          System group
+   */
+  propagation_factor_XU_t(gtsam::Key x0_key, gtsam::Key x1_key, gtsam::Key u0_key, const double tau,
+                          const gtsam::noiseModel::Base::shared_ptr& cost_model,
+                          const std::shared_ptr<system_group_t>& sg)
+    : Base(cost_model, x0_key, x1_key, u0_key)
+    , derivative_x0(partial_x0, 0.01)
+    , derivative_x1(partial_x1, 0.01)
+    , derivative_u0(partial_u0, 0.01)
+    , _tau(tau)
+    , x1_out(X::Zero())
+  {
+    // plan = std::make_shared<plan_t>(sg->get_control_space());
+    // plan->append_onto_back(0.0);
+    _sg = sg;
+    // pt_x0 = sg->get_state_space()->make_point();
+    // pt_x1 = sg->get_state_space()->make_point();
+  }
+
+  virtual ~propagation_factor_XU_t()
+  {
+  }
+
+  virtual Eigen::VectorXd evaluateError(const X& x0, const X& x1, const U& u0,
+                                        boost::optional<Eigen::MatrixXd&> H1 = boost::none,
+                                        boost::optional<Eigen::MatrixXd&> H2 = boost::none,
+                                        boost::optional<Eigen::MatrixXd&> H3 = boost::none) const override
+  {
+    const Eigen::VectorXd error{ compute_error(x0, x1, u0) };
+    // PRX_DEBUG_VAR_1(error);
+    if (H1)
+    {
+      derivative_x0.model = [&](const X& _x0) { return compute_error(_x0, x1, u0); };
+      *H1 = derivative_x0(x0);
+    }
+
+    if (H2)
+    {
+      derivative_x1.model = [&](const X& _x1) { return compute_error(x0, _x1, u0); };
+      *H2 = derivative_x1(x1);
+    }
+
+    if (H3)
+    {
+      derivative_u0.model = [&](const U& _u0) { return compute_error(x0, x1, _u0); };
+      *H3 = derivative_u0(u0);
+    }
+
+    return error;
+  }
+
+  Eigen::VectorXd compute_error(const X& x0, const X& x1, const U& u0) const
+  {
+    // const space_t* ss = _sg->get_state_space();
+    // const space_t* cs = _sg->get_control_space();
+    // const std::size_t ss_dim{ ss->get_dimension() };
+    // const std::size_t cs_dim{ cs->get_dimension() };
+
+    // ss->copy(pt_x0, x0);
+    // cs->copy(plan->front().control, u0);
+    // plan->front().duration = _time_step;
+    // X x1_out;
+
+    _sg->propagate(x0, u0, _tau, x1_out);
+
+    const Eigen::VectorXd error{ x1_out - x1 };
+
+    return error;
+  }
+
+private:
+  X_partial_fn partial_x0;
+  X_partial_fn partial_x1;
+  U_partial_fn partial_u0;
+
+  mutable math::first_order_derivative_t<X_partial_fn, X, 4> derivative_x0;
+  mutable math::first_order_derivative_t<X_partial_fn, X, 4> derivative_x1;
+  mutable math::first_order_derivative_t<U_partial_fn, U, 4> derivative_u0;
+
+  mutable X x1_out;
+  std::shared_ptr<system_group_t> _sg;
+  // std::shared_ptr<plan_t> plan;
+  // space_point_t pt_x0;
+  // space_point_t pt_x1;
+
+  const double _tau;
+};
+
 class propagation_factor_4_t
   : public gtsam::NoiseModelFactor4<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd>
 {

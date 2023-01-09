@@ -147,8 +147,8 @@ Eigen::VectorXd propagation_factor_4_t::compute_error(Eigen::VectorXd xt0, Eigen
   plan.copy_onto_back(ut1, t01[0]);
   ss->copy(x0_pt, xt0);
 
-  sg->propagate(x0_pt, plan, x1_prop_pt);
-
+  // sg->propagate(x0_pt, plan, x1_prop_pt);
+  PRX_DEPRECIATED;
   // ss -> copy_vector_from_point(x_prop, x1_prop_pt);
   auto x_prop = x1_prop_pt->vector<>();
   error = x_prop - xt1;
@@ -215,7 +215,8 @@ Eigen::VectorXd propagation_factor_1_t::compute_error_x0(Eigen::VectorXd vec) co
 
   ss->copy(x_aux_pt, vec);
 
-  sg->propagate(x_aux_pt, plan, x_aux_pt);
+  // sg->propagate(x_aux_pt, plan, x_aux_pt);
+  PRX_DEPRECIATED;
 
   auto x_prop = x_aux_pt->vector<>();
   error = x_prop - xt1;
@@ -232,7 +233,8 @@ Eigen::VectorXd propagation_factor_1_t::compute_error_x1(Eigen::VectorXd vec) co
 
   ss->copy(x_aux_pt, xt0);
 
-  sg->propagate(x_aux_pt, plan, x_aux_pt);
+  // sg->propagate(x_aux_pt, plan, x_aux_pt);
+  PRX_DEPRECIATED;
 
   auto x_prop = x_aux_pt->vector<>();
   error = x_prop - vec;
