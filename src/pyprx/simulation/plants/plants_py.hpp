@@ -5,6 +5,7 @@
 #include "pyprx/simulation/plants/ackermann_FO_py.hpp"
 #include "pyprx/simulation/plants/lander_LD_py.hpp"
 #include "pyprx/simulation/plants/mountain_car_py.hpp"
+#include "pyprx/simulation/plants/quadrotor_1d_py.hpp"
 
 void pyprx_simulation_plants()
 {
@@ -17,4 +18,5 @@ void pyprx_simulation_plants()
 	pyprx_simulation_plants_ackermann_FO();
 	pyprx_simulation_plants_lander_LD();
 	pyprx_simulation_plants_mountain_car();
+	pyprx_simulation_plants_quadrotor_1d();
 }
