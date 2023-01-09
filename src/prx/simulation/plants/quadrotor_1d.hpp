@@ -5,7 +5,7 @@
 
 namespace prx 
 {
-    class quadrotor_1d_t : public plant_t 
+    class quadrotor_1d_t : public  ltv_t
     {
         public:
         quadrotor_1d_t(const std::string& path);
@@ -21,7 +21,7 @@ namespace prx
         double z, zdot, zdotdot, T;
 
         double g = 9.81;
-        double m = 0.486;
+        double m = 1;
     };
 }
 PRX_REGISTER_SYSTEM(quadrotor_1d_t, 1D_Quadrotor)

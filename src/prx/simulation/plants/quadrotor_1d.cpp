@@ -2,14 +2,14 @@
 
 namespace prx
 {
-    quadrotor_1d_t::quadrotor_1d_t(const std::string& path) : plant_t(path)
+    quadrotor_1d_t::quadrotor_1d_t(const std::string& path) : ltv_t(path)
     {
         z=zdot=0;
         state_memory = {&z, &zdot};
         state_space = new space_t("EE",state_memory,"ZdZ");
         state_space->set_bounds(
-            {-10.0,-1.0},
-            { 10.0, 1.0}
+            {   0.0,-1.0},
+            { 100.0, 1.0}
             );
         
         T=0;
