@@ -1,3 +1,4 @@
+#ifndef BULLET_NOT_BUILT
 #include "prx/utilities/defs.hpp"
 #include "prx/planning/world_model.hpp"
 #include "prx/planning/planners/rrt.hpp"
@@ -104,3 +105,8 @@ int main(int argc, char* argv[])
 	}
 	std::cout<<"End of program"<<std::endl;
 }
+#else
+int main(int argc, char* argv[])
+{
+}
+#endif

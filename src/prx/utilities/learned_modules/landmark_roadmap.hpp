@@ -682,6 +682,55 @@ class landmark_roadmap_t
         }
     }
 
+    double distance(node_index_t a, node_index_t b)
+    {
+        // Returns the distance between two vertices.
+        // Get the points and take their squared distance.
+        space_point_t pt_a = vertices[a] -> point;
+        space_point_t pt_b = vertices[b] -> point;
+        return (pt_a -> at(0) - pt_b -> at(0)) * (pt_a -> at(0) - pt_b -> at(0)) + (pt_a -> at(1) - pt_b -> at(1)) * (pt_a -> at(1) - pt_b -> at(1));
+    }
+
+    double frechet_distance(std::vector<node_index_t> path1, std::vector<node_index_t> path2)
+    {
+        // Computes the Frechet distance between two paths.
+        // Frechet distance between two paths p = (p1, p2, ..., pn) and q = (q1, q2, ..., qm) is defined as:
+        // d(p,q) = frechet(n,m)
+        // where frechet(i,j) = max{d(pi,qj), min(frechet(i-1,j), frechet(i,j-1), frechet(i-1,j-1))}
+        // frechet(-1,-1) = 0
+        // frechet(i,-1) = frechet(-1,j) = inf for i >= 0, j >= 0
+        // d(pi,qj) = distance between pi and qj
+
+        int n = path1.size();
+        int m = path2.size();
+
+        std::vector<std::vector<double>> frechet(n+1, std::vector<double>(m+1, -1));
+
+        frechet[0][0] = 0;
+
+        for (int i = 1; i <= n; i++)
+        {
+            frechet[i][0] = std::numeric_limits<double>::infinity();
+        }
+
+        for (int j = 1; j <= m; j++)
+        {
+            frechet[0][j] = std::numeric_limits<double>::infinity();
+        }
+
+        for (int i = 1; i <= n; i++)
+        {
+            for (int j = 1; j <= m; j++)
+            {
+                double d = distance(path1[i-1], path2[j-1]);
+                frechet[i][j] = std::max(d, std::min(frechet[i-1][j], std::min(frechet[i][j-1], frechet[i-1][j-1])));
+            }
+        }
+        
+        return frechet[n][m];
+    
+    }
+
     std::vector<std::vector<node_index_t>> get_k_shortest_paths(node_index_t s, node_index_t t, int k)
     {
         // Modified Dijkstra's algorithm to find k shortest paths.
@@ -714,10 +763,24 @@ class landmark_roadmap_t
             dist[u] = p.first;
             if (u == t)
             {
-                std::cout << "Found path with cost " << p.first << std::endl;
-                paths.push_back(p.second);
+                double min_frechet = std::numeric_limits<double>::infinity();
+                for (auto path2 : paths)
+                {
+                    double d = frechet_distance(p.second, path2);
+                    if (d < min_frechet)
+                    {
+                        min_frechet = d;
+                    }
+                }
+                if (min_frechet > 10)
+                {
+                    std::cout << "Found path with cost " << p.first << std::endl;
+                    paths.push_back(p.second);
+                    count[u]++;
+                }
             }
-            count[u]++;
+            else 
+                count[u]++;
             if (count[u] <= k)
             {
                 for (auto e : edges[u])

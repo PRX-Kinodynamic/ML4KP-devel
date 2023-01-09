@@ -1,5 +1,3 @@
-if(BUILD_FOR_BULLET)
-
 file(GLOB_RECURSE EXAMPLES_PRXBULLET_FILES *.cpp)
 
 set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/local_goal )
@@ -14,11 +12,11 @@ foreach(f ${EXAMPLES_PRXBULLET_FILES})
         ${PROJECT_NAME}_utilities 
         ${PROJECT_NAME}_simulation 
         ${PROJECT_NAME}_planning 	
-        ${PROJECT_NAME}_visualization 
-        ${PROJECT_NAME}_bullet_sim )
+        ${PROJECT_NAME}_visualization )
+    if (BUILD_FOR_BULLET)
+        target_link_libraries(${F_EXEC} ${PROJECT_NAME}_bullet_sim)
+    endif(BUILD_FOR_BULLET)
     if (BUILD_FOR_TORCH)
         target_link_libraries(${F_EXEC} ${TORCH_LIBRARIES})
     endif(BUILD_FOR_TORCH)
 endforeach()
-
-endif(BUILD_FOR_BULLET)

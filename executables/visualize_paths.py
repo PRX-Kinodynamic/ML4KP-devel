@@ -19,7 +19,7 @@ with open(environment_file, 'r') as stream:
 obstacles = env_params["environment"]["geometries"]
 
 
-roadmap_dir = os.environ["DIRTMP_PATH"] + "out/1208/"
+roadmap_dir = os.environ["DIRTMP_PATH"] + "out/1212/test/"
 
 vertices_raw = np.loadtxt(roadmap_dir+"vertices.txt",delimiter=",")
 
@@ -27,7 +27,7 @@ vertices = {}
 for i in range(vertices_raw.shape[0]):
     vertices[int(vertices_raw[i,0])] = vertices_raw[i,1:]
 
-paths_prefix = "path_"
+paths_prefix = "path"
 plt.figure(figsize=(8,8))
 
 for fname in os.listdir(roadmap_dir):
@@ -42,8 +42,9 @@ for fname in os.listdir(roadmap_dir):
         plt.xlim(-11,11)
         plt.ylim(-11,11)
         plt.plot(path[:,0],path[:,1],color='black')
+        cost = np.floor((path.shape[0]-1)*0.1)
         # Display plot title as path[0][:3] -> path[-1][:3] nicely formatted
-        plt.title("Path from "+str(path[0][:3])+" to "+str(path[-1][:3]))
+        plt.title("Path from "+str(path[0][:3])+" to "+str(path[-1][:3]) + " with cost "+str(cost))
         # Plot an arrow at the middle of the path
         plt.arrow(path[int(path.shape[0]/2),0],path[int(path.shape[0]/2),1],path[int(path.shape[0]/2)+10,0]-path[int(path.shape[0]/2),0],path[int(path.shape[0]/2)+10,1]-path[int(path.shape[0]/2),1],head_width=0.25, head_length=0.25, fc='k', ec='k')
         plt.savefig(roadmap_dir+fname+".png")

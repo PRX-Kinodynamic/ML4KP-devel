@@ -15,28 +15,32 @@ class access_roadmap_t
      private:
         std::unordered_map<node_index_t,access_vertex_t*> vertices;
         std::unordered_map<node_index_t,double> costs_to_goal;
-        std::unordered_map<node_index_t, std::vector<access_edge_t>> edges;
-        node_index_t vertex_counter;
+        std::unordered_map<node_index_t, std::vector<access_edge_t*>> edges;
+        std::vector<std::pair<node_index_t, node_index_t>> all_edges;
+        node_index_t vertex_counter, edge_counter;
         std::vector<node_index_t> path;
         std::vector<std::vector<node_index_t>> components;
 
     protected:
-        int max_failures, num_failures;
         space_point_t pt;
         std::vector<double> pt_vec;
         double cost;
+        double stretch_factor;
 
         std::shared_ptr<param_loader> params_ptr;
 
         std::vector<node_index_t> a_indices, d_indices;
+        std::unordered_map<node_index_t, double> a_costs, d_costs;
 
     public:
-        access_roadmap_t() : max_failures(100), num_failures(0), vertex_counter(0) {}
+        std::vector<space_point_t> verification_set;
+        access_roadmap_t() : vertex_counter(0), edge_counter(0), stretch_factor(3.0) {}
         ~access_roadmap_t() {}
 
     access_roadmap_t(param_loader params)
     {
-        num_failures = 0;
+        edge_counter = 0;
+        stretch_factor = params["stretch_factor"].as<double>();
         vertex_counter = 0;
         init(params);
     }
@@ -44,48 +48,76 @@ class access_roadmap_t
     void init(param_loader params)
     {
         params_ptr = std::make_shared<param_loader>(params);
-        max_failures = params["num_failures"].as<int>();
     }
 
     space_point_t get_point(node_index_t index)
     {
         return vertices[index]->get_point();
     }
-    
+
+    void set_stretch_factor(double factor) { stretch_factor = factor; }
+
+    std::pair<std::vector<std::pair<node_index_t, node_index_t>>::iterator,std::vector<std::pair<node_index_t, node_index_t>>::iterator> get_all_edges()
+    {
+        // Re-compute all edges.
+        all_edges.clear();
+        for (auto e : edges)
+        {
+            for (auto e2 : e.second)
+            {
+                all_edges.push_back(std::make_pair(e.first, e2->end));
+            }
+        }
+        return std::make_pair(all_edges.begin(), all_edges.end());
+    }
+
     void get_indices(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
     {
-        a_indices.clear();
+         a_indices.clear();
         d_indices.clear();
+
+        a_costs.clear();
+        d_costs.clear();
 
         for (auto v : vertices)
         {
-            spec.state_space -> copy_point(query.goal_state, v.second -> get_point());
+            // a_indices -> all vertices that can be reached from the considered point
             spec.state_space -> copy_point(query.start_state, pt);
+            spec.state_space -> copy_point(query.goal_state, v.second -> get_point());
 
-            controller.fulfill_query(query, spec);
-
-            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+            if (!query.goal_check(query.start_state))
             {
-                a_indices.push_back(v.first);
+                controller.fulfill_query(query, spec);
+
+                if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+                {
+                    a_indices.push_back(v.first);
+                    a_costs[v.first] = (query.solution_traj.size()-1)*simulation_step;
+                }
             }
             
             query.clear_outputs();
 
-            spec.state_space -> copy_point(query.goal_state, pt);
+            // d_indices -> all vertices that can reach the considered point
             spec.state_space -> copy_point(query.start_state, v.second -> get_point());
+            spec.state_space -> copy_point(query.goal_state, pt);
 
-            controller.fulfill_query(query, spec);
-
-            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+            if (!query.goal_check(query.start_state))
             {
-                d_indices.push_back(v.first);
+                controller.fulfill_query(query, spec);
+
+                if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+                {
+                    d_indices.push_back(v.first);
+                    d_costs[v.first] = (query.solution_traj.size()-1)*simulation_step;
+                }
             }
 
             query.clear_outputs();
         }
     }
 
-    int get_best_node(space_point_t s, rrt_specification_t& spec)
+    node_index_t get_best_node(space_point_t s, rrt_specification_t& spec)
     {
         pt = spec.state_space -> clone_point(s);
         spec.state_space -> copy_vector_from_point(pt_vec, pt);
@@ -104,6 +136,25 @@ class access_roadmap_t
         }
 
         return -1;
+    }
+
+    bool check_edge_exists(node_index_t d, node_index_t a)
+    {
+        if (edges.find(d) == edges.end()) return false;
+        for (auto e : edges[d])
+        {
+            if (e->end == a) return true;
+        }
+        return false;
+    }
+
+    double get_edge_cost(node_index_t d, node_index_t a)
+    {
+        for (auto e : edges[d])
+        {
+            if (e->end == a) return e->cost;
+        }
+        return PRX_INFINITY;
     }
 
     bool check_connected(node_index_t d, node_index_t a)
@@ -126,10 +177,10 @@ class access_roadmap_t
             {
                 for (auto e : edges[curr])
                 {
-                    if (visited.find(e.end) == visited.end())
+                    if (visited.find(e->end) == visited.end())
                     {
-                        stack.push_back(e.end);
-                        visited.insert(e.end);
+                        stack.push_back(e->end);
+                        visited.insert(e->end);
                     }
                 }
             }
@@ -142,12 +193,14 @@ class access_roadmap_t
         prx_assert(s != t, "Cannot add edge between the same node.");
         if (edges.find(s) == edges.end())
         {
-            edges[s] = std::vector<access_edge_t>();
+            edges[s] = std::vector<access_edge_t*>();
         }
-        access_edge_t e;
-        e.end = t;
-        e.cost = cost;
+        access_edge_t* e = new access_edge_t();
+        e->end = t;
+        e->cost = cost;
         edges[s].push_back(e);
+        edge_counter++;
+        all_edges.push_back(std::make_pair(s, t));
     }
 
     bool add_vertex(node_index_t index, access_vertex_t* v)
@@ -160,8 +213,49 @@ class access_roadmap_t
         return false;
     }
 
+    double get_path_cost(node_index_t s, node_index_t t)
+    {
+        std::priority_queue<std::pair<double, node_index_t>, std::vector<std::pair<double, node_index_t>>, std::greater<std::pair<double, node_index_t>>> pq;
+        std::map<node_index_t, node_index_t> prev;
+        std::map<node_index_t, double> dist;
+
+        for (auto v : vertices)
+        {
+            dist[v.first] = PRX_INFINITY;
+            prev[v.first] = -1;
+        }
+
+        dist[s] = 0;
+        pq.push(std::make_pair(0, s));
+
+        while (!pq.empty())
+        {
+            auto curr = pq.top();
+            pq.pop();
+
+            if (curr.second == t) break;
+
+            if (edges.find(curr.second) != edges.end())
+            {
+                for (auto e : edges[curr.second])
+                {
+                    double alt = dist[curr.second] + e->cost;
+                    if (alt < dist[e->end])
+                    {
+                        dist[e->end] = alt;
+                        prev[e->end] = curr.second;
+                        pq.push(std::make_pair(alt, e->end));
+                    }
+                }
+            }
+        }
+
+        return dist[t];
+    }
+    
     bool build_roadmap_from_file(std::string data_dir, rrt_specification_t& spec)
     {
+        prx_throw("This function has not been tested yet!");
         std::string vertices_file = data_dir + "/vertices.txt";
         std::string edges_file = data_dir + "/edges.txt";
 
@@ -235,48 +329,46 @@ class access_roadmap_t
     void build_roadmap(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
     {
         pt = spec.state_space -> make_point();
+        std::vector<node_index_t> unconsidered;
+        for (int i = 0; i < verification_set.size(); i++) unconsidered.push_back(i);
+
         do
         {
-            do
-            {
-                spec.sample_state(pt);
-            } while (!spec.valid_state(pt));
+            // Sample a random point from the verification set.
+            int idx = uniform_int_random(0, unconsidered.size() - 1);
+            node_index_t v_idx = unconsidered[idx];
+            unconsidered.erase(unconsidered.begin() + idx);
 
-            pt_vec.clear();
-            spec.state_space -> copy_vector_from_point(pt_vec,pt);
+            spec.state_space -> copy_point(pt, verification_set[v_idx]);
 
             get_indices(query,spec,controller);
-
-            bool changed_graph = false;
 
             if (a_indices.size() == 0 || d_indices.size() == 0)
             {
                 auto v = new access_vertex_t(*params_ptr);
-                bool success = v -> construct_vertex(pt, controller, query, spec);
-                if (!success)
-                {
-                    delete v;
-                    num_failures++;
-                    continue;
-                }
+                v -> construct_vertex(pt, spec);
                 vertices.insert(std::make_pair(vertex_counter, v));
 
                 for (auto a : a_indices)
                 {
-                    cost = spec.distance_function(vertices[a] -> get_point(), pt);
-                    add_edge(vertex_counter, a, cost);
+                    cost = a_costs[a];
+                    if (!check_edge_exists(vertex_counter,a))
+                    {
+                        add_edge(vertex_counter, a, cost);
+                    }
                 }
 
                 for (auto d : d_indices)
                 {
-                    cost = spec.distance_function(vertices[d] -> get_point(), pt);
-                    add_edge(d, vertex_counter, cost);
+                    cost = d_costs[d];
+                    if (!check_edge_exists(d, vertex_counter))
+                    {
+                        add_edge(d, vertex_counter, cost);
+                    }
                 }
 
-                changed_graph = true;
                 vertex_counter++;
             }
-
             else
             {
                 bool vertex_created = false;
@@ -285,99 +377,260 @@ class access_roadmap_t
                     for (auto a : a_indices)
                     {
                         if (d == a) continue;
-                        // Check if d and a are connected by any path.
                         bool connected = check_connected(d, a);
-                        if (!connected)
+                        if (!connected || (connected && get_path_cost(d, a) > stretch_factor * (a_costs[a] + d_costs[d])))
                         {
+                            // if (connected)
+                            // {
+                            //     std::cout << "Original path cost: " << get_path_cost(d, a) << std::endl;
+                            // }
                             query.clear_outputs();
                             spec.state_space -> copy_point(query.start_state, vertices[d] -> get_point());
                             spec.state_space -> copy_point(query.goal_state, pt);
 
+                            bool add_flag = true;
+                            
+                            add_flag &= !query.goal_check(query.start_state);
+
                             controller.fulfill_query(query, spec);
 
-                            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+                            if (add_flag && spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
                             {
                                 spec.state_space -> copy_point(query.start_state, query.solution_traj.back());
                                 spec.state_space -> copy_point(query.goal_state, vertices[a] -> get_point());
+                                trajectory_t buffer_traj(query.solution_traj);
                                 query.clear_outputs();
+
+                                add_flag &= !query.goal_check(query.start_state);
 
                                 controller.fulfill_query(query, spec);
 
-                                if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+                                if (add_flag && spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
                                 {
                                     if (!vertex_created)
                                     {
                                         auto v = new access_vertex_t(*params_ptr);
-                                        bool success = v -> construct_vertex(pt, controller, query, spec);
-                                        if (!success)
-                                        {
-                                            delete v;
-                                            num_failures++;
-                                            continue;
-                                        }
+                                        v -> construct_vertex(pt, spec);
                                         vertices.insert(std::make_pair(vertex_counter, v));
                                         vertex_created = true;
                                         vertex_counter++;
                                     }
-                                    cost = spec.distance_function(vertices[d] -> get_point(), pt);
-                                    add_edge(d, vertex_counter-1, cost);
+                                    cost = d_costs[d];
+                                    if (!check_edge_exists(d, vertex_counter - 1))
+                                    {
+                                        add_edge(d, vertex_counter - 1, cost);
+                                    }
 
-                                    cost = spec.distance_function(vertices[a] -> get_point(), pt);
-                                    add_edge(vertex_counter-1, a, cost);
-
-                                    changed_graph = true;
+                                    cost = a_costs[a];
+                                    if (!check_edge_exists(vertex_counter - 1, a))
+                                    {
+                                        add_edge(vertex_counter - 1, a, cost);
+                                    }
                                 }
+
+                                // if (connected && add_flag)
+                                // {
+                                //     std::cout << "New path cost: " << get_path_cost(d,a) << std::endl;
+                                // }
 
                             }
                         }
                     }
                 }
             }
-
-            if (!changed_graph)
+            if (unconsidered.size() % 10 == 0)
             {
-                num_failures++;
-                output_progress_bar(1.0*num_failures/max_failures);
+                std::cout << unconsidered.size() << " configurations remaining." << std::endl;
+                std::cout << "Vertices: " << vertices.size() << std::endl;
+                std::cout << "Edges: " << edge_counter << std::endl;
+            }
+        } while (unconsidered.size() > 0);
+
+        for (auto e : all_edges)
+        {
+            node_index_t a = e.first;
+            node_index_t b = e.second;
+
+            std::vector<node_index_t> in_a, out_b;
+            for (auto edge : edges[b]) out_b.push_back(edge -> end);
+            for (auto edge : edges) for (auto edge2 : edge.second) if (edge2 -> end == a) in_a.push_back(edge.first);
+
+            if (in_a.size() == 0 || out_b.size() == 0) continue;
+
+            // Temporarily set the edge cost to inf.
+            double a_b_cost = get_edge_cost(a, b);
+            for (auto edge : edges[a])
+            {
+                if (edge -> end == b)
+                {
+                    edge -> cost = PRX_INFINITY;
+                    break;
+                }
             }
 
-        } while (num_failures < max_failures); 
+            // Check path cost from a to b.
+            double path_cost_without = get_path_cost(a, b);
+            if (path_cost_without < stretch_factor * a_b_cost)
+            {
+                std::cout << "Removing edge " << a << " -> " << b << std::endl;
+                remove_edge(a, b);
+            }
+            else
+            {
+                // Reset the edge cost.
+                for (auto edge : edges[a])
+                {
+                    if (edge -> end == b)
+                    {
+                        edge -> cost = a_b_cost;
+                        break;
+                    }
+                }
+            }
+
+        }
+
+        for (auto v = vertices.begin(); v != vertices.end();)
+        {
+            // Check if the vertex only has incoming edges.
+            bool only_incoming = true;
+            for (auto e : edges)
+            {
+                for (auto ee : e.second)
+                {
+                    if (ee->end == v->first)
+                    {
+                        only_incoming = false;
+                        break;
+                    }
+                }
+                if (!only_incoming) break;
+            }
+
+            if (only_incoming)
+            {
+                remove_vertex(v->first);
+                v = vertices.erase(v);
+            } 
+            else
+            {
+                ++v;
+            }
+        }
+
+        for (auto v = vertices.begin(); v != vertices.end();)
+        {
+            // Check if the vertex only has outgoing edges.
+            bool only_outgoing = true;
+            for (auto e : edges[v->first])
+            {
+                only_outgoing = false;
+                break;
+            }
+
+            if (only_outgoing)
+            {
+                remove_vertex(v->first);
+                v = vertices.erase(v);
+            } 
+            else
+            {
+                ++v;
+            }
+        }
+        
+        for (auto v : vertices)
+        {
+            spec.state_space -> copy_point(pt, v.second -> get_point());
+            v.second -> construct_vertex(pt, controller,query,spec);
+        }
     }
 
     void remove_edge(node_index_t s, node_index_t t)
     {
-        edges[s].erase(std::remove_if(edges[s].begin(), edges[s].end(), [t](access_edge_t e) { return e.end == t; }), edges[s].end());
+        for (auto e = edges[s].begin(); e != edges[s].end();)
+        {
+            if ((*e)->end == t)
+            {
+                delete *e;
+                e = edges[s].erase(e);
+                edge_counter--;
+            }
+            else
+            {
+                ++e;
+            }
+        }
     }
 
-    node_index_t add_start(space_point_t s, rrt_specification_t& spec, rrt_query_t& query, learned_controller_t controller)
+    void remove_vertex(node_index_t v)
     {
-        spec.state_space -> copy_point(pt, s);
-        spec.state_space -> copy_vector_from_point(pt_vec,pt);
-
-        get_indices(query, spec, controller);
-
-        auto v = new access_vertex_t(*params_ptr);
-        bool success = v -> construct_vertex(pt, controller, query, spec);
-        if (!success)
+        std::cout << "Removing vertex " << v << std::endl;
+        for (auto e : edges[v])
         {
-            delete v;
-            return -1;
+            remove_edge(e->end, v);
         }
-        vertices.insert(std::make_pair(vertex_counter, v));
-
-        if (a_indices.size() == 0)
+        // Locate the vertex in other vertices' edges.
+        for (auto e : edges)
         {
-            return -1;
+            for (auto edge : e.second)
+            {
+                if (edge->end == v)
+                {
+                    remove_edge(e.first, v);
+                }
+            }
         }
+        edges.erase(v);
+        // Free the memory.
+        delete vertices[v];
+        std::cout << "Removed vertex " << v << std::endl;
+    }
 
-        for (auto a : a_indices)
+    std::string print_vertices(space_t* space)
+    {
+        std::stringstream out(std::stringstream::out);
+        for (auto v : vertices)
         {
-            cost = spec.distance_function(vertices[a] -> get_point(), pt);
-            add_edge(vertex_counter, a, cost);
+            out << v.first << "," << space -> print_point(v.second -> get_point(),4) << std::endl;
         }
+        return out.str();
+    }
 
-        vertex_counter++;
+    std::string print_edges()
+    {
+        std::stringstream out(std::stringstream::out);
+        for (auto e : edges)
+        {
+            for (auto e2 : e.second)
+            {
+                out << e.first << "," << e2->end << "," << e2->cost << std::endl;
+            }
+        }
+        return out.str();
+    }
 
-        return vertex_counter-1;
+    std::string print_edge_traj(node_index_t s, node_index_t t,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, bool verify = false)
+    {
+        if (check_edge_exists(s,t) && s != t)
+        {
+            query.clear_outputs();
+
+            spec.state_space -> copy_point(query.start_state, vertices[s] -> get_point());
+            spec.state_space -> copy_point(query.goal_state, vertices[t] -> get_point());
+
+            controller.fulfill_query(query, spec);
+
+            // if (!spec.valid_check(query.solution_traj))
+            // {
+            //     std::cout << "Invalid trajectory was added!" << std::endl;
+            //     std::cout << s << " " << t << std::endl;
+            //     return "";
+            // }
+
+            return query.solution_traj.print();
+        }
+        return "";
     }
 
     node_index_t add_goal(space_point_t g, rrt_specification_t& spec, rrt_query_t& query, learned_controller_t controller)
@@ -404,7 +657,7 @@ class access_roadmap_t
 
         for (auto d : d_indices)
         {
-            cost = spec.distance_function(vertices[d] -> get_point(), pt);
+            cost = d_costs[d];
             add_edge(d, vertex_counter, cost);
         }
 
@@ -413,27 +666,36 @@ class access_roadmap_t
         return vertex_counter-1;
     }
 
-    std::string print_vertices(space_t* space)
+    node_index_t add_start(space_point_t s, rrt_specification_t& spec, rrt_query_t& query, learned_controller_t controller)
     {
-        std::stringstream out(std::stringstream::out);
-        for (auto v : vertices)
-        {
-            out << v.first << "," << v.second -> print_point(space) << std::endl;
-        }
-        return out.str();
-    }
+        spec.state_space -> copy_point(pt, s);
+        spec.state_space -> copy_vector_from_point(pt_vec,pt);
 
-    std::string print_edges()
-    {
-        std::stringstream out(std::stringstream::out);
-        for (auto e : edges)
+        get_indices(query, spec, controller);
+
+        auto v = new access_vertex_t(*params_ptr);
+        bool success = v -> construct_vertex(pt, controller, query, spec);
+        if (!success)
         {
-            for (auto e2 : e.second)
-            {
-                out << e.first << "," << e2.end << "," << e2.cost << std::endl;
-            }
+            delete v;
+            return -1;
         }
-        return out.str();
+        vertices.insert(std::make_pair(vertex_counter, v));
+
+        if (a_indices.size() == 0)
+        {
+            return -1;
+        }
+
+        for (auto a : a_indices)
+        {
+            cost = a_costs[a];
+            add_edge(vertex_counter, a, cost);
+        }
+
+        vertex_counter++;
+
+        return vertex_counter-1;
     }
 
     bool is_connected()
@@ -497,7 +759,7 @@ class access_roadmap_t
         {
             for (auto e : edges[v])
             {
-                node_index_t w = e.end;
+                node_index_t w = e->end;
                 if (indices[w] == -1)
                 {
                     strongconnect(w, index, indices, lowlinks, stack, on_stack, components);
@@ -557,12 +819,12 @@ class access_roadmap_t
             {
                 for (auto e : edges[u.second])
                 {
-                    double alt = dist[u.second] + e.cost;
-                    if (alt < dist[e.end])
+                    double alt = dist[u.second] + e->cost;
+                    if (alt < dist[e->end])
                     {
-                        dist[e.end] = alt;
-                        prev[e.end] = u.second;
-                        pq.push(std::make_pair(alt, e.end));
+                        dist[e->end] = alt;
+                        prev[e->end] = u.second;
+                        pq.push(std::make_pair(alt, e->end));
                     }
                 }
             }

@@ -118,6 +118,12 @@ class access_vertex_t
         return true;
     }
 
+    bool construct_vertex(space_point_t point, rrt_specification_t planner_spec)
+    {
+        this -> point = planner_spec.state_space -> clone_point(point);
+        return true;
+    }
+
     bool construct_vertex(space_point_t point, learned_controller_t controller, rrt_query_t planner_query, rrt_specification_t planner_spec)
     {
         this->point = planner_spec.state_space -> clone_point(point);

@@ -1,3 +1,4 @@
+#ifndef BULLET_NOT_BUILT
 #include "prx/utilities/defs.hpp"
 #include "prx/planning/world_model.hpp"
 #include "prx/planning/planners/dirt.hpp"
@@ -199,3 +200,6 @@ int main(int argc, char* argv[])
 	}
     
 }
+#else 
+int main(int argc, char** argv){}
+#endif

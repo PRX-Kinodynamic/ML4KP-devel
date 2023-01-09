@@ -14,6 +14,7 @@ class termination_classifier_t
     struct svm_node* x_space_test;
     svm_parameter param;
     svm_problem prob_train, prob_test;
+    bool trained;
 
     protected:
     bool normalize_input;
@@ -30,14 +31,18 @@ class termination_classifier_t
 
     ~termination_classifier_t()
     {
-        svm_destroy_param(&param);
-        svm_free_and_destroy_model(&model);
-        free(prob_train.y);
-        free(prob_train.x);
-        free(prob_test.y);
-        free(prob_test.x);
-        free(x_space_train);
-        free(x_space_test);
+        // No need to do this if param and model are not initialized
+        if (trained)
+        {
+            svm_destroy_param(&param);
+            svm_free_and_destroy_model(&model);
+            free(prob_train.y);
+            free(prob_train.x);
+            free(prob_test.y);
+            free(prob_test.x);
+            free(x_space_train);
+            free(x_space_test);
+        }
     }
 
     double get_accuracy()
@@ -49,6 +54,8 @@ class termination_classifier_t
     {
         lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
         upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
+
+        trained = false;
 
         normalize_input = params["/termination_classifier/normalize_input"].as<bool>();
 
@@ -112,6 +119,8 @@ class termination_classifier_t
         accuracy /= prob_train.l;
 
         std::cout << "Training accuracy: " << accuracy << std::endl;
+
+        trained = true;
     }
 
     bool predict (std::vector<double> data)
