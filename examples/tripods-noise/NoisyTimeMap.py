@@ -1,6 +1,6 @@
 import sys 
 import os 
-import torch 
+# import torch 
 import libpyDirtMP as prx 
 import numpy as np 
 
@@ -94,7 +94,7 @@ class NoisyTimeMap:
         self.obstacle_check = prx.custom_check.wrap(self.in_collision_py );
         self.checker_gc = prx.condition_check( self.goal_check );
         self.checker_obstacle = prx.condition_check( self.obstacle_check );
-        self.checker.add_condition(self.checker_gc);
+        # self.checker.add_condition(self.checker_gc);
         self.checker.add_condition(self.checker_obstacle);
 
         # x_{t+1} = x_t + f(x_t, u(x_t+\epsilon_x) + \epsilon_u)
@@ -191,6 +191,7 @@ class NoisyTimeMap:
     
     def quadrotor_lqr(self, X):
         self.ss.copy(self.start_state,X)
+        self.ss.copy_from_point(self.start_state)
         self.ss.enforce_bounds()
 
         if self.noisy_plant == None:
@@ -210,19 +211,21 @@ class NoisyTimeMap:
         self.checker.reset()
 
         switch_control = False
-        switch_height = 0.25 * np.copy(self.start_state[0])
+        switch_height = 0.25 * np.copy(self.goal_state[0])
 
         while True:
-            self.noisy_plant.get_state_space().copy_to(self.start_state);
+            # self.noisy_plant.get_state_space().copy_to(self.start_state);
+            self.ss.copy_to(self.start_state)
             if not switch_control and self.start_state[0] < switch_height:
                 self.controller_base.compute_controls()
                 self.cs.enforce_bounds()
                 switch_control = True
-                self.plant.propagate(self.simulation_step)
             if switch_control and self.start_state[0] > self.goal_state[0]:
                 self.ctrl[0] = 0
+                self.cs.copy_from(self.ctrl)
                 switch_control = False 
-                self.context.system_group.propagate_once(prx.MIDDLE_STEP, self.ctrl)
+            
+            self.plant.propagate(self.simulation_step)
 
             if self.checker.check():
                 break

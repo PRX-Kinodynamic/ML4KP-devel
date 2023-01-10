@@ -6,6 +6,6 @@ environment: "environments/empty.yaml"
 
 goal_region_radius: 0.1
 
-duration: 15
+duration: 5.0
 state_increment: 0.1
 system_name: "quadrotor_lqr"

@@ -6,7 +6,6 @@ import NoisyTimeMap
 
 if __name__ == "__main__":
     step = 11
-    time_h = 15
 
     # TM = NoisyTimeMap.NoisyTimeMap("pendulum_lc", time_h,
                                 #    "examples/tripods/pendulum_lc_noise.yaml")
