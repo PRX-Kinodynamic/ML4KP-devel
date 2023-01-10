@@ -7,9 +7,9 @@ from inspect import currentframe, getframeinfo
 def distance_function(a,b):
     return prx.space_t.euclidean_2d(a,b,0,2)
 
-max_height = 150
-start_height = 100
-time = 30
+max_height = 10
+start_height = 4
+time = 15
 sim_step = 0.01
 
 if __name__ == "__main__":
@@ -35,13 +35,16 @@ if __name__ == "__main__":
     current     = ss.make_point()
     end_state   = ss.make_point()
 
+    # lower_bounds = [0,-200.]
+    # upper_bounds = [200, 20.]
     lower_bounds = [0,-20.]
-    upper_bounds = [200, 20.]
+    upper_bounds = [20, 2.]
     ss.set_bounds(lower_bounds,upper_bounds)
-    cs.set_bounds([0.],[20.])
+    cs.set_bounds([0.],[2.])
 
     ss.copy_point_from_vector(start_state,[start_height,0.])
     ss.copy_from_point(start_state)
+    ss.enforce_bounds()
     ss.copy_point_from_vector(goal_state,[max_height,0.])
 
     ctrl_pt = cs.make_point()

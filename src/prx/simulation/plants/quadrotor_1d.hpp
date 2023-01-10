@@ -21,7 +21,7 @@ namespace prx
         double z, zdot, zdotdot, T;
 
         double g = 9.81;
-        double m = 1;
+        double m = 0.1;
     };
 }
 PRX_REGISTER_SYSTEM(quadrotor_1d_t, 1D_Quadrotor)
