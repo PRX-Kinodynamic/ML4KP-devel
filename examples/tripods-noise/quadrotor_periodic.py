@@ -3,7 +3,6 @@ import numpy as np
 from tqdm import tqdm
 import NoisyTimeMap
 
-
 if __name__ == "__main__":
     step = 11
 
@@ -16,7 +15,7 @@ if __name__ == "__main__":
         return TM.quadrotor_lqr(X)
     
     xs = np.linspace(0, 20, step)
-    ys = np.linspace(-2, 20, step)
+    ys = np.linspace(-20, 2, step)
 
     start_state = TM.ss.make_point()
     end_state = TM.ss.make_point()

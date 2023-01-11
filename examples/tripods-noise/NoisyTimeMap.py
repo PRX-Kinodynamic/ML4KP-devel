@@ -1,6 +1,6 @@
 import sys 
 import os 
-# import torch 
+import torch 
 import libpyDirtMP as prx 
 import numpy as np 
 
@@ -94,7 +94,8 @@ class NoisyTimeMap:
         self.obstacle_check = prx.custom_check.wrap(self.in_collision_py );
         self.checker_gc = prx.condition_check( self.goal_check );
         self.checker_obstacle = prx.condition_check( self.obstacle_check );
-        # self.checker.add_condition(self.checker_gc);
+        if self.system_name != "quadrotor_lqr":
+            self.checker.add_condition(self.checker_gc);
         self.checker.add_condition(self.checker_obstacle);
 
         # x_{t+1} = x_t + f(x_t, u(x_t+\epsilon_x) + \epsilon_u)

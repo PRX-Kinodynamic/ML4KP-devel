@@ -7,11 +7,11 @@ goal_state:  [10.0, 0.0]
 min_steps: 1
 max_steps: 50
 
-state_space_lower_bound: [ 0, -2]
-state_space_upper_bound: [20, 20]
+state_space_lower_bound: [ 0, -20]
+state_space_upper_bound: [20, 2]
 
-starting_lower_bound: [0, -2]
-ending_upper_bound: [ 20,  20]
+starting_lower_bound: [0, -20]
+ending_upper_bound: [ 20,  2]
 
 control_space_lower_bound: [0]
 control_space_upper_bound: [2]
