@@ -8,8 +8,8 @@ def distance_function(a,b):
     return prx.space_t.euclidean_2d(a,b,0,2)
 
 max_height = 10
-start_height = 4
-time = 15
+start_height = 19
+time = 15.0
 sim_step = 0.01
 
 if __name__ == "__main__":
@@ -57,15 +57,13 @@ if __name__ == "__main__":
     v_goal[0] = max_height
     R = prx.matrix.Identity(1, 1)
     
-
-    lqr = prx.lqr(plant,Q,R,"LQR")
-    lqr.set_goal(v_goal)
-    lqr.compute_K()
-    K = lqr.get_K()
-
     switch = False
-    for i in range(int(time*1./sim_step)):
+    ss.copy_to_point(end_state)
+    for i in range(int(time*1./sim_step)+1):
         if not switch and end_state[0] < 0.25 * max_height:
+            lqr = prx.lqr(plant,Q,R,"LQR")
+            lqr.set_goal(v_goal)
+            lqr.compute_K()
             lqr.compute_controls()
             cs.enforce_bounds()
             switch = True
@@ -78,7 +76,10 @@ if __name__ == "__main__":
         
 
     traj = np.array(traj)
+    print(traj[-1])
 
     plt.figure(figsize=(8,8))
     plt.plot(traj[:,0],traj[:,1],color='black')
+    plt.scatter(traj[0,0],traj[0,1],color='green')
+    plt.scatter(traj[-1,0],traj[-1,1],color='red')
     plt.show()
