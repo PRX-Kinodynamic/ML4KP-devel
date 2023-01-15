@@ -20,13 +20,13 @@ public:
   }
 
   template <typename T>
-  void add_values(T values)
+  void add_values(T values, const std::string& last_str = "\n")
   {
     for (auto v : values)
     {
       ofs_logger << v << sep;
     }
-    ofs_logger << '\n';
+    ofs_logger << last_str;
   }
 
   template <class... Types>

@@ -182,14 +182,6 @@ int main(int argc, char* argv[])
   std::vector<std::pair<X, X>> local_goals_ks;
   PRX_DEBUG_VAR_1(steps);
 
-  const std::string nominal_traj_filename{ prx::out_path + "pend_nominal_traj_" +
-                                           std::to_string(aorrt_query.start_state->at(0)) +
-                                           std::to_string(aorrt_query.start_state->at(1)) + ".txt" };
-  const std::string nominal_plan_filename{ prx::out_path + "pend_nominal_plan_" +
-                                           std::to_string(aorrt_query.start_state->at(0)) +
-                                           std::to_string(aorrt_query.start_state->at(1)) + ".txt" };
-  aorrt_query.solution_traj.to_file(nominal_traj_filename);
-  aorrt_query.solution_plan.to_file(nominal_plan_filename);
   for (unsigned i = 0; i < tot_ctrls; ++i)
   {
     // const auto xi{ aorrt_query.solution_traj[i] };
@@ -251,7 +243,7 @@ int main(int argc, char* argv[])
       PRX_DEBUG_VAR_1(prx::key_formatter(k));
     }
   }
-  fg_logger_t friction_map_logger("pendulum_traj_tracking.log", ' ', "-");
+  fg_logger_t friction_map_logger("pendulum_traj_tracking_2.log", ' ', "-");
 
   gtsam::LevenbergMarquardtParams lm_params{ fg_params() };
   gtsam::LevenbergMarquardtOptimizer optimizer(ilqr_graph, ilqr_values, lm_params);
@@ -259,141 +251,109 @@ int main(int argc, char* argv[])
 
   auto linearized_fg = ilqr_graph.linearize(results);
   // gtsam::GaussianEliminationTree ilqr_elimination_tree(*linearized_fg, ilqr_ordering);
-  auto ilqr_elimination_tree = BlockEliminateSequential(*linearized_fg, ilqr_ordering);
+  // auto ilqr_elimination_tree = BlockEliminateSequential(*linearized_fg, ilqr_ordering);
 
-  std::size_t ci{ 0 };
-  for (auto c : *ilqr_elimination_tree)
-  {
-    PRX_DEBUG_VAR_1(ci);
-    PRX_DEBUG_VAR_1(c->R());
-    PRX_DEBUG_VAR_1(c->S());
-    PRX_DEBUG_VAR_1(c->getA());
-    PRX_DEBUG_VAR_1(c->nrFrontals());
+  // std::size_t ci{ 0 };
+  // for (auto c : *ilqr_elimination_tree)
+  // {
+  //   PRX_DEBUG_VAR_1(ci);
+  //   PRX_DEBUG_VAR_1(c->R());
+  //   PRX_DEBUG_VAR_1(c->S());
+  //   PRX_DEBUG_VAR_1(c->getA());
+  //   PRX_DEBUG_VAR_1(c->nrFrontals());
 
-    c->print("cond: ", prx::key_formatter);
-    // auto x = c->R().triangularView<Eigen::Upper>().solve(c->S());
-    // PRX_DEBUG_VAR_1(x);
-    ci++;
+  //   c->print("cond: ", prx::key_formatter);
+  //   // auto x = c->R().triangularView<Eigen::Upper>().solve(c->S());
+  //   // PRX_DEBUG_VAR_1(x);
+  //   ci++;
 
-    //   // c->print("ilqr conditional", prx::key_formatter);
-  }
+  //   //   // c->print("ilqr conditional", prx::key_formatter);
+  // }
 
   // remove the initial state as there is no K for it
-  local_goals_ks.erase(local_goals_ks.begin());
-  std::cout << "-~-~-~-~-~-~-~-~\n";
-  auto ilqr_ptr = ilqr_elimination_tree->end();
-  for (std::size_t i = 0; i < tot_ctrls;)
-  {
-    ilqr_ptr--;
-    // PRX_DEBUG_VAR_1(i);
-    auto cond = *ilqr_ptr;
-    prx::prx_symbol_t control_symbol = symbol_factory_t::create_symbol("control_symbol", i);
-    if (cond->nrFrontals() == 1 && cond->firstFrontalKey() == control_symbol)
-    {
-      PRX_DEBUG_VAR_1(prx::key_formatter(cond->firstFrontalKey()));
-      cond->print("cond: ", prx::key_formatter);
-      auto R_inv = cond->R().inverse();
-      auto Ti = cond->S();
-      X ki = (R_inv * Ti).transpose();
-      PRX_DEBUG_VAR_1(ki);
-      local_goals_ks[i].second = ki;
+  // local_goals_ks.erase(local_goals_ks.begin());
+  // std::cout << "-~-~-~-~-~-~-~-~\n";
+  // auto ilqr_ptr = ilqr_elimination_tree->end();
+  // for (std::size_t i = 0; i < tot_ctrls;)
+  // {
+  //   ilqr_ptr--;
+  //   // PRX_DEBUG_VAR_1(i);
+  //   auto cond = *ilqr_ptr;
+  //   prx::prx_symbol_t control_symbol = symbol_factory_t::create_symbol("control_symbol", i);
+  //   if (cond->nrFrontals() == 1 && cond->firstFrontalKey() == control_symbol)
+  //   {
+  //     PRX_DEBUG_VAR_1(prx::key_formatter(cond->firstFrontalKey()));
+  //     cond->print("cond: ", prx::key_formatter);
+  //     auto R_inv = cond->R().inverse();
+  //     auto Ti = cond->S();
+  //     X ki = (R_inv * Ti).transpose();
+  //     PRX_DEBUG_VAR_1(ki);
+  //     local_goals_ks[i].second = ki;
 
-      i++;
-    }
-  }
+  //     i++;
+  //   }
+  // }
   // std::cout << "local_goals_ks:\n";
-  const std::string local_goals_ks_filename{ prx::out_path + "local_goals_ks_" +
-                                             std::to_string(aorrt_query.start_state->at(0)) +
-                                             std::to_string(aorrt_query.start_state->at(1)) + ".txt" };
-  logger_t local_goals_ks_log(local_goals_ks_filename);
+  // for (auto p : local_goals_ks)
+  // {
+  //   std::cout << p.first.transpose() << "\t";
+  //   std::cout << p.second.transpose() << "\n";
+  // }
 
-  for (auto p : local_goals_ks)
-  {
-    local_goals_ks_log.log(p.first.transpose(), p.second.transpose());
-    // std::cout << p.first.transpose() << "\t";
-    // std::cout << p.second.transpose() << "\n";
-  }
+  // auto state_ks = ss->make_point();
+  // auto control_ks = cs->make_point();
 
-  auto state_ks = ss->make_point();
-  auto control_ks = cs->make_point();
-  // ss->copy(state_ks, aorrt_query.start_state->vector() + X(0.05, 0.05));
-  // PRX_DEBUG_VAR_1(state_ks);
+  // trajectory_t traj_i(ss);
+  // const std::string tracking_trajs(prx::out_path + "tracking_trajs.txt");
+  // const std::string gt_tracking_trajs(prx::out_path + "gt_tracking_trajs.txt");
+  // std::function<void()> compute_traj = [&]() {
+  //   std::size_t u_idx{ 0 };
+  //   std::size_t curr_k{ 0 };
+  //   double segment_duration{ 0.0 };
+  //   traj_i.copy_onto_back(state_ks);
+  //   for (std::size_t x_idx = 0; x_idx < aorrt_query.solution_traj.size() - 1; x_idx++)
+  //   {
+  //     const X x_traj{ aorrt_query.solution_traj[x_idx]->vector() };
+  //     const U u_plan{ aorrt_query.solution_plan[u_idx].control->vector() };
+  //     const double u_dur{ aorrt_query.solution_plan[u_idx].duration };
 
-  trajectory_t traj_i(ss);
-  std::function<void()> compute_traj = [&]() {
-    std::size_t u_idx{ 0 };
-    std::size_t curr_k{ 0 };
-    double segment_duration{ 0.0 };
-    traj_i.copy_onto_back(state_ks);
-    for (std::size_t x_idx = 0; x_idx < aorrt_query.solution_traj.size() - 1; x_idx++)
-    {
-      const X x_traj{ aorrt_query.solution_traj[x_idx]->vector() };
-      const U u_plan{ aorrt_query.solution_plan[u_idx].control->vector() };
-      const double u_dur{ aorrt_query.solution_plan[u_idx].duration };
+  //     const X ki{ local_goals_ks[curr_k].second };
+  //     const U du{ -ki.transpose() * (state_ks->vector() - x_traj) };
+  //     cs->copy(control_ks, u_plan + du);
+  //     sg->propagate(state_ks, control_ks, simulation_step, state_ks);
 
-      const X ki{ local_goals_ks[curr_k].second };
-      const U du{ -ki.transpose() * (state_ks->vector() - x_traj) };
-      // const U du{ U::Zero() };
-      cs->copy(control_ks, u_plan + du);
-      sg->propagate(state_ks, control_ks, simulation_step, state_ks);
+  //     segment_duration += simulation_step;
+  //     // Can't do segment_duration
+  //     if (std::fabs(segment_duration - u_dur) < std::pow(simulation_step, 2))
+  //     {
+  //       segment_duration = 0.0;
+  //       u_idx++;
+  //       curr_k++;
+  //     }
+  //     traj_i.copy_onto_back(ss);
+  //   }
+  //   // traj_i.to_file(tracking_trajs);
+  // };
 
-      segment_duration += simulation_step;
-      // Can't do segment_duration
-      if (std::fabs(segment_duration - u_dur) < std::pow(simulation_step, 2))
-      {
-        segment_duration = 0.0;
-        u_idx++;
-        curr_k++;
-      }
-      traj_i.copy_onto_back(ss);
-    }
-    // traj_i.to_file(tracking_trajs);
-  };
+  // // uniform_noise_t noise(-.5, .5);
+  // uniform_noise_t noise(-.25, .25);
 
-  // uniform_noise_t noise(-.5, .5);
-  uniform_noise_t noise(-.25, .25);
+  // ss->copy(state_ks, aorrt_query.start_state->vector());
+  // compute_traj();
 
-  ss->copy(state_ks, aorrt_query.start_state->vector());
-  compute_traj();
+  // traj_i.to_file(gt_tracking_trajs);
+  // traj_i.to_file(tracking_trajs, std::ofstream::app);
 
-  const std::string gt_tracking_trajs(prx::out_path + "gt_tracking_trajs.txt");
-  const std::string fail_tracking_trajs(prx::out_path + "fail_tracking_trajs.txt");
-  const std::string succ_tracking_trajs(prx::out_path + "succ_tracking_trajs.txt");
-
-  traj_i.to_file(gt_tracking_trajs);
-  traj_i.clear();
-  traj_i.to_file(fail_tracking_trajs, std::ofstream::trunc);
-  traj_i.to_file(succ_tracking_trajs, std::ofstream::trunc);
-
-  const std::string ss_es_filename{ prx::out_path + "/pend_tracking_ss_es.txt" };
-  const std::string fail_trajs_filename{ prx::out_path + "/pend_tracking_fail_trajs.txt" };
-  const std::string succ_trajs_filename{ prx::out_path + "/pend_tracking_succ_trajs.txt" };
-  logger_t ss_es_log(ss_es_filename);
-
-  std::ios_base::openmode tracking_trajs_openmode = std::ofstream::trunc;
-
-  for (int i = 0; i < 100000; ++i)
-  {
-    traj_i.clear();
-    ss->copy(state_ks, aorrt_query.start_state->vector());
-    noise.add_noise(state_ks);
-    ss_es_log.add_values(*state_ks, " ");
-    // PRX_DEBUG_VAR_1(state_ks);
-    compute_traj();
-    ss_es_log.add_values(*state_ks, " ");
-    if (space_t::euclidean_2d(aorrt_query.goal_state, state_ks) < 0.1)
-    {
-      ss_es_log.log(1);
-      traj_i.to_file(succ_trajs_filename, tracking_trajs_openmode);
-    }
-    else
-    {
-      ss_es_log.log(0);
-      traj_i.to_file(fail_trajs_filename, tracking_trajs_openmode);
-    }
-    // PRX_DEBUG_VAR_1(state_ks);
-    tracking_trajs_openmode = std::ofstream::app;
-  }
+  // std::ios_base::openmode tracking_trajs_openmode = std::ofstream::trunc;
+  // for (int i = 0; i < 10000; ++i)
+  // {
+  //   traj_i.clear();
+  //   ss->copy(state_ks, aorrt_query.start_state->vector());
+  //   noise.add_noise(state_ks);
+  //   compute_traj();
+  //   traj_i.to_file(tracking_trajs, tracking_trajs_openmode);
+  //   tracking_trajs_openmode = std::ofstream::app;
+  // }
 
   three_js_group_t* vis_group = new three_js_group_t({ plant }, { obstacle_list });
 

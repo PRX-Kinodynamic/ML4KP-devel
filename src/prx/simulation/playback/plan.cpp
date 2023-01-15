@@ -291,7 +291,7 @@ void plan_t::to_file(const std::string file_name, const std::ios_base::openmode 
   {
     ofs_map << steps[i].duration << " ";
     ofs_map << steps[i].control;
-    ofs_map << std::endl;
+    ofs_map << "\n";
   }
 
   ofs_map.close();
