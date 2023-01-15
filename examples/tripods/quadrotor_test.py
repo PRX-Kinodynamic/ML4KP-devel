@@ -8,8 +8,9 @@ def distance_function(a,b):
     return prx.space_t.euclidean_2d(a,b,0,2)
 
 max_height = 10
-start_height = 19
-time = 15.0
+start_height = 0.00
+start_vel = -20.00
+time = 5
 sim_step = 0.01
 
 if __name__ == "__main__":
@@ -42,14 +43,14 @@ if __name__ == "__main__":
     ss.set_bounds(lower_bounds,upper_bounds)
     cs.set_bounds([0.],[2.])
 
-    ss.copy_point_from_vector(start_state,[start_height,0.])
+    ss.copy_point_from_vector(start_state,[start_height,start_vel])
     ss.copy_from_point(start_state)
     ss.enforce_bounds()
     ss.copy_point_from_vector(goal_state,[max_height,0.])
 
     ctrl_pt = cs.make_point()
     u_goal = cs.make_point()
-    traj = [[start_height,0.]]
+    traj = [[start_height,start_vel]]
 
     # plant.linearize(goal_state,u_goal)
     Q = prx.matrix.Identity(2, 2)
@@ -79,6 +80,8 @@ if __name__ == "__main__":
     print(traj[-1])
 
     plt.figure(figsize=(8,8))
+    plt.xlim(-0.1,20.1)
+    plt.ylim(-20.1,2.1)
     plt.plot(traj[:,0],traj[:,1],color='black')
     plt.scatter(traj[0,0],traj[0,1],color='green')
     plt.scatter(traj[-1,0],traj[-1,1],color='red')

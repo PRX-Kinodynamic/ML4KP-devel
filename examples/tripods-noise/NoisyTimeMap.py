@@ -195,8 +195,8 @@ class NoisyTimeMap:
         self.ss.copy_from_point(self.start_state)
         self.ss.enforce_bounds()
 
-        if self.noisy_plant == None:
-            self.get_noisy_system()
+        # if self.noisy_plant == None:
+        #     self.get_noisy_system()
         
         if self.controller == None:
             self.Q = prx.matrix.Identity(2, 2)
@@ -204,7 +204,7 @@ class NoisyTimeMap:
             self.controller_base = prx.lqr(self.noisy_plant, self.Q, self.R, "LQR")
             self.controller_base.set_goal(self.goal_state, self.u_goal)
             self.controller_base.compute_K()
-            self.get_noisy_controller()
+            # self.get_noisy_controller()
         
         total_time = self.duration
 
