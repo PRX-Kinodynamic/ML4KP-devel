@@ -340,6 +340,16 @@ class NoisyTimeMap:
         # print("After propagate: ", self.end_state)
         return self.end_state.to_list()
 
+    def pendulum_trajectory_ilqr(self, X, traj):
+        if hasattr(self, 'nominal_trajs'): 
+            self.nominal_trajs = {}
+        if traj not in self.nominal_trajs: 
+            self.nominal_trajs[traj] = prx.trajectory(ss);
+            self.nominal_trajs[traj].from_file(traj);
+        print(self.nominal_trajs[traj])
+
+
+
     def lander_analytical(self, X):
         self.ss.copy_point_from_vector(self.start_state,X)
         if self.x_0_noise is not None:
