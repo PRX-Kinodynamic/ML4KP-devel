@@ -13,6 +13,7 @@
 #include "prx/planning/planner_functions/planner_functions.hpp"
 #include "prx/planning/planner_statistics.hpp"
 #include "prx/planning/world_model.hpp"
+#include "prx/planning/noisy_world_model.hpp"
 
 #include "prx/simulation/controllers/custom_controller.hpp"
 #include "prx/simulation/general/condition_check.hpp"
@@ -99,8 +100,8 @@ double compute_weight(const state_t& theta_t_pos, const state_t& theta_i_pos, co
   const double delta_x{ std::fabs(Bx - Xx) };
   const double delta_y{ std::fabs(By - Xy) };
 
-  // const double D{ std::sqrt(length * length + length * length) };
-  const double D{ length };
+  const double D{ std::sqrt(length * length + length * length) };
+  // const double D{ length };
   return std::max(1.0 - ((delta_x + delta_y) / D), 0.0);
 }
 
@@ -232,7 +233,7 @@ gtsam::NonlinearFactorGraph compute_thetas_graph(const double x_max, const doubl
 
 int main(int argc, char* argv[])
 {
-  auto params = param_loader("executables/factor_graphs/fm_basis.yaml", argc, argv);
+  auto params = param_loader("executables/factor_graphs/fm_basis_noise.yaml", argc, argv);
 
   simulation_step = params["simulation_step"].as<double>();
   init_random(params["random_seed"].as<int>());
@@ -245,9 +246,12 @@ int main(int argc, char* argv[])
   auto obstacle_list = obstacles.second;
   auto obstacle_names = obstacles.first;
 
+  const double state_noise_stddev{ params["state_noise_stddev"].as<double>() };
+  const double control_noise_stddev{ params["control_noise_stddev"].as<double>() };
   auto system = system_factory_t::create_system(plant_name, plant_path);
   auto plant = std::dynamic_pointer_cast<plant_t>(system);
   world_model_t world_model({ plant }, {});
+  // noisy_world_model_t<gaussian_noise_t> world_model({ plant }, {}, 0, state_noise_stddev);
   world_model.create_context("context", { plant_name }, {});
 
   auto context = world_model.get_context("context");
@@ -269,6 +273,7 @@ int main(int argc, char* argv[])
   const std::string fm_out_dir = out_path + "friction_maps/";
   std::unordered_map<std::string, std::string> files;
   files["traj_real_file"] = fm_out_dir + "fmbasis_trajs_real.txt";
+  files["traj_noise_file"] = fm_out_dir + "fmbasis_trajs_noise.txt";
   files["plan_real_file"] = fm_out_dir + "fmbasis_plans_real.txt";
   files["traj_fg_file"] = fm_out_dir + "fmbasis_trajs_fg.txt";
   files["fg_graph_file"] = fm_out_dir + "fmbasis_factor_graph.dot";
@@ -413,8 +418,9 @@ int main(int argc, char* argv[])
   const double frequency{ params["frequency"].as<double>() };
   double curr_freq{ frequency };
 
-  auto n_plant = new prx::noisy_plant_t<prx::gaussian_noise_t>(plant, 0, params["noise_var"].as<double>());
-  auto n_ss = n_plant->get_state_space();
+  // auto n_plant = new prx::noisy_plant_t<prx::gaussian_noise_t>(plant, 0, state_noise_stddev);
+  // auto n_ss = n_plant->get_state_space();
+  prx::gaussian_noise_t ctrl_noise(0, control_noise_stddev);
 
   Eigen::Vector4d U{ Eigen::Vector4d::Zero() };
   const double goal_region_radius{ params["goal_region_radius"].as<double>() };
@@ -422,7 +428,7 @@ int main(int argc, char* argv[])
   omnibot_controller -> custom_control_function = [&](const space_point_t& goal, const space_point_t& control) 
   {
     curr_freq += simulation_step;
-    n_ss -> copy_to(current_state_vec);
+    ss -> copy_to(current_state_vec);
     const Eigen::Vector3d xd{ goal->vector() - current_state_vec};
     if (xd.norm() < goal_region_radius)
     {
@@ -430,7 +436,12 @@ int main(int argc, char* argv[])
     }
     else if (curr_freq >= frequency)
     {
-      U = (inverse * xd).normalized() * 128;
+      U = (inverse * xd).normalized() ;
+    // PRX_DEBUG_VAR_2("before",U.transpose());
+      // ctrl_noise.add_noise(U);
+    // PRX_DEBUG_VAR_2("After", U.transpose());
+      U *=128;
+      // U = (inverse * xd).normalized() * 128;
       curr_freq = 0;
     }
     cs -> copy(control, U);
@@ -442,10 +453,12 @@ int main(int argc, char* argv[])
 
   trajectory_t traj_real(ss);
   trajectory_t traj_fg(ss);
-  trajectory_t accum_traj(ss);
+  trajectory_t accum_traj_real(ss);
+  trajectory_t accum_traj_noise(ss);
   traj_real.clear();
   traj_fg.clear();
-  accum_traj.clear();
+  accum_traj_real.clear();
+  accum_traj_noise.clear();
   plan_t accum_plan(cs);
 
   const int num_trajs{ params["num_trajs"].as<int>() };
@@ -469,9 +482,9 @@ int main(int argc, char* argv[])
 
   const int increment = static_cast<int>(frequency / simulation_step);
   std::cout << "increment: " << increment << std::endl;
-  auto x_sigma = gtsam::noiseModel::Isotropic::Sigma(ss_dim, 1e-3);
+  auto x_sigma = gtsam::noiseModel::Isotropic::Sigma(ss_dim, state_noise_stddev);
   auto dm = gtsam::noiseModel::Isotropic::Sigma(ss_dim, 1e-0);
-  auto cs_dm = gtsam::noiseModel::Isotropic::Sigma(cs_dim, 1e-3);
+  auto cs_dm = gtsam::noiseModel::Isotropic::Sigma(cs_dim, control_noise_stddev);
   auto t_dm = gtsam::noiseModel::Isotropic::Sigma(1, 1e-3);
   auto p_cm = gtsam::noiseModel::Isotropic::Sigma(3, 1e0);
   auto ff_nm = gtsam::noiseModel::Isotropic::Sigma(1, 1e0);
@@ -483,7 +496,8 @@ int main(int argc, char* argv[])
   int fg_iters{ 0 };
   space_point_t start_state = ss->make_point();
   const int initial_goal{ params["initial_goal"].as<int>() };
-  PRX_DEBUG_PRINT;
+  gaussian_noise_t state_noise(0, state_noise_stddev);
+
   for (int i = initial_goal; i < num_trajs; ++i)
   {
     std::cout << "Going into trajectory: " << i << "..." << std::endl;
@@ -497,7 +511,6 @@ int main(int argc, char* argv[])
     omnibot_controller->get_plan()->clear();
 
     ss->copy(start_state, goals[i % goals.size()]);
-    n_ss->add_noise(start_state);
     ss->copy(goal, goals[(i + 1) % goals.size()]);
     omnibot_controller->set_goal(goal);
 
@@ -523,12 +536,20 @@ int main(int argc, char* argv[])
     basis_vector_t big_vector = get_basis_vector(frictions_grid);
     weights_values.insert(param_symbol_basis, big_vector);
     weights_graph.addPrior(param_symbol_basis, big_vector, basis_nm);
+
+    accum_traj_real += traj_real;
+    accum_plan += plan;
+    // add noise to the whole trajectory
+    state_noise.add_noise(traj_real);
+
+    accum_traj_noise += traj_real;
+
     for (unsigned xi = 0; xi < traj_real.size(); xi += increment)
     {
       if (xi < traj_real.size() - increment - 1)
       {
-        const Eigen::Vector3d x0{ traj_real[xi]->vector() };
-        const Eigen::Vector3d x1{ traj_real[xi + increment]->vector() };
+        // const Eigen::Vector3d x0{ traj_real[xi]->vector() };
+        // const Eigen::Vector3d x1{ traj_real[xi + increment]->vector() };
         // const double y0{ traj_real[xi]->vector()[1] };
         // const double x1{ traj_real[xi + increment]->vector()[0] };
         // const double y1{ traj_real[xi + increment]->vector()[1] };
@@ -542,13 +563,16 @@ int main(int argc, char* argv[])
 
         thetas_used[param_symbol] = state_symbol;
 
+        Eigen::VectorXd ctrl_i{ plan[xi].control->vector<>() };
+        ctrl_noise.add_noise(ctrl_i);
+
         Eigen::VectorXd t_vec{ (Eigen::VectorXd(1) << plan[xi].duration * increment).finished() };
         trajectory_graph.addPrior(state_symbol, traj_real[xi]->vector<>(), x_sigma);
-        trajectory_graph.addPrior(control_symbol, plan[xi].control->vector<>(), cs_dm);
+        trajectory_graph.addPrior(control_symbol, ctrl_i, cs_dm);
         trajectory_graph.addPrior(time_symbol, t_vec, t_dm);
 
         trajectory_values.insert(state_symbol, traj_real[xi]->vector<>());
-        trajectory_values.insert(control_symbol, plan[xi].control->vector<>());
+        trajectory_values.insert(control_symbol, ctrl_i);
         trajectory_values.insert(time_symbol, t_vec);
         trajectory_values.insert(param_symbol, (Eigen::VectorXd(1) << 1).finished());
 
@@ -606,9 +630,6 @@ int main(int argc, char* argv[])
     sg->propagate(start_state, plan, traj_fg);
     std::cout << "traj_fg: " << traj_fg.size() << std::endl;
     traj_fg.to_file(files["traj_fg_file"], std::ofstream::app);
-
-    accum_traj += traj_real;
-    accum_plan += plan;
   }
   // results.print("Results: ", prx::key_formatter);
 
@@ -630,6 +651,7 @@ int main(int argc, char* argv[])
 
   // This are not "Real" trajectories/plan, is all appended into one and might
   // have discontinuities. Only used for dumping into a file.
-  accum_traj.to_file(files["traj_real_file"], std::ofstream::app);
-  accum_plan.to_file(files["plan_real_file"], std::ofstream::app);
+  accum_traj_real.to_file(files["traj_real_file"], std::ofstream::trunc);
+  accum_traj_noise.to_file(files["traj_noise_file"], std::ofstream::trunc);
+  accum_plan.to_file(files["plan_real_file"], std::ofstream::trunc);
 }

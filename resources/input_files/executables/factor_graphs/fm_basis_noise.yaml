@@ -26,4 +26,5 @@ initial_goal: 0
 initial_friction: 1.0
 
 # noise_var: 0.5
-noise_var: 0.0
+state_noise_stddev: 0.05
+control_noise_stddev: 2

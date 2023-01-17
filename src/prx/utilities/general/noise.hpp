@@ -56,39 +56,45 @@ public:
     }
   }
 
-  template <class T, typename = std::enable_if_t<std::is_arithmetic<T>::value>>
-  T add_noise(const T val) const
+  // template <class T, typename = std::enable_if_t<std::is_arithmetic<T>::value>>
+  template <typename T, std::enable_if_t<std::is_arithmetic<T>::value && !prx::utils::is_ptr_type<T>{}, bool> = true>
+  void add_noise(T& val) const
   {
-    return val + rnd(generator);
+    val += rnd(generator);
   }
 
   void add_noise(const space_t* space) const
   {
     for (int i = 0; i < space->size(); ++i)
     {
-      space->at(i) = add_noise(space->at(i));
+      add_noise(space->at(i));
     }
   }
 
-  template <typename T>  // Add template checks to generalize to containers
-  void add_noise(std::vector<T>& container) const
+  // template <typename T>  // Add template checks to generalize to containers
+  template <class T, typename = std::enable_if_t<prx::utils::is_iterable<T>::value>>
+  void add_noise(T& container) const
   {
     for (int i = 0; i < container.size(); ++i)
     {
-      container[i] += rnd(generator);
+      // container[i] = add_noise(container[i]);
+      add_noise(container[i]);
     }
   }
 
-  void add_noise(Eigen::Ref<Eigen::MatrixXd> mat) const
+  template <typename T, int R, int C>
+  void add_noise(Eigen::Matrix<T, R, C>& mat) const
   {
+    // PRX_DEBUG_VAR_1(mat.transpose());
     // There might be a better (faster) way of doing this
-    for (int i = 0; i < mat.rows(); ++i)
+    for (Eigen::Index i = 0; i < mat.rows(); ++i)
     {
-      for (int j = 0; j < mat.cols(); ++j)
+      for (Eigen::Index j = 0; j < mat.cols(); ++j)
       {
         mat(i, j) += rnd(generator);
       }
     }
+    // PRX_DEBUG_VAR_1(mat.transpose());
   }
 
 protected:
