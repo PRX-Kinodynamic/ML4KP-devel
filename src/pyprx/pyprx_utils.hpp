@@ -44,6 +44,32 @@ using namespace boost::python;
 #define PRX_ITERABLE_WRAPPER_NONSTR(CLASS, NAME) class_<CLASS>(NAME).def(vector_indexing_suite<CLASS>());
 
 #define SINGLE_ARG(...) __VA_ARGS__
+
+// TODO: put everything inside these namespaces
+namespace pyprx
+{
+template <typename T>
+std::string stream_to_str(T& obj)
+{
+  std::stringstream ss;
+  ss << obj;
+  return ss.str();
+}
+
+// Haven't been able to bind operator[] directly, so this makes it almost the same
+template <typename T, typename R>
+R& wrapper_subscript_oper_to_get_item(T& obj, const std::size_t& idx)
+{
+  return obj[idx];
+}
+
+template <typename T, typename R>
+void wrapper_subscript_oper_to_set_item(T& obj, const std::size_t& idx, R data)
+{
+  obj[idx] = data;
+}
+
+}  // namespace pyprx
 /*
  * Iterating functions
  */

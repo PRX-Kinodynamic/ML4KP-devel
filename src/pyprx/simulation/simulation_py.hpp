@@ -1,5 +1,6 @@
 #include <iostream>
 #include <boost/python.hpp>
+#include "prx/simulation/defs.hpp"
 #include "pyprx/simulation/plant_py.hpp"
 #include "pyprx/simulation/system_py.hpp"
 #include "pyprx/simulation/controller_py.hpp"
@@ -11,19 +12,40 @@
 #include "pyprx/simulation/controllers/controllers_py.hpp"
 #include "pyprx/simulation/collision_checking/collision_checking_py.hpp"
 
-void pyprx_simulation_py()
+namespace pyprx
 {
-	pyprx_simulation_system_py();
-	pyprx_simulation_plant();
-	pyprx_simulation_system_group_py();
-	pyprx_simulation_collision_checking_py();
-	
-	pyprx_simulation_controller();
-	pyprx_simulation_controllers();
+namespace simulation
+{
 
-	pyprx_simulation_plants();
-	pyprx_simulation_playback_py();
-
-	pyprx_simulation_loaders();
-	pyprx_simulation_system_factory_py();
+double get_simulation_step()
+{
+  return prx::simulation_step;
 }
+
+void set_simulation_step(const double& ss)
+{
+  prx::simulation_step = ss;
+}
+
+void bindings()
+{
+  def("set_simulation_step", &set_simulation_step);
+  def("get_simulation_step", &get_simulation_step);
+
+  system::bindings();
+  pyprx_simulation_plant();
+  system_group::bindings();
+  pyprx_simulation_collision_checking_py();
+
+  pyprx_simulation_controller();
+  pyprx_simulation_controllers();
+
+  pyprx_simulation_plants();
+  playback::bindings();
+
+  pyprx_simulation_loaders();
+  pyprx_simulation_system_factory_py();
+}
+
+}  // namespace simulation
+}  // namespace pyprx
