@@ -7,8 +7,14 @@ from inspect import currentframe, getframeinfo
 def distance_function(a,b):
     return prx.space_t.euclidean_2d(a,b,0,2)
 
+max_height = 10
+start_height = 0.00
+start_vel = -20.00
+time = 5
+sim_step = 0.01
+
 if __name__ == "__main__":
-    prx.set_simulation_step(0.01)
+    prx.set_simulation_step(sim_step)
 
     plant_name = "1D_Quadrotor"
     plant_path = "1D_Quadrotor"
@@ -30,41 +36,53 @@ if __name__ == "__main__":
     current     = ss.make_point()
     end_state   = ss.make_point()
 
-    lower_bounds = [0,-10.]
-    upper_bounds = [100, 10.]
+    # lower_bounds = [0,-200.]
+    # upper_bounds = [200, 20.]
+    lower_bounds = [0,-20.]
+    upper_bounds = [20, 2.]
     ss.set_bounds(lower_bounds,upper_bounds)
+    cs.set_bounds([0.],[2.])
 
-    ss.copy_point_from_vector(start_state,[50.,0.])
+    ss.copy_point_from_vector(start_state,[start_height,start_vel])
     ss.copy_from_point(start_state)
-    ss.copy_point_from_vector(goal_state,[50.,0.])
+    ss.enforce_bounds()
+    ss.copy_point_from_vector(goal_state,[max_height,0.])
 
     ctrl_pt = cs.make_point()
     u_goal = cs.make_point()
-    traj = [[50.,0.]]
+    traj = [[start_height,start_vel]]
 
-    print(getframeinfo(currentframe()).filename, getframeinfo(currentframe()).lineno)
     # plant.linearize(goal_state,u_goal)
     Q = prx.matrix.Identity(2, 2)
     v_goal = prx.vector.Zero(2)
-    v_goal[0] = 50.
+    v_goal[0] = max_height
     R = prx.matrix.Identity(1, 1)
     
-    print(getframeinfo(currentframe()).filename, getframeinfo(currentframe()).lineno)
+    switch = False
+    ss.copy_to_point(end_state)
+    for i in range(int(time*1./sim_step)+1):
+        if not switch and end_state[0] < 0.25 * max_height:
+            lqr = prx.lqr(plant,Q,R,"LQR")
+            lqr.set_goal(v_goal)
+            lqr.compute_K()
+            lqr.compute_controls()
+            cs.enforce_bounds()
+            switch = True
+        if switch and end_state[0] > max_height:
+            cs.copy_from_point(ctrl_pt)
+            switch = False
+        plant.propagate(0.01)
+        ss.copy_to_point(end_state)
+        traj.append(end_state.to_list())
+        
 
-    lqr = prx.lqr(plant,Q,R,"LQR")
-    lqr.set_goal(v_goal)
-    lqr.compute_K()
-    K = lqr.get_K()
-    print(K)
+    traj = np.array(traj)
+    print(traj[-1])
 
-    # for i in range(1000):
-    #     cs.copy_from_point(ctrl_pt)
-    #     plant.propagate(0.01)
-    #     ss.copy_to_point(end_state)
-    #     traj.append(end_state.to_list())
-
-    # traj = np.array(traj)
-
-    # plt.figure(figsize=(8,8))
-    # plt.plot(traj[:,0],traj[:,1],color='black')
-    # plt.show()
+    plt.figure(figsize=(8,8))
+    plt.xlim(-0.1,20.1)
+    plt.ylim(-20.1,2.1)
+    plt.plot(traj[:,0],traj[:,1],color='black')
+    plt.scatter(traj[0,0],traj[0,1],color='green')
+    plt.scatter(traj[-1,0],traj[-1,1],color='red')
+    plt.show()

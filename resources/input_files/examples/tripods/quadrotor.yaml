@@ -1,0 +1,11 @@
+random_seed: 11101993
+simulation_step: 0.01
+
+plant: !file "plants/quadrotor_1d.yaml"
+environment: "environments/empty.yaml"
+
+goal_region_radius: 0.1
+
+duration: 1.0
+state_increment: 0.1
+system_name: "quadrotor_lqr"
