@@ -11,9 +11,9 @@
 BOOST_PYTHON_MODULE(libpyDirtMP)  // Name here must match the name of the final shared library, i.e. mantid.dll or
                                   // mantid.so
 {
-  pyprx_stdlib_py();
-  pyprx_utilities_py();
+  pyprx::stdlib::bindings();
+  pyprx::utilities::bindings();
   pyprx::simulation::bindings();
-  pyprx_planning_py();
-  pyprx_visualization_py();
+  pyprx::planning::bindings();
+  pyprx::visualization::bindings();
 }

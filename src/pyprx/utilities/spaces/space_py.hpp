@@ -7,6 +7,15 @@
 
 using namespace boost::python;
 
+namespace pyprx
+{
+namespace utilities
+{
+namespace spaces
+{
+namespace space
+{
+
 int get_dim_wrapper(prx::space_point_t p)
 {
   return p->get_dim();
@@ -226,7 +235,7 @@ void py_copy_2(const prx::space_t* space, boost::python::list& py_list_to, const
   vector_to_pyobject(py_list_to, vec_aux_to);
 }
 
-void pyprx_utilities_spaces_space()
+void bindings()
 {
   // typedef std::shared_ptr<space_snapshot_t> space_point_t;
   class_<prx::space_point_t>("space_point", no_init)
@@ -332,3 +341,8 @@ void pyprx_utilities_spaces_space()
       // &prx::space_t::) .def("", &prx::space_t::)
       ;
 }
+
+}  // namespace space
+}  // namespace spaces
+}  // namespace utilities
+}  // namespace pyprx

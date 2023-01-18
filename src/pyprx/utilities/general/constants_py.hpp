@@ -4,7 +4,16 @@
 
 using namespace boost::python;
 
-void pyprx_utilities_general_constants()
+namespace pyprx
+{
+namespace utilities
+{
+namespace general
+{
+namespace constants
+{
+
+void bindings()
 {
   // Var("EPSILON", PRX_EPSILON);
   scope().attr("PRX_EPSILON") = PRX_EPSILON;
@@ -22,3 +31,7 @@ void pyprx_utilities_general_constants()
       .value("FINAL_STEP", prx::FINAL_STEP)
       .export_values();
 }
+}  // namespace constants
+}  // namespace general
+}  // namespace utilities
+}  // namespace pyprx

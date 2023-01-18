@@ -33,18 +33,18 @@ void bindings()
   def("get_simulation_step", &get_simulation_step);
 
   system::bindings();
-  pyprx_simulation_plant();
+  plant::bindings();
   system_group::bindings();
-  pyprx_simulation_collision_checking_py();
+  collision_checking::bindings();
 
-  pyprx_simulation_controller();
-  pyprx_simulation_controllers();
+  controller::bindings();
+  controllers::bindings();
 
-  pyprx_simulation_plants();
+  plants::bindings();
   playback::bindings();
 
-  pyprx_simulation_loaders();
-  pyprx_simulation_system_factory_py();
+  loaders::bindings();
+  system_factory::bindings();
 }
 
 }  // namespace simulation

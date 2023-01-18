@@ -69,7 +69,6 @@ void wrapper_subscript_oper_to_set_item(T& obj, const std::size_t& idx, R data)
   obj[idx] = data;
 }
 
-}  // namespace pyprx
 /*
  * Iterating functions
  */
@@ -218,3 +217,4 @@ boost::python::list returning_a_pylist(const T& v)
   boost::python::list l(iter);
   return l;
 }
+}  // namespace pyprx

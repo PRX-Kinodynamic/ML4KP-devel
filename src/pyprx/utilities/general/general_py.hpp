@@ -6,11 +6,22 @@
 #include "pyprx/utilities/general/param_loader_py.hpp"
 #include "pyprx/utilities/general/noise_py.hpp"
 
-void pyprx_utilities_general()
+namespace pyprx
 {
-	pyprx_utilities_general_constants();
-	pyprx_utilities_general_transforms();
-	pyprx_utilities_general_random();
-	pyprx_utilities_general_param_loader();
-	pyprx_utilities_general_noise();
+namespace utilities
+{
+namespace general
+{
+
+void bindings()
+{
+  constants::bindings();
+  transforms::bindings();
+  random::bindings();
+  param_loader::bindings();
+  noise::bindings();
 }
+
+}  // namespace general
+}  // namespace utilities
+}  // namespace pyprx

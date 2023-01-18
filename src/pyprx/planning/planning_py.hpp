@@ -8,12 +8,19 @@
 #include "pyprx/planning/noisy_world_model_py.hpp"
 
 using namespace boost::python;
-void pyprx_planning_py()
+
+namespace pyprx
 {
-  pyprx_planning_condition_check_py();
-  pyprx_planning_planner_functions_py();
-  pyprx_planning_planner_statistics_py();
-  pyprx_planning_planners_py();
-  pyprx_planning_world_model_py();
-  pyprx_planning_noisy_world_model_py();
+namespace planning
+{
+void bindings()
+{
+  condition_check::bindings();
+  planner_functions::bindings();
+  planner_statistics::bindings();
+  planners::bindings();
+  world_model::bindings();
+  noisy_world_model::bindings();
 }
+}  // namespace planning
+}  // namespace pyprx

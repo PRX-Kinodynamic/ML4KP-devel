@@ -2,7 +2,15 @@
 #include <boost/python.hpp>
 #include "pyprx/visualization/three_js_group_py.hpp"
 
-void pyprx_visualization_py()
+namespace pyprx
 {
-	pyprx_visualization_three_js_group_py();
+namespace visualization
+{
+
+void bindings()
+{
+  three_js_group::bindings();
 }
+
+}  // namespace visualization
+}  // namespace pyprx

@@ -2,8 +2,17 @@
 #include <boost/python.hpp>
 #include "pyprx/simulation/collision_checking/collision_group_py.hpp"
 
-void pyprx_simulation_collision_checking_py()
+namespace pyprx
 {
-	pyprx_simulation_collision_checking_collision_group_py();
+namespace simulation
+{
+namespace collision_checking
+{
+void bindings()
+{
+  collision_group::bindings();
 }
 
+}  // namespace collision_checking
+}  // namespace simulation
+}  // namespace pyprx

@@ -8,6 +8,16 @@
 #include <Eigen/Core>
 
 using namespace boost::python;
+
+namespace pyprx
+{
+namespace utilities
+{
+namespace general
+{
+namespace transforms
+{
+
 typedef Eigen::Matrix<ptrdiff_t, 1, 1>::Index Index;
 typedef Eigen::Matrix<double, 1, 1>::Scalar Scalar;
 typedef Eigen::AngleAxis<double> AngleAxisT;
@@ -195,7 +205,7 @@ std::string transform_to_str(prx::transform_t obj)
   return iss.str();
 }
 
-void pyprx_utilities_general_transforms()
+void bindings()
 {
   // using n_vector_t = Eigen::Matrix<double, N, 1>;
   // template <int N>
@@ -285,3 +295,8 @@ void pyprx_utilities_general_transforms()
       .def("translation", &get_translation)
       .def("__str__", &transform_to_str);
 }
+
+}  // namespace transforms
+}  // namespace general
+}  // namespace utilities
+}  // namespace pyprx

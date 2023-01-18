@@ -5,10 +5,18 @@
 #include "pyprx/utilities/geometry/geometry_py.hpp"
 #include "pyprx/utilities/data_structures/data_structures_py.hpp"
 
-void pyprx_utilities_py()
+namespace pyprx
 {
-	pyprx_utilities_spaces();
-	pyprx_utilities_general();
-	pyprx_utilities_geometry_py();
-	pyprx_utilities_data_structures_py();
+namespace utilities
+{
+
+void bindings()
+{
+  spaces::bindings();
+  general::bindings();
+  geometry::bindings();
+  data_structures::bindings();
 }
+
+}  // namespace utilities
+}  // namespace pyprx
