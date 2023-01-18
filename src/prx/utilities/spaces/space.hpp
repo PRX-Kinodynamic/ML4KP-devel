@@ -274,12 +274,10 @@ public:
   }
 
   /**
-   * @brief Add two points (vector addition)
-   * @details Element-wise addition of two points belonging to the same space.
+   * @brief Check if two points are equal (with PRX_EPSILON)
    *
    * @param point1 First point
    * @param point2 Second point
-   * @param point3 Resulting point
    *
    */
   bool equal_points(const space_point_t& point1, const space_point_t& point2) const;

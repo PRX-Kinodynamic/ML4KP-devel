@@ -340,16 +340,172 @@ class NoisyTimeMap:
         # print("After propagate: ", self.end_state)
         return self.end_state.to_list()
 
-    def pendulum_trajectory_ilqr(self, X, traj):
-        if hasattr(self, 'nominal_trajs'): 
-            self.nominal_trajs = {}
-        if traj not in self.nominal_trajs: 
-            self.nominal_trajs[traj] = prx.trajectory(ss);
-            self.nominal_trajs[traj].from_file(traj);
-        print(self.nominal_trajs[traj])
+    def pendulum_trajectory_ilqr(self, X):
+        if not hasattr(self, 'nominal_traj'): 
+            self.nominal_traj = prx.trajectory(self.ss);
+            self.nominal_plan = prx.plan(self.cs);
+
+            traj_file = prx.input_path + str(self.params["nominal_traj"])
+            plan_file = prx.input_path + str(self.params["nominal_plan"])
+            lgoals_ks = prx.input_path + str(self.params["local_goals_ks"])
+
+            self.ctrl[0] = 0;
+
+            self.plan = prx.plan(self.cs)
+            self.plan.append_onto_back(self.simulation_step) # add one step
+
+            self.nominal_traj.from_file(traj_file);
+            self.nominal_plan.from_file(plan_file);
+            self.nominal_plan.expand();
+            # self.nominal_plan.append_onto_back(0.0) # add one "empty" step so that nominal plan & traj are of the same size
+            
+            self.resulting_trajectory = prx.trajectory(self.ss)
 
 
+            self.ks = [];
+            self.ks_duration = [];
+            self.local_goals = [];
+            with open(lgoals_ks, 'r') as file:
+                i = 0
+                for line in file:
+                    vals = line.split()
 
+                    self.ks.append([]);
+                    self.local_goals.append([]);
+
+                    self.local_goals[i].append(float(vals[0])) 
+                    self.local_goals[i].append(float(vals[1])) 
+
+                    self.ks[i].append(float(vals[2])) 
+                    self.ks[i].append(float(vals[3]))
+                    self.ks_duration.append(float(vals[4]))
+
+                    i += 1
+
+        self.resulting_trajectory.clear()
+        start_state = self.nominal_traj.front()
+
+        self.start_state[0] = start_state[0] + X[0]
+        self.start_state[1] = start_state[1] + X[1]
+
+        segment_duration = 0
+        current_k = 0
+
+        for ti in range(0,len(self.nominal_plan)):
+
+            x_i = np.array(self.nominal_traj[ti]);
+            xhat = np.array(self.start_state)
+            ctrl_i = np.array( self.nominal_plan[ti].control)
+            duration_i =  self.nominal_plan[ti].duration
+
+            ki = np.array(self.ks[current_k])
+
+            du = np.matmul(-ki, xhat - x_i) ;
+            # print("du:", ki, xhat,x_i, du)
+
+            ctrl_hat = ctrl_i + du;
+
+            self.cs.copy(self.plan[0].control, ctrl_hat)
+            self.plan.duration = self.simulation_step
+
+            self.context.system_group.propagate(self.start_state, self.plan, self.start_state);
+            self.resulting_trajectory.copy_onto_back(self.start_state)
+            segment_duration += self.simulation_step
+
+            if (np.abs(segment_duration - self.ks_duration[current_k]) < self.simulation_step**2):
+              segment_duration = 0.0;
+              current_k += 1;
+
+        return self.resulting_trajectory.back().to_list();
+
+    
+    def pendulum_trajectory_segment(self, X):
+        if not hasattr(self, 'nominal_traj'): 
+            self.nominal_traj = prx.trajectory(self.ss);
+            self.nominal_plan = prx.plan(self.cs);
+
+            traj_file = prx.input_path + str(self.params["nominal_traj"])
+            plan_file = prx.input_path + str(self.params["nominal_plan"])
+            lgoals_ks = prx.input_path + str(self.params["local_goals_ks"])
+
+            self.ctrl[0] = 0;
+
+            self.plan = prx.plan(self.cs)
+            self.plan.append_onto_back(self.simulation_step) # add one step
+
+            self.nominal_traj.from_file(traj_file);
+            self.nominal_plan.from_file(plan_file);
+            self.nominal_plan.expand();
+            # self.nominal_plan.append_onto_back(0.0) # add one "empty" step so that nominal plan & traj are of the same size
+            
+            self.resulting_trajectory = prx.trajectory(self.ss)
+
+            self.ks = [];
+            self.ks_duration = [];
+            self.local_goals = [];
+            with open(lgoals_ks, 'r') as file:
+                i = 0
+                for line in file:
+                    vals = line.split()
+
+                    self.ks.append([]);
+                    self.local_goals.append([]);
+
+                    self.local_goals[i].append(float(vals[0])) 
+                    self.local_goals[i].append(float(vals[1])) 
+
+                    self.ks[i].append(float(vals[2])) 
+                    self.ks[i].append(float(vals[3]))
+                    self.ks_duration.append(float(vals[4]))
+
+                    i += 1
+        segment = int(self.params["segment"])
+        assert 0 < segment, "Segment must be greater than 0 " 
+        assert segment < len(self.ks_duration), "Segment must be less than %d".format(len(self.ks_duration)) 
+
+        self.resulting_trajectory.clear()
+
+        start_state_idx = 0;
+        for s in range(segment):
+            s_dur = self.ks_duration[s]
+            start_state_idx += int(s_dur * 100)
+
+        start_state = self.nominal_traj[start_state_idx]
+
+        self.start_state[0] = start_state[0] + X[0]
+        self.start_state[1] = start_state[1] + X[1]
+
+        segment_duration = 0
+        current_k = segment
+        self.resulting_trajectory.copy_onto_back(self.start_state)
+
+        print(int(self.ks_duration[segment]*100))
+        for ti in range(start_state_idx,start_state_idx+int(self.ks_duration[segment]*100)):
+            x_i = np.array(self.nominal_traj[ti]);
+            xhat = np.array(self.start_state)
+            ctrl_i = np.array( self.nominal_plan[ti].control)
+            duration_i =  self.nominal_plan[ti].duration
+
+            ki = np.array(self.ks[current_k])
+
+            du = np.matmul(-ki, xhat - x_i) ;
+
+            ctrl_hat = ctrl_i + du;
+
+            self.cs.copy(self.plan[0].control, ctrl_hat)
+            self.plan.duration = self.simulation_step
+
+            self.context.system_group.propagate(self.start_state, self.plan, self.start_state);
+            self.resulting_trajectory.copy_onto_back(self.start_state)
+            segment_duration += self.simulation_step
+
+            if (np.abs(segment_duration - self.ks_duration[current_k]) < self.simulation_step**2):
+              segment_duration = 0.0;
+              current_k += 1;
+
+        return self.resulting_trajectory.back().to_list();
+
+    
     def lander_analytical(self, X):
         self.ss.copy_point_from_vector(self.start_state,X)
         if self.x_0_noise is not None:

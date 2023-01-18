@@ -12,9 +12,9 @@ goal_region_radius: 0.5
 
 duration: 30
 state_increment: 1
-# system_name: "pendulum_lqr"
+system_name: "pendulum_lqr"
 # system_name: "pendulum_lc"
-system_name: "ackermann_lc"
+# system_name: "ackermann_lc"
 # system_name: "pendulum_bang_bang"
 # system_name: "acrobot_lqr"
 out_dir: "roas/"
@@ -23,3 +23,10 @@ num_samples: 1
 
 total_files: 1
 file_number: 0
+
+segment: 2
+
+# ML4KP-devel/resources/input_files/traj_tracking...
+nominal_traj: "traj_tracking/pend_nominal_traj_2.0000000.000000.txt"
+nominal_plan: "traj_tracking/pend_nominal_plan_2.0000000.000000.txt"
+local_goals_ks: "traj_tracking/local_goals_ks_2.0000000.000000.txt"
