@@ -505,7 +505,7 @@ class NoisyTimeMap:
 
                     i += 1
         segment = int(self.params["segment"])
-        assert 0 < segment, "Segment must be greater than 0 " 
+        assert 0 <= segment, "Segment must be greater than 0 " 
         assert segment < len(self.ks_duration), "Segment must be less than %d".format(len(self.ks_duration)) 
 
         self.resulting_trajectory.clear()
