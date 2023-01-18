@@ -66,18 +66,10 @@ void system_group_t::propagate(space_point_t start_state, const plan_t& plan, sp
     // int i = 0;
     if (steps > 0)
     {
-      // for( ; i < steps; i++ )
-      // {
-      // 	if (i == 0) p_step = propagate_step::FIRST_STEP;
-      // 	else if (i > 0 && i < steps-1) p_step = propagate_step::MIDDLE_STEP;
-      // 	else p_step = propagate_step::FINAL_STEP;
-
-      // 	propagate_once(step.control,p_step);
-      // }
       propagate(steps, step.control);
     }
   }
-  state_space->copy_to_point(result);
+  state_space->copy_to(result);
 }
 
 void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
@@ -127,15 +119,6 @@ void system_group_t::propagate(space_point_t start_state, const plan_t& plan, tr
     if (steps > 0)
     {
       propagate(steps, step.control, &traj);
-      // for( ; i < steps; i++ )
-      // {
-      // 	if (i == 0) p_step = propagate_step::FIRST_STEP;
-      // 	else if (i > 0 && i < steps-1) p_step = propagate_step::MIDDLE_STEP;
-      // 	else p_step = propagate_step::FINAL_STEP;
-
-      // 	propagate_once(step.control,p_step);
-      // 	traj.copy_onto_back(state_space);
-      // }
     }
   }
 }
@@ -157,6 +140,7 @@ void system_group_t::propagate(int steps, space_point_t control, trajectory_t* t
     {
       traj->copy_onto_back(state_space);
     }
+    // PRX_DEBUG_VAR_3(traj->back(), control, simulation_step);
   }
 }
 
