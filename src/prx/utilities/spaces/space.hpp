@@ -154,6 +154,7 @@ public:
 
   friend std::ostream& operator<<(std::ostream& os, const space_snapshot_t& obj)
   {
+    os << std::fixed << std::setprecision(prx::precision);
     for (auto e : obj.memory)
     {
       os << e << " ";

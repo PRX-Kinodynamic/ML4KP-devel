@@ -14,6 +14,7 @@ namespace prx
 #define PRX_PI 3.1415926535897932385
 #define PRX_EPSILON 1e-7
 #define PRX_INFINITY 1e10
+extern int precision;
 
 static inline std::string lib_path_safe(std::string env_var)
 {

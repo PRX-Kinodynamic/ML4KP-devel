@@ -2,6 +2,7 @@
 
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/spaces/space.hpp"
+#include "prx/utilities/general/constants.hpp"
 #include "prx/utilities/general/transforms.hpp"
 
 #include <deque>

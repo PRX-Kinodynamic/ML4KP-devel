@@ -287,6 +287,7 @@ void plan_t::to_file(const std::string file_name, const std::ios_base::openmode 
   std::ofstream ofs_map;
   ofs_map.open(file_name.c_str(), _mode);
 
+  ofs_map << std::setprecision(prx::precision);
   for (unsigned i = 0; i < num_steps; ++i)
   {
     ofs_map << steps[i].duration << " ";

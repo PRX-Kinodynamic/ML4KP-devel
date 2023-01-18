@@ -82,6 +82,7 @@ int main(int argc, char* argv[])
   auto params = param_loader("examples/tripods/pendulum_traj_tracking.yaml", argc, argv);
 
   simulation_step = params["simulation_step"].as<double>();
+  prx::precision = 10;
   init_random(params["random_seed"].as<int>());
 
   auto obstacles = load_obstacles(params["environment"].as<>());
@@ -190,6 +191,9 @@ int main(int argc, char* argv[])
                                            std::to_string(aorrt_query.start_state->at(1)) + ".txt" };
   aorrt_query.solution_traj.to_file(nominal_traj_filename);
   aorrt_query.solution_plan.to_file(nominal_plan_filename);
+
+  PRX_DEBUG_VAR_1(nominal_traj_filename);
+  PRX_DEBUG_VAR_1(nominal_plan_filename);
   for (unsigned i = 0; i < tot_ctrls; ++i)
   {
     // const auto xi{ aorrt_query.solution_traj[i] };
