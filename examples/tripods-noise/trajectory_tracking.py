@@ -39,7 +39,7 @@ if __name__ == "__main__":
     # 
     TM.pendulum_trajectory_segment([0,0])
     TM.resulting_trajectory.to_file(prx.out_path + "/py_pend_track_trajs.txt")
-    # for th in np.arange(-.25,.25,0.01):
-    #     for thdot in np.arange(-.25,.25,0.01):
-    #         TM.pendulum_trajectory_ilqr([th,thdot])
-    #         TM.resulting_trajectory.to_file(prx.out_path + "/py_pend_track_trajs.txt", "a")
+    for th in np.arange(-.25,.25,0.01):
+        for thdot in np.arange(-.25,.25,0.01):
+            TM.pendulum_trajectory_segment([th,thdot])
+            TM.resulting_trajectory.to_file(prx.out_path + "/py_pend_track_trajs.txt", "a")

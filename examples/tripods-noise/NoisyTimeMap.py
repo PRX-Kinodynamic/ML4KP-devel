@@ -524,7 +524,7 @@ class NoisyTimeMap:
         current_k = segment
         self.resulting_trajectory.copy_onto_back(self.start_state)
 
-        print(int(self.ks_duration[segment]*100))
+        # print(int(self.ks_duration[segment]*100))
         for ti in range(start_state_idx,start_state_idx+int(self.ks_duration[segment]*100)):
             x_i = np.array(self.nominal_traj[ti]);
             xhat = np.array(self.start_state)
