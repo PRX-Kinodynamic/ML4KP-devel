@@ -1,6 +1,7 @@
 #pragma once
 
 #include "prx/utilities/defs.hpp"
+#include "prx/simulation/system.hpp"
 
 using namespace prx;
 
@@ -27,7 +28,7 @@ public:
         velocity = mult;
         initial_position = pos;
         initial_orientation = orn;
-        if (function_descriptor == "triangle")
+        if (function_descriptor == "triangle" || function_descriptor == "oscillate")
         {
             period_x = 40.0 / (velocity * std::cos(initial_orientation));
             period_y = 40.0 / (velocity * std::sin(initial_orientation));
@@ -47,6 +48,7 @@ public:
     virtual std::vector<double> operator()(double t)
     {
         std::vector<double> result = initial_position;
+        std::vector<double> next_pos = result;
         if (function_descriptor == "cos")
         {
             result[1] = velocity * std::cos(0.33*t);
@@ -59,21 +61,18 @@ public:
         {
             result[0] = triangle_wave(t - shift_x, 10.0, period_x);
             result[1] = triangle_wave(t - shift_y, 10.0, period_y);
-            // while (last_reset_time > 0 && t >= last_reset_time) t -= last_reset_time;
-            // if (t < -PRX_EPSILON || (t >= last_reset_time && last_reset_time > 0)) 
-            //     prx_throw_backtrace("Invalid time for position function: " + std::to_string(t) + " " + std::to_string(last_reset_time));
-            // result[0] += velocity * std::cos(initial_orientation) * (t);
-            // result[1] += velocity * std::sin(initial_orientation) * (t);
-            // // If the object goes outside the limits, then its position is reset.
-            // if (result[0] < -10 || result[0] > 10 || result[1] < -10 || result[1] > 10)
-            // {
-            //     result[0] = initial_position[0];
-            //     result[1] = initial_position[1];
-            //     if (last_reset_time < PRX_EPSILON) last_reset_time = t;
-            // }
+            next_pos[0] = triangle_wave(t - shift_x + simulation_step, 10.0, period_x);
+            next_pos[1] = triangle_wave(t - shift_y + simulation_step, 10.0, period_y);
         }
+        else if (function_descriptor == "oscillate")
+        {
+            result[1] = triangle_wave(t - shift_y, 10.0, period_y);
+            next_pos[1] = triangle_wave(t - shift_y + simulation_step, 10.0, period_y);
+        }
+        double current_orientation = std::atan2(next_pos[1] - result[1], next_pos[0] - result[0]);
+        // result.push_back(current_orientation);
         result.push_back(initial_orientation);
-        result.push_back(velocity);
+        result.push_back(velocity * std::sin(current_orientation));
         return result;
     }
 protected:

@@ -40,9 +40,10 @@ namespace prx
             obstacle->current_position = new_position;
             obstacle->initial_update_time = obstacle->current_update_time;
             obstacle->current_update_time = timestamp;
+            obstacle->linear_velocity.clear();
             for (int i = 0; i < new_position.size(); i++)
             {
-                obstacle->linear_velocity.push_back((new_position[i] - obstacle->initial_position[i]) / (timestamp - obstacle->initial_update_time));
+                obstacle->linear_velocity.push_back((obstacle->current_position[i] - obstacle->initial_position[i]) / (obstacle->current_update_time - obstacle->initial_update_time));
             }
         }
 
@@ -66,7 +67,6 @@ namespace prx
             } 
             else 
             {
-                // PRX_DEBUG_PRINT
                 for(auto it : obstacles)
                 {
                     pos.at(0) = it.second->current_position[0] + (time - it.second->current_update_time) * it.second->linear_velocity[0];

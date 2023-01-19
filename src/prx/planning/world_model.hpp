@@ -159,12 +159,12 @@ namespace prx
 			return out.str();
 		}
 
-		inline void update_all_obstacle_poses(double time)
+		inline void update_all_obstacle_poses(double time, bool update_sensor = false)
 		{
 			for (auto it : obstacles)
 			{
 				auto result = it.second->position_function(time);
-				if (sensor != nullptr) sensor->update_obstacle_pose(it.first, result, time);
+				if (sensor != nullptr && update_sensor) sensor->update_obstacle_pose(it.first, result, time);
 				update_obstacle_pose(it.first,result);
 			}
 		}

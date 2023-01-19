@@ -20,7 +20,9 @@ class Obstacle:
         self.last_reset_time = 0
         self.diag_len = 0
         self.name = name
+        print(self.name)
         self.poses = []
+        
     
     def set_box_dims(self,box_dims):
         self.box_dims = box_dims
@@ -35,13 +37,14 @@ class Obstacle:
 robot_dims = [0.508,0.430]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 goal = [9.0,0.0]
-goal_radius = 0.1
-data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/evaluation/greedy2/8/"
+goal_radius = 0.5
+# data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/benchmark/prescience/6/"
+data_dir = os.environ["DIRTMP_PATH"]+"out/dynamic/prescience_test/"
 simulation_step = 0.01
 step = int(0.1/simulation_step)
-num_trajs = 10
+num_trajs = 1
 
-environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/test_dynamic_box/box_8.yaml"
+environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/train_dynamic_box/box_0.yaml"
 
 with open(environment_file, 'r') as stream:
     try:
@@ -53,16 +56,17 @@ obstacles = []
 obstacles_yml = env_params["environment"]["dynamic_geometries"]
 for obstacle in obstacles_yml:
     obstacles.append(Obstacle(obstacle["config"]["position"],obstacle["config"]["rotation"],obstacle["multiplier"],obstacle["name"]))
-    obstacles[0].set_box_dims(obstacle["collision_geometry"]["dims"][:2])
+    obstacles[-1].set_box_dims(obstacle["collision_geometry"]["dims"][:2])
 
 plt.figure(figsize=(8,8))
-for idx in tqdm(range(3)):
-# for idx in tqdm(range(0,num_trajs)):
+for idx in tqdm(range(0,num_trajs)):
     traj = np.loadtxt(data_dir+"trajectory_"+str(idx)+".txt",delimiter=",")
     obs_infos = pd.read_csv(data_dir+"infos_"+str(idx)+".txt",delimiter=",")
     waypts = []
     if os.path.isfile(data_dir+"waypts_"+str(idx)+".txt"):
         waypts = np.genfromtxt(data_dir+"waypts_"+str(idx)+".txt",delimiter=",",usecols=[0,1,2,3,4])
+    if os.path.isfile(data_dir+"problem.txt"):
+        goal = np.loadtxt(data_dir+"problem.txt",delimiter=",")[-1]
     continue_plotting = True
     first_collision_state = -1
 
@@ -92,7 +96,7 @@ for idx in tqdm(range(3)):
                     obstacle.name,fontsize=10)
             box_dims = obstacle.box_dims
             rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
-                linewidth=1,edgecolor='r',facecolor='r',angle=180. * obstacle.orn / np.pi)
+                linewidth=1,edgecolor='r',facecolor='r',angle=180. * obstacle.orn / np.pi, rotation_point='center')
             plt.gca().add_patch(rect)
 
         circle = plt.Circle((goal[0],goal[1]),goal_radius,color='green')
@@ -114,7 +118,7 @@ for idx in tqdm(range(3)):
         continue_plotting = (continue_plotting and traj[max(0,i),-1] == 1)
 
         plt.text(6.0,9.0,"t =: "+f"{(i*simulation_step): .1f}"+"s",fontsize=10)
-        plt.title("DIRT_NoReplan_Prescience")
+        plt.title("DIRT_Replan_Prescience")
         plt.savefig(data_dir+str(i)+".png",bbox_inches='tight')
         plt.clf()
 

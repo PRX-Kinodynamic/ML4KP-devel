@@ -3,9 +3,10 @@ planner: "dirt"
 random_seed: 210896
 simulation_step: 0.01
 
-# environment: "environments/dynamic.yaml"
-environment: "environments/dynamic_box.yaml"
-plant: !file "plants/treaded_vehicle.yaml"
+# environment: "environments/dynamic_v2.yaml"
+environment: "environments/train_dynamic_box/box_0.yaml"
+# plant: !file "plants/treaded_vehicle.yaml"
+plant: !file "plants/unicycle.yaml"
 
 blossom: 5
 pruning: false
@@ -15,7 +16,7 @@ prescience: true
 checker_type: time
 checker_value: 10.0
 
-goal_region_radius: 1.0
+goal_region_radius: 0.5
 
 num_trials: 1
 output_dir: "dynamic/prescience_test"

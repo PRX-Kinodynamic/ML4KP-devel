@@ -74,13 +74,13 @@ int main(int argc, char* argv[])
     {
         // Custom time_valid_state function:
         ss -> copy_from_point(s);
-        sim -> update_all_obstacle_poses(current_time);
+        // sim -> update_all_obstacle_poses(current_time);
 
-        // poses = sensor->get_obstacle_poses(current_time);
-        // for (auto p : poses)
-        // {
-        //     sim -> update_obstacle_pose(p.first, p.second);
-        // }
+        poses = sensor->get_obstacle_poses(current_time);
+        for (auto p : poses)
+        {
+            sim -> update_obstacle_pose(p.first, p.second);
+        }
 
         // This is standard
         if(cg->in_collision() || !ss->satisfies_bounds(s))

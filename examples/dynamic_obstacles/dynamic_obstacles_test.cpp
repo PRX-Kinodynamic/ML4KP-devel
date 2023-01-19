@@ -50,6 +50,7 @@ int main(int argc, char* argv[])
     std::shared_ptr<world_model_t> sim(new world_model_t({plant},{obstacle_list}));
     sensor_ptr_t sensor(new sensor_t("simple_sensor"));
     sim -> link_sensor(sensor);
+    sim -> update_all_obstacle_poses(0.0,true);
     sensor -> print_obstacle_infos();
     sim -> create_context("dirt_context",{plant_name},{obstacle_names});
     auto context = sim -> get_context("dirt_context");
@@ -63,7 +64,7 @@ int main(int argc, char* argv[])
     dirt_spec.h = [&](const space_point_t& s, const space_point_t& s2)
     {
         // Custom h function: ( eucledian distance from s to s2 ) / (max velocity)
-        return space_t::euclidean_2d(s, s2, 0, 3) / max_vel;
+        return space_t::euclidean_2d(s, s2, 0, 2) / max_vel;
     };
 
     dirt_spec.use_prescience = params["prescience"].as<bool>();
@@ -125,16 +126,20 @@ int main(int argc, char* argv[])
         {
             context.first -> get_state_space() -> sample(dirt_query.start_state);
             context.first -> get_state_space() -> sample(dirt_query.goal_state);
-            dirt_query.start_state -> at(0) = uniform_random(-9.5, -8.5);
+            dirt_query.start_state -> at(0) = uniform_random(-9.5, -7.5);
             dirt_query.start_state -> at(1) = uniform_random(-9.5,  9.5);
-            dirt_query.goal_state  -> at(0) = uniform_random( 8.5,  9.5);
+            dirt_query.start_state -> at(3) = 0.0;
+            dirt_query.start_state -> at(4) = 0.0;
+            dirt_query.goal_state  -> at(0) = uniform_random( 7.5,  9.5);
             dirt_query.goal_state  -> at(1) = uniform_random(-9.5,  9.5);
+            dirt_query.goal_state -> at(3) = 0.0;
+            dirt_query.goal_state -> at(4) = 0.0;
         } while (!dirt_spec.time_valid_state(dirt_query.start_state, 0.0) || !dirt_spec.time_valid_state(dirt_query.goal_state, 0.0));
     }
     else
     {
-        context.first -> get_state_space() -> copy_point_from_vector(dirt_query.start_state, params["start_state"].as<std::vector<double>>());
-        context.first -> get_state_space() -> copy_point_from_vector(dirt_query.goal_state, params["goal_state"].as<std::vector<double>>());
+        context.first -> get_state_space() -> copy_point_from_vector(dirt_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
+        context.first -> get_state_space() -> copy_point_from_vector(dirt_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
     }
     dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
 
@@ -199,7 +204,7 @@ int main(int argc, char* argv[])
         }
         fout.close();
 
-        fout.open(out_path + params["output_dir"].as<std::string>() + "problem.txt");
+        fout.open(out_path + params["output_dir"].as<std::string>() + "/problem.txt");
         fout << context.first -> get_state_space() -> print_point(dirt_query.start_state,4) << std::endl;
         fout << context.first -> get_state_space() -> print_point(dirt_query.goal_state,4) << std::endl;
         fout.close();

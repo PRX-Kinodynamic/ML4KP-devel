@@ -1,0 +1,96 @@
+environment:
+    type: obstacle
+    geometries:
+      -
+        name: upper
+        dynamic: false
+        collision_geometry: 
+          type: box
+          material: red 
+          dims: [21,.5,.2]      
+        config:
+          position: [0, 10.25, 0]
+          orientation: [0, 0, 0, 1]
+      -
+        name: lower
+        dynamic: false
+        collision_geometry: 
+          type: box
+          material: red 
+          dims: [21,.5,.2]      
+        config:
+          position: [0, -10.25, 0]
+          orientation: [0, 0, 0, 1]
+      -
+        name: left
+        dynamic: false
+        collision_geometry: 
+          type: box
+          material: red 
+          dims: [.5,21,.2]      
+        config:
+          position: [-10.25,0, 0]
+          orientation: [0, 0, 0, 1]
+      -
+        name: right
+        dynamic: false
+        collision_geometry: 
+          type: box
+          material: red 
+          dims: [.5,21,.2]      
+        config:
+          position: [10.25,0, 0]
+          orientation: [0, 0, 0, 1]
+    dynamic_geometries:
+      -
+        name: box1
+        dynamic: true
+        position_function: "oscillate"
+        multiplier: 1.5
+        collision_geometry: 
+          type: box
+          material: red 
+          dims: [2.0,2.0,.2]      
+        config:
+          position: [-6,-6, 0]
+          orientation: [0, 0, 0, 1]
+          rotation: 1.5708
+      -
+        name: box2
+        dynamic: true
+        position_function: "oscillate"
+        multiplier: 1.5
+        collision_geometry: 
+          type: box
+          material: red 
+          dims: [2.0,2.0,.2]      
+        config:
+          position: [-2,-2, 0]
+          orientation: [0, 0, 0, 1]
+          rotation: 1.5708
+      -
+        name: box3
+        dynamic: true
+        position_function: "oscillate"
+        multiplier: 1.5
+        collision_geometry: 
+          type: box
+          material: red 
+          dims: [2.0,2.0,.2]      
+        config:
+          position: [2,2, 0]
+          orientation: [0, 0, 0, 1]
+          rotation: 1.5708
+      -
+        name: box4
+        dynamic: true
+        position_function: "oscillate"
+        multiplier: 1.5
+        collision_geometry: 
+          type: box
+          material: red 
+          dims: [2.0,2.0,.2]      
+        config:
+          position: [6,6, 0]
+          orientation: [0, 0, 0, 1]
+          rotation: 1.5708
