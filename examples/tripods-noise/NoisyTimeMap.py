@@ -410,6 +410,8 @@ class NoisyTimeMap:
             self.ks = [];
             self.ks_duration = [];
             self.local_goals = [];
+            self.regions = [];
+
             with open(lgoals_ks, 'r') as file:
                 i = 0
                 for line in file:
@@ -417,6 +419,7 @@ class NoisyTimeMap:
 
                     self.ks.append([]);
                     self.local_goals.append([]);
+                    self.regions.append([]);
 
                     self.local_goals[i].append(float(vals[0])) 
                     self.local_goals[i].append(float(vals[1])) 
@@ -424,6 +427,11 @@ class NoisyTimeMap:
                     self.ks[i].append(float(vals[2])) 
                     self.ks[i].append(float(vals[3]))
                     self.ks_duration.append(float(vals[4]))
+
+                    self.regions[i].append(float(vals[5]))
+                    self.regions[i].append(float(vals[6]))
+                    self.regions[i].append(float(vals[7]))
+                    self.regions[i].append(float(vals[8]))
 
                     i += 1
 
@@ -488,6 +496,7 @@ class NoisyTimeMap:
             self.ks = [];
             self.ks_duration = [];
             self.local_goals = [];
+            self.regions = [];
             with open(lgoals_ks, 'r') as file:
                 i = 0
                 for line in file:
@@ -495,6 +504,7 @@ class NoisyTimeMap:
 
                     self.ks.append([]);
                     self.local_goals.append([]);
+                    self.regions.append([]);
 
                     self.local_goals[i].append(float(vals[0])) 
                     self.local_goals[i].append(float(vals[1])) 
@@ -502,6 +512,11 @@ class NoisyTimeMap:
                     self.ks[i].append(float(vals[2])) 
                     self.ks[i].append(float(vals[3]))
                     self.ks_duration.append(float(vals[4]))
+
+                    self.regions[i].append(float(vals[5]))
+                    self.regions[i].append(float(vals[6]))
+                    self.regions[i].append(float(vals[7]))
+                    self.regions[i].append(float(vals[8]))
 
                     i += 1
         segment = int(self.params["segment"])
@@ -524,6 +539,7 @@ class NoisyTimeMap:
         current_k = segment
         self.resulting_trajectory.copy_onto_back(self.start_state)
 
+        print("region:", self.regions[segment])
         # print(int(self.ks_duration[segment]*100))
         for ti in range(start_state_idx,start_state_idx+int(self.ks_duration[segment]*100)):
             x_i = np.array(self.nominal_traj[ti]);
