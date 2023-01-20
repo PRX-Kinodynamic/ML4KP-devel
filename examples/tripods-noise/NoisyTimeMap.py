@@ -195,17 +195,17 @@ class NoisyTimeMap:
         self.ss.copy_from_point(self.start_state)
         self.ss.enforce_bounds()
 
-        # if self.noisy_plant == None:
-        #     self.get_noisy_system()
-        
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
         if self.controller == None:
             self.Q = prx.matrix.Identity(2, 2)
             self.R = prx.matrix.Identity(1, 1)
             self.controller_base = prx.lqr(self.noisy_plant, self.Q, self.R, "LQR")
             self.controller_base.set_goal(self.goal_state, self.u_goal)
             self.controller_base.compute_K()
-            # self.get_noisy_controller()
-        
+            self.get_noisy_controller()
+
         total_time = self.duration
 
         self.checker.set_check_value(total_time)
@@ -217,20 +217,28 @@ class NoisyTimeMap:
         while True:
             # self.noisy_plant.get_state_space().copy_to(self.start_state);
             self.ss.copy_to(self.start_state)
-            if not switch_control and self.start_state[0] < switch_height:
+            # if not switch_control and self.start_state[0] < switch_height:
+            #     self.controller_base.compute_controls()
+            #     self.cs.enforce_bounds()
+            #     switch_control = True
+            # if switch_control and self.start_state[0] > self.goal_state[0]:
+            #     self.ctrl[0] = 0
+            #     self.cs.copy_from(self.ctrl)
+            #     switch_control = False
+            if self.start_state[0] < switch_height or all([self.start_state[1]>9.99, self.start_state[0] < 1.15*switch_height]):
                 self.controller_base.compute_controls()
                 self.cs.enforce_bounds()
                 switch_control = True
-            if switch_control and self.start_state[0] > self.goal_state[0]:
+            else:
                 self.ctrl[0] = 0
                 self.cs.copy_from(self.ctrl)
-                switch_control = False 
-            
+                switch_control = False
+
             self.plant.propagate(self.simulation_step)
 
             if self.checker.check():
                 break
-                
+
         self.ss.copy_to(self.end_state)
         return self.end_state.to_list()
     
