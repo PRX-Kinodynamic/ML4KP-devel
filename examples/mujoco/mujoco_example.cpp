@@ -8,7 +8,7 @@ int main(int argc, char** argv)
     std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr.xml");
     sim->init_simulator();
 
-    timer_t timer;
+    prx::timer_t timer;
     for (double time = 0; time < 10; time += simulation_step)
     {
         sim -> step_simulation(propagate_step::FIRST_STEP);

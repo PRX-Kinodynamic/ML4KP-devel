@@ -33,6 +33,16 @@ if(APPLE)
     )
     set(CMAKE_MACOSX_RPATH 0)
     set_target_properties(${PROJECT_NAME}_mjsim PROPERTIES FRAMEWORK true)
+else()
+	find_package(glfw3 REQUIRED)
+	target_include_directories(${PROJECT_NAME}_mjsim INTERFACE ${GLFW_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME}_mjsim INTERFACE ${MJ_INCLUDE_DIR})
+    target_link_directories(${PROJECT_NAME}_mjsim INTERFACE ${MJ_LIB_DIR})
+    target_link_libraries(${PROJECT_NAME}_mjsim INTERFACE
+        ${MJ_LIB_DIR}/libmujoco.so
+        glfw
+    )
+    set_target_properties(${PROJECT_NAME}_mjsim PROPERTIES FRAMEWORK true)
 endif()
 
 # TODO: Take care of this for Linux
