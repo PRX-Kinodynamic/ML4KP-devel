@@ -1,8 +1,8 @@
-import sys 
-import os 
-import torch 
-import libpyDirtMP as prx 
-import numpy as np 
+import sys
+import os
+import torch
+import libpyDirtMP as prx
+import numpy as np
 
 # from inspect import currentframe, getframeinfo
 
@@ -24,8 +24,8 @@ class NoisyTimeMap:
         elif isinstance(parameters, prx.param_loader):
             print("Instance of prx.param_loader")
             params = parameters
-        
-        self.duration = params["duration"].as_float() 
+
+        self.duration = params["duration"].as_float()
         self.time_step = self.duration # For backwards comp, should delete it eventually
         self.system_name = params["system_name"].as_string()
         self.params = params
@@ -85,8 +85,8 @@ class NoisyTimeMap:
 
         self.radius = params["goal_region_radius"].as_float()
 
-        self.xt_noise = None 
-        self.u_t_noise = None 
+        self.xt_noise = None
+        self.u_t_noise = None
         self.in_collision_py = lambda : self.context.collision_group.in_collision()
 
         self.checker = prx.condition_check("sim_time" , self.duration );
@@ -97,6 +97,19 @@ class NoisyTimeMap:
         if self.system_name != "quadrotor_lqr":
             self.checker.add_condition(self.checker_gc);
         self.checker.add_condition(self.checker_obstacle);
+
+        try:
+            self.params['nominal_traj']
+            self.trajectory_tracking_regions()
+            self.segment = int(self.params["segment"])
+            assert 0 <= self.segment, "Segment must be greater than 0 "
+            assert self.segment < len(self.ks_duration), "Segment must be less than %d".format(len(self.ks_duration))
+            self.start_state_idx = 0;
+            for s in range(self.segment):
+                s_dur = self.ks_duration[s]
+                self.start_state_idx += int(s_dur * 100)
+        except:
+            pass
 
         # x_{t+1} = x_t + f(x_t, u(x_t+\epsilon_x) + \epsilon_u)
         # self.xt_noise = self.init_noise("/plant/xt_noise", "/plant/xt_noise_params");
@@ -186,10 +199,10 @@ class NoisyTimeMap:
 
             if self.checker.check():
                 break;
-                
+
         self.ss.copy_to(self.end_state)
         return self.end_state.to_list()
-    
+
     def quadrotor_lqr(self, X):
         self.ss.copy(self.start_state,X)
         self.ss.copy_from_point(self.start_state)
@@ -241,7 +254,7 @@ class NoisyTimeMap:
 
         self.ss.copy_to(self.end_state)
         return self.end_state.to_list()
-    
+
     def pendulum_lqr(self, X):
 
         self.ss.copy(self.start_state,X)
@@ -297,16 +310,16 @@ class NoisyTimeMap:
                     self.ctrl_dict[box] = line_as_str[6]
 
 
-  
+
         total_time = self.duration
         if self.t_noise is not None:
-            total_time = self.t_noise.add_noise(total_time) 
+            total_time = self.t_noise.add_noise(total_time)
 
 
 
         self.checker.set_check_value(total_time)
         self.checker.reset()
-        
+
         self.traj.clear()
 
         self.traj.copy_onto_back(self.ss)
@@ -342,7 +355,7 @@ class NoisyTimeMap:
         #         self.fout_roa.write("\n")
         #         past_state = state
         # self.fout_roa.write("\n")
-        return self.traj.back().to_list() 
+        return self.traj.back().to_list()
 
     def pendulum_bang_bang(self, X, ctrl_num = 2):
 
@@ -367,16 +380,16 @@ class NoisyTimeMap:
 
             self.fout_roa = open(prx.out_path + self.params["out_dir"].as_string() + "/" + self.params["system_name"].as_string() + "_traj" + self.params["file_name_suffix"].as_string(), "w", buffering=2^10)
 
-  
+
         total_time = self.duration
         if self.t_noise is not None:
-            total_time = self.t_noise.add_noise(total_time) 
+            total_time = self.t_noise.add_noise(total_time)
 
         self.checker.set_check_value(total_time)
         self.checker.reset()
         # print("Before propagate: ", self.start_state)
         # self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
-        
+
         self.traj.clear()
         self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.traj);
 
@@ -394,7 +407,7 @@ class NoisyTimeMap:
         return self.end_state.to_list()
 
     def pendulum_trajectory_ilqr(self, X):
-        if not hasattr(self, 'nominal_traj'): 
+        if not hasattr(self, 'nominal_traj'):
             self.nominal_traj = prx.trajectory(self.ss);
             self.nominal_plan = prx.plan(self.cs);
 
@@ -411,7 +424,7 @@ class NoisyTimeMap:
             self.nominal_plan.from_file(plan_file);
             self.nominal_plan.expand();
             # self.nominal_plan.append_onto_back(0.0) # add one "empty" step so that nominal plan & traj are of the same size
-            
+
             self.resulting_trajectory = prx.trajectory(self.ss)
 
 
@@ -429,10 +442,10 @@ class NoisyTimeMap:
                     self.local_goals.append([]);
                     self.regions.append([]);
 
-                    self.local_goals[i].append(float(vals[0])) 
-                    self.local_goals[i].append(float(vals[1])) 
+                    self.local_goals[i].append(float(vals[0]))
+                    self.local_goals[i].append(float(vals[1]))
 
-                    self.ks[i].append(float(vals[2])) 
+                    self.ks[i].append(float(vals[2]))
                     self.ks[i].append(float(vals[3]))
                     self.ks_duration.append(float(vals[4]))
 
@@ -479,9 +492,9 @@ class NoisyTimeMap:
 
         return self.resulting_trajectory.back().to_list();
 
-    
-    def pendulum_trajectory_segment(self, X):
-        if not hasattr(self, 'nominal_traj'): 
+
+    def trajectory_tracking_regions(self):
+        if not hasattr(self, 'nominal_traj'):
             self.nominal_traj = prx.trajectory(self.ss);
             self.nominal_plan = prx.plan(self.cs);
 
@@ -498,7 +511,7 @@ class NoisyTimeMap:
             self.nominal_plan.from_file(plan_file);
             self.nominal_plan.expand();
             # self.nominal_plan.append_onto_back(0.0) # add one "empty" step so that nominal plan & traj are of the same size
-            
+
             self.resulting_trajectory = prx.trajectory(self.ss)
 
             self.ks = [];
@@ -514,10 +527,10 @@ class NoisyTimeMap:
                     self.local_goals.append([]);
                     self.regions.append([]);
 
-                    self.local_goals[i].append(float(vals[0])) 
-                    self.local_goals[i].append(float(vals[1])) 
+                    self.local_goals[i].append(float(vals[0]))
+                    self.local_goals[i].append(float(vals[1]))
 
-                    self.ks[i].append(float(vals[2])) 
+                    self.ks[i].append(float(vals[2]))
                     self.ks[i].append(float(vals[3]))
                     self.ks_duration.append(float(vals[4]))
 
@@ -527,29 +540,31 @@ class NoisyTimeMap:
                     self.regions[i].append(float(vals[8]))
 
                     i += 1
-        segment = int(self.params["segment"])
-        assert 0 <= segment, "Segment must be greater than 0 " 
-        assert segment < len(self.ks_duration), "Segment must be less than %d".format(len(self.ks_duration)) 
 
-        self.resulting_trajectory.clear()
+    def pendulum_trajectory_segment(self, X):
+        self.ss.copy_point_from_vector(self.start_state,X)
+        # self.resulting_trajectory.clear()
 
-        start_state_idx = 0;
-        for s in range(segment):
-            s_dur = self.ks_duration[s]
-            start_state_idx += int(s_dur * 100)
 
-        start_state = self.nominal_traj[start_state_idx]
-
-        self.start_state[0] = start_state[0] + X[0]
-        self.start_state[1] = start_state[1] + X[1]
+        start_state = self.nominal_traj[self.start_state_idx]
 
         segment_duration = 0
-        current_k = segment
-        self.resulting_trajectory.copy_onto_back(self.start_state)
+        current_k = self.segment
+        # self.resulting_trajectory.copy_onto_back(self.start_state)
 
-        print("region:", self.regions[segment])
-        # print(int(self.ks_duration[segment]*100))
-        for ti in range(start_state_idx,start_state_idx+int(self.ks_duration[segment]*100)):
+        local_goal = self.local_goals[self.segment]
+        dim = len(self.start_state.to_list())
+
+        box_goal = [0.07, 0.07] # + self.duration*local_goal[1]]
+
+        # print("region:", self.regions[self.segment])
+        # print(int(self.ks_duration[self.segment]*100))
+        max_time = min(self.duration * 100, self.ks_duration[self.segment]*100) + self.start_state_idx
+        max_time = int(max_time)
+        current_state = self.start_state.to_list()
+        for ti in range(self.start_state_idx, max_time):
+            if all([np.linalg.norm(local_goal[i] - current_state[i]) < box_goal[i] for i in range(dim)]):
+                break
             x_i = np.array(self.nominal_traj[ti]);
             xhat = np.array(self.start_state)
             ctrl_i = np.array( self.nominal_plan[ti].control)
@@ -565,16 +580,16 @@ class NoisyTimeMap:
             self.plan.duration = self.simulation_step
 
             self.context.system_group.propagate(self.start_state, self.plan, self.start_state);
-            self.resulting_trajectory.copy_onto_back(self.start_state)
             segment_duration += self.simulation_step
 
-            if (np.abs(segment_duration - self.ks_duration[current_k]) < self.simulation_step**2):
-              segment_duration = 0.0;
-              current_k += 1;
+            current_state = self.start_state.to_list()
 
-        return self.resulting_trajectory.back().to_list();
+            # if np.linalg.norm(np.array(self.start_state) - np.array(self.local_goals[segment])) < 0.07:
+            #     break
+        return self.start_state.to_list()
 
-    
+
+
     def lander_analytical(self, X):
         self.ss.copy_point_from_vector(self.start_state,X)
         if self.x_0_noise is not None:
@@ -592,7 +607,7 @@ class NoisyTimeMap:
             def lander_custom_check_1():
                 # print("Start:", self.start_state,"\tEnd:", self.end_state)
                 # print(getframeinfo(currentframe()).filename, getframeinfo(currentframe()).lineno)
-                return self.ss.at(0) <= -1 
+                return self.ss.at(0) <= -1
 
             def lander_custom_check_2():
                 # print("2) Start:", self.start_state,"\tEnd:", self.end_state)
@@ -610,13 +625,13 @@ class NoisyTimeMap:
             self.checker_gc = prx.condition_check( self.goal_check_2 );
             self.checker.add_condition(self.checker_gc);
 
-            
+
             self.controller_base = prx.lander_meditch_ctrl(self.noisy_plant, "lander_ctrl")
             self.get_noisy_controller()
 
         total_time = self.duration
         if self.t_noise is not None:
-            total_time = self.t_noise.add_noise(total_time) 
+            total_time = self.t_noise.add_noise(total_time)
 
         self.checker.set_check_value(total_time)
         self.checker.reset()
@@ -691,7 +706,7 @@ class NoisyTimeMap:
             self.controller_base.set_goal(self.goal_state, self.u_goal)
             self.controller_base.compute_K()
             self.get_noisy_controller()
-  
+
         total_time = self.duration
 
         self.checker.set_check_value(total_time)
@@ -730,7 +745,7 @@ class NoisyTimeMap:
             ctrl_input[0,1] = self.start_state[1]
             ctrl_input[0,2] = self.start_state[2]
             ctrl_input[0,3] = self.start_state[3]
-        
+
             with torch.no_grad():
                 ctrl_output = self.controller(ctrl_input)
             ctrl = np.array([-14. + ((ctrl_output + 1.) * 14.)], dtype=np.float64)
@@ -745,5 +760,3 @@ class NoisyTimeMap:
 
         self.ss.copy_to(self.end_state)
         return self.end_state.to_list()
-    
-    
