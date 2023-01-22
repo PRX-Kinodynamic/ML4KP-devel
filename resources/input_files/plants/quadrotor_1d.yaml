@@ -2,19 +2,19 @@ name: "1D_Quadrotor"
 path: "1D_Quadrotor"
 
 start_state: [4.0, 0.0]
-goal_state:  [10.0, 0.0]
+goal_state:  [80.0, 0]
 
 min_steps: 1
 max_steps: 50
 
-state_space_lower_bound: [ 0, -20]
-state_space_upper_bound: [20, 2]
+state_space_lower_bound: [10, -15]
+state_space_upper_bound: [30, 10]
 
-starting_lower_bound: [0, -20]
-ending_upper_bound: [ 20,  2]
+starting_lower_bound: [10, -15]
+ending_upper_bound: [30,  10]
 
 control_space_lower_bound: [0]
-control_space_upper_bound: [2]
+control_space_upper_bound: [2.5]
 
 vis_body: "body"
 
