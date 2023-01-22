@@ -407,7 +407,7 @@ class NoisyTimeMap:
         return self.end_state.to_list()
 
     def pendulum_trajectory_ilqr(self, X):
-        if not hasattr(self, 'nominal_traj'):
+        if not hasattr(self, 'gnn'):
             self.nominal_traj = prx.trajectory(self.ss);
             self.nominal_plan = prx.plan(self.cs);
 
