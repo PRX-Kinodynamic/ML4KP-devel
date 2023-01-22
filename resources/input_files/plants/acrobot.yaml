@@ -30,7 +30,8 @@ mass: 1
 xt_noise: "uniform"
 # xt_noise_params: [-0.1,0.1]
 # xt_noise_params: [-0.03141592654,0.03141592654]
-xt_noise_params: [-0.,0.]
+xt_noise_params: [-0.003,0.003]
+# xt_noise_params: [-0.,0.]
 
 ut_noise: "uniform"
 # u_t_noise_params: [-0.25,0.25]
@@ -39,5 +40,6 @@ ut_noise_params: [-0.,0.]
 
 ft_noise: "uniform"
 # ft_noise_params: [-0.03141592654,0.03141592654]
-ft_noise_params: [-0.,0.]
+ft_noise_params: [-0.003,0.003]
+# ft_noise_params: [-0.,0.]
 # f_noise_params: [-0.,0.]

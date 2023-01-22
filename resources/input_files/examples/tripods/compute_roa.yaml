@@ -1,8 +1,8 @@
 random_seed: 11101993
 simulation_step: 0.01
 
-plant: !file "plants/pendulum.yaml"
-# plant: !file "plants/acrobot.yaml"
+# plant: !file "plants/pendulum.yaml"
+plant: !file "plants/acrobot.yaml"
 # plant: !file "plants/ackermann_FO.yaml"
 # plant: !file "plants/lander_LD.yaml"
 environment: "environments/empty.yaml"
@@ -10,16 +10,16 @@ environment: "environments/empty.yaml"
 
 goal_region_radius: 0.5
 
-duration: 30
-state_increment: 1
+duration: 300
+state_increment: 0.5
 # system_name: "pendulum_lqr"
 # system_name: "pendulum_lc"
-system_name: "ackermann_lc"
+# system_name: "ackermann_lc"
 # system_name: "pendulum_bang_bang"
-# system_name: "acrobot_lqr"
+system_name: "acrobot_lqr"
 out_dir: "roas/"
 file_name_suffix: "_test.txt"
-num_samples: 1
+num_samples: 100
 
 total_files: 1
 file_number: 0

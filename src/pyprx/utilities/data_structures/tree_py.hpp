@@ -15,6 +15,8 @@ PRX_GETTER(tree_t, vertex_id_counter)
 void bindings()
 {
   class_<prx::tree_node_t, std::shared_ptr<prx::tree_node_t>, bases<prx::abstract_node_t>>("tree_node", init<>())
+      .def("__init__",
+           make_constructor(&init_as_ptr<prx::tree_node_t, const prx::node_index_t&>, default_call_policies()))
       .def("get_parent", &prx::tree_node_t::get_parent)
       .def("get_index", &prx::tree_node_t::get_index)
       .def("get_parent_edge", &prx::tree_node_t::get_parent_edge)

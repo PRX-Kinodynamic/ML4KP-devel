@@ -3,7 +3,7 @@ import os
 import torch 
 import libpyDirtMP as prx 
 import numpy as np 
-
+from inspect import currentframe, getframeinfo
 # from inspect import currentframe, getframeinfo
 
 class NoisyTimeMap:
@@ -434,24 +434,63 @@ class NoisyTimeMap:
                     self.regions[i].append(float(vals[8]))
 
                     i += 1
+            self.ki = []
+            for k, k_dur in zip(self.ks, self.ks_duration):
+                for ti in np.arange(0,k_dur, 0.01):
+                    self.ki.append(k);
+            # metric = lambda p1,p2: prx.space_t.euclidean_2d(p1,p2)
+            self.metric = prx.distance_function.wrap(prx.space_t.euclidean_2d)
 
+            self.gnn = prx.graph_nearest_neighbors(self.metric);
+            self.tree_nodes = []
+            k = 0;
+            for _ in self.nominal_plan:
+                self.tree_nodes.append(prx.tree_node(k))
+                self.tree_nodes[-1].point = self.nominal_traj[k];
+                self.gnn.add_node(self.tree_nodes[-1])
+                k += 1
+            # print(self.ks)
+            # print(self.ks_duration)
+            # print(self.ki)
         self.resulting_trajectory.clear()
         start_state = self.nominal_traj.front()
 
-        self.start_state[0] = start_state[0] + X[0]
-        self.start_state[1] = start_state[1] + X[1]
-
+        # self.start_state[0] = start_state[0] + X[0]
+        # self.start_state[1] = start_state[1] + X[1]
+        self.ss.copy(self.start_state, X)
         segment_duration = 0
         current_k = 0
 
-        for ti in range(0,len(self.nominal_plan)):
+
+        def closest_x_in_traj(xhat):
+            # print(getframeinfo(currentframe()).filename, getframeinfo(currentframe()).lineno)
+            # print(xhat)
+            node = self.gnn.single_query(xhat)
+            # print(getframeinfo(currentframe()).filename, getframeinfo(currentframe()).lineno)
+            k = node.get_index();
+            # print(k)
+            return k;
+            # best_so_far = 100; # <- big number
+            # k = k_best = 0
+            # for _ in self.nominal_plan:
+            #     dist = prx.space_t.euclidean_2d(xhat, self.nominal_traj[k], 0, 2)
+            #     if ( dist < best_so_far):
+            #         best_so_far = dist;
+            #         k_best = k;
+            #     k += 1
+            # return k_best
+
+        # for ti in range(0,len(self.nominal_plan)):
+        for _ in range(0,2*len(self.nominal_plan)):
+
+            ti = closest_x_in_traj(self.start_state);
 
             x_i = np.array(self.nominal_traj[ti]);
             xhat = np.array(self.start_state)
             ctrl_i = np.array( self.nominal_plan[ti].control)
             duration_i =  self.nominal_plan[ti].duration
 
-            ki = np.array(self.ks[current_k])
+            ki = np.array(self.ki[ti])
 
             du = np.matmul(-ki, xhat - x_i) ;
             # print("du:", ki, xhat,x_i, du)
@@ -465,9 +504,12 @@ class NoisyTimeMap:
             self.resulting_trajectory.copy_onto_back(self.start_state)
             segment_duration += self.simulation_step
 
-            if (np.abs(segment_duration - self.ks_duration[current_k]) < self.simulation_step**2):
-              segment_duration = 0.0;
-              current_k += 1;
+            # if (np.abs(segment_duration - self.ks_duration[current_k]) < self.simulation_step**2):
+            #   segment_duration = 0.0;
+            #   current_k += 1;
+
+            if (np.linalg.norm(np.array(self.start_state)) < 0.1):
+                break;
 
         return self.resulting_trajectory.back().to_list();
 
@@ -530,17 +572,16 @@ class NoisyTimeMap:
             s_dur = self.ks_duration[s]
             start_state_idx += int(s_dur * 100)
 
-        start_state = self.nominal_traj[start_state_idx]
+        # start_state = self.nominal_traj[start_state_idx]
 
-        self.start_state[0] = start_state[0] + X[0]
-        self.start_state[1] = start_state[1] + X[1]
-
+        # self.start_state[0] = start_state[0] + X[0]
+        # self.start_state[1] = start_state[1] + X[1]
+        start_state = X
         segment_duration = 0
         current_k = segment
         self.resulting_trajectory.copy_onto_back(self.start_state)
 
-        print("region:", self.regions[segment])
-        # print(int(self.ks_duration[segment]*100))
+
         for ti in range(start_state_idx,start_state_idx+int(self.ks_duration[segment]*100)):
             x_i = np.array(self.nominal_traj[ti]);
             xhat = np.array(self.start_state)
@@ -560,11 +601,12 @@ class NoisyTimeMap:
             self.resulting_trajectory.copy_onto_back(self.start_state)
             segment_duration += self.simulation_step
 
-            if (np.abs(segment_duration - self.ks_duration[current_k]) < self.simulation_step**2):
-              segment_duration = 0.0;
-              current_k += 1;
+            # if( prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 4) > 0.05)
+            if (np.linalg.norm(np.array(self.start_state) - np.array(self.local_goals[segment])) < 0.1):
+                return self.resulting_trajectory.back().to_list(),1
+                # break;
 
-        return self.resulting_trajectory.back().to_list();
+        return self.resulting_trajectory.back().to_list(),0
 
     
     def lander_analytical(self, X):

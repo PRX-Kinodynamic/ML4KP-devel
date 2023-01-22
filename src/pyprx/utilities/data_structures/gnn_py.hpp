@@ -29,7 +29,6 @@ void bindings()
       .def("__init__", make_constructor(&init_as_ptr<prx::proximity_node_t>, default_call_policies()))
       .def("get_prox_index", &prx::proximity_node_t::get_prox_index)
       .def("set_index", &prx::proximity_node_t::set_index)
-      // .def("get_neighbors", &prx::proximity_node_t::get_neighbors, return_internal_reference<>())
       .def("get_neighbors", get_neighbors_wrapper)
       .def("add_neighbor", &prx::proximity_node_t::add_neighbor)
       .def("delete_neighbor", &prx::proximity_node_t::delete_neighbor)
@@ -37,7 +36,7 @@ void bindings()
       .def("remove_all_neighbors", &prx::proximity_node_t::remove_all_neighbors)
       .add_property("added_index", &get_proximity_node_t_added_index<long unsigned>,
                     &set_proximity_node_t_added_index<long unsigned>)
-      // .def("", &prx::proximity_node_t::)
+      // Comment to force ; to the next one
       ;
 
   class_<prx::graph_nearest_neighbors_t, std::shared_ptr<prx::graph_nearest_neighbors_t>>("graph_nearest_neighbors",

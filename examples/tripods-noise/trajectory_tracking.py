@@ -4,6 +4,7 @@ import numpy as np
 import NoisyTimeMap
 from tqdm import tqdm
 import libpyDirtMP as prx
+from inspect import currentframe, getframeinfo
 
 def state_increment(space_point, step_inc, lower_bounds, upper_bounds):
     for i in range(len(space_point)):
@@ -24,34 +25,44 @@ if __name__ == "__main__":
     step_inc = TM.params["state_increment"].as_float()
     sys_name = TM.params["system_name"].as_string()
 
-    TM.pendulum_trajectory_segment([0,0])
+    TM.pendulum_trajectory_ilqr([2,0])
     TM.resulting_trajectory.to_file(prx.out_path + "/py_pend_track_trajs.txt")
 
-    delta = 0.5
-    x_plus_max = y_plus_max = -100
-    x_minus_min = y_minus_min = 100
-    for state in TM.resulting_trajectory:
-        if (state[0] > 0):
-            continue
-        # print(state)
-        x_plus = min(state[0] + delta, prx.PRX_PI)
-        y_plus =  min(state[1] + delta, 2*prx.PRX_PI)
-        x_minus = max(state[0] - delta, -prx.PRX_PI)
-        y_minus = max(state[1] - delta, -2*prx.PRX_PI)
 
-        if x_plus > x_plus_max:
-            x_plus_max = x_plus
-        if y_plus > y_plus_max:
-            y_plus_max = y_plus
+    print(getframeinfo(currentframe()).filename, getframeinfo(currentframe()).lineno)
+    # delta = 0.5
+    # x_plus_max = y_plus_max = -100
+    # x_minus_min = y_minus_min = 100
+    # for state in TM.resulting_trajectory:
+    #     if (state[0] > 0):
+    #         continue
+    #     # print(state)
+    #     x_plus = min(state[0] + delta, prx.PRX_PI)
+    #     y_plus =  min(state[1] + delta, 2*prx.PRX_PI)
+    #     x_minus = max(state[0] - delta, -prx.PRX_PI)
+    #     y_minus = max(state[1] - delta, -2*prx.PRX_PI)
 
-        if x_minus < x_minus_min:
-            x_minus_min = x_minus
-        if y_minus < y_minus_min:
-            y_minus_min = y_minus
+    #     if x_plus > x_plus_max:
+    #         x_plus_max = x_plus
+    #     if y_plus > y_plus_max:
+    #         y_plus_max = y_plus
+
+    #     if x_minus < x_minus_min:
+    #         x_minus_min = x_minus
+    #     if y_minus < y_minus_min:
+    #         y_minus_min = y_minus
         
-    print("box:", x_minus_min, y_minus_min, x_plus_max, y_plus_max)
+    # print("box:", x_minus_min, y_minus_min, x_plus_max, y_plus_max)
 
-    for th in np.arange(-.25,.25,0.01):
-        for thdot in np.arange(-.25,.25,0.01):
-            TM.pendulum_trajectory_segment([th,thdot])
+    fout_roa = open(prx.out_path + "/py_pend_trajs_succ.txt", "w", buffering=2^10)
+    
+    # for th in np.arange(-np.pi, np.pi, 0.1):
+
+    for th in tqdm(np.arange(-np.pi, np.pi, 0.1)):
+        for thdot in np.arange(-2*np.pi, 2*np.pi, 0.1):
+            l,r = TM.pendulum_trajectory_ilqr([th,thdot])
             TM.resulting_trajectory.to_file(prx.out_path + "/py_pend_track_trajs.txt", "a")
+            fout_roa.write(str(TM.resulting_trajectory.front()) + " ")
+            fout_roa.write(str(TM.resulting_trajectory.back()) + " ")
+            fout_roa.write(str(r))
+            fout_roa.write("\n")

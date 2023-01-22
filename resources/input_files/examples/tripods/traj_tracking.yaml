@@ -24,7 +24,8 @@ num_samples: 1
 total_files: 1
 file_number: 0
 
-segment: 2
+# from 0 to 9
+segment: 2 
 
 # ML4KP-devel/resources/input_files/traj_tracking...
 nominal_traj: "traj_tracking/pend_nominal_traj_2.0000000.000000.txt"

@@ -122,9 +122,6 @@ void bindings()
                     &set_dirt_t_blossom_edges_counter<std::vector<long unsigned>>)
       // Comment to force ; to the next one
       ;
-
-  // class_<prx::hyb_aorrt2_stride_query_t, std::shared_ptr<prx::hyb_aorrt2_stride_query_t>>("hyb_aorrt2_stride_query",
-  // init<>())
 }
 }  // namespace dirt
 }  // namespace planners

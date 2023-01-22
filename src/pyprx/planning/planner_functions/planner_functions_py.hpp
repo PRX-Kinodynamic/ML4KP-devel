@@ -35,33 +35,45 @@ void bindings()
       .def("set_f", &create_function<prx::valid_trajectory_t, bool, prx::trajectory_t>)
       .staticmethod("set_f")
       .def("wrap", &create_function<prx::valid_trajectory_t, bool, prx::trajectory_t>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::sample_state_t>("sample_state")
       .def("__call__", &prx::sample_state_t::operator())
       .def("wrap", &create_function<prx::sample_state_t, void, prx::space_point_t&>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::sample_plan_t>("sample_plan")
       .def("__call__", &prx::sample_plan_t::operator())
       .def("wrap", &create_function<prx::sample_plan_t, void, prx::plan_t, prx::space_point_t>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::valid_stop_t>("valid_stop")
       .def("__call__", &prx::valid_stop_t::operator())
       .def("wrap", &create_function<prx::valid_stop_t, bool, prx::space_point_t, prx::plan_t*, prx::trajectory_t*>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::propagate_t>("propagate")
       .def("__call__", &prx::propagate_t::operator())
       .def("wrap", &create_function<prx::propagate_t, void, prx::space_point_t, prx::plan_t&, prx::trajectory_t&>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::expand_t>("expand")
       .def("__call__", &prx::expand_t::operator())
       .def("wrap", &create_function<prx::expand_t, void, prx::space_point_t&, std::vector<prx::plan_t*>&,
                                     std::vector<prx::trajectory_t*>&, int, bool>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   def("create_default_goal_check", &prx::create_default_goal_check);
 }

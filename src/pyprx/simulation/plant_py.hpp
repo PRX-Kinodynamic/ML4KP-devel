@@ -40,26 +40,15 @@ PRX_GETTER(plant_t, derivative_space)
 void bindings()
 {
   class_<plant_wrap, bases<prx::system_t, prx::movable_object_t>, boost::noncopyable>("plant_t", init<std::string>())
-      // class_<plant_wrap, bases<prx::system_t>, boost::noncopyable>("plant_t", no_init)
-      // .def("__init__", make_constructor(&init_as_ptr<prx::plant_t, std::string>, default_call_policies()))
       .def("add_system", &prx::plant_t::add_system)
       .def("propagate", &prx::plant_t::propagate)
       .def("compute_stopping_maneuver", &prx::plant_t::compute_stopping_maneuver)
       .def("compute_control", &prx::plant_t::compute_control)
-      // .def("update_configuration", &plant_wrap::update_configuration)
-      // .def("update_configuration", pure_virtual(&prx::plant_t::update_configuration))
-      // .def("update_configuration", pure_virtual(&plant_wrap::update_configuration))
       .def("update_configuration", pure_virtual(&prx::plant_t::update_configuration))
       .def("compute_derivative", pure_virtual(&plant_wrap::compute_derivative))
-      // TODO: Add "std::pair<unsigned,unsigned>" class
-      // .def("get_collision_list", &prx::plant_t::get_collision_list)
       .def("set_integrator", &prx::plant_t::set_integrator)
       .def("set_state_space_bounds", &prx::plant_t::set_state_space_bounds)
-      // .def("get_derivative_space", &get_plant_t_derivative_space<prx::space_t*>, return_internal_reference<>())
-      // .def("set_derivative_space", &set_plant_t_derivative_space<prx::space_t*>, return_internal_reference<>())
-      // TODO: Add "std::vector<double*>" class
-      // .def("derivative_memory", &get_plant_t_derivative_memory<std::vector<double*>>,
-      // &set_plant_t_derivative_memory<std::vector<double*>>)
+      // Comment to force ; to the next one
       ;
 
   iterable_converter().from_python<std::vector<prx::system_ptr_t> >();
