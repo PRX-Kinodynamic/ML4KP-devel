@@ -10,7 +10,7 @@ environment: "environments/empty.yaml"
 
 goal_region_radius: 0.5
 
-duration: 30
+duration: 10
 state_increment: 1
 system_name: "pendulum_lqr"
 # system_name: "pendulum_lc"

@@ -476,34 +476,22 @@ class NoisyTimeMap:
         self.resulting_trajectory.clear()
         start_state = self.nominal_traj.front()
 
-        # self.start_state[0] = start_state[0] + X[0]
-        # self.start_state[1] = start_state[1] + X[1]
+
         self.ss.copy(self.start_state, X)
+
         segment_duration = 0
         current_k = 0
 
 
         def closest_x_in_traj(xhat):
-            # print(getframeinfo(currentframe()).filename, getframeinfo(currentframe()).lineno)
-            # print(xhat)
             node = self.gnn.single_query(xhat)
-            # print(getframeinfo(currentframe()).filename, getframeinfo(currentframe()).lineno)
             k = node.get_index();
             # print(k)
             return k;
-            # best_so_far = 100; # <- big number
-            # k = k_best = 0
-            # for _ in self.nominal_plan:
-            #     dist = prx.space_t.euclidean_2d(xhat, self.nominal_traj[k], 0, 2)
-            #     if ( dist < best_so_far):
-            #         best_so_far = dist;
-            #         k_best = k;
-            #     k += 1
-            # return k_best
 
-        # for ti in range(0,len(self.nominal_plan)):
-        for _ in range(0,2*len(self.nominal_plan)):
+        self.resulting_trajectory.copy_onto_back(self.start_state)
 
+        for _ in range(int(self.duration * 100)):
             ti = closest_x_in_traj(self.start_state);
 
             x_i = np.array(self.nominal_traj[ti]);
