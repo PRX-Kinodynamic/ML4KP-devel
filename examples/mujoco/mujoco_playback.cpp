@@ -1,24 +1,19 @@
 #include "prx/mujoco/mj_simulator.hpp"
 #include "prx/simulation/playback/plan.hpp"
+#include <iostream>
+#include <fstream>
+#include <string>
 
 using namespace prx;
 
+// arg 1: file name of target control file in resources/control_sequences/
 int main(int argc, char** argv)
 {
-    std::vector<double> plan_to_playback = 
-    {
-       -1.9251 , 1.72,
-        -0.8954 , 0.5,
-        2.6199 , 1.26,
-        -1.3660 , 0.66,
-        2.1589 , 0.58,
-        -2.2905 , 0.58,
-        2.0933 , 0.74,
-        -2.8685 , 0.52,
-        1.6676 , 0.52
-    };
 
-    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("cartpole.xml");
+    std::string controlFilename(argv[1]);
+    std::string modelFilename(argv[2]);
+
+    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>(modelFilename);
     sim->init_simulator();
 
     auto context = sim -> get_context("mujoco");
@@ -31,11 +26,29 @@ int main(int argc, char** argv)
     start -> at(2) = PRX_PI;
 
     plan_t plan(cs);
-    for (int i = 0; i < plan_to_playback.size(); i+=2)
-    {
-        plan.append_onto_back(plan_to_playback[i+1]);
-        plan.back().control -> at(0) = plan_to_playback[i];
+    std::string line;
+    std::ifstream FileReader("resources/control_sequences/"+controlFilename);
+    while (getline (FileReader, line)) {
+        // Output the text from the file
+        std::cout << line;
+        
+        int start = 0;
+        int end = line.find(",");
+        double time = std::stod(line.substr(start, end - start));
+        int start = end + 1;
+
+        plan.append_onto_back(time);
+
+        space_point_t u = plan.back().control;
+        for(int i = 0; i< u->get_dim();i++){
+            end = line.find(",", start);
+            if(end != -1){
+                u->at(i) = std::stod(line.substr(start, end - start));
+                start = end + 1;
+            }
+        }
     }
+    FileReader.close();
 
     while(true)
     {
