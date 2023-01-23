@@ -6,13 +6,21 @@
 
 using namespace prx;
 
-// arg 1: file name of target control file in resources/control_sequences/
-// arg 2: file name of target model file in resources/models/mujoco/
 int main(int argc, char** argv)
 {
+    std::string params_file;
+    if (argc<=1)
+    {
+        params_file = "cartpole_playback.yaml";
+    }
+    else
+    {
+        params_file = std::string(argv[1]);
+    }
+    param_loader params(params_file);
 
-    std::string controlFilename(argv[1]);
-    std::string modelFilename(argv[2]);
+    std::string controlFilename = params["control_file"].as<std::string>();
+    std::string modelFilename = params["model_file"].as<std::string>();
 
     std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>(modelFilename);
     sim->init_simulator();
@@ -21,34 +29,33 @@ int main(int argc, char** argv)
     auto ss = context.first -> get_state_space();
     auto cs = context.first -> get_control_space();
 
-    init_random(111093);
-    space_point_t start = ss -> make_point();
+    init_random(params["random_seed"].as<int>());
+    space_point_t start = ss ->make_point();
+    ss -> copy_point_from_vector(start, params["start_state"].as<std::vector<double>>());
     space_point_t end = ss -> make_point();
-    start -> at(2) = PRX_PI;
 
     plan_t plan(cs);
-
 
     std::string line;
     std::ifstream FileReader("resources/control_sequences/"+controlFilename);
     while (getline (FileReader, line)) {
         
         //read time from start of line
-        int start = 0;
-        int end = line.find(",");
-        double time = std::stod(line.substr(start, end - start));
-        start = end + 1;
+        int startindx = 0;
+        int endindx = line.find(",");
+        double time = std::stod(line.substr(startindx, endindx - startindx));
+        startindx = endindx + 1;
         plan.append_onto_back(time);
 
         //read controls
         space_point_t u = plan.back().control;
         for(int i = 0; i< u->get_dim();i++){
-            if(end != -1){
-                end = line.find(",", start);
-                u->at(i) = std::stod(line.substr(start, end - start));
-                start = end + 1;
+            if(endindx != -1){
+                endindx = line.find(",", startindx);
+                u->at(i) = std::stod(line.substr(startindx, endindx - startindx));
+                startindx = endindx + 1;
             }else{
-                std::cout<< "WARNING: control space larger than input control!\n";
+                prx_throw("WARNING: control space larger than input control!\n");
             }
         }
     }
