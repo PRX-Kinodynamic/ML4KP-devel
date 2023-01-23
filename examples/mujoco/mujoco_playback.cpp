@@ -11,7 +11,7 @@ int main(int argc, char** argv)
     std::string params_file;
     if (argc<=1)
     {
-        params_file = "cartpole_playback.yaml";
+        params_file = "examples/mujoco/cartpole_playback.yaml";
     }
     else
     {
@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     plan_t plan(cs);
 
     std::string line;
-    std::ifstream FileReader("resources/control_sequences/"+controlFilename);
+    std::ifstream FileReader("resources/input_files/plans/"+controlFilename);
     while (getline (FileReader, line)) {
         
         //read time from start of line
@@ -47,6 +47,9 @@ int main(int argc, char** argv)
         startindx = endindx + 1;
         plan.append_onto_back(time);
 
+
+        std::cout<<" ";
+        
         //read controls
         space_point_t u = plan.back().control;
         for(int i = 0; i< u->get_dim();i++){
