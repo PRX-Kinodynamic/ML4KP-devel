@@ -7,6 +7,7 @@
 using namespace prx;
 
 // arg 1: file name of target control file in resources/control_sequences/
+// arg 2: file name of target model file in resources/models/mujoco/
 int main(int argc, char** argv)
 {
 
@@ -26,30 +27,34 @@ int main(int argc, char** argv)
     start -> at(2) = PRX_PI;
 
     plan_t plan(cs);
+
+
     std::string line;
     std::ifstream FileReader("resources/control_sequences/"+controlFilename);
     while (getline (FileReader, line)) {
-        // Output the text from the file
-        std::cout << line;
         
+        //read time from start of line
         int start = 0;
         int end = line.find(",");
         double time = std::stod(line.substr(start, end - start));
-        int start = end + 1;
-
+        start = end + 1;
         plan.append_onto_back(time);
 
+        //read controls
         space_point_t u = plan.back().control;
         for(int i = 0; i< u->get_dim();i++){
-            end = line.find(",", start);
             if(end != -1){
+                end = line.find(",", start);
                 u->at(i) = std::stod(line.substr(start, end - start));
                 start = end + 1;
+            }else{
+                std::cout<< "WARNING: control space larger than input control!\n";
             }
         }
     }
     FileReader.close();
 
+    //execute loaded plan
     while(true)
     {
         context.first -> propagate(start, plan, end);
