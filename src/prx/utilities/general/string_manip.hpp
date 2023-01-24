@@ -1,14 +1,33 @@
 #pragma once
 /**
  * @file string_manip.hpp
- * @author Zakary Littlefield
+ * @author Zakary Littlefield and Noah Carver
  * @brief <b> Some helper functions for string manipulation. </b>
  * */
 #include <utility>
 #include <string>
+#include <vector>
 
 namespace prx
 {
+	/**
+	 * Splits a string by delimiter into the remainder and the beginning
+	 * 
+	 * Note: this is the one thing Noah Carver wrote :)
+	 * 
+	 * For example: 
+	 * 
+	 * text = "1/2/3/4"
+	 * split = split_to_dbl_vector(text, "/");
+	 * split = {1.0,2.0,3.0,4.0}
+	 * 
+	 * @brief Splits a text and returns as vector of type T
+	 * @param text The text to be split
+	 * @param delimiter the character to split by
+	 * @return A vector<double> containing the split string
+	 */
+	std::vector<double> split_to_dbl_vector(const std::string& text, char delimiter=',');
+
 	/**
 	 * Splits a /-delimited path into the remainder and the beginning
 	 * 

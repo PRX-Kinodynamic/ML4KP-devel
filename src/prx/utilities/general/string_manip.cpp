@@ -2,9 +2,26 @@
 
 #include <algorithm>
 #include <iostream>
+#include <vector>
 
 namespace prx
 {
+	std::vector<double> split_to_dbl_vector(const std::string& text, char delimiter)
+	{
+		int startindx = 0;
+        int endindx = text.find(",");
+		std::vector<double> ret = {};
+		while(endindx != -1)
+		{
+			ret.push_back(std::stod(text.substr(startindx, endindx - startindx)));
+			startindx = endindx + 1;
+			endindx = text.find(",", startindx);
+		}
+		ret.push_back(std::stod(text.substr(startindx, endindx - startindx)));
+		return ret;
+	}
+
+
 	std::pair<const std::string, const std::string> split_path(const std::string& path, char delimiter)
 	{
 		const size_t first_slash = path.find(delimiter);

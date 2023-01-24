@@ -2,7 +2,7 @@ name: "cartpole_playback"
 path: "cartpole_playback"
 
 # define initial state
-start_state: [0.0, 0.0, 0.0, 0.0]
+start_state: [3.14, 0.0, 0.0, 0.0]
 
 control_file: "cartpole_plan_1.txt"
 model_file: "cartpole.xml"

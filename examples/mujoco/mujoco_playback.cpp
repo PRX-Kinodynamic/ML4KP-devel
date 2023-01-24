@@ -39,34 +39,27 @@ int main(int argc, char** argv)
     std::string line;
     std::ifstream FileReader("resources/input_files/plans/"+controlFilename);
     while (getline (FileReader, line)) {
+        std::vector<double> line_data = split_to_dbl_vector(line);
+        std::cout<<"Read line from plan: "<< line << "\n";
         
         //read time from start of line
-        int startindx = 0;
-        int endindx = line.find(",");
-        double time = std::stod(line.substr(startindx, endindx - startindx));
-        startindx = endindx + 1;
+        double time = line_data[0];
         plan.append_onto_back(time);
+        line_data.erase(line_data.begin());
 
-
-        std::cout<<" ";
-        
         //read controls
         space_point_t u = plan.back().control;
-        for(int i = 0; i< u->get_dim();i++){
-            if(endindx != -1){
-                endindx = line.find(",", startindx);
-                u->at(i) = std::stod(line.substr(startindx, endindx - startindx));
-                startindx = endindx + 1;
-            }else{
-                prx_throw("WARNING: control space larger than input control!\n");
-            }
-        }
+        cs -> copy_point_from_vector(u, line_data);
+
     }
     FileReader.close();
+
+    std::cout<<"finished reading file\n";
 
     //execute loaded plan
     while(true)
     {
+        std::cout<<"execute step\n";
         context.first -> propagate(start, plan, end);
         usleep(int(1e6));
     }
