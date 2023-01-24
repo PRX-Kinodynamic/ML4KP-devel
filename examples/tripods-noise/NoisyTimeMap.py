@@ -571,24 +571,19 @@ class NoisyTimeMap:
 
                     i += 1
 
-    def pendulum_trajectory_segment(self, X):
+    def pendulum_trajectory_segment(self, X, box_goal=[0.07, 0.07]):
         self.ss.copy_point_from_vector(self.start_state,X)
         # self.resulting_trajectory.clear()
 
 
         start_state = self.nominal_traj[self.start_state_idx]
 
-        # self.start_state[0] = start_state[0] + X[0]
-        # self.start_state[1] = start_state[1] + X[1]
-        start_state = X
         segment_duration = 0
         current_k = self.segment
         # self.resulting_trajectory.copy_onto_back(self.start_state)
 
         local_goal = self.local_goals[self.segment]
         dim = len(self.start_state.to_list())
-
-        box_goal = [0.07, 0.07] # + self.duration*local_goal[1]]
 
         # print("region:", self.regions[self.segment])
         # print(int(self.ks_duration[self.segment]*100))
