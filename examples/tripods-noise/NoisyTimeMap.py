@@ -108,6 +108,7 @@ class NoisyTimeMap:
             for s in range(self.segment):
                 s_dur = self.ks_duration[s]
                 self.start_state_idx += int(s_dur * 100)
+            self.load_nominal_traj()
         except:
             pass
 
@@ -406,7 +407,7 @@ class NoisyTimeMap:
         # print("After propagate: ", self.end_state)
         return self.end_state.to_list()
 
-    def pendulum_trajectory_ilqr(self, X):
+    def load_nominal_traj(self):
         if not hasattr(self, 'gnn'):
             self.nominal_traj = prx.trajectory(self.ss);
             self.nominal_plan = prx.plan(self.cs);
@@ -473,14 +474,18 @@ class NoisyTimeMap:
             # print(self.ks)
             # print(self.ks_duration)
             # print(self.ki)
-        self.resulting_trajectory.clear()
-        start_state = self.nominal_traj.front()
+
+
+    def pendulum_trajectory_ilqr(self, X):
+        
+        # self.resulting_trajectory.clear()
+        # start_state = self.nominal_traj.front()
 
 
         self.ss.copy(self.start_state, X)
 
         segment_duration = 0
-        current_k = 0
+        # current_k = 0
 
 
         def closest_x_in_traj(xhat):
@@ -489,7 +494,7 @@ class NoisyTimeMap:
             # print(k)
             return k;
 
-        self.resulting_trajectory.copy_onto_back(self.start_state)
+        # self.resulting_trajectory.copy_onto_back(self.start_state)
 
         for _ in range(int(self.duration * 100)):
             ti = closest_x_in_traj(self.start_state);
@@ -497,7 +502,7 @@ class NoisyTimeMap:
             x_i = np.array(self.nominal_traj[ti]);
             xhat = np.array(self.start_state)
             ctrl_i = np.array( self.nominal_plan[ti].control)
-            duration_i =  self.nominal_plan[ti].duration
+            # duration_i =  self.nominal_plan[ti].duration
 
             ki = np.array(self.ki[ti])
 
@@ -510,7 +515,7 @@ class NoisyTimeMap:
             self.plan.duration = self.simulation_step
 
             self.context.system_group.propagate(self.start_state, self.plan, self.start_state);
-            self.resulting_trajectory.copy_onto_back(self.start_state)
+            # self.resulting_trajectory.copy_onto_back(self.start_state)
             segment_duration += self.simulation_step
 
             # if (np.abs(segment_duration - self.ks_duration[current_k]) < self.simulation_step**2):
@@ -520,7 +525,8 @@ class NoisyTimeMap:
             if (np.linalg.norm(np.array(self.start_state)) < 0.1):
                 break;
 
-        return self.resulting_trajectory.back().to_list();
+        # return self.resulting_trajectory.back().to_list();
+        return self.start_state.to_list();
 
 
     def trajectory_tracking_regions(self):
