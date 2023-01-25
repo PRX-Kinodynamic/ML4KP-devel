@@ -94,12 +94,12 @@ namespace prx
             d -> qacc_warmstart[i] = 0;
         }
         mj_step(m, d);
-        // mjrRect viewport = {0, 0, 0, 0};
-        // glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
-        // mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
-        // mjr_render(viewport, &scn, &con);
-        // glfwSwapBuffers(window);
-        // glfwPollEvents();
+        mjrRect viewport = {0, 0, 0, 0};
+        glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+        mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
+        mjr_render(viewport, &scn, &con);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
 
     void mujoco_simulator_t::reset_simulation()
