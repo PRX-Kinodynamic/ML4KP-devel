@@ -14,6 +14,8 @@
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/simulation/plants/types/noisy_plant.hpp"
 
+#include "prx/utilities/data_structures/gnn.hpp"
+#include "prx/utilities/data_structures/tree.hpp"
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/general/noise.hpp"
 #include "prx/utilities/general/param_loader.hpp"
@@ -113,6 +115,10 @@ struct time_map_t
 
     _ss->print_bounds();
     _cs->print_bounds();
+
+    traj_file = prx::input_path + params["nominal_traj"].as<>();
+    plan_file = prx::input_path + params["nominal_plan"].as<>();
+    lgoals_ks = prx::input_path + params["local_goals_ks"].as<>();
   }
   void get_noisy_controller()
   {
@@ -132,6 +138,7 @@ struct time_map_t
   space_point_t goal_state;
   space_point_t u_goal;
   space_point_t end_state;
+  space_point_t ctrl;
 
   std::shared_ptr<uniform_noise_t> x0_noise;
   std::shared_ptr<uniform_noise_t> t_noise;
@@ -152,6 +159,19 @@ struct time_map_t
   custom_check_t goal_check;
 
   world_model_t* world_model;
+
+  // ilqr-related stuff
+  std::shared_ptr<prx::trajectory_t> nominal_traj;
+  std::shared_ptr<prx::plan_t> nominal_plan;
+  std::shared_ptr<prx::plan_t> plan;
+  prx::distance_function_t df;
+  std::shared_ptr<prx::graph_nearest_neighbors_t> gnn;
+  std::vector<std::shared_ptr<prx::tree_node_t>> tree_nodes;
+  std::vector<Eigen::Vector2d> ki;
+  std::shared_ptr<prx::trajectory_t> resulting_trajectory;
+  std::string traj_file;
+  std::string plan_file;
+  std::string lgoals_ks;
 };
 
 using time_map_function_t = std::function<void(const space_point_t&, time_map_t&)>;
@@ -280,6 +300,124 @@ time_map_function_t acrobot_lqr = [](const space_point_t& s, time_map_t& tmv)  /
   // std::cout << "Start: " << tmv.start_state << "\tend: " << tmv.end_state << "\n";
 };
 
+time_map_function_t pendulum_trajectory_ilqr = [](const space_point_t& s, time_map_t& tmv)  // no-lint
+{
+  if (tmv.gnn == nullptr)
+  {
+    tmv._ss->copy(tmv.goal_state, Eigen::Vector2d::Zero());
+    tmv.ctrl = tmv._cs->make_point();
+    tmv.nominal_traj = std::make_shared<prx::trajectory_t>(tmv._ss);
+    tmv.nominal_plan = std::make_shared<prx::plan_t>(tmv._cs);
+
+    tmv.ctrl->at(0) = 0;
+
+    tmv.plan = std::make_shared<prx::plan_t>(tmv._cs);
+    tmv.plan->append_onto_back(simulation_step);
+
+    tmv.nominal_traj->from_file(tmv.traj_file);
+    tmv.nominal_plan->from_file(tmv.plan_file);
+    tmv.nominal_plan->expand();
+    tmv.resulting_trajectory = std::make_shared<prx::trajectory_t>(tmv._ss);
+
+    tmv.resulting_trajectory->to_file(prx::out_path + "/cpp_pend_track_trajs.txt");
+
+    std::vector<Eigen::Vector2d> ks;
+    std::vector<double> ks_duration;
+    // std::vector<double> local_goals;
+    // std::vector<double> regions;
+
+    std::ifstream ifs(tmv.lgoals_ks);
+    std::string line;
+
+    while (std::getline(ifs, line))
+    {
+      std::istringstream ss(line);
+      std::string token;
+      std::vector<std::string> strs;
+      while (std::getline(ss, token, ' '))
+      {
+        if (token == " " || token.size() == 0)
+          continue;
+        // PRX_DEBUG_VAR_1(token);
+        strs.push_back(token);
+      }
+      ks.emplace_back(std::stod(strs[2]), std::stod(strs[3]));
+      ks_duration.emplace_back(std::stod(strs[4]));
+    }
+
+    tmv.df = std::bind(prx::space_t::euclidean_2d, std::placeholders::_1, std::placeholders::_2, 0,
+                       tmv._ss->get_dimension());
+    tmv.gnn = std::make_shared<prx::graph_nearest_neighbors_t>(tmv.df);
+
+    double k_dur;
+    Eigen::Vector2d k;
+
+    for (auto t : prx::zip_iters(ks, ks_duration))
+    {
+      std::tie(k, k_dur) = prx::unzip(t);
+
+      for (double ti = 0; ti < k_dur; ti += 0.01)
+      {
+        tmv.ki.push_back(k);
+      }
+    }
+
+    std::size_t kt{ 0 };
+    for (auto ut : *tmv.nominal_plan)
+    {
+      tmv.tree_nodes.push_back(std::make_shared<prx::tree_node_t>(kt));
+      tmv.tree_nodes.back()->point = tmv.nominal_traj->at(kt);
+      tmv.gnn->add_node(tmv.tree_nodes.back().get());
+      kt++;
+    }
+  }
+
+  tmv.resulting_trajectory->clear();
+
+  tmv._ss->copy(tmv.start_state, s);
+
+  std::function<std::size_t(space_point_t&)> closest_x_in_traj = [&](space_point_t& xhat) {
+    // node = self.gnn.single_query(xhat) k = node.get_index();
+    return dynamic_cast<prx::tree_node_t*>(tmv.gnn->single_query(xhat))->get_index();
+  };
+
+  tmv.resulting_trajectory->copy_onto_back(tmv.start_state);
+  // PRX_DEBUG_VAR_1("~-~-~-~-~-~-~-~-~-");
+
+  for (double tt = 0; tt < tmv.duration; tt += simulation_step)
+  {
+    auto start_i = tmv.resulting_trajectory->back();
+    const std::size_t ti = closest_x_in_traj(start_i);
+
+    auto x_i = (*tmv.nominal_traj)[ti]->vector();
+    auto xhat = start_i->vector();
+    auto ctrl_i = (*tmv.nominal_plan)[ti].control->vector();
+    auto duration_i = (*tmv.nominal_plan)[ti].duration;
+
+    auto ki = tmv.ki[ti];
+
+    auto du = -ki.transpose() * (xhat - x_i);
+    auto ctrl_hat = ctrl_i + du;
+
+    // PRX_DEBUG_VAR_3(ctrl_hat, ctrl_i, du);
+    tmv._cs->copy(tmv.plan->front().control, ctrl_hat);
+    tmv.plan->front().duration = simulation_step;
+
+    tmv.resulting_trajectory->copy_onto_back(tmv._ss);
+    auto new_state = tmv.resulting_trajectory->back();
+    tmv.sg->propagate(start_i, *tmv.plan, new_state);
+
+    // PRX_DEBUG_VAR_2(new_state, tmv.plan->front());
+
+    if (tmv.df(new_state, tmv.goal_state) <= 0.1)
+    {
+      break;
+    }
+  }
+  tmv.resulting_trajectory->to_file(prx::out_path + "/cpp_pend_track_trajs.txt", std::ofstream::app);
+  tmv._ss->copy(tmv.end_state, tmv.resulting_trajectory->back());
+};
+
 bool state_increment(space_point_t pt, double step_inc, std::vector<double> lower_bounds,
                      std::vector<double> upper_bounds)
 {
@@ -304,6 +442,7 @@ int main(int argc, char* argv[])
   time_map_functions["pendulum_lc"] = pendulum_lc;
   time_map_functions["ackermann_lc"] = ackermann_lc;
   time_map_functions["acrobot_lqr"] = acrobot_lqr;
+  time_map_functions["pendulum_trajectory_ilqr"] = pendulum_trajectory_ilqr;
 
   const std::string system_name{ params["system_name"].as<>() };
   const int num_samples{ params["num_samples"].as<int>() };
@@ -351,35 +490,46 @@ int main(int argc, char* argv[])
   PRX_DEBUG_VAR_3(states_per_file, initial_state_num, final_state_num);
   progress_bar_t bar(final_state_num - initial_state_num, "");
   tmv._ss->copy(tmv.start_state, lower_bounds);
-  do
+
+  auto thetas = prx::linspace(-PRX_PI, PRX_PI, std::pow(2, 10));
+  auto thetas_dot = prx::linspace(-2 * PRX_PI, 2 * PRX_PI, std::pow(2, 10));
+  int co = 0;
+  for (auto th : thetas)
   {
-    state_num++;
-    if (state_num < initial_state_num)
-      continue;
-    if (state_num >= final_state_num)
-      continue;
-    bar.update(state_num - initial_state_num);
-
-    line.str(std::string());
-    line << tmv.start_state;
-    int reached = 0;
-    for (int i = 0; i < num_samples; ++i)
+    for (auto thdot : thetas_dot)
     {
-      g_tm(tmv.start_state, tmv);
-      if (tmv.goal_check())
-      {
-        reached += 1;
-      }
-    }
-    const double succesful_samples{ reached / static_cast<double>(num_samples) };
-    line << succesful_samples;
-    line << " " << tmv.end_state;
-    line << "\n";
-    const std::string str{ line.str() };
-    fout_roa.write(str.c_str(), str.size());
+      tmv._ss->copy(tmv.start_state, { th, thdot });
+      // do
+      // {
+      // state_num++;
+      // if (state_num < initial_state_num)
+      //   continue;
+      // if (state_num >= final_state_num)
+      //   continue;
+      bar.update(state_num - initial_state_num);
 
-    // exit(0);
-  } while (state_increment(tmv.start_state, step_inc, lower_bounds, upper_bounds));
+      line.str(std::string());
+      line << tmv.start_state;
+      int reached = 0;
+      for (int i = 0; i < num_samples; ++i)
+      {
+        g_tm(tmv.start_state, tmv);
+        if (tmv.goal_check())
+        {
+          reached += 1;
+        }
+      }
+      const double succesful_samples{ reached / static_cast<double>(num_samples) };
+      // line << succesful_samples;
+      line << "\n" << tmv.end_state;
+      line << "\n";
+      const std::string str{ line.str() };
+      fout_roa.write(str.c_str(), str.size());
+
+      // exit(0);
+    }
+  }
+  // } while (state_increment(tmv.start_state, step_inc, lower_bounds, upper_bounds));
 
   fout_roa.close();
   return 0;

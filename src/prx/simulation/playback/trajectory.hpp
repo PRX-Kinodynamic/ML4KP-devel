@@ -96,7 +96,7 @@ public:
   void clear();
   // void copy_onto_back(space_point_t state);
   template <typename State>
-  void copy_onto_back(State state)
+  void copy_onto_back(State& state)
   {
     if ((num_states + 1) >= max_num_states)
     {
