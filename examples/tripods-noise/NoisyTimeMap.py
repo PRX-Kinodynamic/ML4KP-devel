@@ -239,7 +239,7 @@ class NoisyTimeMap:
             #     self.ctrl[0] = 0
             #     self.cs.copy_from(self.ctrl)
             #     switch_control = False
-            if self.start_state[0] < switch_height or all([self.start_state[1]>9.99, self.start_state[0] < 1.15*switch_height]):
+            if self.start_state[0] < switch_height or all([self.start_state[1]>2.5, self.start_state[0] < 1.15*switch_height]):
                 self.controller_base.compute_controls()
                 self.cs.enforce_bounds()
                 switch_control = True
