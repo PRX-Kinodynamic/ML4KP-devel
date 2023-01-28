@@ -32,9 +32,22 @@ namespace prx
         mjr_makeContext(m, &con, mjFONTSCALE_150);
 
         // TODO: These lines don't work. Need to make them work.
-        // glfwSetCursorPosCallback(window, mouse_move);
-        // glfwSetMouseButtonCallback(window, mouse_button);
-        // glfwSetScrollCallback(window, scroll);
+        glfwSetWindowUserPointer(window, this);
+        glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos)
+        {
+            auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
+            sim->mouse_move(window, xpos, ypos);
+        });
+        glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods)
+        {
+            auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
+            sim->mouse_button(window, button, action, mods);
+        });
+        glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset)
+        {
+            auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
+            sim->scroll(window, xoffset, yoffset);
+        });
 
         // number of generalized coordinates
         std::cout << "nq = " << m -> nq << std::endl;
