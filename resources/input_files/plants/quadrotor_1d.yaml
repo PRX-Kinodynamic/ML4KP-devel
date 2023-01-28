@@ -8,7 +8,7 @@ min_steps: 1
 max_steps: 50
 
 state_space_lower_bound: [10, -15]
-state_space_upper_bound: [30, 10]
+state_space_upper_bound: [30, 3]
 
 starting_lower_bound: [10, -15]
 ending_upper_bound: [30,  10]
