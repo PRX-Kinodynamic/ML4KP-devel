@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 
+
 using namespace prx;
 
 int main(int argc, char** argv)
@@ -37,16 +38,17 @@ int main(int argc, char** argv)
     ss -> copy_point_from_vector(start, params["start_state"].as<std::vector<double>>());
     ss -> copy_from_point(start);
     space_point_t end = ss -> make_point();
+    trajectory_t traj(ss);
 
     plan_t plan(cs);
 
     std::string line;
     std::ifstream FileReader(input_path + controlFilename);
-    std::cout<< input_path + controlFilename << "\n";
+    std::cout<<"Reading plan file: " <<input_path + controlFilename << "\n";
     while (getline (FileReader, line)) 
     {
         std::vector<double> line_data = split_to_dbl_vector(line);
-        std::cout<<"Read line from plan: "<< line << "\n";
+        //std::cout<<"Read line from plan: "<< line << "\n";
         
         //read time from start of line
         double time = line_data[0];
@@ -59,14 +61,14 @@ int main(int argc, char** argv)
 
     }
     FileReader.close();
-
     std::cout<<"Finished reading file\n";
 
     //execute loaded plan
-    while(true)
-    {
-        context.first -> propagate(start, plan, end);
-        usleep(int(1e6));
-        std::cout << ss -> print_point(end, 3) << std::endl;
-    }    
+
+    context.first -> propagate(start, plan, traj);
+    usleep(int(1e6));  
+
+    std::ofstream out ("plot generator/output.txt");
+    out<<traj.print();
+    out.close();
 }
