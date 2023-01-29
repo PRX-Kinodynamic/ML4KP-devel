@@ -23,6 +23,14 @@ namespace prx
 
         GLFWwindow* window;
 
+        protected:
+        bool button_left, button_right, button_middle;
+        double lastx, lasty;
+
+        void mouse_button(GLFWwindow* window, int button, int act, int mods);
+        void mouse_move(GLFWwindow* window, double xpos, double ypos);
+        void scroll(GLFWwindow* window, double xoffset, double yoffset);
+
         public:
         mujoco_simulator_t(const std::string& model_path);
 

@@ -1,5 +1,5 @@
 #include "prx/mujoco/mj_simulator.hpp"
-#include "prx/planning/planners/rrt.hpp"
+#include "prx/planning/planners/dirt.hpp"
 
 #include <fstream>
 
@@ -22,45 +22,47 @@ int main(int argc, char* argv[])
         sim -> step_simulation(propagate_step::FIRST_STEP);
     }
 
-    rrt_t rrt("rrt");
-    rrt_specification_t rrt_spec(context.first, context.second);
+    dirt_t dirt("dirt");
+    dirt_specification_t dirt_spec(context.first, context.second);
 
-    rrt_spec.distance_function = [&rrt_spec](const space_point_t& point1, const space_point_t& point2)
+    dirt_spec.distance_function = [&dirt_spec](const space_point_t& point1, const space_point_t& point2)
     {
-        return rrt_spec.state_space -> euclidean_2d(point1, point2, 0, 2);
+        return dirt_spec.state_space -> euclidean_2d(point1, point2, 0, 2);
     };
 
-    rrt_spec.min_control_steps = 0.5 * (1.0/simulation_step);
-    rrt_spec.max_control_steps = 2.0 * (1.0/simulation_step);
+    // dirt_spec.min_control_steps = 0.5 * (1.0/simulation_step);
+    // dirt_spec.max_control_steps = 2.0 * (1.0/simulation_step);
+    dirt_spec.min_control_steps = 1.0 * (1.0/simulation_step);
+    dirt_spec.max_control_steps = 1.0 * (1.0/simulation_step);
 
-    rrt_query_t rrt_query(ss,cs);
-    rrt_query.start_state = ss -> make_point();
-    rrt_query.goal_state = ss -> make_point();
-    ss -> copy_to_point(rrt_query.start_state);
-    ss -> copy_to_point(rrt_query.goal_state);
-    rrt_query.goal_state -> at(0) += 5.0;
-    rrt_query.goal_state -> at(1) += 5.0;
-    std::cout << ss -> print_point(rrt_query.start_state, 4) << std::endl;
-    std::cout << ss -> print_point(rrt_query.goal_state, 4) << std::endl;
+    dirt_query_t dirt_query(ss,cs);
+    dirt_query.start_state = ss -> make_point();
+    dirt_query.goal_state = ss -> make_point();
+    ss -> copy_to_point(dirt_query.start_state);
+    ss -> copy_to_point(dirt_query.goal_state);
+    dirt_query.goal_state -> at(0) += 9.0;
+    dirt_query.goal_state -> at(1) += 9.0;
+    std::cout << ss -> print_point(dirt_query.start_state, 4) << std::endl;
+    std::cout << ss -> print_point(dirt_query.goal_state, 4) << std::endl;
 
-    rrt_query.goal_check = [&](const space_point_t& point)
+    dirt_query.goal_check = [&](const space_point_t& point)
     {
-        return rrt_spec.distance_function(point, rrt_query.goal_state) < 0.5;
+        return dirt_spec.distance_function(point, dirt_query.goal_state) < 0.5;
     };
 
-    rrt_query.get_visualization = true;
+    dirt_query.get_visualization = true;
 
-    rrt.link_and_setup_spec(&rrt_spec);
-    rrt.preprocess();
-    rrt.link_and_setup_query(&rrt_query);
+    dirt.link_and_setup_spec(&dirt_spec);
+    dirt.preprocess();
+    dirt.link_and_setup_query(&dirt_query);
 
-    condition_check_t checker("time", 5.0);
-    rrt.resolve_query(&checker);
-    rrt.fulfill_query(); 
+    condition_check_t checker("time", 60.0);
+    dirt.resolve_query(&checker);
+    dirt.fulfill_query(); 
 
     std::ofstream fout;
     unsigned counter = 0;
-    for (auto& traj : rrt_query.tree_visualization)
+    for (auto& traj : dirt_query.tree_visualization)
     {
         fout.open(output_path + "tree" + std::to_string(counter) + ".txt");
         fout << traj.print(2);
@@ -69,8 +71,8 @@ int main(int argc, char* argv[])
     }
 
     fout.open(output_path + "solution.txt");
-    fout << rrt_query.solution_traj.print(4);
+    fout << dirt_query.solution_traj.print(4);
     fout.close();
 
-    std::cout << rrt_query.solution_plan.print(4) << std::endl;
+    std::cout << dirt_query.solution_plan.print(4) << std::endl;
 }
