@@ -37,12 +37,12 @@ int main(int argc, char** argv)
     ss -> copy_point_from_vector(start, params["start_state"].as<std::vector<double>>());
     ss -> copy_from_point(start);
     space_point_t end = ss -> make_point();
-    ss -> copy_from_point(start);
 
     plan_t plan(cs);
 
     std::string line;
     std::ifstream FileReader(input_path + controlFilename);
+    std::cout<< input_path + controlFilename << "\n";
     while (getline (FileReader, line)) 
     {
         std::vector<double> line_data = split_to_dbl_vector(line);
@@ -68,10 +68,5 @@ int main(int argc, char** argv)
         context.first -> propagate(start, plan, end);
         usleep(int(1e6));
         std::cout << ss -> print_point(end, 3) << std::endl;
-    }
-    std::cout<<"state point\n";
-    space_point_t test = ss ->make_point();
-    ss ->sample(test);
-    std::cout << ss ->print_point(test) <<"\n";
-    
+    }    
 }
