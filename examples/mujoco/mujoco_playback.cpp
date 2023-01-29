@@ -11,7 +11,7 @@ int main(int argc, char** argv)
     std::string params_file;
     if (argc<=1)
     {
-        params_file = "examples/mujoco/cartpole_playback.yaml";
+        params_file = "examples/mujoco/mushr_playback.yaml";
     }
     else
     {
@@ -28,8 +28,11 @@ int main(int argc, char** argv)
     auto context = sim -> get_context("mujoco");
     auto ss = context.first -> get_state_space();
     auto cs = context.first -> get_control_space();
-
+    
     init_random(params["random_seed"].as<int>());
+
+
+    
     space_point_t start = ss ->make_point();
     ss -> copy_point_from_vector(start, params["start_state"].as<std::vector<double>>());
     ss -> copy_from_point(start);
@@ -39,6 +42,7 @@ int main(int argc, char** argv)
 
     std::string line;
     std::ifstream FileReader(input_path + controlFilename);
+    std::cout<< input_path + controlFilename << "\n";
     while (getline (FileReader, line)) 
     {
         std::vector<double> line_data = split_to_dbl_vector(line);
@@ -58,10 +62,11 @@ int main(int argc, char** argv)
 
     std::cout<<"Finished reading file\n";
 
+    //execute loaded plan
     while(true)
     {
         context.first -> propagate(start, plan, end);
         usleep(int(1e6));
         std::cout << ss -> print_point(end, 3) << std::endl;
-    }
+    }    
 }

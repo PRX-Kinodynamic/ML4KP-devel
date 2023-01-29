@@ -3,7 +3,7 @@
   <asset>
     <mesh name="buddy_mushr_base_nano" file="mushr_base_nano.stl"/>
     <mesh name="buddy_mushr_wheel" file="mushr_wheel.stl"/>
-    <!-- <mesh name="buddy_mushr_ydlidar" file="mushr_ydlidar.stl"/> -->
+    <mesh name="buddy_mushr_ydlidar" file="mushr_ydlidar.stl"/>
   </asset>
   <default>
       <default class="buddy_wheel">
@@ -25,8 +25,8 @@
       <site name="buddy_imu" pos="-0.005 0 .165"/>
 
       <geom pos="0 0 0.094655" type="mesh" mass="3.542137" mesh="buddy_mushr_base_nano"/>
-      <!-- <geom name="buddy_realsense_d435i" size="0.012525 0.045 0.0125" pos="0.0123949 0 0.162178" mass="0.072" type="box"/> -->
-      <!-- <geom name="buddy_ydlidar" pos="-0.035325 0 0.202405" type="mesh" mass="0.180" mesh="buddy_mushr_ydlidar"/> -->
+      <geom name="buddy_realsense_d435i" size="0.012525 0.045 0.0125" pos="0.0123949 0 0.162178" mass="0.072" type="box"/>
+      <geom name="buddy_ydlidar" pos="-0.035325 0 0.202405" type="mesh" mass="0.180" mesh="buddy_mushr_ydlidar"/>
 
       <body name="buddy_steering_wheel" pos="0.1385 0 0.0488">
         <joint class="buddy_steering" name="buddy_steering_wheel"/>
