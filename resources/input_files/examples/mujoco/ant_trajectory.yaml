@@ -1,0 +1,2 @@
+plant: !file "plants/ant.yaml"
+learned_controller: !file "networks/ant.yaml"
