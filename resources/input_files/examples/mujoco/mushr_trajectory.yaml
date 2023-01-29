@@ -1,0 +1,2 @@
+plant: !file "plants/mushr.yaml"
+learned_controller: !file "networks/mushr.yaml"

@@ -26,6 +26,9 @@ namespace prx
         protected:
         bool button_left, button_right, button_middle;
         double lastx, lasty;
+        mjrRect viewport;
+        std::vector<double> goal_pos;
+        double goal_radius;
 
         void mouse_button(GLFWwindow* window, int button, int act, int mods);
         void mouse_move(GLFWwindow* window, double xpos, double ypos);
@@ -41,6 +44,20 @@ namespace prx
         virtual void step_simulation(propagate_step step) override;
 
         virtual void reset_simulation() override;
+
+        inline void set_goal(const space_point_t goal)
+        {
+            goal_pos.clear();
+            for (int i = 0; i < 3; i++)
+            {
+                goal_pos.push_back(goal->at(i));
+            }
+        }
+
+        inline void set_goal_radius(double radius)
+        {
+            goal_radius = radius;
+        }
 
         bool in_collision();
 

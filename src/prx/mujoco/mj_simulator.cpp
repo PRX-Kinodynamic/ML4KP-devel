@@ -30,8 +30,8 @@ namespace prx
         mjr_defaultContext(&con);
         mjv_makeScene(m, &scn, 1000);
         mjr_makeContext(m, &con, mjFONTSCALE_150);
+        viewport = {0, 0, 1200, 900};
 
-        // TODO: These lines don't work. Need to make them work.
         glfwSetWindowUserPointer(window, this);
         glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos)
         {
@@ -47,6 +47,10 @@ namespace prx
         {
             auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
             sim->scroll(window, xoffset, yoffset);
+        });
+        glfwSetWindowCloseCallback(window, [](GLFWwindow* window)
+        {
+            prx_throw("Closing the visualizer will cause the simulation to crash.")
         });
 
         // number of generalized coordinates
@@ -102,7 +106,6 @@ namespace prx
 
         system_groups -> add_system_group(context_name, context_systems);
 
-        // TODO: Need to set up collision stuff here.
         collision_groups.reset(new mujoco_collision_checker_t(sim_ptr));
         collision_groups -> add_collision_group(context_name, context_systems, {});
     }
@@ -115,9 +118,29 @@ namespace prx
             d -> qacc_warmstart[i] = 0;
         }
         mj_step(m, d);
-        mjrRect viewport = {0, 0, 0, 0};
         glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
         mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
+
+        // Refer here: https://github.com/deepmind/mujoco/issues/132 
+        // and here: https://roboti.us/forum/index.php?threads/rendering-geoms.3460/#post-3963 
+        if (goal_pos.size() != 0)
+        {
+            mjvGeom* goal_geom = scn.geoms + scn.ngeom++;
+            mjv_initGeom(goal_geom, mjGEOM_SPHERE, NULL, NULL, NULL, NULL);
+            goal_geom -> rgba[0] = 0.0;
+            goal_geom -> rgba[1] = 1.0;
+            goal_geom -> rgba[2] = 0.0;
+            goal_geom -> rgba[3] = 0.25;
+            goal_geom -> size[0] = goal_radius;
+            goal_geom -> size[1] = goal_radius;
+            goal_geom -> size[2] = goal_radius;
+            goal_geom -> pos[0] = goal_pos[0];
+            goal_geom -> pos[1] = goal_pos[1];
+            goal_geom -> pos[2] = goal_pos[2];
+
+            // TODO: Add a quat2euler to visualize the orientation
+        }
+
         mjr_render(viewport, &scn, &con);
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -219,7 +242,7 @@ namespace prx
 
     void mujoco_simulator_t::scroll(GLFWwindow* window, double xoffset, double yoffset) 
     {
-        mjv_moveCamera(m, mjMOUSE_ZOOM, 0, -0.05*yoffset, &scn, &cam);
+        mjv_moveCamera(m, mjMOUSE_ZOOM, 0, 0.05*yoffset, &scn, &cam);
     }
 }
 #endif

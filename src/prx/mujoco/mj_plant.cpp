@@ -60,69 +60,59 @@ namespace prx
                         ss_ub.push_back(1);
                         state_memory[idx+i] = &sim -> d -> qpos[joint -> qposadr + i];
                     }
-                    // These are the qvel
-                    state_topo_string += "EEEEEE";
-                    for (int i = 0; i < 6; i++)
-                    {
-                        ss_lb.push_back(-10.);
-                        ss_ub.push_back(10.);
-                        state_memory[idx+i+7] = &sim -> d -> qvel[joint -> dofadr + i];
-                    }
-                    idx += 13;
+                    idx += 7;
                     next_qpos += 7;
                     break;
                 case 2:
                     // Slide
-                    state_topo_string += "EE";
+                    state_topo_string += "E";
                     
                     if (joint -> limited)
                     {
                         ss_lb.push_back(joint -> range[0]);
                         ss_ub.push_back(joint -> range[1]);
-                        ss_lb.push_back(-50.);
-                        ss_ub.push_back(50.);
                     }
                     else
                     {
                         prx_warn("Slide joint is not limited. Setting limits to (-inf, inf)");
                         ss_lb.push_back(-PRX_INFINITY);
                         ss_ub.push_back(PRX_INFINITY);
-                        ss_lb.push_back(-50.);
-                        ss_ub.push_back(50.);
                     }
 
                     state_memory[idx]   = &sim -> d -> qpos[joint -> qposadr];
-                    state_memory[idx+1] = &sim -> d -> qvel[joint -> dofadr]; 
-                    idx += 2;
+                    idx += 1;
                     next_qpos++;
                     break;
                 case 3:
                     // Hinge
-                    state_topo_string += "EE";
+                    state_topo_string += "E";
 
                     if (joint -> limited)
                     {
                         ss_lb.push_back(joint -> range[0]);
                         ss_ub.push_back(joint -> range[1]);
-                        ss_lb.push_back(-10.);
-                        ss_ub.push_back(10.);
                     }
                     else
                     {
                         ss_lb.push_back(-PRX_PI);
                         ss_ub.push_back(PRX_PI);
-                        ss_lb.push_back(-10.);
-                        ss_ub.push_back(10.);
                     }
 
                     state_memory[idx]   = &sim -> d -> qpos[joint -> qposadr];
-                    state_memory[idx+1] = &sim -> d -> qvel[joint -> dofadr]; 
-                    idx += 2;
+                    idx += 1;
                     next_qpos++;
                     break;
                 default:
                     prx_throw("Joint type not supported (yet)");
             }
+        }
+
+        for (int i = 0; i < sim -> m -> nv; i++)
+        {
+            state_topo_string += "E";
+            state_memory[idx+i] = &sim -> d -> qvel[i];
+            ss_lb.push_back(-PRX_INFINITY);
+            ss_ub.push_back(PRX_INFINITY);
         }
 
         if (next_qpos != sim -> m -> nq)
