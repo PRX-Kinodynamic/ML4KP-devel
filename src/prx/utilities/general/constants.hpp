@@ -293,4 +293,18 @@ static bool state_space_step(State& state, const double step, const std::size_t&
 {
   return state_space_step(state, std::vector<double>(dimension, step), lower_bound, upper_bound);
 }
+
+static std::vector<std::string> split(std::string str, char separator = ' ')
+{
+  std::vector<std::string> result;
+  std::istringstream ss(str);
+  std::string token;
+  int i = 0;
+  while (std::getline(ss, token, separator))
+  {
+    if (token.size() > 0)
+      result.push_back(token);
+  }
+  return result;
+}
 }  // namespace prx
