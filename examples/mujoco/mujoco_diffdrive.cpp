@@ -24,24 +24,25 @@ int main(int argc, char* argv[])
 
     dirt_t dirt("dirt");
     dirt_specification_t dirt_spec(context.first, context.second);
+    dirt_spec.blossom_number = 1;
 
     dirt_spec.distance_function = [&dirt_spec](const space_point_t& point1, const space_point_t& point2)
     {
         return dirt_spec.state_space -> euclidean_2d(point1, point2, 0, 2);
     };
 
-    // dirt_spec.min_control_steps = 0.5 * (1.0/simulation_step);
-    // dirt_spec.max_control_steps = 2.0 * (1.0/simulation_step);
-    dirt_spec.min_control_steps = 1.0 * (1.0/simulation_step);
-    dirt_spec.max_control_steps = 1.0 * (1.0/simulation_step);
+    dirt_spec.min_control_steps = 0.5 * (1.0/simulation_step);
+    dirt_spec.max_control_steps = 2.0 * (1.0/simulation_step);
 
     dirt_query_t dirt_query(ss,cs);
     dirt_query.start_state = ss -> make_point();
     dirt_query.goal_state = ss -> make_point();
     ss -> copy_to_point(dirt_query.start_state);
+    dirt_query.start_state ->at(0) = -8.0;
+    dirt_query.start_state ->at(1) = 0.0;
     ss -> copy_to_point(dirt_query.goal_state);
-    dirt_query.goal_state -> at(0) += 9.0;
-    dirt_query.goal_state -> at(1) += 9.0;
+    dirt_query.goal_state -> at(0) = 8.0;
+    dirt_query.goal_state -> at(1) = 0.0;
     std::cout << ss -> print_point(dirt_query.start_state, 4) << std::endl;
     std::cout << ss -> print_point(dirt_query.goal_state, 4) << std::endl;
 
