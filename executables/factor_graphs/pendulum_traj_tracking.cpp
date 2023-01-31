@@ -163,6 +163,7 @@ int main(int argc, char* argv[])
   aorrt.resolve_query(&checker);
   aorrt.fulfill_query();
 
+  aorrt.get_tree().to_file(out_path + "aorrt_tree.txt");
   params.print();
 
   std::cout << "Solution traj: " << aorrt_query.solution_traj << std::endl;

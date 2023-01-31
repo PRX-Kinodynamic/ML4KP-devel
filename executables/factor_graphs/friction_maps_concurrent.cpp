@@ -82,7 +82,6 @@ void init_ground_truth_grid(prx::regular_grid_t<double, 2>& gt_grid, const int x
       i++;
     }
   }
-
   // gt_grid.set_to(2.0);
 }
 

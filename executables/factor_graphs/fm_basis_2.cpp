@@ -99,8 +99,8 @@ double compute_weight(const state_t& theta_t_pos, const state_t& theta_i_pos, co
   const double delta_x{ std::fabs(Bx - Xx) };
   const double delta_y{ std::fabs(By - Xy) };
 
-  // const double D{ std::sqrt(length * length + length * length) };
-  const double D{ length };
+  const double D{ std::sqrt(length * length + length * length) };
+  // const double D{ length };
   return std::max(1.0 - ((delta_x + delta_y) / D), 0.0);
 }
 
@@ -133,8 +133,22 @@ friction_vector_t friction_at(const double x, const double y, const basis_vector
   return friction_vector;
 }
 
-template <typename ThetasGrid>
-void compute_friction_map(ThetasGrid& grid, logger_t& logger)
+template <typename ThetaPosGrid>
+friction_vector_t friction_2_at(const double x, const double y, const basis_vector_t& thetas, ThetaPosGrid& pos_grid)
+{
+  const double min_val{ 0.5 };
+  const double max_val{ 1.5 };
+  // const double x_step{ x_max / static_cast<double>(3) };
+  // const double y_step{ y_max / static_cast<double>(3) };
+  // std::vector<double> vals{ linspace(min_val, max_val, 1 + GRID_DIVISIONS / 2) };
+  std::vector<double> vals{ linspace(min_val, max_val, 1 + 4 / 2) };
+  vals.insert(vals.end(), vals.rbegin() + 1, vals.rend());
+  double per = y / y_max;
+  return friction_vector_t(vals[static_cast<int>(per * vals.size())]);
+}
+
+template <typename ThetasGrid, typename F>
+void compute_friction_map(ThetasGrid& grid, logger_t& logger, F& f)
 {
   const double grid_stepping{ 1.0 / static_cast<double>(GRID_DIVISIONS) };
   const basis_vector_t basis{ get_basis_vector(grid) };
@@ -143,7 +157,7 @@ void compute_friction_map(ThetasGrid& grid, logger_t& logger)
     for (double y = 0; y < y_max; y += 0.02)
     {
       // friction_params = friction_at(x, y, real_thetas_vector, frictions_grid);
-      const friction_vector_t friction_params{ friction_at(x, y, basis, grid) };
+      const friction_vector_t friction_params{ f(x, y, basis, grid) };
       logger.log(x, y, friction_params.transpose());
 
       // ps->copy_from(friction_params);
@@ -176,7 +190,7 @@ void compute_grid_error(FrictionGrid& gt_grid, FrictionGrid& fg_grid, logger_t& 
     const state_t pos_theta{ gt_grid.template unmap_key<state_t>(pair_.first) };
     const double x1{ pos_theta[0] };
     const double y1{ pos_theta[1] };
-    const friction_vector_t gt_friction_params{ friction_at(x1, y1, gt_basis, gt_grid) };
+    const friction_vector_t gt_friction_params{ friction_2_at(x1, y1, gt_basis, gt_grid) };
     const friction_vector_t ft_friction_params{ friction_at(x1, y1, fg_basis, fg_grid) };
     const friction_vector_t fp_error{ gt_friction_params - ft_friction_params };
 
@@ -342,7 +356,7 @@ int main(int argc, char* argv[])
     const double y{ ss->at(1) };
     const double th{ ss->at(2) };
 
-    friction_params = friction_at(x, y, real_thetas_vector, frictions_grid);
+    friction_params = friction_2_at(x, y, real_thetas_vector, frictions_grid);
     if (x < 0.0 || x_max < x || y < 0.0 || y_max < y)
     {
       friction_params = friction_vector_t::Ones();
@@ -373,15 +387,23 @@ int main(int argc, char* argv[])
 
   // write_to_file = true;
   world_model.world_change_function = real_world;
-  compute_friction_map(ground_truth_thetas_grid, gt_friction_map_log);
+  compute_friction_map(ground_truth_thetas_grid, gt_friction_map_log,
+                       friction_2_at<decltype(ground_truth_thetas_grid)>);
   write_to_file = false;
 
   std::vector<std::vector<double>> goals = { { 0.1 * x_max, 0.1 * y_max, 0 } };
-  // std::vector<std::vector<double>> goals;  // = { { 0.1 * x_max, 0.1 * y_max, 0 }, { 0.9 * x_max, 0.9 * y_max, 0 },
-  //    { 0.9 * x_max, 0.1 * y_max, 0 }, { 0.1 * x_max, 0.9 * y_max, 0 },
-  //    { 0.5 * x_max, 0.1 * y_max, 0 }, { 0.5 * x_max, 0.9 * y_max, 0 } };
 
-  for (int i = 0; i < 150; ++i)
+  const int num_trajs{ params["num_trajs"].as<int>() };
+  const int num_goals{ params["num_goals"].as<int>() };
+
+  const std::vector<std::vector<double>> input_goals{ params["goals"].as<std::vector<std::vector<double>>>() };
+
+  for (auto v : input_goals)
+  {
+    goals.push_back(v);
+  }
+
+  for (int i = 0; i < num_goals - input_goals.size(); ++i)
   {
     double x_new{ x_max * uniform_random() };
     double y_new{ y_max * uniform_random() };
@@ -448,8 +470,6 @@ int main(int argc, char* argv[])
   accum_traj.clear();
   plan_t accum_plan(cs);
 
-  const int num_trajs{ params["num_trajs"].as<int>() };
-
   space_point_t goal = ss->make_point();
   condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());
   auto cc = create_default_goal_check(ss, goal, goal_region_radius);
@@ -483,9 +503,13 @@ int main(int argc, char* argv[])
   int fg_iters{ 0 };
   space_point_t start_state = ss->make_point();
   const int initial_goal{ params["initial_goal"].as<int>() };
-  PRX_DEBUG_PRINT;
   for (int i = initial_goal; i < num_trajs; ++i)
   {
+    if (i != 0 && i % num_goals == 0)
+    {
+      auto rng = std::default_random_engine{};
+      std::shuffle(std::begin(goals), std::end(goals), rng);
+    }
     std::cout << "Going into trajectory: " << i << "..." << std::endl;
 
     compute_grid_error(ground_truth_thetas_grid, frictions_grid, grid_error_lg, thetas_error_log,
@@ -508,6 +532,7 @@ int main(int argc, char* argv[])
     world_model.world_change_function = real_world;
     sg->propagate(start_state, omnibot_controller, checker, traj_real);
 
+    traj_real.to_file(files["traj_real_file"], std::ofstream::app);
     std::cout << "traj_real: " << traj_real.size() << std::endl;
     const plan_t plan{ *(omnibot_controller->get_plan()) };
     std::cout << "plan size: " << plan.size() << std::endl;
@@ -607,7 +632,6 @@ int main(int argc, char* argv[])
     std::cout << "traj_fg: " << traj_fg.size() << std::endl;
     traj_fg.to_file(files["traj_fg_file"], std::ofstream::app);
 
-    accum_traj += traj_real;
     accum_plan += plan;
   }
   // results.print("Results: ", prx::key_formatter);
@@ -617,7 +641,7 @@ int main(int argc, char* argv[])
   world_model.world_change_function = recovered_world;
   // write_to_file = true;
   recovered_thetas_vector = get_basis_vector(frictions_grid);
-  compute_friction_map(frictions_grid, logger_idd_friction_map);
+  compute_friction_map(frictions_grid, logger_idd_friction_map, friction_at<decltype(frictions_grid)>);
 
   // write_to_file = false;
 
@@ -630,6 +654,6 @@ int main(int argc, char* argv[])
 
   // This are not "Real" trajectories/plan, is all appended into one and might
   // have discontinuities. Only used for dumping into a file.
-  accum_traj.to_file(files["traj_real_file"], std::ofstream::app);
+  // accum_traj.to_file(files["traj_real_file"], std::ofstream::app);
   accum_plan.to_file(files["plan_real_file"], std::ofstream::app);
 }

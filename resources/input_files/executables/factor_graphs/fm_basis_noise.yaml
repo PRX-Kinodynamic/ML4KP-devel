@@ -11,20 +11,25 @@ plant: !file "plants/omnibot_mecanum_FO.yaml"
 visualize: true
 
 checker_type: iterations
-checker_value: 50000
+checker_value: 1000
 # checker_value: 500
 # checker_value: 5
 goal_region_radius: 0.125
 
 noisy_plant: false
 frequency: 0.05
-num_trajs: 50
+num_trajs: 28
 initial_goal: 0
+num_goals: 28
 
 # fg_state_increment: 100
 
 initial_friction: 1.0
 
 # noise_var: 0.5
-state_noise_stddev: 0.05
+state_noise_stddev: 0.1
 control_noise_stddev: 2
+
+# goals: []
+# goals: [[3,0,0],[3,3,0],[0,3,0],[0,0,0]]
+goals: [[0.2,0,0],[0.2,2.8,0],[0.4,2.8,0],[0.4,0,0],[0.6,0,0],[0.6,2.8,0],[0.8,2.8,0],[0.8,0,0],[1,0,0],[1,2.8,0],[1.2,2.8,0],[1.2,0,0],[1.4,0,0],[1.4,2.8,0],[1.6,2.8,0],[1.6,0,0],[1.8,0,0],[1.8,2.8,0],[2.0,2.8,0],[2.0,0,0],[2.2,0,0],[2.2,2.8,0],[2.4,2.8,0],[2.4,0,0],[2.6,0,0],[2.6,2.8,0],[2.8,2.8,0],[2.8,0,0]]

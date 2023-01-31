@@ -47,7 +47,7 @@ using namespace prx;
 const int X_DIM{ 3 };
 const int U_DIM{ 2 };
 const int TH_DIM{ 1 };
-const int GRID_DIVISIONS{ 4 };
+const int GRID_DIVISIONS{ 10 };
 const int BASIS_DIM{ (GRID_DIVISIONS + 1) * (GRID_DIVISIONS + 1) };
 
 const double x_max{ 3.0 };
@@ -127,15 +127,32 @@ friction_vector_t friction_at(const double x, const double y, const basis_vector
   const basis_vector_t weights{ compute_weights_vector(pos_grid, state_t(x, y, 0)) };
   const friction_vector_t friction_vector{ weights.adjoint() * thetas };
 
-  // PRX_DEBUG_VAR_1(thetas.transpose());
-  // PRX_DEBUG_VAR_1(weights.transpose());
-  // PRX_DEBUG_VAR_1(friction_vector.transpose());
-
   return friction_vector;
 }
 
-template <typename ThetasGrid>
-void compute_friction_map(ThetasGrid& grid, logger_t& logger)
+template <typename ThetaPosGrid>
+friction_vector_t friction_2_at(const double x, const double y, const basis_vector_t& thetas, ThetaPosGrid& pos_grid)
+{
+  const double min_val{ 0.5 };
+  const double max_val{ 1.5 };
+  const double x_step{ x_max / static_cast<double>(GRID_DIVISIONS) };
+  const double y_step{ y_max / static_cast<double>(GRID_DIVISIONS) };
+  std::vector<double> vals{ linspace(min_val, max_val, 1 + 4 / 2) };
+  vals.insert(vals.end(), vals.rbegin() + 1, vals.rend());
+  // for (double x = 0; x < x_max; x += x_step)
+  // {
+  //   int i = 0;
+  //   for (double y = 0; y < y_max; y += y_step)
+  //   {
+  double per = y / y_max;
+  return friction_vector_t(vals[static_cast<int>(per * vals.size())]);
+  // i++;
+  // }
+  // }
+}
+
+template <typename ThetasGrid, typename F>
+void compute_friction_map(ThetasGrid& grid, logger_t& logger, F& f)
 {
   const double grid_stepping{ 1.0 / static_cast<double>(GRID_DIVISIONS) };
   const basis_vector_t basis{ get_basis_vector(grid) };
@@ -144,7 +161,7 @@ void compute_friction_map(ThetasGrid& grid, logger_t& logger)
     for (double y = 0; y < y_max; y += 0.02)
     {
       // friction_params = friction_at(x, y, real_thetas_vector, frictions_grid);
-      const friction_vector_t friction_params{ friction_at(x, y, basis, grid) };
+      const friction_vector_t friction_params{ f(x, y, basis, grid) };
       logger.log(x, y, friction_params.transpose());
 
       // ps->copy_from(friction_params);
@@ -177,7 +194,7 @@ void compute_grid_error(FrictionGrid& gt_grid, FrictionGrid& fg_grid, logger_t& 
     const state_t pos_theta{ gt_grid.template unmap_key<state_t>(pair_.first) };
     const double x1{ pos_theta[0] };
     const double y1{ pos_theta[1] };
-    const friction_vector_t gt_friction_params{ friction_at(x1, y1, gt_basis, gt_grid) };
+    const friction_vector_t gt_friction_params{ friction_2_at(x1, y1, gt_basis, gt_grid) };
     const friction_vector_t ft_friction_params{ friction_at(x1, y1, fg_basis, fg_grid) };
     const friction_vector_t fp_error{ gt_friction_params - ft_friction_params };
 
@@ -347,7 +364,7 @@ int main(int argc, char* argv[])
     const double y{ ss->at(1) };
     const double th{ ss->at(2) };
 
-    friction_params = friction_at(x, y, real_thetas_vector, frictions_grid);
+    friction_params = friction_2_at(x, y, real_thetas_vector, frictions_grid);
     if (x < 0.0 || x_max < x || y < 0.0 || y_max < y)
     {
       friction_params = friction_vector_t::Ones();
@@ -378,27 +395,27 @@ int main(int argc, char* argv[])
 
   // write_to_file = true;
   world_model.world_change_function = real_world;
-  compute_friction_map(ground_truth_thetas_grid, gt_friction_map_log);
+  compute_friction_map(ground_truth_thetas_grid, gt_friction_map_log,
+                       friction_2_at<decltype(ground_truth_thetas_grid)>);
   write_to_file = false;
 
-  std::vector<std::vector<double>> goals = { { 0.1 * x_max, 0.1 * y_max, 0 } };
-  // std::vector<std::vector<double>> goals;  // = { { 0.1 * x_max, 0.1 * y_max, 0 }, { 0.9 * x_max, 0.9 * y_max, 0 },
-  //    { 0.9 * x_max, 0.1 * y_max, 0 }, { 0.1 * x_max, 0.9 * y_max, 0 },
-  //    { 0.5 * x_max, 0.1 * y_max, 0 }, { 0.5 * x_max, 0.9 * y_max, 0 } };
+  std::vector<std::vector<double>> goals = {};
+  PRX_DEBUG_PRINT;
+  const int num_trajs{ params["num_trajs"].as<int>() };
+  const int num_goals{ params["num_goals"].as<int>() };
+  const std::vector<std::vector<double>> input_goals{ params["goals"].as<std::vector<std::vector<double>>>() };
 
-  for (int i = 0; i < 150; ++i)
+  for (auto v : input_goals)
+  {
+    goals.push_back(v);
+  }
+
+  for (int i = 0; i < num_goals - input_goals.size(); ++i)
   {
     double x_new{ x_max * uniform_random() };
     double y_new{ y_max * uniform_random() };
-    double dist = std::sqrt(std::pow(goals.back()[0] - x_new, 2) + std::pow(goals.back()[1] - y_new, 2));
-    if (dist < 1)
-    {
-      i--;
-    }
-    else
-    {
-      goals.push_back({ x_new, y_new, 0 });
-    }
+
+    goals.push_back({ x_new, y_new, 0 });
   }
 
   std::shared_ptr<custom_controller_t> omnibot_controller =
@@ -461,8 +478,6 @@ int main(int argc, char* argv[])
   accum_traj_noise.clear();
   plan_t accum_plan(cs);
 
-  const int num_trajs{ params["num_trajs"].as<int>() };
-
   space_point_t goal = ss->make_point();
   condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());
   auto cc = create_default_goal_check(ss, goal, goal_region_radius);
@@ -496,10 +511,17 @@ int main(int argc, char* argv[])
   int fg_iters{ 0 };
   space_point_t start_state = ss->make_point();
   const int initial_goal{ params["initial_goal"].as<int>() };
-  gaussian_noise_t state_noise(0, state_noise_stddev);
 
-  for (int i = initial_goal; i < num_trajs; ++i)
+  gaussian_noise_t state_noise(0, state_noise_stddev);
+  auto last_state = ss->make_point();
+  ss->copy(last_state, goals[0]);
+  for (int i = initial_goal; i < num_trajs + initial_goal; ++i)
   {
+    if (i != 0 && i % num_goals == 0)
+    {
+      auto rng = std::default_random_engine{};
+      std::shuffle(std::begin(goals), std::end(goals), rng);
+    }
     std::cout << "Going into trajectory: " << i << "..." << std::endl;
 
     compute_grid_error(ground_truth_thetas_grid, frictions_grid, grid_error_lg, thetas_error_log,
@@ -510,7 +532,8 @@ int main(int argc, char* argv[])
     checker.reset();
     omnibot_controller->get_plan()->clear();
 
-    ss->copy(start_state, goals[i % goals.size()]);
+    ss->copy(start_state, last_state);
+    // ss->copy(start_state, goals[i % goals.size()]);
     ss->copy(goal, goals[(i + 1) % goals.size()]);
     omnibot_controller->set_goal(goal);
 
@@ -521,6 +544,7 @@ int main(int argc, char* argv[])
     world_model.world_change_function = real_world;
     sg->propagate(start_state, omnibot_controller, checker, traj_real);
 
+    ss->copy(last_state, traj_real.back());
     std::cout << "traj_real: " << traj_real.size() << std::endl;
     const plan_t plan{ *(omnibot_controller->get_plan()) };
     std::cout << "plan size: " << plan.size() << std::endl;
@@ -537,12 +561,12 @@ int main(int argc, char* argv[])
     weights_values.insert(param_symbol_basis, big_vector);
     weights_graph.addPrior(param_symbol_basis, big_vector, basis_nm);
 
-    accum_traj_real += traj_real;
     accum_plan += plan;
     // add noise to the whole trajectory
+    traj_real.to_file(files["traj_real_file"], std::ofstream::app);
     state_noise.add_noise(traj_real);
 
-    accum_traj_noise += traj_real;
+    traj_real.to_file(files["traj_noise_file"], std::ofstream::app);
 
     for (unsigned xi = 0; xi < traj_real.size(); xi += increment)
     {
@@ -554,12 +578,12 @@ int main(int argc, char* argv[])
         // const double x1{ traj_real[xi + increment]->vector()[0] };
         // const double y1{ traj_real[xi + increment]->vector()[1] };
 
-        auto state_symbol = symbol_factory_t::create_symbol("state_symbol", i, xi);
-        auto next_state_symbol = symbol_factory_t::create_symbol("state_symbol", i, xi + increment);
-        auto control_symbol = symbol_factory_t::create_symbol("control_symbol", i, xi);
-        auto time_symbol = symbol_factory_t::create_symbol("time_symbol", i, xi);
-        auto param_symbol = symbol_factory_t::create_symbol("param_symbol_X", i, xi);
-        auto weights_symbol = symbol_factory_t::create_symbol("weight_symbol", i, xi);
+        auto state_symbol = symbol_factory_t::create_symbol("state_symbol", 0, xi);
+        auto next_state_symbol = symbol_factory_t::create_symbol("state_symbol", 0, xi + increment);
+        auto control_symbol = symbol_factory_t::create_symbol("control_symbol", 0, xi);
+        auto time_symbol = symbol_factory_t::create_symbol("time_symbol", 0, xi);
+        auto param_symbol = symbol_factory_t::create_symbol("param_symbol_X", 0, xi);
+        auto weights_symbol = symbol_factory_t::create_symbol("weight_symbol", 0, xi);
 
         thetas_used[param_symbol] = state_symbol;
 
@@ -638,7 +662,7 @@ int main(int argc, char* argv[])
   world_model.world_change_function = recovered_world;
   // write_to_file = true;
   recovered_thetas_vector = get_basis_vector(frictions_grid);
-  compute_friction_map(frictions_grid, logger_idd_friction_map);
+  compute_friction_map(frictions_grid, logger_idd_friction_map, friction_at<decltype(frictions_grid)>);
 
   // write_to_file = false;
 
@@ -651,7 +675,7 @@ int main(int argc, char* argv[])
 
   // This are not "Real" trajectories/plan, is all appended into one and might
   // have discontinuities. Only used for dumping into a file.
-  accum_traj_real.to_file(files["traj_real_file"], std::ofstream::trunc);
-  accum_traj_noise.to_file(files["traj_noise_file"], std::ofstream::trunc);
+  // accum_traj_real.to_file(files["traj_real_file"], std::ofstream::trunc);
+  // accum_traj_noise.to_file(files["traj_noise_file"], std::ofstream::trunc);
   accum_plan.to_file(files["plan_real_file"], std::ofstream::trunc);
 }
