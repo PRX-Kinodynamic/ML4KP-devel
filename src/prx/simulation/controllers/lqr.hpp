@@ -86,6 +86,10 @@ public:
 
   void compute_K();
 
+  void set_K(Eigen::MatrixXd k)
+  {
+    K = k;
+  }
   Eigen::MatrixXd get_K()
   {
     return K;
