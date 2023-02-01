@@ -3,7 +3,6 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/spaces/space.hpp"
 
-#include "prx/simulation/defs.hpp"
 #include "prx/simulation/system_factory.hpp"
 
 #include <memory>

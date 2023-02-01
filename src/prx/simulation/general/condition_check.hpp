@@ -8,7 +8,6 @@
 
 #include <string>
 
-#include "prx/simulation/defs.hpp"
 #include "prx/utilities/general/timer.hpp"
 
 namespace prx

@@ -1,10 +1,10 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "prx/simulation/system.hpp"
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
-
-#include <unordered_map>
 
 namespace prx
 {
