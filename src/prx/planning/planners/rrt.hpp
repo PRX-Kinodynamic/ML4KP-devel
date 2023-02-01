@@ -206,6 +206,7 @@ namespace prx
 		double current_solution;
 		long unsigned current_solution_iters;
 		double current_solution_time;
+		double current_solution_sim_time;
 
 		bool use_replanning;
 

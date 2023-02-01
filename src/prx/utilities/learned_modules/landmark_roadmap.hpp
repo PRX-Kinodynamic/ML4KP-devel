@@ -19,11 +19,11 @@ class landmark_roadmap_t
 {
     private:
         std::unordered_map<node_index_t,landmark_vertex_t*> vertices;
-        std::unordered_map<node_index_t,double> costs_to_goal;
         std::unordered_map<node_index_t, std::vector<landmark_edge_t*>> edges;
         std::vector<std::pair<node_index_t, node_index_t>> all_edges;
         node_index_t vertex_counter, edge_counter;
         std::vector<node_index_t> path;
+        std::vector<std::vector<node_index_t>> paths;
         std::vector<std::vector<node_index_t>> components;
 
     protected:
@@ -104,8 +104,64 @@ class landmark_roadmap_t
         }
     }
 
-    node_index_t get_best_node(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
+    node_index_t get_best_node_on_kth_path_backward(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, unsigned k)
     {
+        prx_assert(k < paths.size(), "k is out of bounds");
+        path.clear();
+        path = paths[k];
+        std::reverse(path.begin(), path.end());
+        return get_best_node_backward(s, query, spec, controller);
+    }
+
+    node_index_t get_best_node_on_kth_path_forward(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, unsigned k, unsigned start_idx)
+    {
+        prx_assert(k < paths.size(), "k is out of bounds");
+        path.clear();
+        path = paths[k];
+        std::reverse(path.begin(), path.end());
+        return get_best_node_forward(s, query, spec, controller, start_idx);
+    }
+
+    node_index_t get_best_node_forward(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, unsigned start_idx)
+    {
+        PRX_DEBUG_PRINT
+        a_indices.clear();
+        // Find the index of start_idx in path
+        // TODO: This is a linear search, can be improved
+        int start_idx_in_path = -1;
+        for (int i = 0; i < path.size(); i++)
+        {
+            if (path[i] == start_idx)
+            {
+                start_idx_in_path = i;
+                break;
+            }
+        }
+
+        // Iterate through path in reverse starting from start_idx
+        for (int i = start_idx_in_path; i >= 0; i--)
+        {
+            auto v_idx = path[i];
+            auto v = vertices[v_idx];
+            spec.state_space -> copy_point(query.goal_state, v -> point);
+            spec.state_space -> copy_point(query.start_state, s);
+
+            controller.fulfill_query(query, spec);
+
+            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+            {
+                return v_idx;
+            }
+            
+            query.clear_outputs();
+        }
+
+        return -1;
+    }
+
+    node_index_t get_best_node_backward(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
+    {
+        // PRX_DEBUG_PRINT
         a_indices.clear();
 
         for (auto v_idx : path)
@@ -596,19 +652,21 @@ class landmark_roadmap_t
     {
         // Check if roadmap is fully connected.
         // Tarjan's algorithm for finding strongly connected components.
-        std::vector<node_index_t> indices;
-        std::vector<node_index_t> lowlinks;
+        // This should work even if the vertex indices are not contiguous.
+        // So the indices, lowlinks, and on_stack vectors are indexed by vertex index.
+        std::unordered_map<node_index_t, node_index_t> indices;
+        std::unordered_map<node_index_t, node_index_t> lowlinks;
         std::vector<node_index_t> stack;
-        std::vector<bool> on_stack;
-        
+        std::unordered_map<node_index_t, bool> on_stack;
+
         components.clear();
 
         node_index_t index = 0;
         for (auto v : vertices)
         {
-            indices.push_back(-1);
-            lowlinks.push_back(-1);
-            on_stack.push_back(false);
+            indices.insert(std::make_pair(v.first, -1));
+            lowlinks.insert(std::make_pair(v.first, -1));
+            on_stack.insert(std::make_pair(v.first, false));
         }
 
         for (auto v : vertices)
@@ -641,7 +699,7 @@ class landmark_roadmap_t
         }
     }
 
-    void strongconnect(node_index_t v, node_index_t& index, std::vector<node_index_t>& indices, std::vector<node_index_t>& lowlinks, std::vector<node_index_t>& stack, std::vector<bool>& on_stack, std::vector<std::vector<node_index_t>>& components)
+    void strongconnect(node_index_t v, node_index_t& index, std::unordered_map<node_index_t, node_index_t>& indices, std::unordered_map<node_index_t, node_index_t>& lowlinks, std::vector<node_index_t>& stack, std::unordered_map<node_index_t, bool>& on_stack, std::vector<std::vector<node_index_t>>& components)
     {
         indices[v] = index;
         lowlinks[v] = index;
@@ -738,8 +796,6 @@ class landmark_roadmap_t
         // Each path is assigned a cost, which is the sum of the costs of the edges in the path.
         // The priority queue is sorted by path cost.
         // The algorithm terminates when the priority queue is empty or when k paths have been found.
-        // The algorithm is based on the following paper:
-        // https://www.cs.cmu.edu/~avrim/451f11/lectures/lect1003.pdf
 
         std::priority_queue<std::pair<double, std::vector<node_index_t>>, std::vector<std::pair<double, std::vector<node_index_t>>>, std::greater<std::pair<double, std::vector<node_index_t>>>> pq;
         std::map<node_index_t, int> count;
@@ -748,13 +804,12 @@ class landmark_roadmap_t
         for (auto v : vertices)
         {
             dist[v.first] = std::numeric_limits<double>::infinity();
-            count[v.first] = -1;
+            count[v.first] = 0;
         }
 
         dist[s] = 0;
         pq.push(std::make_pair(0, std::vector<node_index_t>{s}));
 
-        std::vector<std::vector<node_index_t>> paths;
         while (!pq.empty() && count[t] < k)
         {
             std::pair<double, std::vector<node_index_t>> p = pq.top();
@@ -774,9 +829,9 @@ class landmark_roadmap_t
                 }
                 if (min_frechet > 10)
                 {
-                    std::cout << "Found path with cost " << p.first << std::endl;
                     paths.push_back(p.second);
                     count[u]++;
+                    std::cout << "Found path with cost " << p.first << std::endl;
                 }
             }
             else 
@@ -807,7 +862,6 @@ class landmark_roadmap_t
         for (auto v : vertices)
         {
             dist[v.first] = std::numeric_limits<double>::infinity();
-            costs_to_goal[v.first] = std::numeric_limits<double>::infinity();
             prev[v.first] = -1;
         }
 
@@ -843,7 +897,6 @@ class landmark_roadmap_t
         path.clear();
         while (curr != -1)
         {
-            costs_to_goal[curr] = dist[g] - dist[curr];
             path.push_back(curr);
             curr = prev[curr];
         }

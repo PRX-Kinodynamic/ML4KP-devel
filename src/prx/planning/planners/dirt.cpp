@@ -61,6 +61,7 @@ namespace prx
 		current_solution=0;
 		current_solution_iters=0;
 		current_solution_time=0;
+		simulation_time=0;
 
 		// Removed by BNB, Removed by pruning, Removed by collision check, Final
 		random_edges_counter = {0,0,0,0};
@@ -394,12 +395,14 @@ namespace prx
 				current_solution=new_tree_node->cost_to_come;
 				current_solution_time = timer.measure();
 				current_solution_iters = iteration_count;
+				current_solution_sim_time = simulation_time;
 				goal_vertex = node_index;
 				std::cout <<"[dirt] Found new goal: "<<state_space->print_point(new_tree_node->point,3);
 				std::cout <<" cost:"<<new_tree_node->cost_to_come;
 				std::cout<< " time:" << current_solution_time;
 				std::cout<< " iter:" << current_solution_iters;
 				std::cout<< " nodes:" << metric->get_nr_nodes() <<std::endl;
+				std::cout << "sim time: " << simulation_time << std::endl;
 				bnb(start_vertex,current_solution);
 			}
 		}
@@ -409,16 +412,16 @@ namespace prx
 	{
 		// time, iters, nodes, solution quality, first_time, first_iters, current_solution,
 		std::vector<double> rrt_statistics = rrt_t::get_statistics();
-		std::vector<double> rand_counts(random_edges_counter.begin(),random_edges_counter.end());
-		std::vector<double> blossom_counts(blossom_edges_counter.begin(),blossom_edges_counter.end());
-		rrt_statistics.insert(rrt_statistics.end(),
-			std::make_move_iterator(rand_counts.begin()),
-			std::make_move_iterator(rand_counts.end())
-		);
-		rrt_statistics.insert(rrt_statistics.end(),
-			std::make_move_iterator(blossom_counts.begin()),
-			std::make_move_iterator(blossom_counts.end())
-		);
+		// std::vector<double> rand_counts(random_edges_counter.begin(),random_edges_counter.end());
+		// std::vector<double> blossom_counts(blossom_edges_counter.begin(),blossom_edges_counter.end());
+		// rrt_statistics.insert(rrt_statistics.end(),
+		// 	std::make_move_iterator(rand_counts.begin()),
+		// 	std::make_move_iterator(rand_counts.end())
+		// );
+		// rrt_statistics.insert(rrt_statistics.end(),
+		// 	std::make_move_iterator(blossom_counts.begin()),
+		// 	std::make_move_iterator(blossom_counts.end())
+		// );
 		return rrt_statistics;
 	}
 

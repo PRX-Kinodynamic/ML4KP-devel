@@ -62,6 +62,7 @@ namespace prx
 		current_solution=0;
 		current_solution_iters=0;
 		current_solution_time=0;
+		simulation_time=0;
 		return true;
 	}
 	
@@ -185,7 +186,7 @@ namespace prx
 
 	std::vector<std::string> rrt_t::get_statistics_header()
 	{
-		return {"time", "iters", "nodes", "solution_cost", "solution_time", "solution_iters"};
+		return {"time", "iters", "nodes", "solution_cost", "solution_time", "solution_iters", "sim_time"};
 	}
 	std::vector<double> rrt_t::get_statistics()
 	{
@@ -193,9 +194,11 @@ namespace prx
 		return {timer.measure(),
 				static_cast<double>(iteration_count),
 				static_cast<double>(metric->get_nr_nodes()),
+				simulation_time,
 				current_solution,
 				current_solution_time,
-				static_cast<double>(current_solution_iters)
+				static_cast<double>(current_solution_iters),
+				current_solution_sim_time
 				};
 	}
 
@@ -230,6 +233,8 @@ namespace prx
 				std::cout<< " time:" << current_solution_time;
 				std::cout<< " iter:" << current_solution_iters;
 				std::cout<< " nodes:" << metric->get_nr_nodes() <<std::endl;
+				std::cout << "sim_time: " << simulation_time << std::endl;
+				simulation_time = 0;
 				bnb(start_vertex,current_solution);
 			}
 		}
