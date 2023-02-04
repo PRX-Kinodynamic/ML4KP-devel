@@ -50,8 +50,8 @@ namespace prx
                     {
                         state_memory[idx+i] = &sim -> d -> qpos[joint -> qposadr + i];
                     }
-                    ss_lb.push_back(-10); ss_lb.push_back(-10); ss_lb.push_back(0);
-                    ss_ub.push_back( 10); ss_ub.push_back( 10); ss_ub.push_back(10);
+                    ss_lb.push_back(-20); ss_lb.push_back(-20); ss_lb.push_back(-1);
+                    ss_ub.push_back( 20); ss_ub.push_back( 20); ss_ub.push_back(10);
                     // These are the qpos rotations
                     state_topo_string += "QQQQ";
                     for (int i = 3; i < 7; i++)
@@ -101,6 +101,25 @@ namespace prx
                     state_memory[idx]   = &sim -> d -> qpos[joint -> qposadr];
                     idx += 1;
                     next_qpos++;
+                    break;
+                case 1:
+                    // Ball
+                    state_topo_string += "QQQQ";
+
+                    if (joint->limited)
+                    {
+                        prx_throw("Ball joint is limited. Not supported yet.");
+                    }
+
+                    for (int i = 0; i < 4; i++)
+                    {
+                        ss_lb.push_back(-1);
+                        ss_ub.push_back(1);
+                        state_memory[idx+i] = &sim -> d -> qpos[joint -> qposadr + i];
+                    }
+
+                    idx += 4;
+                    next_qpos += 4;
                     break;
                 default:
                     prx_throw("Joint type not supported (yet)");
