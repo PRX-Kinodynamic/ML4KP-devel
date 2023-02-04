@@ -1,4 +1,6 @@
 import sys,random
+import os
+
 
 cells_x = 20
 cells_y = 20
@@ -24,7 +26,7 @@ def create_maze(fname,pt1=[0,0],pt2=[0,0]):
 
 	boxes = []
 
-	for x in xrange(0,cells_y*cells_x/3):
+	for x in range(0,cells_y*cells_x//3):
 		while True:
 			dx = random_number_uniform()
 			dy = random_number_uniform()
@@ -55,7 +57,7 @@ def create_3D_maze(fname,pt1=[0,0],pt2=[0,0]):
 	boxes = []
 
 	# for x in xrange(0,10):
-	for x in xrange(0,cells_y*cells_x/15):
+	for x in range(0,cells_y*cells_x//15): 
 		while True:
 			dx = random_number_uniform()
 			dy = random_number_uniform()
@@ -159,5 +161,6 @@ def create_boundaries(f):
 	'''
 
 if __name__ == "__main__":
-	fname = "/home/aravind/repos/dirtmp/resources/input_files/mazes/maze.yaml"
+	script_dir = os.path.dirname(__file__)
+	fname = os.path.join(script_dir,"maze.yaml")
 	create_maze(fname,[-9.5,-9.5],[9.5,9.5])
