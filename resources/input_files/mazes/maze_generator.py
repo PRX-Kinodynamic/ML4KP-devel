@@ -420,7 +420,6 @@ def create_boundaries(f):
 	'''
 
 if __name__ == "__main__":
-	
-	script_dir = os.path.dirname(__file__)
-	fname = os.path.join(script_dir,"maze.yaml")
+	yaml_prefix = os.environ['DIRTMP_PATH'] + "resources/input_files/environments/"
+	fname = os.path.join(yaml_prefix,"maze.yaml")
 	create_maze(fname,[-9.5,-9.5],[9.5,9.5])
