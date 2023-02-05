@@ -4,7 +4,7 @@ import os
 
 cells_x = 20
 cells_y = 20
-cell_size = 2
+cell_size = 4
 wall = '0'
 cell = ' '
 unvisited = '.'
