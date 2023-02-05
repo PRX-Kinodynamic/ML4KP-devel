@@ -1,0 +1,261 @@
+<mujoco model = "obstacles">
+<worldbody>
+<body name="obstacle_box_0">
+	<geom name="obstacle_box_0" type="box" pos="-20 -20 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_1">
+	<geom name="obstacle_box_1" type="box" pos="-20 -18 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_2">
+	<geom name="obstacle_box_2" type="box" pos="-20 -16 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_3">
+	<geom name="obstacle_box_3" type="box" pos="-20 -14 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_4">
+	<geom name="obstacle_box_4" type="box" pos="-20 -12 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_5">
+	<geom name="obstacle_box_5" type="box" pos="-20 -10 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_6">
+	<geom name="obstacle_box_6" type="box" pos="-20 -8 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_7">
+	<geom name="obstacle_box_7" type="box" pos="-20 -6 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_8">
+	<geom name="obstacle_box_8" type="box" pos="-20 -4 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_9">
+	<geom name="obstacle_box_9" type="box" pos="-20 -2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_10">
+	<geom name="obstacle_box_10" type="box" pos="-20 0 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_11">
+	<geom name="obstacle_box_11" type="box" pos="-20 2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_12">
+	<geom name="obstacle_box_12" type="box" pos="-18 -20 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_13">
+	<geom name="obstacle_box_13" type="box" pos="-18 -14 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_14">
+	<geom name="obstacle_box_14" type="box" pos="-18 -10 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_15">
+	<geom name="obstacle_box_15" type="box" pos="-18 -8 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_16">
+	<geom name="obstacle_box_16" type="box" pos="-18 -2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_17">
+	<geom name="obstacle_box_17" type="box" pos="-18 2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_18">
+	<geom name="obstacle_box_18" type="box" pos="-16 -20 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_19">
+	<geom name="obstacle_box_19" type="box" pos="-16 -18 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_20">
+	<geom name="obstacle_box_20" type="box" pos="-16 -14 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_21">
+	<geom name="obstacle_box_21" type="box" pos="-16 -10 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_22">
+	<geom name="obstacle_box_22" type="box" pos="-16 -8 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_23">
+	<geom name="obstacle_box_23" type="box" pos="-16 -6 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_24">
+	<geom name="obstacle_box_24" type="box" pos="-16 -2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_25">
+	<geom name="obstacle_box_25" type="box" pos="-16 2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_26">
+	<geom name="obstacle_box_26" type="box" pos="-14 -20 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_27">
+	<geom name="obstacle_box_27" type="box" pos="-14 -2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_28">
+	<geom name="obstacle_box_28" type="box" pos="-14 2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_29">
+	<geom name="obstacle_box_29" type="box" pos="-12 -20 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_30">
+	<geom name="obstacle_box_30" type="box" pos="-12 -18 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_31">
+	<geom name="obstacle_box_31" type="box" pos="-12 -14 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_32">
+	<geom name="obstacle_box_32" type="box" pos="-12 -10 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_33">
+	<geom name="obstacle_box_33" type="box" pos="-12 -6 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_34">
+	<geom name="obstacle_box_34" type="box" pos="-12 2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_35">
+	<geom name="obstacle_box_35" type="box" pos="-10 -20 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_36">
+	<geom name="obstacle_box_36" type="box" pos="-10 -14 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_37">
+	<geom name="obstacle_box_37" type="box" pos="-10 -12 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_38">
+	<geom name="obstacle_box_38" type="box" pos="-10 -8 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_39">
+	<geom name="obstacle_box_39" type="box" pos="-10 -6 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_40">
+	<geom name="obstacle_box_40" type="box" pos="-10 -2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_41">
+	<geom name="obstacle_box_41" type="box" pos="-10 2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_42">
+	<geom name="obstacle_box_42" type="box" pos="-8 -20 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_43">
+	<geom name="obstacle_box_43" type="box" pos="-8 -18 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_44">
+	<geom name="obstacle_box_44" type="box" pos="-8 -14 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_45">
+	<geom name="obstacle_box_45" type="box" pos="-8 -2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_46">
+	<geom name="obstacle_box_46" type="box" pos="-8 2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_47">
+	<geom name="obstacle_box_47" type="box" pos="-6 -20 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_48">
+	<geom name="obstacle_box_48" type="box" pos="-6 -18 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_49">
+	<geom name="obstacle_box_49" type="box" pos="-6 -16 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_50">
+	<geom name="obstacle_box_50" type="box" pos="-6 -14 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_51">
+	<geom name="obstacle_box_51" type="box" pos="-6 -10 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_52">
+	<geom name="obstacle_box_52" type="box" pos="-6 -8 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_53">
+	<geom name="obstacle_box_53" type="box" pos="-6 -6 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_54">
+	<geom name="obstacle_box_54" type="box" pos="-6 -4 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_55">
+	<geom name="obstacle_box_55" type="box" pos="-6 -2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_56">
+	<geom name="obstacle_box_56" type="box" pos="-6 2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_57">
+	<geom name="obstacle_box_57" type="box" pos="-4 -20 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_58">
+	<geom name="obstacle_box_58" type="box" pos="-4 -16 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_59">
+	<geom name="obstacle_box_59" type="box" pos="-4 -14 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_60">
+	<geom name="obstacle_box_60" type="box" pos="-4 -12 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_61">
+	<geom name="obstacle_box_61" type="box" pos="-4 -10 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_62">
+	<geom name="obstacle_box_62" type="box" pos="-4 2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_63">
+	<geom name="obstacle_box_63" type="box" pos="-2 -20 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_64">
+	<geom name="obstacle_box_64" type="box" pos="-2 -6 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_65">
+	<geom name="obstacle_box_65" type="box" pos="-2 -2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_66">
+	<geom name="obstacle_box_66" type="box" pos="-2 0 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_67">
+	<geom name="obstacle_box_67" type="box" pos="-2 2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_68">
+	<geom name="obstacle_box_68" type="box" pos="0 -20 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_69">
+	<geom name="obstacle_box_69" type="box" pos="0 -16 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_70">
+	<geom name="obstacle_box_70" type="box" pos="0 -12 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_71">
+	<geom name="obstacle_box_71" type="box" pos="0 -10 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_72">
+	<geom name="obstacle_box_72" type="box" pos="0 -6 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_73">
+	<geom name="obstacle_box_73" type="box" pos="0 2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_74">
+	<geom name="obstacle_box_74" type="box" pos="2 -20 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_75">
+	<geom name="obstacle_box_75" type="box" pos="2 -18 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_76">
+	<geom name="obstacle_box_76" type="box" pos="2 -16 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_77">
+	<geom name="obstacle_box_77" type="box" pos="2 -14 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_78">
+	<geom name="obstacle_box_78" type="box" pos="2 -12 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_79">
+	<geom name="obstacle_box_79" type="box" pos="2 -10 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_80">
+	<geom name="obstacle_box_80" type="box" pos="2 -8 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_81">
+	<geom name="obstacle_box_81" type="box" pos="2 -6 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_82">
+	<geom name="obstacle_box_82" type="box" pos="2 -4 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_83">
+	<geom name="obstacle_box_83" type="box" pos="2 -2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_84">
+	<geom name="obstacle_box_84" type="box" pos="2 0 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_85">
+	<geom name="obstacle_box_85" type="box" pos="2 2 0" size="1.0 1.0 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+</worldbody></mujoco>

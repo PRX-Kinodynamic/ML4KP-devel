@@ -19,13 +19,45 @@ def random_number_uniform(min=-max_bound,max=max_bound):
 	return random.uniform(min,max)
 	# return 1
 
-def create_maze(fname,pt1=[0,0],pt2=[0,0]):
-	f = open(fname,wall)
+def create_maze(fname,start=[0,0],goal=[0,0]):
+	f = open(fname,'w')
 	f.write("environment:\n")
 	f.write("  type: obstacle\n")
 	f.write("  geometries:\n")
 
-	create_boundaries(f)
+	#create_boundaries(f)
+	map = generate_2D_mazemap(cells_y//cell_size,cells_x//cell_size)
+	print_mazemap(map)
+	boxes = []
+	for row in range(len(map)):
+		for col in range(len(map[row])):
+			dx = row*cell_size - cells_x
+			dy = col*cell_size - cells_y
+			if map[row][col] == wall and ((dx-start[0])**2+(dy-start[1])**2 > 2) and ((dx-goal[0])**2+(dy-goal[1])**2 > 2):
+				boxes.append({})
+				boxes[-1]["size"] = [cell_size,cell_size]
+				boxes[-1]["pos"] = [dx,dy]
+	
+	for i in range(len(boxes)):
+		f.write("    -\n")
+		f.write("      name: box_"+str(i)+"\n")
+		f.write("      collision_geometry:\n")
+		f.write("        type: box\n")
+		f.write("        dims: ["+str(boxes[i]["size"][0])+","+str(boxes[i]["size"][1])+", .2]\n")
+		f.write("        material: red\n")
+		f.write("      config:\n")
+		f.write("        position: ["+str(boxes[i]["pos"][0])+","+str(boxes[i]["pos"][1])+",0]\n")
+		f.write("        orientation: [0,0,0,1]\n")
+
+	f.close()
+
+def create_random_obstacles_2D(fname,pt1=[0,0],pt2=[0,0]):
+	f = open(fname,'w')
+	f.write("environment:\n")
+	f.write("  type: obstacle\n")
+	f.write("  geometries:\n")
+
+	#create_boundaries(f)
 
 	boxes = []
 
@@ -50,7 +82,7 @@ def create_maze(fname,pt1=[0,0],pt2=[0,0]):
 	f.close()
 
 def create_3D_maze(fname,pt1=[0,0],pt2=[0,0]):
-	f = open(fname,wall)
+	f = open(fname,'w')
 	f.write("environment:\n")
 	f.write("  type: obstacle\n")
 	f.write("  geometries:\n")
@@ -80,6 +112,7 @@ def create_3D_maze(fname,pt1=[0,0],pt2=[0,0]):
 				f.write("        orientation: [0,0,0,1]\n")
 				break
 	f.close()
+
 # Find number of surrounding cells
 def surroundingCells(maze, rand_wall):
 	s_cells = 0
@@ -93,9 +126,13 @@ def surroundingCells(maze, rand_wall):
 		s_cells += 1
 
 	return s_cells
-	
 
-def generate_2D_mazemap(height,width):
+def generate_2D_mazemap(h,w):
+
+	# add space for walls, so working area is h*w
+	height = h+2
+	width = w+2
+
 	global wall
 	global cell
 	global unvisited
@@ -383,7 +420,7 @@ def create_boundaries(f):
 	'''
 
 if __name__ == "__main__":
-	print_mazemap(generate_2D_mazemap(cells_y,cells_x))
-	#script_dir = os.path.dirname(__file__)
-	#fname = os.path.join(script_dir,"maze.yaml")
-	#create_maze(fname,[-9.5,-9.5],[9.5,9.5])
+	
+	script_dir = os.path.dirname(__file__)
+	fname = os.path.join(script_dir,"maze.yaml")
+	create_maze(fname,[-9.5,-9.5],[9.5,9.5])

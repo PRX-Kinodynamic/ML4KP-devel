@@ -1,0 +1,777 @@
+environment:
+  type: obstacle
+  geometries:
+    -
+      name: box_0
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-20,-20,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_1
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-20,-18,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_2
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-20,-16,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_3
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-20,-14,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_4
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-20,-12,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_5
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-20,-10,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_6
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-20,-8,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_7
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-20,-6,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_8
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-20,-4,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_9
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-20,-2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_10
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-20,0,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_11
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-20,2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_12
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-18,-20,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_13
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-18,-14,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_14
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-18,-10,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_15
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-18,-8,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_16
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-18,-2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_17
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-18,2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_18
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-16,-20,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_19
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-16,-18,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_20
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-16,-14,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_21
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-16,-10,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_22
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-16,-8,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_23
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-16,-6,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_24
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-16,-2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_25
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-16,2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_26
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-14,-20,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_27
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-14,-2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_28
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-14,2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_29
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-12,-20,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_30
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-12,-18,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_31
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-12,-14,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_32
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-12,-10,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_33
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-12,-6,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_34
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-12,2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_35
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-10,-20,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_36
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-10,-14,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_37
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-10,-12,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_38
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-10,-8,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_39
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-10,-6,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_40
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-10,-2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_41
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-10,2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_42
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-8,-20,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_43
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-8,-18,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_44
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-8,-14,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_45
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-8,-2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_46
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-8,2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_47
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-6,-20,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_48
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-6,-18,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_49
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-6,-16,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_50
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-6,-14,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_51
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-6,-10,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_52
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-6,-8,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_53
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-6,-6,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_54
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-6,-4,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_55
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-6,-2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_56
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-6,2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_57
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-4,-20,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_58
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-4,-16,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_59
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-4,-14,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_60
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-4,-12,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_61
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-4,-10,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_62
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-4,2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_63
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-2,-20,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_64
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-2,-6,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_65
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-2,-2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_66
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-2,0,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_67
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [-2,2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_68
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [0,-20,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_69
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [0,-16,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_70
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [0,-12,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_71
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [0,-10,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_72
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [0,-6,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_73
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [0,2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_74
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [2,-20,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_75
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [2,-18,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_76
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [2,-16,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_77
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [2,-14,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_78
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [2,-12,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_79
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [2,-10,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_80
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [2,-8,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_81
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [2,-6,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_82
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [2,-4,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_83
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [2,-2,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_84
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [2,0,0]
+        orientation: [0,0,0,1]
+    -
+      name: box_85
+      collision_geometry:
+        type: box
+        dims: [2,2, .2]
+        material: red
+      config:
+        position: [2,2,0]
+        orientation: [0,0,0,1]
