@@ -4,7 +4,7 @@ path: "mushr_playback"
 # define initial state
 start_state: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-control_file: "plans/mushr_plan_eight.txt"
+control_file: "plans/forward_backward.txt"
 model_file: "mushr.xml"
 
 random_seed: 111093
