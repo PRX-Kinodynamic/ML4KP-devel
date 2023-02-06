@@ -5,6 +5,7 @@
   <size njmax="500" nconmax="100"/>
   <option timestep="0.01" integrator="RK4"/>
   <include file="buddy.xml"/>
+  <include file="maze.xml"/>
   <asset>
     <texture name="texplane" type="2d" builtin="checker" rgb1="0.26 0.12 0.36" rgb2="0.23 0.09 0.33" width="512" height="512" mark="cross" markrgb=".8 .8 .8"/>
     <texture name="texgeom" type="cube" builtin="flat" mark="cross" width="127" height="1278" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" markrgb="1 1 1" random="0.01"/>
