@@ -44,7 +44,7 @@ namespace prx
 }
 PRX_REGISTER_SYSTEM(treaded_vehicle_t, treaded_vehicle)
 
-auto tv_vel_fn = [](prx::system_ptr_t sys_ptr)
+static prx::velocity_gen_fn tv_vel_fn = [](prx::system_ptr_t sys_ptr)
 {
     auto s = std::dynamic_pointer_cast<prx::treaded_vehicle_t>(sys_ptr);
 
