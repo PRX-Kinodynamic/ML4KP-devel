@@ -36,14 +36,20 @@ class ScriptRunner:
     def run(self, start, goal, mode, name, id=0):
         self.planner_params["start_state"] = start.tolist()
         self.planner_params["goal_state"] = goal.tolist()
-        self.planner_params["output_dir"] = "1212/"+mode+"/"+str(id)+"/"
-        self.planner_params["planner_name"] = name
+        self.planner_params["output_dir"] = "ablation/"+mode+"/"+str(id)+"/"
+        if name == "roadmap" or name == "blossom":
+            self.planner_params["planner_name"] = self.planner_params["roadmap_dir"].split("/")[1]
+        else:
+            self.planner_params["planner_name"] = name
+            
         if name == "random":
             self.planner_params["random_local_goal"] = False 
         elif name == "rlg":
             self.planner_params["random_local_goal"] = True
 
-        with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/test.yaml','w') as f:
+        # test_yaml_fname = "test_"+mode+"_"+name+"_"+str(id)+".yaml"
+        test_yaml_fname = "test.yaml"
+        with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/'+test_yaml_fname,'w') as f:
             yaml.safe_dump(self.planner_params, f, default_flow_style=False)
             if mode == "treaded":
                 f.write("plant: !file \"plants/treaded_vehicle.yaml\"\n")
@@ -54,11 +60,13 @@ class ScriptRunner:
             f.write("termination_classifier: !file \"networks/svm_classifier.yaml\"\n")
 
         if name == "roadmap":
-            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/landmark_roadmap","examples/test.yaml"]
-        elif name == "classify":
-            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/access_roadmap","examples/test.yaml"]
+            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/landmark_roadmap","examples/"+test_yaml_fname]
+        elif name == "blossom":
+            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/roadmap_from_file","examples/"+test_yaml_fname]
+            # cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/k_paths_test","examples/"+test_yaml_fname]
+            # cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/access_roadmap","examples/"+test_yaml_fname]
         else:
-            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/rlg_test","examples/test.yaml"]
+            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/rlg_test","examples/"+test_yaml_fname]
         popen = subprocess.Popen(cmd)
         time.sleep(1)
         # popen.wait()
@@ -67,7 +75,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--run', action='store_true')
     parser.add_argument('--mode', type=str, default="car")
-    parser.add_argument('--name', type=str, default='random')
+    parser.add_argument('--name', type=str, default='roadmap')
 
     args = parser.parse_args()
     run = args.run
@@ -75,15 +83,14 @@ if __name__ == "__main__":
     name = args.name
 
     if run:
-        sr = ScriptRunner(name)
-        landmarks = np.loadtxt(os.environ["DIRTMP_PATH"]+"out/1212/landmarks.txt",delimiter=",")
+        sr = ScriptRunner(mode)
+        landmarks = np.loadtxt(os.environ["DIRTMP_PATH"]+"out/0123/landmarks.txt",delimiter=",")
         counter = 0
         for i in tqdm(range(landmarks.shape[0])):
             s = landmarks[i,:5]
             g = landmarks[i,5:]
             sr.run(s,g,mode,name,counter)
             counter += 1
-            time.sleep(0.1)
     else:
         environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/landmark.yaml"
         with open(environment_file, 'r') as f:

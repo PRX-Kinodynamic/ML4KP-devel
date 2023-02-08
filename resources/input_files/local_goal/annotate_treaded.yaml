@@ -11,7 +11,7 @@ use_learned_controller: true
 learned_controller: !file "networks/treaded_vehicle_controller.yaml"
 
 random_local_goal: true
-planner_name: "roadmap"
+planner_name: "rlg"
 goal_radius: 0.5
 
 num_trajectories: 100
@@ -19,12 +19,13 @@ sample_around: true
 verify_edge: true
 validate: true
 num_failures: 100
-stretch_factor: 3.0
+stretch_factor: 2.0
 termination_classifier: !file "networks/svm_classifier.yaml"
 
-start_state: [-8.0, 0.0,0.0000,0.0000,0.0000]
-goal_state:  [ 8.0, 0.0,0.0000,0.0000,0.0000]
+start_state: [ 8.0, 0.0,0.0000,0.0000,0.0000]
+goal_state:  [-8.0, 0.0,0.0000,0.0000,0.0000]
 
 debug: false
 
-output_dir: "1212/"
+output_dir: "ablation/"
+roadmap_dir: "ablation_treaded/roadmap_medium_1.5/"

@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
         std::string params_file;
         if (argc <= 1)
         {
-            params_file = "local_goal/treaded_dirt_experiments.yaml";
+            params_file = "examples/test_treaded_rlg_0.yaml";
             // prx_throw("This executable needs a parameter file!");
         }
         else 
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
         dirt_specification_t dirt_spec(context.first,context.second);
         dirt_spec.min_control_steps = params["/plant/min_steps"].as<double>()/simulation_step;
         dirt_spec.max_control_steps = params["/plant/max_steps"].as<double>()/simulation_step;
-        dirt_spec.blossom_number = 1;
+        dirt_spec.blossom_number = 5;
         dirt_spec.use_pruning = false;
         space_point_t sample_point = ss -> make_point();
 
@@ -139,8 +139,9 @@ int main(int argc, char* argv[])
         };
 
         int stats_runs = 10;
+        condition_check_t checker("time", 0.5);
         // condition_check_t checker("time",30);
-        condition_check_t checker("solutions",1);
+        // condition_check_t checker("solutions",1);
         std::ofstream fout;
 
         std::string output_dir = params["output_dir"].as<std::string>();
@@ -156,34 +157,31 @@ int main(int argc, char* argv[])
             dirt.preprocess();
             dirt.link_and_setup_query(&dirt_query);
 
+            planner_statistics_t stats;
+            stats.link_planner(&dirt);
+            stats.link_criterion(&checker);
             simulation_time = 0.0;
-            dirt.resolve_query(&checker);
+            stats.repeat_data_gathering(60);
             double end_sim_time = simulation_time;
-            dirt.fulfill_query();
 
-            std::string full_fname = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
-            fout.open(full_fname);
-            fout << dirt.get_current_solution() << std::endl;
-            fout << dirt.get_current_solution_time() << std::endl;
-            fout << dirt.get_current_solution_iters() << std::endl;
-            fout << dirt.get_branching_factor() << std::endl;
-            fout << end_sim_time << std::endl;
+            std::string full_name = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
+            fout.open(full_name);
+            fout << stats.serialize() << std::endl;
             fout.close();
 
-            // planner_statistics_t stats;
-            // stats.link_planner(&dirt);
-            // stats.link_criterion(&checker);
-            // stats.repeat_data_gathering(stats_iters);
-
-            // std::string full_filename = output_path+params["output_dir"].as<std::string>()+params["planner_name"].as<std::string>()+"_"+std::to_string(i)+".txt";
-			// fout.open(full_filename);
-			// fout<<stats.serialize() << std::endl;
-			// fout.close();
+            // std::string full_fname = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
+            // fout.open(full_fname);
+            // fout << dirt.get_current_solution() << std::endl;
+            // fout << dirt.get_current_solution_time() << std::endl;
+            // fout << dirt.get_current_solution_iters() << std::endl;
+            // fout << dirt.get_branching_factor() << std::endl;
+            // fout << end_sim_time << std::endl;
+            // fout.close();
 
             // TODO: Add visualization code here.
-            if (true)
+            if (false)
             {
-            //     dirt.fulfill_query();
+                dirt.fulfill_query();
                 std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
                 three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
                 vis_group->add_vis_infos(info_geometry_t::FULL_LINE, dirt_query.tree_visualization, body_name, ss, "0x000000");

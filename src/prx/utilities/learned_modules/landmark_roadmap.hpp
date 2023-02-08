@@ -58,7 +58,7 @@ class landmark_roadmap_t
         return std::make_pair(all_edges.begin(), all_edges.end());
     }
     
-    void get_indices(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
+    void get_indices(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, bool in_goal = false)
     {
         a_indices.clear();
         d_indices.clear();
@@ -82,6 +82,11 @@ class landmark_roadmap_t
                     a_costs[v.first] = (query.solution_traj.size()-1)*simulation_step;
                 }
             }
+            else if (in_goal && query.goal_check(query.start_state))
+            {
+                a_indices.push_back(v.first);
+                a_costs[v.first] = 0;
+            }
             
             query.clear_outputs();
 
@@ -98,6 +103,11 @@ class landmark_roadmap_t
                     d_indices.push_back(v.first);
                     d_costs[v.first] = (query.solution_traj.size()-1)*simulation_step;
                 }
+            }
+            else if (in_goal && query.goal_check(query.start_state))
+            {
+                d_indices.push_back(v.first);
+                d_costs[v.first] = 0;
             }
 
             query.clear_outputs();
@@ -232,6 +242,14 @@ class landmark_roadmap_t
             }
         }
         return false;
+    }
+
+    void add_vertex(rrt_specification_t& spec, space_point_t p, node_index_t idx)
+    {
+        landmark_vertex_t* v = new landmark_vertex_t();
+        v->point = spec.state_space->clone_point(p);
+        vertices.insert(std::make_pair(idx, v));
+        vertex_counter = std::max(vertex_counter, idx+1);
     }
 
     void add_edge(node_index_t s, node_index_t t, double cost)
@@ -455,55 +473,57 @@ class landmark_roadmap_t
 
         }
 
-        for (auto v = vertices.begin(); v != vertices.end();)
-        {
-            // Check if the vertex only has incoming edges.
-            bool only_incoming = true;
-            for (auto e : edges)
+        // while (!is_connected())
+        // {
+            for (auto v = vertices.begin(); v != vertices.end();)
             {
-                for (auto ee : e.second)
+                // Check if the vertex only has incoming edges.
+                bool only_incoming = true;
+                for (auto e : edges)
                 {
-                    if (ee->end == v->first)
+                    for (auto ee : e.second)
                     {
-                        only_incoming = false;
-                        break;
+                        if (ee->end == v->first)
+                        {
+                            only_incoming = false;
+                            break;
+                        }
                     }
+                    if (!only_incoming) break;
                 }
-                if (!only_incoming) break;
+
+                if (only_incoming)
+                {
+                    remove_vertex(v->first);
+                    v = vertices.erase(v);
+                } 
+                else
+                {
+                    ++v;
+                }
             }
 
-            if (only_incoming)
+            for (auto v = vertices.begin(); v != vertices.end();)
             {
-                remove_vertex(v->first);
-                v = vertices.erase(v);
-            } 
-            else
-            {
-                ++v;
-            }
-        }
+                // Check if the vertex only has outgoing edges.
+                bool only_outgoing = true;
+                for (auto e : edges[v->first])
+                {
+                    only_outgoing = false;
+                    break;
+                }
 
-        for (auto v = vertices.begin(); v != vertices.end();)
-        {
-            // Check if the vertex only has outgoing edges.
-            bool only_outgoing = true;
-            for (auto e : edges[v->first])
-            {
-                only_outgoing = false;
-                break;
+                if (only_outgoing)
+                {
+                    remove_vertex(v->first);
+                    v = vertices.erase(v);
+                } 
+                else
+                {
+                    ++v;
+                }
             }
-
-            if (only_outgoing)
-            {
-                remove_vertex(v->first);
-                v = vertices.erase(v);
-            } 
-            else
-            {
-                ++v;
-            }
-        }
-
+        // }
     }
 
     void remove_edge(node_index_t s, node_index_t t)
@@ -594,10 +614,10 @@ class landmark_roadmap_t
 
     node_index_t add_goal(space_point_t g, rrt_specification_t& spec, rrt_query_t& query, learned_controller_t controller)
     {
-        spec.state_space -> copy_point(pt, g);
+        pt = spec.state_space -> clone_point(g);
         spec.state_space -> copy_vector_from_point(pt_vec,pt);
 
-        get_indices(query, spec, controller);
+        get_indices(query, spec, controller, true);
 
         // Add the goal as a vertex.
         auto v = new landmark_vertex_t();
@@ -622,10 +642,10 @@ class landmark_roadmap_t
 
     node_index_t add_start(space_point_t s, rrt_specification_t& spec, rrt_query_t& query, learned_controller_t controller)
     {
-        spec.state_space -> copy_point(pt, s);
+        pt = spec.state_space -> clone_point(s);
         spec.state_space -> copy_vector_from_point(pt_vec,pt);
 
-        get_indices(query, spec, controller);
+        get_indices(query, spec, controller, true);
 
         // Add the goal as a vertex.
         auto v = new landmark_vertex_t();

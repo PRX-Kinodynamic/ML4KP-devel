@@ -244,7 +244,7 @@ namespace prx
 			iteration_count++;
 		}
 		while(!condition->check());
-		print_statistics();
+		// print_statistics();
 	}
 
     void dirt_roadmap_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg,
@@ -342,6 +342,7 @@ namespace prx
 				current_solution=new_tree_node->cost_to_come;
 				current_solution_time = timer.measure();
 				current_solution_iters = iteration_count;
+				current_solution_sim_time = simulation_time;
 				goal_vertex = node_index;
 				std::cout <<"[dirt] Found new goal: "<<state_space->print_point(new_tree_node->point,3);
 				std::cout <<" cost:"<<new_tree_node->cost_to_come;
@@ -349,7 +350,6 @@ namespace prx
 				std::cout<< " iter:" << current_solution_iters;
 				std::cout<< " nodes:" << metric->get_nr_nodes();
 				std::cout<< " sim time: " << simulation_time << std::endl;
-				simulation_time = 0;
 				bnb(start_vertex,current_solution);
 			}
 		}
