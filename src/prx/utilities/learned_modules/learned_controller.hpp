@@ -100,13 +100,13 @@ class learned_controller_t
         /*
             Get multiple predictions from the network.
         */
-        if (goal_uses_quaternion) prx_throw("Not implemented yet!");
         torch::Device device(torch::kCPU);
         std::vector<torch::jit::IValue> inputs;
         std::vector<std::vector<double>> normalized_states, normalized_goals;
 
         if (normalize_input)
         {
+            if (goal_uses_quaternion) prx_throw("Not implemented yet!");
             for (int i = 0; i < states.size(); i++)
             {
                 normalized_states.push_back(extract_state(normalize_vector(states[i],state_lower_bounds,state_upper_bounds),state_indices));
@@ -118,7 +118,10 @@ class learned_controller_t
             for (int i = 0; i < states.size(); i++)
             {
                 normalized_states.push_back(extract_state(states[i],state_indices));
-                normalized_goals.push_back(extract_state(goals[i],goal_indices));
+                if (!goal_uses_quaternion)
+                    normalized_goals.push_back(extract_state(goals[i],goal_indices));
+                else
+                    normalized_goals.push_back(extract_state_with_quat(goals[i]));
             }
         }
         if (delta_input)

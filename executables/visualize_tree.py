@@ -9,8 +9,8 @@ from matplotlib.patches import Circle, Rectangle
 
 fname = os.environ['DIRTMP_PATH'] + "out/"
 env_fname_prefix = os.environ['DIRTMP_PATH'] + "resources/input_files/environments/"
-env_fname = "rrt_star_obstacles.yaml"
-goal_state = np.array([9.,9.])
+env_fname = "landmark.yaml"
+goal_state = np.array([8.,0.])
 goal_radius = 0.5
 
 plt.figure(figsize=(8, 8))

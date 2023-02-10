@@ -1,2 +1,5 @@
 plant: !file "plants/mushr.yaml"
 learned_controller: !file "networks/mushr.yaml"
+planner_name: "random"
+use_rlg: false
+output_dir: "random/"
