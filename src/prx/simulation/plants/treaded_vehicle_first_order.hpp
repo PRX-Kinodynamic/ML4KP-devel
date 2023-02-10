@@ -29,7 +29,7 @@ namespace prx
 }
 PRX_REGISTER_SYSTEM(treaded_vehicle_first_order_t, FO_treaded_vehicle)
 
-auto tvfo_vel_fn = [](prx::system_ptr_t sys_ptr)
+static prx::velocity_gen_fn tvfo_vel_fn = [](prx::system_ptr_t sys_ptr)
 {
     auto tv_fo = std::dynamic_pointer_cast<prx::treaded_vehicle_first_order_t>(sys_ptr);
     if (!tv_fo) return std::numeric_limits<double>::infinity();
