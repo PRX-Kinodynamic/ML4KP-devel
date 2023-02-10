@@ -1,0 +1,39 @@
+<mujoco model = "obstacles">
+<worldbody>
+<body name="obstacle_upper">
+	<geom name="obstacle_upper" type="box" pos="0 10.5 0" size="10.5 0.25 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_lower">
+	<geom name="obstacle_lower" type="box" pos="0 -10.5 0" size="10.5 0.25 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_right">
+	<geom name="obstacle_right" type="box" pos="10.5 0 0" size="0.25 10.5 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_left">
+	<geom name="obstacle_left" type="box" pos="-10.5 0 0" size="0.25 10.5 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_vertical_0_a">
+	<geom name="obstacle_vertical_0_a" type="box" pos="-6.0 4.293469973740032 0.0" size="0.5 2.7065300262599683 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_vertical_0_b">
+	<geom name="obstacle_vertical_0_b" type="box" pos="-6.0 -3.7065300262599683 0.0" size="0.5 3.2934699737400317 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_vertical_1_a">
+	<geom name="obstacle_vertical_1_a" type="box" pos="-2.0 3.0178377486112122 0.0" size="0.5 3.9821622513887878 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_vertical_1_b">
+	<geom name="obstacle_vertical_1_b" type="box" pos="-2.0 -4.982162251388788 0.0" size="0.5 2.0178377486112122 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_vertical_2_a">
+	<geom name="obstacle_vertical_2_a" type="box" pos="2.0 3.9615482465224066 0.0" size="0.5 3.0384517534775934 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_vertical_2_b">
+	<geom name="obstacle_vertical_2_b" type="box" pos="2.0 -4.038451753477593 0.0" size="0.5 2.9615482465224066 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_vertical_3_a">
+	<geom name="obstacle_vertical_3_a" type="box" pos="6.0 3.7734362282157 0.0" size="0.5 3.2265637717843 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_vertical_3_b">
+	<geom name="obstacle_vertical_3_b" type="box" pos="6.0 -4.2265637717843 0.0" size="0.5 2.7734362282157 0.1" rgba="1.0 0.0 0.0 1"/>
+</body>
+</worldbody></mujoco>

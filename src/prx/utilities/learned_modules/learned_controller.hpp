@@ -299,8 +299,14 @@ class learned_controller_t
             }
             time_so_far += control_duration;
             query.solution_cost += control_duration;
+            if (!spec.valid_check(step_traj))
+            {
+                query.clear_outputs();
+                return;
+            }
         }
         query.solution_traj.copy_onto_back(current);
+        if (!query.goal_check(current)) query.clear_outputs();
     }
 
 };

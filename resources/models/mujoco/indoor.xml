@@ -1,0 +1,46 @@
+<mujoco model = "obstacles">
+<compiler angle="radian" />
+<worldbody>
+<body name="obstacle_Wall_7">
+	<geom name="obstacle_Wall_7" type="box" pos="-9.9226 -0.018331 0.0" euler="0.0 -0.0 1.5708" size="6.75 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_18">
+	<geom name="obstacle_Wall_18" type="box" pos="-0.023262 -6.76923 0.0" euler="0.0 -0.0 0.0" size="10.0 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_36">
+	<geom name="obstacle_Wall_36" type="box" pos="1.88252 0.156868 0.0" euler="0.0 -0.0 0.0" size="2.125 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_31">
+	<geom name="obstacle_Wall_31" type="box" pos="-0.202658 -3.92672 0.0" euler="0.0 -0.0 -1.5708" size="0.5 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_16">
+	<geom name="obstacle_Wall_16" type="box" pos="0.023262 6.76923 0.0" euler="0.0 -0.0 0.0" size="10.0 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_32">
+	<geom name="obstacle_Wall_32" type="box" pos="2.84734 -4.35172 0.0" euler="0.0 -0.0 0.0" size="3.125 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_13">
+	<geom name="obstacle_Wall_13" type="box" pos="9.9274 -0.018331 0.0" euler="0.0 -0.0 1.5708" size="6.75 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_34">
+	<geom name="obstacle_Wall_34" type="box" pos="8.83292 -4.34601 0.0" euler="0.0 -0.0 0.0" size="1.125 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_29">
+	<geom name="obstacle_Wall_29" type="box" pos="-0.202658 0.691353 0.0" euler="0.0 -0.0 -1.5708" size="2.625 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_27">
+	<geom name="obstacle_Wall_27" type="box" pos="-0.167479 5.8103 0.0" euler="0.0 -0.0 -1.5708" size="1.0 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_38">
+	<geom name="obstacle_Wall_38" type="box" pos="7.81267 0.171933 0.0" euler="0.0 -0.0 0.0" size="2.125 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_25">
+	<geom name="obstacle_Wall_25" type="box" pos="-2.9934 -6.21656 0.0" euler="0.0 -0.0 1.5708" size="0.625 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_23">
+	<geom name="obstacle_Wall_23" type="box" pos="-2.97875 1.37885 0.0" euler="0.0 -0.0 -1.5708" size="5.375 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_Wall_21">
+	<geom name="obstacle_Wall_21" type="box" pos="-5.77018 -1.79504 0.0" euler="0.0 -0.0 1.5708" size="5.0 0.075 1.25" rgba="1.0 0.0 0.0 1"/>
+</body>
+</worldbody></mujoco>

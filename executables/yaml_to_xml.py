@@ -18,8 +18,15 @@ def yaml_to_xml_string(yaml_fname):
         if obstacle["collision_geometry"]["type"] == "box":
             box_center = obstacle["config"]["position"]
             box_dims   = obstacle["collision_geometry"]["dims"]
-            xml_string += "<body name=\"obstacle_"+obstacle["name"]+"\">\n"
-            xml_string += "\t<geom name=\"obstacle_"+obstacle["name"]+"\" type=\"box\" pos=\""+str(box_center[0])+" "+str(box_center[1])+" "+str(box_center[2])+"\" size=\""+str(box_dims[0]*0.5)+" "+str(box_dims[1]*0.5)+" "+str(box_dims[2]*0.5)+"\" rgba=\"1.0 0.0 0.0 1\"/>\n"
+            xml_string += "<body name=\"obstacle_"+str(obstacle["name"])+"\">\n"
+            xml_string += "\t<geom name=\"obstacle_"+str(obstacle["name"])+"\" type=\"box\" pos=\""+str(box_center[0])+" "+str(box_center[1])+" "+str(box_center[2])+"\" size=\""+str(box_dims[0]*0.5)+" "+str(box_dims[1]*0.5)+" "+str(box_dims[2]*0.5)+"\" rgba=\"1.0 0.0 0.0 1\"/>\n"
+            xml_string += "</body>\n"
+        elif obstacle["collision_geometry"]["type"] == "cylinder":
+            cyl_center = obstacle["config"]["position"]
+            cyl_height = obstacle["collision_geometry"]["height"]
+            cyl_radius = obstacle["collision_geometry"]["radius"]
+            xml_string += "<body name=\"obstacle_"+str(obstacle["name"])+"\">\n"
+            xml_string += "\t<geom name=\"obstacle_"+str(obstacle["name"])+"\" type=\"cylinder\" pos=\""+str(cyl_center[0])+" "+str(cyl_center[1])+" "+str(cyl_center[2])+"\" size=\""+str(cyl_radius)+" "+str(cyl_height*0.5)+"\" rgba=\"0.0 1.0 0.0 1\"/>\n"
             xml_string += "</body>\n"
         else:
             print("Only box obstacles are supported")

@@ -6,7 +6,7 @@ environment:
       type: box
     config:
       orientation: [0, 0, 0, 1]
-      position: [0, 10.25, 0]
+      position: [0, 10.5, 0]
     dynamic: false
     name: upper
   - collision_geometry:
@@ -15,7 +15,7 @@ environment:
       type: box
     config:
       orientation: [0, 0, 0, 1]
-      position: [0, -10.25, 0]
+      position: [0, -10.5, 0]
     dynamic: false
     name: lower
   - collision_geometry:
@@ -24,7 +24,7 @@ environment:
       type: box
     config:
       orientation: [0, 0, 0, 1]
-      position: [10.25, 0, 0]
+      position: [10.5, 0, 0]
     dynamic: false
     name: right
   - collision_geometry:
@@ -33,7 +33,7 @@ environment:
       type: box
     config:
       orientation: [0, 0, 0, 1]
-      position: [-10.25, 0, 0]
+      position: [-10.5, 0, 0]
     dynamic: false
     name: left
   - collision_geometry:
