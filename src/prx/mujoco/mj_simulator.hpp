@@ -50,7 +50,7 @@ namespace prx
             goal_pos.clear();
             for (int i = 0; i < 3; i++)
             {
-                goal_pos.push_back(goal->at(i));
+                // goal_pos.push_back(goal->at(i));
             }
         }
 

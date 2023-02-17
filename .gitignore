@@ -19,3 +19,4 @@ resources/input_files/mazes/*.yaml
 **/._.DS_Store
 experiments/
 plot generator/
+executables/ablation/indoors/0/random_0.txt

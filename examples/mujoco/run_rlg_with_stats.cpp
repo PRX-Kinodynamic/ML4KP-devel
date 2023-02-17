@@ -19,8 +19,11 @@ using namespace prx;
 int main(int argc, char* argv[])
 {
     init_random(210896);
-
     std::string params_file = "examples/mujoco/mushr_trajectory.yaml";
+    if(argc>=2){
+        params_file = argv[1];
+    }
+
     param_loader params(params_file);
     learned_controller_t controller(params);
 
@@ -80,38 +83,50 @@ int main(int argc, char* argv[])
     dirt_spec.max_control_steps = 2.0 * (1.0/simulation_step);
     std::cout << dirt_spec.min_control_steps << " " << dirt_spec.max_control_steps << std::endl;
 
-    double roll = 0, pitch = 0, yaw = 0;
-    Eigen::Quaterniond quat = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX())
-                            * Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY())
-                                * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+    std::vector<double> start = params["start_state"].as<std::vector<double>>();
+    
+    double s_roll = start[2], s_pitch = start[3], s_yaw = start[4];
+    Eigen::Quaterniond s_quat = Eigen::AngleAxisd(s_roll, Eigen::Vector3d::UnitX())
+                            * Eigen::AngleAxisd(s_pitch, Eigen::Vector3d::UnitY())
+                            * Eigen::AngleAxisd(s_yaw, Eigen::Vector3d::UnitZ());
 
     dirt_query_t dirt_query(ss,cs);
     dirt_query.start_state = ss -> make_point();
-    dirt_query.goal_state = ss -> make_point();
     ss -> copy_to_point(dirt_query.start_state);
-    dirt_query.start_state ->at(0) =  -8.0;
-    dirt_query.start_state ->at(1) =  0.0;
-    dirt_query.start_state ->at(3) = quat.w();
-    dirt_query.start_state ->at(4) = quat.x();
-    dirt_query.start_state ->at(5) = quat.y();
-    dirt_query.start_state ->at(6) = quat.z();
+    dirt_query.start_state ->at(0) =  start[0];
+    dirt_query.start_state ->at(1) =  start[1];
+    dirt_query.start_state ->at(3) = s_quat.w();
+    dirt_query.start_state ->at(4) = s_quat.x();
+    dirt_query.start_state ->at(5) = s_quat.y();
+    dirt_query.start_state ->at(6) = s_quat.z();
+
+
+    std::vector<double> goal = params["goal_state"].as<std::vector<double>>();
+
+    double g_roll = goal[2], g_pitch = goal[3], g_yaw = goal[4];
+    Eigen::Quaterniond g_quat = Eigen::AngleAxisd(g_roll, Eigen::Vector3d::UnitX())
+                            * Eigen::AngleAxisd(g_pitch, Eigen::Vector3d::UnitY())
+                            * Eigen::AngleAxisd(g_yaw, Eigen::Vector3d::UnitZ());
+    dirt_query.goal_state = ss -> make_point();
     ss -> copy_to_point(dirt_query.goal_state);
-    dirt_query.goal_state -> at(0) = 8.0;
-    dirt_query.goal_state -> at(1) = 0.0;
-    dirt_query.goal_state -> at(3) = quat.w();
-    dirt_query.goal_state -> at(4) = quat.x();
-    dirt_query.goal_state -> at(5) = quat.y();
-    dirt_query.goal_state -> at(6) = quat.z();
+    dirt_query.goal_state -> at(0) = goal[0];
+    dirt_query.goal_state -> at(1) = goal[1];
+    dirt_query.goal_state -> at(3) = g_quat.w();
+    dirt_query.goal_state -> at(4) = g_quat.x();
+    dirt_query.goal_state -> at(5) = g_quat.y();
+    dirt_query.goal_state -> at(6) = g_quat.z();
 
     sim -> set_goal(dirt_query.goal_state);
-    sim -> set_goal_radius(0.5);
+    sim -> set_goal_radius(1.0);
 
     std::cout << ss -> print_point(dirt_query.start_state, 4) << std::endl;
     std::cout << ss -> print_point(dirt_query.goal_state, 4) << std::endl;
 
     dirt_query.goal_check = [&](const space_point_t& point)
     {
-        return dirt_spec.distance_function(point, dirt_query.goal_state) < 0.5;
+        //double diff = dirt_spec.distance_function(point, dirt_query.goal_state)
+        double diff = (dirt_query.goal_state->at(0) - point->at(0)) * (dirt_query.goal_state->at(0) - point->at(0)) + (dirt_query.goal_state->at(1) - point->at(1)) * (dirt_query.goal_state->at(1) - point->at(1));
+        return  diff < 1;
     };
 
     dirt_query.get_visualization = true;
@@ -156,14 +171,15 @@ int main(int argc, char* argv[])
         }
         else
         {
-            default_expand(s,plans,trajs,bn,sg,dirt_spec.sample_plan,dirt_spec.propagate);
+            default_expand(s,plans,trajs\
+            ,bn,sg,dirt_spec.sample_plan,dirt_spec.propagate);
         }
     };
 
-    int stats_runs = 10;
-    condition_check_t checker("time", 0.5);
+    int stats_runs = params["runs"].as<int>();
+    condition_check_t checker("time", params["poll_rate"].as<double>());
     std::ofstream fout;
-
+    
     std::string output_dir = params["output_dir"].as<std::string>();
     std::string out_path = output_path + output_dir;
     if (!fs::exists(out_path))
@@ -180,7 +196,7 @@ int main(int argc, char* argv[])
         planner_statistics_t stats;
         stats.link_planner(&dirt);
         stats.link_criterion(&checker);
-        stats.repeat_data_gathering(30);
+        stats.repeat_data_gathering(params["duration"].as<double>()/params["poll_rate"].as<double>());
 
         std::string full_name = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
         fout.open(full_name);

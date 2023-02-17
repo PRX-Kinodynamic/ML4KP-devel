@@ -68,31 +68,41 @@ int main(int argc, char* argv[])
     };
 
     dirt_spec.min_control_steps = 0.5 * (1.0/simulation_step);
-    dirt_spec.max_control_steps = 2.0 * (1.0/simulation_step);
+    dirt_spec.max_control_steps = 1.0 * (1.0/simulation_step);
     std::cout << dirt_spec.min_control_steps << " " << dirt_spec.max_control_steps << std::endl;
 
-    double roll = 0, pitch = 0, yaw = 0;
-    Eigen::Quaterniond quat = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX())
-                            * Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY())
-                                * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+    std::vector<double> start = params["start_state"].as<std::vector<double>>();
+    
+    double s_roll = start[2], s_pitch = start[3], s_yaw = start[4];
+    Eigen::Quaterniond s_quat = Eigen::AngleAxisd(s_roll, Eigen::Vector3d::UnitX())
+                            * Eigen::AngleAxisd(s_pitch, Eigen::Vector3d::UnitY())
+                            * Eigen::AngleAxisd(s_yaw, Eigen::Vector3d::UnitZ());
 
     dirt_query_t dirt_query(ss,cs);
     dirt_query.start_state = ss -> make_point();
-    dirt_query.goal_state = ss -> make_point();
     ss -> copy_to_point(dirt_query.start_state);
-    dirt_query.start_state ->at(0) =  -8.0;
-    dirt_query.start_state ->at(1) =  0.0;
-    dirt_query.start_state ->at(3) = quat.w();
-    dirt_query.start_state ->at(4) = quat.x();
-    dirt_query.start_state ->at(5) = quat.y();
-    dirt_query.start_state ->at(6) = quat.z();
+    dirt_query.start_state ->at(0) =  start[0];
+    dirt_query.start_state ->at(1) =  start[1];
+    dirt_query.start_state ->at(3) = s_quat.w();
+    dirt_query.start_state ->at(4) = s_quat.x();
+    dirt_query.start_state ->at(5) = s_quat.y();
+    dirt_query.start_state ->at(6) = s_quat.z();
+
+
+    std::vector<double> goal = params["goal_state"].as<std::vector<double>>();
+
+    double g_roll = goal[2], g_pitch = goal[3], g_yaw = goal[4];
+    Eigen::Quaterniond g_quat = Eigen::AngleAxisd(g_roll, Eigen::Vector3d::UnitX())
+                            * Eigen::AngleAxisd(g_pitch, Eigen::Vector3d::UnitY())
+                            * Eigen::AngleAxisd(g_yaw, Eigen::Vector3d::UnitZ());
+    dirt_query.goal_state = ss -> make_point();
     ss -> copy_to_point(dirt_query.goal_state);
-    dirt_query.goal_state -> at(0) = 8.0;
-    dirt_query.goal_state -> at(1) = 0.0;
-    dirt_query.goal_state -> at(3) = quat.w();
-    dirt_query.goal_state -> at(4) = quat.x();
-    dirt_query.goal_state -> at(5) = quat.y();
-    dirt_query.goal_state -> at(6) = quat.z();
+    dirt_query.goal_state -> at(0) = goal[0];
+    dirt_query.goal_state -> at(1) = goal[1];
+    dirt_query.goal_state -> at(3) = g_quat.w();
+    dirt_query.goal_state -> at(4) = g_quat.x();
+    dirt_query.goal_state -> at(5) = g_quat.y();
+    dirt_query.goal_state -> at(6) = g_quat.z();
 
     sim -> set_goal(dirt_query.goal_state);
     sim -> set_goal_radius(0.5);
@@ -155,7 +165,7 @@ int main(int argc, char* argv[])
     dirt.preprocess();
     dirt.link_and_setup_query(&dirt_query);
 
-    condition_check_t checker("time", 30.0);
+    condition_check_t checker("time", params["duration"].as<double>());
     dirt.resolve_query(&checker);
     dirt.fulfill_query(); 
 

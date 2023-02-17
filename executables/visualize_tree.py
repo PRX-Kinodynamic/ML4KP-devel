@@ -2,20 +2,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import yaml
+import math
 from xml.dom import minidom
 from tqdm import tqdm
-
+import matplotlib
 from matplotlib.patches import Circle, Rectangle
 
 fname = os.environ['DIRTMP_PATH'] + "out/"
-env_fname_prefix = os.environ['DIRTMP_PATH'] + "resources/input_files/environments/"
-env_fname = "landmark.yaml"
-goal_state = np.array([8.,0.])
+env_fname_prefix = os.environ['DIRTMP_PATH'] + "resources/models/mujoco/"
+env_fname = "indoor.xml"
+goal_state = np.array([-9.,-5.])
 goal_radius = 0.5
 
 plt.figure(figsize=(8, 8))
 plt.xlim(-10,10)
 plt.ylim(-10,10)
+
+
+print('matplotlib: {}'.format(matplotlib.__version__))
 
 if env_fname.endswith(".yaml"):
     with open(env_fname_prefix + env_fname) as f:
@@ -45,7 +49,8 @@ elif env_fname.endswith(".xml"):
             if geom.attributes['type'].value == "box":
                 box_center = [float(x) for x in geom.attributes['pos'].value.split()]
                 box_dims   = [float(x) for x in geom.attributes['size'].value.split()]
-                rect = Rectangle((box_center[0]-box_dims[0]*0.5, box_center[1]-box_dims[1]*0.5), box_dims[0], box_dims[1], color='red')
+                box_orient = math.degrees(float(geom.attributes['euler'].value.split()[2])) #just need yaw, hence 2
+                rect = Rectangle((box_center[0]-box_dims[0], box_center[1]-box_dims[1]), 2*box_dims[0], 2*box_dims[1], angle = box_orient, rotation_point= 'center', color='red')
                 plt.gca().add_patch(rect)
             else:
                 print("Only box obstacles are supported")

@@ -60,14 +60,14 @@ int main(int argc, char* argv[])
     dirt_query.goal_state = ss -> make_point();
     ss -> copy_to_point(dirt_query.start_state);
     dirt_query.start_state ->at(0) =  -9.0;
-    dirt_query.start_state ->at(1) =  -9.0;
+    dirt_query.start_state ->at(1) =  -5.0;
     dirt_query.start_state ->at(3) = quat.w();
     dirt_query.start_state ->at(4) = quat.x();
     dirt_query.start_state ->at(5) = quat.y();
     dirt_query.start_state ->at(6) = quat.z();
     ss -> copy_to_point(dirt_query.goal_state);
     dirt_query.goal_state -> at(0) = 9.0;
-    dirt_query.goal_state -> at(1) = 9.0;
+    dirt_query.goal_state -> at(1) = 5.0;
     dirt_query.goal_state -> at(3) = quat.w();
     dirt_query.goal_state -> at(4) = quat.x();
     dirt_query.goal_state -> at(5) = quat.y();

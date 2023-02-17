@@ -67,6 +67,7 @@ int main(int argc, char* argv[])
 
     query.clear_outputs();
     query.start_state = ss -> make_point();
+    
     ss -> copy_to_point(query.start_state);
     query.goal_state = ss -> make_point();
     
