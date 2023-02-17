@@ -77,4 +77,7 @@ if __name__ == "__main__":
     plt.ylabel("Success Rate",fontsize=16)
     plt.xlim(0,300)
     plt.ylim(0,1.0)
-    plt.show()
+
+    plots_dir = os.environ["DIRTMP_PATH"]+"out/success_rate.png"
+    plt.savefig(plots_dir)
+    #plt.show()
