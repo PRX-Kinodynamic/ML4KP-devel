@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+if [ "$1" = "run" ]
+then
+    python3 run_experiments.py --run &
+    python3 run_experiments.py --run --name rlg
+fi
+if [ "$1" = "plot" ]
+then
+    python3 visualize_cost.py -tofile experiment&
+    python3 visualize_success_rate.py -tofile experiment
+fi
