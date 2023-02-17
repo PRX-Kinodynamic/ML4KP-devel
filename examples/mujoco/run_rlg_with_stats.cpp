@@ -7,7 +7,7 @@
 #include <fstream>
 
 #ifdef __cpp_lib_filesystem
-    #include <boost/filesystem.hpp>
+#include <boost/filesystem.hpp>
     namespace fs = boost::filesystem;
 #else
     #include <experimental/filesystem>
