@@ -116,7 +116,7 @@ class landmark_roadmap_t
 
     node_index_t get_best_node_on_kth_path_backward(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, unsigned k)
     {
-        prx_assert(k < paths.size(), "k is out of bounds");
+        prx_assert(k < paths.size(), "k is out of bounds. k = " << k << " and paths.size() = " << paths.size());
         path.clear();
         path = paths[k];
         std::reverse(path.begin(), path.end());
@@ -170,11 +170,14 @@ class landmark_roadmap_t
     }
 
     node_index_t get_best_node_backward(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
-   {
+    {
+        // PRX_DEBUG_PRINT
         a_indices.clear();
 
         for (auto v_idx : path)
         {
+            // PRX_DEBUG_PRINT
+            // std::cout << "v_idx = " << v_idx << std::endl;
             auto v = vertices[v_idx];
             spec.state_space -> copy_point(query.goal_state, v -> point);
             spec.state_space -> copy_point(query.start_state, s);
@@ -818,6 +821,7 @@ class landmark_roadmap_t
         std::priority_queue<std::pair<double, std::vector<node_index_t>>, std::vector<std::pair<double, std::vector<node_index_t>>>, std::greater<std::pair<double, std::vector<node_index_t>>>> pq;
         std::map<node_index_t, int> count;
         std::map<node_index_t, double> dist;
+        paths.clear();
 
         for (auto v : vertices)
         {
@@ -828,7 +832,6 @@ class landmark_roadmap_t
         dist[s] = 0;
         pq.push(std::make_pair(0, std::vector<node_index_t>{s}));
 
-        std::vector<std::vector<node_index_t>> paths;
         while (!pq.empty() && count[t] < k)
         {
             std::pair<double, std::vector<node_index_t>> p = pq.top();

@@ -47,9 +47,12 @@ elif env_fname.endswith(".xml"):
         geom_list = body.getElementsByTagName('geom')
         for geom in geom_list:
             if geom.attributes['type'].value == "box":
+                box_orient = 0
+                # Check if box has euler attribute
+                if 'euler' in geom.attributes:
+                    box_orient = math.degrees(float(geom.attributes['euler'].value.split()[2]))
                 box_center = [float(x) for x in geom.attributes['pos'].value.split()]
                 box_dims   = [float(x) for x in geom.attributes['size'].value.split()]
-                box_orient = math.degrees(float(geom.attributes['euler'].value.split()[2])) #just need yaw, hence 2
                 rect = Rectangle((box_center[0]-box_dims[0], box_center[1]-box_dims[1]), 2*box_dims[0], 2*box_dims[1], angle = box_orient, rotation_point= 'center', color='red')
                 plt.gca().add_patch(rect)
             else:

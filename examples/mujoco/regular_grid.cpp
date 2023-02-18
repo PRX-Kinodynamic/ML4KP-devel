@@ -14,6 +14,7 @@ int main(int argc, char* argv[])
         init_random(21081996);
 
         std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr.xml");
+        // std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr_terrain.xml");
         sim->init_simulator();
 
         auto context = sim -> get_context("mujoco");
@@ -28,10 +29,10 @@ int main(int argc, char* argv[])
         dirt_specification_t dirt_spec(context.first, context.second);
 
         space_point_t current = ss -> make_point();
-        std::vector<double> xs = linspace(-9.,9.,9);
+        ss -> copy_to_point(current);
+        std::vector<double> xs = linspace(-9.,9.,12);
         std::vector<double> ys = linspace(-5.,5.,5);
-        std::vector<double> ts = linspace(-PRX_PI, PRX_PI, 4);
-        // std::vector<double> ts = linspace(-PRX_PI, PRX_PI, 2);
+        std::vector<double> ts = linspace(-PRX_PI, PRX_PI, 2);
 
         trajectory_t traj(ss); plan_t plan(cs);
         std::vector<space_point_t> verification_points;
@@ -45,7 +46,7 @@ int main(int argc, char* argv[])
                 {
                     current -> at(0) = x;
                     current -> at(1) = y;
-                    current -> at(2) = 0.0;
+                    // current -> at(2) = 0.2;
                     double roll = 0, pitch = 0, yaw = t;
 
                     Eigen::Quaterniond quat = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX())
