@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import os
 import sys
+import argparse
 
 def load_data(fname):
 	raw_data = np.genfromtxt(fname,delimiter=',',unpack=True)
@@ -53,6 +54,11 @@ def analyze_success_time(exps_dir,problems,planner):
     return out_x, out_y
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-tofile', type=str)
+    args = parser.parse_args()
+    fn = args.tofile
+
     exps_dir = os.environ["DIRTMP_PATH"] + "out/ablation/indoors"
     planners = ["random","rlg"]
     markers = ["^","s","*","o",".","P"]
@@ -77,4 +83,9 @@ if __name__ == "__main__":
     plt.ylabel("Success Rate",fontsize=16)
     plt.xlim(0,300)
     plt.ylim(0,1.0)
-    plt.show()
+
+    if(fn == None):
+        plt.show()
+    else:
+        plots_dir = os.environ["DIRTMP_PATH"]+"out/"+fn+"_success_rate.png"
+        plt.savefig(plots_dir)

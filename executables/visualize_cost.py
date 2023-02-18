@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import os
 import sys
+import argparse
 from collections import defaultdict
 
 def load_data(fname):
@@ -70,6 +71,11 @@ def analyze_quality_time(exps_dir,problems,planner,best_costs):
 	return out_x, out_y
 
 if __name__ == "__main__":
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-tofile', type=str)
+	args = parser.parse_args()
+	fn = args.tofile
+
 	exps_dir = os.environ["DIRTMP_PATH"] + "out/ablation/indoors"
 	planners = ["random","rlg"]
 	markers = ["^","s","*","o",".","P"]
@@ -101,4 +107,9 @@ if __name__ == "__main__":
 	plt.xlabel("Time",fontsize=16)
 	plt.ylabel("Cost",fontsize=16)
 	#plt.xlim(0,min_plot_x)
-	plt.show()
+
+	if(fn == None):
+		plt.show()
+	else:
+		plots_dir = os.environ["DIRTMP_PATH"]+"out/"+fn+"_cost.png"
+		plt.savefig(plots_dir)
