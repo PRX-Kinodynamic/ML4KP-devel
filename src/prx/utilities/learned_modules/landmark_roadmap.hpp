@@ -135,6 +135,7 @@ class landmark_roadmap_t
     node_index_t get_best_node_forward(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, unsigned start_idx)
     {
         PRX_DEBUG_PRINT
+        std::cout << "Previous best: " << start_idx << std::endl;
         a_indices.clear();
         // Find the index of start_idx in path
         // TODO: This is a linear search, can be improved
@@ -147,9 +148,11 @@ class landmark_roadmap_t
                 break;
             }
         }
+        prx_assert(start_idx_in_path != -1, "start_idx not found in path");
 
         // Iterate through path in reverse starting from start_idx
-        for (int i = start_idx_in_path; i >= 0; i--)
+        node_index_t best_idx = start_idx_in_path;
+        for (int i = start_idx_in_path - 1; i >= 0; i--)
         {
             auto v_idx = path[i];
             auto v = vertices[v_idx];
@@ -158,26 +161,35 @@ class landmark_roadmap_t
 
             controller.fulfill_query(query, spec);
 
-            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+            if (!spec.valid_check(query.solution_traj) || query.solution_traj.size() == 0)
             {
-                return v_idx;
+                PRX_DEBUG_PRINT
+                std::cout << "Goal check: " << spec.distance_function(s, vertices[path[best_idx]] -> point) << std::endl;
+                if (spec.distance_function(s, vertices[path[best_idx]] -> point) < query.goal_region_radius)
+                    return -1;
+                return path[best_idx];
+            }
+            else
+            {
+                PRX_DEBUG_PRINT
+                std::cout << "Updated to: " << path[i] << std::endl;
+                best_idx = i;
             }
             
             query.clear_outputs();
         }
 
-        return -1;
+        PRX_DEBUG_PRINT
+        return path[best_idx];
     }
 
     node_index_t get_best_node_backward(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
     {
-        // PRX_DEBUG_PRINT
+        PRX_DEBUG_PRINT
         a_indices.clear();
 
         for (auto v_idx : path)
         {
-            // PRX_DEBUG_PRINT
-            // std::cout << "v_idx = " << v_idx << std::endl;
             auto v = vertices[v_idx];
             spec.state_space -> copy_point(query.goal_state, v -> point);
             spec.state_space -> copy_point(query.start_state, s);
@@ -186,6 +198,9 @@ class landmark_roadmap_t
 
             if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
             {
+                PRX_DEBUG_PRINT
+                std::cout << v_idx << std::endl;
+                if (spec.distance_function(s, vertices[v_idx] -> point) < query.goal_region_radius) return -1;
                 return v_idx;
                 // a_indices.push_back(v_idx);
             }
@@ -193,6 +208,7 @@ class landmark_roadmap_t
             query.clear_outputs();
         }
 
+        PRX_DEBUG_PRINT
         return -1;
     }
 

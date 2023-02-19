@@ -54,7 +54,6 @@ namespace prx
 			start_node->cost_to_go = h(start_node->point,dirt_query->goal_state);
 			start_node->blossom_number = dirt_spec->blossom_number;
 			start_node->expand_number = 0;
-			start_node->greedy_child = false; 
 			metric->add_node(start_node.get());
 			previous_child = start_vertex;
 			child_extension = true;
@@ -145,8 +144,13 @@ namespace prx
 
 			std::vector<plan_t*> plans;
 			std::vector<trajectory_t*> trajs;
-			roadmap_expand(closest_node->point,plans,trajs,closest_node->expand_number,closest_node->roadmap_path_indices);
-		
+			// PRX_DEBUG_PRINT
+			// std::cout << "Prev expand num: " << closest_node->expand_number << std::endl;
+			bool override_child_extension = false;
+			roadmap_expand(closest_node->point,plans,trajs,closest_node->expand_number,closest_node->roadmap_path_indices, override_child_extension);
+			// PRX_DEBUG_PRINT
+			// std::cout << closest_node->roadmap_path_indices.size() << std::endl;
+
 			for(int i=0;i<plans.size();i++)
 			{
 				closest_node->edge_generators.push_back(std::make_pair(plans[i],trajs[i]));
@@ -236,7 +240,8 @@ namespace prx
 				delete eg.second;
 			}
 
-			if (closest_node -> expand_number < closest_node -> blossom_number)
+			// if (closest_node -> expand_number <= closest_node -> blossom_number)
+			if (override_child_extension)
 			{
 				child_extension = true;
 			}
@@ -270,10 +275,10 @@ namespace prx
 		new_tree_node->dir_radius = new_node_dir_radius;
 		new_tree_node->expand_number = 0;
         // Copy the parent's roadmap path indices
-        for (auto& path_index : closest_node->roadmap_path_indices)
-        {
-            new_tree_node->roadmap_path_indices.push_back(path_index);
-        }
+		for (int i = 0; i < closest_node->roadmap_path_indices.size(); i++)
+		{
+			new_tree_node->roadmap_path_indices.push_back(new unsigned(*closest_node->roadmap_path_indices[i]));
+		}
 
 		max_radius = std::max(max_radius,new_node_dir_radius);
 		// EXPERIMENTAL: Try commenting this line out. Behavior seems reasonable, but need to consider theoretical effects

@@ -84,11 +84,8 @@ int main(int argc, char* argv[])
         // Get the Euler angles between the two quaternions
         quaternion_t quat1 = Eigen::Quaterniond(a->at(3), a->at(4), a->at(5), a->at(6));
         quaternion_t quat2 = Eigen::Quaterniond(b->at(3), b->at(4), b->at(5), b->at(6));
-        auto euler1 = quat1.toRotationMatrix().eulerAngles(0, 1, 2);
-        auto euler2 = quat2.toRotationMatrix().eulerAngles(0, 1, 2);
-        double euler1_z = euler1(2);
-        double euler2_z = euler2(2);
-        diff += norm_angle_pi(euler1_z - euler2_z) * norm_angle_pi(euler1_z - euler2_z);
+        double angular_diff = quat1.angularDistance(quat2);
+        diff += angular_diff * angular_diff;
         return sqrt(diff);
     };
 
@@ -99,6 +96,7 @@ int main(int argc, char* argv[])
 
     dirt_spec.min_control_steps = 0.5 * (1.0/simulation_step);
     dirt_spec.max_control_steps = 1.0 * (1.0/simulation_step);
+    dirt_spec.use_pruning = false;
     std::cout << dirt_spec.min_control_steps << " " << dirt_spec.max_control_steps << std::endl;
 
     double roll = 0, pitch = 0, yaw = 0;
@@ -110,15 +108,15 @@ int main(int argc, char* argv[])
     dirt_query.start_state = ss -> make_point();
     dirt_query.goal_state = ss -> make_point();
     ss -> copy_to_point(dirt_query.start_state);
-    dirt_query.start_state ->at(0) =  -9.0;
-    dirt_query.start_state ->at(1) =  -5.0;
+    dirt_query.start_state ->at(0) =  9.0;
+    dirt_query.start_state ->at(1) = 5.0;
     dirt_query.start_state ->at(3) = quat.w();
     dirt_query.start_state ->at(4) = quat.x();
     dirt_query.start_state ->at(5) = quat.y();
     dirt_query.start_state ->at(6) = quat.z();
     ss -> copy_to_point(dirt_query.goal_state);
-    dirt_query.goal_state -> at(0) = 9.0;
-    dirt_query.goal_state -> at(1) = 5.0;
+    dirt_query.goal_state -> at(0) = -9.0;
+    dirt_query.goal_state -> at(1) = -5.0;
     dirt_query.goal_state -> at(3) = quat.w();
     dirt_query.goal_state -> at(4) = quat.x();
     dirt_query.goal_state -> at(5) = quat.y();
@@ -191,10 +189,12 @@ int main(int argc, char* argv[])
     
     space_point_t lg = ss -> make_point();
     dirt_spec.roadmap_expand = [&](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, 
-                int bn, std::vector<unsigned*>& idxes)
+                int en, std::vector<unsigned*>& idxes, bool& override_child_extension)
     {
+        std::cout << s ->at(0) << " " << s -> at(1) << std::endl;
+
         bool perform_random_expand = true;
-        if (bn < dirt_spec.blossom_number)
+        if (en < dirt_spec.blossom_number)
         {
             std::vector<std::vector<double>> current_states;
             std::vector<std::vector<double>> local_goals;
@@ -203,7 +203,23 @@ int main(int argc, char* argv[])
             ss -> copy_vector_from_point(current_state,s);
             std::vector<double> local_goal;
 
-            auto nn = rrr.get_best_node_on_kth_path_backward(s,controller_query, dirt_spec, controller, bn);
+            int nn = -1;
+            if (idxes.size() == en)
+            {
+                // This is the first time this node is trying out this path.
+                nn = rrr.get_best_node_on_kth_path_backward(s,controller_query, dirt_spec, controller, en);
+                if (nn != -1)
+                    idxes.push_back(new unsigned(nn));
+            }
+            else
+            {
+                // This is not the first time this node is trying out this path.
+                nn = rrr.get_best_node_on_kth_path_forward(s,controller_query, dirt_spec, controller, en, *idxes[en]);
+                if (nn != -1)
+                    *idxes[en] = nn;
+            }
+            
+            // auto nn = rrr.get_best_node_on_kth_path_backward(s,controller_query, dirt_spec, controller, en);
             
             if (nn == -1)
             {
@@ -215,6 +231,7 @@ int main(int argc, char* argv[])
             }
             else
             {
+                override_child_extension = true;
                 ss -> copy_point(lg,rrr.get_point(nn));
                 local_goal.clear();
                 ss -> copy_vector_from_point(local_goal,lg);
@@ -234,9 +251,13 @@ int main(int argc, char* argv[])
             plans.push_back(new plan_t(plan));
             trajs.push_back(new trajectory_t(traj));
 
+            std::cout << "Adding traj with end point: ";
+            std::cout << traj.back()->at(0) << " " << traj.back()->at(1) << std::endl;
+
         }
         else
         {
+            PRX_DEBUG_PRINT
             default_expand(s,plans,trajs,1,sg,dirt_spec.sample_plan,dirt_spec.propagate);
         }
     };
@@ -245,7 +266,8 @@ int main(int argc, char* argv[])
     dirt.preprocess();
     dirt.link_and_setup_query(&dirt_query);
 
-    condition_check_t checker("time", 60.0);
+    condition_check_t checker("time", 30.0);
+    // condition_check_t checker("iterations", 100);
     dirt.resolve_query(&checker);
     dirt.fulfill_query(); 
 

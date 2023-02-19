@@ -13,7 +13,6 @@ namespace prx
         virtual ~dirt_roadmap_node_t() = default;
         std::vector<unsigned*> roadmap_path_indices;
 		int expand_number;
-		bool greedy_child;
     };
     class dirt_roadmap_specification_t : public dirt_specification_t
     { 

@@ -53,12 +53,8 @@ int main(int argc, char* argv[])
         // Get the Euler angles between the two quaternions
         quaternion_t quat1 = Eigen::Quaterniond(a->at(3), a->at(4), a->at(5), a->at(6));
         quaternion_t quat2 = Eigen::Quaterniond(b->at(3), b->at(4), b->at(5), b->at(6));
-        auto euler1 = quat1.toRotationMatrix().eulerAngles(0, 1, 2);
-        auto euler2 = quat2.toRotationMatrix().eulerAngles(0, 1, 2);
-        double euler1_z = euler1(2);
-        double euler2_z = euler2(2);
-        diff += norm_angle_pi(euler1_z - euler2_z) * norm_angle_pi(euler1_z - euler2_z);
-        double dist = quat1.angularDistance(quat2);
+        double angular_diff = quat1.angularDistance(quat2);
+        diff += angular_diff * angular_diff;
         return sqrt(diff);
     };
 

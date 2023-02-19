@@ -31,8 +31,9 @@ int main(int argc, char* argv[])
         space_point_t current = ss -> make_point();
         ss -> copy_to_point(current);
         std::vector<double> xs = linspace(-9.,9.,12);
-        std::vector<double> ys = linspace(-5.,5.,5);
-        std::vector<double> ts = linspace(-PRX_PI, PRX_PI, 2);
+        std::vector<double> ys = linspace(-5.,5.,10);
+        std::vector<double> ts = {0.0, PRX_PI/2, PRX_PI, 3*PRX_PI/2};
+        // std::vector<double> ts = linspace(-PRX_PI, PRX_PI, 2);
 
         trajectory_t traj(ss); plan_t plan(cs);
         std::vector<space_point_t> verification_points;
