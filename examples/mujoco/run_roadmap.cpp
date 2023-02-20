@@ -146,11 +146,12 @@ int main(int argc, char* argv[])
 
     landmark_roadmap_t rrr;
     std::string env_path = std::getenv("DIRTMP_PATH");
-    std::string roadmap_dir = env_path + ("/resources/input_files/roadmaps") +params["env_name"].as<std:string>();
+    std::string roadmap_dir = env_path + "/resources/input_files/roadmaps/" + params["env_name"].as<std::string>();
     std::vector<std::vector<double>> vertices = read_comma_separated_file(roadmap_dir + "/vertices.txt");
 
     for (auto& v : vertices)
     {
+        //std::cout << "adding vertex: " << v[0] << "\n";
         auto p = ss -> make_point();
         // Copy from vector starting at index 1
         auto pv = std::vector<double>(v.begin() + 1, v.end());
@@ -162,6 +163,7 @@ int main(int argc, char* argv[])
 
     for (auto& e : edges)
     {
+        //std::cout << "connecting vertices: " << e[0]<<" and "<< e[1] << "\n";
         rrr.add_edge(int(e[0]),int(e[1]),e[2]);
     }
 
@@ -317,6 +319,7 @@ int main(int argc, char* argv[])
 
     for( int i = 0; i < stats_runs; ++i )
     {
+        
         dirt.link_and_setup_spec(&dirt_spec);
         dirt.preprocess();
         dirt.link_and_setup_query(&dirt_query);
