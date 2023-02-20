@@ -173,6 +173,7 @@ int main(int argc, char* argv[])
 
     prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
     auto paths = rrr.get_k_shortest_paths(s_nn,g_nn,dirt_spec.blossom_number);
+    dirt_spec.blossom_number = paths.size();
 
     for (auto path : paths)
     {
@@ -219,7 +220,7 @@ int main(int argc, char* argv[])
             std::vector<double> local_goal;
 
             int nn = -1;
-            if (idxes.size() == en)
+            if (idxes.size() <= en)
             {
                 // This is the first time this node is trying out this path.
                 nn = rrr.get_best_node_on_kth_path_backward(s,controller_query, dirt_spec, controller, en);
