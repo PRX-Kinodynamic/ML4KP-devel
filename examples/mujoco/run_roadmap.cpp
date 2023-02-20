@@ -43,6 +43,10 @@ int main(int argc, char* argv[])
     init_random(210896);
 
     std::string params_file = "examples/mujoco/mushr_rm_trajectory.yaml";
+    if(argc>=2){
+        params_file = argv[1];
+    }
+
     param_loader params(params_file);
     learned_controller_t controller(params);
 
@@ -282,8 +286,8 @@ int main(int argc, char* argv[])
     dirt.preprocess();
     dirt.link_and_setup_query(&dirt_query);
 
-    condition_check_t checker("time", 30.0);
-    // condition_check_t checker("iterations", 100);
+    //condition_check_t checker("time", 30.0);
+    condition_check_t checker("iterations", 100);
     dirt.resolve_query(&checker);
     dirt.fulfill_query(); 
 

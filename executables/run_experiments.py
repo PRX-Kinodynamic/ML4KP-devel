@@ -45,9 +45,13 @@ class ScriptRunner:
             f.write("plant: !file \"plants/mushr.yaml\"\n")
             f.write("learned_controller: !file \"networks/mushr.yaml\"\n")
 
-       
-        cmd = [os.environ["DIRTMP_PATH"]+"bin/examples/mujoco/run_rlg_with_stats","examples/"+test_yaml_fname]
-        popen = subprocess.Popen(cmd)
+        if name == "random" or name == "rlg":
+            cmd = [os.environ["DIRTMP_PATH"]+"bin/examples/mujoco/run_rlg_with_stats","examples/"+test_yaml_fname]
+            popen = subprocess.Popen(cmd)
+            
+        elif name == "roadmap":
+            cmd = [os.environ["DIRTMP_PATH"]+"bin/examples/mujoco/run_roadmap","examples/"+test_yaml_fname]
+            popen = subprocess.Popen(cmd)
         time.sleep(1)
         # popen.wait()
 
