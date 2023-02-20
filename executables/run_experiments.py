@@ -39,8 +39,7 @@ class ScriptRunner:
         elif name == "rlg":
             self.planner_params["use_rlg"] = True
 
-        # test_yaml_fname = "test_"+mode+"_"+name+"_"+str(id)+".yaml"
-        test_yaml_fname = "test.yaml"
+        test_yaml_fname = "test_"+name+".yaml"
         with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/'+test_yaml_fname,'w') as f:
             yaml.safe_dump(self.planner_params, f, default_flow_style=False)
             f.write("plant: !file \"plants/mushr.yaml\"\n")

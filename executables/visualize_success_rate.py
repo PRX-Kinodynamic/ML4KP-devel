@@ -16,11 +16,13 @@ def analyze_success_time(exps_dir,problems,planner):
 
     for problem in problems:
         current_dir = exps_dir+"/"+problem
+        
         # Find number of files that start with planner_ inside exps_dir
         num_trials = len([name for name in os.listdir(current_dir) if os.path.isfile(os.path.join(current_dir, name)) and name.startswith(planner) and name.endswith(".txt")])
         for i in range(num_trials):
             run_data = []
             fname=current_dir+"/"+planner+"_"+str(i)+".txt"
+            print(fname)
             times, _, costs = load_data(fname)
             max_time = max(max_time,max(times))
             for time, cost in zip(times,costs):
