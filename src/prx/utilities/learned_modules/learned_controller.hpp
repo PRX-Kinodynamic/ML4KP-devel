@@ -50,6 +50,7 @@ class learned_controller_t
         {
             std::cout << input_path + controller_file << std::endl;
             controller = torch::jit::load(input_path+controller_file,device);
+            torch::set_num_threads(1);
         }
         catch(const c10::Error& e)
         {
