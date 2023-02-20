@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
                             * Eigen::AngleAxisd(s_pitch, Eigen::Vector3d::UnitY())
                             * Eigen::AngleAxisd(s_yaw, Eigen::Vector3d::UnitZ());
 
-    dirt_query_t dirt_query(ss,cs);
+    dirt_roadmap_query_t dirt_query(ss,cs);
     dirt_query.start_state = ss -> make_point();
     ss -> copy_to_point(dirt_query.start_state);
     dirt_query.start_state ->at(0) =  start[0];
@@ -145,8 +145,7 @@ int main(int argc, char* argv[])
     space_point_t g = ss -> clone_point(dirt_query.goal_state);
 
     landmark_roadmap_t rrr;
-    std::string env_path = std::getenv("DIRTMP_PATH");
-    std::string roadmap_dir = env_path + "/resources/input_files/roadmaps/" + params["env_name"].as<std::string>();
+    std::string roadmap_dir = input_path + "roadmaps/" + params["env_name"].as<std::string>(); // todo: use prx/utils/constants 
     std::vector<std::vector<double>> vertices = read_comma_separated_file(roadmap_dir + "/vertices.txt");
 
     for (auto& v : vertices)
@@ -309,7 +308,6 @@ int main(int argc, char* argv[])
     int stats_runs = params["runs"].as<int>();
     condition_check_t poll_checker("time", params["poll_rate"].as<double>());
 
-    std::string output_path = std::getenv("DIRTMP_PATH");
     std::string output_dir = params["output_dir"].as<std::string>();
     std::string out_path = output_path + output_dir;
     if (!fs::exists(out_path))

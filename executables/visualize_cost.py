@@ -77,7 +77,7 @@ if __name__ == "__main__":
 	fn = args.tofile
 
 	exps_dir = os.environ["DIRTMP_PATH"] + "out/ablation/indoors"
-	planners = ["random","rlg"]
+	planners = ["random","rlg","roadmap"]
 	markers = ["^","s","*","o",".","P"]
 	problems = list(os.listdir(exps_dir))
 
