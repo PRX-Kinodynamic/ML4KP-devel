@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
     dirt_query.goal_check = [&](const space_point_t& point)
     {
         //double diff = dirt_spec.distance_function(point, dirt_query.goal_state)
-        double diff = (dirt_query.goal_state->at(0) - point->at(0)) * (dirt_query.goal_state->at(0) - point->at(0)) + (dirt_query.goal_state->at(1) - point->at(1)) * (dirt_query.goal_state->at(1) - point->at(1));
+        double diff = sqrt((dirt_query.goal_state->at(0) - point->at(0)) * (dirt_query.goal_state->at(0) - point->at(0)) + (dirt_query.goal_state->at(1) - point->at(1)) * (dirt_query.goal_state->at(1) - point->at(1)));
         return  diff < 1;
     };
 
