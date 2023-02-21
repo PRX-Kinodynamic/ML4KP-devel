@@ -25,6 +25,7 @@ class landmark_roadmap_t
         std::vector<node_index_t> path;
         std::vector<std::vector<node_index_t>> paths;
         std::vector<std::vector<node_index_t>> components;
+        int closest_index;
 
     protected:
         space_point_t pt;
@@ -66,11 +67,20 @@ class landmark_roadmap_t
         a_costs.clear();
         d_costs.clear();
 
+        double min_dist = PRX_INFINITY;
+        closest_index = -1;
+
         for (auto v : vertices)
         {
             // a_indices -> all vertices that can be reached from the considered point
             spec.state_space -> copy_point(query.start_state, pt);
             spec.state_space -> copy_point(query.goal_state, v.second -> point);
+            
+            if (spec.distance_function(pt, v.second -> point) < min_dist)
+            {
+                min_dist = spec.distance_function(pt, v.second -> point);
+                closest_index = v.first;
+            }
             
             if (!query.goal_check(query.start_state))
             {
@@ -112,6 +122,18 @@ class landmark_roadmap_t
 
             query.clear_outputs();
         }
+
+        if (a_indices.size() == 0)
+        {
+            a_indices.push_back(closest_index);
+            a_costs[closest_index] = 0;
+        }
+
+        if (d_indices.size() == 0)
+        {
+            d_indices.push_back(closest_index);
+            d_costs[closest_index] = 0;
+        }
     }
 
     node_index_t get_best_node_on_kth_path_backward(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, unsigned k)
@@ -152,6 +174,7 @@ class landmark_roadmap_t
 
         // Iterate through path in reverse starting from start_idx
         node_index_t best_idx = start_idx_in_path;
+        node_index_t init_best = start_idx_in_path;
         for (int i = start_idx_in_path - 1; i >= 0; i--)
         {
             auto v_idx = path[i];
