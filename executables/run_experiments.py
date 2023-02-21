@@ -38,6 +38,8 @@ class ScriptRunner:
             self.planner_params["use_rlg"] = False 
         elif name == "rlg":
             self.planner_params["use_rlg"] = True
+        
+        self.planner_params["env_name"] = mode
 
         test_yaml_fname = "test_"+name+".yaml"
         with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/'+test_yaml_fname,'w') as f:

@@ -137,7 +137,6 @@ int main(int argc, char* argv[])
     dirt_query.goal_state -> at(5) = g_quat.y();
     dirt_query.goal_state -> at(6) = g_quat.z();
 
-
     dirt_query.get_visualization = true;
 
     dirt_query.goal_check = [&](const space_point_t& point)
@@ -150,6 +149,9 @@ int main(int argc, char* argv[])
 
     landmark_roadmap_t rrr;
     std::string roadmap_dir = input_path + "roadmaps/" + params["env_name"].as<std::string>(); // todo: use prx/utils/constants 
+
+    std::cout << "checkpoint 3" <<std::endl;
+
     std::vector<std::vector<double>> vertices = read_comma_separated_file(roadmap_dir + "/vertices.txt");
 
     for (auto& v : vertices)
@@ -292,6 +294,7 @@ int main(int argc, char* argv[])
     dirt.fulfill_query(); 
 
     std::ofstream fout;
+    
     unsigned counter = 0;
     for (auto& traj : dirt_query.tree_visualization)
     {
@@ -304,7 +307,7 @@ int main(int argc, char* argv[])
     fout.open(output_path + "solution.txt");
     fout << dirt_query.solution_traj.print(4);
     fout.close();
-    // */
+    
 
     ///
     /// untested begin

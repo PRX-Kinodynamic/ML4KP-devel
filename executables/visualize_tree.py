@@ -72,4 +72,5 @@ for f in tqdm(os.listdir(fname)):
         if f.startswith("solution") and data.shape[0] > 1:
             plt.plot(data[:,0], data[:,1], color='red', linewidth=2)
 
-plt.show()
+plots_dir = os.environ["DIRTMP_PATH"]+"out/tree.png"
+plt.savefig(plots_dir)
