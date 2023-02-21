@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
     dirt_spec.roadmap_expand = [&](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, 
                 int en, std::vector<unsigned*>& idxes, bool& override_child_extension)
     {
-        std::cout << s ->at(0) << " " << s -> at(1) << std::endl;
+        //std::cout << s ->at(0) << " " << s -> at(1) << std::endl;
 
         bool perform_random_expand = true;
         if (en < dirt_spec.blossom_number)
@@ -273,13 +273,13 @@ int main(int argc, char* argv[])
             plans.push_back(new plan_t(plan));
             trajs.push_back(new trajectory_t(traj));
 
-            std::cout << "Adding traj with end point: ";
-            std::cout << traj.back()->at(0) << " " << traj.back()->at(1) << std::endl;
+            //std::cout << "Adding traj with end point: ";
+            //std::cout << traj.back()->at(0) << " " << traj.back()->at(1) << std::endl;
 
         }
         else
         {
-            PRX_DEBUG_PRINT
+            //PRX_DEBUG_PRINT
             default_expand(s,plans,trajs,1,sg,dirt_spec.sample_plan,dirt_spec.propagate);
         }
     };

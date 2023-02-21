@@ -61,7 +61,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--run', action='store_true')
     parser.add_argument('--mode', type=str, default="indoors")
-    parser.add_argument('--name', type=str, default='random')
+    parser.add_argument('--name', type=str, default='roadmap')
 
     args = parser.parse_args()
     run = args.run
