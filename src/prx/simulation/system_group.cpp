@@ -83,7 +83,7 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
   do
   {
     ctrl->compute_controls();
-    propagate_once(propagate_step::MIDDLE_STEP, nullptr);
+    propagate_once();
   } while (!cond_check.check());
 
   state_space->copy_to_point(result);
@@ -102,7 +102,7 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
   do
   {
     ctrl->compute_controls();
-    propagate_once(propagate_step::MIDDLE_STEP, nullptr);
+    propagate_once();
     result.copy_onto_back(state_space);
   } while (!cond_check.check());
 
@@ -121,7 +121,7 @@ void system_group_t::propagate(int steps, space_point_t control, trajectory_t* t
     else
       p_step = propagate_step::FINAL_STEP;
 
-    propagate_once(p_step, control);
+    propagate_once(control, p_step);
     if (traj != nullptr)
     {
       traj->copy_onto_back(state_space);
@@ -129,12 +129,8 @@ void system_group_t::propagate(int steps, space_point_t control, trajectory_t* t
   }
 }
 
-void system_group_t::propagate_once(propagate_step step, space_point_t control)
+void system_group_t::propagate_once(const propagate_step& step)
 {
-  if (control != nullptr)
-  {
-    control_space->copy_from(control);
-  }
   for (auto s : group)
   {
     s->compute_control();

@@ -179,7 +179,10 @@ bool omnirobot_mecanum_FO_t::connect_points(space_point_t origin, space_point_t 
 void omnirobot_mecanum_FO_t::compute_derivative()
 {
   // std::cout << input_control_space -> print_memory(2) << std::endl;
-  mu_1 = mu_2 = mu_3 = mu_0;
+  if (parameter_space->get_dimension() == 1)
+  {
+    mu_1 = mu_2 = mu_3 = mu_0;
+  }
 
   U[0] = w1 * (1. - (mu_0 * mass * gravity * radius) / (4. * stall_torque));
   U[1] = w2 * (1. - (mu_1 * mass * gravity * radius) / (4. * stall_torque));

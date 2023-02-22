@@ -134,29 +134,29 @@ void plan_t::copy_to(const double start_time, const double duration, plan_t& t)
   // std::cout<<duration<<" Copy to: "<<t.duration()<<std::endl;
 }
 
-void plan_t::copy_onto_back(Eigen::VectorXd v_control, double time)
-{
-  // PRX_DEPRECIATED;
-  control_space->copy_from(v_control);
-  append_onto_back(time, true);
-}
+// void plan_t::copy_onto_back(Eigen::VectorXd v_control, double time)
+// {
+//   // PRX_DEPRECIATED;
+//   control_space->copy_from(v_control);
+//   append_onto_back(time, true);
+// }
 
-void plan_t::copy_onto_back(space_point_t control, double time)
-{
-  if ((num_steps + 1) >= max_num_steps)
-  {
-    increase_buffer();
-    end_iterator = steps.begin();
-    const_end_iterator = steps.begin();
-    std::advance(end_iterator, num_steps);
-    std::advance(const_end_iterator, num_steps);
-  }
-  control_space->copy_point((*end_iterator).control, control);
-  (*end_iterator).duration = time;
-  ++end_iterator;
-  ++const_end_iterator;
-  ++num_steps;
-}
+// void plan_t::copy_onto_back(space_point_t control, double time)
+// {
+//   if ((num_steps + 1) >= max_num_steps)
+//   {
+//     increase_buffer();
+//     end_iterator = steps.begin();
+//     const_end_iterator = steps.begin();
+//     std::advance(end_iterator, num_steps);
+//     std::advance(const_end_iterator, num_steps);
+//   }
+//   control_space->copy_point((*end_iterator).control, control);
+//   (*end_iterator).duration = time;
+//   ++end_iterator;
+//   ++const_end_iterator;
+//   ++num_steps;
+// }
 
 void plan_t::copy_onto_front(space_point_t control, double time)
 {
@@ -287,10 +287,9 @@ void plan_t::to_file(const std::string file_name, const std::ios_base::openmode 
   std::ofstream ofs_map;
   ofs_map.open(file_name.c_str(), _mode);
 
-  ofs_map << std::setprecision(prx::precision);
   for (unsigned i = 0; i < num_steps; ++i)
   {
-    ofs_map << steps[i].duration << " ";
+    ofs_map << steps[i].duration << prx::separating_value;
     ofs_map << steps[i].control;
     ofs_map << "\n";
   }
@@ -300,11 +299,11 @@ void plan_t::to_file(const std::string file_name, const std::ios_base::openmode 
 
 void plan_t::from_file(const std::string file_name)
 {
+  const char sep{ prx::separating_value };
   std::ifstream ifs(file_name);
   std::string line;
 
   space_point_t aux = control_space->make_point();
-  char sep = ' ';
   double time;
   while (std::getline(ifs, line))
   {
@@ -324,5 +323,40 @@ void plan_t::from_file(const std::string file_name)
     control_space->copy_point_from_string(aux, ctrl, sep);
     copy_onto_back(aux, time);
   }
+}
+
+void plan_t::expand()
+{
+  plan_t expanded_plan(control_space);
+  for (auto step : steps)
+  {
+    for (double t = 0; t < step.duration; t += simulation_step)
+    {
+      expanded_plan.copy_onto_back(step.control, simulation_step);
+    }
+  }
+  (*this) = expanded_plan;
+}
+
+void plan_t::compress()
+{
+  plan_t compressed_plan(control_space);
+
+  for (auto step : steps)
+  {
+    if (compressed_plan.size() == 0)
+    {
+      compressed_plan.copy_onto_back(step.control, step.duration);
+    }
+    else if (control_space->equal_points(compressed_plan.back().control, step.control))
+    {
+      compressed_plan.extend_last_control(step.duration);
+    }
+    else
+    {
+      compressed_plan.copy_onto_back(step.control, step.duration);
+    }
+  }
+  (*this) = compressed_plan;
 }
 }  // namespace prx

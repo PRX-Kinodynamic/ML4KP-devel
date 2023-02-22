@@ -6,6 +6,7 @@
 #include "prx/simulation/plants/omni_mantis.hpp"
 #include "prx/simulation/plants/racecar_mini.hpp"
 #include "prx/simulation/plants/ackermann_FO.hpp"
+#include "prx/simulation/plants/ackermann_SO.hpp"
 #include "prx/simulation/plants/omnirobot_FO.hpp"
 #include "prx/simulation/plants/quadrotor_1d.hpp"
 #include "prx/simulation/plants/quadrotor_2d.hpp"
