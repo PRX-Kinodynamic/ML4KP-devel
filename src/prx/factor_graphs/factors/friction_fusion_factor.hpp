@@ -76,80 +76,11 @@ public:
     return error;
   }
 
-  // bool is_theta_relevant(const state_t theta_t_pos, const gtsam::Key& theta_key, state_t& theta_i_pos) const
-  // {
-  //   const double x_cell_length{ _theta_pos.get_cell_length(0) };
-  //   const double y_cell_length{ _theta_pos.get_cell_length(1) };
-
-  //   const double x0{ theta_t_pos[0] };
-  //   const double y0{ theta_t_pos[1] };
-
-  //   const double x1{ theta_t_pos[0] + x_cell_length };
-  //   const double y1{ theta_t_pos[1] };
-
-  //   const double x2{ theta_t_pos[0] };
-  //   const double y2{ theta_t_pos[1] + y_cell_length };
-
-  //   const double x3{ theta_t_pos[0] + x_cell_length };
-  //   const double y3{ theta_t_pos[1] + y_cell_length };
-
-  //   if (_theta_pos.in_bounds(x0, y0) && _theta_pos(x0, y0) == theta_key)
-  //   {
-  //     theta_i_pos = _theta_pos.template unmap<state_t>(x0, y0);
-  //     return true;
-  //   }
-  //   if (_theta_pos.in_bounds(x1, y1) && _theta_pos(x1, y1) == theta_key)
-  //   {
-  //     theta_i_pos = _theta_pos.template unmap<state_t>(x1, y1);
-  //     return true;
-  //   }
-  //   if (_theta_pos.in_bounds(x2, y2) && _theta_pos(x2, y2) == theta_key)
-  //   {
-  //     theta_i_pos = _theta_pos.template unmap<state_t>(x2, y2);
-  //     return true;
-  //   }
-  //   if (_theta_pos.in_bounds(x3, y3) && _theta_pos(x3, y3) == theta_key)
-  //   {
-  //     theta_i_pos = _theta_pos.template unmap<state_t>(x3, y3);
-  //     return true;
-  //   }
-  //   return false;
-  // }
-
-  // double compute_weight(const state_t theta_t_pos, const state_t& theta_i_pos) const
-  // {
-  //   const double Bx{ theta_i_pos[0] };
-  //   const double By{ theta_i_pos[1] };
-
-  //   const double Xx{ theta_t_pos[0] };
-  //   const double Xy{ theta_t_pos[1] };
-
-  //   const double x_cell_length{ _theta_pos.get_cell_length(0) };
-  //   const double y_cell_length{ _theta_pos.get_cell_length(1) };
-
-  //   const double delta_x{ std::pow(Bx - Xx, 2) };
-  //   const double delta_y{ std::pow(By - Xy, 2) };
-
-  //   if (delta_x == 0 && delta_y == 0)
-  //     return 10000;
-  //   const double D{ std::sqrt(delta_x + delta_y) };
-
-  //   return 1 / (D);
-  // }
-
   theta_t compute_error(const theta_t& th_t, const weights_t weights, const frictions_t thetas) const
   {
-    // std::cout << "th_t: " << th_t[0] << std::endl;
-    // std::cout << "ws: " << weights.transpose() << std::endl;
-    // std::cout << "thetas: " << thetas.transpose() << std::endl;
-    // std::cout << "dot: " << weights.dot(thetas) << std::endl;
-    // PRX_DEBUG_VAR_2(th_t, weights.dot(thetas));
     const theta_t error{ th_t[0] - weights.dot(thetas) };
-    // const theta_t error{ weights.dot(thetas) - th_t[0] };
-    // std::cout << "error: " << error << std::endl;
+
     return error;
-    // return th_t -
-    //        weights.adjoint() * thetas;  // equivalent to adjoint but returns a 1x1 Mat (1-vec) instead of a double
   }
 
 private:
