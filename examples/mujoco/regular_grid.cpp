@@ -60,12 +60,7 @@ int main(int argc, char* argv[])
                     current -> at(5) = quat.y();
                     current -> at(6) = quat.z();
 
-<<<<<<< HEAD
-
-                    // usleep(int(1e5));
-=======
                     //sim -> step_simulation(propagate_step::FIRST_STEP);
->>>>>>> df3e61cd634a83906c926460736bbf47137ed78c
 
                     if (dirt_spec.valid_state(current))
                     {
