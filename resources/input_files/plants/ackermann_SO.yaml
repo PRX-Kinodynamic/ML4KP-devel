@@ -1,0 +1,8 @@
+name: "Ackermann_SO"
+path: "Ackermann_SO"
+
+# Assume simple_obstacle environment
+start_state: [0,0,0,0,0]
+goal_state:  [5.0, 5.0, 1.57,0,0]
+
+vis_body: "body"

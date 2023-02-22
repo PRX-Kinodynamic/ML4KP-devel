@@ -1,0 +1,7 @@
+random_seed: 11101993
+simulation_step: 0.01
+environment: "environments/empty.yaml"
+plant: !file "plants/Ackermann_SO.yaml"
+# curve_file: "/Users/Gary/pracsys/ML4KP-devel/bin/curve_0p1.txt"
+curve_file: "/Users/Gary/pracsys/ML4KP-devel/bin/curve.txt"
+visualize: false

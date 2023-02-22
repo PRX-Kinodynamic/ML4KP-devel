@@ -1,0 +1,12 @@
+verbosity: "SUMMARY"
+lambda_upper_bound: 1e32
+use_fixed_lambda_factor: false
+diagonal_damping: true
+lambda_factor: 2
+lambda_initial: 1e-7
+lambda_lower_bound: 1e5
+log_file: "/tmp/lm_log.log"
+error_tolerance: 0.0
+relative_error_tolerance: 1e-6
+absolute_error_tolerance: 1e-6
+max_iterations: 10

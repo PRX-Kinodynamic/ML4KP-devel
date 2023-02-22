@@ -1,0 +1,8 @@
+simulation_step: 0.01
+random_seed: 231192
+
+environment: "environments/empty.yaml"
+plant: !file "plants/ackermann_SO.yaml"
+
+visualize: true
+

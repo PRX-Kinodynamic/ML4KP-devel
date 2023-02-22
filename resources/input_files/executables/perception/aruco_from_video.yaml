@@ -1,0 +1,7 @@
+video_file: "/Users/Gary/pracsys/aruco_videos/video_060223_0201.mp4"
+# video_file: "/Users/Gary/Downloads/my_video-11.m4v"
+display_video: true
+display_wait: 2
+
+corners_filename: "mushr_4.txt"
+locations_filename: "mushr_locations_4.txt"
