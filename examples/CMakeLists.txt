@@ -7,4 +7,5 @@ add_subdirectory(advanced)
 # add_subdirectory(tripods)
 add_subdirectory(bullet)
 add_subdirectory(gazebo)
+add_subdirectory(mujoco)
 

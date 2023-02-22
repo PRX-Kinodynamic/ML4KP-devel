@@ -8,60 +8,33 @@ using namespace prx;
 
 int main(int argc, char** argv)
 {
-    std::string params_file;
-    if (argc<=1)
-    {
-        params_file = "examples/mujoco/cartpole_playback.yaml";
-    }
-    else
-    {
-        params_file = std::string(argv[1]);
-    }
-    param_loader params(params_file);
+  std::string params_file = "examples/mujoco/playback.yaml";
 
-    std::string controlFilename = params["control_file"].as<std::string>();
-    std::string modelFilename = params["model_file"].as<std::string>();
+  param_loader params(params_file, argc, argv);
 
-    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>(modelFilename);
-    sim->init_simulator();
+  std::string control_filename = params["control_file"].as<std::string>();
+  std::string model_filename = params["model_file"].as<std::string>();
 
-    auto context = sim -> get_context("mujoco");
-    auto ss = context.first -> get_state_space();
-    auto cs = context.first -> get_control_space();
+  std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>(model_filename);
+  sim->init_simulator();
 
-    init_random(params["random_seed"].as<int>());
-    space_point_t start = ss ->make_point();
-    ss -> copy_point_from_vector(start, params["start_state"].as<std::vector<double>>());
-    ss -> copy_from_point(start);
-    space_point_t end = ss -> make_point();
+  auto context = sim->get_context("mujoco");
+  auto ss = context.first->get_state_space();
+  auto cs = context.first->get_control_space();
 
-    plan_t plan(cs);
+  init_random(params["random_seed"].as<int>());
+  space_point_t start = ss->make_point();
+  trajectory_t traj(ss);
 
-    std::string line;
-    std::ifstream FileReader(input_path + controlFilename);
-    while (getline (FileReader, line)) 
-    {
-        std::vector<double> line_data = split_to_dbl_vector(line);
-        std::cout<<"Read line from plan: "<< line << "\n";
-        
-        //read time from start of line
-        double time = line_data[0];
-        plan.append_onto_back(time);
-        line_data.erase(line_data.begin());
+  ss->copy(start, params["start_state"].as<std::vector<double>>());
+  ss->copy_from(start);
 
-        //read controls
-        space_point_t u = plan.back().control;
-        cs -> copy_point_from_vector(u, line_data);
+  plan_t plan(cs);
+  plan.from_file(control_filename);
 
-    }
-    FileReader.close();
+  context.first->propagate(start, plan, traj);
+  usleep(int(1e6));
+  // std::cout << ss->print_point(end, 3) << std::endl;
 
-    std::cout<<"Finished reading file\n";
-
-    while(true)
-    {
-        context.first -> propagate(start, plan, end);
-        usleep(int(1e6));
-        std::cout << ss -> print_point(end, 3) << std::endl;
-    }
+  traj.to_file(prx::out_path + "traj_playback.txt");
 }

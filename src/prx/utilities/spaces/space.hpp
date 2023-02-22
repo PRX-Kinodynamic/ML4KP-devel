@@ -145,7 +145,15 @@ public:
   {
     return at(i);
   }
-
+  operator std::string() const
+  {
+    std::stringstream ss;
+    for (auto e : memory)
+    {
+      ss << e << prx::separating_value;
+    }
+    return ss.str();
+  }
   friend std::ostream& operator<<(std::ostream& os, const space_point_t& obj)
   {
     os << *obj;
@@ -175,11 +183,6 @@ public:
   template <typename Vector_t = Eigen::VectorXd>
   inline Vector_t vector()
   {
-    // Eigen::VectorXd v(memory.size());
-    // for (int i = 0; i < memory.size(); ++i)
-    // {
-    //   v[i] = memory[i];
-    // }
     return Vector_t{ map_vector };
   }
 
@@ -218,7 +221,8 @@ public:
     EUCLIDEAN = 0,
     ROTATIONAL = 1,
     DISCRETE = 2,
-    IDLE = 3
+    IDLE = 3,
+    QUATERNION = 4
   };
 
   space_t(const std::string& topology, const std::vector<double*>& addresses, const std::string& name);
@@ -696,6 +700,40 @@ public:
     {
       (*result)[i] = (*p1)[i] - (*p2)[i];
     }
+  }
+  std::string topology_to_str(const topology_t& topology) const
+  {
+    std::string ret;
+    switch (topology)
+    {
+      case topology_t::EUCLIDEAN:
+        ret = "EUCLIDEAN";
+        break;
+      case topology_t::ROTATIONAL:
+        ret = "ROTATIONAL";
+        break;
+      case topology_t::DISCRETE:
+        ret = "DISCRETE";
+        break;
+      case topology_t::IDLE:
+        ret = "IDLE";
+        break;
+      case topology_t::QUATERNION:
+        ret = "QUATERNION";
+        break;
+      default:
+        ret = "Unsuported";
+    }
+    return ret;
+  }
+
+  void print_topology()
+  {
+    for (auto t : topology)
+    {
+      std::cout << topology_to_str(t) << " ";
+    }
+    std::cout << std::endl;
   }
 
 protected:

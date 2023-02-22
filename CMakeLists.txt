@@ -15,6 +15,7 @@ set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
 set(BUILD_FOR_GAZEBO ON  CACHE BOOL "SET ON/TRUE for building for Gazebo")
 set(BUILD_FOR_FACTOR_GRAPHS ON CACHE BOOL "Set ON/TRUE for building tests")
+set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(cmake_utils)
@@ -66,6 +67,7 @@ else()
     add_definitions(-DBULLET_NOT_BUILT)
 endif()
 
+
 include_directories(src/prx/external)
 include_directories(src/prx/visualization)
 include_directories(src/prx/planning)
@@ -77,6 +79,15 @@ if(BUILD_FOR_GAZEBO)
 	include_directories(src/prx/gazebo)
 	add_subdirectory(src/prx/gazebo)
 endif(BUILD_FOR_GAZEBO)
+if(BUILD_FOR_MUJOCO)
+    message("Building with mujoco.")
+
+	include_directories(src/prx/mujoco)
+	add_subdirectory(src/prx/mujoco)
+else()
+    message("Not building with mujoco.")
+    add_definitions(-DMUJOCO_NOT_BUILT)
+endif()
 
 # TODO: Make a shared libraries.
 add_subdirectory(src/prx/planning)
