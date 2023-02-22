@@ -4,7 +4,8 @@
 if [ "$1" = "run" ]
 then
     python3 run_experiments.py --run &
-    python3 run_experiments.py --run --name rlg
+    python3 run_experiments.py --run --name rlg &
+    python3 run_experiments.py --run --name roadmap
 fi
 if [ "$1" = "plot" ]
 then

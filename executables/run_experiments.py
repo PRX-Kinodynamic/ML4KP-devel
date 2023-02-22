@@ -38,6 +38,8 @@ class ScriptRunner:
             self.planner_params["use_rlg"] = False 
         elif name == "rlg":
             self.planner_params["use_rlg"] = True
+        
+        self.planner_params["env_name"] = mode
 
         test_yaml_fname = "test_"+name+".yaml"
         with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/'+test_yaml_fname,'w') as f:
@@ -59,7 +61,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--run', action='store_true')
     parser.add_argument('--mode', type=str, default="indoors")
-    parser.add_argument('--name', type=str, default='random')
+    parser.add_argument('--name', type=str, default='roadmap')
 
     args = parser.parse_args()
     run = args.run
