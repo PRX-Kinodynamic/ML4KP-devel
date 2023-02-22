@@ -12,6 +12,8 @@
 
 namespace prx
 {
+namespace fg
+{
 typedef std::function<bool(const gtsam::Factor* /* Factor */, double /* whitenedError */, size_t /* index */)>
     factor_filter_t;
 // static const factor_filter_t factor_filter_default = [](const gtsam::Factor *, double, size_t) {return true;};
@@ -32,17 +34,23 @@ std::string get_factor_name(const gtsam::NonlinearFactorGraph::sharedFactor& fac
 // 	return "no_factor_name";
 // }
 
-class fg_logger_t : public logger_t
+class factor_graph_logger_t : public logger_t
 {
 public:
-  fg_logger_t(const std::string& file_name, char separator = ' ', const std::string& _nullptr_val = "-")
-    : logger_t(file_name, separator = ' ')
+  factor_graph_logger_t(const std::string& file_name, char separator, const std::string& _nullptr_val)
+    : factor_graph_logger_t(file_name, std::string(1, separator), _nullptr_val)
+  {
+  }
+
+  factor_graph_logger_t(const std::string& file_name, std::string separator = " ",
+                        const std::string& _nullptr_val = "-")
+    : logger_t(file_name, separator)
   {
     nullptr_val = _nullptr_val;
     // ofstream ofs_log(params_.logFile.c_str(), ios::trunc);
   }
 
-  virtual ~fg_logger_t()
+  virtual ~factor_graph_logger_t()
   {
   }
 
@@ -56,4 +64,6 @@ private:
   // std::shared_ptr<gtsam::NonlinearFactorGraph> graph_ptr;
   std::string nullptr_val;
 };
+}  // namespace fg
+using fg_logger_t = prx::fg::factor_graph_logger_t;  // For bwk comp.
 }  // namespace prx

@@ -13,8 +13,10 @@
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/utilities/math/math_functions.hpp"
 #include "prx/utilities/math/first_order_derivative.hpp"
-#include "prx/factor_graphs/utilities/symbols_factory.hpp"
 #include "prx/simulation/plants/types/linear_time_variant.hpp"
+
+#include "prx/factor_graphs/factors/noise_model_factor.hpp"
+#include "prx/factor_graphs/utilities/symbols_factory.hpp"
 
 namespace prx
 {
@@ -329,6 +331,58 @@ private:
   // space_point_t pt_x1;
 
   const double _tau;
+};
+
+// Implements X_{t+1} = X_t + f(X_t, U_t, tau)
+template <Eigen::Index X_dim, Eigen::Index U_dim>
+class propagation_factor_XUTau_t : public fg::noise_model_4factor_t<X_dim, X_dim, U_dim, 1>
+{
+  using Base = fg::noise_model_4factor_t<X_dim, X_dim, U_dim, 1>;
+
+  using X = typename Base::X0;
+  using U = typename Base::X2;
+  using Tau = typename Base::X3;
+
+public:
+  /**
+   * @brief      This implements X_{t+1} = X_t + f(X_t, U_t, \theta, \tau).
+   *             Where \theta and \tau (params and duration of propagation) are constant. The plants parameters remain
+   *             unchanged, whatever is in the parameter space is used.
+   *
+   * @param[in]  x0_key      The x_0 key
+   * @param[in]  x1_key      The x_1 key
+   * @param[in]  u0_key      The u_0 key
+   * @param[in]  time_step   The time step
+   * @param[in]  cost_model  The cost model
+   * @param[in]  sg          System group
+   */
+  propagation_factor_XUTau_t(gtsam::Key x0_key, gtsam::Key x1_key, gtsam::Key u0_key, gtsam::Key tau_key,
+                             const gtsam::noiseModel::Base::shared_ptr& cost_model,
+                             const std::shared_ptr<system_group_t>& sg)
+    : Base(x0_key, x1_key, u0_key, tau_key, cost_model)
+  {
+    _sg = sg;
+  }
+
+  virtual X compute_error(const X& x0, const X& x1, const U& u0, const Tau& tau) const override
+  {
+    if (tau[0] > 0)
+    {
+      _sg->propagate(x0, u0, tau[0], x1_out);
+    }
+    else
+    {
+      x1_out = X::Ones() * 1000;  // Make the error really big
+    }
+
+    const X error{ x1_out - x1 };
+
+    return error;
+  }
+
+private:
+  mutable X x1_out;
+  std::shared_ptr<system_group_t> _sg;
 };
 
 class propagation_factor_4_t

@@ -2,6 +2,8 @@
 
 namespace prx
 {
+namespace fg
+{
 std::string get_factor_name(const gtsam::NonlinearFactorGraph::sharedFactor& factor_ptr)
 {
   // if (std::dynamic_pointer_cast<goal_distance_factor_t>(factor))
@@ -19,9 +21,9 @@ std::string get_factor_name(const gtsam::NonlinearFactorGraph::sharedFactor& fac
   return typeid(factor_ptr).name();
 }
 
-void fg_logger_t::add_graph_errors(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& values,
-                                   const std::string& extra_values, const factor_filter_t& print_condition,
-                                   const gtsam::KeyFormatter& kf)
+void factor_graph_logger_t::add_graph_errors(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& values,
+                                             const std::string& extra_values, const factor_filter_t& print_condition,
+                                             const gtsam::KeyFormatter& kf)
 {
   int i = 0;
   for (const gtsam::NonlinearFactorGraph::sharedFactor& factor : graph)
@@ -47,4 +49,5 @@ void fg_logger_t::add_graph_errors(const gtsam::NonlinearFactorGraph& graph, con
     i++;
   }
 }
+}  // namespace fg
 }  // namespace prx

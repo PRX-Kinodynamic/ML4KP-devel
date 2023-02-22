@@ -3,11 +3,14 @@
 
 namespace prx
 {
-namespace fg_utilities
+namespace fg
+{
+namespace utilities
 {
 
 const gtsam::Values& optimize_and_log(gtsam::NonlinearOptimizer& nl_opt, const gtsam::NonlinearOptimizerParams& params,
-                                      fg_logger_t& logger, const int extra_iters, condition_check_t* checker_0)
+                                      factor_graph_logger_t& logger, const int extra_iters,
+                                      condition_check_t* checker_0)
 {
   double currentError = nl_opt.error();
 
@@ -137,12 +140,19 @@ void values_to_plan_and_traj(const gtsam::Values& vals, trajectory_t* traj, plan
   {
     auto xs = symbol_factory_t::create_symbol("state_symbol", ti);
     auto us = symbol_factory_t::create_symbol("control_symbol", ti);
+    auto ts = symbol_factory_t::create_symbol("time_symbol", ti);
 
     auto x = vals.at<Eigen::VectorXd>(xs);
     auto u = vals.at<Eigen::VectorXd>(us);
 
+    double step = simulation_step;
+    if (vals.exists(ts))
+    {
+      step = vals.at<Eigen::Vector<double, 1>>(ts)[0];
+    }
+
     traj->copy_onto_back(x);
-    plan->copy_onto_back(u, simulation_step);
+    plan->copy_onto_back(u, step);
   }
 
   // Append the last state, at time T
@@ -206,6 +216,6 @@ void add_noise(gtsam::Values& values, const std::string symbol_name,
     v.value = v.value + sampler.sample();
   }
 }
-
-}  // namespace fg_utilities
+}  // namespace utilities
+}  // namespace fg
 }  // namespace prx

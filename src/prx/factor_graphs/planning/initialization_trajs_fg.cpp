@@ -157,7 +157,7 @@ gtsam::Values initialization_trajs_fg_t::init_from_plan(std::shared_ptr<system_g
       values.insert(ui_sy, vu);
 
       total_steps++;
-      sg->propagate_once(propagate_step::MIDDLE_STEP, step.control);
+      sg->propagate_once(step.control);
       auto xi_sy = prx_symbol_t::state_symbol(total_steps);
       Eigen::VectorXd vs = gtsam::Vector::Zero(x_dim);
       ss->copy_to(vs);

@@ -12,17 +12,17 @@
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/linear/NoiseModel.h>
 
-// #define GET_FACTOR_NAME_MACRO_GTSAM(FACTOR_CLASS, FACTOR, NAME) \
-// 	if (dynamic_cast<gtsam::FACTOR_CLASS*>(FACTOR.get())) return NAME;
+#include "prx/factor_graphs/utilities/fg_logger.hpp"
 
 namespace prx
 {
-class fg_logger_t;
-namespace fg_utilities
+namespace fg
+{
+namespace utilities
 {
 
 const gtsam::Values& optimize_and_log(gtsam::NonlinearOptimizer& nl_opt, const gtsam::NonlinearOptimizerParams& params,
-                                      fg_logger_t& logger, const int extra_iters = 0,
+                                      factor_graph_logger_t& logger, const int extra_iters = 0,
                                       condition_check_t* checker_0 = nullptr);
 
 void values_to_plan_and_traj(const gtsam::Values& vals, trajectory_t* traj, plan_t* plan, const int total_steps);
@@ -38,5 +38,6 @@ void values_to_plan(const gtsam::Values& vals, plan_t* plan, const int total_ste
 
 void values_to_traj(const gtsam::Values& vals, trajectory_t& traj, const int total_steps);
 
-}  // namespace fg_utilities
+}  // namespace utilities
+}  // namespace fg
 }  // namespace prx

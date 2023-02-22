@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <string>
 
+#include "prx/utilities/general/constants.hpp"
 #include "prx/simulation/system.hpp"
 #include "prx/factor_graphs/utilities/prx_symbols.hpp"
 
@@ -23,6 +24,26 @@ public:
     return instance;
   }
 
+  template <typename... Ts>
+  static gtsam::Key create_hashed_symbol(std::string name, Ts... args)
+  {
+    std::size_t hash{ 0 };
+    const std::tuple<Ts...> ts(args...);
+    create_hash<0>(hash, ts);
+    return gtsam::Key(hash);
+  }
+
+  template <std::size_t I, typename... Tp, std::enable_if_t<(I == sizeof...(Tp) - 1), bool> = true>
+  inline static void create_hash(std::size_t& hash, const std::tuple<Tp...>& t)
+  {
+    prx::hash_combine(hash, std::get<I>(t));
+  }
+  template <std::size_t I, typename... Tp, std::enable_if_t<(I < sizeof...(Tp) - 1), bool> = true>
+  inline static void create_hash(std::size_t& hash, const std::tuple<Tp...>& t)
+  {
+    prx::hash_combine(hash, std::get<I>(t));
+    create_hash<I + 1>(hash, t);
+  }
   /**
    * When called, this methods creates an instance of the system associated to the given name and assigns the given
    * path.
