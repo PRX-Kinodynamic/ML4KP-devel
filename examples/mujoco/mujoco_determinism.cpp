@@ -15,7 +15,6 @@ int main(int argc, char** argv)
     init_random(111093);
     space_point_t start = ss -> make_point();
     space_point_t end  = ss -> make_point();
-    ss -> sample(start);
     ss -> copy_from_point(start);
     for (int i = 0; i < 1000; i++)
     {

@@ -123,13 +123,13 @@ class landmark_roadmap_t
             query.clear_outputs();
         }
 
-        if (a_indices.size() == 0)
+        if (in_goal && a_indices.size() == 0)
         {
             a_indices.push_back(closest_index);
             a_costs[closest_index] = 0;
         }
 
-        if (d_indices.size() == 0)
+        if (in_goal && d_indices.size() == 0)
         {
             d_indices.push_back(closest_index);
             d_costs[closest_index] = 0;
@@ -670,6 +670,7 @@ class landmark_roadmap_t
         for (auto d : d_indices)
         {
             cost = d_costs[d];
+            std::cout << "Adding edge " << d << " -> " << vertex_counter << " with cost " << cost << std::endl;
             add_edge(d, vertex_counter, cost);
         }
 
@@ -698,6 +699,7 @@ class landmark_roadmap_t
         for (auto a : a_indices)
         {
             cost = a_costs[a];
+            std::cout << "Adding edge " << vertex_counter << " -> " << a << " with cost " << cost << std::endl;
             add_edge(vertex_counter, a, cost);
         }
 

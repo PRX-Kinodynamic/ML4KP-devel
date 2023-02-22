@@ -17,41 +17,41 @@ namespace prx
         simulation_step = m->opt.timestep;
         std::cout << "Using simulation step: " << simulation_step << std::endl;
 
-        // if (!glfwInit()) prx_throw("Error in initializing GLFW.")
+        if (!glfwInit()) prx_throw("Error in initializing GLFW.")
 
-        // window = glfwCreateWindow(1200, 900, "MuJoCo", NULL, NULL);
-        // if (!window) prx_throw("Error in creating GLFW window.")
-        // glfwMakeContextCurrent(window);
-        // glfwSwapInterval(1);
+        window = glfwCreateWindow(1200, 900, "MuJoCo", NULL, NULL);
+        if (!window) prx_throw("Error in creating GLFW window.")
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1);
         
-        // mjv_defaultCamera(&cam);
-        // mjv_defaultOption(&opt);
-        // mjv_defaultScene(&scn);
-        // mjr_defaultContext(&con);
-        // mjv_makeScene(m, &scn, 1000);
-        // mjr_makeContext(m, &con, mjFONTSCALE_150);
-        // viewport = {0, 0, 1200, 900};
+        mjv_defaultCamera(&cam);
+        mjv_defaultOption(&opt);
+        mjv_defaultScene(&scn);
+        mjr_defaultContext(&con);
+        mjv_makeScene(m, &scn, 1000);
+        mjr_makeContext(m, &con, mjFONTSCALE_150);
+        viewport = {0, 0, 1200, 900};
 
-        // glfwSetWindowUserPointer(window, this);
-        // glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos)
-        // {
-        //     auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
-        //     sim->mouse_move(window, xpos, ypos);
-        // });
-        // glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods)
-        // {
-        //     auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
-        //     sim->mouse_button(window, button, action, mods);
-        // });
-        // glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset)
-        // {
-        //     auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
-        //     sim->scroll(window, xoffset, yoffset);
-        // });
-        // glfwSetWindowCloseCallback(window, [](GLFWwindow* window)
-        // {
-        //     prx_throw("Closing the visualizer will cause the simulation to crash.")
-        // });
+        glfwSetWindowUserPointer(window, this);
+        glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos)
+        {
+            auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
+            sim->mouse_move(window, xpos, ypos);
+        });
+        glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods)
+        {
+            auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
+            sim->mouse_button(window, button, action, mods);
+        });
+        glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset)
+        {
+            auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
+            sim->scroll(window, xoffset, yoffset);
+        });
+        glfwSetWindowCloseCallback(window, [](GLFWwindow* window)
+        {
+            prx_throw("Closing the visualizer will cause the simulation to crash.")
+        });
 
         // number of generalized coordinates
         std::cout << "nq = " << m -> nq << std::endl;
@@ -84,7 +84,7 @@ namespace prx
     {
         mjv_freeScene(&scn);
         mjr_freeContext(&con);
-        // glfwTerminate();
+        glfwTerminate();
 
         mj_deleteData(d);
         mj_deleteModel(m);
@@ -119,33 +119,34 @@ namespace prx
         }
         mj_step(m, d);
         
-        
-        // glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
-        // mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
+        /*
+        glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+        mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
 
-        // // Refer here: https://github.com/deepmind/mujoco/issues/132 
-        // // and here: https://roboti.us/forum/index.php?threads/rendering-geoms.3460/#post-3963 
-        // if (goal_pos.size() != 0)
-        // {
-        //     mjvGeom* goal_geom = scn.geoms + scn.ngeom++;
-        //     mjv_initGeom(goal_geom, mjGEOM_SPHERE, NULL, NULL, NULL, NULL);
-        //     goal_geom -> rgba[0] = 0.0;
-        //     goal_geom -> rgba[1] = 1.0;
-        //     goal_geom -> rgba[2] = 0.0;
-        //     goal_geom -> rgba[3] = 0.25;
-        //     goal_geom -> size[0] = goal_radius;
-        //     goal_geom -> size[1] = goal_radius;
-        //     goal_geom -> size[2] = goal_radius;
-        //     goal_geom -> pos[0] = goal_pos[0];
-        //     goal_geom -> pos[1] = goal_pos[1];
-        //     goal_geom -> pos[2] = goal_pos[2];
+        // Refer here: https://github.com/deepmind/mujoco/issues/132 
+        // and here: https://roboti.us/forum/index.php?threads/rendering-geoms.3460/#post-3963 
+        if (goal_pos.size() != 0)
+        {
+            mjvGeom* goal_geom = scn.geoms + scn.ngeom++;
+            mjv_initGeom(goal_geom, mjGEOM_SPHERE, NULL, NULL, NULL, NULL);
+            goal_geom -> rgba[0] = 0.0;
+            goal_geom -> rgba[1] = 1.0;
+            goal_geom -> rgba[2] = 0.0;
+            goal_geom -> rgba[3] = 0.25;
+            goal_geom -> size[0] = goal_radius;
+            goal_geom -> size[1] = goal_radius;
+            goal_geom -> size[2] = goal_radius;
+            goal_geom -> pos[0] = goal_pos[0];
+            goal_geom -> pos[1] = goal_pos[1];
+            goal_geom -> pos[2] = goal_pos[2];
 
-        //     // TODO: Add a quat2euler to visualize the orientation
-        // }
+            // TODO: Add a quat2euler to visualize the orientation
+        }
 
-        // mjr_render(viewport, &scn, &con);
-        // glfwSwapBuffers(window);
-        // glfwPollEvents();
+        mjr_render(viewport, &scn, &con);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+        */
         
     }
 
@@ -178,6 +179,7 @@ namespace prx
 
     bool mujoco_collision_group_t::in_collision()
     {
+        mj_forward(sim->m, sim->d);
         int ncon = sim -> d->ncon;
         if (ncon > 0)
         {
