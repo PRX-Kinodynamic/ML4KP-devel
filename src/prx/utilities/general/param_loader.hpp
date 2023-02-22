@@ -59,13 +59,13 @@ public:
 
   void print();
 
-  inline bool exists(const std::string& key)
+  inline bool exists(const std::string& key) const
   {
     return !params[key].IsNull();
   }
 
   template <typename T = std::string>
-  T as()
+  T as() const
   {
     T val;
     try

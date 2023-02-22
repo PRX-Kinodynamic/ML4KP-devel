@@ -15,6 +15,7 @@ namespace prx
 #define PRX_EPSILON 1e-7
 #define PRX_INFINITY 1e10
 extern int precision;
+extern char separating_value;
 
 static inline std::string lib_path_safe(std::string env_var)
 {
@@ -66,10 +67,9 @@ enum propagate_step
 enum plant_type
 {
   ANALYTICAL,
-  BULLET,
+  MUJOCO,
   GZ
 };
-
 static inline double norm_angle_pi(double angle, double min_angle = -PRX_PI, double max_angle = PRX_PI)
 {
   // prx_warn_cond(std::fabs(angle) < 100 * max_angle, "Angle might be too high: " << std::to_string(angle));
@@ -293,5 +293,24 @@ static bool state_space_step(State& state, const double step, const std::size_t&
                              const Bound upper_bound)
 {
   return state_space_step(state, std::vector<double>(dimension, step), lower_bound, upper_bound);
+}
+
+template <typename T>
+static std::vector<T> split(std::string str, const char separator = prx::separating_value)
+{
+  std::vector<T> result;
+  std::istringstream ss(str);
+  std::string token;
+  while (std::getline(ss, token, separator))
+  {
+    if (token.size() > 0)
+    {
+      std::istringstream ti(token);
+      T x;
+      if ((ti >> x))
+        result.push_back(x);
+    }
+  }
+  return result;
 }
 }  // namespace prx

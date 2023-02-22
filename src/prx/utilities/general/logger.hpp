@@ -1,16 +1,24 @@
 #pragma once
 #include <fstream>
 
+#include "prx/utilities/general/constants.hpp"
+
 namespace prx
 {
 // TODO: is this the best (faster) way of logging?
 class logger_t
 {
 public:
-  logger_t(const std::string& filename, char separator = ' ')
-    : ofs_logger(filename.c_str(), std::ofstream::out | std::ofstream::trunc), _filename(filename)
+  logger_t(const std::string& filename, char separator = prx::separating_value, std::string endline = "")
+    : logger_t(filename, std::string(1, separator), endline)
   {
-    sep = separator;
+  }
+  logger_t(const std::string& filename, std::string separator, std::string endline = "")
+    : ofs_logger(filename.c_str(), std::ofstream::out | std::ofstream::trunc)
+    , _filename(filename)
+    , sep(separator)
+    , _endline(endline)
+  {
   }
 
   virtual ~logger_t()
@@ -57,7 +65,8 @@ protected:
 
   std::ofstream ofs_logger;
   std::string _filename;
-  char sep;
-};
+  std::string sep;
+  std::string _endline;
+};  // namespace prx
 
 }  // namespace prx

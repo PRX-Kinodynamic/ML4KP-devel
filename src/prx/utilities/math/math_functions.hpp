@@ -1,6 +1,7 @@
 #pragma once
 
-// #include "prx/simulation/system.hpp"
+#include "prx/simulation/defs.hpp"
+#include "prx/utilities/general/constants.hpp"
 #include "prx/utilities/general/constants.hpp"
 #include "prx/utilities/general/prx_assert.hpp"
 namespace prx
@@ -8,7 +9,7 @@ namespace prx
 namespace math_functions
 {
 static Eigen::MatrixXd differentiate(std::function<Eigen::VectorXd(Eigen::VectorXd)> f, Eigen::VectorXd xt,
-                                     double sim_step = simulation_step)
+                                     double sim_step = prx::simulation_step)
 {
   auto epsilon = sim_step * sim_step;
   // auto epsilon = std::sqrt(sim_step);
