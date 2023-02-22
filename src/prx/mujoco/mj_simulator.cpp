@@ -17,41 +17,44 @@ namespace prx
         simulation_step = m->opt.timestep;
         std::cout << "Using simulation step: " << simulation_step << std::endl;
 
-        if (!glfwInit()) prx_throw("Error in initializing GLFW.")
+        if(MUJOCO_VIS){
+            if (!glfwInit()) prx_throw("Error in initializing GLFW.")
 
-        window = glfwCreateWindow(1200, 900, "MuJoCo", NULL, NULL);
-        if (!window) prx_throw("Error in creating GLFW window.")
-        glfwMakeContextCurrent(window);
-        glfwSwapInterval(1);
+            window = glfwCreateWindow(1200, 900, "MuJoCo", NULL, NULL);
+            if (!window) prx_throw("Error in creating GLFW window.")
+            glfwMakeContextCurrent(window);
+            glfwSwapInterval(1);
+            
+            mjv_defaultCamera(&cam);
+            mjv_defaultOption(&opt);
+            mjv_defaultScene(&scn);
+            mjr_defaultContext(&con);
+            mjv_makeScene(m, &scn, 1000);
+            mjr_makeContext(m, &con, mjFONTSCALE_150);
+            viewport = {0, 0, 1200, 900};
+
+            glfwSetWindowUserPointer(window, this);
+            glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos)
+            {
+                auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
+                sim->mouse_move(window, xpos, ypos);
+            });
+            glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods)
+            {
+                auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
+                sim->mouse_button(window, button, action, mods);
+            });
+            glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset)
+            {
+                auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
+                sim->scroll(window, xoffset, yoffset);
+            });
+            glfwSetWindowCloseCallback(window, [](GLFWwindow* window)
+            {
+                prx_throw("Closing the visualizer will cause the simulation to crash.")
+            });
+        }
         
-        mjv_defaultCamera(&cam);
-        mjv_defaultOption(&opt);
-        mjv_defaultScene(&scn);
-        mjr_defaultContext(&con);
-        mjv_makeScene(m, &scn, 1000);
-        mjr_makeContext(m, &con, mjFONTSCALE_150);
-        viewport = {0, 0, 1200, 900};
-
-        glfwSetWindowUserPointer(window, this);
-        glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos)
-        {
-            auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
-            sim->mouse_move(window, xpos, ypos);
-        });
-        glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods)
-        {
-            auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
-            sim->mouse_button(window, button, action, mods);
-        });
-        glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset)
-        {
-            auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
-            sim->scroll(window, xoffset, yoffset);
-        });
-        glfwSetWindowCloseCallback(window, [](GLFWwindow* window)
-        {
-            prx_throw("Closing the visualizer will cause the simulation to crash.")
-        });
 
         // number of generalized coordinates
         std::cout << "nq = " << m -> nq << std::endl;
@@ -84,7 +87,7 @@ namespace prx
     {
         mjv_freeScene(&scn);
         mjr_freeContext(&con);
-        glfwTerminate();
+        if(MUJOCO_VIS) glfwTerminate();
 
         mj_deleteData(d);
         mj_deleteModel(m);

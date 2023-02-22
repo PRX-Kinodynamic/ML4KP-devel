@@ -25,6 +25,8 @@ namespace prx
 		return std::string(path);
 	}
 
+	const bool MUJOCO_VIS = false;
+
 	const std::string lib_path = lib_path_safe("DIRTMP_PATH");
 	
 	const std::string models_path = lib_path + "resources/models/";
