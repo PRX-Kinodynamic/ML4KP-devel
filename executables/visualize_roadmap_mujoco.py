@@ -19,6 +19,7 @@ diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 use_quat = True
 
 environment_file = os.environ["DIRTMP_PATH"]+"resources/models/mujoco/indoor.xml"
+# environment_file = os.environ["DIRTMP_PATH"]+"resources/models/mujoco/mushr_terrain.xml"
 
 plt.figure(figsize=(8,8))
 xmldoc = minidom.parse(environment_file)
@@ -40,7 +41,7 @@ plt.xlim(-11,11)
 plt.ylim(-11,11)
 
 # '''
-roadmap_dir = os.environ["DIRTMP_PATH"] + "out/"
+roadmap_dir = os.environ["DIRTMP_PATH"] + "out/indoor/"
 # roadmap_dir = "/Users/aravind/Downloads/mujoco_roadmap/"
 
 for fname in os.listdir(roadmap_dir):

@@ -43,7 +43,8 @@ int main(int argc, char* argv[])
     init_random(210896);
 
     std::string params_file = "examples/mujoco/mushr_rm_trajectory.yaml";
-    if(argc>=2){
+    if(argc>=2)
+    {
         params_file = argv[1];
     }
 
@@ -223,6 +224,7 @@ int main(int argc, char* argv[])
             ss -> copy_vector_from_point(current_state,s);
             std::vector<double> local_goal;
 
+            // /*
             int nn = -1;
             if (idxes.size() <= en)
             {
@@ -238,11 +240,13 @@ int main(int argc, char* argv[])
                 if (nn != -1)
                     *idxes[en] = nn;
             }
+            // */
             
             // auto nn = rrr.get_best_node_on_kth_path_backward(s,controller_query, dirt_spec, controller, en);
             
             if (nn == -1)
             {
+                PRX_DEBUG_PRINT
                 local_goal.clear();
                 ss -> sample(lg);
                 ss -> copy_vector_from_point(local_goal,lg);
@@ -287,7 +291,7 @@ int main(int argc, char* argv[])
     dirt.link_and_setup_query(&dirt_query);
 
     //condition_check_t checker("time", 30.0);
-    condition_check_t checker("iterations", 100);
+    condition_check_t checker("iterations", 60);
     dirt.resolve_query(&checker);
     dirt.fulfill_query(); 
 
@@ -310,6 +314,7 @@ int main(int argc, char* argv[])
     /// untested begin
     ///
 
+    /*
     int stats_runs = params["runs"].as<int>();
     condition_check_t poll_checker("time", params["poll_rate"].as<double>());
 
@@ -341,6 +346,7 @@ int main(int argc, char* argv[])
         dirt_query.clear_outputs();
         checker.reset();
     }
+    */
 }
 #else
 int main() {}
