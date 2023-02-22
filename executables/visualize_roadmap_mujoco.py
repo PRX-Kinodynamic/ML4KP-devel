@@ -18,6 +18,8 @@ robot_dims = [.45,0.31]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 use_quat = True
 
+visualize_traj = True
+
 environment_file = os.environ["DIRTMP_PATH"]+"resources/models/mujoco/indoor.xml"
 # environment_file = os.environ["DIRTMP_PATH"]+"resources/models/mujoco/mushr_terrain.xml"
 
@@ -41,27 +43,28 @@ plt.xlim(-11,11)
 plt.ylim(-11,11)
 
 # '''
-roadmap_dir = os.environ["DIRTMP_PATH"] + "out/indoor/"
+roadmap_dir = os.environ["DIRTMP_PATH"] + "out/"
 # roadmap_dir = "/Users/aravind/Downloads/mujoco_roadmap/"
 
-for fname in os.listdir(roadmap_dir):
-    if fname.endswith(".txt"):
-        if fname.startswith("traj"):
-            traj = np.loadtxt(roadmap_dir+fname,delimiter=",")
-            if len(traj) == 0: continue
-            plt.plot(traj[:,0],traj[:,1],color='black')
-            # Plot an arrow in the middle of the trajectory
-            mid = int(len(traj)/2)
-            plt.arrow(traj[mid,0],traj[mid,1],traj[mid+10,0]-traj[mid,0],traj[mid+10,1]-traj[mid,1],color='black',width=0.1)
+if(visualize_traj):
+    for fname in os.listdir(roadmap_dir+"traj/"):
+        if fname.endswith(".txt"):
+            if fname.startswith("traj"):
+                traj = np.loadtxt(roadmap_dir+"traj/"+fname,delimiter=",")
+                if len(traj) == 0: continue
+                plt.plot(traj[:,0],traj[:,1],color='black')
+                # Plot an arrow in the middle of the trajectory
+                mid = int(len(traj)/2)
+                plt.arrow(traj[mid,0],traj[mid,1],traj[mid+10,0]-traj[mid,0],traj[mid+10,1]-traj[mid,1],color='black',width=0.07, lw = 0.01)
 
-vertices_raw = np.loadtxt(roadmap_dir+"points.txt",delimiter=",")
+vertices_raw = np.loadtxt(roadmap_dir+"vertices.txt",delimiter=",")
 
-# vertices = {}
-# for i in range(vertices_raw.shape[0]):
-#     vertices[int(vertices_raw[i,0])] = vertices_raw[i,1:]
+vertices = {}
+for i in range(vertices_raw.shape[0]):
+    vertices[int(vertices_raw[i,0])] = vertices_raw[i,1:]
 
 # plt.scatter(vertices_raw[:,1],vertices_raw[:,2],marker='o',s=100)
-for v in vertices_raw:
+for h,v in vertices.items():
     angle = quat2euler(v[3:7]) if use_quat else v[2]
     rectangle_corner = np.array([v[0]-diag_len*np.cos(0.25*np.pi+angle),
                                 v[1]-diag_len*np.sin(0.25*np.pi+angle)])
@@ -69,13 +72,14 @@ for v in vertices_raw:
                 robot_dims[0],robot_dims[1],
                 edgecolor='purple',facecolor='purple',angle=180.*angle/np.pi)
     plt.gca().add_patch(rect)
-    # Label vertices with their idx
+    #Label vertices with their idx
     # for i in range(vertices_raw.shape[0]):
-    #     plt.annotate(str(int(vertices_raw[i,0])),(vertices_raw[i,1],vertices_raw[i,2]))
+    #    plt.annotate(str(int(vertices_raw[i,0])),(vertices_raw[i,1],vertices_raw[i,2]))
 
 #edges_fname = roadmap_dir+"edges.txt"
 #edges = np.loadtxt(edges_fname,delimiter=",")
 # '''
-plots_dir = roadmap_dir + "points.png"
+
+plots_dir = roadmap_dir + ("points_traj.png" if visualize_traj else "points.png")
 plt.savefig(plots_dir)
 #plt.show()

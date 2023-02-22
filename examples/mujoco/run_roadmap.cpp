@@ -19,6 +19,9 @@
 
 using namespace prx;
 
+bool viz_tree = true;
+bool rec_stats = true;
+
 std::vector<std::vector<double>> read_comma_separated_file(const std::string& path, const std::string& delimiter = ",")
 {
     std::ifstream file(path);
@@ -248,7 +251,7 @@ int main(int argc, char* argv[])
             
             if (nn == -1)
             {
-                PRX_DEBUG_PRINT
+                //PRX_DEBUG_PRINT
                 local_goal.clear();
                 ss -> sample(lg);
                 ss -> copy_vector_from_point(local_goal,lg);
@@ -299,57 +302,81 @@ int main(int argc, char* argv[])
 
     std::ofstream fout;
     
-    unsigned counter = 0;
-    for (auto& traj : dirt_query.tree_visualization)
-    {
-        fout.open(output_path + "tree" + std::to_string(counter) + ".txt");
-        fout << traj.print(2);
-        fout.close();
-        counter++;
-    }
+    if(viz_tree && !rec_stats){
+        unsigned counter = 0;
+        for (auto& traj : dirt_query.tree_visualization)
+        {
 
-    fout.open(output_path + "solution.txt");
-    fout << dirt_query.solution_traj.print(4);
-    fout.close();
+            std::string out_path = output_path + params["output_dir"].as<std::string>()+ params["planner_name"].as<std::string>()+"_tree/";
+            if (!fs::exists(out_path))
+            {
+                fs::create_directory(out_path);
+            }
+            fout.open(out_path+ "tree" + std::to_string(counter) + ".txt");
+            fout << traj.print(2);
+            fout.close();
+            counter++;
+        }
+
+        fout.open(output_path + "solution.txt");
+        fout << dirt_query.solution_traj.print(4);
+        fout.close();
+    }
+    
     
 
-    ///
-    /// untested begin
-    ///
+    if(rec_stats){    
+        int stats_runs = params["runs"].as<int>();
+        condition_check_t poll_checker("time", params["poll_rate"].as<double>());
 
-    /*
-    int stats_runs = params["runs"].as<int>();
-    condition_check_t poll_checker("time", params["poll_rate"].as<double>());
+        std::string output_dir = params["output_dir"].as<std::string>();
+        std::string out_path = output_path + output_dir;
+        if (!fs::exists(out_path))
+        {
+            fs::create_directory(out_path);
+        }
 
-    std::string output_dir = params["output_dir"].as<std::string>();
-    std::string out_path = output_path + output_dir;
-    if (!fs::exists(out_path))
-    {
-        fs::create_directory(out_path);
+        for( int i = 0; i < stats_runs; ++i )
+        {
+            
+            dirt.link_and_setup_spec(&dirt_spec);
+            dirt.preprocess();
+            dirt.link_and_setup_query(&dirt_query);
+
+            planner_statistics_t stats;
+            stats.link_planner(&dirt);
+            stats.link_criterion(&poll_checker);
+            stats.repeat_data_gathering(params["duration"].as<double>()/params["poll_rate"].as<double>());
+
+            std::string full_name = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
+            fout.open(full_name);
+            fout << stats.serialize() << std::endl;
+            fout.close();
+
+            if(viz_tree){
+                unsigned counter = 0;
+                for (auto& traj : dirt_query.tree_visualization)
+                {
+                    std::string out_path = output_path + params["output_dir"].as<std::string>()+ params["planner_name"].as<std::string>()+"_tree_"+std::to_string(i)+"/";
+                    if (!fs::exists(out_path))
+                    {
+                        fs::create_directory(out_path);
+                    }
+                    fout.open(out_path+ "tree" + std::to_string(counter) + ".txt");
+                    fout << traj.print(2);
+                    fout.close();
+                    counter++;
+                }
+                fout.open(output_path + "solution.txt");
+                fout << dirt_query.solution_traj.print(4);
+                fout.close();
+            }
+
+            dirt.reset();
+            dirt_query.clear_outputs();
+            checker.reset();
+        }
     }
-
-    for( int i = 0; i < stats_runs; ++i )
-    {
-        
-        dirt.link_and_setup_spec(&dirt_spec);
-        dirt.preprocess();
-        dirt.link_and_setup_query(&dirt_query);
-
-        planner_statistics_t stats;
-        stats.link_planner(&dirt);
-        stats.link_criterion(&poll_checker);
-        stats.repeat_data_gathering(params["duration"].as<double>()/params["poll_rate"].as<double>());
-
-        std::string full_name = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
-        fout.open(full_name);
-        fout << stats.serialize() << std::endl;
-        fout.close();
-
-        dirt.reset();
-        dirt_query.clear_outputs();
-        checker.reset();
-    }
-    */
 }
 #else
 int main() {}
