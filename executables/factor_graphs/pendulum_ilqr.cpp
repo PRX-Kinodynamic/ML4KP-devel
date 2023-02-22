@@ -212,11 +212,11 @@ int main(int argc, char* argv[])
   const std::string traj_txt{ out_path + "/ilqr/pendulum_ilqr_traj.txt" };
   const std::string plan_txt{ out_path + "/ilqr/pendulum_ilqr_plan.txt" };
 
-  results = fg_utilities::optimize_and_log(optimizer, lm_params, logger, 0);
+  results = fg::utilities::optimize_and_log(optimizer, lm_params, logger, 0);
   fg::formatter_t graph_formatter;
   ilqr_graph.saveGraph(graph_txt, results, prx::key_formatter, graph_formatter);
 
-  fg_utilities::values_to_plan_and_traj(results, &traj, &plan, plan.size());
+  fg::utilities::values_to_plan_and_traj(results, &traj, &plan, plan.size());
 
   traj.to_file(traj_txt);
   plan.to_file(plan_txt);

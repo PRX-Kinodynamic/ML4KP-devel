@@ -518,7 +518,7 @@ int main(int argc, char* argv[])
     world_model.world_change_function = fg_world;
     std::cout << "Graph: " << graph.size() << std::endl;
     gtsam::LevenbergMarquardtOptimizer optimizer(graph, init_vals, lm_params);
-    auto results = fg_utilities::optimize_and_log(optimizer, lm_params, lg, fg_iters);
+    auto results = fg::utilities::optimize_and_log(optimizer, lm_params, lg, fg_iters);
 
     graph.saveGraph(fg_graph_file, results, prx::key_formatter, graph_formatter);
     gtsam::Marginals marginals{ graph_trajs, results };

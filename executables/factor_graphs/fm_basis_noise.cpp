@@ -138,17 +138,16 @@ friction_vector_t friction_2_at(const double x, const double y, const basis_vect
   const double x_step{ x_max / static_cast<double>(GRID_DIVISIONS) };
   const double y_step{ y_max / static_cast<double>(GRID_DIVISIONS) };
   std::vector<double> vals{ linspace(min_val, max_val, 1 + 4 / 2) };
-  vals.insert(vals.end(), vals.rbegin() + 1, vals.rend());
-  // for (double x = 0; x < x_max; x += x_step)
-  // {
-  //   int i = 0;
-  //   for (double y = 0; y < y_max; y += y_step)
-  //   {
-  double per = y / y_max;
-  return friction_vector_t(vals[static_cast<int>(per * vals.size())]);
-  // i++;
-  // }
-  // }
+  double per;
+  if (y < 1.5)
+  {
+    per = 2 * y / 1.5;
+  }
+  else
+  {
+    per = 2 * (y_max - y) / 1.5;
+  }
+  return friction_vector_t(per);
 }
 
 template <typename ThetasGrid, typename F>
@@ -568,53 +567,59 @@ int main(int argc, char* argv[])
 
     traj_real.to_file(files["traj_noise_file"], std::ofstream::app);
 
-    for (unsigned xi = 0; xi < traj_real.size(); xi += increment)
+    // for (unsigned xi = 0; xi < traj_real.size(); xi += increment)
+    std::size_t xi = 0;
+    for (; xi + increment < traj_real.size(); xi += increment)
     {
-      if (xi < traj_real.size() - increment - 1)
-      {
-        // const Eigen::Vector3d x0{ traj_real[xi]->vector() };
-        // const Eigen::Vector3d x1{ traj_real[xi + increment]->vector() };
-        // const double y0{ traj_real[xi]->vector()[1] };
-        // const double x1{ traj_real[xi + increment]->vector()[0] };
-        // const double y1{ traj_real[xi + increment]->vector()[1] };
+      auto state_symbol = symbol_factory_t::create_symbol("state_symbol", xi);
+      auto next_state_symbol = symbol_factory_t::create_symbol("state_symbol", xi + increment);
+      auto control_symbol = symbol_factory_t::create_symbol("control_symbol", xi);
+      auto time_symbol = symbol_factory_t::create_symbol("time_symbol", xi);
+      auto param_symbol = symbol_factory_t::create_symbol("param_symbol_X", xi);
+      auto weights_symbol = symbol_factory_t::create_symbol("weight_symbol", xi);
 
-        auto state_symbol = symbol_factory_t::create_symbol("state_symbol", 0, xi);
-        auto next_state_symbol = symbol_factory_t::create_symbol("state_symbol", 0, xi + increment);
-        auto control_symbol = symbol_factory_t::create_symbol("control_symbol", 0, xi);
-        auto time_symbol = symbol_factory_t::create_symbol("time_symbol", 0, xi);
-        auto param_symbol = symbol_factory_t::create_symbol("param_symbol_X", 0, xi);
-        auto weights_symbol = symbol_factory_t::create_symbol("weight_symbol", 0, xi);
+      // if (xi + increment < traj_real.size())
+      // {
+      // std::cout << prx::key_formatter(state_symbol) << " " << prx::key_formatter(next_state_symbol) << std::endl;
 
-        thetas_used[param_symbol] = state_symbol;
+      thetas_used[param_symbol] = state_symbol;
 
-        Eigen::VectorXd ctrl_i{ plan[xi].control->vector<>() };
-        ctrl_noise.add_noise(ctrl_i);
+      Eigen::VectorXd ctrl_i{ plan[xi].control->vector<>() };
+      ctrl_noise.add_noise(ctrl_i);
 
-        Eigen::VectorXd t_vec{ (Eigen::VectorXd(1) << plan[xi].duration * increment).finished() };
-        trajectory_graph.addPrior(state_symbol, traj_real[xi]->vector<>(), x_sigma);
-        trajectory_graph.addPrior(control_symbol, ctrl_i, cs_dm);
-        trajectory_graph.addPrior(time_symbol, t_vec, t_dm);
+      Eigen::VectorXd t_vec{ (Eigen::VectorXd(1) << plan[xi].duration * increment).finished() };
+      trajectory_graph.addPrior(state_symbol, traj_real[xi]->vector<>(), x_sigma);
+      trajectory_graph.addPrior(control_symbol, ctrl_i, cs_dm);
+      trajectory_graph.addPrior(time_symbol, t_vec, t_dm);
 
-        trajectory_values.insert(state_symbol, traj_real[xi]->vector<>());
-        trajectory_values.insert(control_symbol, ctrl_i);
-        trajectory_values.insert(time_symbol, t_vec);
-        trajectory_values.insert(param_symbol, (Eigen::VectorXd(1) << 1).finished());
+      trajectory_values.insert(state_symbol, traj_real[xi]->vector<>());
+      trajectory_values.insert(control_symbol, ctrl_i);
+      trajectory_values.insert(time_symbol, t_vec);
+      trajectory_values.insert(param_symbol, (Eigen::VectorXd(1) << 1).finished());
 
-        // basis_vector_t compute_weights_vector(ThetaPosGrid& pos_grid, const state_t& theta_i_pos)
-        const basis_vector_t weight_i{ compute_weights_vector(frictions_grid, traj_real[xi]->vector<state_t>()) };
-        weights_values.insert(weights_symbol, weight_i);
-        weights_graph.addPrior(weights_symbol, weight_i, weight_nm);
-        if (xi + increment >= traj_real.size() - increment - 1)
-        {
-          trajectory_graph.addPrior(next_state_symbol, traj_real[xi + increment]->vector<>(), x_sigma);
-          trajectory_values.insert(next_state_symbol, traj_real[xi + increment]->vector<>());
-        }
-        trajectory_graph.add(propagation_factor_5_t<3, 4, 1>(state_symbol, next_state_symbol, control_symbol,
-                                                             time_symbol, param_symbol, dm, sg));
-        weights_graph.add(
-            fg::friction_fusion_factor_t<TH_DIM, BASIS_DIM>(ff_nm, param_symbol_basis, weights_symbol, param_symbol));
-      }
+      // basis_vector_t compute_weights_vector(ThetaPosGrid& pos_grid, const state_t& theta_i_pos)
+      const basis_vector_t weight_i{ compute_weights_vector(frictions_grid, traj_real[xi]->vector<state_t>()) };
+      weights_values.insert(weights_symbol, weight_i);
+      weights_graph.addPrior(weights_symbol, weight_i, weight_nm);
+      // if (xi + 2 * increment <= traj_real.size())
+      // {
+      //   trajectory_graph.addPrior(next_state_symbol, traj_real[xi + increment]->vector<>(), x_sigma);
+      //   trajectory_values.insert(next_state_symbol, traj_real[xi + increment]->vector<>());
+      // }
+      trajectory_graph.add(propagation_factor_5_t<3, 4, 1>(state_symbol, next_state_symbol, control_symbol, time_symbol,
+                                                           param_symbol, dm, sg));
+      weights_graph.add(
+          fg::friction_fusion_factor_t<TH_DIM, BASIS_DIM>(ff_nm, param_symbol_basis, weights_symbol, param_symbol));
+      // }
+      // else if (xi < traj_real.size())
+      // {
+      // }
     }
+    // auto state_symbol = symbol_factory_t::create_symbol("state_symbol", xi);
+    auto last_state_symbol = symbol_factory_t::create_symbol("state_symbol", xi);
+    // std::cout << prx::key_formatter(state_symbol) << " " << prx::key_formatter(next_state_symbol) << std::endl;
+    trajectory_graph.addPrior(last_state_symbol, traj_real.back()->vector<>(), x_sigma);
+    trajectory_values.insert(last_state_symbol, traj_real.back()->vector<>());
 
     gtsam::NonlinearFactorGraph graph;
     graph.add(trajectory_graph);
@@ -627,7 +632,7 @@ int main(int argc, char* argv[])
     world_model.world_change_function = fg_sim_world;
     std::cout << "Graph: " << graph.size() << std::endl;
     gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
-    results = fg_utilities::optimize_and_log(optimizer, lm_params, friction_map_logger, fg_iters);
+    results = fg::utilities::optimize_and_log(optimizer, lm_params, friction_map_logger, fg_iters);
 
     graph.saveGraph(files["fg_graph_file"], results, prx::key_formatter, graph_formatter);
 

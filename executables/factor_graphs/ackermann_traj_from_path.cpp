@@ -80,6 +80,7 @@ int main(int argc, char* argv[])
   const double tau{ 0.01 };
   space_point_t rand_ctrl = cs->make_point();
   cs->copy(rand_ctrl, { -.80, 0.1 });
+  trajectory_t traj_nominal(ss);
   while (reader.has_next_line())
   {
     auto line = reader.next_line();
@@ -93,59 +94,63 @@ int main(int argc, char* argv[])
       theta = PRX_PI;
       first = false;
     }
-    // PRX_DEBUG_VAR_3(x, x_prev, x - x_prev);
-    // PRX_DEBUG_VAR_3(y, y_prev, y - y_prev);
-    // PRX_DEBUG_VAR_1(theta);
-    // PRX_DEBUG_VAR_2((x - x_prev) / (y - y_prev), std::acos((x - x_prev) / (y - y_prev)));
-    traj.copy_onto_back(Eigen::Vector3d(x, y, theta));
+
+    traj_nominal.copy_onto_back(Eigen::Vector3d(x, y, theta));
     plan.copy_onto_back(rand_ctrl, 0.1);
     x_prev = x;
     y_prev = y;
   }
   plan.pop_back();
-  traj.to_file(prx::out_path + "traj_dbg.txt");
-  std::cout << traj << std::endl;
-  // auto dm = gtsam::noiseModel::Isotropic::Sigma(X_DIM, 1e0);
-  // auto dm = gtsam::noiseModel::Constrained::MixedSigmas(Eigen::Vector3d(100, 100, 1), Eigen::Vector3d(0, 0, 1));
-  // auto dm = gtsam::noiseModel::Constrained::All(3);
+  traj_nominal.to_file(prx::out_path + "traj_nominal.txt");
+  auto start = traj_nominal.front();
+  sg->propagate(start, plan, traj);
+  auto dm = gtsam::noiseModel::Isotropic::Sigma(X_DIM, 1e0);
+  auto constrained_3d = gtsam::noiseModel::Constrained::All(3);
+  auto constrained_xy = gtsam::noiseModel::Constrained::MixedSigmas(Eigen::Vector3d(0, 0, 1));
   auto tau_nm = gtsam::noiseModel::Constrained::All(1);
-  auto dm = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e-3, 1e-3, 1e0));
-  auto start = traj.front();
+  // auto dm = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e-3, 1e-3, 1e0));
   plan_t plan_res(cs);
   trajectory_t traj_fg(ss);
   trajectory_t traj_res(ss);
+
   using Tau = Eigen::Vector<double, 1>;
   for (int i = 0; i < 10; ++i)
   {
     gtsam::Values values;
     gtsam::NonlinearFactorGraph graph;
 
-    const std::size_t total_states{ traj.size() };
-    for (std::size_t i = 0; i < total_states - 1; ++i)
+    double duration_so_far{ 0.0 };
+    const std::size_t total_states{ plan.size() };
+    const double total_duration{ plan.duration() };
+    for (std::size_t i = 0; i < total_states; ++i)
     {
       prx::prx_symbol_t state_symbol = symbol_factory_t::create_symbol("state_symbol", i);
       prx::prx_symbol_t next_state_symbol = symbol_factory_t::create_symbol("state_symbol", i + 1);
       prx::prx_symbol_t control_symbol = symbol_factory_t::create_symbol("control_symbol", i);
       prx::prx_symbol_t time_symbol = symbol_factory_t::create_symbol("time_symbol", i);
 
-      // cs->sample(rand_ctrl);
-      values.insert(state_symbol, traj[i]->vector<>());
+      const double norm_duration{ duration_so_far / total_duration };
+      const Eigen::VectorXd state{ traj.at(norm_duration)->vector<>() };
+      const Eigen::VectorXd state_nominal{ traj_nominal.at(norm_duration)->vector<>() };
+      duration_so_far += plan[i].duration;
+
+      values.insert(state_symbol, state_nominal);
       values.insert(control_symbol, plan[i].control->vector<>());
       values.insert(time_symbol, Tau(plan[i].duration));
 
       const fg::positive_vector_factor_t<1> positive_duration(time_symbol, tau_nm);
       graph.add(positive_duration);
-      graph.add(state_prior_factor_t<X_DIM>(state_symbol, traj[i]->vector<>(), ss, dm));
+      // graph.add(state_prior_factor_t<X_DIM>(state_symbol, state_nominal, ss, constrained_xy));
       // graph.addPrior(state_symbol, traj[i]->vector<>(), dm);
       graph.add(propagation_factor_XUTau_t<X_DIM, U_DIM>(state_symbol, next_state_symbol, control_symbol, time_symbol,
-                                                         dm, sg));
+                                                         constrained_xy, sg));
       // propagation_factor_XU_t<X_DIM, U_DIM>(state_symbol, next_state_symbol, control_symbol, 0.01, dm, sg));
-      graph.add(quadratic_cost_factor_t<X_DIM>(state_symbol, traj[i]->vector<>(), Eigen::Matrix3d::Ones(), 1e0));
-      graph.add(quadratic_cost_factor_t<U_DIM>(control_symbol, rand_ctrl->vector<>(), Eigen::Matrix2d::Ones(), 1e0));
+      graph.add(quadratic_cost_factor_t<X_DIM>(state_symbol, state_nominal, Eigen::Matrix3d::Ones(), 1e0));
+      // graph.add(quadratic_cost_factor_t<U_DIM>(control_symbol, rand_ctrl->vector<>(), Eigen::Matrix2d::Ones(), 1e0));
     }
-    prx::prx_symbol_t state_symbol = symbol_factory_t::create_symbol("state_symbol", total_states - 1);
-    graph.addPrior(state_symbol, traj[total_states - 1]->vector<>(), dm);
-    values.insert(state_symbol, traj[total_states - 1]->vector<>());
+    prx::prx_symbol_t state_symbol = symbol_factory_t::create_symbol("state_symbol", total_states);
+    graph.addPrior(state_symbol, traj_nominal.back()->vector<>(), constrained_3d);
+    values.insert(state_symbol, traj_nominal.back()->vector<>());
 
     gtsam::LevenbergMarquardtParams lm_params{ prx::fg::utilities::default_levenberg_marquardt_parameters() };
     lm_params.setMaxIterations(100);

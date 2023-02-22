@@ -604,7 +604,7 @@ int main(int argc, char* argv[])
     world_model.world_change_function = fg_sim_world;
     std::cout << "Graph: " << graph.size() << std::endl;
     gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
-    results = fg_utilities::optimize_and_log(optimizer, lm_params, friction_map_logger, fg_iters);
+    results = fg::utilities::optimize_and_log(optimizer, lm_params, friction_map_logger, fg_iters);
 
     graph.saveGraph(files["fg_graph_file"], results, prx::key_formatter, graph_formatter);
 

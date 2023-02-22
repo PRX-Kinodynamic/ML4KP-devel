@@ -260,7 +260,7 @@ int main(int argc, char* argv[])
 
   gtsam::LevenbergMarquardtParams lm_params{ fg_params() };
   gtsam::LevenbergMarquardtOptimizer optimizer(ilqr_graph, ilqr_values, lm_params);
-  gtsam::Values results = fg_utilities::optimize_and_log(optimizer, lm_params, friction_map_logger, 0);
+  gtsam::Values results = fg::utilities::optimize_and_log(optimizer, lm_params, friction_map_logger, 0);
 
   auto linearized_fg = ilqr_graph.linearize(results);
   // gtsam::GaussianEliminationTree ilqr_elimination_tree(*linearized_fg, ilqr_ordering);
@@ -340,7 +340,7 @@ int main(int argc, char* argv[])
       const U du{ -ki.transpose() * (state_ks->vector() - x_traj) };
       // const U du{ U::Zero() };
       cs->copy(control_ks, u_plan + du);
-      sg->propagate(state_ks, control_ks, simulation_step, state_ks);
+      sg->propagate_once(state_ks, control_ks, state_ks);
 
       segment_duration += simulation_step;
       // Can't do segment_duration

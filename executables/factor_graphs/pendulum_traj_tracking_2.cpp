@@ -247,7 +247,7 @@ int main(int argc, char* argv[])
 
   gtsam::LevenbergMarquardtParams lm_params{ fg_params() };
   gtsam::LevenbergMarquardtOptimizer optimizer(ilqr_graph, ilqr_values, lm_params);
-  gtsam::Values results = fg_utilities::optimize_and_log(optimizer, lm_params, friction_map_logger, 0);
+  gtsam::Values results = fg::utilities::optimize_and_log(optimizer, lm_params, friction_map_logger, 0);
 
   auto linearized_fg = ilqr_graph.linearize(results);
   // gtsam::GaussianEliminationTree ilqr_elimination_tree(*linearized_fg, ilqr_ordering);
