@@ -53,14 +53,14 @@ for fname in os.listdir(roadmap_dir):
             mid = int(len(traj)/2)
             plt.arrow(traj[mid,0],traj[mid,1],traj[mid+10,0]-traj[mid,0],traj[mid+10,1]-traj[mid,1],color='black',width=0.1)
 
-vertices_raw = np.loadtxt(roadmap_dir+"vertices.txt",delimiter=",")
+vertices_raw = np.loadtxt(roadmap_dir+"points.txt",delimiter=",")
 
-vertices = {}
-for i in range(vertices_raw.shape[0]):
-    vertices[int(vertices_raw[i,0])] = vertices_raw[i,1:]
+# vertices = {}
+# for i in range(vertices_raw.shape[0]):
+#     vertices[int(vertices_raw[i,0])] = vertices_raw[i,1:]
 
 # plt.scatter(vertices_raw[:,1],vertices_raw[:,2],marker='o',s=100)
-for k,v in vertices.items():
+for v in vertices_raw:
     angle = quat2euler(v[3:7]) if use_quat else v[2]
     rectangle_corner = np.array([v[0]-diag_len*np.cos(0.25*np.pi+angle),
                                 v[1]-diag_len*np.sin(0.25*np.pi+angle)])
@@ -72,8 +72,9 @@ for k,v in vertices.items():
     # for i in range(vertices_raw.shape[0]):
     #     plt.annotate(str(int(vertices_raw[i,0])),(vertices_raw[i,1],vertices_raw[i,2]))
 
-edges_fname = roadmap_dir+"edges.txt"
-edges = np.loadtxt(edges_fname,delimiter=",")
+#edges_fname = roadmap_dir+"edges.txt"
+#edges = np.loadtxt(edges_fname,delimiter=",")
 # '''
-
-plt.show()
+plots_dir = roadmap_dir + "points.png"
+plt.savefig(plots_dir)
+#plt.show()

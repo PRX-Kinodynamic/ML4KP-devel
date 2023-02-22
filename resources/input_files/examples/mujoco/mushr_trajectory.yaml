@@ -3,7 +3,7 @@ learned_controller: !file "networks/mushr.yaml"
 planner_name: "rlg"
 use_rlg: true
 output_dir: "ablation/indoors/"
-duration: 30
+duration: 300
 poll_rate: 0.5
 runs: 10
 goal_state: [-9.0,-5.0,0.0,0.0,0.0]

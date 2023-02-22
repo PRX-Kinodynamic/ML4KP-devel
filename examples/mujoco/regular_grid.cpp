@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 
         space_point_t current = ss -> make_point();
         ss -> copy_to_point(current);
-        std::vector<double> xs = linspace(-9.,9.,12);
+        std::vector<double> xs = linspace(-9.,9.,18);
         std::vector<double> ys = linspace(-5.,5.,10);
         std::vector<double> ts = {0.0, PRX_PI/2, PRX_PI, 3*PRX_PI/2};
         // std::vector<double> ts = linspace(-PRX_PI, PRX_PI, 2);
@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
                     current -> at(5) = quat.y();
                     current -> at(6) = quat.z();
 
-                    sim -> step_simulation(propagate_step::FIRST_STEP);
+                    //sim -> step_simulation(propagate_step::FIRST_STEP);
 
                     if (dirt_spec.valid_state(current))
                     {

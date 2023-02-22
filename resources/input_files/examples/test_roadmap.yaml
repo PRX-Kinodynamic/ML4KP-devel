@@ -1,4 +1,4 @@
-duration: 30
+duration: 300
 env_name: indoors
 goal_state:
 - -9.0
