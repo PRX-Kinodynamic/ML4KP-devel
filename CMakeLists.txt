@@ -115,3 +115,20 @@ endif(BUILD_TESTS)
 
 # Add the "out" directory: "PATH/TO/ML4KP/out"
 file(MAKE_DIRECTORY out)
+
+include(ExternalProject)
+
+set(QHULL_SRC_DIR ${CMAKE_BINARY_DIR}/third_party/qhull)
+set(QHULL_BIN_DIR ${CMAKE_BINARY_DIR}/third_party/qhull/build)
+ExternalProject_Add(qhull
+    GIT_REPOSITORY https://github.com/qhull/qhull.git
+    GIT_TAG v8.0.2
+    GIT_PROGRESS TRUE
+    SOURCE_DIR ${QHULL_SRC_DIR}
+    BINARY_DIR ${QHULL_BIN_DIR}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}
+    CMAKE_CACHE_ARGS ""
+    # BUILD_COMMAND "${MAKE_COMMAND}  "
+    INSTALL_COMMAND ""
+    # TEST_COMMAND "${CMAKE_COMMAND} test "
+)

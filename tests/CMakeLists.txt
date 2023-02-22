@@ -9,6 +9,12 @@ file(GLOB_RECURSE TESTS_FILES
 	${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/utilities/*.cpp
 	)
+if (BUILD_FOR_FACTOR_GRAPHS)
+	file(GLOB_RECURSE FACTOR_GRAPH_FILES
+		${PROJECT_SOURCE_DIR}/tests/factor_graphs/*.cpp
+		)
+	list(APPEND TESTS_FILES ${FACTOR_GRAPH_FILES})
+endif()
 
 foreach(f ${TESTS_FILES})
 	GET_FILENAME_COMPONENT(fname ${f} NAME_WE )
@@ -24,6 +30,10 @@ foreach(f ${TESTS_FILES})
 	target_link_libraries(${fname} ${PROJECT_NAME}_planning )
 	if(BUILD_FOR_BULLET)
 		target_link_libraries(${fname} ${PROJECT_NAME}_bullet_sim )
+	endif()
+	if (BUILD_FOR_FACTOR_GRAPHS)
+		target_link_libraries(${fname} ${PROJECT_NAME}_factor_graphs )
+
 	endif()
 	target_link_libraries(${fname} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 	add_test(NAME "${fname}" COMMAND "${fname}" )
