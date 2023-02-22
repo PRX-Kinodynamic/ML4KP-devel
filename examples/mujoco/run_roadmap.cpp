@@ -291,18 +291,20 @@ int main(int argc, char* argv[])
         }
     };
 
-    dirt.link_and_setup_spec(&dirt_spec);
-    dirt.preprocess();
-    dirt.link_and_setup_query(&dirt_query);
 
-    //condition_check_t checker("time", 30.0);
-    condition_check_t checker("iterations", 60);
-    dirt.resolve_query(&checker);
-    dirt.fulfill_query(); 
+
 
     std::ofstream fout;
     
     if(viz_tree && !rec_stats){
+        dirt.link_and_setup_spec(&dirt_spec);
+        dirt.preprocess();
+        dirt.link_and_setup_query(&dirt_query);
+        //condition_check_t checker("time", 30.0);
+        condition_check_t checker("iterations", 60);
+        dirt.resolve_query(&checker);
+        dirt.fulfill_query(); 
+
         unsigned counter = 0;
         for (auto& traj : dirt_query.tree_visualization)
         {
@@ -347,6 +349,7 @@ int main(int argc, char* argv[])
             stats.link_planner(&dirt);
             stats.link_criterion(&poll_checker);
             stats.repeat_data_gathering(params["duration"].as<double>()/params["poll_rate"].as<double>());
+            dirt.fulfill_query(); 
 
             std::string full_name = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
             fout.open(full_name);
@@ -374,7 +377,7 @@ int main(int argc, char* argv[])
 
             dirt.reset();
             dirt_query.clear_outputs();
-            checker.reset();
+            poll_checker.reset();
         }
     }
 }
