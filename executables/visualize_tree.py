@@ -6,9 +6,16 @@ import math
 from xml.dom import minidom
 from tqdm import tqdm
 import matplotlib
+import argparse
 from matplotlib.patches import Circle, Rectangle
 
-fname = os.environ['DIRTMP_PATH'] + "out/"
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--target', type=str, default="roadmap_tree_0")
+args = parser.parse_args()
+target = args.target
+
+fname = os.environ['DIRTMP_PATH'] + "out/ablation/indoors/"+ target+"/"
 env_fname_prefix = os.environ['DIRTMP_PATH'] + "resources/models/mujoco/"
 env_fname = "indoor.xml"
 goal_state = np.array([-9.,-5.])
@@ -72,5 +79,5 @@ for f in tqdm(os.listdir(fname)):
         if f.startswith("solution") and data.shape[0] > 1:
             plt.plot(data[:,0], data[:,1], color='red', linewidth=2)
 
-plots_dir = os.environ["DIRTMP_PATH"]+"out/tree.png"
+plots_dir = os.environ["DIRTMP_PATH"]+"out/"+target+".png"
 plt.savefig(plots_dir)

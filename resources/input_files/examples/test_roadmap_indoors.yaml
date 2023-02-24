@@ -1,0 +1,21 @@
+duration: 300
+env_name: indoors
+goal_state:
+- -1.0
+- 5.0
+- 0.0
+- 0.0
+- 1.57
+output_dir: ablation/indoors/4/
+planner_name: roadmap
+poll_rate: 0.5
+runs: 10
+start_state:
+- -1.0
+- -5.0
+- 0.0
+- 0.0
+- 1.57
+use_rlg: true
+plant: !file "plants/mushr.yaml"
+learned_controller: !file "networks/mushr.yaml"

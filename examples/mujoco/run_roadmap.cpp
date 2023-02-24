@@ -184,15 +184,21 @@ int main(int argc, char* argv[])
     prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
     auto paths = rrr.get_k_shortest_paths(s_nn,g_nn,dirt_spec.blossom_number);
     dirt_spec.blossom_number = paths.size();
-
+    
+    std::ofstream fout;
     for (auto path : paths)
     {
+        std::string output_dir = params["output_dir"].as<std::string>();
+        std::string out_path = output_path + output_dir;
+        fout.open(out_path+ "path_"+params["planner_name"].as<std::string>()+".txt");
         std::cout << "Path: ";
         for (auto v : path)
         {
             std::cout << v << " ";
+            fout << rrr.get_point(v) << std::endl;
         }
         std::cout << std::endl;
+        fout.close();
     }
 
     // /*
@@ -294,7 +300,7 @@ int main(int argc, char* argv[])
 
 
 
-    std::ofstream fout;
+    
     
     if(viz_tree && !rec_stats){
         dirt.link_and_setup_spec(&dirt_spec);
