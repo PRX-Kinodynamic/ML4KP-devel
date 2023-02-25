@@ -9,10 +9,15 @@ namespace prx
         public:
         dirt_roadmap_node_t() : dirt_node_t()
         {
+			achieved_goal = 0;
+			reachable_goal = 0;
+			expand_num = 0;
+			greedy_expand = false;
         }
         virtual ~dirt_roadmap_node_t() = default;
-        std::vector<unsigned*> roadmap_path_indices;
-		int expand_number;
+		int expand_num;
+        unsigned achieved_goal, reachable_goal;
+		bool greedy_expand;
     };
     class dirt_roadmap_specification_t : public dirt_specification_t
     { 
@@ -69,7 +74,8 @@ namespace prx
 		dirt_roadmap_node_t* closest_node,
 		std::vector<dirt_roadmap_node_t*> dir_updates,
 		double new_node_dir_radius,
-		condition_check_t* condition
+		condition_check_t* condition,
+		bool skip_informed
 		);
 
 		dirt_roadmap_node_t* get_vertex(node_index_t v) const

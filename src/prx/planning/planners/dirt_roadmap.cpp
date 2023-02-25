@@ -53,7 +53,7 @@ namespace prx
 			start_node->is_safety_node = false;
 			start_node->cost_to_go = h(start_node->point,dirt_query->goal_state);
 			start_node->blossom_number = dirt_spec->blossom_number;
-			start_node->expand_number = 0;
+			start_node->greedy_expand = true;
 			metric->add_node(start_node.get());
 			previous_child = start_vertex;
 			child_extension = true;
@@ -131,7 +131,6 @@ namespace prx
 				}
 				else
 					previous_child = closest_index;
-				// std::cout << "Node selected for expansion: " << state_space->print_point(get_vertex(previous_child)->point) << std::endl;
 			}
 			child_extension = false;
 
@@ -144,18 +143,15 @@ namespace prx
 
 			std::vector<plan_t*> plans;
 			std::vector<trajectory_t*> trajs;
-			// PRX_DEBUG_PRINT
-			// std::cout << "Prev expand num: " << closest_node->expand_number << std::endl;
-			bool override_child_extension = false;
-			roadmap_expand(closest_node->point,plans,trajs,closest_node->expand_number,closest_node->roadmap_path_indices, override_child_extension);
-			// PRX_DEBUG_PRINT
-			// std::cout << closest_node->roadmap_path_indices.size() << std::endl;
+			roadmap_expand(closest_node->point,plans,trajs,closest_node->achieved_goal,closest_node->reachable_goal, closest_node->expand_num,
+							closest_node->greedy_expand, child_extension);
+			closest_node->expand_num++;
+
 
 			for(int i=0;i<plans.size();i++)
 			{
 				closest_node->edge_generators.push_back(std::make_pair(plans[i],trajs[i]));
 			}
-			closest_node->expand_number++;
 
 			std::pair<plan_t*,trajectory_t*> eg = std::make_pair(nullptr,nullptr);
 			double edge_cost;
@@ -198,27 +194,20 @@ namespace prx
 					}
 				});
 
+			bool skip_informed = false;
 			if(dirt_spec->use_pruning)
 			{
-				bool delete_node = false;
 				std::for_each(dir_updates.begin(), dir_updates.end(),
 						[&,this](dirt_roadmap_node_t* node)
 					{
-						if( !delete_node && closest_node->cost_to_come+edge_cost+end_heuristic > node->cost_to_come + node->cost_to_go)
+						if( !skip_informed && closest_node->cost_to_come+edge_cost+end_heuristic > node->cost_to_come + node->cost_to_go)
 						{
 							if(new_node_dir_radius + distance_function(node->point,eg.second->back()) < node->dir_radius)
 							{
-								delete_node = true;
+								skip_informed = true;
 							}
 						}
 					});
-				if(delete_node)
-				{
-					delete eg.first;
-					delete eg.second;
-					eg = std::make_pair(nullptr,nullptr);
-					continue;
-				}
 			}
 
 			//validity check
@@ -234,16 +223,9 @@ namespace prx
 
 			if (eg.first != nullptr)
 			{
-				// std::cout << "Adding edge of length " << eg.second->size() << std::endl;
-				add_edge_to_tree(eg, closest_node, dir_updates, new_node_dir_radius, condition);
-				delete eg.first;
+				add_edge_to_tree(eg, closest_node, dir_updates, new_node_dir_radius, condition, skip_informed);
+					delete eg.first;
 				delete eg.second;
-			}
-
-			// if (closest_node -> expand_number <= closest_node -> blossom_number)
-			if (override_child_extension)
-			{
-				child_extension = true;
 			}
 
 			iteration_count++;
@@ -256,7 +238,8 @@ namespace prx
 		dirt_roadmap_node_t* closest_node,
 		std::vector<dirt_roadmap_node_t*> dir_updates,
 		double new_node_dir_radius,
-		condition_check_t* condition
+		condition_check_t* condition,
+		bool skip_informed
 	)
 	{
 		auto node_index = tree.add_vertex<dirt_roadmap_node_t,rrt_edge_t>();
@@ -273,13 +256,10 @@ namespace prx
 		new_tree_node->cost_to_go = h(eg.second->back(),dirt_query->goal_state);;
 		new_tree_node->blossom_number = dirt_spec->blossom_number;
 		new_tree_node->dir_radius = new_node_dir_radius;
-		new_tree_node->expand_number = 0;
-        // Copy the parent's roadmap path indices
-		for (int i = 0; i < closest_node->roadmap_path_indices.size(); i++)
-		{
-			new_tree_node->roadmap_path_indices.push_back(new unsigned(*closest_node->roadmap_path_indices[i]));
-		}
 
+		new_tree_node->achieved_goal = closest_node->achieved_goal;
+		new_tree_node->reachable_goal = closest_node->reachable_goal;
+	
 		max_radius = std::max(max_radius,new_node_dir_radius);
 		// EXPERIMENTAL: Try commenting this line out. Behavior seems reasonable, but need to consider theoretical effects
 		// get_vertex(start_vertex)->dir_radius = max_radius;
@@ -291,44 +271,18 @@ namespace prx
 				if( new_tree_node->cost_to_come+new_tree_node->cost_to_go < node->cost_to_come + node->cost_to_go)
 				{
 					node->dir_radius = std::min(node->dir_radius,sibling_distance);
-					if(dirt_spec->use_pruning && node->dir_radius + sibling_distance < new_node_dir_radius && !node->is_safety_node)
+					if(dirt_spec->use_pruning && node->dir_radius + sibling_distance < new_node_dir_radius)
 					{
-						if(!node->bridge)
-						{
-							metric->remove_node(node);
-							node->bridge = true;
-						}
-						node_index_t iter = node->get_index();
-						while( is_leaf(iter) && get_vertex(iter)->bridge && !is_best_goal(iter))
-						{
-							node_index_t next = get_vertex(iter)->get_parent();
-							for (int man_index=0; man_index < get_vertex(iter)->edge_generators.size(); man_index++)
-							{
-								if (get_vertex(iter)->edge_generators[man_index].first != nullptr)
-								{
-									delete get_vertex(iter)->edge_generators[man_index].first;
-									delete get_vertex(iter)->edge_generators[man_index].second;
-								}
-							}
-							get_vertex(iter)->edge_generators.clear();
-							get_vertex(iter)->indices.clear();
-                            for (int i = 0; i < get_vertex(iter)->roadmap_path_indices.size(); i++)
-                            {
-                                delete get_vertex(iter)->roadmap_path_indices[i];
-                            }
-                            get_vertex(iter)->roadmap_path_indices.clear();
-							get_vertex(iter)->is_blossom_expand_done = false;
-							get_vertex(iter)->random_expand = false;
-							remove_leaf(iter);
-							iter = next;
-						}
+						node->greedy_expand = false;
 					}
 				}
 			});
 		if(new_tree_node->cost_to_go < closest_node->cost_to_go)
 		{
-			child_extension = true;
+			child_extension &= true;
 		}
+		new_tree_node->greedy_expand = !skip_informed && child_extension;
+		std::cout << "Greedy expand: " << new_tree_node->greedy_expand << std::endl;
 		previous_child=node_index;
 		metric->add_node(new_tree_node.get());
 		new_tree_node->bridge = false;
@@ -399,11 +353,6 @@ namespace prx
 			}
 			node->edge_generators.clear();
 			node->indices.clear();
-            for (int i = 0; i < node->roadmap_path_indices.size(); i++)
-            {
-                delete node->roadmap_path_indices[i];
-            }
-            node->roadmap_path_indices.clear();
 
 			//remove the node
 			tree.remove_vertex(v);

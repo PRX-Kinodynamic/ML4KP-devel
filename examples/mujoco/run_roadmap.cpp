@@ -19,8 +19,8 @@
 
 using namespace prx;
 
-bool viz_tree = true;
-bool rec_stats = true;
+bool visualize_tree = true;
+bool record_statistics = false;
 
 std::vector<std::vector<double>> read_comma_separated_file(const std::string& path, const std::string& delimiter = ",")
 {
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
 
     dirt_spec.min_control_steps = 0.5 * (1.0/simulation_step);
     dirt_spec.max_control_steps = 1.0 * (1.0/simulation_step);
-    dirt_spec.use_pruning = false;
+    dirt_spec.use_pruning = true;
     std::cout << dirt_spec.min_control_steps << " " << dirt_spec.max_control_steps << std::endl;
 
 
@@ -153,8 +153,6 @@ int main(int argc, char* argv[])
 
     landmark_roadmap_t rrr;
     std::string roadmap_dir = input_path + "roadmaps/" + params["env_name"].as<std::string>(); // todo: use prx/utils/constants 
-
-    std::cout << "checkpoint 3" <<std::endl;
 
     std::vector<std::vector<double>> vertices = read_comma_separated_file(roadmap_dir + "/vertices.txt");
 
@@ -215,58 +213,41 @@ int main(int argc, char* argv[])
     
     space_point_t lg = ss -> make_point();
     dirt_spec.roadmap_expand = [&](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, 
-                int en, std::vector<unsigned*>& idxes, bool& override_child_extension)
-    {
-        //std::cout << s ->at(0) << " " << s -> at(1) << std::endl;
-
-        bool perform_random_expand = true;
-        if (en < dirt_spec.blossom_number)
+                unsigned& achieved_goal, unsigned& reachable_goal, int expand_num, bool search_flag, bool& override_child_extension)
         {
-            std::vector<std::vector<double>> current_states;
-            std::vector<std::vector<double>> local_goals;
+        std::vector<std::vector<double>> current_states;
+        std::vector<std::vector<double>> local_goals;
 
-            std::vector<double> current_state;
-            ss -> copy_vector_from_point(current_state,s);
-            std::vector<double> local_goal;
+        std::vector<double> current_state;
+        ss -> copy_vector_from_point(current_state,s);
+        std::vector<double> local_goal;
 
-            // /*
-            int nn = -1;
-            if (idxes.size() <= en)
-            {
-                // This is the first time this node is trying out this path.
-                nn = rrr.get_best_node_on_kth_path_backward(s,controller_query, dirt_spec, controller, en);
-                if (nn != -1)
-                    idxes.push_back(new unsigned(nn));
-            }
-            else
-            {
-                // This is not the first time this node is trying out this path.
-                nn = rrr.get_best_node_on_kth_path_forward(s,controller_query, dirt_spec, controller, en, *idxes[en]);
-                if (nn != -1)
-                    *idxes[en] = nn;
-            }
-            // */
-            
-            // auto nn = rrr.get_best_node_on_kth_path_backward(s,controller_query, dirt_spec, controller, en);
-            
-            if (nn == -1)
-            {
-                //PRX_DEBUG_PRINT
-                local_goal.clear();
-                ss -> sample(lg);
-                ss -> copy_vector_from_point(local_goal,lg);
-                current_states.push_back(current_state);
-                local_goals.push_back(local_goal);
-            }
-            else
+        rrr.update_achieved_goal(s,controller_query, dirt_spec, achieved_goal, reachable_goal);
+
+        if (search_flag && expand_num == 0)
+        {
+            int new_target = rrr.get_best_index(s,controller_query, dirt_spec, controller, achieved_goal, reachable_goal);
+            if (new_target != -1) reachable_goal = new_target;
+        }
+
+        if (expand_num == 0)
+        {
+            // std::cout << "Informed expand with achieved goal: " << achieved_goal << " and reachable goal: " << reachable_goal << std::endl;
+            if (achieved_goal < reachable_goal)
             {
                 override_child_extension = true;
-                ss -> copy_point(lg,rrr.get_point(nn));
-                local_goal.clear();
-                ss -> copy_vector_from_point(local_goal,lg);
-                current_states.push_back(current_state);
-                local_goals.push_back(local_goal);
+                unsigned nn_vertex = rrr.get_vertex_on_path(reachable_goal);
+                ss -> copy_point(lg,rrr.get_point(nn_vertex));
             }
+            else 
+            {
+                ss -> sample(lg);
+            }
+            
+            local_goal.clear();
+            ss -> copy_vector_from_point(local_goal,lg);
+            current_states.push_back(current_state);
+            local_goals.push_back(local_goal);
 
             auto controls = controller.get_controls(current_states,local_goals);
 
@@ -279,14 +260,10 @@ int main(int argc, char* argv[])
             dirt_spec.propagate(s,plan,traj);
             plans.push_back(new plan_t(plan));
             trajs.push_back(new trajectory_t(traj));
-
-            //std::cout << "Adding traj with end point: ";
-            //std::cout << traj.back()->at(0) << " " << traj.back()->at(1) << std::endl;
-
         }
-        else
+        else 
         {
-            //PRX_DEBUG_PRINT
+            // std::cout << "Random expand" << std::endl;
             default_expand(s,plans,trajs,1,sg,dirt_spec.sample_plan,dirt_spec.propagate);
         }
     };
@@ -296,7 +273,8 @@ int main(int argc, char* argv[])
 
     std::ofstream fout;
     
-    if(viz_tree && !rec_stats){
+    if(visualize_tree && !record_statistics)
+    {
         dirt.link_and_setup_spec(&dirt_spec);
         dirt.preprocess();
         dirt.link_and_setup_query(&dirt_query);
@@ -327,7 +305,8 @@ int main(int argc, char* argv[])
     
     
 
-    if(rec_stats){    
+    if(record_statistics)
+    {    
         int stats_runs = params["runs"].as<int>();
         condition_check_t poll_checker("time", params["poll_rate"].as<double>());
 
@@ -356,7 +335,7 @@ int main(int argc, char* argv[])
             fout << stats.serialize() << std::endl;
             fout.close();
 
-            if(viz_tree){
+            if(visualize_tree){
                 unsigned counter = 0;
                 for (auto& traj : dirt_query.tree_visualization)
                 {

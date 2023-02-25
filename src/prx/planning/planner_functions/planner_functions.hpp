@@ -16,7 +16,7 @@ namespace prx
 	typedef std::function<bool (space_point_t&)> valid_state_t;
 	typedef std::function<void (space_point_t&, plan_t&, trajectory_t& )> propagate_t;
 	typedef std::function<void (space_point_t&, std::vector<plan_t*>&, std::vector<trajectory_t*>&, int bn, bool blossom_expand)> expand_t;
-	typedef std::function<void (space_point_t&, std::vector<plan_t*>&, std::vector<trajectory_t*>&, int bn, std::vector<unsigned*>&, bool&)> roadmap_expand_t;
+	typedef std::function<void (space_point_t&, std::vector<plan_t*>&, std::vector<trajectory_t*>&, unsigned&, unsigned&, int, bool, bool&)> roadmap_expand_t;
 
 	typedef std::function<double (const trajectory_t&, const plan_t&)> cost_function_t;
 	typedef std::function<double (const space_point_t&, const space_point_t&)> heuristic_function_t;

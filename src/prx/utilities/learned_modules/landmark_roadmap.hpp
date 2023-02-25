@@ -136,6 +136,116 @@ class landmark_roadmap_t
         }
     }
 
+    node_index_t get_vertex_on_path(node_index_t idx)
+    {
+        return path[idx];
+    }
+
+    void update_achieved_goal(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, unsigned& achieved_goal, unsigned& reachable_goal)
+    {
+        auto v = vertices[path[reachable_goal]];
+        spec.state_space -> copy_point(query.goal_state, v -> point);
+        if (achieved_goal != reachable_goal && query.goal_check(s))
+        {
+            std::cout << "Reached goal: " << reachable_goal << std::endl;
+            achieved_goal = reachable_goal;
+        }
+    }
+    
+    int get_best_index(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, unsigned& achieved_goal, unsigned& reachable_goal)
+    {
+        std::cout << "Achieved goal: " << achieved_goal << " Reachable goal: " << reachable_goal << std::endl;
+        int new_goal = -1;
+        if (reachable_goal == 0)
+        {
+            // This is the first time we are trying this branch.
+            new_goal = get_best_node_backward(s, query, spec, controller);
+        }
+        else if (reachable_goal != path.back())
+        {
+            // We have already tried this branch.
+            new_goal = get_best_node_forward(s, query, spec, controller, reachable_goal);
+        }
+
+        std::cout << "New target: " << new_goal << std::endl;
+        return new_goal;
+    }
+
+    node_index_t get_best_node_backward(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
+    {
+        for (int i = path.size()-1; i >= 0; i--)
+        {
+            auto v = vertices[path[i]];
+            spec.state_space -> copy_point(query.goal_state, v -> point);
+            spec.state_space -> copy_point(query.start_state, s);
+
+            controller.fulfill_query(query, spec);
+
+            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+            {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    int get_best_node_forward(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, unsigned start_idx)
+    {
+        int best_idx = start_idx;
+        
+        // /*
+        // Perform binary search in [start_idx+1, path.size()-1]
+        int l = start_idx + 1;
+        int r = path.size() - 1;
+        while (l <= r)
+        {
+            int mid = l + (r - l) / 2;
+            auto v = vertices[path[mid]];
+            spec.state_space -> copy_point(query.goal_state, v -> point);
+            spec.state_space -> copy_point(query.start_state, s);
+
+            controller.fulfill_query(query, spec);
+
+            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+            {
+                best_idx = mid;
+                l = mid + 1;
+            }
+            else
+            {
+                r = mid - 1;
+            }
+        }
+        // */
+
+
+        /*
+        for (int i = start_idx + 1; i < path.size(); i++)
+        {
+            auto v = vertices[path[i]];
+            spec.state_space -> copy_point(query.goal_state, v -> point);
+            spec.state_space -> copy_point(query.start_state, s);
+
+            controller.fulfill_query(query, spec);
+
+            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+            {
+                best_idx = i;
+            }
+            else
+            {
+                break;
+            }
+        }    
+        */    
+        
+        if (best_idx != start_idx)
+            return best_idx;
+        else
+            return -1;
+    }
+
+    /*
     node_index_t get_best_node_on_kth_path_backward(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, unsigned k)
     {
         prx_assert(k < paths.size(), "k is out of bounds. k = " << k << " and paths.size() = " << paths.size());
@@ -234,6 +344,7 @@ class landmark_roadmap_t
         //PRX_DEBUG_PRINT
         return -1;
     }
+    */
 
     bool check_edge_exists(node_index_t d, node_index_t a)
     {
@@ -912,6 +1023,8 @@ class landmark_roadmap_t
             }
         }
 
+        path.clear(); 
+        path = paths[0];
         return paths;
     }
 
