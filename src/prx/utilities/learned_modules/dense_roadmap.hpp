@@ -363,108 +363,32 @@ class dense_roadmap_t
 
             spec.state_space -> copy_point(pt, verification_set[v_idx]);
 
-            //18 & 19
             get_indices(query,spec,controller);
 
-            if (a_indices.size() == 0 || d_indices.size() == 0)
+            auto v = new dense_vertex_t();
+            v -> point = spec.state_space -> clone_point(pt);
+            vertices.insert(std::make_pair(vertex_counter, v));
+
+            for (auto a : a_indices)
             {
-                auto v = new dense_vertex_t();
-                v -> point = spec.state_space -> clone_point(pt);
-                vertices.insert(std::make_pair(vertex_counter, v));
-
-                for (auto a : a_indices)
+                cost = a_costs[a];
+                if (!check_edge_exists(vertex_counter,a))
                 {
-                    cost = a_costs[a];
-                    if (!check_edge_exists(vertex_counter,a))
-                    {
-                        add_edge(vertex_counter, a, cost);
-                    }
-                }
-
-                for (auto d : d_indices)
-                {
-                    cost = d_costs[d];
-                    if (!check_edge_exists(d, vertex_counter))
-                    {
-                        add_edge(d, vertex_counter, cost);
-                    }
-                }
-
-                vertex_counter++;
-            }
-            else
-            {
-                bool vertex_created = false;
-                for (auto d : d_indices)
-                {
-                    for (auto a : a_indices)
-                    {
-                        if (d == a) continue;
-                        bool connected = check_connected(d, a);
-                        
-                        //if (!connected || (connected && get_path_cost(d, a) > stretch_factor * (a_costs[a] + d_costs[d])))
-                        if(true)
-                        {
-                            // if (connected)
-                            // {
-                            //     std::cout << "Original path cost: " << get_path_cost(d, a) << std::endl;
-                            // }
-                            query.clear_outputs();
-                            spec.state_space -> copy_point(query.start_state, vertices[d] -> point);
-                            spec.state_space -> copy_point(query.goal_state, pt);
-
-                            bool add_flag = true;
-                            
-                            add_flag &= !query.goal_check(query.start_state);
-
-                            controller.fulfill_query(query, spec);
-
-                            if (add_flag && spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
-                            {
-                                spec.state_space -> copy_point(query.start_state, query.solution_traj.back());
-                                spec.state_space -> copy_point(query.goal_state, vertices[a] -> point);
-                                trajectory_t buffer_traj(query.solution_traj);
-                                query.clear_outputs();
-
-                                add_flag &= !query.goal_check(query.start_state);
-
-                                controller.fulfill_query(query, spec);
-
-                                if (add_flag && spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
-                                {
-                                    if (!vertex_created)
-                                    {
-                                        auto v = new dense_vertex_t();
-                                        v -> point = spec.state_space -> clone_point(pt);
-                                        vertices.insert(std::make_pair(vertex_counter, v));
-                                        vertex_created = true;
-                                        vertex_counter++;
-                                    }
-                                    // cost = spec.distance_function(vertices[d] -> point, pt);
-                                    cost = d_costs[d];
-                                    if (!check_edge_exists(d, vertex_counter - 1))
-                                    {
-                                        add_edge(d, vertex_counter - 1, cost);
-                                    }
-
-                                    // cost = spec.distance_function(vertices[a] -> point, pt);
-                                    cost = a_costs[a];
-                                    if (!check_edge_exists(vertex_counter - 1, a))
-                                    {
-                                        add_edge(vertex_counter - 1, a, cost);
-                                    }
-                                }
-
-                                // if (connected && add_flag)
-                                // {
-                                //     std::cout << "New path cost: " << get_path_cost(d,a) << std::endl;
-                                // }
-
-                            }
-                        }
-                    }
+                    add_edge(vertex_counter, a, cost);
                 }
             }
+
+            for (auto d : d_indices)
+            {
+                cost = d_costs[d];
+                if (!check_edge_exists(d, vertex_counter))
+                {
+                    add_edge(d, vertex_counter, cost);
+                }
+            }
+
+            vertex_counter++;
+
             if (unconsidered.size() % 10 == 0)
             {
                 std::cout << unconsidered.size() << " configurations remaining." << std::endl;
@@ -473,7 +397,8 @@ class dense_roadmap_t
             }
         } while (unconsidered.size() > 0);
 
-        /*for (auto e : all_edges)
+        /*
+        for (auto e : all_edges)
         {
             node_index_t a = e.first;
             node_index_t b = e.second;
@@ -514,9 +439,9 @@ class dense_roadmap_t
                 }
             }
 
-        }*/
+        }
+        */
 
-        
         for (auto v = vertices.begin(); v != vertices.end();)
         {
             // Check if the vertex only has incoming edges.
