@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     param_loader params(params_file);
     learned_controller_t controller(params);
 
-    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr.xml");
+    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr_landmark.xml");
     sim->init_simulator();
 
     auto context = sim -> get_context("mujoco");
@@ -153,8 +153,6 @@ int main(int argc, char* argv[])
 
     landmark_roadmap_t rrr;
     std::string roadmap_dir = input_path + "roadmaps/" + params["env_name"].as<std::string>(); // todo: use prx/utils/constants 
-
-    std::cout << "checkpoint 3" <<std::endl;
 
     std::vector<std::vector<double>> vertices = read_comma_separated_file(roadmap_dir + "/vertices.txt");
 

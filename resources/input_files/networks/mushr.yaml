@@ -10,6 +10,6 @@ delta_input: true
 goal_uses_quaternion: true
 
 control_duration: 1.0
-max_duration: 2.0
+max_duration: 5.0
 
 debug_controller: false

@@ -22,7 +22,7 @@ def quat2euler(quat):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--target', type=str, default="roadmap_tree_0")
-parser.add_argument('--dir', type=str, default="out/ablation/indoors/")
+parser.add_argument('--dir', type=str, default="out/ablation/landmark_dense/")
 parser.add_argument('--g', action="store_true")
 args = parser.parse_args()
 target = args.target
@@ -32,7 +32,7 @@ if not args.g:
 
 fname = dir + target+"/"
 env_fname_prefix = os.environ['DIRTMP_PATH'] + "resources/models/mujoco/"
-env_fname = "indoor.xml"
+env_fname = "landmark.xml"
 
 goal_state = np.array([-4.0,-5.0])
 goal_radius = 0.5
@@ -84,8 +84,8 @@ elif env_fname.endswith(".xml"):
 else:
     pass
 
-circle = Circle(goal_state, goal_radius, color='green')
-plt.gca().add_patch(circle)
+#circle = Circle(goal_state, goal_radius, color='green')
+#plt.gca().add_patch(circle)
 
 for f in tqdm(os.listdir(fname)):
     if f.endswith(".txt"):

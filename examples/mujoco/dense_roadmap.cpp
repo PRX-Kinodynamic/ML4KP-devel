@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
         std::string params_file = "examples/mujoco/mushr_trajectory.yaml";
         param_loader params(params_file);
 
-        std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr.xml");
+        std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr_landmark.xml");
         sim->init_simulator();
 
         auto context = sim -> get_context("mujoco");
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
         
         std::ofstream fout;
         
-        std::string points_fname = output_path + "points.txt";
+        std::string points_fname = output_path + "mushr_landmark_roadmap_dense/" + "points.txt";
         std::vector<std::vector<double>> dataset = read_comma_separated_file(points_fname);
         space_point_t current = ss -> make_point();
         for (auto row: dataset)
@@ -95,9 +95,9 @@ int main(int argc, char* argv[])
         std::cout << rrr.is_connected() << std::endl;
 
         // Output graph to file.
-        std::string vertex_fname = output_path + "vertices.txt";
-        std::string edge_fname = output_path + "edges.txt";
-        std::string time_fname = output_path + "time.txt";
+        std::string vertex_fname = output_path + "mushr_landmark_roadmap_dense/" + "vertices.txt";
+        std::string edge_fname = output_path + "mushr_landmark_roadmap_dense/" + "edges.txt";
+        std::string time_fname = output_path + "mushr_landmark_roadmap_dense/" + "time.txt";
 
         std::ofstream vertex_file(vertex_fname);
         std::ofstream edge_file(edge_fname);
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
         for (auto e = roadmap_edges.first; e != roadmap_edges.second; ++e)
         {
             auto edge = *e;
-            std::string traj_fname = output_path + "traj_" + std::to_string(edge.first) + "_" + std::to_string(edge.second) + ".txt";
+            std::string traj_fname = output_path + "mushr_landmark_roadmap_dense/traj/" + "traj_" + std::to_string(edge.first) + "_" + std::to_string(edge.second) + ".txt";
             std::ofstream fout;
             fout.open(traj_fname);
             fout << rrr.print_edge_traj(edge.first,edge.second,dirt_query,dirt_spec,controller);

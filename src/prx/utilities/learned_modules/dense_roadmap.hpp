@@ -9,7 +9,7 @@ struct dense_vertex_t
     space_point_t point;
 };
 
-struct dense_edge_t,6
+struct dense_edge_t
 {
     node_index_t end;
     double cost;
