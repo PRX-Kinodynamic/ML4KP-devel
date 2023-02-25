@@ -3,12 +3,13 @@
 
 if [ "$1" = "run" ]
 then
-    python3 run_experiments.py --run &
-    python3 run_experiments.py --run --name rlg &
-    python3 run_experiments.py --run --name roadmap
+    python3 run_experiments.py --run --mode indoors&
+    python3 run_experiments.py --run --mode indoors_dense&
+    python3 run_experiments.py --run --mode indoors_superdense
 fi
 if [ "$1" = "plot" ]
 then
-    python3 visualize_cost.py -tofile experiment&
-    python3 visualize_success_rate.py -tofile experiment
+    ./plot indoors &
+    ./plot indoors_dense &
+    ./plot indoors_superdense
 fi

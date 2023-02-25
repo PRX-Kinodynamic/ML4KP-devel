@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for d in ${DIRTMP_PATH}out/ablation/$1/*/; do
+    for ((i=0; i<10; i++)) ; do
+        python3 visualize_roadmap_tree.py --g --dir $d --target roadmap_tree_$i
+    done
+done

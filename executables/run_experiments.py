@@ -41,7 +41,7 @@ class ScriptRunner:
         
         self.planner_params["env_name"] = mode
 
-        test_yaml_fname = "test_"+name+".yaml"
+        test_yaml_fname = "test_"+name+"_"+mode+".yaml"
         with open(os.environ["DIRTMP_PATH"]+'resources/input_files/examples/'+test_yaml_fname,'w') as f:
             yaml.safe_dump(self.planner_params, f, default_flow_style=False)
             f.write("plant: !file \"plants/mushr.yaml\"\n")
@@ -60,7 +60,7 @@ class ScriptRunner:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--run', action='store_true')
-    parser.add_argument('--mode', type=str, default="indoors")
+    parser.add_argument('--mode', type=str, default="indoors_dense")
     parser.add_argument('--name', type=str, default='roadmap')
 
     args = parser.parse_args()
