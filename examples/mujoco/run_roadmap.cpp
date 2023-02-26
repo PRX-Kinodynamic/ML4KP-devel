@@ -45,6 +45,8 @@ int main(int argc, char* argv[])
 {
     init_random(210896);
 
+    int get_best_index_counter = 0;
+
     std::string params_file = "examples/mujoco/mushr_rm_trajectory.yaml";
     if(argc>=2)
     {
@@ -54,7 +56,7 @@ int main(int argc, char* argv[])
     param_loader params(params_file);
     learned_controller_t controller(params);
 
-    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr_landmark.xml");
+    std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr_indoors.xml");
     sim->init_simulator();
 
     auto context = sim -> get_context("mujoco");
@@ -173,7 +175,7 @@ int main(int argc, char* argv[])
         //std::cout << "connecting vertices: " << e[0]<<" and "<< e[1] << "\n";
         rrr.add_edge(int(e[0]),int(e[1]),e[2]);
     }
-
+    
     ss -> copy_point(dirt_query.start_state,s);
     auto s_nn = rrr.add_start(dirt_query.start_state, dirt_spec, dirt_query, controller);
     ss -> copy_point(dirt_query.goal_state,g);
@@ -232,6 +234,7 @@ int main(int argc, char* argv[])
 
         if (search_flag && expand_num == 0)
         {
+            get_best_index_counter += 1;
             int new_target = rrr.get_best_index(s,controller_query, dirt_spec, controller, achieved_goal, reachable_goal);
             if (new_target != -1) reachable_goal = new_target;
         }
@@ -365,6 +368,7 @@ int main(int argc, char* argv[])
             poll_checker.reset();
         }
     }
+    std::cout << "rrr.get_best_index called " << get_best_index_counter << " times\n";
 }
 #else
 int main() {}

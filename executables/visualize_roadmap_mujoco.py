@@ -20,7 +20,7 @@ use_quat = True
 
 visualize_traj = True
 
-environment_file = os.environ["DIRTMP_PATH"]+"resources/models/mujoco/landmark.xml"
+environment_file = os.environ["DIRTMP_PATH"]+"resources/models/mujoco/indoor.xml"
 # environment_file = os.environ["DIRTMP_PATH"]+"resources/models/mujoco/mushr_terrain.xml"
 
 plt.figure(figsize=(8,8))
@@ -43,8 +43,8 @@ plt.xlim(-11,11)
 plt.ylim(-11,11)
 
 # '''
-roadmap_dir = os.environ["DIRTMP_PATH"] + "out/mushr_landmark_roadmap_dense/"
-# roadmap_dir = os.environ["DIRTMP_PATH"] + "resources/input_files/roadmaps/indoors/"
+#roadmap_dir = os.environ["DIRTMP_PATH"] + "out/mushr_landmark_roadmap_dense/"
+roadmap_dir = os.environ["DIRTMP_PATH"] + "resources/input_files/roadmaps/indoors_superdense_5/"
 # roadmap_dir = "/Users/aravind/Downloads/mujoco_roadmap/"
 
 if(visualize_traj):

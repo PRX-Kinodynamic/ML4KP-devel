@@ -1,9 +1,9 @@
 plant: !file "plants/mushr.yaml"
 learned_controller: !file "networks/mushr.yaml"
 planner_name: "roadmap"
-env_name: "mushr_landmark_roadmap_dense"
+env_name: "indoors_superdense_5"
 use_rlg: true
-output_dir: "ablation/landmark_dense/"
+output_dir: "ablation/indoors_superdense_5/"
 duration: 60
 poll_rate: 0.5
 runs: 1

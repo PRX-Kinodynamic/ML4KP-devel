@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
     {
         init_random(21081996);
 
-        std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr_landmark.xml");
+        std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr_indoors.xml");
         // std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>("mushr_terrain.xml");
         sim->init_simulator();
 
@@ -30,8 +30,8 @@ int main(int argc, char* argv[])
 
         space_point_t current = ss -> make_point();
         ss -> copy_to_point(current);
-        std::vector<double> xs = linspace(-9.,9.,9);
-        std::vector<double> ys = linspace(-9.,9.,9);
+        std::vector<double> xs = linspace(-9.,9.,18);
+        std::vector<double> ys = linspace(-5.,5.,10);
         // std::vector<double> ts = {0.0, PRX_PI/4, PRX_PI/2, 3*PRX_PI/4, PRX_PI, 5*PRX_PI/4, 3*PRX_PI/2, 7*PRX_PI/4};
         std::vector<double> ts = {0.0, PRX_PI/2, PRX_PI, 3*PRX_PI/2};
         // std::vector<double> ts = linspace(-PRX_PI, PRX_PI, 2);
