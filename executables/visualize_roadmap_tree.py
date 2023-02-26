@@ -21,8 +21,8 @@ def quat2euler(quat):
     return yaw
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--target', type=str, default="roadmap_tree_0")
-parser.add_argument('--dir', type=str, default="out/ablation/landmark_dense/")
+parser.add_argument('--target', type=str, default="roadmap_tree")
+parser.add_argument('--dir', type=str, default="out/ablation/indoors/")
 parser.add_argument('--g', action="store_true")
 args = parser.parse_args()
 target = args.target
@@ -32,7 +32,7 @@ if not args.g:
 
 fname = dir + target+"/"
 env_fname_prefix = os.environ['DIRTMP_PATH'] + "resources/models/mujoco/"
-env_fname = "landmark.xml"
+env_fname = "indoor.xml"
 
 goal_state = np.array([-4.0,-5.0])
 goal_radius = 0.5
