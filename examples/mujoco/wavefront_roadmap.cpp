@@ -49,7 +49,8 @@ int main(int argc, char* argv[])
         if (argc <= 1)
         {
             // prx_throw("This executable needs a parameter file!");
-            params_file = "local_goal/car_like.yaml";
+            params_file = "examples/mujoco/mushr_trajectory.yaml";
+            // params_file = "local_goal/car_like.yaml";
             // params_file = "local_goal/annotate_treaded.yaml";
         }
         else 
@@ -97,13 +98,28 @@ int main(int argc, char* argv[])
 
         dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
         {
-            return ss -> euclidean_2d(a,b,0,2);
+            
+            double diff = (a->at(0) - b->at(0)) * (a->at(0) - b->at(0)) + (a->at(1) - b->at(1)) * (a->at(1) - b->at(1));
+            // Get the Euler angles between the two quaternions
+            quaternion_t quat1 = Eigen::Quaterniond(a->at(3), a->at(4), a->at(5), a->at(6));
+            quaternion_t quat2 = Eigen::Quaterniond(b->at(3), b->at(4), b->at(5), b->at(6));
+            double angular_diff = quat1.angularDistance(quat2);
+            diff += angular_diff * angular_diff;
+            return sqrt(diff);
+            //return ss -> euclidean_2d(a,b,0,2);
         };
 
 
         dirt_spec.h = [&](space_point_t s, space_point_t d)
         {
-            return ss -> euclidean_2d(s,d,0,2);
+            double diff = (s->at(0) - d->at(0)) * (s->at(0) - d->at(0)) + (s->at(1) - d->at(1)) * (s->at(1) - d->at(1));
+
+            quaternion_t quat1 = Eigen::Quaterniond(s->at(3), s->at(4), s->at(5), s->at(6));
+            quaternion_t quat2 = Eigen::Quaterniond(d->at(3), d->at(4), d->at(5), d->at(6));
+            double angular_diff = quat1.angularDistance(quat2);
+            diff += angular_diff * angular_diff;
+            return sqrt(diff);
+            //return ss -> euclidean_2d(s,d,0,2);
         };
 
         distance_function_t goal_dist = [&](space_point_t s1, space_point_t s2)
@@ -300,11 +316,11 @@ int main(int argc, char* argv[])
             planner_statistics_t stats;
             stats.link_planner(&dirt);
             stats.link_criterion(&checker);
-            simulation_time = 0.0;
+            // simulation_time = 0.0;
             stats.repeat_data_gathering(60);
             // stats.repeat_data_gathering(20);
             dirt.print_statistics();
-            simulation_time = 0.0;
+            // simulation_time = 0.0;
 
             std::string full_name = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
             fout.open(full_name);

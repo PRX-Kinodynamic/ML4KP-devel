@@ -64,7 +64,7 @@ namespace prx
 		current_solution=0;
 		current_solution_iters=0;
 		current_solution_time=0;
-		simulation_time=0;
+		//simulation_time=0;
 		return true;
 	}
 
@@ -290,10 +290,10 @@ namespace prx
 		previous_child=node_index;
 		metric->add_node(new_tree_node.get());
 		new_tree_node->bridge = false;
-		update_goal(node_index, condition);
+		update_goal(node_index);
 	}
 
-    void dirt_roadmap_t::update_goal(node_index_t node_index, condition_check_t* condition)
+    void dirt_roadmap_t::update_goal(node_index_t node_index)
 	{
 		auto new_tree_node = tree.get_vertex_as<dirt_roadmap_node_t>(node_index);
 		// if(distance_function(dirt_query->goal_state,new_tree_node->point)<dirt_query->goal_region_radius)
@@ -301,18 +301,18 @@ namespace prx
 		{
 			if(goal_vertex==start_vertex || tree.get_vertex_as<dirt_roadmap_node_t>(goal_vertex)->cost_to_come > new_tree_node->cost_to_come)
 			{
-				condition -> report_new_solution();
+				//condition -> report_new_solution();
 				current_solution=new_tree_node->cost_to_come;
 				current_solution_time = timer.measure();
 				current_solution_iters = iteration_count;
-				current_solution_sim_time = simulation_time;
+				//current_solution_sim_time = simulation_time;
 				goal_vertex = node_index;
 				std::cout <<"[dirt] Found new goal: "<<state_space->print_point(new_tree_node->point,3);
 				std::cout <<" cost:"<<new_tree_node->cost_to_come;
 				std::cout<< " time:" << current_solution_time;
 				std::cout<< " iter:" << current_solution_iters;
 				std::cout<< " nodes:" << metric->get_nr_nodes();
-				std::cout<< " sim time: " << simulation_time << std::endl;
+				//std::cout<< " sim time: " << simulation_time << std::endl;
 				bnb(start_vertex,current_solution);
 			}
 		}
