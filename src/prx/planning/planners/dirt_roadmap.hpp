@@ -10,15 +10,20 @@ namespace prx
         dirt_roadmap_node_t() : dirt_node_t()
         {
 			achieved_goal = 0;
-			reachable_goal = 0;
+			reachable_goal = -1;
 			expand_num = 0;
+			roadmap_cost_to_go = PRX_INFINITY;
 			greedy_expand = false;
         }
         virtual ~dirt_roadmap_node_t() = default;
 		int expand_num;
-        unsigned achieved_goal, reachable_goal;
-		bool greedy_expand;
+		double roadmap_cost_to_go;
+        int achieved_goal, reachable_goal;
+	bool greedy_expand;
     };
+
+	typedef std::function<void (dirt_roadmap_node_t*, std::vector<plan_t*>&, std::vector<trajectory_t*>&, bool&)> node_expand_t;
+
     class dirt_roadmap_specification_t : public dirt_specification_t
     { 
     public:
@@ -28,6 +33,7 @@ namespace prx
         virtual ~dirt_roadmap_specification_t() = default;
 
         roadmap_expand_t roadmap_expand;
+		node_expand_t node_expand;
     };
 
     class dirt_roadmap_query_t : public dirt_query_t
@@ -65,6 +71,7 @@ namespace prx
 	private:
         heuristic_function_t h;
         roadmap_expand_t roadmap_expand;
+		node_expand_t node_expand;
 
 		double max_radius;
 		bool child_extension;

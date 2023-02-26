@@ -1,12 +1,51 @@
 #pragma once
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/learned_modules/learned_controller.hpp"
+#include "prx/utilities/data_structures/abstract_node.hpp"
+#include "prx/utilities/data_structures/gnn.hpp"
 
 using namespace prx;
 
-struct landmark_vertex_t
+class landmark_node_t : public abstract_node_t
 {
-    space_point_t point;
+    public:
+        landmark_node_t() : abstract_node_t() {}
+        ~landmark_node_t() {}
+
+        node_index_t get_index() const
+		{
+			return index;
+		}
+
+        void set_index(node_index_t i)
+        {
+            index = i;
+        }
+
+        int get_successor()
+        {
+            return node_successor;
+        }
+
+        void set_successor(int s)
+        {
+            node_successor = s;
+        }
+
+        double get_node_cost()
+        {
+            return node_cost;
+        }
+
+        void set_node_cost(double c)
+        {
+            node_cost = c;
+        }
+
+    protected: 
+        node_index_t index;
+        int node_successor;
+        double node_cost;
 };
 
 struct landmark_edge_t
@@ -18,8 +57,10 @@ struct landmark_edge_t
 class landmark_roadmap_t
 {
     private:
-        std::unordered_map<node_index_t,landmark_vertex_t*> vertices;
+        std::unordered_map<node_index_t,landmark_node_t*> vertices;
         std::unordered_map<node_index_t, std::vector<landmark_edge_t*>> edges;
+        std::unordered_map<node_index_t, std::vector<landmark_edge_t*>> in_edges;
+        std::unordered_map<node_index_t, double> vertex_costs;
         std::vector<std::pair<node_index_t, node_index_t>> all_edges;
         node_index_t vertex_counter, edge_counter;
         std::vector<node_index_t> path;
@@ -40,6 +81,8 @@ class landmark_roadmap_t
         std::vector<space_point_t> verification_set;
         landmark_roadmap_t() : vertex_counter(0), edge_counter(0), stretch_factor(3.0) {}
         ~landmark_roadmap_t() {}
+    
+    landmark_node_t* get_vertex(node_index_t index) { return vertices[index]; }
     
     space_point_t get_point(node_index_t index) { return vertices[index]->point; }
     
@@ -126,15 +169,76 @@ class landmark_roadmap_t
         if (in_goal && a_indices.size() == 0)
         {
             a_indices.push_back(closest_index);
-            a_costs[closest_index] = 0;
+            a_costs[closest_index] = PRX_INFINITY;
         }
 
         if (in_goal && d_indices.size() == 0)
         {
             d_indices.push_back(closest_index);
-            d_costs[closest_index] = 0;
+            d_costs[closest_index] = PRX_INFINITY;
         }
     }
+
+    bool is_node_on_path(node_index_t index, node_index_t path_start)
+    {
+        auto v = vertices[index];
+        while (v -> get_successor() != path_start)
+        {
+            v = vertices[v -> get_successor()];
+            if (v -> get_successor() == v -> get_index())
+                return false;
+        }
+        return true;
+    }
+
+    int get_next_local_goal(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller,int vertex_id)
+    {
+        auto v = vertices[vertex_id];
+        int best_idx = -1;
+
+        do 
+        {
+            auto next_index = v -> get_successor();
+            auto next_v = vertices[next_index];
+
+            spec.state_space -> copy_point(query.goal_state, next_v -> point);
+            spec.state_space -> copy_point(query.start_state, s);
+
+            controller.fulfill_query(query, spec);
+
+            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+            {
+                best_idx = next_index;
+                v = next_v;
+            }
+            else
+            {
+                break;
+            }
+            if (next_index == v -> get_successor())
+                break;
+        } while(v -> get_successor() != -1);
+
+        return best_idx;
+
+        // for (int i = start_idx + 1; i < path.size(); i++)
+        // {
+        //     auto v = vertices[path[i]];
+        //     spec.state_space -> copy_point(query.goal_state, v -> point);
+        //     spec.state_space -> copy_point(query.start_state, s);
+
+        //     controller.fulfill_query(query, spec);
+
+        //     if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+        //     {
+        //         best_idx = i;
+        //     }
+        //     else
+        //     {
+        //         break;
+        //     }
+        // }    
+   }
 
     node_index_t get_vertex_on_path(node_index_t idx)
     {
@@ -398,7 +502,7 @@ class landmark_roadmap_t
 
     void add_vertex(rrt_specification_t& spec, space_point_t p, node_index_t idx)
     {
-        landmark_vertex_t* v = new landmark_vertex_t();
+        landmark_node_t* v = new landmark_node_t();
         v->point = spec.state_space->clone_point(p);
         vertices.insert(std::make_pair(idx, v));
         vertex_counter = std::max(vertex_counter, idx+1);
@@ -411,10 +515,20 @@ class landmark_roadmap_t
         {
             edges[s] = std::vector<landmark_edge_t*>();
         }
+        if (in_edges.find(t) == in_edges.end())
+        {
+            in_edges[t] = std::vector<landmark_edge_t*>();
+        }
         landmark_edge_t* e = new landmark_edge_t();
         e->end = t;
         e->cost = cost;
         edges[s].push_back(e);
+
+        landmark_edge_t* e2 = new landmark_edge_t();
+        e2->end = s;
+        e2->cost = cost;
+        in_edges[t].push_back(e2);
+
         edge_counter++;
         all_edges.push_back(std::make_pair(s, t));
     }
@@ -478,8 +592,9 @@ class landmark_roadmap_t
 
             if (a_indices.size() == 0 || d_indices.size() == 0)
             {
-                auto v = new landmark_vertex_t();
+                auto v = new landmark_node_t();
                 v -> point = spec.state_space -> clone_point(pt);
+                v -> set_index(vertex_counter);
                 vertices.insert(std::make_pair(vertex_counter, v));
 
                 for (auto a : a_indices)
@@ -542,8 +657,9 @@ class landmark_roadmap_t
                                 {
                                     if (!vertex_created)
                                     {
-                                        auto v = new landmark_vertex_t();
+                                        auto v = new landmark_node_t();
                                         v -> point = spec.state_space -> clone_point(pt);
+                                        v -> set_index(vertex_counter);
                                         vertices.insert(std::make_pair(vertex_counter, v));
                                         vertex_created = true;
                                         vertex_counter++;
@@ -769,8 +885,9 @@ class landmark_roadmap_t
         get_indices(query, spec, controller, true);
 
         // Add the goal as a vertex.
-        auto v = new landmark_vertex_t();
+        auto v = new landmark_node_t();
         v -> point = spec.state_space -> clone_point(pt);
+        v -> set_index(vertex_counter);
         vertices.insert(std::make_pair(vertex_counter, v));
 
         if (d_indices.size() == 0)
@@ -798,8 +915,9 @@ class landmark_roadmap_t
         get_indices(query, spec, controller, true);
 
         // Add the goal as a vertex.
-        auto v = new landmark_vertex_t();
+        auto v = new landmark_node_t();
         v -> point = spec.state_space -> clone_point(pt);
+        v -> set_index(vertex_counter);
         vertices.insert(std::make_pair(vertex_counter, v));
 
         if (a_indices.size() == 0)
@@ -1028,6 +1146,52 @@ class landmark_roadmap_t
         return paths;
     }
 
+    void compute_wavefront(node_index_t goal)
+    {
+        // Computes the wavefront from a given start node.
+        // The wavefront is a map from nodes to the cost of the shortest path from the start node to the node.
+        // The wavefront is computed using Dijkstra's algorithm.
+
+        std::priority_queue<std::pair<double, node_index_t>, std::vector<std::pair<double, node_index_t>>, std::greater<std::pair<double, node_index_t>>> pq;
+        std::map<node_index_t, int> parent;
+
+        for (auto v : vertices)
+        {
+            vertex_costs[v.first] = std::numeric_limits<double>::infinity();
+            parent[v.first] = -1;
+        }
+
+        vertex_costs[goal] = 0;
+        parent[goal] = goal;
+        pq.push(std::make_pair(0, goal));
+
+        while (!pq.empty())
+        {
+            auto u = pq.top();
+            pq.pop();
+
+            for (auto e : in_edges[u.second])
+            {
+                node_index_t v = e->end;
+                double alt = vertex_costs[u.second] + e->cost;
+                if (alt < vertex_costs[v])
+                {
+                    vertex_costs[v] = alt;
+                    parent[v] = u.second;
+                    pq.push(std::make_pair(alt, v));
+                }
+            }
+        }
+
+        for (auto v : vertices)
+        {
+            auto vertex = vertices[v.first];
+            vertex -> set_node_cost(vertex_costs[v.first]);
+            vertex -> set_successor(parent[v.first]);
+            std::cout << "Vertex," << v.first << "," << parent[v.first] << "," << vertex_costs[v.first] << std::endl;
+        }
+    }
+    
     std::vector<node_index_t> get_shortest_path(node_index_t s, node_index_t g)
     {
         // Apply Dijkstra's with a priority queue->

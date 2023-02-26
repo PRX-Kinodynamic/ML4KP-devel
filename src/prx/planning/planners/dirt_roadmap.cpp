@@ -21,6 +21,7 @@ namespace prx
 
 		h = dirt_spec->h;
 		roadmap_expand = dirt_spec->roadmap_expand;
+		node_expand = dirt_spec->node_expand;
 	}
 
     bool dirt_roadmap_t::_preprocess()
@@ -63,7 +64,7 @@ namespace prx
 		current_solution=0;
 		current_solution_iters=0;
 		current_solution_time=0;
-		// simulation_time=0;
+		simulation_time=0;
 		return true;
 	}
 
@@ -136,17 +137,15 @@ namespace prx
 
 			auto closest_node = get_vertex(previous_child);
 
-			// PRX_DEBUG_PRINT
-			// std::cout << "Selected node " << previous_child << " for expansion." << std::endl;
-			// std::cout << "Its expand number is " << closest_node->expand_number << std::endl;
-			// std::cout << state_space->print_point(closest_node->point,4) << std::endl;
+			PRX_DEBUG_PRINT
+			std::cout << "Expanding " << closest_node->get_parent() << " " << previous_child << ": " << state_space->print_point(closest_node->point,4) << " " << closest_node->greedy_expand << std::endl;
 
 			std::vector<plan_t*> plans;
 			std::vector<trajectory_t*> trajs;
-			roadmap_expand(closest_node->point,plans,trajs,closest_node->achieved_goal,closest_node->reachable_goal, closest_node->expand_num,
-							closest_node->greedy_expand, child_extension);
+			// roadmap_expand(closest_node->point,plans,trajs,closest_node->achieved_goal,closest_node->reachable_goal, closest_node->expand_num,
+			// 				closest_node->greedy_expand, child_extension);
+			node_expand(closest_node,plans,trajs,child_extension);
 			closest_node->expand_num++;
-
 
 			for(int i=0;i<plans.size();i++)
 			{
@@ -170,6 +169,7 @@ namespace prx
 				delete eg.first;
 				delete eg.second;
 				eg = std::make_pair(nullptr,nullptr);
+				iteration_count++;
 				continue;
 			}
 
@@ -215,16 +215,18 @@ namespace prx
 			
 			if(!valid)
 			{
+				std::cout << "Invalid edge!" << std::endl;
 				delete eg.first;
 				delete eg.second;
 				eg = std::make_pair(nullptr,nullptr);
+				iteration_count++;
 				continue;
 			}
 
 			if (eg.first != nullptr)
 			{
 				add_edge_to_tree(eg, closest_node, dir_updates, new_node_dir_radius, condition, skip_informed);
-					delete eg.first;
+				delete eg.first;
 				delete eg.second;
 			}
 
@@ -259,6 +261,7 @@ namespace prx
 
 		new_tree_node->achieved_goal = closest_node->achieved_goal;
 		new_tree_node->reachable_goal = closest_node->reachable_goal;
+		new_tree_node->roadmap_cost_to_go = closest_node->roadmap_cost_to_go;
 	
 		max_radius = std::max(max_radius,new_node_dir_radius);
 		// EXPERIMENTAL: Try commenting this line out. Behavior seems reasonable, but need to consider theoretical effects
@@ -279,17 +282,18 @@ namespace prx
 			});
 		if(new_tree_node->cost_to_go < closest_node->cost_to_go)
 		{
-			child_extension &= true;
+			// if (!child_extension) std::cout << "Found a node with better h, but child extension has been overridden." << std::endl;
+			child_extension = true;
 		}
 		new_tree_node->greedy_expand = !skip_informed && child_extension;
 		std::cout << "Greedy expand: " << new_tree_node->greedy_expand << std::endl;
 		previous_child=node_index;
 		metric->add_node(new_tree_node.get());
 		new_tree_node->bridge = false;
-		update_goal(node_index);
+		update_goal(node_index, condition);
 	}
 
-    void dirt_roadmap_t::update_goal(node_index_t node_index)
+    void dirt_roadmap_t::update_goal(node_index_t node_index, condition_check_t* condition)
 	{
 		auto new_tree_node = tree.get_vertex_as<dirt_roadmap_node_t>(node_index);
 		// if(distance_function(dirt_query->goal_state,new_tree_node->point)<dirt_query->goal_region_radius)
@@ -297,18 +301,18 @@ namespace prx
 		{
 			if(goal_vertex==start_vertex || tree.get_vertex_as<dirt_roadmap_node_t>(goal_vertex)->cost_to_come > new_tree_node->cost_to_come)
 			{
-				// condition -> report_new_solution();
+				condition -> report_new_solution();
 				current_solution=new_tree_node->cost_to_come;
 				current_solution_time = timer.measure();
 				current_solution_iters = iteration_count;
-				// current_solution_sim_time = simulation_time;
+				current_solution_sim_time = simulation_time;
 				goal_vertex = node_index;
 				std::cout <<"[dirt] Found new goal: "<<state_space->print_point(new_tree_node->point,3);
 				std::cout <<" cost:"<<new_tree_node->cost_to_come;
 				std::cout<< " time:" << current_solution_time;
 				std::cout<< " iter:" << current_solution_iters;
 				std::cout<< " nodes:" << metric->get_nr_nodes();
-				// std::cout<< " sim time: " << simulation_time << std::endl;
+				std::cout<< " sim time: " << simulation_time << std::endl;
 				bnb(start_vertex,current_solution);
 			}
 		}
