@@ -29,11 +29,13 @@ namespace prx
     public:
         dirt_roadmap_specification_t(std::shared_ptr<system_group_t> sg,std::shared_ptr<collision_group_t> cg) : dirt_specification_t(sg,cg)
         {
+			start_node_reachable_goal = -1;
         }
         virtual ~dirt_roadmap_specification_t() = default;
 
         roadmap_expand_t roadmap_expand;
 		node_expand_t node_expand;
+		int start_node_reachable_goal;
     };
 
     class dirt_roadmap_query_t : public dirt_query_t
