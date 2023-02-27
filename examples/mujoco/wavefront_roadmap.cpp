@@ -270,62 +270,44 @@ int main(int argc, char* argv[])
                     return static_cast<landmark_node_t*>(prox_node);
                 });
 
-                bool valid_successor = tree_node -> reachable_goal != -1;
+                int best_index = tree_node -> reachable_goal;
                 if (roadmap_nodes.size() != 0)
                 {
-                    // This returns the closest roadmap node to x_{select}.
                     auto nn = roadmap_nodes[0];
-                    if (tree_node -> roadmap_cost_to_go <= nn -> get_node_cost())
-                    {
-                        std::cout << "Inside roadmap node " << ss -> print_point(nn -> point, 4) << std::endl;
-                        std::cout << nn -> get_index() << " " << tree_node -> reachable_goal << std::endl;
-                        
-                        int best_index = -1;
-                        if (tree_node -> reachable_goal == nn -> get_index())
-                        {
-                            best_index = rrr.get_next_local_goal(tree_node->point, controller_query, dirt_spec, controller, tree_node->reachable_goal);
-                        }
-                        if (best_index != -1)
-                        {
-                            override_child_extension = true;
-                            valid_successor = true;
-                            ss -> copy_point(lg, rrr.get_point(best_index));
-                            tree_node -> reachable_goal = best_index;
-                            std::cout << nn -> get_index() << " " << best_index << " Local goal: " << ss -> print_point(lg,4) << std::endl;
-                        }
-                    }
-                    else 
+                    if (tree_node -> roadmap_cost_to_go >= nn -> get_node_cost())
                     {
                         tree_node -> roadmap_cost_to_go = nn -> get_node_cost();
-                        std::cout << "Roadmap node with lower cost: " << nn -> get_index() << std::endl;
-                        std::cout << "Node's cost to go: " << tree_node -> roadmap_cost_to_go << std::endl;
+                        bool is_node_on_path = rrr.is_node_on_path(tree_node->reachable_goal, nn -> get_index());
 
-                        int best_index = rrr.get_next_local_goal(tree_node->point, controller_query, dirt_spec, controller, nn->get_index());
-                        if (best_index != -1)
+                        if (is_node_on_path && tree_node->greedy_expand)
                         {
-                            override_child_extension = true;
-                            valid_successor = true;
-                            ss -> copy_point(lg, rrr.get_point(best_index));
-                            tree_node -> reachable_goal = best_index;
-                            std::cout << nn -> get_index() << " " << best_index << " Local goal: " << ss -> print_point(lg,4) << std::endl;
+                            best_index = rrr.get_next_local_goal(tree_node->point, controller_query, dirt_spec, controller, tree_node->reachable_goal);
+                            if (best_index == nn -> get_index()) best_index = -1;
+                            if (tree_node -> reachable_goal == nn -> get_index()) tree_node -> reachable_goal = -1;
                         }
-                        else if (valid_successor && tree_node -> reachable_goal != nn -> get_index())
+                        else
                         {
-                            std::cout << "Shooting for the reachable goal[a]. " << tree_node->reachable_goal << std::endl;
-                            override_child_extension = true;
-                            ss -> copy_point(lg, rrr.get_point(tree_node -> reachable_goal));
+                            best_index = rrr.get_next_local_goal(tree_node->point, controller_query, dirt_spec, controller, nn->get_successor());
+                        }
+                    }
+                    else
+                    {
+                        if (!tree_node -> greedy_expand)
+                        {
+                            best_index = rrr.get_next_local_goal(tree_node->point, controller_query, dirt_spec, controller, nn->get_successor());
                         }
                     }
                 }
-                else if (roadmap_nodes.size() == 0 && valid_successor)
+
+                if (best_index == -1) best_index = tree_node -> reachable_goal;
+                if (best_index != -1)
                 {
-                    std::cout << "Shooting for the reachable goal[b]. " << tree_node->reachable_goal << std::endl;
                     override_child_extension = true;
-                    ss -> copy_point(lg, rrr.get_point(tree_node -> reachable_goal));
+                    ss -> copy_point(lg, rrr.get_point(best_index));
+                    tree_node -> reachable_goal = best_index;
                 }
-                else 
+                else
                 {
-                    std::cout << "Sampling a random local goal." << std::endl;
                     ss -> sample(lg);
                 }
 
