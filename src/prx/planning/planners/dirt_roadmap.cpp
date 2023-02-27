@@ -138,8 +138,8 @@ namespace prx
 
 			auto closest_node = get_vertex(previous_child);
 
-			PRX_DEBUG_PRINT
-			std::cout << "Expanding " << closest_node->get_parent() << " " << previous_child << ": " << state_space->print_point(closest_node->point,4) << " " << closest_node->greedy_expand << std::endl;
+			//PRX_DEBUG_PRINT
+			//std::cout << "Expanding " << closest_node->get_parent() << " " << previous_child << ": " << state_space->print_point(closest_node->point,4) << " " << closest_node->greedy_expand << std::endl;
 
 			std::vector<plan_t*> plans;
 			std::vector<trajectory_t*> trajs;

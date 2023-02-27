@@ -24,6 +24,8 @@
 
 using namespace prx;
 
+
+
 std::vector<std::vector<double>> read_comma_separated_file(const std::string& path, const std::string& delimiter = ",")
 {
     std::ifstream file(path);
@@ -68,18 +70,15 @@ int main(int argc, char* argv[])
         init_random(random_seed);
         //torch::set_num_threads(1);
 
+        bool visualize_tree = params["visualize_tree"].as<bool>();
+        bool record_statistics = params["record_statistics"].as<bool>();
+
         //std::cout << "--- init seed ---" << std::endl;
 
         std::string plant_name = params["/plant/name"].as<std::string>();
         std::string plant_path = params["/plant/path"].as<std::string>();
         auto plant = system_factory_t::create_system(plant_name,plant_path);
         //std::cout << "--- loaded plant ---" << std::endl;
-
-        // std::vector<double> lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
-        // std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
-        // std::cout << "read bounds"<< std::endl;
-        // plant -> set_state_space_bounds(lower_bounds,upper_bounds);
-        // std::cout << "--- loaded bounds ---" << std::endl;
 
         std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>(params["environment"].as<std::string>());
         sim->init_simulator();
@@ -90,8 +89,14 @@ int main(int argc, char* argv[])
         auto ss = context.first -> get_state_space();
         auto cs = context.first -> get_control_space();
         auto sg = context.first;
+
+        for (double i = 0; i < 1.0/simulation_step; i += 1)
+        {
+            sim -> step_simulation(propagate_step::FIRST_STEP);
+        }
         //std::cout << "--- made context ---" << std::endl;
 
+        dirt_roadmap_t dirt("dirt");
         dirt_roadmap_specification_t dirt_spec(context.first,context.second);
         dirt_roadmap_query_t dirt_query(ss,cs);
         dirt_query.start_state = ss -> make_point();
@@ -104,7 +109,22 @@ int main(int argc, char* argv[])
 
         learned_controller_t controller(params);
         //std::cout << "--- made controller ---" << std::endl;
-
+        
+        dirt_spec.sample_state = [ss](space_point_t& s)
+        {
+            s->at(0) = uniform_random(-9., 9.);
+            s->at(1) = uniform_random(-9., 9.);
+            double roll = 0, pitch = 0, yaw = uniform_random(-PRX_PI, PRX_PI);
+            Eigen::Quaterniond quat = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX())
+                                    * Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY())
+                                    * Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+            s->at(2) = 0.0;
+            s->at(3) = quat.w();
+            s->at(4) = quat.x();
+            s->at(5) = quat.y();
+            s->at(6) = quat.z();
+        };
+    
         dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
         {
             
@@ -151,7 +171,7 @@ int main(int argc, char* argv[])
 
         //std::cout << "--- lambdas defined ---" << std::endl;
 
-        dirt_roadmap_t dirt("dirt");
+        
         dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
         dirt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
         dirt_spec.blossom_number = 1;
@@ -202,7 +222,7 @@ int main(int argc, char* argv[])
         //std::cout << "--- set output path ---" << std::endl;
         
         landmark_roadmap_t rrr;
-        std::string roadmap_dir = output_path + params["roadmap_dir"].as<std::string>();
+        std::string roadmap_dir = input_path + params["roadmap_dir"].as<std::string>();
         std::vector<std::vector<double>> vertices = read_comma_separated_file(roadmap_dir + "/vertices.txt");
         //std::cout << "--- read roadmap vertices file---" << std::endl;
 
@@ -368,33 +388,92 @@ int main(int argc, char* argv[])
             }
         };
 
-        int stats_runs = 1;
-        condition_check_t checker("iterations", 10);
-        for (int i = 0; i < stats_runs; i++)
+
+        std::cout << ss -> print_point(rrr.get_point(rrr.get_vertex(401) -> get_successor()));
+
+
+        if(visualize_tree && !record_statistics)
         {
-            init_random(random_seed + i);
             dirt.link_and_setup_spec(&dirt_spec);
             dirt.preprocess();
             dirt.link_and_setup_query(&dirt_query);
+            //condition_check_t checker("time", 30.0);
+            condition_check_t checker("iterations", 60);
+            dirt.resolve_query(&checker);
+            dirt.fulfill_query(); 
 
-            planner_statistics_t stats;
-            stats.link_planner(&dirt);
-            stats.link_criterion(&checker);
-            // simulation_time = 0.0;
-            stats.repeat_data_gathering(60);
-            // stats.repeat_data_gathering(20);
-            dirt.print_statistics();
-            // simulation_time = 0.0;
+            unsigned counter = 0;
+            for (auto& traj : dirt_query.tree_visualization)
+            {
 
-            std::string full_name = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
-            fout.open(full_name);
-            fout << stats.serialize() << std::endl;
+                std::string out_path = output_path + params["output_dir"].as<std::string>()+ params["planner_name"].as<std::string>()+"_tree/";
+                if (!fs::exists(out_path))
+                {
+                    fs::create_directory(out_path);
+                }
+                fout.open(out_path+ "tree" + std::to_string(counter) + ".txt");
+                fout << traj.print(2);
+                fout.close();
+                counter++;
+            }
+            
+
+            fout.open(output_path + "solution.txt");
+            fout << dirt_query.solution_traj.print(4);
             fout.close();
+        }
 
-            dirt.fulfill_query();
 
-            dirt_query.clear_outputs();
-            dirt.reset();
+
+        if(record_statistics)
+        { 
+            int stats_runs = 10;
+            condition_check_t checker("iterations", 10);
+            for (int i = 0; i < stats_runs; i++)
+            {
+                init_random(random_seed + i);
+                dirt.link_and_setup_spec(&dirt_spec);
+                dirt.preprocess();
+                dirt.link_and_setup_query(&dirt_query);
+
+                planner_statistics_t stats;
+                stats.link_planner(&dirt);
+                stats.link_criterion(&checker);
+                // simulation_time = 0.0;
+                stats.repeat_data_gathering(60);
+                // stats.repeat_data_gathering(20);
+                dirt.print_statistics();
+                // simulation_time = 0.0;
+
+                std::string full_name = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";
+                fout.open(full_name);
+                fout << stats.serialize() << std::endl;
+                fout.close();
+
+                dirt.fulfill_query();
+
+                if(visualize_tree){
+                    unsigned counter = 0;
+                    for (auto& traj : dirt_query.tree_visualization)
+                    {
+                        std::string out_path = output_path + params["output_dir"].as<std::string>()+ params["planner_name"].as<std::string>()+"_tree_"+std::to_string(i)+"/";
+                        if (!fs::exists(out_path))
+                        {
+                            fs::create_directory(out_path);
+                        }
+                        fout.open(out_path+ "tree" + std::to_string(counter) + ".txt");
+                        fout << traj.print(2);
+                        fout.close();
+                        counter++;
+                    }
+                    fout.open(output_path + "solution.txt");
+                    fout << dirt_query.solution_traj.print(4);
+                    fout.close();
+                }
+
+                dirt_query.clear_outputs();
+                dirt.reset();
+            }
         }
 
 
