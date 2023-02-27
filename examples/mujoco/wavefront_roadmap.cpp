@@ -9,6 +9,8 @@
 #include "prx/planning/planner_statistics.hpp"
 #include "prx/visualization/three_js_group.hpp"
 
+#include "prx/mujoco/mj_simulator.hpp"
+
 #include <fstream>
 
 #ifdef __cpp_lib_filesystem
@@ -61,14 +63,9 @@ int main(int argc, char* argv[])
         param_loader params(params_file);
         // params.print();
         prx::timer_t timer; 
-        simulation_step = params["simulation_step"].as<double>();
         int random_seed = params["random_seed"].as<int>();
         init_random(random_seed);
         torch::set_num_threads(1);
-
-        auto obstacles = load_obstacles(params["environment"].as<std::string>());
-        auto obstacle_list = obstacles.second;
-        auto obstacle_names = obstacles.first;
 
         std::string plant_name = params["/plant/name"].as<std::string>();
         std::string plant_path = params["/plant/path"].as<std::string>();
@@ -78,12 +75,12 @@ int main(int argc, char* argv[])
         std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
         plant -> set_state_space_bounds(lower_bounds,upper_bounds);
 
-        world_model_t world_model({plant},{obstacle_list});
-        world_model.create_context("planning_context",{plant_name},{obstacle_names});
-        auto context = world_model.get_context("planning_context");
+        std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>(params["environment"].as<std::string>());
+        sim->init_simulator();
 
-        auto ss = context.first->get_state_space();
-        auto cs = context.first->get_control_space();
+        auto context = sim -> get_context("mujoco");
+        auto ss = context.first -> get_state_space();
+        auto cs = context.first -> get_control_space();
         auto sg = context.first;
 
         dirt_roadmap_specification_t dirt_spec(context.first,context.second);
@@ -124,8 +121,12 @@ int main(int argc, char* argv[])
 
         distance_function_t goal_dist = [&](space_point_t s1, space_point_t s2)
         {
-            double diff = (s1 -> at(0) - s2 -> at(0)) * (s1 -> at(0) - s2 -> at(0)) + (s1 -> at(1) - s2 -> at(1)) * (s1 -> at(1) - s2 -> at(1));
-            diff += norm_angle_pi(s1 -> at(2) - s2 -> at(2)) * norm_angle_pi(s1 -> at(2) - s2 -> at(2));
+            double diff = (s1->at(0) - s2->at(0)) * (s1->at(0) - s2->at(0)) + (s1->at(1) - s2->at(1)) * (s1->at(1) - s2->at(1));
+
+            quaternion_t quat1 = Eigen::Quaterniond(s1->at(3), s1->at(4), s1->at(5), s1->at(6));
+            quaternion_t quat2 = Eigen::Quaterniond(s2->at(3), s2->at(4), s2->at(5), s2->at(6));
+            double angular_diff = quat1.angularDistance(quat2);
+            diff += angular_diff * angular_diff;
             return sqrt(diff);
         };
 
@@ -142,10 +143,41 @@ int main(int argc, char* argv[])
         dirt_spec.blossom_number = 1;
         dirt_spec.use_pruning = false;
 
-        std::vector<double> s = params["start_state"].as<std::vector<double>>();
-        std::vector<double> g = params["goal_state"].as<std::vector<double>>();
-        ss -> copy_point_from_vector(dirt_query.start_state,s);
-        ss -> copy_point_from_vector(dirt_query.goal_state,g);
+        std::vector<double> start = params["start_state"].as<std::vector<double>>();
+
+        double s_roll = start[2], s_pitch = start[3], s_yaw = start[4];
+        Eigen::Quaterniond s_quat = Eigen::AngleAxisd(s_roll, Eigen::Vector3d::UnitX())
+                                * Eigen::AngleAxisd(s_pitch, Eigen::Vector3d::UnitY())
+                                * Eigen::AngleAxisd(s_yaw, Eigen::Vector3d::UnitZ());
+
+
+        dirt_query.start_state = ss -> make_point();
+        ss -> copy_to_point(dirt_query.start_state);
+        dirt_query.start_state ->at(0) =  start[0];
+        dirt_query.start_state ->at(1) =  start[1];
+        dirt_query.start_state ->at(3) = s_quat.w();
+        dirt_query.start_state ->at(4) = s_quat.x();
+        dirt_query.start_state ->at(5) = s_quat.y();
+        dirt_query.start_state ->at(6) = s_quat.z();
+
+
+        std::vector<double> goal = params["goal_state"].as<std::vector<double>>();
+
+        double g_roll = goal[2], g_pitch = goal[3], g_yaw = goal[4];
+        Eigen::Quaterniond g_quat = Eigen::AngleAxisd(g_roll, Eigen::Vector3d::UnitX())
+                                * Eigen::AngleAxisd(g_pitch, Eigen::Vector3d::UnitY())
+                                * Eigen::AngleAxisd(g_yaw, Eigen::Vector3d::UnitZ());
+        dirt_query.goal_state = ss -> make_point();
+        ss -> copy_to_point(dirt_query.goal_state);
+        dirt_query.goal_state -> at(0) = goal[0];
+        dirt_query.goal_state -> at(1) = goal[1];
+        dirt_query.goal_state -> at(3) = g_quat.w();
+        dirt_query.goal_state -> at(4) = g_quat.x();
+        dirt_query.goal_state -> at(5) = g_quat.y();
+        dirt_query.goal_state -> at(6) = g_quat.z();
+
+        //ss -> copy_point_from_vector(dirt_query.start_state,s);
+        //ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
         std::ofstream fout;
         std::string output_dir = params["output_dir"].as<std::string>();
@@ -159,6 +191,7 @@ int main(int argc, char* argv[])
         
         for (auto& v : vertices)
         {
+            
             landmark_node_t* node = new landmark_node_t();
             node->set_index(int(v[0]));
             node->point = ss -> make_point();
@@ -186,10 +219,25 @@ int main(int argc, char* argv[])
             return goal_dist(s,controller_query.goal_state) < controller_query.goal_region_radius;
         };
 
-        ss -> copy_point_from_vector(controller_query.start_state,s);
+        ss -> copy_to_point(controller_query.start_state);
+        controller_query.start_state -> at(0) = start[0];
+        controller_query.start_state -> at(1) = start[1];
+        controller_query.start_state -> at(3) = s_quat.w();
+        controller_query.start_state -> at(4) = s_quat.x();
+        controller_query.start_state -> at(5) = s_quat.y();
+        controller_query.start_state -> at(6) = s_quat.z();
+
         auto s_nn = rrr.add_start(controller_query.start_state, dirt_spec, controller_query, controller);
         metric->add_node(rrr.get_vertex(s_nn));
-        ss -> copy_point_from_vector(controller_query.goal_state,g);
+
+        ss -> copy_to_point(controller_query.goal_state);
+        controller_query.goal_state -> at(0) = goal[0];
+        controller_query.goal_state -> at(1) = goal[1];
+        controller_query.goal_state -> at(3) = g_quat.w();
+        controller_query.goal_state -> at(4) = g_quat.x();
+        controller_query.goal_state -> at(5) = g_quat.y();
+        controller_query.goal_state -> at(6) = g_quat.z();
+
         auto g_nn = rrr.add_goal(controller_query.goal_state, dirt_spec, controller_query, controller);
         metric->add_node(rrr.get_vertex(g_nn));
         std::cout << s_nn << " " << g_nn << std::endl;

@@ -1,11 +1,30 @@
-plant: !file "plants/mushr.yaml"
-learned_controller: !file "networks/mushr.yaml"
-planner_name: "roadmap"
-env_name: "indoors_superdense_5"
-use_rlg: true
-output_dir: "ablation/indoors_superdense_5/"
+random_seed: 123456
+environment: "mushr_indoors.xml"
+runs: 1
 duration: 60
 poll_rate: 0.5
-runs: 1
+
+plant: !file "plants/mushr.yaml"
+learned_controller: !file "networks/mushr.yaml"
+
+planner_name: "roadmap"
+random_local_goal: false
+goal_radius: 0.5
+
+num_trajectories: 100
+sample_around: true
+verify_edge: true
+validate: true
+num_failures: 100
+stretch_factor: 2.0
+termination_classifier: !file "networks/svm_classifier.yaml"
+
 goal_state: [-9.0,-5.0,0.0,0.0,0.0]
 start_state: [9.0,5.0,0.0,0.0,0.0]
+
+
+output_dir: "ablation/indoors_superdense_5/"
+roadmap_dir: "roadmaps/indoors_superdense_5/"
+
+
+
