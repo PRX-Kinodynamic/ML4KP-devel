@@ -55,6 +55,7 @@ namespace prx
 			start_node->cost_to_go = h(start_node->point,dirt_query->goal_state);
 			start_node->blossom_number = dirt_spec->blossom_number;
 			start_node->greedy_expand = true;
+			start_node->reachable_goal = dirt_spec->start_node_reachable_goal;
 			metric->add_node(start_node.get());
 			previous_child = start_vertex;
 			child_extension = true;

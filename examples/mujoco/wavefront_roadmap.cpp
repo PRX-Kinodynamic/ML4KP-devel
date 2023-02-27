@@ -243,6 +243,8 @@ int main(int argc, char* argv[])
         std::cout << s_nn << " " << g_nn << std::endl;
 
         rrr.compute_wavefront(g_nn);
+        dirt_spec.start_node_reachable_goal = s_nn;
+        std::cout << "Start node reachable goal: " << dirt_spec.start_node_reachable_goal << std::endl;
 
         space_point_t lg = ss -> make_point();
         std::vector<landmark_node_t*> roadmap_nodes;
