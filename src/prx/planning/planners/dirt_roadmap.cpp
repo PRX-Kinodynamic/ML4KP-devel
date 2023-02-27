@@ -215,7 +215,7 @@ namespace prx
 			
 			if(!valid)
 			{
-				std::cout << "Invalid edge!" << std::endl;
+				//std::cout << "Invalid edge!" << std::endl;
 				delete eg.first;
 				delete eg.second;
 				eg = std::make_pair(nullptr,nullptr);
@@ -286,7 +286,7 @@ namespace prx
 			child_extension = true;
 		}
 		new_tree_node->greedy_expand = !skip_informed && child_extension;
-		std::cout << "Greedy expand: " << new_tree_node->greedy_expand << std::endl;
+		//std::cout << "Greedy expand: " << new_tree_node->greedy_expand << std::endl;
 		previous_child=node_index;
 		metric->add_node(new_tree_node.get());
 		new_tree_node->bridge = false;
