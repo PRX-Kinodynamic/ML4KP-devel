@@ -328,20 +328,25 @@ int main(int argc, char* argv[])
                 if (roadmap_nodes.size() != 0)
                 {
                     auto nn = roadmap_nodes[0];
+                    // if (debug) std::cout << tree_node -> roadmap_cost_to_go << " " << nn -> get_node_cost() << std::endl;
                     if (tree_node -> roadmap_cost_to_go >= nn -> get_node_cost())
                     {
+                        if (debug) std::cout << "Inside " << nn -> get_index() << " : " << ss -> print_point(nn->point,2) << std::endl;
                         tree_node -> roadmap_cost_to_go = nn -> get_node_cost();
                         bool is_node_on_path = rrr.is_node_on_path(tree_node->reachable_goal, nn -> get_index());
+                        if (debug) std::cout << "Is node on path: " << is_node_on_path << std::endl;
 
                         if (is_node_on_path && tree_node->greedy_expand)
                         {
                             best_index = rrr.get_next_local_goal(tree_node->point, controller_query, dirt_spec, controller, tree_node->reachable_goal);
+                            if (debug) std::cout << "Local goal index[a]: " << best_index << std::endl;
                             if (best_index == nn -> get_index()) best_index = -1;
                             if (tree_node -> reachable_goal == nn -> get_index()) tree_node -> reachable_goal = -1;
                         }
                         else
                         {
                             best_index = rrr.get_next_local_goal(tree_node->point, controller_query, dirt_spec, controller, nn->get_successor());
+                            if (debug) std::cout << "Local goal index[b]: " << best_index << std::endl;
                         }
                     }
                     else
@@ -349,6 +354,7 @@ int main(int argc, char* argv[])
                         if (!tree_node -> greedy_expand)
                         {
                             best_index = rrr.get_next_local_goal(tree_node->point, controller_query, dirt_spec, controller, nn->get_successor());
+                            if (debug) std::cout << "Local goal index[c]: " << best_index << std::endl;
                         }
                     }
                 }
@@ -356,6 +362,7 @@ int main(int argc, char* argv[])
                 if (best_index == -1) best_index = tree_node -> reachable_goal;
                 if (best_index != -1)
                 {
+                    if (debug) std::cout << "Local goal: " << ss -> print_point(rrr.get_point(best_index), 4) << std::endl;
                     override_child_extension = true;
                     ss -> copy_point(lg, rrr.get_point(best_index));
                     tree_node -> reachable_goal = best_index;
