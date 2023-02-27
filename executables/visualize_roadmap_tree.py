@@ -22,7 +22,7 @@ def quat2euler(quat):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--target', type=str, default="roadmap_tree")
-parser.add_argument('--dir', type=str, default="out/ablation/indoors/")
+parser.add_argument('--dir', type=str, default="out/ablation/indoors_superdense_5/")
 parser.add_argument('--g', action="store_true")
 args = parser.parse_args()
 target = args.target

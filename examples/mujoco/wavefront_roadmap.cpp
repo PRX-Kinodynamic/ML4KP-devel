@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
         if (argc <= 1)
         {
             // prx_throw("This executable needs a parameter file!");
-            params_file = "examples/mujoco/mushr_trajectory.yaml";
+            params_file = "examples/mujoco/mushr_rm_trajectory.yaml";
             // params_file = "local_goal/car_like.yaml";
             // params_file = "local_goal/annotate_treaded.yaml";
         }
@@ -61,37 +61,49 @@ int main(int argc, char* argv[])
         }
         
         param_loader params(params_file);
-        // params.print();
+        //std::cout << "--- loaded params file ---" << std::endl;
+        params.print();
         prx::timer_t timer; 
         int random_seed = params["random_seed"].as<int>();
         init_random(random_seed);
-        torch::set_num_threads(1);
+        //torch::set_num_threads(1);
+
+        //std::cout << "--- init seed ---" << std::endl;
 
         std::string plant_name = params["/plant/name"].as<std::string>();
         std::string plant_path = params["/plant/path"].as<std::string>();
         auto plant = system_factory_t::create_system(plant_name,plant_path);
+        //std::cout << "--- loaded plant ---" << std::endl;
 
-        std::vector<double> lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
-        std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
-        plant -> set_state_space_bounds(lower_bounds,upper_bounds);
+        // std::vector<double> lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
+        // std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
+        // std::cout << "read bounds"<< std::endl;
+        // plant -> set_state_space_bounds(lower_bounds,upper_bounds);
+        // std::cout << "--- loaded bounds ---" << std::endl;
 
         std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>(params["environment"].as<std::string>());
         sim->init_simulator();
+
+        //std::cout << "--- made mujoco simulator ---" << std::endl;
 
         auto context = sim -> get_context("mujoco");
         auto ss = context.first -> get_state_space();
         auto cs = context.first -> get_control_space();
         auto sg = context.first;
+        //std::cout << "--- made context ---" << std::endl;
 
         dirt_roadmap_specification_t dirt_spec(context.first,context.second);
         dirt_roadmap_query_t dirt_query(ss,cs);
         dirt_query.start_state = ss -> make_point();
         dirt_query.goal_state  = ss -> make_point();
         dirt_query.get_visualization = true;
+        //std::cout << "--- made dirt query ---" << std::endl;
 
         dirt_query.goal_region_radius = params["goal_radius"].as<double>();
+        //std::cout << "--- loaded goal radius ---" << std::endl;
 
         learned_controller_t controller(params);
+        //std::cout << "--- made controller ---" << std::endl;
 
         dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
         {
@@ -137,11 +149,14 @@ int main(int argc, char* argv[])
             return goal_dist(s,dirt_query.goal_state) < dirt_query.goal_region_radius;
         };
 
+        //std::cout << "--- lambdas defined ---" << std::endl;
+
         dirt_roadmap_t dirt("dirt");
         dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
         dirt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
         dirt_spec.blossom_number = 1;
         dirt_spec.use_pruning = false;
+        //std::cout << "--- made dirt_roadmap ---" << std::endl;
 
         std::vector<double> start = params["start_state"].as<std::vector<double>>();
 
@@ -176,19 +191,24 @@ int main(int argc, char* argv[])
         dirt_query.goal_state -> at(5) = g_quat.y();
         dirt_query.goal_state -> at(6) = g_quat.z();
 
+        //std::cout << "--- loaded start and goal ---" << std::endl;
+
         //ss -> copy_point_from_vector(dirt_query.start_state,s);
         //ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
         std::ofstream fout;
         std::string output_dir = params["output_dir"].as<std::string>();
         std::string out_path = output_path + output_dir;
+        //std::cout << "--- set output path ---" << std::endl;
         
         landmark_roadmap_t rrr;
         std::string roadmap_dir = output_path + params["roadmap_dir"].as<std::string>();
         std::vector<std::vector<double>> vertices = read_comma_separated_file(roadmap_dir + "/vertices.txt");
+        //std::cout << "--- read roadmap vertices file---" << std::endl;
 
         graph_nearest_neighbors_t* metric = new graph_nearest_neighbors_t(goal_dist);
-        
+        //std::cout << "--- made nn metric ---" << std::endl;
+
         for (auto& v : vertices)
         {
             
@@ -202,13 +222,20 @@ int main(int argc, char* argv[])
 
             metric->add_node(rrr.get_vertex(int(v[0])));
         }
+        //std::cout << "--- loaded roadmap vertices ---" << std::endl;
 
         std::vector<std::vector<double>> edges = read_comma_separated_file(roadmap_dir + "/edges.txt");
+
+        //std::cout << "--- read edges file ---" << std::endl;
 
         for (auto& e : edges)
         {
             rrr.add_edge(int(e[0]),int(e[1]),e[2]);
         }
+
+        //std::cout << "--- loaded roadmap edges ---" << std::endl;
+
+
 
         dirt_query_t controller_query(ss,cs);
         controller_query.start_state = ss -> make_point();
@@ -218,6 +245,8 @@ int main(int argc, char* argv[])
         {
             return goal_dist(s,controller_query.goal_state) < controller_query.goal_region_radius;
         };
+        //std::cout << "--- made controller query ---" << std::endl;
+
 
         ss -> copy_to_point(controller_query.start_state);
         controller_query.start_state -> at(0) = start[0];
@@ -238,17 +267,20 @@ int main(int argc, char* argv[])
         controller_query.goal_state -> at(5) = g_quat.y();
         controller_query.goal_state -> at(6) = g_quat.z();
 
+        //std::cout << "--- added controller start/goal ---" << std::endl;
+
+
         auto g_nn = rrr.add_goal(controller_query.goal_state, dirt_spec, controller_query, controller);
         metric->add_node(rrr.get_vertex(g_nn));
-        std::cout << s_nn << " " << g_nn << std::endl;
+        //std::cout << s_nn << " " << g_nn << std::endl;
 
         rrr.compute_wavefront(g_nn);
 
         space_point_t lg = ss -> make_point();
         std::vector<landmark_node_t*> roadmap_nodes;
 
-        std::cout << ss -> print_point(dirt_query.start_state,2) << std::endl;
-        std::cout << ss -> print_point(dirt_query.goal_state,2) << std::endl;
+        //std::cout << ss -> print_point(dirt_query.start_state,2) << std::endl;
+        //std::cout << ss -> print_point(dirt_query.goal_state,2) << std::endl;
 
         dirt_spec.node_expand = [&](dirt_roadmap_node_t* tree_node, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, bool& override_child_extension)
         {
@@ -277,8 +309,8 @@ int main(int argc, char* argv[])
                     auto nn = roadmap_nodes[0];
                     if (tree_node -> roadmap_cost_to_go <= nn -> get_node_cost())
                     {
-                        std::cout << "Inside roadmap node " << ss -> print_point(nn -> point, 4) << std::endl;
-                        std::cout << nn -> get_index() << " " << tree_node -> reachable_goal << std::endl;
+                        //std::cout << "Inside roadmap node " << ss -> print_point(nn -> point, 4) << std::endl;
+                        //std::cout << nn -> get_index() << " " << tree_node -> reachable_goal << std::endl;
                         
                         int best_index = -1;
                         if (tree_node -> reachable_goal == nn -> get_index())
@@ -291,14 +323,14 @@ int main(int argc, char* argv[])
                             valid_successor = true;
                             ss -> copy_point(lg, rrr.get_point(best_index));
                             tree_node -> reachable_goal = best_index;
-                            std::cout << nn -> get_index() << " " << best_index << " Local goal: " << ss -> print_point(lg,4) << std::endl;
+                            //std::cout << nn -> get_index() << " " << best_index << " Local goal: " << ss -> print_point(lg,4) << std::endl;
                         }
                     }
                     else 
                     {
                         tree_node -> roadmap_cost_to_go = nn -> get_node_cost();
-                        std::cout << "Roadmap node with lower cost: " << nn -> get_index() << std::endl;
-                        std::cout << "Node's cost to go: " << tree_node -> roadmap_cost_to_go << std::endl;
+                        //std::cout << "Roadmap node with lower cost: " << nn -> get_index() << std::endl;
+                        //std::cout << "Node's cost to go: " << tree_node -> roadmap_cost_to_go << std::endl;
 
                         int best_index = rrr.get_next_local_goal(tree_node->point, controller_query, dirt_spec, controller, nn->get_index());
                         if (best_index != -1)
@@ -307,11 +339,11 @@ int main(int argc, char* argv[])
                             valid_successor = true;
                             ss -> copy_point(lg, rrr.get_point(best_index));
                             tree_node -> reachable_goal = best_index;
-                            std::cout << nn -> get_index() << " " << best_index << " Local goal: " << ss -> print_point(lg,4) << std::endl;
+                            //std::cout << nn -> get_index() << " " << best_index << " Local goal: " << ss -> print_point(lg,4) << std::endl;
                         }
                         else if (valid_successor && tree_node -> reachable_goal != nn -> get_index())
                         {
-                            std::cout << "Shooting for the reachable goal[a]. " << tree_node->reachable_goal << std::endl;
+                            //std::cout << "Shooting for the reachable goal[a]. " << tree_node->reachable_goal << std::endl;
                             override_child_extension = true;
                             ss -> copy_point(lg, rrr.get_point(tree_node -> reachable_goal));
                         }
@@ -319,13 +351,13 @@ int main(int argc, char* argv[])
                 }
                 else if (roadmap_nodes.size() == 0 && valid_successor)
                 {
-                    std::cout << "Shooting for the reachable goal[b]. " << tree_node->reachable_goal << std::endl;
+                    //std::cout << "Shooting for the reachable goal[b]. " << tree_node->reachable_goal << std::endl;
                     override_child_extension = true;
                     ss -> copy_point(lg, rrr.get_point(tree_node -> reachable_goal));
                 }
                 else 
                 {
-                    std::cout << "Sampling a random local goal." << std::endl;
+                    //std::cout << "Sampling a random local goal." << std::endl;
                     ss -> sample(lg);
                 }
 

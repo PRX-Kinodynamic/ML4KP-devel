@@ -17,14 +17,14 @@ verify_edge: true
 validate: true
 num_failures: 100
 stretch_factor: 2.0
-termination_classifier: !file "networks/svm_classifier.yaml"
+
 
 goal_state: [-9.0,-5.0,0.0,0.0,0.0]
 start_state: [9.0,5.0,0.0,0.0,0.0]
 
 
-output_dir: "ablation/indoors_superdense_5/"
-roadmap_dir: "roadmaps/indoors_superdense_5/"
+output_dir: "ablation/indoors/"
+roadmap_dir: "roadmaps/indoors/"
 
 
 
