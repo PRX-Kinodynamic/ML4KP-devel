@@ -6,4 +6,4 @@ add_library(${PROJECT_NAME}_planning  ${SRC_PRX_LIB_PLANNING})
 
 target_include_directories(${PROJECT_NAME}_planning PUBLIC ".")
 
-target_link_libraries(${PROJECT_NAME}_planning INTERFACE ${PROJECT_NAME}_simulation )
+target_link_libraries(${PROJECT_NAME}_planning PUBLIC ${PROJECT_NAME}_simulation )
