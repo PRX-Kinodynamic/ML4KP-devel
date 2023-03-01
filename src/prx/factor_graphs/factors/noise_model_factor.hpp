@@ -231,6 +231,7 @@ public:
     , derivative_x1(partial_x1, 0.01)
     , derivative_x2(partial_x2, 0.01)
     , derivative_x3(partial_x3, 0.01)
+    , computing_derivative(false)
   {
   }
 
@@ -244,7 +245,9 @@ public:
                                         boost::optional<Eigen::MatrixXd&> H2 = boost::none,
                                         boost::optional<Eigen::MatrixXd&> H3 = boost::none) const override
   {
+    computing_derivative = false;
     auto error = compute_error(x0, x1, x2, x3);
+    computing_derivative = true;
     if (H0)
     {
       derivative_x0.model = [&](const X0& _x0) { return compute_error(_x0, x1, x2, x3); };
@@ -268,7 +271,6 @@ public:
       derivative_x3.model = [&](const X3& _x3) { return compute_error(x0, x1, x2, _x3); };
       *H3 = derivative_x3(x3);
     }
-
     return error;
   }
 
@@ -284,6 +286,10 @@ private:
   mutable prx::math::first_order_derivative_t<partial_X1, X1, Evaluations> derivative_x1;
   mutable prx::math::first_order_derivative_t<partial_X2, X2, Evaluations> derivative_x2;
   mutable prx::math::first_order_derivative_t<partial_X3, X3, Evaluations> derivative_x3;
+
+protected:
+  mutable bool computing_derivative;  // Useful for debuging: avoid printing/stepping if compute_error is being used by
+                                      // the derivative
 };
 
 /**

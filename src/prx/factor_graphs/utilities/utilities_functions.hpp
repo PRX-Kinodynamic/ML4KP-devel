@@ -38,6 +38,23 @@ void values_to_plan(const gtsam::Values& vals, plan_t* plan, const int total_ste
 
 void values_to_traj(const gtsam::Values& vals, trajectory_t& traj, const int total_steps);
 
+template <typename Control, typename Tau>
+void extract_plan_from_values(const gtsam::Values& vals, prx::plan_t& plan, const std::size_t total_controls)
+{
+  plan.clear();
+  std::size_t ti = 0;
+  for (; ti < total_controls; ti++)
+  {
+    auto us = symbol_factory_t::create_symbol("control_symbol", ti);
+    auto ts = symbol_factory_t::create_symbol("time_symbol", ti);
+
+    auto u = vals.at<Control>(us);
+    double step = vals.at<Tau>(ts)[0];
+
+    plan.copy_onto_back(u, step);
+  }
+}
+
 }  // namespace utilities
 }  // namespace fg
 }  // namespace prx

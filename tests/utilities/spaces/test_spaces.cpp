@@ -186,6 +186,25 @@ BOOST_AUTO_TEST_CASE(test_space_copy_to_and_copy_from_point)
   BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
 }
 
+BOOST_AUTO_TEST_CASE(testing_copy_from_initializer_list)
+{
+  double x, y, theta;
+  x = y = theta = 1;
+  std::vector<double*> address_1 = { &x, &y, &theta };
+  prx::space_t space_1("EER", address_1, "space_1");
+
+  prx::space_point_t pt_sp1 = space_1.make_point();
+  prx::space_point_t pt_sp2 = space_1.make_point();
+
+  (*pt_sp1)[0] = 10;
+  (*pt_sp1)[1] = 20;
+  (*pt_sp1)[2] = 3;
+
+  space_1.copy_from({ 10, 20, 3 });
+  space_1.copy_to(pt_sp2);
+  BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
+}
+
 BOOST_AUTO_TEST_CASE(test_space_copy)
 {
   double x, y, theta;

@@ -12,6 +12,7 @@ template <typename value_t, std::size_t dimension>
 class regular_grid_t
 {
 public:
+  const std::size_t Dim = dimension;
   using key_t = std::array<int, dimension>;
   using hash_function_t = range_hash_combine_t<std::array<int, dimension>, dimension>;
   using const_iterator = typename std::unordered_map<key_t, value_t, hash_function_t>::const_iterator;

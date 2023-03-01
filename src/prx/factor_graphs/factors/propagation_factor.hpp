@@ -334,7 +334,7 @@ private:
 };
 
 // Implements X_{t+1} = X_t + f(X_t, U_t, tau)
-template <Eigen::Index X_dim, Eigen::Index U_dim>
+template <Eigen::Index X_dim, Eigen::Index U_dim, Evals Evaluations = 4>
 class propagation_factor_XUTau_t : public fg::noise_model_4factor_t<X_dim, X_dim, U_dim, 1>
 {
   using Base = fg::noise_model_4factor_t<X_dim, X_dim, U_dim, 1>;
@@ -366,17 +366,27 @@ public:
 
   virtual X compute_error(const X& x0, const X& x1, const U& u0, const Tau& tau) const override
   {
+    X error{};
     if (tau[0] > 0)
     {
       _sg->propagate(x0, u0, tau[0], x1_out);
+      _sg->get_state_space()->difference(x1, x1_out, error);
     }
     else
     {
-      x1_out = X::Ones() * 1000;  // Make the error really big
+      error = X::Zero() * std::nan("");
+      // x1_out = X::Ones() * 1000;  // Make the error really big
     }
 
-    const X error{ x1_out - x1 };
-
+    if (!this->computing_derivative)
+    {
+      PRX_DEBUG_VAR_1(x0.transpose());
+      PRX_DEBUG_VAR_1(u0.transpose());
+      PRX_DEBUG_VAR_1(tau);
+      PRX_DEBUG_VAR_1(x1.transpose())
+      PRX_DEBUG_VAR_1(x1_out.transpose())
+      PRX_DEBUG_VAR_1(error.transpose());
+    }
     return error;
   }
 

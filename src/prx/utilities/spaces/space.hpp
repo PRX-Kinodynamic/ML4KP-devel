@@ -414,13 +414,13 @@ public:
   }
 
   template <typename T>
-  inline void copy_from(const std::initializer_list<T>& from) const
+  inline void copy_from(const std::initializer_list<T> from) const
   {
     prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
                                                                      << typeid(decltype(from)).name() << " ( "
                                                                      << from.size() << " )");
     std::vector<T> aux_vector = from;
-    copy_from(from);
+    copy_from(aux_vector);
   }
 
   template <typename T, std::enable_if_t<!prx::utils::is_ptr_type<T>{}, bool> = true>
@@ -663,6 +663,22 @@ public:
   {
     return topology[i];
   };
+
+  template <typename State0, typename State1, typename StateRet>
+  void difference(const State0 s0, const State1 s1, StateRet& res) const
+  {
+    for (int i = 0; i < dimension; ++i)
+    {
+      if (topology[i] == topology_t::ROTATIONAL)
+      {
+        res[i] = angle_diff(s0[i], s1[i]);
+      }
+      else
+      {
+        res[i] = s0[i] - s1[i];
+      }
+    }
+  }
 
   void difference(const space_point_t& s0, const space_point_t& s1, const space_point_t& res) const
   {

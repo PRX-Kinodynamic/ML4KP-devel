@@ -96,8 +96,6 @@ protected:
     }
   }
 
-  // void gradient(space_point_t x, space_point_t u, bool xu, Eigen::VectorXd out );
-
 protected:
   // bodies that we want to check collisions for
   std::vector<std::pair<unsigned, unsigned>> collision_list;
@@ -107,14 +105,6 @@ protected:
 private:
   space_point_t derivative_state;
   friend system_factory_t;
-
-  // Eigen::VectorXd v;
-  // Eigen::VectorXd xv;
-  // Eigen::VectorXd uv;
-  // Eigen::VectorXd plus;
-  //       Eigen::VectorXd minus;
-  //       Eigen::VectorXd d_plus;
-  //       Eigen::VectorXd d_minus;
 };
 
 }  // namespace prx

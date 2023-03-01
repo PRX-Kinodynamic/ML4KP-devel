@@ -2,3 +2,5 @@ factor_graph_file: "perception/fmbasis_factor_graph.dot"
 markers_file: "/Users/Gary/pracsys/aruco_files/txt_230220_1905.txt"
 marker_length: 0.163
 factor_graph_logger: "perception/camera_calibration.log"
+image_width: 1920
+image_height: 1080

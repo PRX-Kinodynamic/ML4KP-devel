@@ -62,7 +62,8 @@ void init()
   noise_models["distance_between_markers"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e-1);
   noise_models["feature"] = gtsam::noiseModel::Isotropic::Sigma(2, 1e0);
   noise_models["markers_pixels"] = gtsam::noiseModel::Isotropic::Sigma(2, 1e-2);
-  noise_models["camera_positive"] = gtsam::noiseModel::Isotropic::Sigma(CameraWithDistortionDim, 1e-3);
+  noise_models["camera_positive"] =
+      gtsam::noiseModel::Constrained::MixedSigmas(CameraWithDistortion(0, 0, 0, 0, 0, 1, 1, 1, 1));
   noise_models["marker_translation"] = gtsam::noiseModel::Isotropic::Sigma(3, 1e0);
 }
 
@@ -212,6 +213,9 @@ int main(int argc, char** argv)
 
   std::size_t l_idx{ 0 };
 
+  camera_initial_value << 1000, 0, params["image_width"].as<int>() / 2,  // no-lint
+      0, 1000, params["image_height"].as<int>() / 2,                     // no-lint
+      0, 0, 1;
   const std::string factor_graph_file{ prx::out_path + params["factor_graph_file"].as<>() };
   marker_length = params["marker_length"].as<double>();
   marker_diagonal = std::sqrt(std::pow(marker_length, 2) + std::pow(marker_length, 2));

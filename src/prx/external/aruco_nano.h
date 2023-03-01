@@ -94,7 +94,6 @@ public:
 
     cv::Mat Rvec, Tvec;
     std::tie(Rvec, Tvec) = estimatePose(cam_mat, dist_vec, markerSize);
-
     cv::Mat rot_mat;
     Eigen::Vector3d rvec_eigen;
     Eigen::Vector3d tvec_eigen;
@@ -119,6 +118,35 @@ public:
       tvec_eigen = Eigen::Vector3d::Zero();
     }
     return { rvec_eigen, tvec_eigen };
+  }
+  template <typename DistortionVector>
+  std::pair<Eigen::Matrix3d, Eigen::Vector3d> estimatePoseEigenRodrigues(Eigen::Matrix3d cameraMatrix,
+                                                                         DistortionVector distCoeffs,
+                                                                         double markerSize) const
+  {
+    cv::Mat cam_mat, dist_vec;
+    cv::eigen2cv(cameraMatrix, cam_mat);
+    cv::eigen2cv(distCoeffs, dist_vec);
+
+    cv::Mat Rvec, Tvec;
+    std::tie(Rvec, Tvec) = estimatePose(cam_mat, dist_vec, markerSize);
+
+    cv::Mat Rmat;
+    Eigen::Matrix3d rmat_eigen;
+    Eigen::Vector3d tvec_eigen;
+
+    if (Rvec.rows == 3)
+    {
+      cv::Rodrigues(Rvec, Rmat);
+      cv::cv2eigen(Rmat, rmat_eigen);
+      cv::cv2eigen(Tvec, tvec_eigen);
+    }
+    else
+    {
+      rmat_eigen = Eigen::Matrix3d::Zero();
+      tvec_eigen = Eigen::Vector3d::Zero();
+    }
+    return { rmat_eigen, tvec_eigen };
   }
 };
 class MarkerDetector
@@ -629,9 +657,11 @@ std::pair<cv::Mat, cv::Mat> Marker::estimatePose(cv::Mat cameraMatrix, cv::Mat d
                                              { markerSize / 2.f, -markerSize / 2.f, 0.f },
                                              { -markerSize / 2.f, -markerSize / 2.f, 0.f } };
   cv::Mat Rvec, Tvec;
-  cv::solvePnP(markerCorners, *this, cameraMatrix, distCoeffs, Rvec, Tvec, false, cv::SOLVEPNP_IPPE);
-  // std::cout << "estimatePose: Rvec: " << Rvec << std::endl;
-  // std::cout << "estimatePose: Tvec: " << Tvec << std::endl;
+  // cv::solvePnP(markerCorners, *this, cameraMatrix, distCoeffs, Rvec, Tvec, false, cv::SOLVEPNP_IPPE_SQUARE);
+
+  cv::solvePnPRansac(markerCorners, *this, cameraMatrix, distCoeffs, Rvec, Tvec, false);
+
+  // cv::solvePnPRefineLM(markerCorners, *this, cameraMatrix, distCoeffs, Rvec, Tvec);
   return { Rvec, Tvec };
 }
 
