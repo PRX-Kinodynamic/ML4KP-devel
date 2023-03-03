@@ -41,7 +41,8 @@ system_group_t::system_group_t(const std::vector<system_ptr_t>& sys_group, plant
   {
     state_spaces.push_back(g1->get_state_space());
     control_spaces.push_back(g1->get_control_space());
-    parameter_spaces.push_back(g1->get_parameter_space());
+    if (g1->get_parameter_space() != nullptr)
+      parameter_spaces.push_back(g1->get_parameter_space());
   }
   state_space = new space_t(state_spaces);
   control_space = new space_t(control_spaces);
@@ -55,73 +56,58 @@ system_group_t::~system_group_t()
   group.clear();
 }
 
-void system_group_t::propagate(space_point_t start_state, const plan_t& plan, space_point_t result)
-{
-  state_space->copy_from(start_state);
-  propagate_step p_step;
+// void system_group_t::propagate(space_point_t start_state, const plan_t& plan, space_point_t result)
+// {
+//   propagate_step p_step;
+//   state_space->copy_from(start_state);
 
-  for (const plan_step_t& step : plan)
-  {
-    int steps = (int)((step.duration / simulation_step) + .1);
-    // int i = 0;
-    if (steps > 0)
-    {
-      propagate(steps, step.control);
-    }
-  }
-  state_space->copy_to(result);
-}
+//   for (const plan_step_t& step : plan)
+//   {
+//     int steps = (int)((step.duration / simulation_step) + .1);
+//     // int i = 0;
+//     if (steps > 0)
+//     {
+//       propagate(steps, step.control);
+//     }
+//   }
+//   state_space->copy_to_point(result);
+// }
 
 void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
                                space_point_t result)
 {
-  state_space->copy_from(start_state);
   propagate_step p_step;
+  state_space->copy_from(start_state);
 
   int i = 0;
   do
   {
     ctrl->compute_controls();
-    propagate_once(propagate_step::MIDDLE_STEP, nullptr);
+    propagate_once();
   } while (!cond_check.check());
 
-  state_space->copy_to(result);
+  state_space->copy_to_point(result);
 }
 
-void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
-                               trajectory_t& result)
-{
-  state_space->copy_from(start_state);
-  propagate_step p_step;
+// void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
+//                                trajectory_t& result)
+// {
+//   propagate_step p_step;
 
-  int i = 0;
-  do
-  {
-    ctrl->compute_controls();
-    propagate_once(propagate_step::MIDDLE_STEP, nullptr);
-    result.copy_onto_back(state_space);
-  } while (!cond_check.check());
+//   result.clear();
+//   state_space->copy_from(start_state);
+//   result.copy_onto_back(state_space);
 
-  // state_space -> copy_to_point(result);
-}
+//   int i = 0;
+//   do
+//   {
+//     ctrl->compute_controls();
+//     propagate_once();
+//     result.copy_onto_back(state_space);
+//   } while (!cond_check.check());
 
-void system_group_t::propagate(space_point_t start_state, const plan_t& plan, trajectory_t& traj)
-{
-  state_space->copy_from(start_state);
-  propagate_step p_step;
-
-  traj.clear();
-  traj.copy_onto_back(state_space);
-  for (const plan_step_t& step : plan)
-  {
-    int steps = (int)((step.duration / simulation_step) + .1);
-    // int i = 0;
-    if (steps > 0)
-    {
-      propagate(steps, step.control, &traj);
-    }
-  }
-}
+//   // state_space -> copy_to_point(result);
+// }
 
 void system_group_t::propagate(int steps, space_point_t control, trajectory_t* traj)
 {
@@ -135,32 +121,24 @@ void system_group_t::propagate(int steps, space_point_t control, trajectory_t* t
     else
       p_step = propagate_step::FINAL_STEP;
 
-    propagate_once(p_step, control);
+    propagate_once(control, p_step);
     if (traj != nullptr)
     {
       traj->copy_onto_back(state_space);
     }
-    // PRX_DEBUG_VAR_3(traj->back(), control, simulation_step);
   }
 }
 
-void system_group_t::propagate_once(propagate_step step, space_point_t control)
+void system_group_t::propagate_once(const propagate_step& step)
 {
-  if (control != nullptr)
-  {
-    control_space->copy_from(control);
-  }
   for (auto s : group)
   {
     s->compute_control();
     s->get_control_space()->enforce_bounds();
   }
-  // for(auto s : group)
-  // {
-  // 	s->propagate(simulation_step, step);
-  // }
-  // std::cout << "ss: " << state_space->print_memory(4) << "\tctrl: " << control_space->print_memory(4) << std::endl;
+
   sim->step_simulation(step);
+  state_space->enforce_bounds();
 }
 
 void system_group_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times,

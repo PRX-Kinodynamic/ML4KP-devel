@@ -156,7 +156,7 @@ void trajectory_t::copy_onto_back(const space_t* space)
     std::advance(end_iterator, num_states);
     std::advance(const_end_iterator, num_states);
   }
-  space->copy_to_point(*end_iterator);
+  space->copy_to(*end_iterator);
   ++end_iterator;
   ++const_end_iterator;
   ++num_states;

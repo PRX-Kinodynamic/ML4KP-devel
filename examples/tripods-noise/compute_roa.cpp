@@ -501,11 +501,11 @@ int main(int argc, char* argv[])
       tmv._ss->copy(tmv.start_state, { th, thdot });
       // do
       // {
-      // state_num++;
-      // if (state_num < initial_state_num)
-      //   continue;
-      // if (state_num >= final_state_num)
-      //   continue;
+      state_num++;
+      if (state_num < initial_state_num)
+        continue;
+      if (state_num >= final_state_num)
+        continue;
       bar.update(state_num - initial_state_num);
 
       line.str(std::string());

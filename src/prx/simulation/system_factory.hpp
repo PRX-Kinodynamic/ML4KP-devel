@@ -100,6 +100,28 @@ private:
   }                                                                                                                    \
   }
 
+/**
+ * Macro to registrer a system to the factory
+ * @param  CONTROLLER_CLASS The class to registrer
+ * @param  CONTROLLER_NAME  The name to associate to this system
+ * @return              If the registration is successful, the variable
+ * prx::factory_registration::VAR_##CONTROLLER_NAME##_REGISTRED is true.
+ */
+#define PRX_REGISTER_CONTROLLER(CONTROLLER_CLASS, CONTROLLER_NAME)                                                     \
+  namespace prx                                                                                                        \
+  {                                                                                                                    \
+  namespace factory_registration                                                                                       \
+  {                                                                                                                    \
+  static auto FN_##CONTROLLER_NAME##_GENERATOR = [](std::string path) {                                                \
+    CONTROLLER_CLASS new_ptr;                                                                                          \
+    new_ptr.reset(new CONTROLLER_CLASS(path));                                                                         \
+    return new_ptr;                                                                                                    \
+  };                                                                                                                   \
+  const bool VAR_##CONTROLLER_NAME##_REGISTRED =                                                                       \
+      system_factory_t::get().register_system(#CONTROLLER_NAME, FN_##CONTROLLER_NAME##_GENERATOR);                     \
+  }                                                                                                                    \
+  }
+
 // TODO: Test this macro. A change to sys_gen_fn might be needed to accept variadic args.
 /**
  * Macro to registrer a system to the factory using variadic arguments. Not tested yet.

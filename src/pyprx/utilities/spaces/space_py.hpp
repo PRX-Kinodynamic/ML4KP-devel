@@ -13,6 +13,32 @@ namespace utilities
 {
 namespace spaces
 {
+
+struct pyspace_snapshot_t
+{
+  inline std::size_t size() const
+  {
+    return boost::python::len(*pylist);
+  }
+
+  inline double& at(const std::size_t idx)
+  {
+    return boost::python::extract<double&>((*pylist)[idx]);
+  }
+  const inline double at(const std::size_t idx) const
+  {
+    return boost::python::extract<double>((*pylist)[idx]);
+  }
+  inline double& operator[](const std::size_t idx)
+  {
+    return at(idx);
+  };
+  const inline double operator[](const std::size_t idx) const
+  {
+    return at(idx);
+  };
+  const boost::python::list* pylist;
+};
 namespace space
 {
 
@@ -173,17 +199,12 @@ void py_copy_from_T(const prx::space_t* space, const T& pt)
   space->copy_from(pt);
 }
 
-void py_copy_from(const prx::space_t* space, boost::python::list& py_list)
+void py_copy_from(const prx::space_t* space, const boost::python::list& pt)
 {
-  const std::size_t dim{ space->get_dimension() };
-  std::vector<double> vec_aux(dim, 0);
-  prx_assert(len(py_list) >= dim, "space::copy_from expects list of size space.get_dimension() = " << dim << ".");
-  prx_warn_cond(len(py_list) == dim, "Length of list (" << len(py_list)
-                                                        << ") to copy from is greater than dimension of space (" << dim
-                                                        << "), dropping the greater indexes.");
-
-  pyobject_to_vector(vec_aux, py_list);
-  space->copy_from(vec_aux);
+  static pyspace_snapshot_t _pt;
+  _pt.pylist = &pt;
+  space->copy_from(_pt);
+  _pt.pylist = nullptr;
 }
 
 template <typename To, typename From>
@@ -191,6 +212,15 @@ void py_copy_T(const prx::space_t* space, To& to, const From& from)
 {
   space->copy(to, from);
 }
+
+// TODO: check why this doesn't work... Refs to python stuff is not working
+// void py_copy_to(const prx::space_t* space, const boost::python::list& pt)
+// {
+//   static pyspace_snapshot_t _pt;
+//   _pt.pylist = &pt;
+//   space->copy_to(_pt);
+//   _pt.pylist = nullptr;
+// }
 
 void py_copy_0(const prx::space_t* space, boost::python::list& py_list_to, const boost::python::list& py_list_from)
 {
@@ -290,6 +320,7 @@ void bindings()
       .def("copy_to", py_copy_to)
       .def("copy_to", py_copy_to_T<prx::space_point_t>)
       .def("copy_to_point", py_copy_to_T<prx::space_point_t>)
+      // .def("copy_from", py_copy_from)
       .def("copy_from", py_copy_from)
       .def("copy_from", py_copy_from_T<prx::space_point_t>)
       .def("copy_from_point", py_copy_from_T<prx::space_point_t>)
@@ -335,8 +366,8 @@ void bindings()
       // .def("lp_norm", lp_norm_2)
       // .def("l1_norm", (double (prx::space_t::*)(const
       // prx::space_point_t&))&prx::space_t::l1_norm).staticmethod("l1_norm") .def("l1_norm", &prx::space_t::l1_norm,
-      // space_t_l1_norm_overloads(args("p1", "p2"), "l1 norm")) .def<double (prx::space_t::*)(const prx::space_point_t&
-      // p1)>("l1_norm", prx::space_t::l1_norm)//.staticmethod("l1_norm") .def("l1_norm",
+      // space_t_l1_norm_overloads(args("p1", "p2"), "l1 norm")) .def<double (prx::space_t::*)(const
+      // prx::space_point_t& p1)>("l1_norm", prx::space_t::l1_norm)//.staticmethod("l1_norm") .def("l1_norm",
       // l1_norm_2).staticmethod("l1_norm") .def("", &prx::space_t::) .def("", &prx::space_t::) .def("",
       // &prx::space_t::) .def("", &prx::space_t::)
       ;

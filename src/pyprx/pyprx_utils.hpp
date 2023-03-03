@@ -68,6 +68,14 @@ void wrapper_subscript_oper_to_set_item(T& obj, const std::size_t& idx, R data)
 {
   obj[idx] = data;
 }
+template <typename T>
+void pylist_to_vector(std::vector<T>& vec_to, const boost::python::list& py_list_from)
+{
+  for (int i = 0; i < boost::python::len(py_list_from); ++i)
+  {
+    vec_to.push_back(boost::python::extract<T>(py_list_from[i]));
+  }
+}
 
 /*
  * Iterating functions

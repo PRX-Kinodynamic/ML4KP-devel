@@ -35,8 +35,8 @@ controller_path: "examples/tripods/lc/pendulum.pt"
 # You can specify "uniform", or "none"
 # If you specify "uniform", specify in noise_params the min and max.
 xt_noise: "uniform"
-# xt_noise_params: [-0.,0.]
-xt_noise_params: [-0.003141592654, 0.003141592654]
+xt_noise_params: [-0.,0.]
+# xt_noise_params: [-0.003141592654, 0.003141592654]
 # xt_noise_params: [-0.01570796327, 0.01570796327]
 # xt_noise_params: [-0.03141592654,0.03141592654]
 
@@ -47,8 +47,8 @@ ut_noise_params: [-0.,0.]
 # ut_noise_params: [-0.03141592654,0.03141592654]
 
 ft_noise: "uniform"
-# ft_noise_params: [-0.,0.]
-ft_noise_params: [-0.003141592654, 0.003141592654]
+ft_noise_params: [-0.,0.]
+# ft_noise_params: [-0.003141592654, 0.003141592654]
 # ft_noise_params: [-0.01570796327, 0.01570796327]
 # ft_noise_params: [-0.03141592654,0.03141592654]
 

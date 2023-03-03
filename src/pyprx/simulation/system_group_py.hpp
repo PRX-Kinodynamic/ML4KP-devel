@@ -12,18 +12,14 @@ void (prx::system_group_t::*propagate_4p0)(prx::space_point_t, prx::controller_p
                                            prx::space_point_t) = &prx::system_group_t::propagate;
 void (prx::system_group_t::*propagate_4p1)(prx::space_point_t, prx::controller_ptr_t, prx::condition_check_t&,
                                            prx::trajectory_t&) = &prx::system_group_t::propagate;
-void (prx::system_group_t::*propagate_plan_state)(prx::space_point_t, const prx::plan_t&,
-                                                  prx::space_point_t) = &prx::system_group_t::propagate;
+// void (prx::system_group_t::*propagate_plan_state)(prx::space_point_t, const prx::plan_t&,
+//                                                   prx::space_point_t) = &prx::system_group_t::propagate;
 void (prx::system_group_t::*propagate_plan_traj)(prx::space_point_t, const prx::plan_t&,
                                                  prx::trajectory_t&) = &prx::system_group_t::propagate;
-// void propagate_once(propagate_step step, space_point_t control = nullptr);
-void system_group_propagate_once_0(prx::system_group_t* sg)
-{
-  sg->propagate_once(prx::propagate_step::MIDDLE_STEP);
-}
+
 void system_group_propagate_once_1(prx::system_group_t* sg, prx::space_point_t ctrl)
 {
-  sg->propagate_once(prx::propagate_step::MIDDLE_STEP, ctrl);
+  sg->propagate_once(ctrl, prx::propagate_step::MIDDLE_STEP);
 }
 
 void bindings()
@@ -37,10 +33,11 @@ void bindings()
       .def("get_control_space", &prx::system_group_t::get_control_space, return_internal_reference<>())
       .def("propagate", propagate_4p0)
       .def("propagate", propagate_4p1)
-      .def("propagate", propagate_plan_state)
+      .def("propagate", &prx::system_group_t::propagate<prx::space_point_t, prx::space_point_t>)
       .def("propagate", propagate_plan_traj)
-      .def("propagate_once", &prx::system_group_t::propagate_once)
-      .def("propagate_once", system_group_propagate_once_0)
+      .def("propagate_once",
+           &prx::system_group_t::propagate_once<prx::space_point_t, prx::space_point_t, prx::space_point_t>)
+      .def("propagate_once", &prx::system_group_t::propagate_once<prx::space_point_t>)
       // no-lint
       ;
 }

@@ -112,8 +112,21 @@ public:
     ++const_end_iterator;
     ++num_states;
   }
+
+  // Using std library function name
+  template <typename State>
+  inline void emplace_back(State& state)
+  {
+    copy_onto_back(state);
+  }
   // void copy_onto_back(const Eigen::Ref<Eigen::VectorXd> v_state);
   void copy_onto_back(const space_t* space);
+
+  // Using std library function name
+  inline void emplace_back(const space_t* space)
+  {
+    copy_onto_back(space);
+  }
 
   std::string print(unsigned precision = 3) const;
 
