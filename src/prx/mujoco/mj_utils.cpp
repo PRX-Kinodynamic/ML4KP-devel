@@ -35,6 +35,7 @@ void get_mj_actuator_info(mjModel* m, std::vector<mjActuatorInfo*>& actuator_inf
   for (int i = 0; i < m->nu; i++)
   {
     mjActuatorInfo* info = new mjActuatorInfo();
+    info->name = std::string(m->names + m->name_actuatoradr[i]);
     info->limited = (bool)m->actuator_ctrllimited[i];
     info->range[0] = m->actuator_ctrlrange[i * 2];
     info->range[1] = m->actuator_ctrlrange[i * 2 + 1];

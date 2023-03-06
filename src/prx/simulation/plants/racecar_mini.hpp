@@ -75,10 +75,10 @@ public:
   Forces& Fz()
   {
     const double L{ _L1 + _L2 };
-    _Fy[0] = _mass * _G * _L2 / (2.0 * L) - (_mass * H / 2.0) * ((_qddot[0] / L) + (_qddot[1] / W));
-    _Fy[1] = _mass * _G * _L2 / (2.0 * L) - (_mass * H / 2.0) * ((_qddot[0] / L) - (_qddot[1] / W));
-    _Fy[2] = _mass * _G * _L1 / (2.0 * L) - (_mass * H / 2.0) * ((_qddot[0] / L) - (_qddot[1] / W));
-    _Fy[3] = _mass * _G * _L1 / (2.0 * L) - (_mass * H / 2.0) * ((_qddot[0] / L) + (_qddot[1] / W));
+    _Fy[0] = _mass * _G * _L2 / (2.0 * L) - (_mass * H / 2.0) * ((_qddot[0] / L) + (_qddot[1] / _W));
+    _Fy[1] = _mass * _G * _L2 / (2.0 * L) - (_mass * H / 2.0) * ((_qddot[0] / L) - (_qddot[1] / _W));
+    _Fy[2] = _mass * _G * _L1 / (2.0 * L) - (_mass * H / 2.0) * ((_qddot[0] / L) - (_qddot[1] / _W));
+    _Fy[3] = _mass * _G * _L1 / (2.0 * L) - (_mass * H / 2.0) * ((_qddot[0] / L) + (_qddot[1] / _W));
     return _Fz;
   }
   Forces& Fy()
@@ -91,10 +91,10 @@ public:
     _Fx = _Fz.array() * _mu_x;
     return _Fx;
   }
-  inline double lambda_f()
-  {
-    return _Fx;
-  }
+  // inline double lambda_f()
+  // {
+  // return (_radius_wheel * _omega - _wheel_velocity);
+  // }
 
 protected:
   virtual void compute_derivative() override final;

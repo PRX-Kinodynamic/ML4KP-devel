@@ -67,7 +67,7 @@ public:
     return this->shared_from_this();
   }
 
-  virtual void step_simulation(propagate_step step) = 0;
+  virtual void step_simulation(propagate_step step = propagate_step::FIRST_STEP) = 0;
 
   virtual void reset_simulation() = 0;
 

@@ -1,0 +1,406 @@
+<mujoco model="TT (v1.31)">
+    <compiler angle="degree" coordinate="local" inertiafromgeom="true">
+        <lengthrange timestep="0.001"/>
+    </compiler>
+
+    <option timestep="0.001"
+            gravity="0 0 -9.81"
+            solver="Newton"
+            integrator="Euler"
+            iterations="100">
+        <flag sensornoise="disable"
+              warmstart="disable"
+              frictionloss="enable"/>
+    </option>
+
+    <visual>
+        <global offwidth="1024" offheight="768"/>
+    </visual>
+
+    <default class='tensegrity'>
+        <geom condim="6" material="geom" rgba="1 .84 0 1" size="0.5"
+              density="1000" friction="1.000 1.0 1.0" solref="-10000 -20" solimp="0.9 0.95 0.001 0.5 2"/>
+        <site type="sphere" size="0.005"/>
+        <tendon width="0.05" rgba="1 0 0 1" frictionloss='0' damping="10" stiffness="1000"/>
+        <joint type="ball" limited="true" range="0 10" damping="100000" armature="1" />
+        <position ctrllimited="true" ctrlrange="-300 100" kp="50"/>
+    </default>
+
+    <asset>
+        <texture name='a' builtin="gradient" height="100" rgb1="1 1 1" rgb2="0 0 0" type="skybox"
+                 width="100"/>
+        <texture builtin="flat" height="1278" mark="cross" markrgb="1 1 1" name="texgeom"
+                 random="0.01" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" type="cube" width="127"/>
+        <texture builtin="checker" height="100" name="texplane" rgb1="0 0 0" rgb2="0.8 0.8 0.8"
+                 type="2d" width="100"/>
+        <material name="MatPlane" reflectance="0.5" shininess="1" specular="1" texrepeat="30 30"
+                  texture="texplane"/>
+        <material name="geom" texture="texgeom" texuniform="true"/>
+    </asset>
+
+    <worldbody>
+
+        <light name='mylight' cutoff="100" diffuse="1 1 1" dir="-0 0 -1.3" directional="true" exponent="1"
+               pos="0 0 1.3" specular=".1 .1 .1"/>
+        <geom conaffinity="1" material="MatPlane" name="floor" pos="0 0 -35"
+              rgba="0.8 0.9 0.8 1" size="400 400 0.1" type="plane"/>
+
+        <camera name="camera" pos="0 -80 50" axisangle="1 0 0 90"/>
+
+        <!-- ======= RODS ======= -->
+        <body name="center">
+            <geom name="center"
+                  size="3 3 3" 
+                  type="box"
+                  mass="1"/>
+            <site 
+                name="site_c01" 
+                type="sphere"
+                pos="2.1213203436 0 2.1213203436" 
+                rgba="1 0 0 1" 
+                size="1 1"/>
+            <site 
+                name="site_c02" 
+                type="sphere"
+                pos="2.1213203436 0 -2.1213203436" 
+                rgba="1 0 0 1" 
+                size="1 1"/>
+            <site 
+                name="site_c03" 
+                type="sphere"
+                pos="-2.1213203436 0 -2.1213203436" 
+                rgba="1 0 0 1" 
+                size="1 1"/>
+            <site 
+                name="site_c04" 
+                type="sphere"
+                pos="-2.1213203436 0 2.1213203436" 
+                rgba="1 0 0 1" 
+                size="1 1"/>
+            <site 
+                name="site_c11" 
+                type="sphere"
+                pos="0 2.1213203436 2.1213203436" 
+                rgba="1 0 0 1" 
+                size="1 1"/>
+            <site 
+                name="site_c12" 
+                type="sphere"
+                pos="0 2.1213203436 -2.1213203436" 
+                rgba="1 0 0 1" 
+                size="1 1"/>
+            <site 
+                name="site_c13" 
+                type="sphere"
+                pos="0 -2.1213203436 -2.1213203436" 
+                rgba="1 0 0 1" 
+                size="1 1"/>
+            <site 
+                name="site_c14" 
+                type="sphere"
+                pos="0 -2.1213203436 2.1213203436" 
+                rgba="1 0 0 1" 
+                size="1 1"/>
+            <body name="r01" pos="4.2426406871 0 4.2426406871" >
+                <geom name="r01_geom"
+                      fromto="0 0 0 19.091883092 0 19.091883092"
+                      type="cylinder"
+                      mass="1"/>
+                <joint name="joint_01"
+                    type="ball" 
+                    pos="0 0 0"/>
+                <site 
+                    name="site_01" 
+                    type="box"
+                    pos="19.091883092 0 19.091883092" 
+                    rgba="1 0 0 1" 
+                    size="1 1 1"/>
+                <site 
+                    name="site_01c" 
+                    type="sphere"
+                    pos="0 0 " 
+                    rgba="1 0 0 1" 
+                    size="1 1"/>
+            </body> 
+            <body name="r02" pos="4.2426406871 0 -4.2426406871" >
+                <geom name="r02_geom"
+                      fromto="0 0 0 19.091883092 0 -19.091883092"
+                      rgba="0 1 0 1"
+                      type="cylinder"
+                      mass="1"/>
+                <joint name="joint_02"
+                    type="ball" 
+                    pos="0 0 0"/>
+                <site 
+                    name="site_02" 
+                    type="box"
+                    pos="19.091883092 0 -19.091883092" 
+                    rgba="1 0 0 1" 
+                    size="1 1 1"/>
+                <site 
+                    name="site_02c" 
+                    type="sphere"
+                    pos="0 0 " 
+                    rgba="1 0 0 1" 
+                    size="1 1"/>
+            </body> 
+            <body name="r03" pos="-4.2426406871 0 -4.2426406871" >
+                <geom name="r03_geom"
+                      fromto="0 0 0 -19.091883092 0 -19.091883092"
+                      type="cylinder"
+                      mass="1"/>
+                <joint name="joint_03"
+                    type="ball" 
+                    pos="0 0 0"/>
+                <site 
+                    name="site_03" 
+                    type="box"
+                    pos="-19.091883092 0 -19.091883092" 
+                    rgba="1 0 0 1" 
+                    size="1 1 1"/>
+                <site 
+                    name="site_03c" 
+                    type="sphere"
+                    pos="0 0 " 
+                    rgba="1 0 0 1" 
+                    size="1 1"/>
+            </body> 
+            <body name="r04" pos="-4.2426406871 0 4.2426406871" >
+                <geom name="r04_geom"
+                      fromto="0 0 0 -19.091883092 0 19.091883092"
+                      type="cylinder"
+                      mass="1"/>
+                <joint name="joint_04"
+                    type="ball" 
+                    pos="0 0 0"/>
+                <site 
+                    name="site_04" 
+                    type="box"
+                    pos="-19.091883092 0 19.091883092" 
+                    rgba="1 0 0 1" 
+                    size="1 1 1"/>
+                <site 
+                    name="site_04c" 
+                    type="sphere"
+                    pos="0 0 " 
+                    rgba="1 0 0 1" 
+                    size="1 1"/>
+            </body> 
+            <body name="r11" pos="0 4.2426406871 4.2426406871" >
+                <geom name="r11_geom"
+                      fromto="0 0 0 0 19.091883092 19.091883092"
+                      type="cylinder"
+                      mass="1"/>
+                <joint name="joint_11"
+                    type="ball" 
+                    pos="0 0 0"/>
+                <site 
+                    name="site_11" 
+                    type="box"
+                    pos="0 19.091883092 19.091883092" 
+                    rgba="1 0 0 1" 
+                    size="1 1 1"/>
+                <site 
+                    name="site_11c" 
+                    type="sphere"
+                    pos="0 0 " 
+                    rgba="1 0 0 1" 
+                    size="1 1"/>
+            </body> 
+            <body name="r12" pos="0 4.2426406871 -4.2426406871" >
+                <geom name="r12_geom"
+                      fromto="0 0 0 0 19.091883092 -19.091883092"
+                      type="cylinder"
+                      mass="1"/>
+                <joint name="joint_12"
+                    type="ball" 
+                    pos="0 0 0"/>
+                <site 
+                    name="site_12" 
+                    type="box"
+                    pos="0 19.091883092 -19.091883092" 
+                    rgba="1 0 0 1" 
+                    size="1 1 1"/>
+                <site 
+                    name="site_12c" 
+                    type="sphere"
+                    pos="0 0 " 
+                    rgba="1 0 0 1" 
+                    size="1 1"/>
+            </body> 
+            <body name="r13" pos="0 -4.2426406871 -4.2426406871" >
+                <geom name="r13_geom"
+                      fromto="0 0 0 0 -19.091883092 -19.091883092"
+                      type="cylinder"
+                      mass="1"/>
+                <joint name="joint_13"
+                    type="ball" 
+                    pos="0 0 0"/>
+                <site 
+                    name="site_13" 
+                    type="box"
+                    pos="0 -19.091883092 -19.091883092" 
+                    rgba="1 0 0 1" 
+                    size="1 1 1"/>
+                <site 
+                    name="site_13c" 
+                    type="sphere"
+                    pos="0 0 " 
+                    rgba="1 0 0 1" 
+                    size="1 1"/>
+            </body> 
+            <body name="r14" pos="0 -4.2426406871 4.2426406871" >
+                <geom name="r14_geom"
+                      fromto="0 0 0 0 -19.091883092 19.091883092"
+                      type="cylinder"
+                      mass="1"/>
+                <joint name="joint_14"
+                    type="ball" 
+                    pos="0 0 0"/>
+                <site 
+                    name="site_14" 
+                    type="box"
+                    pos="0 -19.091883092 19.091883092" 
+                    rgba="1 0 0 1" 
+                    size="1 1 1"/>
+                <site 
+                    name="site_14c" 
+                    type="sphere"
+                    pos="0 0 " 
+                    rgba="1 0 0 1" 
+                    size="1 1"/>
+            </body> 
+        </body>
+
+    </worldbody>
+    <tendon>
+        <!-- Tendons on XZ plane -->
+        <spatial name="tendon_01_02" width="0.2">
+            <site site="site_01"/>
+            <site site="site_02"/>
+        </spatial>
+        <spatial name="tendon_03_04" width="0.2">
+            <site site="site_03"/>
+            <site site="site_04"/>
+        </spatial>
+        <!-- Tendons on YZ plane -->
+        <spatial name="tendon_11_12" width="0.2">
+            <site site="site_11"/>
+            <site site="site_12"/>
+        </spatial>
+        <spatial name="tendon_13_14" width="0.2">
+            <site site="site_13"/>
+            <site site="site_14"/>
+        </spatial>
+        <!-- Tendons on Z+ plane -->
+        <spatial name="tendon_01_11" width="0.2">
+            <site site="site_01"/>
+            <site site="site_11"/>
+        </spatial>
+        <spatial name="tendon_01_14" width="0.2">
+            <site site="site_01"/>
+            <site site="site_14"/>
+        </spatial>
+        <spatial name="tendon_04_14" width="0.2">
+            <site site="site_04"/>
+            <site site="site_14"/>
+        </spatial>
+        <spatial name="tendon_04_11" width="0.2">
+            <site site="site_04"/>
+            <site site="site_11"/>
+        </spatial>
+        <!-- Tendons on Z- plane -->
+        <spatial name="tendon_02_12" width="0.2">
+            <site site="site_02"/>
+            <site site="site_12"/>
+        </spatial>
+        <spatial name="tendon_02_13" width="0.2">
+            <site site="site_02"/>
+            <site site="site_13"/>
+        </spatial>
+        <spatial name="tendon_03_13" width="0.2">
+            <site site="site_03"/>
+            <site site="site_13"/>
+        </spatial>
+        <spatial name="tendon_03_12" width="0.2">
+            <site site="site_03"/>
+            <site site="site_12"/>
+        </spatial>
+
+        <spatial name="tendon_c01" width="0.2">
+            <site site="site_01c"/>
+            <site site="site_c01"/>
+        </spatial>
+        <spatial name="tendon_c02" width="0.2">
+            <site site="site_02c"/>
+            <site site="site_c02"/>
+        </spatial>
+        <spatial name="tendon_c03" width="0.2">
+            <site site="site_03c"/>
+            <site site="site_c03"/>
+        </spatial>
+        <spatial name="tendon_c04" width="0.2">
+            <site site="site_04c"/>
+            <site site="site_c04"/>
+        </spatial>
+
+        <spatial name="tendon_c11" width="0.2">
+            <site site="site_11c"/>
+            <site site="site_c11"/>
+        </spatial>
+        <spatial name="tendon_c12" width="0.2">
+            <site site="site_12c"/>
+            <site site="site_c12"/>
+        </spatial>
+        <spatial name="tendon_c13" width="0.2">
+            <site site="site_13c"/>
+            <site site="site_c13"/>
+        </spatial>
+        <spatial name="tendon_c14" width="0.2">
+            <site site="site_14c"/>
+            <site site="site_c14"/>
+        </spatial>
+    </tendon>
+<!--     <actuator>
+        <position name='actuator_01_02' tendon="tendon_01_02"/>
+    </actuator> -->
+    <actuator>
+        <!-- Tendons on XZ plane -->
+        <position name="u_01_02" tendon="tendon_01_02" ctrllimited="true" ctrlrange="-300 100" />
+        <position name="u_03_04" tendon="tendon_03_04" ctrllimited="true" ctrlrange="-300 100" />
+        <!-- Tendons on YZ plane -->
+        <position name="u_11_12" tendon="tendon_11_12" ctrllimited="true" ctrlrange="-300 100" />
+        <position name="u_13_14" tendon="tendon_13_14" ctrllimited="true" ctrlrange="-300 100" />
+        <!-- Tendons on Z+ plane -->
+        <position name="u_01_11" tendon="tendon_01_11" ctrllimited="true" ctrlrange="-300 100" />
+        <position name="u_01_14" tendon="tendon_01_14" ctrllimited="true" ctrlrange="-300 100" />
+        <position name="u_04_11" tendon="tendon_04_11" ctrllimited="true" ctrlrange="-300 100" />
+        <position name="u_04_14" tendon="tendon_04_14" ctrllimited="true" ctrlrange="-300 100" />
+        <!-- Tendons on Z- plane -->
+        <position name="u_02_12" tendon="tendon_02_12" ctrllimited="true" ctrlrange="-300 100" />
+        <position name="u_02_13" tendon="tendon_02_13" ctrllimited="true" ctrlrange="-300 100" />
+        <position name="u_03_12" tendon="tendon_03_12" ctrllimited="true" ctrlrange="-300 100" />
+        <position name="u_03_13" tendon="tendon_03_13" ctrllimited="true" ctrlrange="-300 100"/>
+
+        <!-- <position name="u_01" joint="joint_0_1" ctrllimited="true" ctrlrange="-10 10" kp="100"/> -->
+        <!-- <damper name="u_01" joint="joint_0_1" ctrlrange="0 100" kv="100"/> -->
+    </actuator>
+    <sensor>
+        <!-- Tendons on XZ plane -->
+        <tendonpos name="sensor_01_02" tendon="tendon_01_02" />
+        <tendonpos name="sensor_03_04" tendon="tendon_03_04" />
+        <!-- Tendons on YZ plane -->
+        <tendonpos name="sensor_11_12" tendon="tendon_11_12" />
+        <tendonpos name="sensor_13_14" tendon="tendon_13_14" />
+        <!-- Tendons on Z+ plane -->
+        <tendonpos name="sensor_01_11" tendon="tendon_01_11" />
+        <tendonpos name="sensor_01_14" tendon="tendon_01_14" />
+        <tendonpos name="sensor_04_11" tendon="tendon_04_11" />
+        <tendonpos name="sensor_04_14" tendon="tendon_04_14" />
+        <!-- Tendons on Z- plane -->
+        <tendonpos name="sensor_02_12" tendon="tendon_02_12" />
+        <tendonpos name="sensor_02_13" tendon="tendon_02_13" />
+        <tendonpos name="sensor_03_12" tendon="tendon_03_12" />
+        <tendonpos name="sensor_03_13" tendon="tendon_03_13" />
+    </sensor>
+</mujoco>
