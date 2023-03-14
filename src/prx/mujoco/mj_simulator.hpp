@@ -5,10 +5,13 @@
 #include "prx/simulation/collision_checking/collision_checker.hpp"
 
 #include "prx/mujoco/mj_utils.hpp"
+#include "prx/mujoco/mj_sensor.hpp"
 // #include "prx/mujoco/mj_plant.hpp"
 
 #include "GLFW/glfw3.h"
 #include "mujoco/mujoco.h"
+
+using prx::mujoco::mujoco_sensor_t;
 
 namespace prx
 {
@@ -32,6 +35,17 @@ protected:
   void mouse_move(GLFWwindow* window, double xpos, double ypos);
   void scroll(GLFWwindow* window, double xoffset, double yoffset);
 
+  mujoco_simulator_t()
+    : simulator_t(plant_type::MUJOCO)
+    , _visualize(true)
+    , button_left(false)
+    , button_right(false)
+    , button_middle(false)
+    , lastx(0)
+    , lasty(0)
+  {
+  }
+
 public:
   mujoco_simulator_t(const std::string& model_path, bool visualize = true);
 
@@ -42,7 +56,7 @@ public:
     _visualize = !_visualize;
   }
 
-  void set_visaliztion(const bool visualize)
+  void set_visualiztion(const bool visualize)
   {
     _visualize = visualize;
   }
@@ -58,11 +72,13 @@ public:
 
   MujocoState get_state();
 
-  mjModel* m;
-  mjData* d;
+  mjModel* _mj_model;
+  mjData* _mj_data;
 
   std::vector<mjJointInfo*> joint_info;
   std::vector<mjActuatorInfo*> actuator_info;
+
+  std::unordered_map<std::string, std::shared_ptr<mujoco_sensor_t>> sensors;
 
   std::vector<double*> actuator_internal_state;
 };

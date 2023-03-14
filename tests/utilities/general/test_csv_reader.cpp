@@ -46,6 +46,19 @@ BOOST_AUTO_TEST_CASE(csv_reader_reads_all_blocks)
   BOOST_CHECK(total_blocks == 2);
 }
 
+BOOST_AUTO_TEST_CASE(csv_reader_reads_blocks_without_empty_line)
+{
+  csv_reader_t reader(test_file, ' ');
+  while (reader.has_next_line())
+  {
+    csv_reader_t::Block block = reader.next_block();
+    for (auto line : block)
+    {
+      BOOST_CHECK(line.size() > 0);
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(csv_reader_reads_lines_with_value)
 {
   csv_reader_t reader(test_file, ' ');
@@ -64,9 +77,7 @@ BOOST_AUTO_TEST_CASE(csv_reader_reads_lines_with_custom_function)
   std::size_t total_lines{ 0 };
   while (reader.has_next_line())
   {
-    PRX_DEBUG_VAR_1(total_lines);
     auto line = reader.next_line([](const csv_reader_t::Line& line) { return line.size() > 2 && line[2] == "4"; });
-    PRX_DEBUG_ITERABLE(line);
     if (line.size() > 0)
       total_lines++;
   }

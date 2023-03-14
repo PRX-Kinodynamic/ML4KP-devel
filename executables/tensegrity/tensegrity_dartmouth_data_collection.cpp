@@ -77,7 +77,12 @@ int main(int argc, char* argv[])
   double u_02_13{ 0 };
   double u_03_12{ 0 };
   double u_03_13{ 0 };
-  for (double time = 0; time < 20; time += 0.01)
+
+  logger_t logger_cable(prx::out_path + "/tensegrity/data_cable_lenghts_0.txt");
+  logger_t logger_endcups(prx::out_path + "/tensegrity/data_endcups_0.txt");
+
+  std::size_t cont{ 0 };
+  for (double time = 0; time < 10; time += 0.01)
   {
     if (u_01_14 > -300)
     {
@@ -89,5 +94,24 @@ int main(int argc, char* argv[])
     sim->step_simulation(propagate_step::FIRST_STEP);
     cs->copy_from(
         { u_01_02, u_03_04, u_11_12, u_13_14, u_01_11, u_01_14, u_04_11, u_04_14, u_02_12, u_02_13, u_03_12, u_03_13 });
+
+    if ((cont % 100) == 0)
+    {
+      for (auto sensor : sim->sensors)
+      {
+        if (sensor.first[0] == 's')
+        {
+          logger_cable.log(sensor.first, sensor.second->get_sensor_space());
+        }
+        else
+        {
+          logger_endcups.log(sensor.first, sensor.second->get_sensor_space());
+        }
+      }
+    }
+    cont++;
+    logger_cable.log("");
+    logger_endcups.log("");
+    // std::cout << "sensor data: " << sim->sensors["sensor_01_02"]->get_sensor_space() << "\n";
   }
 }

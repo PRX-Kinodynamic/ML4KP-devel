@@ -1,5 +1,4 @@
 #include "prx/factor_graphs/utilities/utilities_functions.hpp"
-#include "prx/factor_graphs/utilities/fg_logger.hpp"
 
 namespace prx
 {
@@ -216,6 +215,7 @@ void add_noise(gtsam::Values& values, const std::string symbol_name,
     v.value = v.value + sampler.sample();
   }
 }
+
 }  // namespace utilities
 }  // namespace fg
 }  // namespace prx

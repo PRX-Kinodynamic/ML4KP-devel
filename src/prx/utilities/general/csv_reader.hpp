@@ -80,11 +80,13 @@ public:
     Line line;
     Block block;
 
-    do
+    while (has_next_line())
     {
       line = next_line();
+      if (line.size() == 0)
+        break;
       block.emplace_back(line);
-    } while (has_next_line() && line.size() > 0);
+    }
     return block;
   }
 

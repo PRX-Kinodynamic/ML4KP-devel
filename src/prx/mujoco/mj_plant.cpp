@@ -20,11 +20,11 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
 
   // [qpos, qvel] is the state of the system that we will use for planning.
   // [ctrl] is the control of the system that we will use for planning.
-  for (int i = 0; i < sim->m->nq; i++)
+  for (int i = 0; i < sim->_mj_model->nq; i++)
     state_memory.push_back(new double);
-  for (int i = 0; i < sim->m->nv; i++)
+  for (int i = 0; i < sim->_mj_model->nv; i++)
     state_memory.push_back(new double);
-  for (int i = 0; i < sim->m->nu; i++)
+  for (int i = 0; i < sim->_mj_model->nu; i++)
     control_memory.push_back(new double);
 
   std::string state_topo_string = "";
@@ -54,7 +54,7 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
         state_topo_string += "EEE";
         for (int i = 0; i < 3; i++)
         {
-          state_memory[idx + i] = &sim->d->qpos[joint->qposadr + i];
+          state_memory[idx + i] = &sim->_mj_data->qpos[joint->qposadr + i];
         }
         ss_lb.push_back(-10);
         ss_lb.push_back(-10);
@@ -68,7 +68,7 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
         {
           ss_lb.push_back(-1);
           ss_ub.push_back(1);
-          state_memory[idx + i] = &sim->d->qpos[joint->qposadr + i];
+          state_memory[idx + i] = &sim->_mj_data->qpos[joint->qposadr + i];
         }
         // These are the qvel
         state_topo_string += "EEEEEE";
@@ -76,7 +76,7 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
         {
           ss_lb.push_back(-10.);
           ss_ub.push_back(10.);
-          state_memory[idx + i + 7] = &sim->d->qvel[joint->dofadr + i];
+          state_memory[idx + i + 7] = &sim->_mj_data->qvel[joint->dofadr + i];
         }
         idx += 13;
         next_qpos += 7;
@@ -101,8 +101,8 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
           ss_ub.push_back(50.);
         }
 
-        state_memory[idx] = &sim->d->qpos[joint->qposadr];
-        state_memory[idx + 1] = &sim->d->qvel[joint->dofadr];
+        state_memory[idx] = &sim->_mj_data->qpos[joint->qposadr];
+        state_memory[idx + 1] = &sim->_mj_data->qvel[joint->dofadr];
         idx += 2;
         next_qpos++;
         break;
@@ -125,13 +125,12 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
           ss_ub.push_back(10.);
         }
 
-        state_memory[idx] = &sim->d->qpos[joint->qposadr];
-        state_memory[idx + 1] = &sim->d->qvel[joint->dofadr];
+        state_memory[idx] = &sim->_mj_data->qpos[joint->qposadr];
+        state_memory[idx + 1] = &sim->_mj_data->qvel[joint->dofadr];
         idx += 2;
         next_qpos++;
         break;
       case mjtJoint_::mjJNT_BALL:
-        PRX_DEBUG_PRINT;
         // std::cout << "range[0] = " << joint->range[0] << std::endl;
         // std::cout << "range[1] = " << joint->range[1] << std::endl;
 
@@ -159,8 +158,8 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
         ss_lb.insert(ss_lb.end(), 3, -10.);
         ss_ub.insert(ss_ub.end(), 3, 10.);
         // state_memory[idx + i + 7] = &sim->d->qvel[joint->dofadr + i];
-        state_memory[idx] = &sim->d->qpos[joint->qposadr];
-        state_memory[idx + i + 7] = &sim->d->qvel[joint->dofadr];
+        state_memory[idx] = &sim->_mj_data->qpos[joint->qposadr];
+        state_memory[idx + i + 7] = &sim->_mj_data->qvel[joint->dofadr];
         idx += 4;
         next_qpos += 4;
         break;
@@ -169,9 +168,9 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
     }
   }
 
-  if (next_qpos != sim->m->nq)
+  if (next_qpos != sim->_mj_model->nq)
   {
-    std::cout << "Error: joint dims " << next_qpos << " != nq " << sim->m->nq << std::endl;
+    std::cout << "Error: joint dims " << next_qpos << " != nq " << sim->_mj_model->nq << std::endl;
     prx_throw("Exiting...");
   }
 
@@ -180,7 +179,7 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
   {
     auto actuator = sim->actuator_info[i];
     control_topo_string += "E";
-    control_memory[i] = &sim->d->ctrl[i];
+    control_memory[i] = &sim->_mj_data->ctrl[i];
 
     actuator_name += actuator->name;
     if (actuator->limited)
@@ -215,7 +214,7 @@ void mujoco_plant_t::compute_control()
 
 void mujoco_plant_t::update_configuration()
 {
-  mj_fwdPosition(sim->m, sim->d);
+  mj_fwdPosition(sim->_mj_model, sim->_mj_data);
 }
 
 void mujoco_plant_t::compute_derivative()

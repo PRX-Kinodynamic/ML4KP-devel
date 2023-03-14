@@ -101,9 +101,9 @@
                 pos="0 -2.1213203436 2.1213203436" 
                 rgba="1 0 0 1" 
                 size="1 1"/>
-            <body name="r01" pos="4.2426406871 0 4.2426406871" >
+            <body name="r01" >
                 <geom name="r01_geom"
-                      fromto="0 0 0 19.091883092 0 19.091883092"
+                      fromto="4.2426406871 0 4.2426406871 23.3345237791 0 23.3345237791"
                       type="cylinder"
                       mass="1"/>
                 <joint name="joint_01"
@@ -112,19 +112,19 @@
                 <site 
                     name="site_01" 
                     type="box"
-                    pos="19.091883092 0 19.091883092" 
+                    pos="23.3345237791 0 23.3345237791" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_01c" 
                     type="sphere"
-                    pos="0 0 " 
+                    pos="4.2426406871 0 4.2426406871" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
-            <body name="r02" pos="4.2426406871 0 -4.2426406871" >
+            <body name="r02" >
                 <geom name="r02_geom"
-                      fromto="0 0 0 19.091883092 0 -19.091883092"
+                      fromto="4.2426406871 0 -4.2426406871 23.3345237791 0 -23.3345237791"
                       rgba="0 1 0 1"
                       type="cylinder"
                       mass="1"/>
@@ -134,19 +134,19 @@
                 <site 
                     name="site_02" 
                     type="box"
-                    pos="19.091883092 0 -19.091883092" 
+                    pos="23.3345237791 0 -23.3345237791" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_02c" 
                     type="sphere"
-                    pos="0 0 " 
+                    pos="4.2426406871 0 -4.2426406871" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
-            <body name="r03" pos="-4.2426406871 0 -4.2426406871" >
+            <body name="r03" >
                 <geom name="r03_geom"
-                      fromto="0 0 0 -19.091883092 0 -19.091883092"
+                      fromto="-4.2426406871 0 -4.2426406871 -23.3345237791 0 -23.3345237791"
                       type="cylinder"
                       mass="1"/>
                 <joint name="joint_03"
@@ -155,19 +155,19 @@
                 <site 
                     name="site_03" 
                     type="box"
-                    pos="-19.091883092 0 -19.091883092" 
+                    pos="-23.3345237791 0 -23.3345237791" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_03c" 
                     type="sphere"
-                    pos="0 0 " 
+                    pos="-4.2426406871 0 -4.2426406871" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
-            <body name="r04" pos="-4.2426406871 0 4.2426406871" >
+            <body name="r04" >
                 <geom name="r04_geom"
-                      fromto="0 0 0 -19.091883092 0 19.091883092"
+                      fromto="-4.2426406871 0 4.2426406871 -23.3345237791 0 23.3345237791"
                       type="cylinder"
                       mass="1"/>
                 <joint name="joint_04"
@@ -176,19 +176,19 @@
                 <site 
                     name="site_04" 
                     type="box"
-                    pos="-19.091883092 0 19.091883092" 
+                    pos="-23.3345237791 0 23.3345237791" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_04c" 
                     type="sphere"
-                    pos="0 0 " 
+                    pos="-4.2426406871 0 4.2426406871" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
-            <body name="r11" pos="0 4.2426406871 4.2426406871" >
+            <body name="r11" >
                 <geom name="r11_geom"
-                      fromto="0 0 0 0 19.091883092 19.091883092"
+                      fromto="0 4.2426406871 4.2426406871 0 23.3345237791 23.3345237791"
                       type="cylinder"
                       mass="1"/>
                 <joint name="joint_11"
@@ -197,19 +197,19 @@
                 <site 
                     name="site_11" 
                     type="box"
-                    pos="0 19.091883092 19.091883092" 
+                    pos="0 23.3345237791 23.3345237791" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_11c" 
                     type="sphere"
-                    pos="0 0 " 
+                    pos="0 4.2426406871 4.2426406871" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
-            <body name="r12" pos="0 4.2426406871 -4.2426406871" >
+            <body name="r12"  >
                 <geom name="r12_geom"
-                      fromto="0 0 0 0 19.091883092 -19.091883092"
+                      fromto="0 4.2426406871 -4.2426406871 0 23.3345237791 -23.3345237791"
                       type="cylinder"
                       mass="1"/>
                 <joint name="joint_12"
@@ -218,19 +218,19 @@
                 <site 
                     name="site_12" 
                     type="box"
-                    pos="0 19.091883092 -19.091883092" 
+                    pos="0 23.3345237791 -23.3345237791" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_12c" 
                     type="sphere"
-                    pos="0 0 " 
+                    pos="0 4.2426406871 -4.2426406871 " 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
-            <body name="r13" pos="0 -4.2426406871 -4.2426406871" >
+            <body name="r13" >
                 <geom name="r13_geom"
-                      fromto="0 0 0 0 -19.091883092 -19.091883092"
+                      fromto="0 -4.2426406871 -4.2426406871 0 -23.3345237791 -23.3345237791"
                       type="cylinder"
                       mass="1"/>
                 <joint name="joint_13"
@@ -239,19 +239,19 @@
                 <site 
                     name="site_13" 
                     type="box"
-                    pos="0 -19.091883092 -19.091883092" 
+                    pos="0 -23.3345237791 -23.3345237791" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_13c" 
                     type="sphere"
-                    pos="0 0 " 
+                    pos="0 -4.2426406871 -4.2426406871" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
-            <body name="r14" pos="0 -4.2426406871 4.2426406871" >
+            <body name="r14" pos="0 0 0" >
                 <geom name="r14_geom"
-                      fromto="0 0 0 0 -19.091883092 19.091883092"
+                      fromto="0 -4.2426406871 4.2426406871 0 -23.3345237791 23.3345237791"
                       type="cylinder"
                       mass="1"/>
                 <joint name="joint_14"
@@ -260,13 +260,13 @@
                 <site 
                     name="site_14" 
                     type="box"
-                    pos="0 -19.091883092 19.091883092" 
+                    pos="0 -23.3345237791 23.3345237791" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_14c" 
                     type="sphere"
-                    pos="0 0 " 
+                    pos="0 -4.2426406871 4.2426406871" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
@@ -402,5 +402,14 @@
         <tendonpos name="sensor_02_13" tendon="tendon_02_13" />
         <tendonpos name="sensor_03_12" tendon="tendon_03_12" />
         <tendonpos name="sensor_03_13" tendon="tendon_03_13" />
+
+        <framepos name="end_cup_01" objtype="site" objname="site_01"/>
+        <framepos name="end_cup_02" objtype="site" objname="site_02"/>
+        <framepos name="end_cup_03" objtype="site" objname="site_03"/>
+        <framepos name="end_cup_04" objtype="site" objname="site_04"/>
+        <framepos name="end_cup_11" objtype="site" objname="site_11"/>
+        <framepos name="end_cup_12" objtype="site" objname="site_12"/>
+        <framepos name="end_cup_13" objtype="site" objname="site_13"/>
+        <framepos name="end_cup_14" objtype="site" objname="site_14"/>
     </sensor>
 </mujoco>

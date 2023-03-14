@@ -553,6 +553,12 @@ public:
     return os;
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const space_t* obj)
+  {
+    os << *obj;
+    return os;
+  }
+
   static double l1_norm(const space_point_t& p1)
   {
     auto fn = [&](double accum, double e) { return accum + std::abs(e); };

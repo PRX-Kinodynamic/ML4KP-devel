@@ -1,6 +1,7 @@
 #pragma once
 
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/transforms.hpp"
 
 #include "prx/simulation/general/condition_check.hpp"
 #include "prx/simulation/playback/plan.hpp"
@@ -53,6 +54,67 @@ void extract_plan_from_values(const gtsam::Values& vals, prx::plan_t& plan, cons
 
     plan.copy_onto_back(u, step);
   }
+}
+
+template <typename T, std::enable_if_t<!prx::utils::is_iterable<T>{}, bool> = true>
+void value_to_ostream(T value, std::ostream& ost = std::cout)
+{
+  ost << value;
+}
+
+template <typename T, std::enable_if_t<prx::utils::is_iterable<T>{}, bool> = true>
+void value_to_ostream(T values, std::ostream& ost = std::cout)
+{
+  for (auto value : values)
+  {
+    value_to_ostream(value, ost);
+    ost << " ";
+  }
+}
+
+template <typename T>
+void values_to_ostream(gtsam::Values& values, std::ostream& ost = std::cout)
+{
+  auto filtered = values.filter<T>();
+
+  for (auto key_value : filtered)
+  {
+    ost << prx::symbol_factory_t::formatter(key_value.key) << " ";
+    value_to_ostream(key_value.value, ost);
+    ost << "\n";
+  }
+}
+
+template <std::size_t I, typename... Tp, std::enable_if_t<(I == sizeof...(Tp) - 1), bool> = true>
+inline static void print_values_1(gtsam::Values& values, std::ostream& ost = std::cout)
+{
+  // typename std::tuple_element<I, std::tuple<Tp...> >::type T;
+  using type = typename std::tuple_element<I, std::tuple<Tp...> >::type;
+  values_to_ostream<type>(values, ost);
+}
+
+template <std::size_t I, typename... Tp, std::enable_if_t<(I < sizeof...(Tp) - 1), bool> = true>
+inline static void print_values_1(gtsam::Values& values, std::ostream& ost = std::cout)
+{
+  // typename std::tuple_element<I, std::tuple<Tp...> >::type T;
+  using Type = typename std::tuple_element<I, std::tuple<Tp...> >::type;
+  values_to_ostream<Type>(values, ost);
+  print_values_1<I + 1, Tp...>(values, ost);
+}
+
+template <typename... Ts>
+void print_values(gtsam::Values& values, std::ostream& ost = std::cout)
+{
+  print_values_1<0, Ts...>(values, ost);
+}
+template <typename... Ts>
+void values_to_file(gtsam::Values& values, const std::string& filename,
+                    const std::ios_base::openmode _mode = std::ofstream::trunc)
+{
+  std::ofstream ofs;
+  ofs.open(filename.c_str(), _mode);
+  print_values<Ts...>(values, ofs);
+  ofs.close();
 }
 
 }  // namespace utilities

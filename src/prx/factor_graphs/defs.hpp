@@ -1,6 +1,5 @@
 #pragma once
 #include "prx/factor_graphs/factors/factors.hpp"
-#include "prx/factor_graphs/utilities/fg_logger.hpp"
 #include "prx/factor_graphs/utilities/symbols_factory.hpp"
 #include "prx/factor_graphs/utilities/utilities_functions.hpp"
 
