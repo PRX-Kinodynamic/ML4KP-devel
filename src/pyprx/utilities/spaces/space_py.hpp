@@ -267,7 +267,6 @@ void py_copy_2(const prx::space_t* space, boost::python::list& py_list_to, const
 
 void bindings()
 {
-  // typedef std::shared_ptr<space_snapshot_t> space_point_t;
   class_<prx::space_point_t>("space_point", no_init)
       .def("__len__", &get_dim_wrapper)
       .def("get_dim", &get_dim_wrapper)
@@ -277,13 +276,15 @@ void bindings()
       .def("__str__", &prx_to_str<prx::space_point_t>)
       .def("__repr__", &prx_print<prx::space_point_t>)
       .def("to_list", &space_point_to_pylist)
-      // .def(str(self))
+      // Comment to force ; to the next one
       ;
   enum_<prx::space_t::topology_t>("topology")
       .value("EUCLIDEAN", prx::space_t::topology_t::EUCLIDEAN)
       .value("ROTATIONAL", prx::space_t::topology_t::ROTATIONAL)
       .value("DISCRETE", prx::space_t::topology_t::DISCRETE)
-      .export_values();
+      .export_values()
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::distance_function_t>("distance_function")
       .def("__call__", &prx::distance_function_t::operator())
@@ -294,12 +295,11 @@ void bindings()
       .staticmethod("set_df")
       .def("wrap", &create_function<prx::distance_function_t, double, prx::space_point_t, prx::space_point_t>)
       .staticmethod("wrap")
-      // .def("wrap", &get_df).staticmethod("wrap")
-      // .def("__setattr__", &set_distance_function).staticmethod("__setattr__")
+      // Comment to force ; to the next one
       ;
 
   class_<space_memory_py>("space_memory", init<int>())
-      // .def("get_addresses", &space_memory_py::get_addresses)
+      // Comment to force ; to the next one
       ;
 
   class_<prx::space_t, std::shared_ptr<prx::space_t>>("space_t", init<std::string, std::vector<double*>, std::string>())
@@ -363,13 +363,7 @@ void bindings()
            space_t_euclidean_2d_overloads())
       .staticmethod("euclidean_2d")
       .def("print_bounds", &prx::space_t::print_bounds)
-      // .def("lp_norm", lp_norm_2)
-      // .def("l1_norm", (double (prx::space_t::*)(const
-      // prx::space_point_t&))&prx::space_t::l1_norm).staticmethod("l1_norm") .def("l1_norm", &prx::space_t::l1_norm,
-      // space_t_l1_norm_overloads(args("p1", "p2"), "l1 norm")) .def<double (prx::space_t::*)(const
-      // prx::space_point_t& p1)>("l1_norm", prx::space_t::l1_norm)//.staticmethod("l1_norm") .def("l1_norm",
-      // l1_norm_2).staticmethod("l1_norm") .def("", &prx::space_t::) .def("", &prx::space_t::) .def("",
-      // &prx::space_t::) .def("", &prx::space_t::)
+      // Comment to force ; to the next one
       ;
 }
 

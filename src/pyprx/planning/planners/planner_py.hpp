@@ -12,6 +12,8 @@ namespace planners
 {
 namespace planner
 {
+using prx::planner_query_t;
+
 PRX_SETTER(planner_query_t, solution_traj)
 PRX_GETTER(planner_query_t, solution_traj)
 
@@ -56,7 +58,7 @@ struct planner_wrapper : prx::planner_t, wrapper<prx::planner_t>
   }
   // {std::cout << "\"_preprocess\" is virtual! Needs to be overriden" << std::endl;
   //  return false;};
-  virtual bool _link_and_setup_query(prx::planner_query_t* query) override
+  virtual bool _link_and_setup_query(planner_query_t* query) override
   {
     return this->get_override("_link_and_setup_query");
   }
@@ -81,8 +83,8 @@ struct planner_wrapper : prx::planner_t, wrapper<prx::planner_t>
 
 void bindings()
 {
-  class_<prx::planner_query_t, std::shared_ptr<prx::planner_query_t>>("planner_query", no_init)
-      .def("__init__", make_constructor(&init_as_ptr<prx::planner_query_t, prx::space_t*, prx::space_t*>,
+  class_<planner_query_t, std::shared_ptr<planner_query_t>>("planner_query", no_init)
+      .def("__init__", make_constructor(&init_as_ptr<planner_query_t, prx::space_t*, prx::space_t*>,
                                         default_call_policies(), (arg("state_space"), arg("control_space"))))
       .add_property("start_state", &get_planner_query_t_start_state<prx::space_point_t>,
                     &set_planner_query_t_start_state<prx::space_point_t>)
@@ -108,9 +110,11 @@ void bindings()
       // Comment to force ; to the next one
       ;
 
-  class_<prx::goal_check_t>("goal_check").def("__call__", &prx::goal_check_t::operator())
-      // Comment to force ; to the next one
-      ;
+  scope().attr("goal_check") = scope().attr("valid_state");
+
+  // class_<prx::goal_check_t>("goal_check").def("__call__", &prx::goal_check_t::operator())
+  //     // Comment to force ; to the next one
+  //     ;
 
   class_<planner_wrapper, boost::noncopyable>("planner", no_init)
       .def("__init__",

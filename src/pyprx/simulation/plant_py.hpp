@@ -12,11 +12,13 @@ namespace simulation
 namespace plant
 {
 
-struct plant_wrap : prx::plant_t, wrapper<prx::plant_t>
-{
-  plant_wrap(const plant_t& _plant) : prx::plant_t(_plant){};
+using prx::plant_t;
 
-  plant_wrap(const std::string& path) : prx::plant_t(path){};
+struct plant_wrap : plant_t, wrapper<plant_t>
+{
+  plant_wrap(const plant_t& _plant) : plant_t(_plant){};
+
+  plant_wrap(const std::string& path) : plant_t(path){};
 
   void update_configuration()
   {
@@ -40,14 +42,14 @@ PRX_GETTER(plant_t, derivative_space)
 void bindings()
 {
   class_<plant_wrap, bases<prx::system_t, prx::movable_object_t>, boost::noncopyable>("plant_t", init<std::string>())
-      .def("add_system", &prx::plant_t::add_system)
-      .def("propagate", &prx::plant_t::propagate)
-      .def("compute_stopping_maneuver", &prx::plant_t::compute_stopping_maneuver)
-      .def("compute_control", &prx::plant_t::compute_control)
-      .def("update_configuration", pure_virtual(&prx::plant_t::update_configuration))
+      .def("add_system", &plant_t::add_system)
+      .def("propagate", &plant_t::propagate)
+      .def("compute_stopping_maneuver", &plant_t::compute_stopping_maneuver)
+      .def("compute_control", &plant_t::compute_control)
+      .def("update_configuration", pure_virtual(&plant_t::update_configuration))
       .def("compute_derivative", pure_virtual(&plant_wrap::compute_derivative))
-      .def("set_integrator", &prx::plant_t::set_integrator)
-      .def("set_state_space_bounds", &prx::plant_t::set_state_space_bounds)
+      .def("set_integrator", &plant_t::set_integrator)
+      .def("set_state_space_bounds", &plant_t::set_state_space_bounds)
       // Comment to force ; to the next one
       ;
 

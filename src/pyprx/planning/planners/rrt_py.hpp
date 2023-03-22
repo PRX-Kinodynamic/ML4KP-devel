@@ -9,6 +9,12 @@ namespace planners
 {
 namespace rrt
 {
+using prx::rrt_edge_t;
+using prx::rrt_node_t;
+using prx::rrt_query_t;
+using prx::rrt_specification_t;
+using prx::rrt_t;
+
 PRX_SETTER(rrt_specification_t, cost_function)
 PRX_GETTER(rrt_specification_t, cost_function)
 

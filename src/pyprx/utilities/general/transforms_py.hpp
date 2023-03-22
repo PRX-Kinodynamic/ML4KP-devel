@@ -164,6 +164,23 @@ static T Zero_1d(Index size)
   return T::Zero(size);
 }
 
+template <typename T>
+static T zero_static()
+{
+  return T::Zero();
+}
+
+template <typename T>
+static T ones_vector(Index size)
+{
+  return T::Ones(size);
+}
+template <typename T>
+static T ones_static()
+{
+  return T::Ones();
+}
+
 static prx::quaternion_t* fromAxisAngle(const prx::vector_t& axis, const Scalar& angle)
 {
   prx::quaternion_t* ret = new prx::quaternion_t(AngleAxisT(angle, axis));
@@ -205,6 +222,32 @@ std::string transform_to_str(prx::transform_t obj)
   return iss.str();
 }
 
+template <typename VectorType>
+void python_vector_class(const std::string vector_name)
+{
+  class_<VectorType>(vector_name.c_str(), init<VectorType>())
+      .def("__setitem__", &set_item_v<VectorType>)
+      .def("__getitem__", &get_item_v<VectorType>)
+      .def("transpose", &transpose<VectorType>, "Return transposed matrix.")
+      .def("Zero", &zero_static<VectorType>, "Create zero vector")
+      .staticmethod("Zero")
+      .def("Ones", &ones_static<VectorType>, "Create ones vector")
+      .staticmethod("Ones")
+      .def("__str__", &prx_to_str<VectorType>);
+}
+
+template <Eigen::Index Dim>
+void vector_to_python()
+{
+  using VectorType = Eigen::Matrix<double, Dim, 1>;
+  std::string vector_name{ "vector" + std::to_string(Dim) };
+  python_vector_class<VectorType>(vector_name);
+
+  using RowVectorType = Eigen::Matrix<double, 1, Dim>;
+  std::string row_vector_name{ "row_vector" + std::to_string(Dim) };
+  python_vector_class<RowVectorType>(row_vector_name);
+}
+
 void bindings()
 {
   // using n_vector_t = Eigen::Matrix<double, N, 1>;
@@ -215,23 +258,46 @@ void bindings()
   // using quaternion_t = Eigen::Quaternion<double>;
   // using axis_angle_t = Eigen::AngleAxis<double>;
 
-  class_<prx::n_vector_t<Eigen::Dynamic>>("n_vector", init<prx::n_vector_t<Eigen::Dynamic>>())
-      .def("__setitem__", &set_vector_item<prx::n_vector_t<Eigen::Dynamic>>);
+  // class_<prx::n_vector_t<Eigen::Dynamic>>("n_vector", init<prx::n_vector_t<Eigen::Dynamic>>())
+  //     .def("__setitem__", &set_vector_item<prx::n_vector_t<Eigen::Dynamic>>);
 
-  class_<prx::n_matrix_t<Eigen::Dynamic>>("n_matrix", init<prx::n_matrix_t<Eigen::Dynamic>>())
-      .def("__setitem__", &set_matrix_item<prx::n_matrix_t<Eigen::Dynamic>>);
+  // class_<prx::n_matrix_t<Eigen::Dynamic>>("n_matrix", init<prx::n_matrix_t<Eigen::Dynamic>>())
+  //     .def("__setitem__", &set_matrix_item<prx::n_matrix_t<Eigen::Dynamic>>);
 
+  vector_to_python<2>();
+  vector_to_python<3>();
+  vector_to_python<4>();
   class_<Eigen::VectorXd>("vector", init<Eigen::VectorXd>())
       .def("__init__", make_constructor(&init_as_ptr<Eigen::Vector2d, double, double>, default_call_policies(),
                                         (args("x"), args("y"))))
-      .def("__init__", make_constructor(&init_as_ptr<prx::vector_t, double, double, double>, default_call_policies(),
+      .def("__init__", make_constructor(&init_as_ptr<Eigen::Vector3d, double, double, double>, default_call_policies(),
                                         (args("x"), args("y"), args("z"))))
       .def("__init__", make_constructor(&init_as_ptr<Eigen::Vector4d, double, double, double, double>,
                                         default_call_policies(), (args("x"), args("y"), args("z"), args("w"))))
       .def("__setitem__", &set_item_v<Eigen::VectorXd>)
+      .def("__getitem__", &get_item_v<Eigen::VectorXd>)
+      .def("transpose", &transpose<Eigen::VectorXd>, "Return transposed matrix.")
       .def("Zero", &Zero_1d<Eigen::VectorXd>, (arg("size")), "Create zero vector of given dimensions")
       .staticmethod("Zero")
+      .def("Ones", &ones_vector<Eigen::RowVectorXd>, (arg("size")), "Create ones vector of given dimensions")
+      .staticmethod("Ones")
       .def("__str__", &prx_to_str<Eigen::VectorXd>);
+
+  class_<Eigen::RowVectorXd>("row_vector", init<Eigen::RowVectorXd>())
+      .def("__init__", make_constructor(&init_as_ptr<Eigen::Vector2d, double, double>, default_call_policies(),
+                                        (args("x"), args("y"))))
+      .def("__init__", make_constructor(&init_as_ptr<Eigen::Vector3d, double, double, double>, default_call_policies(),
+                                        (args("x"), args("y"), args("z"))))
+      .def("__init__", make_constructor(&init_as_ptr<Eigen::Vector4d, double, double, double, double>,
+                                        default_call_policies(), (args("x"), args("y"), args("z"), args("w"))))
+      .def("__setitem__", &set_item_v<Eigen::RowVectorXd>)
+      .def("__getitem__", &get_item_v<Eigen::RowVectorXd>)
+      .def("transpose", &transpose<Eigen::RowVectorXd>, "Return transposed matrix.")
+      .def("Zero", &Zero_1d<Eigen::RowVectorXd>, (arg("size")), "Create zero vector of given dimensions")
+      .staticmethod("Zero")
+      .def("Ones", &ones_vector<Eigen::RowVectorXd>, (arg("size")), "Create ones vector of given dimensions")
+      .staticmethod("Ones")
+      .def("__str__", &prx_to_str<Eigen::RowVectorXd>);
 
   class_<Eigen::MatrixXd>("matrix", init<Eigen::MatrixXd>())
       .def("__call__", static_cast<parop_signature>(&Eigen::MatrixXd::operator()),
@@ -268,14 +334,18 @@ void bindings()
       // prx::matrix_t >) .def(str(self))
       .def(self_ns::str(self_ns::self))
       .def("__str__", &prx_to_str<Eigen::MatrixXd>)
-
+      // Comment to force ; to the next one
       ;
+  scope().attr("n_vector") = scope().attr("vector");
+  scope().attr("n_matrix") = scope().attr("matrix");
 
   class_<Eigen::Block<Eigen::Matrix<double, 3, 4, 0, 3, 4>, 3, 1, true>>("block_transform", no_init)
       // .def("__str__", &prx_to_str<Eigen::Block<Eigen::MatrixXd>>)
       .def("__setitem__", &set_item_v<Eigen::Block<Eigen::Matrix<double, 3, 4, 0, 3, 4>, 3, 1, true>>)
       .def("__getitem__", &get_item_v<Eigen::Block<Eigen::Matrix<double, 3, 4, 0, 3, 4>, 3, 1, true>>)
-      .def("__str__", &prx_to_str<Eigen::Block<Eigen::Matrix<double, 3, 4, 0, 3, 4>, 3, 1, true>>);
+      .def("__str__", &prx_to_str<Eigen::Block<Eigen::Matrix<double, 3, 4, 0, 3, 4>, 3, 1, true>>)
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::quaternion_t>("quaternion")
       .def("__init__", make_constructor(&fromAxisAngle, default_call_policies(), (arg("axis"), arg("angle"))))
@@ -286,14 +356,18 @@ void bindings()
                                                 "is *w*, *x*, *y*, *z*. The [] operator numbers them differently, "
                                                 "0...4 for *x* *y* *z* *w*!"))
       .def(init<prx::matrix_t>((arg("rotMatrix"))))  //,"Initialize from given rotation matrix.")
-      .def(init<prx::quaternion_t>((arg("other"))));
+      .def(init<prx::quaternion_t>((arg("other"))))
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::transform_t, std::shared_ptr<prx::transform_t>>("transform")
       // .def("__init__", make_constructor(&fromAxisAngle, default_call_policies(),(arg("axis"),  arg("angle"))))
       .def("setIdentity", &prx::transform_t::setIdentity)
       .def("translation", &translation)
       .def("translation", &get_translation)
-      .def("__str__", &transform_to_str);
+      .def("__str__", &transform_to_str)
+      // Comment to force ; to the next one
+      ;
 }
 
 }  // namespace transforms

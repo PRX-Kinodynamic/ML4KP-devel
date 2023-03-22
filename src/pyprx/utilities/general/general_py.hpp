@@ -5,6 +5,7 @@
 #include "pyprx/utilities/general/random_py.hpp"
 #include "pyprx/utilities/general/param_loader_py.hpp"
 #include "pyprx/utilities/general/noise_py.hpp"
+#include "pyprx/utilities/general/prx_assert_py.hpp"
 
 namespace pyprx
 {
@@ -16,10 +17,11 @@ namespace general
 void bindings()
 {
   constants::bindings();
-  transforms::bindings();
-  random::bindings();
-  param_loader::bindings();
   noise::bindings();
+  param_loader::bindings();
+  prx_assert::bindings();
+  random::bindings();
+  transforms::bindings();
 }
 
 }  // namespace general

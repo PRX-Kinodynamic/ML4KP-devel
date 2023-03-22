@@ -8,6 +8,10 @@ namespace planners
 {
 namespace sst
 {
+using prx::sst_node_t;
+using prx::sst_specification_t;
+using prx::sst_t;
+using prx::witness_node_t;
 
 PRX_SETTER(sst_node_t, bridge)
 PRX_GETTER(sst_node_t, bridge)

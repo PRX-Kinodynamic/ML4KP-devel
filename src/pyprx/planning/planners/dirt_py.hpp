@@ -8,6 +8,10 @@ namespace planners
 {
 namespace dirt
 {
+using prx::dirt_node_t;
+using prx::dirt_specification_t;
+using prx::dirt_t;
+
 PRX_SETTER(dirt_node_t, cost_to_go)
 PRX_GETTER(dirt_node_t, cost_to_go)
 

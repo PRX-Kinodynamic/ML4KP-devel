@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <boost/python.hpp>
 #include "pyprx/utilities/spaces/spaces.hpp"

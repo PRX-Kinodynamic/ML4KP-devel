@@ -11,7 +11,7 @@ namespace stdlib
 {
 
 template <typename T>
-inline std::vector<T> to_std_vector(boost::python::list& ns)
+std::vector<T> to_std_vector(boost::python::list& ns)
 {
   std::vector<T> v;
   for (int i = 0; i < len(ns); ++i)
@@ -34,9 +34,12 @@ void bindings()
   //        .def("__repr__", &to_str<double>)
   //        // .def(str(self))
   //        ;
-  PRX_ITERABLE_WRAPPER(std::vector<std::string>, "vector_of_strings")
-  PRX_ITERABLE_WRAPPER(std::vector<double>, "vector_of_doubles")
-  PRX_ITERABLE_WRAPPER_NONSTR(std::vector<std::vector<double>>, "vector_of_vector_of_doubles")
+  // PRX_ITERABLE_WRAPPER(std::vector<std::string>, "vector_of_strings")
+  // PRX_ITERABLE_WRAPPER(std::vector<double>, "vector_of_doubles")
+  container_wrapper<std::vector<std::string>>("vector_of_strings");
+  container_wrapper<std::vector<double>>("vector_of_doubles");
+  container_wrapper<std::vector<std::vector<double>>>("vector_of_vector_of_doubles");
+  // PRX_ITERABLE_WRAPPER_NONSTR(std::vector<std::vector<double>>, "vector_of_vector_of_doubles")
   // PRX_ITERABLE_WRAPPER_NONSTR(std::vector<double*>, "vector_of_doubles_ptrs")
 
   // PRX_ITERABLE_WRAPPER(std::vector<double>&, "vector_of_doubles")
