@@ -71,7 +71,7 @@ public:
    * @brief Gets the dimensionality of the space snapshot.
    * @return Dimensionality of the space snapshot.
    */
-  inline const std::size_t size()
+  inline const std::size_t size() const
   {
     return memory.size();
   }
@@ -142,9 +142,14 @@ public:
     return memory.end();
   }
 
-  double& operator[](const int i)
+  double& operator[](const std::size_t index)
   {
-    return at(i);
+    return memory[index];
+  }
+
+  const double operator[](const std::size_t index) const
+  {
+    return memory[index];
   }
 
   friend std::ostream& operator<<(std::ostream& os, const space_point_t& obj)
@@ -614,6 +619,17 @@ public:
    *
    * @return     { description_of_the_return_value }
    */
+  static double euclidean_distance(const space_point_t& p1, const space_point_t& p2)
+  {
+    double e1, e2;
+    double accum = 0;
+    for (auto e : zip_iters(p1, p2))
+    {
+      std::tie(e1, e2) = unzip(e);
+      accum += std::pow(e1 - e2, 2.0);
+    }
+    return std::sqrt(accum);
+  }
   static double euclidean_2d(const space_point_t& p1, const space_point_t& p2, int start = 0, int end = 2)
   {
     double e1, e2;

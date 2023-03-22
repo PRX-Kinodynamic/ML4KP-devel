@@ -79,7 +79,21 @@ public:
 
   void propagate(int steps, space_point_t control = nullptr, trajectory_t* traj = nullptr);
 
-  void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, space_point_t result);
+  template <typename StartState, typename EndState>
+  void propagate(const StartState& start_state, controller_ptr_t ctrl, condition_check_t& cond_check, EndState& result)
+  {
+    propagate_step p_step;
+    state_space->copy_from(start_state);
+
+    int i = 0;
+    do
+    {
+      ctrl->compute_controls();
+      propagate_once();
+    } while (!cond_check.check());
+
+    state_space->copy_to(result);
+  }
 
   // TODO: trajectory could also be templated, the problem is how to make the copy efficient (avoid copy to point and
   // then to traj);

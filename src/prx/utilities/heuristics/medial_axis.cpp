@@ -607,7 +607,7 @@ void medial_axis_t::compute_close_vector(int i, int j)
   double aux_dist;
   undirected_node_t* node;
   double min_dist = std::numeric_limits<double>::infinity();
-  std::vector<proximity_node_t*> vec_nodes =
+  std::vector<proximity_node_t<space_point_t>*> vec_nodes =
       metric_close->multi_query(pt, 30);  // radius_and_closest_query(pt, std::abs(map_close(i,j)));
 
   for (int i = 0; i < 5; ++i)
@@ -680,7 +680,8 @@ void medial_axis_t::compute_far_vector(int i, int j)
 
     std::set<node_index_t> vec_nodes;
 
-    std::vector<proximity_node_t*> vec_close = metric_close->radius_and_closest_query(pt, dist_to_obstacle(v2));
+    std::vector<proximity_node_t<space_point_t>*> vec_close =
+        metric_close->radius_and_closest_query(pt, dist_to_obstacle(v2));
 
     if (is_node(i, j))
     {
@@ -694,7 +695,7 @@ void medial_axis_t::compute_far_vector(int i, int j)
       if (has_direct_line_of_sight(pt, ni->point, los_clearance))
       {
         vec_nodes.insert(ni->get_index());
-        vec_close.push_back(static_cast<proximity_node_t*>(ni));
+        vec_close.push_back(static_cast<proximity_node_t<space_point_t>*>(ni));
         auto next_node = graph.get_vertex_as<undirected_node_t>(ni->get_best_neighbor());
         // insert_nodes(static_cast<undirected_node_t*>( ) );
         insert_nodes(next_node.get());

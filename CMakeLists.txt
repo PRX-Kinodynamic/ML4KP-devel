@@ -11,6 +11,7 @@ set(BUILD_FOR_BULLET OFF CACHE BOOL "Set ON/TRUE for building for PyBullet")
 set(BUILD_FOR_TORCH  OFF CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
 set(PY_VERSION "3" CACHE STRING "Set ON/TRUE for building Python Bindings")
+set(BUILD_QHULL ON CACHE BOOL "Set ON/TRUE to build QHull")
 
 # TODO: go back to c++11?
 add_definitions(-O3 -fPIC -g )
@@ -88,68 +89,3 @@ endif(BUILD_TESTS)
 	# ${PROJECT_SOURCE_DIR}/tests/*.cpp
 
 
-# file(GLOB_RECURSE EXAMPLE_FILES
-# 	${PROJECT_SOURCE_DIR}/examples/*.cpp)
-# foreach(f ${EXAMPLE_FILES})
-# GET_FILENAME_COMPONENT(fname ${f} NAME_WE )
-# add_executable(${fname} ${f})
-# target_link_libraries(${fname} 
-# 		${PROJECT_NAME}_external 
-# 		${PROJECT_NAME}_utilities 
-# 		${PROJECT_NAME}_simulation 
-# 		${PROJECT_NAME}_planning 	
-# 		${PROJECT_NAME}_visualization 
-# 		)
-# 	if(BUILD_FOR_BULLET)
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_bullet_sim )
-# 	endif()
-# endforeach()
-
-
-# file(GLOB_RECURSE EXECUTABLE_FILES
-# 	${PROJECT_SOURCE_DIR}/executables/*.cpp)
-# 	# ${PROJECT_SOURCE_DIR}/src/prx/experiments/*.cpp)
-
-# foreach(f ${EXECUTABLE_FILES})
-# GET_FILENAME_COMPONENT(fname ${f} NAME_WE )
-# add_executable(${fname} ${f})
-# target_link_libraries(${fname}
-# 		${PROJECT_NAME}_external 
-# 		${PROJECT_NAME}_utilities 
-# 		${PROJECT_NAME}_simulation 
-# 		${PROJECT_NAME}_planning 	
-# 		${PROJECT_NAME}_visualization 
-# 		)
-# 	if(BUILD_FOR_BULLET)
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_bullet_sim )
-# 	endif()
-# 	if (BUILD_FOR_TORCH)
-# 		target_link_libraries(${fname} ${TORCH_LIBRARIES})
-# 	endif()
-# endforeach()
-
-# if(BUILD_TESTS)
-# 	message("Building tests")
-# 	ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
-# 	enable_testing()
-# 	file(GLOB_RECURSE TESTS_FILES
-# 		${PROJECT_SOURCE_DIR}/tests/simulation/*.cpp
-# 		${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
-# 		${PROJECT_SOURCE_DIR}/tests/utilities/*.cpp
-# 		)
-
-# 	foreach(f ${TESTS_FILES})
-# 		GET_FILENAME_COMPONENT(fname ${f} NAME_WE )
-# 		add_executable(${fname} ${f})
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_external )
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_utilities )
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_visualization )
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_simulation )
-# 		target_link_libraries(${fname} ${PROJECT_NAME}_planning )
-# 		if(BUILD_FOR_BULLET)
-# 			target_link_libraries(${fname} ${PROJECT_NAME}_bullet_sim )
-# 		endif()
-# 		target_link_libraries(${fname} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-# 		add_test(NAME ${fname}_test COMMAND ${fname})
-# 	endforeach()
-# endif()

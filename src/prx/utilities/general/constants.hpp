@@ -291,7 +291,7 @@ template <typename State, typename Bound>
 static bool state_space_step(State& state, const double step, const std::size_t& dimension, const Bound lower_bound,
                              const Bound upper_bound)
 {
-  return state_space_step(state, std::vector<double>(dimension, step), lower_bound, upper_bound);
+  return state_space_step(state, std::vector<double>(dimension, step), dimension, lower_bound, upper_bound);
 }
 
 static std::vector<std::string> split(std::string str, char separator = ' ')

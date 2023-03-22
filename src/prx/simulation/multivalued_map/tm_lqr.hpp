@@ -1,6 +1,6 @@
 #pragma once
 #include "prx/simulation/controllers/lqr.hpp"
-#include "prx/simulation/time_map/time_map.hpp"
+#include "prx/simulation/multivalued_map/time_map.hpp"
 
 namespace prx
 {

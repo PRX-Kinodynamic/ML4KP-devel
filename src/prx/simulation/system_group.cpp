@@ -73,21 +73,21 @@ system_group_t::~system_group_t()
 //   state_space->copy_to_point(result);
 // }
 
-void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
-                               space_point_t result)
-{
-  propagate_step p_step;
-  state_space->copy_from(start_state);
+// void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
+//                                space_point_t result)
+// {
+//   propagate_step p_step;
+//   state_space->copy_from(start_state);
 
-  int i = 0;
-  do
-  {
-    ctrl->compute_controls();
-    propagate_once();
-  } while (!cond_check.check());
+//   int i = 0;
+//   do
+//   {
+//     ctrl->compute_controls();
+//     propagate_once();
+//   } while (!cond_check.check());
 
-  state_space->copy_to_point(result);
-}
+//   state_space->copy_to_point(result);
+// }
 
 // void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
 //                                trajectory_t& result)
