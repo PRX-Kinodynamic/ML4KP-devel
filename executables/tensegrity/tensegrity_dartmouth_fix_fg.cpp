@@ -57,9 +57,9 @@ using graph_values_t = std::pair<gtsam::NonlinearFactorGraph, gtsam::Values>;
 using Distance = Eigen::Vector<double, 1>;
 using Position = Eigen::Vector<double, 3>;
 
-const double rod_length{ 27.0 };
-const double center_position{ 4.2426406871 };
-const double initial_end_position{ 23.3345237791 };
+const double rod_length{ 28.0 };
+const double center_position{ 6.02 };
+const double initial_end_position{ 19.7989898732233 };
 // const gtsam::SharedNoiseModel all_constraint_3d = gtsam::noiseModel::Constrained::All(1);
 const gtsam::SharedNoiseModel all_constraint_3d = gtsam::noiseModel::Isotropic::Sigma(1, 1);
 logger_t rods_logger(prx::out_path + "tensegrity/fg_out_rods.txt");

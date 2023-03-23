@@ -80,6 +80,7 @@ int main(int argc, char* argv[])
 
   logger_t logger_cable(prx::out_path + "/tensegrity/data_cable_lenghts_0.txt");
   logger_t logger_endcups(prx::out_path + "/tensegrity/data_endcups_0.txt");
+  logger_t logger_states(prx::out_path + "/tensegrity/states_0.txt");
 
   std::size_t cont{ 0 };
   for (double time = 0; time < 10; time += 0.01)
@@ -95,7 +96,7 @@ int main(int argc, char* argv[])
     cs->copy_from(
         { u_01_02, u_03_04, u_11_12, u_13_14, u_01_11, u_01_14, u_04_11, u_04_14, u_02_12, u_02_13, u_03_12, u_03_13 });
 
-    if ((cont % 100) == 0)
+    if ((cont % 1) == 0)
     {
       for (auto sensor : sim->sensors)
       {
@@ -112,6 +113,7 @@ int main(int argc, char* argv[])
     cont++;
     logger_cable.log("");
     logger_endcups.log("");
+    logger_states.log(ss);
     // std::cout << "sensor data: " << sim->sensors["sensor_01_02"]->get_sensor_space() << "\n";
   }
 }

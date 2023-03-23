@@ -206,13 +206,14 @@ void add_noise(gtsam::Values& values, const std::string symbol_name,
     return ps.label() == symbol_name && ps.time() > 0;
   };
 
-  auto filtered = values.filter<Eigen::VectorXd>(fn);
+  // auto filtered = values.filter<Eigen::VectorXd>(fn);
+  auto filtered = values.extract<Eigen::VectorXd>(fn);
   gtsam::Sampler sampler(noise);
 
   for (auto v : filtered)
   {
     // std::cout << "filtered: " << prx::key_formatter(v.key) << std::endl;
-    v.value = v.value + sampler.sample();
+    v.second = v.second + sampler.sample();
   }
 }
 

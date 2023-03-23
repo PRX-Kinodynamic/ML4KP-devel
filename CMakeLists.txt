@@ -13,7 +13,7 @@ set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_BULLET OFF CACHE BOOL "Set ON/TRUE for building for PyBullet")
 set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
-set(BUILD_FOR_GAZEBO ON  CACHE BOOL "SET ON/TRUE for building for Gazebo")
+set(BUILD_FOR_GAZEBO OFF  CACHE BOOL "SET ON/TRUE for building for Gazebo")
 set(BUILD_FOR_FACTOR_GRAPHS ON CACHE BOOL "Set ON/TRUE for building tests")
 set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 
@@ -39,9 +39,9 @@ link_libraries(
 	# ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 	)
 
-
-find_package(Eigen3 REQUIRED)
+find_package(Eigen3 3.4 CONFIG REQUIRED NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIR})
+message(STATUS "Eigen version: ${Eigen3_VERSION} ")
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})

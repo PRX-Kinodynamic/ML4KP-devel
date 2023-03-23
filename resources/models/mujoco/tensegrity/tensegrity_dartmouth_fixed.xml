@@ -2,7 +2,7 @@
     <compiler angle="degree" coordinate="local" inertiafromgeom="true">
         <lengthrange timestep="0.001"/>
     </compiler>
-
+    
     <option timestep="0.001"
             gravity="0 0 -9.81"
             solver="Newton"
@@ -42,7 +42,7 @@
 
         <light name='mylight' cutoff="100" diffuse="1 1 1" dir="-0 0 -1.3" directional="true" exponent="1"
                pos="0 0 1.3" specular=".1 .1 .1"/>
-        <geom conaffinity="1" material="MatPlane" name="floor" pos="0 0 -35"
+        <geom conaffinity="1" material="MatPlane" name="floor" pos="0 0 -40"
               rgba="0.8 0.9 0.8 1" size="400 400 0.1" type="plane"/>
 
         <camera name="camera" pos="0 -80 50" axisangle="1 0 0 90"/>
@@ -52,7 +52,7 @@
             <geom name="center"
                   size="3 3 3" 
                   type="box"
-                  mass="1"/>
+                  mass="160"/>
             <site 
                 name="site_c01" 
                 type="sphere"
@@ -103,170 +103,378 @@
                 size="1 1"/>
             <body name="r01" >
                 <geom name="r01_geom"
-                      fromto="4.2426406871 0 4.2426406871 23.3345237791 0 23.3345237791"
+                      fromto="6.02 0 6.02 25.8189898732233 0 25.8189898732233"
                       type="cylinder"
-                      mass="1"/>
+                      mass="5"/>
                 <joint name="joint_01"
                     type="ball" 
                     pos="0 0 0"/>
+                <body name="r01_cap" 
+                    pos="30.7687373415292 0 29.3189898732233"
+                    euler="0 0 45">
+                    <geom name="r01_cap_geom"
+                      size="3.5 3.5 3.5"
+                      type="box"
+                      mass="130"/>
+                    <site 
+                        name="site_01_x" 
+                        type="box"
+                        pos="-3.5 0 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_01_y" 
+                        type="box"
+                        pos="0 3.5 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_01_z" 
+                        type="box"
+                        pos="0 0 -3.5" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                </body>
                 <site 
                     name="site_01" 
                     type="box"
-                    pos="23.3345237791 0 23.3345237791" 
+                    pos="30.7687373415292 0 29.3189898732233"
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_01c" 
                     type="sphere"
-                    pos="4.2426406871 0 4.2426406871" 
+                    pos="6.02 0 6.02" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
             <body name="r02" >
                 <geom name="r02_geom"
-                      fromto="4.2426406871 0 -4.2426406871 23.3345237791 0 -23.3345237791"
+                      fromto="6.02 0 -6.02 25.8189898732233 0 -25.8189898732233"
                       rgba="0 1 0 1"
                       type="cylinder"
-                      mass="1"/>
+                      mass="5"/>
                 <joint name="joint_02"
                     type="ball" 
                     pos="0 0 0"/>
+                <body name="r02_cap" 
+                    pos="30.7687373415292 0 -29.3189898732233"
+                    euler="0 0 45">
+                    <geom name="r02_cap_geom"
+                      size="3.5 3.5 3.5"
+                      type="box"
+                      mass="130"/>
+                    <site 
+                        name="site_02_x" 
+                        type="box"
+                        pos="-3.5 0 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_02_y" 
+                        type="box"
+                        pos="0 3.5 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_02_z" 
+                        type="box"
+                        pos="0 0 3.5" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                </body>
                 <site 
                     name="site_02" 
                     type="box"
-                    pos="23.3345237791 0 -23.3345237791" 
+                    pos="30.7687373415292 0 -29.3189898732233" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_02c" 
                     type="sphere"
-                    pos="4.2426406871 0 -4.2426406871" 
+                    pos="6.02 0 -6.02" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
             <body name="r03" >
                 <geom name="r03_geom"
-                      fromto="-4.2426406871 0 -4.2426406871 -23.3345237791 0 -23.3345237791"
+                      fromto="-6.02 0 -6.02 -25.8189898732233 0 -25.8189898732233"
                       type="cylinder"
-                      mass="1"/>
+                      mass="5"/>
                 <joint name="joint_03"
                     type="ball" 
                     pos="0 0 0"/>
+                <body name="r03_cap" 
+                    pos="-30.7687373415292 0 -29.3189898732233"
+                    euler="0 0 45">
+                    <geom name="r03_cap_geom"
+                      size="3.5 3.5 3.5"
+                      type="box"
+                      mass="130"/>
+                    <site 
+                        name="site_03_x" 
+                        type="box"
+                        pos="3.5 0 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_03_y" 
+                        type="box"
+                        pos="0 -3.5 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_03_z" 
+                        type="box"
+                        pos="0 0 3.5" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                </body>
                 <site 
                     name="site_03" 
                     type="box"
-                    pos="-23.3345237791 0 -23.3345237791" 
+                    pos="-30.7687373415292 0 -29.3189898732233" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_03c" 
                     type="sphere"
-                    pos="-4.2426406871 0 -4.2426406871" 
+                    pos="-6.02 0 -6.02" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
             <body name="r04" >
                 <geom name="r04_geom"
-                      fromto="-4.2426406871 0 4.2426406871 -23.3345237791 0 23.3345237791"
+                      fromto="-6.02 0 6.02 -25.8189898732233 0 25.8189898732233"
                       type="cylinder"
-                      mass="1"/>
+                      mass="5"/>
                 <joint name="joint_04"
                     type="ball" 
                     pos="0 0 0"/>
+                <body name="r04_cap" 
+                    pos="-30.7687373415292 0 29.3189898732233"
+                    euler="0 0 45">
+                    <geom name="r04_cap_geom"
+                      size="3.5 3.5 3.5"
+                      type="box"
+                      mass="130"/>
+                    <site 
+                        name="site_04_x" 
+                        type="box"
+                        pos="3.5 0 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_04_y" 
+                        type="box"
+                        pos="0 -3.5 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_04_z" 
+                        type="box"
+                        pos="0 0 -3.5" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                </body>
                 <site 
                     name="site_04" 
                     type="box"
-                    pos="-23.3345237791 0 23.3345237791" 
+                    pos="-30.7687373415292 0 29.3189898732233" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_04c" 
                     type="sphere"
-                    pos="-4.2426406871 0 4.2426406871" 
+                    pos="-6.02 0 6.02" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
             <body name="r11" >
                 <geom name="r11_geom"
-                      fromto="0 4.2426406871 4.2426406871 0 23.3345237791 23.3345237791"
+                      fromto="0 6.02 6.02 0 25.8189898732233 25.8189898732233"
                       type="cylinder"
-                      mass="1"/>
+                      mass="5"/>
                 <joint name="joint_11"
                     type="ball" 
                     pos="0 0 0"/>
+                <body name="r11_cap" 
+                    pos="0 30.7687373415292 29.3189898732233"
+                    euler="0 0 45">
+                    <geom name="r11_cap_geom"
+                      size="3.5 3.5 3.5"
+                      type="box"
+                      mass="130"/>
+                    <site 
+                        name="site_11_x" 
+                        type="box"
+                        pos="-3.5 0 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_11_y" 
+                        type="box"
+                        pos="0 -3.5 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_11_z" 
+                        type="box"
+                        pos="0 0 -3.5" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                </body>
                 <site 
                     name="site_11" 
                     type="box"
-                    pos="0 23.3345237791 23.3345237791" 
+                    pos="0 30.7687373415292 29.3189898732233" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_11c" 
                     type="sphere"
-                    pos="0 4.2426406871 4.2426406871" 
+                    pos="0 6.02 6.02" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
             <body name="r12"  >
                 <geom name="r12_geom"
-                      fromto="0 4.2426406871 -4.2426406871 0 23.3345237791 -23.3345237791"
+                      fromto="0 6.02 -6.02 0 25.8189898732233 -25.8189898732233"
                       type="cylinder"
-                      mass="1"/>
+                      mass="5"/>
                 <joint name="joint_12"
                     type="ball" 
                     pos="0 0 0"/>
+                <body name="r12_cap" 
+                    pos="0 30.7687373415292 -29.3189898732233"
+                    euler="0 0 45">
+                    <geom name="r12_cap_geom"
+                      size="3.5 3.5 3.5"
+                      type="box"
+                      mass="130"/>
+                    <site 
+                        name="site_12_x" 
+                        type="box"
+                        pos="-3.5 0 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_12_y" 
+                        type="box"
+                        pos="0 -3.5 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_12_z" 
+                        type="box"
+                        pos="0 0 3.5" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                </body>
                 <site 
                     name="site_12" 
                     type="box"
-                    pos="0 23.3345237791 -23.3345237791" 
+                    pos="0 30.7687373415292 -29.3189898732233" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_12c" 
                     type="sphere"
-                    pos="0 4.2426406871 -4.2426406871 " 
+                    pos="0 6.02 -6.02 " 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
             <body name="r13" >
                 <geom name="r13_geom"
-                      fromto="0 -4.2426406871 -4.2426406871 0 -23.3345237791 -23.3345237791"
+                      fromto="0 -6.02 -6.02 0 -25.8189898732233 -25.8189898732233"
                       type="cylinder"
-                      mass="1"/>
+                      mass="5"/>
                 <joint name="joint_13"
                     type="ball" 
                     pos="0 0 0"/>
+                <body name="r13_cap" 
+                    pos="0 -30.7687373415292 -29.3189898732233"
+                    euler="0 0 45">
+                    <geom name="r13_cap_geom"
+                      size="3.5 3.5 3.5"
+                      type="box"
+                      mass="130"/>
+                    <site 
+                        name="site_13_x" 
+                        type="box"
+                        pos="3.5 0 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_13_y" 
+                        type="box"
+                        pos="0 3.5 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_13_z" 
+                        type="box"
+                        pos="0 0 3.5" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                </body>
                 <site 
                     name="site_13" 
                     type="box"
-                    pos="0 -23.3345237791 -23.3345237791" 
+                    pos="0 -30.7687373415292 -29.3189898732233" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_13c" 
                     type="sphere"
-                    pos="0 -4.2426406871 -4.2426406871" 
+                    pos="0 -6.02 -6.02" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
             <body name="r14" pos="0 0 0" >
                 <geom name="r14_geom"
-                      fromto="0 -4.2426406871 4.2426406871 0 -23.3345237791 23.3345237791"
+                      fromto="0 -6.02 6.02 0 -25.8189898732233 25.8189898732233"
                       type="cylinder"
-                      mass="1"/>
+                      mass="5"/>
                 <joint name="joint_14"
                     type="ball" 
                     pos="0 0 0"/>
+                <body name="r14_cap" 
+                    pos="0 -30.7687373415292 29.3189898732233"
+                    euler="0 0 45">
+                    <geom name="r14_cap_geom"
+                      size="3.5 3.5 3.5"
+                      type="box"
+                      mass="130"/>
+                    <site 
+                        name="site_14_x" 
+                        type="box"
+                        pos="3.5 0 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_14_y" 
+                        type="box"
+                        pos="0 3.5 0" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                    <site 
+                        name="site_14_z" 
+                        type="box"
+                        pos="0 0 -3.5" 
+                        rgba="1 0 0 1" 
+                        size="1 1 1"/>
+                </body>
                 <site 
                     name="site_14" 
                     type="box"
-                    pos="0 -23.3345237791 23.3345237791" 
+                    pos="0 -30.7687373415292 29.3189898732233" 
                     rgba="1 0 0 1" 
                     size="1 1 1"/>
                 <site 
                     name="site_14c" 
                     type="sphere"
-                    pos="0 -4.2426406871 4.2426406871" 
+                    pos="0 -6.02 6.02" 
                     rgba="1 0 0 1" 
                     size="1 1"/>
             </body> 
@@ -276,55 +484,55 @@
     <tendon>
         <!-- Tendons on XZ plane -->
         <spatial name="tendon_01_02" width="0.2">
-            <site site="site_01"/>
-            <site site="site_02"/>
+            <site site="site_01_z"/>
+            <site site="site_02_z"/>
         </spatial>
         <spatial name="tendon_03_04" width="0.2">
-            <site site="site_03"/>
-            <site site="site_04"/>
+            <site site="site_03_z"/>
+            <site site="site_04_z"/>
         </spatial>
         <!-- Tendons on YZ plane -->
         <spatial name="tendon_11_12" width="0.2">
-            <site site="site_11"/>
-            <site site="site_12"/>
+            <site site="site_11_z"/>
+            <site site="site_12_z"/>
         </spatial>
         <spatial name="tendon_13_14" width="0.2">
-            <site site="site_13"/>
-            <site site="site_14"/>
+            <site site="site_13_z"/>
+            <site site="site_14_z"/>
         </spatial>
         <!-- Tendons on Z+ plane -->
         <spatial name="tendon_01_11" width="0.2">
-            <site site="site_01"/>
-            <site site="site_11"/>
+            <site site="site_01_y"/>
+            <site site="site_11_y"/>
         </spatial>
         <spatial name="tendon_01_14" width="0.2">
-            <site site="site_01"/>
-            <site site="site_14"/>
+            <site site="site_01_x"/>
+            <site site="site_14_x"/>
         </spatial>
         <spatial name="tendon_04_14" width="0.2">
-            <site site="site_04"/>
-            <site site="site_14"/>
+            <site site="site_04_y"/>
+            <site site="site_14_y"/>
         </spatial>
         <spatial name="tendon_04_11" width="0.2">
-            <site site="site_04"/>
-            <site site="site_11"/>
+            <site site="site_04_x"/>
+            <site site="site_11_x"/>
         </spatial>
         <!-- Tendons on Z- plane -->
         <spatial name="tendon_02_12" width="0.2">
-            <site site="site_02"/>
-            <site site="site_12"/>
+            <site site="site_02_y"/>
+            <site site="site_12_y"/>
         </spatial>
         <spatial name="tendon_02_13" width="0.2">
-            <site site="site_02"/>
-            <site site="site_13"/>
+            <site site="site_02_x"/>
+            <site site="site_13_x"/>
         </spatial>
         <spatial name="tendon_03_13" width="0.2">
-            <site site="site_03"/>
-            <site site="site_13"/>
+            <site site="site_03_y"/>
+            <site site="site_13_y"/>
         </spatial>
         <spatial name="tendon_03_12" width="0.2">
-            <site site="site_03"/>
-            <site site="site_12"/>
+            <site site="site_03_x"/>
+            <site site="site_12_x"/>
         </spatial>
 
         <spatial name="tendon_c01" width="0.2">
