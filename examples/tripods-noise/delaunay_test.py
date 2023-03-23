@@ -1,4 +1,5 @@
 import io
+import os
 import sys
 import math
 import numpy as np 
@@ -52,9 +53,10 @@ if __name__ == "__main__":
   qhull_data = prx.vector_of_doubles();
 
   while(prx.state_space_step(state, [0.2]*dimension, dimension, lower_bounds, upper_bounds)):
-    ss.sample(random_state);
-    # ss.copy_point(start_state, state)
-    ss.copy_point(start_state, random_state)
+    # ss.sample(random_state);
+    # ss.copy(start_state, state)
+    ss.copy(start_state, state)
+    # ss.copy_point(start_state, random_state)
 
     tm(start_state, result_state);
     dgnn.add_point(start_state);

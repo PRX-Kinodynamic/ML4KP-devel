@@ -37,7 +37,8 @@ void bindings()
       .value("MIDDLE_STEP", prx::MIDDLE_STEP)
       .value("FINAL_STEP", prx::FINAL_STEP)
       .export_values();
-  def("state_space_step", py_state_space_step<prx::space_point_t, double, std::vector<double>>);
+  // TODO: Python can't handle function with same number of args, this has to happen on the c++ side
+  // def("state_space_step", py_state_space_step<prx::space_point_t, double, std::vector<double>>);
   def("state_space_step", py_state_space_step<prx::space_point_t, std::vector<double>, std::vector<double>>);
 }
 }  // namespace constants
