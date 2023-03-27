@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(split_test)
 {
   std::string str{ "a bb  ccc      dddd" };
   std::vector<std::string> expected = { "a", "bb", "ccc", "dddd" };
-  std::vector<std::string> result = prx::split(str, ' ');
+  std::vector<std::string> result = prx::split<std::string>(str, ' ');
   BOOST_CHECK_MESSAGE(result.size() == expected.size(),
                       "Wrong size, got: '" << result.size() << "' but '" << expected.size() << "' was expected.");
   for (int i = 0; i < expected.size(); ++i)

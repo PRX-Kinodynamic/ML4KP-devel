@@ -3,6 +3,10 @@
 #include <boost/python.hpp>
 #include <boost/python/copy_const_reference.hpp>
 #include <boost/python/return_value_policy.hpp>
+#include <boost/python/suite/indexing/indexing_suite.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/suite/indexing/map_indexing_suite.hpp>
+
 #include "prx/utilities/data_structures/delaunay.hpp"
 #include "pyprx/utilities/data_structures/gnn_py.hpp"
 namespace pyprx
@@ -15,18 +19,27 @@ namespace delaunay
 {
 using prx::utilities::delaunay_graph_t;
 using prx::utilities::delaunay_node_t;
-using delaunay_node_prx = delaunay_node_t<Eigen::Dynamic>;
-using PyPoint = delaunay_node_prx::Point;
 using delaunay_graph_prx = delaunay_graph_t<Eigen::Dynamic>;
-using delaunay_sites_prx = delaunay_node_prx::Sites;
+using delaunay_node_prx = delaunay_graph_prx::Node;
+using delaunay_nodeptr_prx = delaunay_graph_prx::NodePtr;
+using PyPoint = delaunay_node_prx::Point;
+using delaunay_neighbors_prx = delaunay_node_prx::Neighbors;
 using delaunay_node_base = prx::proximity_node_t<PyPoint>;
 using PyEigenMetric = prx::graph_nearest_neighbors_t<PyPoint, delaunay_node_prx>::Metric;
 
 using shared_delaunay_node_prx = std::shared_ptr<delaunay_node_t<Eigen::Dynamic>>;
-PRX_GETTER(delaunay_node_prx, sites)
-PRX_SETTER(delaunay_node_prx, sites)
-PRX_PTR_GETTER(shared_delaunay_node_prx, sites)
 PRX_PTR_GETTER(shared_delaunay_node_prx, point)
+
+void to_file(delaunay_graph_prx* dg, const std::string filename)
+{
+  const std::ios_base::openmode _mode = std::ofstream::trunc;
+  dg->to_file(filename, _mode);
+}
+
+void add_prx_point(delaunay_graph_prx* graph, prx::space_point_t pt)
+{
+  graph->add_point(pt);
+}
 
 void bindings()
 {
@@ -34,9 +47,13 @@ void bindings()
   gnn::gnn_bindings<PyPoint, delaunay_node_prx>(
       init_as_ptr<prx::graph_nearest_neighbors_t<PyPoint, delaunay_node_prx>, PyEigenMetric>);
 
-  class_<delaunay_node_prx, bases<delaunay_node_base>, boost::noncopyable>("delaunay_node", no_init)
+  register_ptr_with_check<std::shared_ptr<delaunay_node_prx>>();
+
+  class_<delaunay_node_prx, delaunay_node_prx*, bases<delaunay_node_base>, boost::noncopyable>("delaunay_node", no_init)
       .def("__init__", make_constructor(&init_as_ptr<delaunay_node_prx>, default_call_policies()))
-      .def_readwrite("sites", &delaunay_node_prx::sites)
+      .def_readwrite("id", &delaunay_node_prx::id)
+      .def_readwrite("image", &delaunay_node_prx::image)
+      .def_readwrite("neighbors", &delaunay_node_prx::neighbors)
       // .add_property("sites", &get_delaunay_node_prx_sites<delaunay_sites_prx>)
       // .add_property("sites", &get_ptr_shared_delaunay_node_prx_sites<delaunay_sites_prx>)
       // .add_property("point", &get_ptr_shared_delaunay_node_prx_point<PyPoint>)
@@ -45,14 +62,27 @@ void bindings()
       // Comment to force ; to the next one
       ;
 
-  class_<delaunay_graph_prx, boost::noncopyable>("delaunay_graph", no_init)
+  // class_<delaunay_graph_prx::NodeMap>("delaunay_node_map", no_init)
+  // .def(vector_indexing_suite<delaunay_graph_prx::NodeMap>())
+  // Comment to force ; to the next one
+  // ;
+  class_<std::pair<std::size_t, delaunay_nodeptr_prx>>("delaunay_node_pair")
+      .def_readwrite("id", &std::pair<std::size_t, delaunay_nodeptr_prx>::first)
+      .def_readwrite("node", &std::pair<std::size_t, delaunay_nodeptr_prx>::second)
+      // Comment to force ; to the next one
+      ;
+
+  class_<delaunay_graph_prx, delaunay_graph_prx*, boost::noncopyable>("delaunay_graph", no_init)
       .def("__init__",
            make_constructor(&init_as_ptr<delaunay_graph_prx, delaunay_graph_prx::DelaunayMetric, const Eigen::Index>,
                             default_call_policies()))
       .def("qhull_to_delaunay", &delaunay_graph_prx::qhull_to_delaunay)
-      .def("add_point", &delaunay_graph_prx::add_point<prx::space_point_t>)
-      .def("get_gnn_nodes", &delaunay_graph_prx::get_gnn_nodes)
+      .def("add_point", &delaunay_graph_prx::add_point<std::vector<double>>)
+      .def("add_point", add_prx_point)
+      // .def("get_gnn_nodes", &delaunay_graph_prx::get_gnn_nodes)
       .def("get_gnn", &delaunay_graph_prx::get_gnn)
+      .def("get_nodes", &delaunay_graph_prx::get_nodes)
+      .def("__getitem__", &delaunay_graph_prx::at, return_value_policy<copy_non_const_reference>())
       // Comment to force ; to the next one
       ;
 
@@ -69,18 +99,15 @@ void bindings()
   register_ptr_with_check<delaunay_graph_prx*>();
   register_ptr_with_check<std::shared_ptr<delaunay_graph_prx>>();
 
-  register_ptr_with_check<delaunay_node_prx*>();
-  register_ptr_with_check<std::shared_ptr<delaunay_node_prx>>();
-
   register_ptr_with_check<PyPoint*>();
   register_ptr_with_check<std::shared_ptr<PyPoint>>();
 
   register_ptr_with_check<prx::graph_nearest_neighbors_t<PyPoint, delaunay_node_prx>*>();
   register_ptr_with_check<std::shared_ptr<prx::graph_nearest_neighbors_t<PyPoint, delaunay_node_prx>>>();
 
-  container_wrapper<delaunay_graph_prx::GnnNodes>("GnnNodes");
+  // container_wrapper<delaunay_graph_prx::GnnNodes>("GnnNodes");
   // container_wrapper<std::vector<delaunay_node_prx*>>("GnnNodePtrs");
-  container_wrapper<delaunay_sites_prx>("DelaunaySites");
+  // container_wrapper<delaunay_sites_prx>("DelaunaySites");
 }
 }  // namespace delaunay
 }  // namespace data_structures

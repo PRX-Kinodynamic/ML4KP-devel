@@ -49,35 +49,46 @@ if __name__ == "__main__":
   dimension = 2;
   delaunay_metric = prx.delaunay_metric.wrap(prx.default_delaunay_metric);
   dgnn = prx.delaunay_graph(delaunay_metric, dimension);
+  dgnn_im = prx.delaunay_graph(delaunay_metric, dimension);
+
   result_state = ss.make_point();
   qhull_data = prx.vector_of_doubles();
 
-  while(prx.state_space_step(state, [0.2]*dimension, dimension, lower_bounds, upper_bounds)):
-    # ss.sample(random_state);
-    # ss.copy(start_state, state)
+  point_count = 0;
+  while(prx.state_space_step(state, [0.5]*dimension, dimension, lower_bounds, upper_bounds)):
     ss.copy(start_state, state)
+    dgnn.add_point(start_state);
+    point_count += 1
+    # ss.sample(random_state);
+    # ss.copy(start_state, random_state)
     # ss.copy_point(start_state, random_state)
 
-    tm(start_state, result_state);
-    dgnn.add_point(start_state);
+    # tm(start_state, result_state);
     # dgnn.add_point(result_state);
   dgnn.qhull_to_delaunay();
+  for pair in dgnn.get_nodes():
+    tm(pair.node.point, result_state);
+    print(result_state)
+    dgnn_im.add_point(result_state);
+  dgnn_im.qhull_to_delaunay();
+  dgnn.to_file(prx.out_path + "delaunay_start_states.txt");
+  dgnn_im.to_file(prx.out_path + "delaunay_end_states.txt");
 
-  sites_filename = open(prx.out_path + "delaunay_py.txt", 'w');
-  voronoi_filename = open(prx.out_path + "voronoi_py.txt", 'w');
+  # sites_filename = open(prx.out_path + "delaunay_py.txt", 'w');
+  # voronoi_filename = open(prx.out_path + "voronoi_py.txt", 'w');
 
-  query_node = ss.make_point();
-  ss.copy(query_node, [0.0, 0.0]);
-  # result_nodes = dgnn.get_gnn().radius_and_closest_query(query_node, 1.0);
-  result_nodes = dgnn.get_gnn_nodes();
-  for node in result_nodes:
-    pt_str = str(node.point[0]) + " " + str(node.point[1]) + "\n" ;
-    voronoi_filename.write(pt_str)
-    for site in node.sites:
-      site_str = str(site[0]) + " " + str(site[1]) + " ";
-      # print(site_str)
-      sites_filename.write(site_str)
-    sites_filename.write("\n")
+  # query_node = ss.make_point();
+  # ss.copy(query_node, [0.0, 0.0]);
+  # # result_nodes = dgnn.get_gnn().radius_and_closest_query(query_node, 1.0);
+  # result_nodes = dgnn.get_gnn_nodes();
+  # for node in result_nodes:
+  #   pt_str = str(node.point[0]) + " " + str(node.point[1]) + "\n" ;
+  #   voronoi_filename.write(pt_str)
+  #   for site in node.sites:
+  #     site_str = str(site[0]) + " " + str(site[1]) + " ";
+  #     # print(site_str)
+  #     sites_filename.write(site_str)
+  #   sites_filename.write("\n")
 
 
 

@@ -20,13 +20,20 @@ namespace prx
 {
 namespace utilities
 {
+
 template <Eigen::Index Dim>
 class delaunay_node_t : public prx::proximity_node_t<Eigen::Vector<double, Dim>>
 {
 public:
   using Point = Eigen::Vector<double, Dim>;
-  using Sites = std::vector<Point>;
-  Sites sites;
+  using Neighbors = std::set<std::size_t>;
+  delaunay_node_t() : proximity_node_t<Point>(), neighbors()
+  {
+  }
+
+  Neighbors neighbors;
+  Point image;
+  std::size_t id;
 };
 
 template <Eigen::Index Dim>
@@ -34,7 +41,9 @@ class delaunay_graph_t
 {
 public:
   using Point = Eigen::Vector<double, Dim>;
-  using GnnNodes = std::vector<delaunay_node_t<Dim>*>;
+  using Node = delaunay_node_t<Dim>;
+  using NodePtr = Node*;
+  using NodeMap = std::unordered_map<std::size_t, NodePtr>;
   using DelaunayGnn = prx::graph_nearest_neighbors_t<Point, delaunay_node_t<Dim>>;
   using DelaunayMetric = typename DelaunayGnn::Metric;
 
@@ -63,15 +72,16 @@ public:
     int hullDimension = qhull.hullDimension();
 
     // Input sites as a vector of vectors
-    std::vector<std::vector<double>> inputSites;
-    orgQhull::QhullPoints points = qhull.points();
+    // std::vector<std::vector<double>> inputSites;
+    // orgQhull::QhullPoints points = qhull.points();
     // for(QhullPoint point : points)
-    orgQhull::QhullPointsIterator j(points);
-    while (j.hasNext())
-    {
-      orgQhull::QhullPoint point = j.next();
-      inputSites.push_back(point.toStdVector());
-    }
+    // orgQhull::QhullPointsIterator j(points);
+    // while (j.hasNext())
+    // {
+    //   orgQhull::QhullPoint point = j.next();
+    //   PRX_DEBUG_VAR_2(point.id(), point);
+    //   //   inputSites.push_back(point.toStdVector());
+    // }
 
     // Printer header and Voronoi vertices
     orgQhull::QhullFacetList facets = qhull.facetList();
@@ -80,6 +90,7 @@ public:
     std::vector<std::vector<int>> regions;
     // for(QhullFacet f : facets)
     orgQhull::QhullFacetListIterator k(facets);
+    NodePtr current_node;
     while (k.hasNext())
     {
       orgQhull::QhullFacet f = k.next();
@@ -103,31 +114,47 @@ public:
           {
             orgQhull::QhullVertex vertex = i.next();
             orgQhull::QhullPoint p = vertex.point();
+            // const Eigen::Map<Point> site{ p.coordinates(), _dimension };
+            // const std::size_t v_id{ _hash(site) };
+            // current_node = _nodes[v_id];
+            // current_node->neighbors.insert(vertices.begin(), iter);
+
             vertices.push_back(p.id());
           }
         }
-        regions.push_back(vertices);
+        for (auto iter = vertices.begin(); iter != vertices.end(); iter++)
+        {
+          const std::size_t v_id{ static_cast<std::size_t>(*iter) };
+          current_node = _nodes[v_id];
+
+          if (iter != vertices.begin())
+          {
+            current_node->neighbors.insert(vertices.begin(), iter);
+          }
+          current_node->neighbors.insert(iter + 1, vertices.end());
+        }
+        // regions.push_back(vertices);
       }
     }
 
-    for (size_t k2 = 0; k2 < regions.size(); ++k2)
-    {
-      std::vector<int> vertices = regions[k2];
-      size_t n = vertices.size();
-      Point centroid{ Point::Zero(_dimension) };
-      // _gnn_nodes.push_back(std::make_shared<delaunay_node_t<Dim>>());
-      _gnn_nodes.push_back(new delaunay_node_t<Dim>());
-      for (size_t i = 0; i < n; ++i)
-      {
-        // std::vector<double> site = inputSites[vertices[i]];
-        Eigen::Map<Point> site{ inputSites[vertices[i]].data(), _dimension };
-        centroid += site;
-        _gnn_nodes.back()->sites.emplace_back(site(Eigen::seqN(0, _dimension)));
-      }
-      centroid = centroid / n;
-      _gnn_nodes.back()->point = Point(centroid(Eigen::seqN(0, _dimension)));
-      _gnn->add_node(_gnn_nodes.back());
-    }
+    // for (size_t k2 = 0; k2 < regions.size(); ++k2)
+    // {
+    //   std::vector<int> vertices = regions[k2];
+    //   size_t n = vertices.size();
+    //   Point centroid{ Point::Zero(_dimension) };
+    //   // _gnn_nodes.push_back(std::make_shared<delaunay_node_t<Dim>>());
+    //   _gnn_nodes.push_back(new delaunay_node_t<Dim>());
+    //   for (size_t i = 0; i < n; ++i)
+    //   {
+    //     // std::vector<double> site = inputSites[vertices[i]];
+    //     Eigen::Map<Point> site{ inputSites[vertices[i]].data(), _dimension };
+    //     centroid += site;
+    //     _gnn_nodes.back()->sites.emplace_back(site(Eigen::seqN(0, _dimension)));
+    //   }
+    //   centroid = centroid / n;
+    //   _gnn_nodes.back()->point = Point(centroid(Eigen::seqN(0, _dimension)));
+    //   _gnn->add_node(_gnn_nodes.back());
+    // }
   }
 
   std::shared_ptr<DelaunayGnn> get_gnn()
@@ -138,34 +165,83 @@ public:
   template <typename Pt, std::enable_if_t<!prx::utils::is_ptr_type<Pt>{}, bool> = true>
   void add_point(const Pt& p)
   {
+    std::size_t i{ 0 };
+    Point pt{ Point::Zero(_dimension) };
     for (auto e : p)
     {
       _points_data.push_back(e);
+      pt[i] = e;
+      i++;
     }
+    NodePtr new_node = new Node();
+    new_node->id = _point_count;
+    new_node->point = pt;
+    _nodes[_point_count] = new_node;
     _point_count++;
   }
 
   template <typename Pt, std::enable_if_t<prx::utils::is_ptr_type<Pt>{}, bool> = true>
   void add_point(const Pt& p)
   {
-    for (auto e : *p)
-    {
-      _points_data.push_back(e);
-    }
-    _point_count++;
+    add_point(*p);
   }
 
-  GnnNodes get_gnn_nodes()
+  const inline NodePtr operator[](const std::size_t& idx)
   {
-    return _gnn_nodes;
+    return _nodes[idx];
+  }
+
+  inline Node& at(const std::size_t& idx)
+  {
+    return *_nodes[idx];
+  }
+
+  const NodeMap get_nodes()
+  {
+    return _nodes;
+  }
+
+  std::vector<NodePtr> get_neighbors(const NodePtr node) const
+  {
+    std::vector<NodePtr> result_neighbors;
+    for (auto neighbor : node->neighbors)
+    {
+      result_neighbors.push_back(_nodes[neighbor]);
+    }
+    return result_neighbors;
+  }
+  inline std::vector<NodePtr> get_neighbors(const std::size_t idx) const
+  {
+    return get_neighbors(_nodes[idx]);
+  }
+
+  void to_file(const std::string filename, const std::ios_base::openmode _mode = std::ofstream::trunc)
+  {
+    std::ofstream ofs_sites;
+    ofs_sites.open(filename.c_str(), _mode);
+
+    auto delaunay_nodes = _nodes;
+    for (auto node : delaunay_nodes)
+    {
+      for (auto neighbor : node.second->neighbors)
+      {
+        auto site = _nodes[neighbor];
+        prx_assert(site != nullptr, "Site is nullptr");
+        ofs_sites << node.second->point.transpose() << " ";
+        ofs_sites << site->point.transpose() << " ";
+        ofs_sites << "\n";
+      }
+    }
   }
 
 protected:
   const Eigen::Index _dimension;
   std::shared_ptr<DelaunayGnn> _gnn;
-  GnnNodes _gnn_nodes;
+  NodeMap _nodes;
   std::vector<double> _points_data;
   std::size_t _point_count;
+
+  range_hash_combine_t<Point, Dim> _hash;
   // Qhull q("", 2, pointCount, pts.data(), "d Qt");
   // Qhull qhull;
 };

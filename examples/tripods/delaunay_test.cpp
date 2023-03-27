@@ -1,5 +1,3 @@
-#//! user_eg3_r.cpp -- Invoke rbox and qhull from C++
-
 #include "libqhullcpp/RboxPoints.h"
 #include "libqhullcpp/QhullError.h"
 #include "libqhullcpp/QhullQh.h"
@@ -33,11 +31,13 @@
 #include "prx/utilities/general/param_loader.hpp"
 
 #include "prx/utilities/data_structures/delaunay.hpp"
+#include "prx/utilities/general/dijkstra.hpp"
 
 #include <cstdio>   /* for printf() of help message */
 #include <iomanip>  // setw
 #include <ostream>
 #include <stdexcept>
+#include <queue>
 
 using std::cerr;
 using std::cin;
@@ -68,6 +68,7 @@ struct delaunay_node_t : prx::proximity_node_t<Eigen::Vector2d>
   std::vector<Eigen::Vector2d> sites;
 };
 using GnnNodes = std::vector<std::shared_ptr<delaunay_node_t>>;
+using prx::utilities::dijkstra_t;
 
 int main(int argc, char** argv);
 int user_eg3(int argc, char** argv);
@@ -78,6 +79,7 @@ void qdelaunay_o(const Qhull& qhull, prx::graph_nearest_neighbors_t<Eigen::Vecto
 char prompt[] = "";
 
 void trajs_to_qhull();
+
 int main(int argc, char** argv)
 {
   QHULL_LIB_CHECK
@@ -112,7 +114,7 @@ int main(int argc, char** argv)
   prx::trajectory_t traj(sg->get_state_space());
   std::vector<double> pts;
   prx::simulation::time_map_t tm(system_name, plant, sg);
-  tm.set_duration(0.1);
+  tm.set_duration(0.5);
 
   prx::space_point_t state = ss->make_point();
   ss->copy(state, lower_bounds);
@@ -125,67 +127,149 @@ int main(int argc, char** argv)
     return (a - b).norm();
   };
   // prx::graph_nearest_neighbors_t<Eigen::Vector2d, delaunay_node_t> gnn(df, 1e5);
-
-  prx::utilities::delaunay_graph_t<2> dgnn(df);
+  using DelaunayGraph = prx::utilities::delaunay_graph_t<2>;
+  using DelaunayNodePtr = DelaunayGraph::NodePtr;
+  DelaunayGraph dgnn(df);
+  DelaunayGraph dgnn_im(df);
 
   Eigen::Vector2d result_state;
   do
   {
     // trajs.emplace_back(sg->get_state_space());
-    tm(state, result_state);
-    dgnn.add_point(*state);
-    dgnn.add_point(result_state);
-    // pts.push_back((*state)[0]);
-    // pts.push_back((*state)[1]);
-    // pointCount++;
-    // pts.push_back(result_state[0]);
-    // pts.push_back(result_state[1]);
-    // pointCount++;
-    // traj_count++;
-    // for (auto state : traj)
-    // {
-    //   if (df(Eigen::Vector2d::Zero(), state->vector<Eigen::Vector2d>()) < 0.1)
-    //   {
-    //     for (auto e : *state)
-    //     {
-    //       pts.push_back(e);
-    //     }
-    //   }
-    // }
+    dgnn.add_point(state);
+    // tm(state, result_state);
+    // dgnn_im.add_point(result_state);
+    pointCount++;
 
-  } while (state_space_step(*state, std::vector<double>(dimension, 0.1), dimension, lower_bounds, upper_bounds));
+  } while (state_space_step(*state, 0.5, dimension, lower_bounds, upper_bounds));
 
   std::cout << "Total points: " << pointCount << std::endl;
-  std::cout << "Total trajs: " << traj_count << std::endl;
   try
   {
-    // Qhull q(rbox, "d Qt");
-    // Qhull q("", 2, pointCount, pts.data(), "d Qt");
-    // qdelaunay_o(q, gnn, gnn_nodes);
     dgnn.qhull_to_delaunay();
+    // PRX_DEBUG_PRINT;
+    for (auto node : dgnn.get_nodes())
+    {
+      tm(node.second->point, result_state);
+      // PRX_DEBUG_VAR_2(node.second->point, result_state);
+      dgnn_im.add_point(result_state);
+    }
+    // PRX_DEBUG_PRINT;
+    dgnn_im.qhull_to_delaunay();
+    dgnn.to_file(prx::out_path + "delaunay_start_states.txt");
+    dgnn_im.to_file(prx::out_path + "delaunay_end_states.txt");
+    // dgnn_im.qhull_to_delaunay();
+    // dgnn_im.to_file(prx::out_path + "delaunay.txt");
+
+    // std::function<std::vector<std::size_t>(const std::size_t, const std::size_t)> path_from_v_to_y =
+    //     [&](const std::size_t from, const std::size_t to) {
+    //       std::queue<std::size_t> to_explore;
+    //       std::size_t current{ 0 };
+    //       while (current != to)
+    //       {
+    //         current = to_explore.front();
+    //         to_explore.pop();
+    //       }
+    //     };
+
+    std::size_t v_idx{ 87 };
+    std::unordered_map<std::size_t, std::vector<std::size_t>> F;
+
+    std::unordered_map<std::size_t, bool> added;
+    std::queue<std::size_t> candidates;
+    added[v_idx] = true;
+    F[v_idx] = { v_idx };
+    auto N = dgnn[v_idx]->neighbors;
+    std::set<std::size_t> Y{};
+    for (auto n : N)
+    {
+      Y.insert(dgnn_im[n]->id);
+    }
+    PRX_DEBUG_ITERABLE("Y: ", Y);
+    std::size_t idx{ 0 };
+    std::size_t next{ 0 };
+    F[v_idx].insert(F[v_idx].end(), Y.begin(), Y.end());
+    std::function<std::set<std::size_t>(const std::size_t&)> get_neighbors = [&](const std::size_t& id) {
+      return dgnn_im[id]->neighbors;
+    };
+    std::function<double(const std::size_t&, const std::size_t&)> node_distance =
+        [&](const std::size_t& a, const std::size_t& b) { return (dgnn_im[a]->point - dgnn_im[b]->point).norm(); };
+    for (auto y : Y)
+    {
+      std::vector<std::size_t> sp = dijkstra_t::shortest_path(v_idx, y, get_neighbors, node_distance);
+      F[v_idx].insert(F[v_idx].end(), sp.begin(), sp.end());
+    }
+
+    // {
+    //   auto path = path_from_v_to_y(v_idx, y);
+    // }
+    // while (Y.size() > 0)
+    // {
+    //   next = F[v_idx][idx];
+    //   auto M = dgnn_im[next]->neighbors;
+    //   for (auto m : M)
+    //   {
+    //     if (added.count(m) > 0)
+    //       continue;
+    //     added[m] = true;
+    //     F[v_idx].push_back(m);
+    //     if (Y.count(m) > 0)
+    //     {
+    //       Y.erase(m);
+    //     }
+    //     // F[v_idx].insert(M.begin(), M.end());
+    //   }
+    //   idx++;
+    // }
+    PRX_DEBUG_ITERABLE("F: ", F[v_idx]);
 
     std::ofstream ofs_sites;
     std::ofstream ofs_voronoi;
-    std::string sites_filename(prx::out_path + "delaunay.txt");
-    std::string voronoi_filename(prx::out_path + "voronoi.txt");
-
+    std::string sites_filename(prx::out_path + "delaunay_ss_f.txt");
+    std::string voronoi_filename(prx::out_path + "delaunay_es_f.txt");
     ofs_sites.open(sites_filename.c_str(), std::ofstream::trunc);
     ofs_voronoi.open(voronoi_filename.c_str(), std::ofstream::trunc);
 
-    Eigen::Vector2d query_node{ 0.0, 0.0 };
-    auto central_nodes = dgnn.get_gnn()->radius_and_closest_query(query_node, 1.0);
-
-    std::cout << "Total central nodes: " << central_nodes.size() << "\n";
-    for (auto node : central_nodes)
+    ofs_sites << idx << " " << dgnn[v_idx]->point.transpose() << "\n";
+    for (auto idx : N)
     {
-      // auto node = std::dynamic_pointer_cast<delaunay_node_t>(proximity_node);
-      ofs_voronoi << node->point.transpose() << "\n";
-      for (auto site : node->sites)
-      {
-        ofs_sites << site.transpose() << " ";
-      }
-      ofs_sites << "\n";
+      ofs_sites << idx << " " << dgnn[idx]->point.transpose() << "\n";
     }
+    for (auto idx : F[v_idx])
+    {
+      ofs_voronoi << idx << " " << dgnn_im[idx]->point.transpose() << "\n";
+    }
+
+    // Eigen::Vector2d query_node{ 0.0, 0.0 };
+    // auto central_nodes = dgnn.get_gnn()->radius_and_closest_query(query_node, 1.0);
+
+    // std::cout << "Total central nodes: " << central_nodes.size() << "\n";
+    // auto delaunay_nodes = dgnn.get_nodes();
+
+    // std::queue<prx::utilities::delaunay_graph_t<2>::NodePtr> to_explore;
+    // std::unordered_map<std::size_t, bool> explored_nodes;
+    // explored_nodes[delaunay_nodes.begin()->first] = true;
+    // to_explore.push(delaunay_nodes.begin()->second);
+
+    // while (!to_explore.empty())
+    // {
+    //   auto current_node = to_explore.front();
+    //   for (auto neighbor : current_node->neighbors)
+    //   {
+    //     auto site = dgnn[neighbor];
+    //     prx_assert(site != current_node, "Current node is its own neighbor!");
+    //     ofs_sites << current_node->point.transpose() << " ";
+    //     ofs_sites << site->point.transpose() << "\n";
+    //     if (explored_nodes.count(neighbor) == 0)
+    //     {
+    //       to_explore.push(site);
+    //       explored_nodes[neighbor] = true;
+    //     }
+    //   }
+    //   to_explore.pop();
+    // }
+
+    // This goes through every node, so might print duplicates if the implementation has a bug allowing duplicates
   }
   catch (QhullError& e)
   {

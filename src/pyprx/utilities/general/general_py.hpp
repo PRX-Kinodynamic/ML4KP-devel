@@ -6,7 +6,7 @@
 #include "pyprx/utilities/general/param_loader_py.hpp"
 #include "pyprx/utilities/general/noise_py.hpp"
 #include "pyprx/utilities/general/prx_assert_py.hpp"
-
+#include "pyprx/utilities/general/dijkstra_py.hpp"
 namespace pyprx
 {
 namespace utilities
@@ -22,6 +22,7 @@ void bindings()
   prx_assert::bindings();
   random::bindings();
   transforms::bindings();
+  dijkstra::bindings();
 }
 
 }  // namespace general

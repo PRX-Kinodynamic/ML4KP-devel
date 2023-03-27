@@ -14,6 +14,8 @@ namespace prx
 #define PRX_PI 3.1415926535897932385
 #define PRX_EPSILON 1e-7
 #define PRX_INFINITY 1e10
+extern int precision;
+extern char separating_value;
 
 static inline std::string lib_path_safe(std::string env_var)
 {
@@ -65,10 +67,9 @@ enum propagate_step
 enum plant_type
 {
   ANALYTICAL,
-  BULLET,
+  MUJOCO,
   GZ
 };
-
 static inline double norm_angle_pi(double angle, double min_angle = -PRX_PI, double max_angle = PRX_PI)
 {
   // prx_warn_cond(std::fabs(angle) < 100 * max_angle, "Angle might be too high: " << std::to_string(angle));
@@ -221,9 +222,21 @@ inline void range_hash_combine(std::size_t& seed, const T& range)
   range_hash_combine<T, n_i - 1>(seed, range);
 }
 
-template <typename T, std::size_t dimension>
+template <typename T, int dimension>
 struct range_hash_combine_t
 {
+  template <int dim = dimension, std::enable_if_t<(dim <= 0), bool> = true>
+  const std::size_t operator()(const T& t_to_hash) const noexcept
+  {
+    std::size_t seed = 0;
+    for (auto e : t_to_hash)
+    {
+      hash_combine(seed, e);
+    }
+    return seed;
+  }
+
+  template <int dim = dimension, std::enable_if_t<(dim > 0), bool> = true>
   const std::size_t operator()(const T& t_to_hash) const noexcept
   {
     std::size_t seed = 0;
@@ -270,7 +283,8 @@ static Container merge_container(const In1& in1, InRest... in_rest)
  * @tparam     Steps 				A container of size dimension. This allows each dimension to be step at different rate.
  * @tparam     Bound        A container of size dimension representing a bound of the space.
  */
-template <typename State, typename Steps, typename Bound>
+template <typename State, typename Steps, typename Bound,
+          std::enable_if_t<prx::utils::is_iterable<Steps>{}, bool> = true>
 static bool state_space_step(State& state, const Steps steps, const std::size_t& dimension, const Bound lower_bound,
                              const Bound upper_bound)
 {
@@ -287,24 +301,32 @@ static bool state_space_step(State& state, const Steps steps, const std::size_t&
   return false;
 }
 
-template <typename State, typename Bound>
-static bool state_space_step(State& state, const double step, const std::size_t& dimension, const Bound lower_bound,
+template <typename State, typename Step, typename Bound,
+          std::enable_if_t<!prx::utils::is_iterable<Step>{}, bool> = true>
+static bool state_space_step(State& state, const Step step, const std::size_t& dimension, const Bound lower_bound,
                              const Bound upper_bound)
 {
-  return state_space_step(state, std::vector<double>(dimension, step), dimension, lower_bound, upper_bound);
+  const std::vector<double> steps(dimension, step);
+  return state_space_step(state, steps, dimension, lower_bound, upper_bound);
 }
 
-static std::vector<std::string> split(std::string str, char separator = ' ')
+template <typename T>
+static std::vector<T> split(std::string str, const char separator = prx::separating_value)
 {
-  std::vector<std::string> result;
+  std::vector<T> result;
   std::istringstream ss(str);
   std::string token;
-  int i = 0;
   while (std::getline(ss, token, separator))
   {
     if (token.size() > 0)
-      result.push_back(token);
+    {
+      std::istringstream ti(token);
+      T x;
+      if ((ti >> x))
+        result.push_back(x);
+    }
   }
   return result;
 }
+
 }  // namespace prx
