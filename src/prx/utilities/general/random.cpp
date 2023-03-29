@@ -79,4 +79,11 @@ double gaussian_random()
     return t;
   }
 }
+
+std::string generate_uuid()
+{
+  boost::uuids::uuid uuid = boost::uuids::random_generator()();
+  // std::cout << uuid << std::endl;
+  return boost::uuids::to_string(uuid);
+}
 }  // namespace prx

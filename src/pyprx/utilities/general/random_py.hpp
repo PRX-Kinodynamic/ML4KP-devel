@@ -1,3 +1,4 @@
+#pragma once
 #include "prx/utilities/general/random.hpp"
 
 namespace pyprx
@@ -26,6 +27,7 @@ void bindings()
   def("uniform_random", uniform_random_2);
   def("uniform_int_random", &prx::uniform_int_random);
   def("roll_weighted_die", &prx::roll_weighted_die);
+  def("generate_uuid", &prx::generate_uuid);
 }
 
 }  // namespace random

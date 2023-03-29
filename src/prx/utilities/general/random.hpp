@@ -6,6 +6,9 @@
 
 #include <vector>
 #include <random>
+#include <boost/uuid/uuid.hpp>             // uuid class
+#include <boost/uuid/uuid_generators.hpp>  // generators
+#include <boost/uuid/uuid_io.hpp>          // streaming operators etc.
 
 namespace prx
 {
@@ -80,5 +83,7 @@ int uniform_int_random(int min, int max);
  * @return The index of the weighted event that happened
  */
 int roll_weighted_die(std::vector<double> const& weights);
+
+std::string generate_uuid();
 
 }  // namespace prx

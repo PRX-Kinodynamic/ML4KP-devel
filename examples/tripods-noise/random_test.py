@@ -45,3 +45,8 @@ print("Other x_T", g_fix_seed(other_start_state))
 
 print("Original x_T", g_fix_seed(start_state))
 print("Other x_T", g_fix_seed(other_start_state))
+
+def random_uuid_test():
+	uuid = None
+	uuid = prx.generate_uuid()
+	assert type(uuid) == type("String") and uuid != None
