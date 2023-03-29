@@ -142,6 +142,31 @@ void mujoco_simulator_t::reset_simulation()
 {
 }
 
+void mujoco_simulator_t::set_state(MujocoState& s)
+{
+  prx_assert(s.qpos.size() == _mj_model->nq, "Different size of qpos");
+  prx_assert(s.qvel.size() == _mj_model->nv, "Different size of qvel");
+  prx_assert(s.act.size() == _mj_model->na, "Different size of act");
+  prx_assert(s.ctrl.size() == _mj_model->nu, "Different size of ctrl");
+  _mj_data->time = s.time;
+  for (int i = 0; i < _mj_model->nq; i++)
+  {
+    _mj_data->qpos[i] = s.qpos[i];
+  }
+  for (int i = 0; i < _mj_model->nv; i++)
+  {
+    _mj_data->qvel[i] = s.qvel[i];
+  }
+  for (int i = 0; i < _mj_model->na; i++)
+  {
+    _mj_data->act[i] = s.act[i];
+  }
+  for (int i = 0; i < _mj_model->nu; i++)
+  {
+    _mj_data->ctrl[i] = s.ctrl[i];
+  }
+}
+
 MujocoState mujoco_simulator_t::get_state()
 {
   MujocoState s;

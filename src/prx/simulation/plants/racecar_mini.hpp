@@ -35,7 +35,7 @@ public:
 
   void set_state_space_bounds(const std::vector<double>& lower, const std::vector<double>& upper) override;
 
-  Mass& M()
+  inline Mass& M()
   {
     _M(0, 0) = _mass;
     _M(1, 1) = _mass;
@@ -43,14 +43,23 @@ public:
     return _M;
   }
 
-  Coriolis& C()
+  inline Coriolis& C()
   {
-    _C(0, 0) = -_mass * _qdot[1] * _qdot[2];
-    _C(1, 1) = _mass * _qdot[0] * _qdot[2];
-    _C(2, 2) = 0;
+    Eigen::Rotation2D R(_q[2]);
+    // Eigen::AngleAxisd angle(_q[2], Eigen::Vector3d::UnitZ());
+    // R.linear() = (quaternion_t(cos(_q[2] / 2.), 0, 0, sin(_q[2] / 2.)).toRotationMatrix());
+
+    const Eigen::Vector2d v{ R * _qdot.head(2) };
+    PRX_DEBUG_VAR_1(R.toRotationMatrix());
+    PRX_DEBUG_VAR_2(_qdot.transpose(), v.transpose());
+    // _C[0] = -_mass * _qdot[1] * _qdot[2];
+    _C[0] = -_mass * v[1] * _qdot[2];
+    _C[1] = _mass * v[0] * _qdot[2];
+    _C[2] = 0;
     return _C;
   }
-  BMatrix& Bx()
+
+  inline BMatrix& Bx()
   {
     const double c_delta{ std::cos(_delta) };
     const double s_delta{ std::sin(_delta) };
@@ -61,34 +70,41 @@ public:
         ls - wc, ls + wc, -_W, _W;  // no-lint
     return _Bx;
   }
-  BMatrix& By()
+
+  inline BMatrix& By()
   {
     const double c_delta{ std::cos(_delta) };
     const double s_delta{ std::sin(_delta) };
     const double lc{ _L1 * c_delta };
     const double ws{ _W * s_delta };
-    _By << -s_delta, -s_delta, 0, 1,   // no-lint
+    _By << s_delta, s_delta, 0, 1,     // no-lint
         c_delta, c_delta, 1, 1,        // no-lint
         lc - ws, lc + ws, -_L2, -_L2;  // no-lint
     return _By;
   }
-  Forces& Fz()
+
+  inline Forces& Fz()
   {
+    // _Fz = _Fx.array() / _mu_x;
     const double L{ _L1 + _L2 };
-    _Fy[0] = _mass * _G * _L2 / (2.0 * L) - (_mass * H / 2.0) * ((_qddot[0] / L) + (_qddot[1] / _W));
-    _Fy[1] = _mass * _G * _L2 / (2.0 * L) - (_mass * H / 2.0) * ((_qddot[0] / L) - (_qddot[1] / _W));
-    _Fy[2] = _mass * _G * _L1 / (2.0 * L) - (_mass * H / 2.0) * ((_qddot[0] / L) - (_qddot[1] / _W));
-    _Fy[3] = _mass * _G * _L1 / (2.0 * L) - (_mass * H / 2.0) * ((_qddot[0] / L) + (_qddot[1] / _W));
+    _Fz[0] = _mass * _G * _L2 / (2.0 * L) - (_mass * _H / 2.0) * ((_qddot[0] / L) + (_qddot[1] / _W));
+    _Fz[1] = _mass * _G * _L2 / (2.0 * L) - (_mass * _H / 2.0) * ((_qddot[0] / L) - (_qddot[1] / _W));
+    _Fz[2] = _mass * _G * _L1 / (2.0 * L) - (_mass * _H / 2.0) * ((_qddot[0] / L) - (_qddot[1] / _W));
+    _Fz[3] = _mass * _G * _L1 / (2.0 * L) - (_mass * _H / 2.0) * ((_qddot[0] / L) + (_qddot[1] / _W));
     return _Fz;
   }
-  Forces& Fy()
+  inline Forces& Fy()
   {
     _Fy = _Fz.array() * _mu_y;
+    // _Fy = Forces::Zero();
     return _Fy;
   }
-  Forces& Fx()
+  inline Forces& Fx()
   {
+    // _Fx = Forces::Ones() * _accel / 4;
+    // _Fx = (_accel / 4) * (Forces::Ones() - (_mu_x * _mass * gravity * radius) / (4. * stall_torque));
     _Fx = _Fz.array() * _mu_x;
+    _Fx += Forces::Ones() * _accel / 4;
     return _Fx;
   }
   // inline double lambda_f()
@@ -98,6 +114,9 @@ public:
 
 protected:
   virtual void compute_derivative() override final;
+  const double stall_torque = 0.6;
+  const double radius = 0.03;
+  const double gravity = 9.81;
 
   Q _q;
   QDot _qdot;
@@ -108,20 +127,24 @@ protected:
   BMatrix _Bx, _By;
 
   // Parameters
-  double _mass;  // mass of the car
-  double _iz;    // inertia on Z axis
-  double _W;     // distance between left and right wheels
-  double _L1;    // distance between vehicle center and front wheel
-  double _L2;    // distance between vehicle center and back wheel
+  double _mass{ 6 };         // mass of the car
+  double _iz{ .25 };         // inertia on Z axis
+
+  const double _W{ 0.23 };   // distance between left and right wheels
+  const double _L1{ 0.15 };  // distance between vehicle center and front wheel
+  const double _L2{ 0.15 };  // distance between vehicle center and back wheel
+  const double _H{ 0.25 };
+
   Mu _mu_x;
   Mu _mu_y;
 
   // Inputs / Controls
-  double _delta;  // Steering
-  Forces _Fx;     // Tire forces on X
+  double _delta;            // Steering
+  double _accel;            // Wheel motor input
 
-  Forces _Fy;  // Tire forces on Y
-  Forces _Fz;  // Tire forces on Z
+  Forces _Fx;               // Tire forces on X
+  Forces _Fy;               // Tire forces on Y
+  Forces _Fz;               // Tire forces on Z
 
   const double _G{ 9.81 };  // gravity
   // double x, y, theta;
@@ -170,7 +193,6 @@ protected:
   // static constexpr double R = 0.025;
   // // static constexpr double IF = 1.8;
   // // static constexpr double IR = 1.8;
-  static constexpr double H = .05;
   // static constexpr double B = 2;
   // static constexpr double C = 0.6;
   // static constexpr double D = 0.05;
@@ -178,8 +200,8 @@ protected:
   // static constexpr double L = L1 + L2;
   // static constexpr double d_SV = 1.;
 
-  std::vector<double> lower_bound = { -26, -24, -3.14159, -5, -5, -0.5 };
-  std::vector<double> upper_bound = { 0, 24, 3.14159, 5, 5, 0.5 };
+  std::vector<double> lower_bound = { -26, -24, -3.14159, -5, -5, -5 };
+  std::vector<double> upper_bound = { 26, 24, 3.14159, 5, 5, 5 };
 };
 }  // namespace prx
 PRX_REGISTER_SYSTEM(racecar_mini_t, racecar_mini)

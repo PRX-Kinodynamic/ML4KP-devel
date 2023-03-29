@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 
   param_loader params(params_file, argc, argv);
 
-  std::string control_filename = params["control_file"].as<std::string>();
+  std::string control_filename = params["plan_file"].as<std::string>();
   std::string model_filename = params["model_file"].as<std::string>();
 
   std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>(model_filename);

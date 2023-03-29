@@ -3,7 +3,7 @@
 
 file(GLOB_RECURSE SRC_PRX_LIB_EXTERNAL_PQP  PQP/*.cpp)
 
-add_library(${PROJECT_NAME}_external ${SRC_PRX_LIB_EXTERNAL_PQP} ) 
+add_library(${PROJECT_NAME}_external SHARED ${SRC_PRX_LIB_EXTERNAL_PQP} ) 
 
 target_include_directories(${PROJECT_NAME}_external PUBLIC ".")
 

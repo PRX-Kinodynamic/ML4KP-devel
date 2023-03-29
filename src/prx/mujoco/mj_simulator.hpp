@@ -63,10 +63,25 @@ public:
   void init_simulator();
 
   virtual void step_simulation(propagate_step step) override;
+  virtual void forward_simulation()
+  {
+    mj_forward(_mj_model, _mj_data);
+    if (_visualize)
+    {
+      mjrRect viewport = { 0, 0, 0, 0 };
+      glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+      mjv_updateScene(_mj_model, _mj_data, &opt, NULL, &cam, mjCAT_ALL, &scn);
+      mjr_render(viewport, &scn, &con);
+      glfwSwapBuffers(window);
+      glfwPollEvents();
+    }
+  }
 
   virtual void reset_simulation() override;
 
   bool in_collision();
+
+  void set_state(MujocoState& s);
 
   void set_state(const MujocoState& state);
 

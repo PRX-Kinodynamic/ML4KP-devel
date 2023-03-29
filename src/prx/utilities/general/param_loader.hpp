@@ -51,6 +51,8 @@ public:
 
   void add(const param_loader& pl);
 
+  void replace_env_var(YAML::Node& node);
+
   template <typename T>
   void set(T val)
   {

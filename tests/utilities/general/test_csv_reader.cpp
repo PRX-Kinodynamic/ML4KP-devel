@@ -83,3 +83,17 @@ BOOST_AUTO_TEST_CASE(csv_reader_reads_lines_with_custom_function)
   }
   BOOST_CHECK(total_lines == 2);
 }
+
+BOOST_AUTO_TEST_CASE(csv_reader_iterator_iterates)
+{
+  csv_reader_t reader(test_file, ' ');
+  std::size_t total_lines{ 0 };
+  const std::size_t expected_total_lines{ 7 };
+  for (auto line : reader)
+  {
+    // Avoid infinite loop
+    BOOST_CHECK(total_lines < expected_total_lines);
+    total_lines++;
+  }
+  BOOST_CHECK(total_lines == expected_total_lines);
+}

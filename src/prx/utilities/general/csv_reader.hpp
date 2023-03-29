@@ -13,6 +13,69 @@ public:
   using Line = std::vector<std::string>;
   using Block = std::vector<std::vector<std::string>>;
 
+  // member typedefs provided through inheriting from std::iterator
+  class iterator
+  {
+    using iterator_category = std::output_iterator_tag;
+    using value_type = Line;  // crap
+    using difference_type = Line;
+    using pointer = const Line*;
+    using reference = Line;
+    csv_reader_t* _ptr;
+    Line _line;
+
+  public:
+    explicit iterator(csv_reader_t* ptr) : _ptr(ptr), _line()
+    {
+      if (_ptr != nullptr)
+      {
+        if (_ptr->has_next_line())
+          _line = _ptr->next_line();
+        PRX_DEBUG_VAR_1(_line.size());
+      }
+    }
+
+    iterator& operator++()
+    {
+      if (_ptr != nullptr && _ptr->has_next_line())
+      {
+        _line = _ptr->next_line();
+      }
+      else
+      {
+        _ptr = nullptr;
+        _line = Line();
+      }
+      return *this;
+    }
+    iterator operator++(int)
+    {
+      iterator retval = *this;
+      ++(*this);
+      return retval;
+    }
+    bool operator==(iterator other) const
+    {
+      return _ptr == other._ptr && _line == other._line;
+    }
+    bool operator!=(iterator other) const
+    {
+      return !(*this == other);
+    }
+    reference operator*() const
+    {
+      return _line;
+    }
+  };
+  iterator begin()
+  {
+    return iterator(this);
+  }
+  iterator end()
+  {
+    return iterator(nullptr);
+  }
+
   csv_reader_t() = delete;
   csv_reader_t(const std::string filename, const char separator = ' ')
     : _filename(filename), _sep(separator), file(filename.c_str())
