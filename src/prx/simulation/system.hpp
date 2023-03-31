@@ -3,6 +3,7 @@
 #include "prx/simulation/defs.hpp"
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/spaces/space.hpp"
+
 #include "prx/simulation/system_factory.hpp"
 
 #include <memory>
@@ -10,6 +11,7 @@
 namespace prx
 {
 
+extern double simulation_step;
 class controller_t;
 class system_controller_t;
 

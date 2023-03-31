@@ -1,14 +1,51 @@
 #pragma once
 
+#include <unordered_map>
+
 #include "prx/simulation/system.hpp"
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 
-#include <unordered_map>
-
 namespace prx
 {
 class controller_t;
+
+// TODO: Change name?
+// Desired states/points
+// Objective
+// Goal
+// local_goal
+class set_points_t
+{
+public:
+  set_points_t(const space_t* _space)
+  {
+    space = _space;
+  }
+
+  inline space_point_t operator[](unsigned index) const
+  {
+    prx_assert(index < set_points.size(),
+               "Set point out of bounds. Size: " << set_points.size() << " requested: " << index);
+    return set_points[index];
+  }
+
+  inline space_point_t& operator[](unsigned index)
+  {
+    prx_warn_cond(index <= set_points.size(), "Adding " << (index - set_points.size()) << " set_points");
+    for (int i = set_points.size(); i <= index; ++i)
+    {
+      set_points.push_back(space->make_point());
+    }
+    return set_points[index];
+  }
+
+private:
+  set_points_t(){};
+  std::vector<space_point_t> set_points;
+  const space_t* space;
+  friend controller_t;
+};
 
 typedef std::shared_ptr<controller_t> controller_ptr_t;
 
@@ -18,11 +55,13 @@ public:
   controller_t(const controller_t& other) = default;
 
   controller_t(system_ptr_t _plant, std::string _name = "base_controller")
+  // : set_points(_plant -> get_state_space())
   {
     plant = _plant;
     name = _name;
-    goal = plant->get_state_space()->make_point();
-    u_goal = plant->get_control_space()->make_point();
+    goal = _plant->get_state_space()->make_point();
+    init_plan();
+    // set_points = std::make_shared<set_points_t>(plant -> get_state_space());
   }
   virtual ~controller_t();
 
@@ -60,7 +99,7 @@ public:
     plan = std::make_shared<plan_t>(_plan);
   }
 
-  virtual std::shared_ptr<plan_t> get_plan()
+  virtual std::shared_ptr<plan_t> get_plan() const
   {
     return plan;
   }
@@ -68,9 +107,12 @@ public:
   virtual void init_plan()
   {
     plan = std::make_shared<plan_t>(get_control_space());
+    plan->clear();
   }
 
-  virtual void set_goal(const space_point_t& _goal)
+  // void set_goal(const space_point_t& _goal)
+  template <typename T>
+  void set_goal(const T& _goal)
   {
     plant->get_state_space()->copy(goal, _goal);
   }
@@ -94,10 +136,12 @@ protected:
     name = other->name;
     goal = other->goal;
     plan = other->plan;
+    set_points = other->set_points;
   };
   system_ptr_t plant;
   std::string name;
 
+  std::shared_ptr<set_points_t> set_points;
   space_point_t goal;
   space_point_t u_goal;
   std::shared_ptr<plan_t> plan;  // Control sequence

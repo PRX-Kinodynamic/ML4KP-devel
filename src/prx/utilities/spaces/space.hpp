@@ -145,7 +145,15 @@ public:
   {
     return memory[index];
   }
-
+  operator std::string() const
+  {
+    std::stringstream ss;
+    for (auto e : memory)
+    {
+      ss << e << prx::separating_value;
+    }
+    return ss.str();
+  }
   friend std::ostream& operator<<(std::ostream& os, const space_point_t& obj)
   {
     os << *obj;
@@ -154,6 +162,7 @@ public:
 
   friend std::ostream& operator<<(std::ostream& os, const space_snapshot_t& obj)
   {
+    os << std::fixed << std::setprecision(prx::precision);
     for (auto e : obj.memory)
     {
       os << e << " ";
@@ -172,13 +181,8 @@ public:
   }
 
   template <typename Vector_t = Eigen::VectorXd>
-  inline Eigen::VectorXd vector()
+  inline Vector_t vector()
   {
-    // Eigen::VectorXd v(memory.size());
-    // for (int i = 0; i < memory.size(); ++i)
-    // {
-    //   v[i] = memory[i];
-    // }
     return Vector_t{ map_vector };
   }
 
@@ -191,6 +195,7 @@ protected:
   // Eigen::VectorXd map_vector;
 
   friend class space_t;
+
 };
 
 typedef std::function<double(const space_point_t&, const space_point_t&)> distance_function_t;
@@ -211,7 +216,8 @@ public:
     EUCLIDEAN = 0,
     ROTATIONAL = 1,
     DISCRETE = 2,
-    IDLE = 3
+    IDLE = 3,
+    QUATERNION = 4
   };
 
   space_t(const std::string& topology, const std::vector<double*>& addresses, const std::string& name);
@@ -401,13 +407,13 @@ public:
   }
 
   template <typename T>
-  inline void copy_from(const std::initializer_list<T>& from) const
+  inline void copy_from(const std::initializer_list<T> from) const
   {
     prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
                                                                      << typeid(decltype(from)).name() << " ( "
                                                                      << from.size() << " )");
     std::vector<T> aux_vector = from;
-    copy_from(from);
+    copy_from(aux_vector);
   }
 
   template <typename T, std::enable_if_t<!prx::utils::is_ptr_type<T>{}, bool> = true>
@@ -535,6 +541,12 @@ public:
     return os;
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const space_t* obj)
+  {
+    os << *obj;
+    return os;
+  }
+
   static double l1_norm(const space_point_t& p1)
   {
     auto fn = [&](double accum, double e) { return accum + std::abs(e); };
@@ -657,6 +669,22 @@ public:
     return topology[i];
   };
 
+  template <typename State0, typename State1, typename StateRet>
+  void difference(const State0 s0, const State1 s1, StateRet& res) const
+  {
+    for (int i = 0; i < dimension; ++i)
+    {
+      if (topology[i] == topology_t::ROTATIONAL)
+      {
+        res[i] = angle_diff(s0[i], s1[i]);
+      }
+      else
+      {
+        res[i] = s0[i] - s1[i];
+      }
+    }
+  }
+
   void difference(const space_point_t& s0, const space_point_t& s1, const space_point_t& res) const
   {
     for (int i = 0; i < dimension; ++i)
@@ -694,6 +722,40 @@ public:
       (*result)[i] = (*p1)[i] - (*p2)[i];
     }
   }
+  std::string topology_to_str(const topology_t& topology) const
+  {
+    std::string ret;
+    switch (topology)
+    {
+      case topology_t::EUCLIDEAN:
+        ret = "EUCLIDEAN";
+        break;
+      case topology_t::ROTATIONAL:
+        ret = "ROTATIONAL";
+        break;
+      case topology_t::DISCRETE:
+        ret = "DISCRETE";
+        break;
+      case topology_t::IDLE:
+        ret = "IDLE";
+        break;
+      case topology_t::QUATERNION:
+        ret = "QUATERNION";
+        break;
+      default:
+        ret = "Unsuported";
+    }
+    return ret;
+  }
+
+  void print_topology()
+  {
+    for (auto t : topology)
+    {
+      std::cout << topology_to_str(t) << " ";
+    }
+    std::cout << std::endl;
+  }
 
 protected:
   space_t(const space_t* other)
@@ -720,6 +782,12 @@ protected:
   bool owned_values;
 
   space_t(){};
+
+  // For linearization... there must be a better way to handle this
+  Eigen::VectorXd x_plus;
+  Eigen::VectorXd x_minus;
+  Eigen::VectorXd xd_plus;
+  Eigen::VectorXd xd_minus;
 };
 
 typedef std::shared_ptr<space_t> space_ptr_t;

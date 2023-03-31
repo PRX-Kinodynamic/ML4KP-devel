@@ -5,7 +5,7 @@ path: "pendulum"
 start_state: [3.14159, 0.0]
 goal_state:  [0.0, 0.0]
 
-min_steps: 1
+min_steps: 4
 max_steps: 50
 
 state_space_lower_bound: [-3.14159, -6.28318]
@@ -30,6 +30,21 @@ lqr_R: [1]
 lqr_Q: [1,1]
 
 controller_path: "examples/tripods/lc/pendulum.pt"
+# controller_path: "examples/tripods/lc/pendulum_deterministic.pt"
+# controller_path: "examples/tripods/controllers/Pendulum.pt"
+
+
+constant_state: [1.0, 0]
+constant_ctrl: [0]
+
+error_scale: [1,1]
+
+# length
+# friction
+# mass
+# normalize
+
+# parameters: [*LENGTH, *FRICTION, *MASS, *L2, *I1, *I2]
 
 # The following are new parameters. 
 # You can specify "uniform", or "none"

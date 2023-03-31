@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(lqr_pendulum_test)
   double mass = 0.15;
   double normalize = 1;
   std::vector<double> v = { length, friction, mass, normalize };
-  ps->copy_from_vector(v);
+  ps->copy_from(v);
 
   auto Q = Eigen::MatrixXd::Identity(2, 2);
   auto R = Eigen::MatrixXd::Identity(1, 1);
@@ -37,9 +37,9 @@ BOOST_AUTO_TEST_CASE(lqr_pendulum_test)
   lqr.set_goal(Eigen::VectorXd::Zero(2));
   lqr.compute_K();
   Eigen::MatrixXd K = lqr.get_K();
-  // std::cout << "A: " << lqr.get_linearized_plant -> get_A() << std::endl;
-  // std::cout << "B: " << lqr.get_linearized_plant -> get_B() << std::endl;
-  // std::cout << "K: " << K << std::endl;
+  std::cout << "A: " << lqr.get_linearized_plant()->get_A() << std::endl;
+  std::cout << "B: " << lqr.get_linearized_plant()->get_B() << std::endl;
+  std::cout << "K: " << K << std::endl;
 
   BOOST_CHECK(prx::are_approx_equal(K(0, 0), 7.39050619, 1e-5));
   BOOST_CHECK(prx::are_approx_equal(K(0, 1), 2.60611851, 1e-5));
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(lqr_acrobot_test)
   double d2 = 1.0;
   double viz_length = 20;
   std::vector<double> v = { mass, g, l1, l2, I1, I2, d1, d2, viz_length };
-  ps->copy_from_vector(v);
+  ps->copy_from(v);
 
   // Eigen::Vector4d diagonal;
   Eigen::Matrix4d Q = Eigen::Matrix4d::Zero();

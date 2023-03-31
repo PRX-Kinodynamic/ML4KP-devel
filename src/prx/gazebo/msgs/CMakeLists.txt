@@ -1,0 +1,43 @@
+
+find_package(Protobuf REQUIRED)
+
+# set(PRX_GZ_INCLUDE_DIRS PARENT_SCOPE)
+# list(APPEND PRX_GZ_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR})
+# set_property(GLOBAL APPEND PROPERTY PRX_GZ_INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR})
+
+set(PRX_GZ_INCLUDE_DIRS 
+		"${CMAKE_CURRENT_BINARY_DIR};${PRX_GZ_INCLUDE_DIRS}"
+		CACHE INTERNAL "PRX + GZ include directories" FORCE)
+ set(PRX_GZ_LIBRARIES 
+		"${PROTOBUF_LIBRARY};${PRX_GZ_LIBRARIES}"
+		CACHE INTERNAL "PRX + GZ include directories" FORCE)
+
+message("MSGS - PRX_GZ_INCLUDE_DIRS: ${PRX_GZ_INCLUDE_DIRS}")
+
+set(PROTOBUF_IMPORT_DIRS)
+foreach(ITR ${GAZEBO_INCLUDE_DIRS})
+  	if(ITR MATCHES ".*gazebo-[0-9.]+$")
+  		set(PROTOBUF_IMPORT_DIRS "${ITR}/gazebo/msgs/proto")
+  	endif()
+endforeach()
+
+file(GLOB SRC_PRX_GZ_MSGS
+		*.proto
+	)
+set (msgs
+  ${SRC_PRX_GZ_MSGS}
+  # ${PROTOBUF_IMPORT_DIRS}/vector2d.proto
+  # ${PROTOBUF_IMPORT_DIRS}/header.proto
+  # ${PROTOBUF_IMPORT_DIRS}/time.proto
+)
+
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})
+
+add_library(${PROJECT_NAME}_GZ_MSGS SHARED ${PROTO_SRCS})
+
+set_target_properties(${PROJECT_NAME}_GZ_MSGS 
+	PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/gazebo_messages)
+
+target_link_libraries(${PROJECT_NAME}_GZ_MSGS ${PROTOBUF_LIBRARY})
+
+

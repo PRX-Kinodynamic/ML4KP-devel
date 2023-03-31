@@ -9,6 +9,12 @@ file(GLOB_RECURSE TESTS_FILES
 	${PROJECT_SOURCE_DIR}/tests/simulation/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
 	)
+if (BUILD_FOR_FACTOR_GRAPHS)
+	file(GLOB_RECURSE FACTOR_GRAPH_FILES
+		${PROJECT_SOURCE_DIR}/tests/factor_graphs/*.cpp
+		)
+	list(APPEND TESTS_FILES ${FACTOR_GRAPH_FILES})
+endif()
 
 foreach(f ${TESTS_FILES})
 	GET_FILENAME_COMPONENT(fname ${f} NAME_WE )
@@ -25,12 +31,16 @@ foreach(f ${TESTS_FILES})
 	if(BUILD_FOR_BULLET)
 		target_link_libraries(${fname} ${PROJECT_NAME}_bullet_sim )
 	endif()
+	if (BUILD_FOR_FACTOR_GRAPHS)
+		target_link_libraries(${fname} ${PROJECT_NAME}_factor_graphs )
+
+	endif()
 	target_link_libraries(${fname} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 	add_test(NAME "${fname}" COMMAND "${fname}" )
 	# add_test(NAME ${fname}_test COMMAND ${fname} WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
 endforeach()
 
-if (BUILD_TESTS)
+if (BUILD_TESTS AND BUILD_FOR_PYTHON)
 	find_package (Python COMPONENTS Interpreter)
     add_test (NAME python-tests
       COMMAND ${Python_EXECUTABLE} -m pytest ${CMAKE_CURRENT_SOURCE_DIR}

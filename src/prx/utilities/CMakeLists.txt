@@ -5,7 +5,7 @@ include_directories(${YAMLCPP_INCLUDE_DIR} ${YAML_CPP_INCLUDE_DIRS})
 
 file(GLOB_RECURSE SRC_PRX_LIB_UTILITIES  ./*.cpp)
 
-add_library(${PROJECT_NAME}_utilities ${SRC_PRX_LIB_UTILITIES})
+add_library(${PROJECT_NAME}_utilities SHARED ${SRC_PRX_LIB_UTILITIES})
 
 target_include_directories(${PROJECT_NAME}_utilities PUBLIC ".")
 
@@ -16,5 +16,4 @@ if (APPLE)
 endif(APPLE)
 
 target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${PROJECT_NAME}_external )
-# target_link_libraries(${PROJECT_NAME}_utilities ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES} )
 target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES})

@@ -1,12 +1,14 @@
 planner: "AORRT"
 
 random_seed: 231192
-simulation_step: 0.1
+simulation_step: 0.01
 
-environment: "environments/simple_obstacle.yaml"
-plant: !file "plants/two_dim_pt.yaml"
+# environment: "environments/simple_obstacle.yaml"
+environment: "environments/empty.yaml"
+# plant: !file "plants/two_dim_pt.yaml"
 # plant: !file "plants/treaded_vehicle.yaml"
 # plant: !file "plants/fo_treaded_vehicle.yaml"
+plant: !file "plants/acrobot.yaml"
 
 blossom: 5
 pruning: true
@@ -14,6 +16,6 @@ pruning: true
 visualize: true
 
 checker_type: time
-checker_value: 10
+checker_value: 30
 
 goal_region_radius: 0.5

@@ -28,18 +28,8 @@ public:
     : lqr_t(_sys_ptr, _name)  //, Q(_Q), R(_R)
                               // : controller_t(_plant, _name)
   {
-    // lti = std::dynamic_pointer_cast<lti_t>(_plant);
-    // goal = lti -> get_state_space() -> make_point();
-    // prx_assert(lti != nullptr, "Plant is not an lti_t!");
     set_Q(_Q);
     set_R(_R);
-    // int n = lti -> get_state_space() -> get_dimension();
-    // int m = lti -> get_control_space() -> get_dimension();
-    // X.resize(n);
-    // U.resize(m);
-
-    // X_goal.resize(n);
-    // X_goal = Eigen::VectorXd::Zero(n);
   }
 
   void set_Q(Eigen::MatrixXd _Q)

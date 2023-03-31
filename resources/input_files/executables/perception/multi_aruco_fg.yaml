@@ -1,0 +1,8 @@
+# video_sources: ["/Users/Gary/pracsys/aruco_videos/video_060223_0101.mp4","/Users/Gary/pracsys/aruco_videos/video_060223_0102.mp4", "/Users/Gary/pracsys/aruco_videos/video_060223_0103.mp4"]
+video_sources: ["/Users/Gary/pracsys/aruco_videos/video_060223_0801.mp4", "/Users/Gary/pracsys/aruco_videos/video_060223_0702.mp4", "/Users/Gary/pracsys/aruco_videos/video_060223_0803.mp4"]
+# video_file: "/Users/Gary/Downloads/my_video-11.m4v"
+display_video: true
+display_wait: 2
+
+corners_filename: "mushr_4.txt"
+locations_filename: "mushr_locations_4.txt"

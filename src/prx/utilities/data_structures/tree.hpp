@@ -259,6 +259,9 @@ public:
   void clear();
 
   void transplant(node_index_t root, node_index_t new_parent);
+
+  void to_file(const std::string, const std::ios_base::openmode _mode = std::ofstream::trunc) const;
+
   unsigned vertex_id_counter;
 
 protected:

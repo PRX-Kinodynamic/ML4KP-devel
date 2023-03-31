@@ -131,6 +131,11 @@ public:
   virtual std::vector<std::string> get_statistics_header() override;
   virtual std::vector<double> get_statistics() override;
 
+  const tree_t& get_tree()
+  {
+    return tree;
+  }
+
 protected:
   virtual void update_goal(node_index_t node_index);
 

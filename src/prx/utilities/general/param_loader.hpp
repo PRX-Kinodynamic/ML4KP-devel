@@ -51,6 +51,8 @@ public:
 
   void add(const param_loader& pl);
 
+  void replace_env_var(YAML::Node& node);
+
   template <typename T>
   void set(T val)
   {
@@ -59,7 +61,7 @@ public:
 
   void print();
 
-  inline bool exists(const std::string& key)
+  inline bool exists(const std::string& key) const
   {
     return !params[key].IsNull();
   }

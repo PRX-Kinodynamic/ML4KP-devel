@@ -41,12 +41,6 @@ public:
   // {
   // }
 
-  // void set_generator(std::mt19937_64 _gen)
-  // {
-  //   // rnd = _rnd;
-  //   generator = _gen;
-  // }
-
   void add_noise(const space_point_t& pt, unsigned int start = 0,
                  std::size_t end = std::numeric_limits<unsigned int>::max()) const
   {
@@ -93,7 +87,6 @@ public:
   }
 
 protected:
-  // mutable std::mt19937_64 generator;
   mutable RandomNumberDistribution rnd;
 };
 }  // namespace prx

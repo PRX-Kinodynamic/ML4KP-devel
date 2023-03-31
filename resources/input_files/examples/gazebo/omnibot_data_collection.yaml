@@ -1,0 +1,19 @@
+random_seed: 231192
+
+min_ctrl: &MIN_CTRL -5000
+max_ctrl: &MAX_CTRL +5000
+
+# control_to_use: [*MAX_CTRL,0,*MIN_CTRL,0] # 0
+control_to_use: [*MAX_CTRL,*MIN_CTRL,*MIN_CTRL,*MAX_CTRL] # 1
+# control_to_use: [0,-20,0,20] # 2
+# control_to_use: [-20,-20,20,20] # 3
+# control_to_use: [-20,0,20,0] # 4
+# control_to_use: [-20,20,20,-20] # 5
+# control_to_use: [0,20,0,-20] # 6
+# control_to_use: [20,20,-20,-20] # 7
+
+test_num: 0
+append_to_file: true
+# out_file: "omnibot_traj_7.txt"
+
+angle_wheel_1: 6

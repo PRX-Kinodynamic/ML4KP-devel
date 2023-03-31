@@ -132,6 +132,11 @@ public:
   }
 };
 
+#define prx_static_assert(EXPRESSION, MESSAGE)                                                                         \
+  if (!(EXPRESSION))                                                                                                   \
+  {                                                                                                                    \
+    std::static_assert(#EXPRESSION, "[" << __PRETTY_FUNCTION__ << "] " << MESSAGE);                                    \
+  }
 #define prx_assert(EXPRESSION, MESSAGE)                                                                                \
   if (!(EXPRESSION))                                                                                                   \
   {                                                                                                                    \

@@ -17,7 +17,7 @@
 #include "prx/visualization/three_js_group.hpp"
 
 #ifdef __cpp_lib_filesystem
-#include <filesystem.hpp>
+#include <filesystem>
 namespace fs = std::filesystem;
 #else
 #define _LIBCPP_NO_EXPERIMENTAL_DEPRECATION_WARNING_FILESYSTEM

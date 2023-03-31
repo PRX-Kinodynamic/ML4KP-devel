@@ -85,9 +85,10 @@ YAML::Node param_loader::expand_file(YAML::Node& node)
   {
     for (auto p : node)
     {
-      auto expanded = expand_file(p.second);
+      YAML::Node expanded = expand_file(p.second);
       if (!expanded.IsNull())
       {
+        replace_env_var(expanded);
         node[p.first.as<std::string>()] = std::move(expanded);
       }
     }
@@ -112,6 +113,29 @@ YAML::Node param_loader::find(const std::string& key, YAML::Node node)
   }
   // return a null node if nothing was found
   return std::move(n);
+}
+
+void param_loader::replace_env_var(YAML::Node& node)
+{
+  const std::regex env_var_regex("\\$\\{(.)+\\}");
+  if (!node.IsSequence() && !node.IsMap())
+  {
+    const std::string node_str{ node.as<std::string>() };
+
+    std::smatch regex_match;
+    if (std::regex_search(node_str, regex_match, env_var_regex))
+    {
+      for (std::size_t i = 0; i < regex_match.size() - 1; i++)
+      {
+        const std::string match{ regex_match[i] };
+        const std::string env_var_name{ match.substr(2, match.size() - 3) };
+        char* value = std::getenv(env_var_name.c_str());
+        prx_assert(value != NULL, "Env variable " << env_var_name << " not found!");
+        const std::string replaced = std::regex_replace(node_str, env_var_regex, std::string(value));
+        node = replaced;
+      }
+    }
+  }
 }
 
 void param_loader::add_opts(int argc, char* argv[])
@@ -145,13 +169,11 @@ void param_loader::add_opts(std::vector<std::string> argv)
     }
     else if (std::regex_match(opt, opt_regex_mult))
     {
-      // std::cout << "multi opt: " << opt << std::endl;
 
       (*this)[opt.substr(2, opt.find("=") - 2)] = YAML::Load(opt.substr(opt.find("=") + 1));
     }
     else if (std::regex_match(opt, opt_regex_bool))
     {
-      // std::cout << "bool opt: " << opt << std::endl;
       auto pos_eq = opt.find("=");
       if (pos_eq != std::string::npos)
       {

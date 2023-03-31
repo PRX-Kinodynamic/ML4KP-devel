@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
   if (ps->get_dimension() > 0)
   {
     std::vector<double> p_vec{ params["/plant/parameters"].as<std::vector<double>>() };
-    ps->copy_from_vector(p_vec);
+    ps->copy_from(p_vec);
     std::cout << "params: " << ps->print_memory(2) << std::endl;
   }
 

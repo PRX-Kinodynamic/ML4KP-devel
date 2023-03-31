@@ -211,9 +211,9 @@ protected:
   distance_function_t distance_function;
   heuristic_function_t heuristic;
 
-  tree_t tree;
-  graph_nearest_neighbors_t<space_point_t>* metric;
-  graph_nearest_neighbors_t<space_point_t>* metric_rrt;
+  // tree_t tree;
+  graph_nearest_neighbors_t* metric;
+  graph_nearest_neighbors_t* metric_rrt;
 
   space_t* X_state_space;
   space_t* Y_state_space;

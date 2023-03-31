@@ -68,7 +68,7 @@ class TimeMap:
 
         self.ss = self.context.system_group.get_state_space()
         self.cs = self.context.system_group.get_control_space()
-        # self.ps = self.plant.get_parameter_space()
+        self.ps = self.plant.get_parameter_space()
 
         lower_bounds = params["/plant/state_space_lower_bound"].as_float_vector()
         upper_bounds = params["/plant/state_space_upper_bound"].as_float_vector()
@@ -288,6 +288,9 @@ class TimeMap:
 
         duration_so_far = 0
         while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 4) > self.radius:
+            print(prx.default_valid_state(self.start_state,self.ss,self.context.collision_group))
+            if not prx.default_valid_state(self.start_state, self.ss, self.context.collision_group):
+                return self.end_state.to_list(), True
             self.lqr.compute_controls()
             self.cs.enforce_bounds()
             self.plant.propagate(self.simulation_step)
@@ -296,7 +299,7 @@ class TimeMap:
             duration_so_far += self.simulation_step
 
         self.ss.copy_to_point(self.end_state)
-        return self.end_state.to_list() # [self.end_state[0], self.end_state[1]]
+        return self.end_state.to_list(), False # [self.end_state[0], self.end_state[1]]
 
     def pendulum_no_ctrl(self, X):
         self.ss.copy_from_vector(X)

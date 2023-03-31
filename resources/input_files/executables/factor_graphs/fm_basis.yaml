@@ -1,0 +1,33 @@
+random_seed: 231192
+# random_seed: 921123
+simulation_step: 0.01
+
+environment: "environments/empty.yaml"
+# plant: !file "plants/pendulum.yaml"
+# plant: !file "plants/acrobot.yaml"
+# plant: !file "plants/omnibot_FO.yaml"
+plant: !file "plants/omnibot_mecanum_FO.yaml"
+
+visualize: true
+
+checker_type: iterations
+checker_value: 1000
+# checker_value: 500
+# checker_value: 5
+goal_region_radius: 0.125
+
+noisy_plant: false
+frequency: 0.05
+num_trajs: 100
+initial_goal: 0
+num_goals: 100
+
+# goals: []
+goals: [[3,0,0],[3,3,0],[0,3,0],[0,0,0]]
+
+# fg_state_increment: 100
+
+initial_friction: 1.0
+
+# noise_var: 0.5
+noise_var: 0.0

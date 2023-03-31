@@ -98,10 +98,10 @@ namespace prx
 				plant -> update_configuration();
 			}
 
-			virtual void compute_derivative() override
-			{
-				linear_derivative();
-			}
+			// virtual void compute_derivative() override
+			// {
+			// 	linear_derivative();
+			// }
 			
 		protected:
 			std::shared_ptr<plant_t> plant;

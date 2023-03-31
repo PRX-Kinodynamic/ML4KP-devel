@@ -4,181 +4,353 @@
 namespace prx
 {
 
-	two_link_acrobot_t::two_link_acrobot_t(const std::string& path) 
-		: plant_t(path)
-	{
-		_theta1=_theta2=_theta1dot=_theta2dot=0;
-		state_memory = {&_theta1,&_theta2,&_theta1dot,&_theta2dot};
-		state_space = new space_t("RREE",state_memory,"TwoLinkState");
-		state_space->set_bounds({0,-M_PI,-6,-6},{2.0*M_PI,M_PI,6,6});
-		// state_space->set_bounds({-3.15,-3.15,-6,-6},{3.15,3.15,6,6});
+two_link_acrobot_t::two_link_acrobot_t(const std::string& path) : plant_t(path)
+{
+  _theta1 = _theta2 = _theta1dot = _theta2dot = 0;
+  state_memory = { &_theta1, &_theta2, &_theta1dot, &_theta2dot };
+  state_space = new space_t("RREE", state_memory, "TwoLinkState");
+  state_space->set_bounds({ 0, -M_PI, -6, -6 }, { 2.0 * M_PI, M_PI, 6, 6 });
+  // state_space->set_bounds({-3.15,-3.15,-6,-6},{3.15,3.15,6,6});
 
-		_tau=0;
-		control_memory = {&_tau};
-		input_control_space = new space_t("E",control_memory,"Torque");
-		input_control_space->set_bounds({-7},{7});
+  _tau = 0;
+  control_memory = { &_tau };
+  input_control_space = new space_t("E", control_memory, "Torque");
+  input_control_space->set_bounds({ -7 }, { 7 });
 
-		_theta1dotdot=_theta2dotdot=0;
-		derivative_memory = {&_theta1dot,&_theta2dot,&_theta1dotdot,&_theta2dotdot};
-		derivative_space = new space_t("EEEE",derivative_memory,"TwoLinkDeriv");
+  _theta1dotdot = _theta2dotdot = 0;
+  derivative_memory = { &_theta1dot, &_theta2dot, &_theta1dotdot, &_theta2dotdot };
+  derivative_space = new space_t("EEEE", derivative_memory, "TwoLinkDeriv");
 
-		parameter_memory = {&mass,&g,&l1,&l2,&I1,&I2,&d1,&d2,&viz_length};
-		parameter_space = new space_t("EEEEEEEEE", parameter_memory, "acrobot_params");
+  parameter_memory = { &mass, &g, &l1, &l2, &I1, &I2, &d1, &d2, &viz_length };
+  parameter_space = new space_t("EEEEEEEEE", parameter_memory, "acrobot_params");
 
-		geometries["rod1"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
-		geometries["rod1"]->initialize_geometry({viz_length,1,1});
-		geometries["rod1"]->generate_collision_geometry();
-		geometries["rod1"]->set_visualization_color("0x00ff00");
-		configurations["rod1"]= std::make_shared<transform_t>();
-		configurations["rod1"]->setIdentity();
+  geometries["rod1"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
+  geometries["rod1"]->initialize_geometry({ viz_length, 1, 1 });
+  geometries["rod1"]->generate_collision_geometry();
+  geometries["rod1"]->set_visualization_color("0x00ff00");
+  configurations["rod1"] = std::make_shared<transform_t>();
+  configurations["rod1"]->setIdentity();
 
-		geometries["rod2"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
-		geometries["rod2"]->initialize_geometry({viz_length,1,1});
-		geometries["rod2"]->generate_collision_geometry();
-		geometries["rod2"]->set_visualization_color("0xff0000");
-		configurations["rod2"]= std::make_shared<transform_t>();
-		configurations["rod2"]->setIdentity();
+  geometries["rod2"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
+  geometries["rod2"]->initialize_geometry({ viz_length, 1, 1 });
+  geometries["rod2"]->generate_collision_geometry();
+  geometries["rod2"]->set_visualization_color("0xff0000");
+  configurations["rod2"] = std::make_shared<transform_t>();
+  configurations["rod2"]->setIdentity();
 
-		geometries["ball"] = std::make_shared<geometry_t>(geometry_type_t::SPHERE);
-		geometries["ball"]->initialize_geometry({1.5});
-		geometries["ball"]->generate_collision_geometry();
-		geometries["ball"]->set_visualization_color("0x0000ff");
-		configurations["ball"]= std::make_shared<transform_t>();
-		configurations["ball"]->setIdentity();
+  geometries["ball"] = std::make_shared<geometry_t>(geometry_type_t::SPHERE);
+  geometries["ball"]->initialize_geometry({ 1.5 });
+  geometries["ball"]->generate_collision_geometry();
+  geometries["ball"]->set_visualization_color("0x0000ff");
+  configurations["ball"] = std::make_shared<transform_t>();
+  configurations["ball"]->setIdentity();
 
-		// set_integrator("rk4");
-		set_integrator(integrator_t::kRK4);
-
-	}
-
-	two_link_acrobot_t::~two_link_acrobot_t()
-	{
-
-	}
-
-	void two_link_acrobot_t::propagate(const double simulation_step)
-	{
-		integrator -> integrate(simulation_step);
-        _theta1 = norm_angle_pi(_theta1, 0, 2*M_PI);
-        _theta2 = norm_angle_pi(_theta2, -M_PI, M_PI);
-        state_space -> enforce_bounds();
-	}
-
-	void two_link_acrobot_t::update_configuration()
-	{
-
-		// const double length = 20;
-		auto body = configurations["rod2"];
-		body->setIdentity();
-		body->linear() = (quaternion_t(cos((_theta1 - PRX_PI / 2) / 2.0), 0, 0, sin((_theta1 - PRX_PI / 2) / 2.0)).toRotationMatrix());
-		body->translation() = (vector_t((viz_length / 2.0) * cos(_theta1 - PRX_PI / 2), 
-										(viz_length / 2.0) * sin(_theta1 - PRX_PI / 2),
-										 1.5));
-
-		body = configurations["rod1"];
-		body->setIdentity();
-		body->linear() = (quaternion_t(cos((_theta1 + _theta2 - PRX_PI / 2) / 2.0),0, 0, sin((_theta1 + _theta2 - PRX_PI / 2) / 2.0)).toRotationMatrix());
-		body->translation() = (vector_t((viz_length) * cos(_theta1 - PRX_PI / 2)+(viz_length / 2.0) * cos(_theta1 + _theta2 - PRX_PI / 2),
-                                        (viz_length) * sin(_theta1 - PRX_PI / 2)+(viz_length / 2.0) * sin(_theta1 + _theta2 - PRX_PI / 2),
-                                           1.5));
-
-		body = configurations["ball"];
-		body->setIdentity();
-		body->translation() = (vector_t((viz_length) * cos(_theta1 - PRX_PI / 2)+(viz_length) * cos(_theta1 + _theta2 - PRX_PI / 2),
-                                        (viz_length) * sin(_theta1 - PRX_PI / 2)+(viz_length) * sin(_theta1 + _theta2 - PRX_PI / 2),
-                                           1.5));
-	}
-
-	void two_link_acrobot_t::compute_derivative()
-	{
-        const double theta2 = _theta2;
-        const double theta1 = _theta1 - M_PI / 2.0;
-        const double theta1dot = _theta1dot;
-        const double theta2dot = _theta2dot;
-        
-        const double lc1 = l1 / 2.0; 
-        const double lc2 = l2 / 2.0;
-        // TODO: Change to m1 & m2
-        double m = mass;
-
-        //extra term m*lc2
-        const double d11 = m * lc1 * lc1 + m * (l1 * l1 + lc2 * lc2 + 2 * l1 * lc1 * cos(theta2)) + I1 + I2;
-        const double d22 = m * lc2 * lc2 + I2;
-        const double d12 = m * (lc2 * lc2 + l1 * lc2 * cos(theta2)) + I2;
-        const double d21 = d12;
-
-        //extra theta1dot
-        const double c1 = -m * l1 * lc2 * theta2dot * theta2dot * sin(theta2) - (2.0 * m * l1 * lc2 * theta1dot * theta2dot * sin(theta2));
-        const double c2 =  m * l1 * lc2 * theta1dot * theta1dot * sin(theta2);
-
-        const double g1 = (m * lc1 + m * l1) * g * cos(theta1) + (m * lc2 * g * cos(theta1 + theta2));
-        const double g2 = m * lc2 * g * cos(theta1 + theta2);
-
-        const double u1 =  0;//    - 1.0 * d1 * theta1dot;
-        const double u2 = _tau;// - 1.0 * d2 * theta2dot;
-        // const double u1 = - 1.0 * d1 * theta1dot;
-        // const double u2 = _tau - 1.0 * d2 * theta2dot;
-        const double theta1dot_dot = (d22 * (u1 - c1 - g1) - d12 * (u2 - c2 - g2)) / (d11 * d22 - d12 * d21);
-        const double theta2dot_dot = (d11 * (u2 - c2 - g2) - d21 * (u1 - c1 - g1)) / (d11 * d22 - d12 * d21);
-
-        _theta1dotdot = theta1dot_dot;
-        _theta2dotdot = theta2dot_dot;
-	}
-
-	// bool two_link_acrobot_t::linearize()
-	bool two_link_acrobot_t::linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D, space_point_t xt, space_point_t ut, double epsilon)
-	{
-		if ( xt != nullptr && ut != nullptr &&
-    		 xt -> at(0) != PRX_PI && xt -> at(1) != 0 && xt -> at(2) != 0 && xt -> at(3) != 0)
-				return false;
-			
-		constexpr double q1 = PRX_PI;
-    	constexpr double q2 = 0;
-    	constexpr double dq1 = 0;
-    	constexpr double dq2 = 0;
-    	double m1 = mass;
-    	double m2 = mass;
-    	double lc1 = l1 / 2.0; 
-    	double lc2 = l2 / 2.0;
-
-
-		A.resize(4,4);
-		A << 0, 0, 1, 0,
-			 0, 0, 0, 1,
-			 -(- g*l1*std::cos(q1 + q2)*std::cos(q2)*std::pow(lc2, 2.0)*std::pow(m2, 2.0) + I2*g*l1*std::cos(q1)*m2 + I2*g*lc1*m1*std::cos(q1))/(- std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) + I2*std::pow(l1, 2.0)*m2 + I1*I2), 
-			 	(std::pow(dq1, 2.0)*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) - std::pow(dq1, 2.0)*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*sin(std::pow(q2, 2.0)) + g*l1*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q1 + q2)*std::cos(q2) - g*l1*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*sin(q1 + q2)*sin(q2) + I2*std::pow(dq1, 2.0)*l1*lc2*m2*std::cos(q2) + I2*std::pow(dq2, 2.0)*l1*lc2*m2*std::cos(q2) + 2*I2*dq1*dq2*l1*lc2*m2*std::cos(q2))/(- std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) + I2*std::pow(l1, 2.0)*m2 + I1*I2) - (2*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q2)*sin(q2)*(cos(q2)*sin(q2)*std::pow(dq1, 2.0)*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0) + I2*sin(q2)*std::pow(dq1, 2.0)*l1*lc2*m2 + 2*I2*sin(q2)*dq1*dq2*l1*lc2*m2 + I2*sin(q2)*std::pow(dq2, 2.0)*l1*lc2*m2 + g*sin(q1 + q2)*std::cos(q2)*l1*std::pow(lc2, 2.0)*std::pow(m2, 2.0) - I2*g*sin(q1)*l1*m2 - I2*g*lc1*m1*sin(q1)))/(- std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) + I2*std::pow(l1, 2.0)*m2 + I1*std::pow(I2, 2.0)), 
-			 		(2*I2*dq1*l1*lc2*m2*sin(q2) + 2*I2*dq2*l1*lc2*m2*sin(q2) + 2*dq1*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q2)*sin(q2))/(- std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) + I2*std::pow(l1, 2.0)*m2 + I1*I2), 
-			 			(2*I2*dq1*l1*lc2*m2*sin(q2) + 2*I2*dq2*l1*lc2*m2*sin(q2))/(- std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) + I2*std::pow(l1, 2.0)*m2 + I1*I2),
-			 // 0, 0, 0, 1;
-			 (I2*g*l1*m2*std::cos(q1) - I1*g*lc2*m2*std::cos(q1 + q2) - g*std::pow(l1, 2.0)*lc2*std::pow(m2, 2.0)*std::cos(q1 + q2) + I2*g*lc1*m1*std::cos(q1) - g*l1*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q1 + q2)*std::cos(q2) + g*std::pow(l1, 2.0)*lc2*std::pow(m2, 2.0)*std::cos(q1)*std::cos(q2) + g*l1*lc1*lc2*m1*m2*std::cos(q1)*std::cos(q2))/(- std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) + I2*std::pow(l1, 2.0)*m2 + I1*I2), 
-			 	(2*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q2)*std::sin(q2)*(std::pow(dq1, 2.0)*std::pow(l1,3)*lc2*std::pow(m2, 2.0)*sin(q2) + g*std::pow(l1, 2.0)*lc2*std::pow(m2, 2.0)*std::sin(q1 + q2) + I1*g*lc2*m2*sin(q1 + q2) - I2*g*l1*m2*sin(q1) - I2*g*lc1*m1*sin(q1) + 2*std::pow(dq1, 2.0)*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q2)*sin(q2) + std::pow(dq2, 2.0)*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q2)*sin(q2) + g*l1*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*sin(q1 + q2)*std::cos(q2) - g*std::pow(l1, 2.0)*lc2*std::pow(m2, 2.0)*std::cos(q2)*sin(q1) + I1*std::pow(dq1, 2.0)*l1*lc2*m2*sin(q2) + I2*std::pow(dq1, 2.0)*l1*lc2*m2*sin(q2) + I2*std::pow(dq2, 2.0)*l1*lc2*m2*sin(q2) + 2*dq1*dq2*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q2)*std::sin(q2) + 2*I2*dq1*dq2*l1*lc2*m2*std::sin(q2) - g*l1*lc1*lc2*m1*m2*std::cos(q2)*std::sin(q1)))/(- std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) + I2*std::pow(l1, 2.0)*m2 + I1*std::pow(I2, 2.0)) - (g*std::pow(l1, 2.0)*lc2*std::pow(m2, 2.0)*std::cos(q1 + q2) + I1*g*lc2*m2*std::cos(q1 + q2) + 2*std::pow(dq1, 2.0)*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) + std::pow(dq2, 2.0)*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) - 2*std::pow(dq1, 2.0)*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*sin(std::pow(q2, 2.0)) - std::pow(dq2, 2.0)*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::sin(std::pow(q2, 2.0)) + std::pow(dq1, 2.0)*std::pow(l1,3)*lc2*std::pow(m2, 2.0)*std::cos(q2) + g*l1*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q1 + q2)*std::cos(q2) - g*l1*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::sin(q1 + q2)*std::sin(q2) + I1*std::pow(dq1, 2.0)*l1*lc2*m2*std::cos(q2) + I2*std::pow(dq1, 2.0)*l1*lc2*m2*std::cos(q2) + I2*std::pow(dq2, 2.0)*l1*lc2*m2*std::cos(q2) + g*std::pow(l1, 2.0)*lc2*std::pow(m2, 2.0)*std::sin(q1)*std::sin(q2) + 2*dq1*dq2*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) - 2*dq1*dq2*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::sin(std::pow(q2, 2.0)) + 2*I2*dq1*dq2*l1*lc2*m2*std::cos(q2) + g*l1*lc1*lc2*m1*m2*sin(q1)*sin(q2))/(- std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) + I2*std::pow(l1, 2.0)*m2 + I1*I2), 
-			 		-(2*dq1*std::pow(l1,3.0)*lc2*std::pow(m2, 2.0)*sin(q2) + 2*I1*dq1*l1*lc2*m2*sin(q2) + 2*I2*dq1*l1*lc2*m2*sin(q2) + 2*I2*dq2*l1*lc2*m2*sin(q2) + 4*dq1*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q2)*sin(q2) + 2*dq2*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q2)*sin(q2))/(- std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) + I2*std::pow(l1, 2.0)*m2 + I1*I2), 
-			 			-(2*I2*dq1*l1*lc2*m2*sin(q2) + 2*I2*dq2*l1*lc2*m2*sin(q2) + 2*dq1*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q2)*sin(q2) + 2*dq2*std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(q2)*sin(q2))/(- std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0)*std::cos(std::pow(q2, 2.0)) + I2*std::pow(l1, 2.0)*m2 + I1*I2)
-			 			;
- 
-
-		B.resize(4,1);
-		B << 0,
-			 0,
-            -(d2*(I2 + l1*lc2*m2))/(- std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0) + I2*std::pow(l1, 2.0)*m2 + I1*I2),
-			 (d2*(m2*std::pow(l1, 2.0) + 2*lc2*m2*l1 + I1 + I2))/(- std::pow(l1, 2.0)*std::pow(lc2, 2.0)*std::pow(m2, 2.0) + I2*std::pow(l1, 2.0)*m2 + I1*I2);
-		// A.resize(2,2);
-		// B.resize(2,1);
-		// C.resize(2,2);
-		// D.resize(2,1);
-		// A << 0., 1., gravity / length, -friction / inertia;
-
-
-
-       return true;
-	}
-
-	// bool two_link_acrobot_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
- //   {
- //    	if ( xt -> at(0) == PRX_PI && xt -> at(1) == 0 && xt -> at(2) == 0 && xt -> at(3) == 0)
- //    	{
- //    		return linearize();
- //    	}
-	// 	return ltv_t::linearize(xt, ut, epsilon);
- //   }
+  // set_integrator("rk4");
+  set_integrator(integrator_t::kRK4);
 }
+
+two_link_acrobot_t::~two_link_acrobot_t()
+{
+}
+
+void two_link_acrobot_t::propagate(const double simulation_step)
+{
+  integrator->integrate(simulation_step);
+
+  _theta1 = norm_angle_pi(_theta1, 0, 2. * M_PI);
+  _theta2 = norm_angle_pi(_theta2, -M_PI, M_PI);
+  state_space->enforce_bounds();
+}
+
+void two_link_acrobot_t::update_configuration()
+{
+  // const double length = 20;
+  auto body = configurations["rod2"];
+  body->setIdentity();
+  body->linear() =
+      (quaternion_t(cos((_theta1 - PRX_PI / 2) / 2.0), 0, 0, sin((_theta1 - PRX_PI / 2) / 2.0)).toRotationMatrix());
+  body->translation() =
+      (vector_t((viz_length / 2.0) * cos(_theta1 - PRX_PI / 2), (viz_length / 2.0) * sin(_theta1 - PRX_PI / 2), 1.5));
+
+  body = configurations["rod1"];
+  body->setIdentity();
+  body->linear() =
+      (quaternion_t(cos((_theta1 + _theta2 - PRX_PI / 2) / 2.0), 0, 0, sin((_theta1 + _theta2 - PRX_PI / 2) / 2.0))
+           .toRotationMatrix());
+  body->translation() = (vector_t(
+      (viz_length)*cos(_theta1 - PRX_PI / 2) + (viz_length / 2.0) * cos(_theta1 + _theta2 - PRX_PI / 2),
+      (viz_length)*sin(_theta1 - PRX_PI / 2) + (viz_length / 2.0) * sin(_theta1 + _theta2 - PRX_PI / 2), 1.5));
+
+  body = configurations["ball"];
+  body->setIdentity();
+  body->translation() =
+      (vector_t((viz_length)*cos(_theta1 - PRX_PI / 2) + (viz_length)*cos(_theta1 + _theta2 - PRX_PI / 2),
+                (viz_length)*sin(_theta1 - PRX_PI / 2) + (viz_length)*sin(_theta1 + _theta2 - PRX_PI / 2), 1.5));
+}
+
+void two_link_acrobot_t::compute_derivative()
+{
+  const double theta2 = _theta2;
+  const double theta1 = _theta1 - M_PI / 2.0;
+  const double theta1dot = _theta1dot;
+  const double theta2dot = _theta2dot;
+
+  const double lc1 = l1 / 2.0;
+  const double lc2 = l2 / 2.0;
+  // TODO: Change to m1 & m2
+  double m = mass;
+
+  // extra term m*lc2
+  const double d11 = m * lc1 * lc1 + m * (l1 * l1 + lc2 * lc2 + 2 * l1 * lc1 * cos(theta2)) + I1 + I2;
+  const double d22 = m * lc2 * lc2 + I2;
+  const double d12 = m * (lc2 * lc2 + l1 * lc2 * cos(theta2)) + I2;
+  const double d21 = d12;
+
+  // extra theta1dot
+  const double c1 =
+      -m * l1 * lc2 * theta2dot * theta2dot * sin(theta2) - (2.0 * m * l1 * lc2 * theta1dot * theta2dot * sin(theta2));
+  const double c2 = m * l1 * lc2 * theta1dot * theta1dot * sin(theta2);
+
+  const double g1 = (m * lc1 + m * l1) * g * cos(theta1) + (m * lc2 * g * cos(theta1 + theta2));
+  const double g2 = m * lc2 * g * cos(theta1 + theta2);
+
+  const double u1 = 0;     //    - 1.0 * d1 * theta1dot;
+  const double u2 = _tau;  // - 1.0 * d2 * theta2dot;
+  // const double u1 = - 1.0 * d1 * theta1dot;
+  // const double u2 = _tau - 1.0 * d2 * theta2dot;
+  const double theta1dot_dot = (d22 * (u1 - c1 - g1) - d12 * (u2 - c2 - g2)) / (d11 * d22 - d12 * d21);
+  const double theta2dot_dot = (d11 * (u2 - c2 - g2) - d21 * (u1 - c1 - g1)) / (d11 * d22 - d12 * d21);
+
+  _theta1dotdot = theta1dot_dot;
+  _theta2dotdot = theta2dot_dot;
+}
+
+double two_link_acrobot_t::kinetic_energy()
+{
+  const double theta2 = _theta2;
+  const double theta1 = _theta1 - M_PI / 2.0;
+  const double theta1dot = _theta1dot;
+  const double theta2dot = _theta2dot;
+
+  const double lc1 = l1 / 2.0;
+  const double lc2 = l2 / 2.0;
+  // TODO: Change to m1 & m2
+  double m = mass;
+
+  const double d11 = m * lc1 * lc1 + m * (l1 * l1 + lc2 * lc2 + 2 * l1 * lc1 * cos(theta2)) + I1 + I2;
+  const double d22 = m * lc2 * lc2 + I2;
+  const double d12 = m * (lc2 * lc2 + l1 * lc2 * cos(theta2)) + I2;
+  const double d21 = d12;
+
+  Eigen::Vector2d th_dot;
+  Eigen::Matrix2d M;
+
+  th_dot(0) = theta1dot;
+  th_dot(1) = theta2dot;
+  M(0, 0) = d11;
+  M(1, 0) = d21;
+  M(0, 1) = d12;
+  M(1, 1) = d22;
+  return 0.5 * th_dot.transpose() * M * th_dot;
+  // return (0.5) * d11 * theta1dot * theta1dot +
+  // 				   d12 * theta1dot * theta2dot +
+  // 		 (0.5) * d22 * theta2dot * theta2dot;
+}
+
+void two_link_acrobot_t::compute_control()
+{
+  const double theta2 = _theta2;
+  const double theta1 = _theta1 - M_PI / 2.0;
+  const double theta1dot = _theta1dot;
+  const double theta2dot = _theta2dot;
+
+  const double lc1 = l1 / 2.0;
+  const double lc2 = l2 / 2.0;
+  // TODO: Change to m1 & m2
+  double m = mass;
+
+  const double d11 = m * lc1 * lc1 + m * (l1 * l1 + lc2 * lc2 + 2 * l1 * lc1 * cos(theta2)) + I1 + I2;
+  const double d22 = m * lc2 * lc2 + I2;
+  const double d12 = m * (lc2 * lc2 + l1 * lc2 * cos(theta2)) + I2;
+  const double d21 = d12;
+
+  const double c1 =
+      -m * l1 * lc2 * theta2dot * theta2dot * sin(theta2) - (2.0 * m * l1 * lc2 * theta1dot * theta2dot * sin(theta2));
+  const double c2 = m * l1 * lc2 * theta1dot * theta1dot * sin(theta2);
+
+  const double g1 = (m * lc1 + m * l1) * g * cos(theta1) + (m * lc2 * g * cos(theta1 + theta2));
+  const double g2 = m * lc2 * g * cos(theta1 + theta2);
+
+  Eigen::Vector2d u;
+  Eigen::Matrix2d M;
+  Eigen::Vector2d C;
+  Eigen::Vector2d G;
+  Eigen::Vector2d th;
+  Eigen::Vector2d th_dot;
+
+  th_dot(0) = theta1dot;
+  th_dot(1) = theta2dot;
+
+  M(0, 0) = d11;
+  M(1, 0) = d21;
+  M(0, 1) = d12;
+  M(1, 1) = d22;
+
+  C(0) = c1;
+  C(1) = c2;
+
+  G(0) = g1;
+  G(1) = g2;
+
+  u = M * th_dot + C + G;
+
+  // std::cout << "u: " << u << std::endl;
+  // _tau = u[1];
+
+  // get_control_space() -> copy_from_vector(u);
+}
+
+double two_link_acrobot_t::potential_energy()
+{
+  const double theta2 = _theta2;
+  const double theta1 = _theta1 - M_PI / 2.0;
+  const double theta1dot = _theta1dot;
+  const double theta2dot = _theta2dot;
+  const double lc1 = l1 / 2.0;
+  const double lc2 = l2 / 2.0;
+
+  double m1 = mass;
+  double m2 = mass;
+
+  return m1 * g * lc1 * std::sin(theta1) + m2 * g * l1 * std::sin(theta1) + m2 * g * lc2 * std::sin(theta1 + theta2);
+}
+
+bool two_link_acrobot_t::linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D,
+                                   space_point_t xt, space_point_t ut, double epsilon)
+{
+  if (xt != nullptr && ut != nullptr && xt->at(0) != PRX_PI && xt->at(1) != 0 && xt->at(2) != 0 && xt->at(3) != 0)
+    return false;
+
+  constexpr double q1 = PRX_PI;
+  constexpr double q2 = 0;
+  constexpr double dq1 = 0;
+  constexpr double dq2 = 0;
+  double m1 = mass;
+  double m2 = mass;
+  double lc1 = l1 / 2.0;
+  double lc2 = l2 / 2.0;
+
+  A.resize(4, 4);
+  A << 0, 0, 1, 0, 0, 0, 0, 1,
+      -(-g * l1 * std::cos(q1 + q2) * std::cos(q2) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) +
+        I2 * g * l1 * std::cos(q1) * m2 + I2 * g * lc1 * m1 * std::cos(q1)) /
+          (-std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(std::pow(q2, 2.0)) +
+           I2 * std::pow(l1, 2.0) * m2 + I1 * I2),
+      (std::pow(dq1, 2.0) * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(std::pow(q2, 2.0)) -
+       std::pow(dq1, 2.0) * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * sin(std::pow(q2, 2.0)) +
+       g * l1 * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q1 + q2) * std::cos(q2) -
+       g * l1 * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * sin(q1 + q2) * sin(q2) +
+       I2 * std::pow(dq1, 2.0) * l1 * lc2 * m2 * std::cos(q2) + I2 * std::pow(dq2, 2.0) * l1 * lc2 * m2 * std::cos(q2) +
+       2 * I2 * dq1 * dq2 * l1 * lc2 * m2 * std::cos(q2)) /
+              (-std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(std::pow(q2, 2.0)) +
+               I2 * std::pow(l1, 2.0) * m2 + I1 * I2) -
+          (2 * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q2) * sin(q2) *
+           (cos(q2) * sin(q2) * std::pow(dq1, 2.0) * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) +
+            I2 * sin(q2) * std::pow(dq1, 2.0) * l1 * lc2 * m2 + 2 * I2 * sin(q2) * dq1 * dq2 * l1 * lc2 * m2 +
+            I2 * sin(q2) * std::pow(dq2, 2.0) * l1 * lc2 * m2 +
+            g * sin(q1 + q2) * std::cos(q2) * l1 * std::pow(lc2, 2.0) * std::pow(m2, 2.0) - I2 * g * sin(q1) * l1 * m2 -
+            I2 * g * lc1 * m1 * sin(q1))) /
+              (-std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(std::pow(q2, 2.0)) +
+               I2 * std::pow(l1, 2.0) * m2 + I1 * std::pow(I2, 2.0)),
+      (2 * I2 * dq1 * l1 * lc2 * m2 * sin(q2) + 2 * I2 * dq2 * l1 * lc2 * m2 * sin(q2) +
+       2 * dq1 * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q2) * sin(q2)) /
+          (-std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(std::pow(q2, 2.0)) +
+           I2 * std::pow(l1, 2.0) * m2 + I1 * I2),
+      (2 * I2 * dq1 * l1 * lc2 * m2 * sin(q2) + 2 * I2 * dq2 * l1 * lc2 * m2 * sin(q2)) /
+          (-std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(std::pow(q2, 2.0)) +
+           I2 * std::pow(l1, 2.0) * m2 + I1 * I2),
+      // 0, 0, 0, 1;
+      (I2 * g * l1 * m2 * std::cos(q1) - I1 * g * lc2 * m2 * std::cos(q1 + q2) -
+       g * std::pow(l1, 2.0) * lc2 * std::pow(m2, 2.0) * std::cos(q1 + q2) + I2 * g * lc1 * m1 * std::cos(q1) -
+       g * l1 * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q1 + q2) * std::cos(q2) +
+       g * std::pow(l1, 2.0) * lc2 * std::pow(m2, 2.0) * std::cos(q1) * std::cos(q2) +
+       g * l1 * lc1 * lc2 * m1 * m2 * std::cos(q1) * std::cos(q2)) /
+          (-std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(std::pow(q2, 2.0)) +
+           I2 * std::pow(l1, 2.0) * m2 + I1 * I2),
+      (2 * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q2) * std::sin(q2) *
+       (std::pow(dq1, 2.0) * std::pow(l1, 3) * lc2 * std::pow(m2, 2.0) * sin(q2) +
+        g * std::pow(l1, 2.0) * lc2 * std::pow(m2, 2.0) * std::sin(q1 + q2) + I1 * g * lc2 * m2 * sin(q1 + q2) -
+        I2 * g * l1 * m2 * sin(q1) - I2 * g * lc1 * m1 * sin(q1) +
+        2 * std::pow(dq1, 2.0) * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q2) * sin(q2) +
+        std::pow(dq2, 2.0) * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q2) * sin(q2) +
+        g * l1 * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * sin(q1 + q2) * std::cos(q2) -
+        g * std::pow(l1, 2.0) * lc2 * std::pow(m2, 2.0) * std::cos(q2) * sin(q1) +
+        I1 * std::pow(dq1, 2.0) * l1 * lc2 * m2 * sin(q2) + I2 * std::pow(dq1, 2.0) * l1 * lc2 * m2 * sin(q2) +
+        I2 * std::pow(dq2, 2.0) * l1 * lc2 * m2 * sin(q2) +
+        2 * dq1 * dq2 * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q2) * std::sin(q2) +
+        2 * I2 * dq1 * dq2 * l1 * lc2 * m2 * std::sin(q2) -
+        g * l1 * lc1 * lc2 * m1 * m2 * std::cos(q2) * std::sin(q1))) /
+              (-std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(std::pow(q2, 2.0)) +
+               I2 * std::pow(l1, 2.0) * m2 + I1 * std::pow(I2, 2.0)) -
+          (g * std::pow(l1, 2.0) * lc2 * std::pow(m2, 2.0) * std::cos(q1 + q2) + I1 * g * lc2 * m2 * std::cos(q1 + q2) +
+           2 * std::pow(dq1, 2.0) * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) *
+               std::cos(std::pow(q2, 2.0)) +
+           std::pow(dq2, 2.0) * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) *
+               std::cos(std::pow(q2, 2.0)) -
+           2 * std::pow(dq1, 2.0) * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) *
+               sin(std::pow(q2, 2.0)) -
+           std::pow(dq2, 2.0) * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) *
+               std::sin(std::pow(q2, 2.0)) +
+           std::pow(dq1, 2.0) * std::pow(l1, 3) * lc2 * std::pow(m2, 2.0) * std::cos(q2) +
+           g * l1 * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q1 + q2) * std::cos(q2) -
+           g * l1 * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::sin(q1 + q2) * std::sin(q2) +
+           I1 * std::pow(dq1, 2.0) * l1 * lc2 * m2 * std::cos(q2) +
+           I2 * std::pow(dq1, 2.0) * l1 * lc2 * m2 * std::cos(q2) +
+           I2 * std::pow(dq2, 2.0) * l1 * lc2 * m2 * std::cos(q2) +
+           g * std::pow(l1, 2.0) * lc2 * std::pow(m2, 2.0) * std::sin(q1) * std::sin(q2) +
+           2 * dq1 * dq2 * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(std::pow(q2, 2.0)) -
+           2 * dq1 * dq2 * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::sin(std::pow(q2, 2.0)) +
+           2 * I2 * dq1 * dq2 * l1 * lc2 * m2 * std::cos(q2) + g * l1 * lc1 * lc2 * m1 * m2 * sin(q1) * sin(q2)) /
+              (-std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(std::pow(q2, 2.0)) +
+               I2 * std::pow(l1, 2.0) * m2 + I1 * I2),
+      -(2 * dq1 * std::pow(l1, 3.0) * lc2 * std::pow(m2, 2.0) * sin(q2) + 2 * I1 * dq1 * l1 * lc2 * m2 * sin(q2) +
+        2 * I2 * dq1 * l1 * lc2 * m2 * sin(q2) + 2 * I2 * dq2 * l1 * lc2 * m2 * sin(q2) +
+        4 * dq1 * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q2) * sin(q2) +
+        2 * dq2 * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q2) * sin(q2)) /
+          (-std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(std::pow(q2, 2.0)) +
+           I2 * std::pow(l1, 2.0) * m2 + I1 * I2),
+      -(2 * I2 * dq1 * l1 * lc2 * m2 * sin(q2) + 2 * I2 * dq2 * l1 * lc2 * m2 * sin(q2) +
+        2 * dq1 * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q2) * sin(q2) +
+        2 * dq2 * std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(q2) * sin(q2)) /
+          (-std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) * std::cos(std::pow(q2, 2.0)) +
+           I2 * std::pow(l1, 2.0) * m2 + I1 * I2);
+
+  B.resize(4, 1);
+  B << 0, 0,
+      -(d2 * (I2 + l1 * lc2 * m2)) /
+          (-std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) + I2 * std::pow(l1, 2.0) * m2 + I1 * I2),
+      (d2 * (m2 * std::pow(l1, 2.0) + 2 * lc2 * m2 * l1 + I1 + I2)) /
+          (-std::pow(l1, 2.0) * std::pow(lc2, 2.0) * std::pow(m2, 2.0) + I2 * std::pow(l1, 2.0) * m2 + I1 * I2);
+  // A.resize(2,2);
+  // B.resize(2,1);
+  // C.resize(2,2);
+  // D.resize(2,1);
+  // A << 0., 1., gravity / length, -friction / inertia;
+
+  return true;
+}
+
+// bool two_link_acrobot_t::linearize()
+// {
+
+// }
+
+// bool two_link_acrobot_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
+// {
+//   // if (xt->at(0) == PRX_PI && xt->at(1) == 0 && xt->at(2) == 0 && xt->at(3) == 0)
+//   // {
+//   //   return linearize();
+//   // }
+//   return ltv_t::linearize(xt, ut, epsilon);
+// }
+}  // namespace prx

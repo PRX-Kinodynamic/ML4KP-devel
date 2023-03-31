@@ -56,58 +56,6 @@ system_group_t::~system_group_t()
   group.clear();
 }
 
-// void system_group_t::propagate(space_point_t start_state, const plan_t& plan, space_point_t result)
-// {
-//   propagate_step p_step;
-//   state_space->copy_from(start_state);
-
-//   for (const plan_step_t& step : plan)
-//   {
-//     int steps = (int)((step.duration / simulation_step) + .1);
-//     // int i = 0;
-//     if (steps > 0)
-//     {
-//       propagate(steps, step.control);
-//     }
-//   }
-//   state_space->copy_to_point(result);
-// }
-
-// void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
-//                                space_point_t result)
-// {
-//   propagate_step p_step;
-//   state_space->copy_from(start_state);
-
-//   int i = 0;
-//   do
-//   {
-//     ctrl->compute_controls();
-//     propagate_once();
-//   } while (!cond_check.check());
-
-//   state_space->copy_to_point(result);
-// }
-
-// void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
-//                                trajectory_t& result)
-// {
-//   propagate_step p_step;
-
-//   result.clear();
-//   state_space->copy_from(start_state);
-//   result.copy_onto_back(state_space);
-
-//   int i = 0;
-//   do
-//   {
-//     ctrl->compute_controls();
-//     propagate_once();
-//     result.copy_onto_back(state_space);
-//   } while (!cond_check.check());
-
-//   // state_space -> copy_to_point(result);
-// }
 
 void system_group_t::propagate(int steps, space_point_t control, trajectory_t* traj)
 {

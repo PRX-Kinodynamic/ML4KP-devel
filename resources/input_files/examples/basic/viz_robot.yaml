@@ -1,0 +1,8 @@
+random_seed: 23111992
+simulation_step: 0.1
+
+plant: !file "plants/omnibot_FO.yaml"
+# plant: !file "plants/treaded_vehicle.yaml"
+# plant: !file "plants/fo_treaded_vehicle.yaml"
+
+visualize: true

@@ -14,9 +14,8 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/data_structures/gnn.hpp"
 #include "prx/utilities/data_structures/undirected_graph.hpp"
-// #include "prx/utilities/data_structures/tree.hpp"
-#include "prx/simulation/playback/trajectory.hpp"
-#include "prx/planning/planner_functions/planner_functions.hpp"
+
+// #include "prx/planning/planner_functions/planner_functions.hpp"
 
 // #define z_obstacle std::complex<double>(std::numeric_limits<double>::max(),std::numeric_limits<double>::max())
 #define MA_DEBUG(i, j, iL, jL, str)                                                                                    \
@@ -26,6 +25,8 @@
 
 namespace prx
 {
+typedef std::function<bool(space_point_t&)> valid_state_t;
+
 typedef std::function<void(int, int, space_point_t)> mapping_f;
 typedef std::complex<double> ma_pt;
 /**

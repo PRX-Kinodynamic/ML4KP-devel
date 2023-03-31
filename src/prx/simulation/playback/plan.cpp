@@ -324,7 +324,7 @@ void plan_t::to_file(const std::string file_name, const std::ios_base::openmode 
 
   for (unsigned i = 0; i < num_steps; ++i)
   {
-    ofs_map << steps[i].duration << " ";
+    ofs_map << steps[i].duration << prx::separating_value;
     ofs_map << steps[i].control;
     ofs_map << "\n";
   }
@@ -334,11 +334,11 @@ void plan_t::to_file(const std::string file_name, const std::ios_base::openmode 
 
 void plan_t::from_file(const std::string file_name)
 {
+  const char sep{ prx::separating_value };
   std::ifstream ifs(file_name);
   std::string line;
 
   space_point_t aux = control_space->make_point();
-  char sep = ' ';
   double time;
   while (std::getline(ifs, line))
   {

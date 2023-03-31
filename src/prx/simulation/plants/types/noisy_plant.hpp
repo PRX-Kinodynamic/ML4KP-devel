@@ -29,7 +29,7 @@ public:
   {
   }
 
-  virtual inline const space_t* get_state_space() const override
+  virtual inline const noisy_space_t<T>* get_state_space() const override
   {
     return noisy_space.get();
     // return static_cast<space_t*>(noisy_space);

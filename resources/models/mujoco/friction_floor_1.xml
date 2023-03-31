@@ -1,0 +1,25 @@
+<mujoco model="mushr_nano">
+  <compiler angle="radian" />
+  <asset>
+    <texture name='a' builtin="gradient" height="100" rgb1="1 1 1" rgb2="0 0 0" type="skybox" width="100"/>
+    <texture name="texplane0" type="2d" builtin="checker" rgb1="0.14 0.83 0.43" rgb2="0.23 0.09 0.33" width="100" height="100" mark="cross" markrgb=".8 .8 .8"/>
+    <texture name="texplane1" type="2d" builtin="checker" rgb1="0.26 0.12 0.36" rgb2="0.23 0.09 0.33" width="100" height="100" mark="cross" markrgb=".8 .8 .8"/>
+    <material name="matplane0" reflectance="0.3" texture="texplane0" texrepeat="30 30" texuniform="true"/>
+    <material name="matplane1" reflectance="0.3" texture="texplane1" texrepeat="30 30" texuniform="true"/>
+  </asset>
+  <visual>
+    <headlight ambient="0.6 0.6 0.6" diffuse="0.5 0.5 0.5" specular="0.2 0.2 0.2"/>
+    <map znear="0.001" />
+  </visual>
+  <worldbody>
+    <geom contype="1" friction="1 0 0.001" name="floor0" pos="0 0 0" euler="0 0 0" size="1 1 0.01" type="box" material="matplane0" condim="6"/> 
+    <geom contype="1" friction="1 0 0.01" name="floor1" pos="2 0 0" euler="0 0 0" size="1 1 0.01" type="box" material="matplane1" condim="6"/> 
+    <geom contype="1" friction="1 0 0.001" name="floor2" pos="2 2 0" euler="0 0 0" size="1 1 0.01" type="box" material="matplane0" condim="6"/> 
+    <geom contype="1" friction="1 0 0.001" name="floor3" pos="0 2 0" euler="0 0 0" size="1 1 0.01" type="box" material="matplane1" condim="6"/> 
+    <geom contype="1" friction="1 0 0.001" name="floor4" pos="-2 -2 0" euler="0 0 0" size="1 1 0.01" type="box" material="matplane0" condim="6"/> 
+    <geom contype="1" friction="1 0 0.001" name="floor5" pos="0 -2 0" euler="0 0 0" size="1 1 0.01" type="box" material="matplane1" condim="6"/> 
+    <geom contype="1" friction="1 0 0.001" name="floor6" pos="-2 2 0" euler="0 0 0" size="1 1 0.01" type="box" material="matplane0" condim="6"/> 
+    <geom contype="1" friction="1 0 0.001" name="floor7" pos="-2 0 0" euler="0 0 0" size="1 1 0.01" type="box" material="matplane1" condim="6"/> 
+    <geom contype="1" friction="1 0 0.001" name="floor8" pos="2 -2 0" euler="0 0 0" size="1 1 0.01" type="box" material="matplane0" condim="6"/> 
+  </worldbody>
+</mujoco>

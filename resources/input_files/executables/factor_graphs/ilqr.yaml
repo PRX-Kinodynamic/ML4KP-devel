@@ -1,0 +1,9 @@
+random_seed: 231192
+simulation_step: 0.01
+
+environment: "environments/empty.yaml"
+plant: !file "plants/pendulum.yaml"
+
+visualize: true
+
+trajectory_duration: 10

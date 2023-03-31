@@ -1,0 +1,32 @@
+name: "planar_2link"
+path: "planar_2link"
+
+# Assume empty environment... Doesn't make sense otherwise
+start_state: [0.0, 0.0, 0.0, 0.0]
+goal_state:  [3.141592653589793, 0.0, 0.0, 0.0]
+
+min_steps: 1
+max_steps: 50
+
+state_space_lower_bound: [0.0, -3.141592653589793, -6, -6]
+state_space_upper_bound: [6.283185307179586, 3.141592653589793, 6, 6]
+
+control_space_lower_bound: [-14,-14]
+control_space_upper_bound: [14,14]
+
+starting_lower_bound: [0.0, -3.141592653589793, -6, -6]
+ending_upper_bound:   [6.283185307179586, 3.141592653589793, 6, 6]
+
+vis_body: "ball"
+
+lqr_Q: [10,10,1,1]
+
+g: 9.81
+mass: 1
+
+# constant_state: [3.14159, 0, 0, 0]
+# constant_state: [1.57079, 0, 0, 0]
+constant_state: [0.00000, 0, 0, 0]
+constant_ctrl: [0,0]
+
+error_scale: [1,1,1,1]

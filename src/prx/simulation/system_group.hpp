@@ -2,9 +2,10 @@
 
 #include "prx/utilities/defs.hpp"
 
-#include "prx/planning/condition_check.hpp"
+#include "prx/simulation/general/condition_check.hpp"
 #include "prx/simulation/collision_checking/collision_checker.hpp"
 #include "prx/simulation/controller.hpp"
+#include "prx/simulation/general/condition_check.hpp"
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/simulation/system.hpp"

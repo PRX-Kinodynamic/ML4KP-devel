@@ -67,7 +67,7 @@ public:
     return const_end_iterator;
   }
 
-  template <typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
+  template <typename T, std::enable_if_t<std::is_integral_v<T>, bool> = true>
   space_point_t at(T index) const
   {
     prx_assert(index < num_states, "Trying to access state outside of trajectory size.");
@@ -79,7 +79,7 @@ public:
     return interpolate(index);
   }
 
-  template <typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
+  template <typename T, std::enable_if_t<std::is_integral_v<T>, bool> = true>
   unsigned get_num_states() const
   {
     return num_states;

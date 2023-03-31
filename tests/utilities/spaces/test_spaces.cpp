@@ -19,6 +19,23 @@ BOOST_AUTO_TEST_CASE(test_space_is_built_correctly)
   BOOST_CHECK((*pt_sp1)[2] == pt_sp1->at(2));
   BOOST_CHECK(pt_sp1->get_dim() == space_1.get_dimension());
 }
+BOOST_AUTO_TEST_CASE(test_space_point_to_string)
+{
+  double x, y, theta;
+  x = y = theta = 1;
+  std::vector<double*> address_1 = { &x, &y, &theta };
+  prx::space_t space_1("EER", address_1, "space_1");
+
+  prx::space_point_t pt_sp1 = space_1.make_point();
+
+  const std::vector<double> point = { 0, 1, 2 };
+  const std::string expected_string = "0 1 2 ";
+
+  space_1.copy(pt_sp1, point);
+
+  const std::string casted_value{ static_cast<std::string>(*pt_sp1) };
+  BOOST_CHECK_MESSAGE(expected_string == casted_value, "Expected: " << expected_string << ". Got: " << casted_value);
+}
 BOOST_AUTO_TEST_CASE(test_space_operations_are_correct)
 {
   double x, y, theta;
@@ -166,6 +183,25 @@ BOOST_AUTO_TEST_CASE(test_space_copy_to_and_copy_from_point)
   (*pt_sp1)[2] = -3;
   space_1.copy(pt_sp2, pt_sp1);
 
+  BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
+}
+
+BOOST_AUTO_TEST_CASE(testing_copy_from_initializer_list)
+{
+  double x, y, theta;
+  x = y = theta = 1;
+  std::vector<double*> address_1 = { &x, &y, &theta };
+  prx::space_t space_1("EER", address_1, "space_1");
+
+  prx::space_point_t pt_sp1 = space_1.make_point();
+  prx::space_point_t pt_sp2 = space_1.make_point();
+
+  (*pt_sp1)[0] = 10;
+  (*pt_sp1)[1] = 20;
+  (*pt_sp1)[2] = 3;
+
+  space_1.copy_from({ 10, 20, 3 });
+  space_1.copy_to(pt_sp2);
   BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
 }
 

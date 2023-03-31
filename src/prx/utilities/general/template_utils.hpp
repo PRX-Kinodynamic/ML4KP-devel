@@ -59,6 +59,5 @@ struct is_iterable<T, void_t<decltype(std::begin(std::declval<T>())), decltype(s
 // Here is a helper:
 template <typename T>
 constexpr bool is_iterable_v = is_iterable<T>::value;
-
 }  // namespace utils
 }  // namespace prx

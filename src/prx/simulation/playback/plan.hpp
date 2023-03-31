@@ -4,6 +4,7 @@
 
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/spaces/space.hpp"
+#include "prx/utilities/general/constants.hpp"
 #include "prx/utilities/general/transforms.hpp"
 
 #include <deque>
@@ -52,6 +53,17 @@ public:
   ~plan_t();
 
   /**
+   * @brief A plan can contain plan_steps that have a duration > simulation_step. This expands all plan_steps to have
+   * duration==simulation_step by adding as many plan_steps as necessary.
+   */
+  void expand();
+
+  /**
+   * @brief The oposite of expand: if multiple consecutive plan_steps have the same control, have a single plan_step
+   * with duration = total plan_steps that are equal.
+   */
+  void compress();
+  /**
    * @brief Returns the number of steps in the plan.
    *
    * A plan {(u_1,t_1),(u_2,t_2),...,(u_M,t_M)} has <i> M </i> steps.
@@ -90,18 +102,6 @@ public:
     prx_assert(index < num_steps, "Trying to access plan[ " << index << "] outside of bounds ( " << num_steps << ").");
     return steps[index];
   }
-
-  /**
-   * @brief A plan can contain plan_steps that have a duration > simulation_step. This expands all plan_steps to have
-   * duration==simulation_step by adding as many plan_steps as necessary.
-   */
-  void expand();
-
-  /**
-   * @brief The oposite of expand: if multiple consecutive plan_steps have the same control, have a single plan_step
-   * with duration = total plan_steps that are equal.
-   */
-  void compress();
 
   inline space_point_t at(double t) const
   {
@@ -160,8 +160,26 @@ public:
 
   void copy_to(const double start_time, const double duration, plan_t& t);
 
-  void copy_onto_back(space_point_t control, double time);
-  void copy_onto_back(Eigen::VectorXd v_control, double time);
+  template <typename Control, typename Duration>
+  void copy_onto_back(const Control& control, const Duration& duration)
+  {
+    if ((num_steps + 1) >= max_num_steps)
+    {
+      increase_buffer();
+      end_iterator = steps.begin();
+      const_end_iterator = steps.begin();
+      std::advance(end_iterator, num_steps);
+      std::advance(const_end_iterator, num_steps);
+    }
+    control_space->copy((*end_iterator).control, control);
+    (*end_iterator).duration = duration;
+    ++end_iterator;
+    ++const_end_iterator;
+    ++num_steps;
+  }
+
+  // void copy_onto_back(space_point_t control, double time);
+  // void copy_onto_back(Eigen::VectorXd v_control, double time);
 
   void copy_onto_front(space_point_t control, double time);
 

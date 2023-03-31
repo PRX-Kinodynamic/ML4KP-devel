@@ -1,0 +1,21 @@
+random_seed: 11101993
+simulation_step: 0.01
+
+plant: !file "plants/pendulum.yaml"
+# plant: !file "plants/lander_LD.yaml"
+environment: "environments/empty.yaml"
+
+goal_region_radius: 0.1
+
+duration: 5
+state_increment: 0.01
+
+out_dir: "roas/"
+
+file_name_suffix: "_traj_tracking.txt"
+num_samples: 1
+
+checker_value: 150
+checker_type: "time"
+
+visualize: true

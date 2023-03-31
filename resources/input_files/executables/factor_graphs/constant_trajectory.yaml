@@ -1,0 +1,12 @@
+random_seed: 231192
+simulation_step: 0.01
+
+environment: "environments/empty.yaml"
+# plant: !file "plants/pendulum.yaml"
+# plant: !file "plants/acrobot.yaml"
+# plant: !file "plants/omnibot_FO.yaml"
+plant: !file "plants/omnibot_mecanum_FO.yaml"
+
+visualize: true
+
+out_file: "0_1.txt"

@@ -18,10 +18,14 @@
 #define PRX_NOT_IMPLEMENTED                                                                                            \
   std::cout << PRX_COLOR_RED << __PRETTY_FUNCTION__ << " NOT IMPLEMENTED. Is an override needed?" << PRX_COLOR_NORMAL  \
             << std::endl;
+#define PRX_DEPRECIATED                                                                                                \
+  std::cout << PRX_COLOR_YELLOW << __PRETTY_FUNCTION__ << " is depreciated." << PRX_COLOR_NORMAL << std::endl;
+#define PRX_DEPRECIATED_1(MSG)                                                                                         \
+  std::cout << PRX_COLOR_YELLOW << __PRETTY_FUNCTION__ << " is depreciated. " << MSG << PRX_COLOR_NORMAL << std::endl;
 
-#define PRX_DEBUG_ITERABLE(msg, v)                                                                                     \
-  std::cout << "[DBG " << msg << "] ";                                                                                 \
-  for (auto e : v)                                                                                                     \
+#define PRX_DEBUG_ITERABLE(VEC)                                                                                        \
+  std::cout << "[DBG " << #VEC << "] ";                                                                                \
+  for (auto e : VEC)                                                                                                   \
   {                                                                                                                    \
     std::cout << e << " ";                                                                                             \
   }                                                                                                                    \

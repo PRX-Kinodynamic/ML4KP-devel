@@ -6,7 +6,6 @@
 
 #include <bitset>
 
-
 #include "prx/simulation/integrators/integrator.hpp"
 #include "prx/simulation/integrators/euler.hpp"
 #include "prx/simulation/integrators/dopri5.hpp"
@@ -14,78 +13,98 @@
 
 namespace prx
 {
-	class system_factory_t;
-	
-	class plant_t : public system_t, public movable_object_t
-	{
-	public:
-		plant_t(const plant_t& _plant) = default;
-		plant_t(const std::string& path);
-		virtual ~plant_t();
+class system_factory_t;
 
-		virtual void add_system(system_ptr_t& ) override final;
+class plant_t;
+typedef std::shared_ptr<plant_t> plant_ptr_t;
 
-		virtual void propagate(const double simulation_step) override;
+class plant_t : public system_t, public movable_object_t
+{
+public:
+  // plant_t(const std::shared_ptr<plant_t>& _plant);
+  plant_t(const std::string& path);
+  virtual ~plant_t();
 
-		virtual void compute_stopping_maneuver(space_point_t, std::vector<double>&, std::vector<double>&) override;
+  virtual void add_system(system_ptr_t&) override final;
 
-		virtual void compute_control() override;
+  virtual void propagate(const double simulation_step) override;
 
-		virtual void update_configuration()=0;
+  virtual void compute_stopping_maneuver(space_point_t, std::vector<double>&, std::vector<double>&) override;
 
-		const std::vector<std::pair<unsigned,unsigned>>& get_collision_list()
-		{
-			return collision_list;
-		}
+  virtual void compute_control() override;
 
-		void set_integrator(integrator_t::integrators integrator);
+  virtual void update_configuration() = 0;
 
-        virtual void set_state_space_bounds(const std::vector<double>& lower,const std::vector<double>& upper) override;
+  const std::vector<std::pair<unsigned, unsigned>>& get_collision_list()
+  {
+    return collision_list;
+  }
 
-        virtual inline space_t* get_derivative_space()
-        {
-        	return derivative_space;
-        }
-        
-		space_t* derivative_space;
+  void set_integrator(integrator_t::integrators integrator);
 
-		static int registred_plants;
-		
-		virtual void compute_derivative()=0;
+  virtual void set_state_space_bounds(const std::vector<double>& lower, const std::vector<double>& upper) override;
 
-	protected:
+  virtual inline space_t* get_derivative_space()
+  {
+    return derivative_space;
+  }
 
-		plant_t(const system_ptr_t other)
-			: system_t(other),
-			  movable_object_t(other -> get_pathname())
-		{
-			auto _plant = std::dynamic_pointer_cast<plant_t>(other);
-			prx_assert(_plant != nullptr, "Problem casting to a plant_t");
-			derivative_space = _plant -> derivative_space;
-			// derivative_memory = other -> derivative_memory;
-			integrator = _plant -> integrator;
-			derivative_state = _plant -> derivative_state;
+  space_t* derivative_space;
 
-			for (int i = 0; i < derivative_space -> get_dimension(); ++i)
-			{
-				derivative_memory.push_back(_plant -> derivative_memory[i]);
-			}
-		}
+  static int registred_plants;
 
-		std::vector<double*> derivative_memory;
+  virtual void compute_derivative() = 0;
 
+  // virtual bool linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D,
+  // space_point_t xt = nullptr, space_point_t ut = nullptr, double epsilon = 1e-3);
 
+protected:
+  plant_t(const system_ptr_t other) : system_t(other), movable_object_t(other->get_pathname())
+  {
+    auto _plant = std::dynamic_pointer_cast<plant_t>(other);
+    prx_assert(_plant != nullptr, "Problem casting to a plant_t");
+    derivative_space = _plant->derivative_space;
+    // derivative_memory = other -> derivative_memory;
+    integrator = _plant->integrator;
+    derivative_state = _plant->derivative_state;
 
-		//bodies that we want to check collisions for
-		std::vector<std::pair<unsigned,unsigned>> collision_list;
+    for (int i = 0; i < derivative_space->get_dimension(); ++i)
+    {
+      derivative_memory.push_back(_plant->derivative_memory[i]);
+    }
+  }
 
-		std::shared_ptr<integrator_t> integrator;
+  std::vector<double*> derivative_memory;
 
-	private:
+  void compute_derivative(Eigen::VectorXd x, Eigen::VectorXd u)
+  {
+    get_state_space()->copy_from(x);
+    get_control_space()->copy_from(u);
+    compute_derivative();
 
-		space_point_t derivative_state;
-		friend system_factory_t;
+    // get_state_space() -> copy_to_vector(xdot);
+  }
 
-	};
+  void compute_derivative(space_point_t x, space_point_t u, space_point_t xdot = nullptr)
+  {
+    get_state_space()->copy_from_point(x);
+    get_control_space()->copy_from_point(u);
+    compute_derivative();
+    if (xdot)
+    {
+      get_state_space()->copy_to_point(xdot);
+    }
+  }
 
-}
+protected:
+  // bodies that we want to check collisions for
+  std::vector<std::pair<unsigned, unsigned>> collision_list;
+
+  std::shared_ptr<integrator_t> integrator;
+
+private:
+  space_point_t derivative_state;
+  friend system_factory_t;
+};
+
+}  // namespace prx
