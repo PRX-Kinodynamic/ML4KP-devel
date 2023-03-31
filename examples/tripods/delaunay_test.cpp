@@ -14,7 +14,6 @@
 #include "prx/planning/condition_check.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"
 #include "prx/planning/noisy_world_model.hpp"
-#include "prx/planning/world_model.hpp"
 
 #include "prx/simulation/controllers/lqr.hpp"
 #include "prx/simulation/controllers/noisy_controller.hpp"
@@ -23,6 +22,7 @@
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/simulation/plants/types/noisy_plant.hpp"
 #include "prx/simulation/multivalued_map/systems.hpp"
+#include "prx/simulation/world_model.hpp"
 
 #include "prx/utilities/data_structures/gnn.hpp"
 #include "prx/utilities/data_structures/tree.hpp"
@@ -136,8 +136,11 @@ int main(int argc, char** argv)
   do
   {
     // trajs.emplace_back(sg->get_state_space());
-    dgnn.add_point(state);
     // tm(state, result_state);
+    dgnn.add_point(state);
+    tm(state, result_state);
+    // PRX_DEBUG_VAR_2(node.second->point, result_state);
+    dgnn_im.add_point(result_state);
     // dgnn_im.add_point(result_state);
     pointCount++;
 
@@ -148,12 +151,12 @@ int main(int argc, char** argv)
   {
     dgnn.qhull_to_delaunay();
     // PRX_DEBUG_PRINT;
-    for (auto node : dgnn.get_nodes())
-    {
-      tm(node.second->point, result_state);
-      // PRX_DEBUG_VAR_2(node.second->point, result_state);
-      dgnn_im.add_point(result_state);
-    }
+    // for (auto node : dgnn)
+    // {
+    //   tm(node->point, result_state);
+    //   // PRX_DEBUG_VAR_2(node.second->point, result_state);
+    //   dgnn_im.add_point(result_state);
+    // }
     // PRX_DEBUG_PRINT;
     dgnn_im.qhull_to_delaunay();
     dgnn.to_file(prx::out_path + "delaunay_start_states.txt");
@@ -172,32 +175,34 @@ int main(int argc, char** argv)
     //       }
     //     };
 
-    std::size_t v_idx{ 87 };
-    std::unordered_map<std::size_t, std::vector<std::size_t>> F;
+    std::function<std::unordered_set<std::size_t>(const std::size_t&)> get_neighbors = [&](const std::size_t& id) {
+      return dgnn_im[id]->neighbors;
+    };
+    std::function<double(const std::size_t&, const std::size_t&)> node_distance =
+        [&](const std::size_t& a, const std::size_t& b) { return (dgnn_im[a]->point - dgnn_im[b]->point).norm(); };
 
-    std::unordered_map<std::size_t, bool> added;
-    std::queue<std::size_t> candidates;
-    added[v_idx] = true;
+    std::size_t v_idx{ 85 };
+    // std::size_t v_idx{ 87 };
+    std::unordered_map<std::size_t, std::unordered_set<std::size_t>> F;
+
+    // std::unordered_map<std::size_t, bool> added;
+    // std::queue<std::size_t> candidates;
+    // added[v_idx] = true;
     F[v_idx] = { v_idx };
     auto N = dgnn[v_idx]->neighbors;
-    std::set<std::size_t> Y{};
+    std::unordered_set<std::size_t> Y{};
     for (auto n : N)
     {
       Y.insert(dgnn_im[n]->id);
     }
     PRX_DEBUG_ITERABLE("Y: ", Y);
-    std::size_t idx{ 0 };
-    std::size_t next{ 0 };
-    F[v_idx].insert(F[v_idx].end(), Y.begin(), Y.end());
-    std::function<std::set<std::size_t>(const std::size_t&)> get_neighbors = [&](const std::size_t& id) {
-      return dgnn_im[id]->neighbors;
-    };
-    std::function<double(const std::size_t&, const std::size_t&)> node_distance =
-        [&](const std::size_t& a, const std::size_t& b) { return (dgnn_im[a]->point - dgnn_im[b]->point).norm(); };
+    F[v_idx].insert(Y.begin(), Y.end());
     for (auto y : Y)
     {
       std::vector<std::size_t> sp = dijkstra_t::shortest_path(v_idx, y, get_neighbors, node_distance);
-      F[v_idx].insert(F[v_idx].end(), sp.begin(), sp.end());
+      PRX_DEBUG_VAR_2(v_idx, y);
+      PRX_DEBUG_ITERABLE("sp: ", sp);
+      F[v_idx].insert(sp.begin(), sp.end());
     }
 
     // {
@@ -230,7 +235,7 @@ int main(int argc, char** argv)
     ofs_sites.open(sites_filename.c_str(), std::ofstream::trunc);
     ofs_voronoi.open(voronoi_filename.c_str(), std::ofstream::trunc);
 
-    ofs_sites << idx << " " << dgnn[v_idx]->point.transpose() << "\n";
+    ofs_sites << v_idx << " " << dgnn[v_idx]->point.transpose() << "\n";
     for (auto idx : N)
     {
       ofs_sites << idx << " " << dgnn[idx]->point.transpose() << "\n";

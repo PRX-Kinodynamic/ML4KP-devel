@@ -15,7 +15,7 @@
 
 #include "prx/utilities/data_structures/gnn.hpp"
 #include "prx/utilities/defs.hpp"
-
+#include <unordered_set>
 namespace prx
 {
 namespace utilities
@@ -26,7 +26,7 @@ class delaunay_node_t : public prx::proximity_node_t<Eigen::Vector<double, Dim>>
 {
 public:
   using Point = Eigen::Vector<double, Dim>;
-  using Neighbors = std::set<std::size_t>;
+  using Neighbors = std::unordered_set<std::size_t>;
   delaunay_node_t() : proximity_node_t<Point>(), neighbors()
   {
   }
@@ -50,6 +50,54 @@ public:
   static inline double default_delaunay_metric(const Point& a, const Point& b)
   {
     return (a - b).norm();
+  }
+
+  class iterator
+  {
+    typename NodeMap::iterator _iter;
+
+  public:
+    using iterator_category = std::output_iterator_tag;
+    using value_type = NodePtr;  // crap
+    using difference_type = NodePtr;
+    using pointer = const NodePtr*;
+    using reference = NodePtr;
+
+    explicit iterator(typename NodeMap::iterator iter) : _iter(iter)
+    {
+    }
+
+    iterator& operator++()
+    {
+      _iter++;
+      return *this;
+    }
+    iterator operator++(int)
+    {
+      iterator retval = *this;
+      ++(*this);
+      return retval;
+    }
+    bool operator==(iterator other) const
+    {
+      return _iter == other._iter;
+    }
+    bool operator!=(iterator other) const
+    {
+      return !(*this == other);
+    }
+    reference operator*() const
+    {
+      return (*_iter).second;
+    }
+  };
+  iterator begin()
+  {
+    return iterator(_nodes.begin());
+  }
+  iterator end()
+  {
+    return iterator(_nodes.end());
   }
 
   template <Eigen::Index di = Dim, std::enable_if_t<(di != Eigen::Dynamic), bool> = true>
@@ -191,9 +239,9 @@ public:
     return _nodes[idx];
   }
 
-  inline Node& at(const std::size_t& idx)
+  inline NodePtr& at(const std::size_t& idx)
   {
-    return *_nodes[idx];
+    return _nodes[idx];
   }
 
   const NodeMap get_nodes()

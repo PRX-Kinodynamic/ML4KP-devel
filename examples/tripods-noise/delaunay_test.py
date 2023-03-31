@@ -8,40 +8,19 @@ import libpyDirtMP as prx
 
 if __name__ == "__main__":
 
-  params = prx.param_loader("examples/tripods/compute_roa.yaml", sys.argv);
-
-  simulation_step = params["simulation_step"].as_float()
-  prx.set_simulation_step(simulation_step)
-  prx.init_random(params["random_seed"].as_int())
-
-  system_name = str(params["system_name"]);
-
-  plant_name = params["/plant/name"].as_string()
-  plant_path = params["/plant/path"].as_string()
-  plant = prx.system_factory.create_system(plant_name, plant_path)
-  assert plant != None, "Error: plant not found!";
+  param = prx.param_loader("examples/tripods/compute_roa.yaml", sys.argv);
+  time_map = prx.time_map(param);
   
-  world_model = prx.world_model([plant], []);
-  world_model.create_context("context", [plant_name], []);
-  context = world_model.get_context("context");
-
-  sg = context.system_group;
-  ss = sg.get_state_space();
-  dimension = ss.get_dimension();
-
-  lower_bounds = params["/plant/state_space_lower_bound"].as_float_vector()
-  upper_bounds = params["/plant/state_space_upper_bound"].as_float_vector()
-  ss.set_bounds(lower_bounds, upper_bounds)
-
-  traj = prx.trajectory(ss);
-  pts = [];
-
-  tm = prx.time_map(system_name, plant, sg);
-  tm.set_duration(0.5);
+  tm_data = time_map.data;
+  ss = tm_data.state_space
 
   state = ss.make_point();
   random_state = ss.make_point();
   start_state = ss.make_point();
+  result_state = ss.make_point();
+
+  lower_bounds = param["/plant/state_space_lower_bound"].as_float_vector();
+  upper_bounds = param["/plant/state_space_upper_bound"].as_float_vector();
   ss.copy(state, lower_bounds);
   pointCount = 0 ;
   traj_count = 0 ;
@@ -51,46 +30,59 @@ if __name__ == "__main__":
   dgnn = prx.delaunay_graph(delaunay_metric, dimension);
   dgnn_im = prx.delaunay_graph(delaunay_metric, dimension);
 
-  result_state = ss.make_point();
-  qhull_data = prx.vector_of_doubles();
-
   point_count = 0;
-  while(prx.state_space_step(state, [0.5]*dimension, dimension, lower_bounds, upper_bounds)):
-    ss.copy(start_state, state)
+  is_there_next = True
+  while(is_there_next):
+    ss.sample(random_state);
+    ss.copy(start_state, random_state)
+    # ss.copy(start_state, state)
+    time_map(start_state, result_state);
     dgnn.add_point(start_state);
-    point_count += 1
-    # ss.sample(random_state);
-    # ss.copy(start_state, random_state)
-    # ss.copy_point(start_state, random_state)
-
-    # tm(start_state, result_state);
-    # dgnn.add_point(result_state);
-  dgnn.qhull_to_delaunay();
-  for pair in dgnn.get_nodes():
-    tm(pair.node.point, result_state);
-    print(result_state)
     dgnn_im.add_point(result_state);
+
+    point_count += 1
+    is_there_next=prx.state_space_step(state, 0.5, dimension, lower_bounds, upper_bounds);
+
+  dgnn.qhull_to_delaunay();
   dgnn_im.qhull_to_delaunay();
-  dgnn.to_file(prx.out_path + "delaunay_start_states.txt");
-  dgnn_im.to_file(prx.out_path + "delaunay_end_states.txt");
+  dgnn.to_file(prx.out_path + "py_delaunay_start_states.txt");
+  dgnn_im.to_file(prx.out_path + "py_delaunay_end_states.txt");
 
-  # sites_filename = open(prx.out_path + "delaunay_py.txt", 'w');
-  # voronoi_filename = open(prx.out_path + "voronoi_py.txt", 'w');
+  def neighbors_query_py(idx):
+    return dgnn_im[idx].neighbors
+  def dijkstra_distance_py(a, b):
+    return (dgnn_im[a].point - dgnn_im[b].point).norm();
+  neighbors_query = prx.neighbors_query.wrap(neighbors_query_py)
+  dijkstra_distance = prx.dijkstra_distance.wrap(dijkstra_distance_py)
 
-  # query_node = ss.make_point();
-  # ss.copy(query_node, [0.0, 0.0]);
-  # # result_nodes = dgnn.get_gnn().radius_and_closest_query(query_node, 1.0);
-  # result_nodes = dgnn.get_gnn_nodes();
-  # for node in result_nodes:
-  #   pt_str = str(node.point[0]) + " " + str(node.point[1]) + "\n" ;
-  #   voronoi_filename.write(pt_str)
-  #   for site in node.sites:
-  #     site_str = str(site[0]) + " " + str(site[1]) + " ";
-  #     # print(site_str)
-  #     sites_filename.write(site_str)
-  #   sites_filename.write("\n")
+  F = {};
+  # v_idx = 87
+
+  for node in dgnn:
+    v_idx = node.id
+    F[v_idx] = {v_idx}
+    N = dgnn[v_idx].neighbors;
+    Y = set();
+    for n in N:
+      Y.add(dgnn_im[n].id)
+
+    F[v_idx] |= Y;
+
+    for y in Y:
+      sp = prx.dijkstra.shortest_path(v_idx, y, neighbors_query, dijkstra_distance);
+      for s in sp:
+        F[v_idx].add(s)
+
+  sites_filename = prx.out_path + "py_delaunay_ss_f.txt";
+  voronoi_filename = prx.out_path + "py_delaunay_es_f.txt";
+  ofs_sites = open(sites_filename, "w");
+  ofs_voronoi = open(voronoi_filename, "w");
+
+  v_idx = 85
+  ofs_sites.write(str(v_idx) + " " + str(dgnn[v_idx].point.transpose()) +"\n");
+  for idx in dgnn[v_idx].neighbors:
+    ofs_sites.write(str(idx) + " " + str(dgnn[idx].point.transpose()) +"\n");
+  for idx in F[v_idx]:
+    ofs_voronoi.write(str(idx) + " " + str(dgnn_im[idx].point.transpose()) +"\n");
 
 
-
-
-   

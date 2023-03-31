@@ -10,8 +10,8 @@ namespace prx
 {
 namespace simulation
 {
-class time_map_t;
-typedef std::function<controller_ptr_t(prx::simulation::time_map_t&)> tm_controller_gen_fn;
+struct time_map_data_t;
+typedef std::function<controller_ptr_t(prx::simulation::time_map_data_t&)> tm_controller_gen_fn;
 
 class time_map_controllers_t
 {

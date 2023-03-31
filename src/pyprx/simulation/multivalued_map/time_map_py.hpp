@@ -10,13 +10,37 @@ namespace multivalued_map
 {
 namespace time_map
 {
+using prx::simulation::time_map_data_t;
 using prx::simulation::time_map_t;
-PRX_SETTER(time_map_t, x_goal)
-PRX_GETTER(time_map_t, x_goal)
 
-PRX_SETTER(time_map_t, u_goal)
-PRX_GETTER(time_map_t, u_goal)
+PRX_GETTER(time_map_data_t, _params)
+PRX_GETTER(time_map_data_t, _system)
+PRX_GETTER(time_map_data_t, x_goal)
+PRX_GETTER(time_map_data_t, u_goal)
+PRX_GETTER(time_map_data_t, _system_name)
+PRX_GETTER(time_map_data_t, _state_space)
+PRX_GETTER(time_map_data_t, _control_space)
+PRX_GETTER(time_map_data_t, _parameter_space)
+PRX_GETTER(time_map_data_t, _system_group)
+PRX_GETTER(time_map_data_t, _checker)
+PRX_GETTER(time_map_data_t, _controller)
+PRX_GETTER(time_map_data_t, _world_model)
 
+PRX_SETTER(time_map_data_t, _params)
+PRX_SETTER(time_map_data_t, _system)
+PRX_SETTER(time_map_data_t, x_goal)
+PRX_SETTER(time_map_data_t, u_goal)
+PRX_SETTER(time_map_data_t, _system_name)
+PRX_SETTER(time_map_data_t, _state_space)
+PRX_SETTER(time_map_data_t, _control_space)
+PRX_SETTER(time_map_data_t, _parameter_space)
+PRX_SETTER(time_map_data_t, _system_group)
+PRX_SETTER(time_map_data_t, _checker)
+PRX_SETTER(time_map_data_t, _controller)
+PRX_SETTER(time_map_data_t, _world_model)
+
+PRX_GETTER(time_map_t, _data)
+PRX_SETTER(time_map_t, _data)
 std::mutex mutex_start_state;
 
 template <typename T, std::enable_if_t<is_pyobject<T>{}, bool> = true>
@@ -75,7 +99,43 @@ void timemap_call_pyobject(const std::shared_ptr<time_map_t> tm, StartState& sta
 
 void bindings()
 {
+  class_<time_map_data_t, std::shared_ptr<time_map_data_t>>("time_map_data", no_init)
+      .add_property("params", &get_time_map_data_t__params<prx::param_loader>,
+                    &set_time_map_data_t__params<prx::param_loader>)
+      .add_property("system", &get_time_map_data_t__system<prx::system_ptr_t>,
+                    &set_time_map_data_t__system<prx::system_ptr_t>)
+      .add_property("x_goal", &get_time_map_data_t_x_goal<prx::space_point_t>,
+                    &set_time_map_data_t_x_goal<prx::space_point_t>)
+      .add_property("u_goal", &get_time_map_data_t_u_goal<prx::space_point_t>,
+                    &set_time_map_data_t_u_goal<prx::space_point_t>)
+      .add_property("system_name", &get_time_map_data_t__system_name<std::string>,
+                    &set_time_map_data_t__system_name<std::string>)
+      .add_property("state_space",
+                    make_function(get_time_map_data_t__state_space<prx::space_t*>, return_internal_reference<>()),
+                    make_function(set_time_map_data_t__state_space<prx::space_t*>, return_internal_reference<>()))
+      .add_property("control_space",
+                    make_function(get_time_map_data_t__control_space<prx::space_t*>, return_internal_reference<>()),
+                    make_function(set_time_map_data_t__control_space<prx::space_t*>, return_internal_reference<>()))
+      .add_property("parameter_space",
+                    make_function(get_time_map_data_t__parameter_space<prx::space_t*>, return_internal_reference<>()),
+                    make_function(set_time_map_data_t__parameter_space<prx::space_t*>, return_internal_reference<>()))
+      .add_property("system_group", &get_time_map_data_t__system_group<std::shared_ptr<prx::system_group_t>>,
+                    &set_time_map_data_t__system_group<std::shared_ptr<prx::system_group_t>>)
+      .add_property("checker",
+                    make_function(get_time_map_data_t__checker<prx::condition_check_t*>, return_internal_reference<>()),
+                    make_function(set_time_map_data_t__checker<prx::condition_check_t*>, return_internal_reference<>()))
+      .add_property("controller", &get_time_map_data_t__controller<prx::controller_ptr_t>,
+                    &set_time_map_data_t__controller<prx::controller_ptr_t>)
+      .add_property("world_model",
+                    make_function(get_time_map_data_t__world_model<prx::world_model_t*>, return_internal_reference<>()),
+                    make_function(set_time_map_data_t__world_model<prx::world_model_t*>, return_internal_reference<>()))
+      // Comment to force ; to the next one
+      ;
   class_<time_map_t, std::shared_ptr<time_map_t>>("time_map", no_init)
+      .def("__init__", make_constructor(&init_as_ptr<time_map_t, const std::string&>, default_call_policies(),
+                                        (arg("param_filename"))))
+      .def("__init__", make_constructor(&init_as_ptr<time_map_t, prx::param_loader&>, default_call_policies(),
+                                        (arg("param_loader"))))
       .def("__init__",
            make_constructor(&init_as_ptr<time_map_t, const std::string, const prx::system_ptr_t,
                                          const std::shared_ptr<prx::system_group_t>>,
@@ -86,8 +146,10 @@ void bindings()
       .def("__call__", timemap_call_pyobject<prx::space_point_t, boost::python::list>)
       .def("__call__", &time_map_t::operator()<prx::space_point_t, prx::trajectory_t>)
       .def("__call__", &time_map_t::operator()<prx::space_point_t, prx::space_point_t>)
-      .add_property("x_goal", &get_time_map_t_x_goal<prx::space_point_t>, &set_time_map_t_x_goal<prx::space_point_t>)
-      .add_property("u_goal", &get_time_map_t_u_goal<prx::space_point_t>, &set_time_map_t_u_goal<prx::space_point_t>)
+      .def("__call__", &time_map_t::operator()<Eigen::VectorXd, prx::space_point_t>)
+      .def("__call__", &time_map_t::operator()<Eigen::VectorXd, Eigen::VectorXd>)
+      .def("__call__", &time_map_t::operator()<prx::space_point_t, Eigen::VectorXd>)
+      .add_property("data", &get_time_map_t__data<time_map_data_t>, &set_time_map_t__data<time_map_data_t>)
       // Comment to force ; to the next one
       ;
 }

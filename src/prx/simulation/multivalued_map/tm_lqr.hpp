@@ -6,7 +6,7 @@ namespace prx
 {
 namespace simulation
 {
-static controller_ptr_t pendulum_lqr(const time_map_t& tm)
+static controller_ptr_t pendulum_lqr(const time_map_data_t& tm)
 {
   Eigen::Matrix<double, 2, 2> Q{ Eigen::Matrix<double, 2, 2>::Identity() };
   Eigen::Matrix<double, 1, 1> R{ Eigen::Matrix<double, 1, 1>::Identity() };

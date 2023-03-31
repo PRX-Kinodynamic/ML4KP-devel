@@ -1,4 +1,5 @@
 #pragma once
+#include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 #include "prx/utilities/general/template_utils.hpp"
@@ -140,13 +141,12 @@ std::string iter_to_str(T& v)
   os << "]";
   return os.str();
 }
-template <typename Container>
-void container_wrapper(const std::string name)
+template <typename Vector>
+void vector_wrapper(const std::string name)
 {
-  class_<Container>(name.c_str(), init<>())
-      .def(vector_indexing_suite<Container>())
-      // .def("__str__", &iter_to_str<Container>)
-      .def("__str__", &container_to_string<Container>)
+  class_<Vector>(name.c_str(), init<>())
+      .def(vector_indexing_suite<Vector>())
+      .def("__str__", &container_to_string<Vector>)
       // Comment to force ; to the next one
       ;
 }

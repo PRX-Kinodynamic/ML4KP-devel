@@ -98,8 +98,8 @@ static Scalar get_item_v(const T& a, Index _idx)
   return a[_idx];
 }
 
-template <typename T>
-static T transpose(const T& m)
+template <typename Type, typename Transpose>
+static Transpose transpose(const Type& m)
 {
   return m.transpose();
 }
@@ -115,6 +115,16 @@ static T __imul__(T& a, const T& b)
   a *= b;
   return a;
 };
+template <typename T>
+static T __add__(const T& a, const T& b)
+{
+  return a + b;
+}
+template <typename T>
+static T __sub__(const T& a, const T& b)
+{
+  return a - b;
+}
 template <typename T>
 static T __mul__(const T& a, const T& b)
 {
@@ -136,7 +146,11 @@ static T __div__(const T& a, const T& b)
 {
   return a / b;
 }
-
+template <typename T>
+static double norm(const T& a)
+{
+  return a.norm();
+}
 template <typename T>
 static T Ones(Index rows, Index cols)
 {
@@ -222,17 +236,20 @@ std::string transform_to_str(prx::transform_t obj)
   return iss.str();
 }
 
-template <typename VectorType>
+template <typename VectorType, typename VectorTranspose>
 void python_vector_class(const std::string vector_name)
 {
   class_<VectorType>(vector_name.c_str(), init<VectorType>())
       .def("__setitem__", &set_item_v<VectorType>)
       .def("__getitem__", &get_item_v<VectorType>)
-      .def("transpose", &transpose<VectorType>, "Return transposed matrix.")
+      .def("transpose", &transpose<VectorType, VectorTranspose>, "Return transposed vector.")
       .def("Zero", &zero_static<VectorType>, "Create zero vector")
       .staticmethod("Zero")
       .def("Ones", &ones_static<VectorType>, "Create ones vector")
       .staticmethod("Ones")
+      .def("__add__", &__add__<Eigen::VectorXd>)
+      .def("__sub__", &__sub__<Eigen::VectorXd>)
+      .def("norm", &norm<Eigen::VectorXd>)
       .def("__str__", &prx_to_str<VectorType>);
 }
 
@@ -240,12 +257,13 @@ template <Eigen::Index Dim>
 void vector_to_python()
 {
   using VectorType = Eigen::Matrix<double, Dim, 1>;
-  std::string vector_name{ "vector" + std::to_string(Dim) };
-  python_vector_class<VectorType>(vector_name);
-
   using RowVectorType = Eigen::Matrix<double, 1, Dim>;
+
+  std::string vector_name{ "vector" + std::to_string(Dim) };
+  python_vector_class<VectorType, RowVectorType>(vector_name);
+
   std::string row_vector_name{ "row_vector" + std::to_string(Dim) };
-  python_vector_class<RowVectorType>(row_vector_name);
+  python_vector_class<RowVectorType, VectorType>(row_vector_name);
 }
 
 void bindings()
@@ -276,7 +294,10 @@ void bindings()
                                         default_call_policies(), (args("x"), args("y"), args("z"), args("w"))))
       .def("__setitem__", &set_item_v<Eigen::VectorXd>)
       .def("__getitem__", &get_item_v<Eigen::VectorXd>)
-      .def("transpose", &transpose<Eigen::VectorXd>, "Return transposed matrix.")
+      .def("__add__", &__add__<Eigen::VectorXd>)
+      .def("__sub__", &__sub__<Eigen::VectorXd>)
+      .def("norm", &norm<Eigen::VectorXd>)
+      .def("transpose", &transpose<Eigen::VectorXd, Eigen::RowVectorXd>, "Return transposed matrix.")
       .def("Zero", &Zero_1d<Eigen::VectorXd>, (arg("size")), "Create zero vector of given dimensions")
       .staticmethod("Zero")
       .def("Ones", &ones_vector<Eigen::RowVectorXd>, (arg("size")), "Create ones vector of given dimensions")
@@ -292,7 +313,10 @@ void bindings()
                                         default_call_policies(), (args("x"), args("y"), args("z"), args("w"))))
       .def("__setitem__", &set_item_v<Eigen::RowVectorXd>)
       .def("__getitem__", &get_item_v<Eigen::RowVectorXd>)
-      .def("transpose", &transpose<Eigen::RowVectorXd>, "Return transposed matrix.")
+      .def("__add__", &__add__<Eigen::RowVectorXd>)
+      .def("__sub__", &__sub__<Eigen::RowVectorXd>)
+      .def("norm", &norm<Eigen::VectorXd>)
+      .def("transpose", &transpose<Eigen::VectorXd, Eigen::RowVectorXd>, "Return transposed matrix.")
       .def("Zero", &Zero_1d<Eigen::RowVectorXd>, (arg("size")), "Create zero vector of given dimensions")
       .staticmethod("Zero")
       .def("Ones", &ones_vector<Eigen::RowVectorXd>, (arg("size")), "Create ones vector of given dimensions")
@@ -309,7 +333,7 @@ void bindings()
       .def("__setitem__", &set_item<Eigen::MatrixXd>)
       .def("determinant", &Eigen::MatrixXd::determinant, "Return matrix determinant.")
       .def("trace", &Eigen::MatrixXd::trace, "Return sum of diagonal elements.")
-      .def("transpose", &transpose<Eigen::MatrixXd>, "Return transposed matrix.")
+      .def("transpose", &transpose<Eigen::MatrixXd, Eigen::MatrixXd>, "Return transposed matrix.")
       .def("diagonal", &diagonal<Eigen::MatrixXd, Eigen::VectorXd>, "Return diagonal as vector.")
       // // matrix*matrix product
       .def("__mul__", &__mul__<Eigen::MatrixXd>)

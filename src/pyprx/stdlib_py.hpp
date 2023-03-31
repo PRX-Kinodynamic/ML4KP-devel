@@ -1,7 +1,9 @@
 #include <iostream>
+#include <unordered_set>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 // #include "prx/utilities/geometry/movable_object.hpp"
+#include "pyprx/set_wrapper.hpp"
 
 using namespace boost::python;
 
@@ -36,10 +38,13 @@ void bindings()
   //        ;
   // PRX_ITERABLE_WRAPPER(std::vector<std::string>, "vector_of_strings")
   // PRX_ITERABLE_WRAPPER(std::vector<double>, "vector_of_doubles")
-  container_wrapper<std::vector<std::string>>("vector_of_strings");
-  container_wrapper<std::vector<double>>("vector_of_doubles");
-  container_wrapper<std::vector<std::vector<double>>>("vector_of_vector_of_doubles");
-  container_wrapper<std::vector<std::size_t>>("vector_of_unsigned");
+  vector_wrapper<std::vector<std::string>>("vector_of_strings");
+  vector_wrapper<std::vector<double>>("vector_of_doubles");
+  vector_wrapper<std::vector<std::vector<double>>>("vector_of_vector_of_doubles");
+  vector_wrapper<std::vector<std::size_t>>("vector_of_unsigned");
+
+  set_wrapper<std::unordered_set<std::size_t>>::bindings("unordered_set_of_unsigned");
+
   // PRX_ITERABLE_WRAPPER_NONSTR(std::vector<std::vector<double>>, "vector_of_vector_of_doubles")
   // PRX_ITERABLE_WRAPPER_NONSTR(std::vector<double*>, "vector_of_doubles_ptrs")
 
