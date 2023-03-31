@@ -7,12 +7,15 @@
 #include <vector>
 #include <iomanip>
 #include <algorithm>
+#include <fstream>
 
 namespace prx
 {
 #define PRX_PI 3.1415926535897932385
 #define PRX_EPSILON 1e-7
 #define PRX_INFINITY 1e10
+extern int precision;
+extern char separating_value;
 
 static inline std::string lib_path_safe(std::string env_var)
 {
@@ -48,9 +51,11 @@ static inline bool are_approx_equal(std::vector<T> c1, std::vector<S> c2, double
 }
 
 const std::string lib_path = lib_path_safe("DIRTMP_PATH");
+
 const std::string models_path = lib_path + "resources/models/";
 const std::string input_path = lib_path + "resources/input_files/";
 const std::string js_path = lib_path + "resources/js/";
+// TODO: Add code that creates/check for existance of directory
 const std::string out_path = lib_path + "out/";
 
 enum propagate_step
@@ -62,9 +67,8 @@ enum propagate_step
 enum plant_type
 {
   ANALYTICAL,
-  BULLET
+  MUJOCO
 };
-
 static inline double norm_angle_pi(double angle, double min_angle = -PRX_PI, double max_angle = PRX_PI)
 {
   // prx_warn_cond(std::fabs(angle) < 100 * max_angle, "Angle might be too high: " << std::to_string(angle));
@@ -152,7 +156,7 @@ static inline vector_t string_to_rgb(std::string input)
 }
 
 template <typename T>
-std::vector<T> linspace(T a, T b, size_t N)
+std::vector<T> linspace(T a, T b, std::size_t N)
 {
   T h = (b - a) / static_cast<T>(N - 1);
   std::vector<T> xs(N);
@@ -177,4 +181,151 @@ int sgn(T a)
 {
   return (a > 0) - (a < 0);
 }
+
+template <typename T>
+void vector_to_file(const std::string file_name, const std::vector<std::vector<T>> _vec,
+                    const std::ios_base::openmode _mode)
+{
+  std::ofstream ofs_map;
+  ofs_map.open(file_name.c_str(), _mode);
+
+  for (auto _vec_in : _vec)
+  {
+    for (auto e : _vec_in)
+    {
+      ofs_map << std::to_string(e) << " ";
+    }
+    ofs_map << "\n";
+  }
+  ofs_map << "\n";
+
+  ofs_map.close();
+}
+
+template <typename T>
+inline void hash_combine(std::size_t& seed, const T& val)
+{
+  seed ^= std::hash<T>()(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+template <typename T, std::size_t n_i, std::enable_if_t<(n_i == 0), bool> = true>
+inline void range_hash_combine(std::size_t& seed, const T& range)
+{
+  hash_combine(seed, range[n_i]);
+}
+
+template <typename T, std::size_t n_i, std::enable_if_t<(n_i != 0), bool> = true>
+inline void range_hash_combine(std::size_t& seed, const T& range)
+{
+  hash_combine(seed, range[n_i]);
+  range_hash_combine<T, n_i - 1>(seed, range);
+}
+
+template <typename T, int dimension>
+struct range_hash_combine_t
+{
+  template <int dim = dimension, std::enable_if_t<(dim <= 0), bool> = true>
+  const std::size_t operator()(const T& t_to_hash) const noexcept
+  {
+    std::size_t seed = 0;
+    for (auto e : t_to_hash)
+    {
+      hash_combine(seed, e);
+    }
+    return seed;
+  }
+
+  template <int dim = dimension, std::enable_if_t<(dim > 0), bool> = true>
+  const std::size_t operator()(const T& t_to_hash) const noexcept
+  {
+    std::size_t seed = 0;
+    range_hash_combine<T, dimension - 1>(seed, t_to_hash);
+    return seed;
+  }
+};
+
+// ToDo: Use In2... (variadic) to handle multiple containers.
+template <typename Container, typename In1, typename In2>
+static Container merge_container(const In1& in1, const In2& in2)
+{
+  Container container(in1.begin(), in1.end());
+  container.insert(container.end(), in2.begin(), in2.end());
+  return container;
+}
+template <typename Container, typename In1, typename... InRest>
+static Container merge_container(const In1& in1, InRest... in_rest)
+{
+  Container container(in1.begin(), in1.end());
+  const Container merged{ merge_container<Container>(in_rest...) };
+  container.insert(container.end(), merged.begin(), merged.end());
+  return container;
+}
+
+/**
+ * @brief      Given a state space, repeated calls to this function will step through all the space. Every call to this
+ *             function the state is incremented by step. This can be though of handling a state as a number and
+ *             increasing a digit in each call but starting from the right for simplicity: 0xAF00 + step = 0xA010
+ *
+ * 							Example usage: \\ no-lint
+ * 							state <- lower bound;
+ * 							do{
+ *             		Amazing code here
+ *             } while(state_space_step(state, step, ...))
+ *
+ * @param      state        The state to step over
+ * @param[in]  step         The step per dimension
+ * @param[in]  dimension    The dimension of the state space
+ * @param[in]  lower_bound  The lower bound
+ * @param[in]  upper_bound  The upper bound
+ *
+ * @tparam     State        An object representing the state and accessable through operator[] (i.e state[i])
+ * @tparam     Steps 				A container of size dimension. This allows each dimension to be step at different rate.
+ * @tparam     Bound        A container of size dimension representing a bound of the space.
+ */
+template <typename State, typename Steps, typename Bound,
+          std::enable_if_t<prx::utils::is_iterable<Steps>{}, bool> = true>
+static bool state_space_step(State& state, const Steps steps, const std::size_t& dimension, const Bound lower_bound,
+                             const Bound upper_bound)
+{
+  for (int i = 0; i < dimension; ++i)
+  {
+    state[i] = state[i] + steps[i];
+
+    if (state[i] <= upper_bound[i])
+    {
+      return true;
+    }
+    state[i] = lower_bound[i];
+  }
+  return false;
+}
+
+template <typename State, typename Step, typename Bound,
+          std::enable_if_t<!prx::utils::is_iterable<Step>{}, bool> = true>
+static bool state_space_step(State& state, const Step step, const std::size_t& dimension, const Bound lower_bound,
+                             const Bound upper_bound)
+{
+  const std::vector<double> steps(dimension, step);
+  return state_space_step(state, steps, dimension, lower_bound, upper_bound);
+}
+
+template <typename T>
+static std::vector<T> split(std::string str, const char separator = prx::separating_value)
+{
+  std::vector<T> result;
+  std::istringstream ss(str);
+  std::string token;
+  while (std::getline(ss, token, separator))
+  {
+    if (token.size() > 0)
+    {
+      std::istringstream ti(token);
+      T x;
+      if ((ti >> x))
+        result.push_back(x);
+    }
+  }
+  return result;
+}
+
 }  // namespace prx

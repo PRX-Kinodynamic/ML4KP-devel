@@ -5,16 +5,27 @@
 #include "pyprx/simulation/plants/ackermann_FO_py.hpp"
 #include "pyprx/simulation/plants/lander_LD_py.hpp"
 #include "pyprx/simulation/plants/mountain_car_py.hpp"
+#include "pyprx/simulation/plants/quadrotor_1d_py.hpp"
 
-void pyprx_simulation_plants()
+namespace pyprx
 {
-	pyprx_simulation_plants_types();
+namespace simulation
+{
+namespace plants
+{
+void bindings()
+{
+  types::bindings();
 
-   	pyprx_simulation_plants_2DPT_py();
-	pyprx_simulation_plants_acrobot_py();
-   	// pyprx_simulation_plants_acrobot();
-   	pyprx_simulation_plants_pendulum();
-	pyprx_simulation_plants_ackermann_FO();
-	pyprx_simulation_plants_lander_LD();
-	pyprx_simulation_plants_mountain_car();
+  two_dimensional_point::bindings();
+  acrobot::bindings();
+  pendulum::bindings();
+  ackermann_FO::bindings();
+  lander_LD::bindings();
+  mountain_car::bindings();
+  quadrotor_1d::bindings();
 }
+
+}  // namespace plants
+}  // namespace simulation
+}  // namespace pyprx

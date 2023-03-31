@@ -8,16 +8,12 @@
 #include "pyprx/planning/planning_py.hpp"
 #include "pyprx/visualization/visualization_py.hpp"
 
-
-
-BOOST_PYTHON_MODULE(libpyDirtMP)  // Name here must match the name of the final shared library, i.e. mantid.dll or mantid.so
+BOOST_PYTHON_MODULE(libpyDirtMP)  // Name here must match the name of the final shared library, i.e. mantid.dll or
+                                  // mantid.so
 {
-	pyprx_stdlib_py();
-	pyprx_utilities_py();
-	pyprx_simulation_py();
-	pyprx_planning_py();
-	pyprx_visualization_py();
-   	// class_<prx::plant_t>("plant_t", init<std::string>())
-   	    // .def("propagate", pure_virtual(&prx::system_t::propagate))
-   	// ;
+  pyprx::stdlib::bindings();
+  pyprx::utilities::bindings();
+  pyprx::simulation::bindings();
+  pyprx::planning::bindings();
+  pyprx::visualization::bindings();
 }

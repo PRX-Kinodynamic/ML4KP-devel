@@ -5,12 +5,26 @@
 #include "pyprx/utilities/general/random_py.hpp"
 #include "pyprx/utilities/general/param_loader_py.hpp"
 #include "pyprx/utilities/general/noise_py.hpp"
-
-void pyprx_utilities_general()
+#include "pyprx/utilities/general/prx_assert_py.hpp"
+#include "pyprx/utilities/general/dijkstra_py.hpp"
+namespace pyprx
 {
-	pyprx_utilities_general_constants();
-	pyprx_utilities_general_transforms();
-	pyprx_utilities_general_random();
-	pyprx_utilities_general_param_loader();
-	pyprx_utilities_general_noise();
+namespace utilities
+{
+namespace general
+{
+
+void bindings()
+{
+  constants::bindings();
+  noise::bindings();
+  param_loader::bindings();
+  prx_assert::bindings();
+  random::bindings();
+  transforms::bindings();
+  dijkstra::bindings();
 }
+
+}  // namespace general
+}  // namespace utilities
+}  // namespace pyprx

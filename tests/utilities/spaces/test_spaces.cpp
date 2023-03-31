@@ -70,9 +70,9 @@ BOOST_AUTO_TEST_CASE(test_space_copy_and_clone_point)
   space_1.copy_point(pt_sp2, pt_sp1);
   BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
 
-  space_1.copy_point_from_vector(pt_sp2, { 2, 5, 1 });
-  std::vector<double> v;
-  space_1.copy_vector_from_point(v, pt_sp2);
+  space_1.copy(pt_sp2, { 2, 5, 1 });
+  std::vector<double> v(space_1.size());
+  space_1.copy(v, pt_sp2);
   BOOST_CHECK(v[0] == 2 && v[1] == 5 && v[2] == 1);
 }
 BOOST_AUTO_TEST_CASE(test_space_bounds)
@@ -196,4 +196,34 @@ BOOST_AUTO_TEST_CASE(test_space_copy)
   BOOST_CHECK(!space_1.equal_points(pt_sp1, pt_sp2));
   space_1.copy(pt_sp1, pt_sp2);
   BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
+}
+
+BOOST_AUTO_TEST_CASE(test_space_point_eigen_vector_shares_memory_without_crashing)
+{
+  double x, y, theta;
+  x = y = theta = 1;
+  std::vector<double*> address_1 = { &x, &y, &theta };
+  prx::space_t space_1("EER", address_1, "space_1");
+
+  prx::space_point_t pt_sp1 = space_1.make_point();
+
+  space_1.copy(pt_sp1, { 1, 2, 3 });
+
+  BOOST_REQUIRE(pt_sp1->vector()[0] == (*pt_sp1)[0]);
+  BOOST_REQUIRE(pt_sp1->vector()[1] == (*pt_sp1)[1]);
+  BOOST_REQUIRE(pt_sp1->vector()[2] == (*pt_sp1)[2]);
+
+  pt_sp1->vector()[0] = 3;
+  pt_sp1->vector()[1] = 2;
+  pt_sp1->vector()[2] = 1;
+
+  BOOST_REQUIRE(pt_sp1->vector()[0] == (*pt_sp1)[0]);
+  BOOST_REQUIRE(pt_sp1->vector()[1] == (*pt_sp1)[1]);
+  BOOST_REQUIRE(pt_sp1->vector()[2] == (*pt_sp1)[2]);
+
+  pt_sp1->vector() = Eigen::Vector3d::Ones() + Eigen::Vector3d::Ones();
+  BOOST_REQUIRE((*pt_sp1)[0] == 2);
+  BOOST_REQUIRE((*pt_sp1)[1] == 2);
+  BOOST_REQUIRE((*pt_sp1)[2] == 2);
+  BOOST_REQUIRE(pt_sp1->vector() == Eigen::Vector3d(2, 2, 2));
 }

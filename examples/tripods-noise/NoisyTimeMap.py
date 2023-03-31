@@ -1,8 +1,8 @@
-import sys 
-import os 
-import torch 
-import libpyDirtMP as prx 
-import numpy as np 
+import sys
+import os
+import torch
+import libpyDirtMP as prx
+import numpy as np
 
 # from inspect import currentframe, getframeinfo
 
@@ -15,14 +15,17 @@ class NoisyTimeMap:
         print("System: ", self.system_name, " not supported!")
         exit(-1);
 
+    def set_seed(self, seed):
+        prx.init_random(seed)
+
     def __init__(self, parameters):
         if isinstance(parameters, str):
             params = prx.param_loader(parameters, sys.argv)
         elif isinstance(parameters, prx.param_loader):
             print("Instance of prx.param_loader")
             params = parameters
-        
-        self.duration = params["duration"].as_float() 
+
+        self.duration = params["duration"].as_float()
         self.time_step = self.duration # For backwards comp, should delete it eventually
         self.system_name = params["system_name"].as_string()
         self.params = params
@@ -34,7 +37,7 @@ class NoisyTimeMap:
 
         self.simulation_step = params["simulation_step"].as_float()
         prx.set_simulation_step(self.simulation_step)
-        prx.init_random(params["random_seed"].as_int())
+        self.set_seed(params["random_seed"].as_int())
 
         self.obstacles = prx.obstacle_loader(params["environment"].as_string())
 
@@ -45,7 +48,8 @@ class NoisyTimeMap:
             print("Error: plant not found!")
             exit(-1)
 
-        self.wm = prx.world_model([self.plant], self.obstacles.get_obstacles())
+        ft_params = self.params["/plant/ft_noise_params"].as_float_vector();
+        self.wm = prx.uniform_noisy_world_model([self.plant], self.obstacles.get_obstacles(),ft_params[0],ft_params[1])
         self.wm.create_context("context", [plant_name], self.obstacles.get_names())
         self.context = self.wm.get_context("context")
 
@@ -70,21 +74,19 @@ class NoisyTimeMap:
         self.u_goal = self.cs.make_point()
         for i in range(len(self.u_goal)): self.u_goal[i] = 0
 
-        self.ss.copy_point_from_vector(
+        self.ss.copy(
             self.start_state, params["/plant/start_state"].as_float_vector())
-        self.ss.copy_point_from_vector(
+        self.ss.copy(
             self.goal_state, params["/plant/goal_state"].as_float_vector())
-        self.ss.copy_from_point(self.start_state)
+        self.ss.copy_from(self.start_state)
 
         self.ss.print_bounds()
         self.cs.print_bounds()
 
         self.radius = params["goal_region_radius"].as_float()
 
-        self.x_0_noise = None 
-        self.f_noise = None 
-        self.u_t_noise = None 
-        self.t_noise = None
+        self.xt_noise = None
+        self.u_t_noise = None
         self.in_collision_py = lambda : self.context.collision_group.in_collision()
 
         self.checker = prx.condition_check("sim_time" , self.duration );
@@ -92,14 +94,27 @@ class NoisyTimeMap:
         self.obstacle_check = prx.custom_check.wrap(self.in_collision_py );
         self.checker_gc = prx.condition_check( self.goal_check );
         self.checker_obstacle = prx.condition_check( self.obstacle_check );
-        self.checker.add_condition(self.checker_gc);
+        if self.system_name != "quadrotor_lqr":
+            self.checker.add_condition(self.checker_gc);
         self.checker.add_condition(self.checker_obstacle);
 
-        self.x_0_noise = self.init_noise("/plant/x_0_noise", "/plant/x_0_noise_params");
-        self.u_t_noise = self.init_noise("/plant/u_t_noise", "/plant/u_t_noise_params");
-        self.t_noise   = self.init_noise("/plant/t_noise",   "/plant/t_noise_params"  );
-        self.f_noise   = self.init_noise("/plant/f_noise",   "/plant/f_noise_params"  );
+        try:
+            self.params['nominal_traj']
+            self.trajectory_tracking_regions()
+            self.segment = int(self.params["segment"])
+            assert 0 <= self.segment, "Segment must be greater than 0 "
+            assert self.segment < len(self.ks_duration), "Segment must be less than %d".format(len(self.ks_duration))
+            self.start_state_idx = 0;
+            for s in range(self.segment):
+                s_dur = self.ks_duration[s]
+                self.start_state_idx += int(s_dur * 100)
+            self.load_nominal_traj()
+        except:
+            pass
 
+        # x_{t+1} = x_t + f(x_t, u(x_t+\epsilon_x) + \epsilon_u)
+        # self.xt_noise = self.init_noise("/plant/xt_noise", "/plant/xt_noise_params");
+        # self.ut_noise = self.init_noise("/plant/ut_noise", "/plant/ut_noise_params");
 
     def init_noise(self, noise_type_pn, noise_params_pn):
         prx_noise = None
@@ -113,9 +128,9 @@ class NoisyTimeMap:
         return prx_noise
 
     def get_noisy_system(self):
-        noise_type = self.params["/plant/f_noise"].as_string()
+        noise_type = self.params["/plant/xt_noise"].as_string()
         if noise_type == "uniform":
-            noise_params = self.params["/plant/f_noise_params"].as_float_vector()
+            noise_params = self.params["/plant/xt_noise_params"].as_float_vector()
             self.noisy_plant = prx.uniform_noisy_plant(self.plant, noise_params[0], noise_params[1]);
         elif noise_type == "None":
             self.noisy_plant = self.plant
@@ -124,9 +139,9 @@ class NoisyTimeMap:
             exit(-1)
 
     def get_noisy_controller(self):
-        noise_type = self.params["/plant/u_t_noise"].as_string()
+        noise_type = self.params["/plant/ut_noise"].as_string()
         if noise_type == "uniform":
-            noise_params = self.params["/plant/u_t_noise_params"].as_float_vector()
+            noise_params = self.params["/plant/ut_noise_params"].as_float_vector()
             self.controller = prx.noisy_uniform_controller(self.controller_base, noise_params[0], noise_params[1]);
         elif noise_type == "None":
             self.controller = self.controller_base
@@ -139,32 +154,30 @@ class NoisyTimeMap:
 
     def pendulum_lc(self, X):
 
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
         if self.controller == None:
             controller_path = self.params["/plant/controller_path"].as_string()
             controller_path = prx.lib_path + controller_path
             self.controller = torch.load(controller_path)
             self.controller.eval()
             torch.manual_seed(self.params["random_seed"].as_int())
+            self.ut_noise = self.init_noise("/plant/ut_noise", "/plant/ut_noise_params");
 
-        self.ss.copy_point_from_vector(self.start_state,X)
-        if self.x_0_noise is not None:
-            self.x_0_noise.add_noise(self.start_state)
-        self.ss.copy_from_point(self.start_state)
-        self.ss.enforce_bounds()
+
+        # self.ss.copy(self.start_state,X)
+        self.ss.copy_from(X)
 
         ctrl_input = torch.zeros(1, 4)
 
-        duration_so_far = 0
         ctrl = [0]
 
-        total_time = self.time_step
-        if self.t_noise is not None:
-            self.t_noise.add_noise(total_time)         
+        self.checker.set_check_value(self.duration)
+        self.checker.reset()
 
-        while duration_so_far < total_time and not self.check_goal_reached(2):
-            if self.f_noise is not None:
-                self.f_noise.add_noise(self.start_state)
-            
+        while True:
+            self.noisy_plant.get_state_space().copy_to(self.start_state);
             ctrl_input[0, 0] = self.start_state[0]
             ctrl_input[0, 1] = self.start_state[1]
             ctrl_input[0, 2] = self.goal_state[0]
@@ -178,25 +191,21 @@ class NoisyTimeMap:
                                                     * 0.6371781908344007)], dtype=np.float64)
 
             self.ctrl[0] = ctrl[0]
-            if self.u_t_noise is not None:
-                self.u_t_noise.add_noise(self.ctrl)
-            self.cs.copy_from_point(self.ctrl)
-            self.cs.enforce_bounds()
+            self.ut_noise.add_noise(self.ctrl);
+            # self.cs.copy_from(self.ctrl)
+            # self.cs.enforce_bounds()
 
-            self.plant.propagate(self.simulation_step)
-            self.ss.copy_to_point(self.start_state)
+            # self.plant.propagate(self.simulation_step)
+            self.context.system_group.propagate_once(prx.MIDDLE_STEP, self.ctrl)
 
-            duration_so_far += self.simulation_step
+            if self.checker.check():
+                break;
 
-        self.ss.copy_to_point(self.end_state)
+        self.ss.copy_to(self.end_state)
         return self.end_state.to_list()
-    
 
-    def pendulum_lqr(self, X):
-
-        self.ss.copy_point_from_vector(self.start_state,X)
-        if self.x_0_noise is not None:
-            self.x_0_noise.add_noise(self.start_state)
+    def quadrotor_lqr(self, X):
+        self.ss.copy(self.start_state,X)
         self.ss.copy_from_point(self.start_state)
         self.ss.enforce_bounds()
 
@@ -208,21 +217,66 @@ class NoisyTimeMap:
             self.R = prx.matrix.Identity(1, 1)
             self.controller_base = prx.lqr(self.noisy_plant, self.Q, self.R, "LQR")
             self.controller_base.set_goal(self.goal_state, self.u_goal)
-            # self.controller_base.set_goal(self.goal_state)
             self.controller_base.compute_K()
             self.get_noisy_controller()
-            # if self.u_t_noise is not None:
-            #     self.controller = prx.noisy_uniform_controller
-  
+
         total_time = self.duration
-        if self.t_noise is not None:
-            total_time = self.t_noise.add_noise(total_time) 
 
         self.checker.set_check_value(total_time)
         self.checker.reset()
-        # print("Before propagate: ", self.start_state)
+
+        switch_control = False
+        switch_height = 0.25 * np.copy(self.goal_state[0])
+
+        while True:
+            # self.noisy_plant.get_state_space().copy_to(self.start_state);
+            self.ss.copy_to(self.start_state)
+            # if not switch_control and self.start_state[0] < switch_height:
+            #     self.controller_base.compute_controls()
+            #     self.cs.enforce_bounds()
+            #     switch_control = True
+            # if switch_control and self.start_state[0] > self.goal_state[0]:
+            #     self.ctrl[0] = 0
+            #     self.cs.copy_from(self.ctrl)
+            #     switch_control = False
+            if self.start_state[0] < switch_height or all([self.start_state[1]>2.5, self.start_state[0] < 1.15*switch_height]):
+                self.controller_base.compute_controls()
+                self.cs.enforce_bounds()
+                switch_control = True
+            else:
+                self.ctrl[0] = 0
+                self.cs.copy_from(self.ctrl)
+                switch_control = False
+
+            self.plant.propagate(self.simulation_step)
+
+            if self.checker.check():
+                break
+
+        self.ss.copy_to(self.end_state)
+        return self.end_state.to_list()
+
+    def pendulum_lqr(self, X):
+
+        self.ss.copy(self.start_state,X)
+        self.ss.enforce_bounds()
+
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
+        if self.controller == None:
+            self.Q = prx.matrix.Identity(2, 2)
+            self.R = prx.matrix.Identity(1, 1)
+            self.controller_base = prx.lqr(self.noisy_plant, self.Q, self.R, "LQR")
+            self.controller_base.set_goal(self.goal_state, self.u_goal)
+            self.controller_base.compute_K()
+            self.get_noisy_controller()
+
+        total_time = self.duration
+
+        self.checker.set_check_value(total_time)
+        self.checker.reset()
         self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
-        # print("After propagate: ", self.end_state)
         return self.end_state.to_list()
 
     def pendulum_tbc(self, X):
@@ -257,16 +311,16 @@ class NoisyTimeMap:
                     self.ctrl_dict[box] = line_as_str[6]
 
 
-  
+
         total_time = self.duration
         if self.t_noise is not None:
-            total_time = self.t_noise.add_noise(total_time) 
+            total_time = self.t_noise.add_noise(total_time)
 
 
 
         self.checker.set_check_value(total_time)
         self.checker.reset()
-        
+
         self.traj.clear()
 
         self.traj.copy_onto_back(self.ss)
@@ -302,7 +356,7 @@ class NoisyTimeMap:
         #         self.fout_roa.write("\n")
         #         past_state = state
         # self.fout_roa.write("\n")
-        return self.traj.back().to_list() 
+        return self.traj.back().to_list()
 
     def pendulum_bang_bang(self, X, ctrl_num = 2):
 
@@ -327,16 +381,16 @@ class NoisyTimeMap:
 
             self.fout_roa = open(prx.out_path + self.params["out_dir"].as_string() + "/" + self.params["system_name"].as_string() + "_traj" + self.params["file_name_suffix"].as_string(), "w", buffering=2^10)
 
-  
+
         total_time = self.duration
         if self.t_noise is not None:
-            total_time = self.t_noise.add_noise(total_time) 
+            total_time = self.t_noise.add_noise(total_time)
 
         self.checker.set_check_value(total_time)
         self.checker.reset()
         # print("Before propagate: ", self.start_state)
         # self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
-        
+
         self.traj.clear()
         self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.traj);
 
@@ -352,6 +406,223 @@ class NoisyTimeMap:
 
         # print("After propagate: ", self.end_state)
         return self.end_state.to_list()
+
+    def load_nominal_traj(self):
+        if not hasattr(self, 'gnn'):
+            self.nominal_traj = prx.trajectory(self.ss);
+            self.nominal_plan = prx.plan(self.cs);
+
+            traj_file = prx.input_path + str(self.params["nominal_traj"])
+            plan_file = prx.input_path + str(self.params["nominal_plan"])
+            lgoals_ks = prx.input_path + str(self.params["local_goals_ks"])
+
+            self.ctrl[0] = 0;
+
+            self.plan = prx.plan(self.cs)
+            self.plan.append_onto_back(self.simulation_step) # add one step
+
+            self.nominal_traj.from_file(traj_file);
+            self.nominal_plan.from_file(plan_file);
+            self.nominal_plan.expand();
+            # self.nominal_plan.append_onto_back(0.0) # add one "empty" step so that nominal plan & traj are of the same size
+
+            self.resulting_trajectory = prx.trajectory(self.ss)
+
+
+            self.ks = [];
+            self.ks_duration = [];
+            self.local_goals = [];
+            self.regions = [];
+
+            with open(lgoals_ks, 'r') as file:
+                i = 0
+                for line in file:
+                    vals = line.split()
+
+                    self.ks.append([]);
+                    self.local_goals.append([]);
+                    self.regions.append([]);
+
+                    self.local_goals[i].append(float(vals[0]))
+                    self.local_goals[i].append(float(vals[1]))
+
+                    self.ks[i].append(float(vals[2]))
+                    self.ks[i].append(float(vals[3]))
+                    self.ks_duration.append(float(vals[4]))
+
+                    self.regions[i].append(float(vals[5]))
+                    self.regions[i].append(float(vals[6]))
+                    self.regions[i].append(float(vals[7]))
+                    self.regions[i].append(float(vals[8]))
+
+                    i += 1
+            self.ki = []
+            for k, k_dur in zip(self.ks, self.ks_duration):
+                for ti in np.arange(0,k_dur, 0.01):
+                    self.ki.append(k);
+            # metric = lambda p1,p2: prx.space_t.euclidean_2d(p1,p2)
+            self.metric = prx.distance_function.wrap(prx.space_t.euclidean_2d)
+
+            self.gnn = prx.graph_nearest_neighbors(self.metric);
+            self.tree_nodes = []
+            k = 0;
+            for _ in self.nominal_plan:
+                self.tree_nodes.append(prx.tree_node(k))
+                self.tree_nodes[-1].point = self.nominal_traj[k];
+                self.gnn.add_node(self.tree_nodes[-1])
+                k += 1
+            # print(self.ks)
+            # print(self.ks_duration)
+            # print(self.ki)
+
+
+    def pendulum_trajectory_ilqr(self, X):
+        
+        # self.resulting_trajectory.clear()
+        # start_state = self.nominal_traj.front()
+
+
+        self.ss.copy(self.start_state, X)
+
+        segment_duration = 0
+        # current_k = 0
+
+
+        def closest_x_in_traj(xhat):
+            node = self.gnn.single_query(xhat)
+            k = node.get_index();
+            # print(k)
+            return k;
+
+        # self.resulting_trajectory.copy_onto_back(self.start_state)
+
+        for _ in range(int(self.duration * 100)):
+            ti = closest_x_in_traj(self.start_state);
+
+            x_i = np.array(self.nominal_traj[ti]);
+            xhat = np.array(self.start_state)
+            ctrl_i = np.array( self.nominal_plan[ti].control)
+            # duration_i =  self.nominal_plan[ti].duration
+
+            ki = np.array(self.ki[ti])
+
+            du = np.matmul(-ki, xhat - x_i) ;
+            # print("du:", ki, xhat,x_i, du)
+
+            ctrl_hat = ctrl_i + du;
+
+            self.cs.copy(self.plan[0].control, ctrl_hat)
+            self.plan.duration = self.simulation_step
+
+            self.context.system_group.propagate(self.start_state, self.plan, self.start_state);
+            # self.resulting_trajectory.copy_onto_back(self.start_state)
+            segment_duration += self.simulation_step
+
+            # if (np.abs(segment_duration - self.ks_duration[current_k]) < self.simulation_step**2):
+            #   segment_duration = 0.0;
+            #   current_k += 1;
+
+            if (np.linalg.norm(np.array(self.start_state)) < 0.1):
+                break;
+
+        # return self.resulting_trajectory.back().to_list();
+        return self.start_state.to_list();
+
+
+    def trajectory_tracking_regions(self):
+        if not hasattr(self, 'nominal_traj'):
+            self.nominal_traj = prx.trajectory(self.ss);
+            self.nominal_plan = prx.plan(self.cs);
+
+            traj_file = prx.input_path + str(self.params["nominal_traj"])
+            plan_file = prx.input_path + str(self.params["nominal_plan"])
+            lgoals_ks = prx.input_path + str(self.params["local_goals_ks"])
+
+            self.ctrl[0] = 0;
+
+            self.plan = prx.plan(self.cs)
+            self.plan.append_onto_back(self.simulation_step) # add one step
+
+            self.nominal_traj.from_file(traj_file);
+            self.nominal_plan.from_file(plan_file);
+            self.nominal_plan.expand();
+            # self.nominal_plan.append_onto_back(0.0) # add one "empty" step so that nominal plan & traj are of the same size
+
+            self.resulting_trajectory = prx.trajectory(self.ss)
+
+            self.ks = [];
+            self.ks_duration = [];
+            self.local_goals = [];
+            self.regions = [];
+            with open(lgoals_ks, 'r') as file:
+                i = 0
+                for line in file:
+                    vals = line.split()
+
+                    self.ks.append([]);
+                    self.local_goals.append([]);
+                    self.regions.append([]);
+
+                    self.local_goals[i].append(float(vals[0]))
+                    self.local_goals[i].append(float(vals[1]))
+
+                    self.ks[i].append(float(vals[2]))
+                    self.ks[i].append(float(vals[3]))
+                    self.ks_duration.append(float(vals[4]))
+
+                    self.regions[i].append(float(vals[5]))
+                    self.regions[i].append(float(vals[6]))
+                    self.regions[i].append(float(vals[7]))
+                    self.regions[i].append(float(vals[8]))
+
+                    i += 1
+
+    def pendulum_trajectory_segment(self, X, box_goal=[0.07, 0.07]):
+        self.ss.copy_point_from_vector(self.start_state,X)
+        # self.resulting_trajectory.clear()
+
+
+        start_state = self.nominal_traj[self.start_state_idx]
+
+        segment_duration = 0
+        current_k = self.segment
+        # self.resulting_trajectory.copy_onto_back(self.start_state)
+
+        local_goal = self.local_goals[self.segment]
+        dim = len(self.start_state.to_list())
+
+        # print("region:", self.regions[self.segment])
+        # print(int(self.ks_duration[self.segment]*100))
+        max_time = min(self.duration * 100, self.ks_duration[self.segment]*100) + self.start_state_idx
+        max_time = int(max_time)
+        current_state = self.start_state.to_list()
+        for ti in range(self.start_state_idx, max_time):
+            if all([np.linalg.norm(local_goal[i] - current_state[i]) < box_goal[i] for i in range(dim)]):
+                break
+            x_i = np.array(self.nominal_traj[ti]);
+            xhat = np.array(self.start_state)
+            ctrl_i = np.array( self.nominal_plan[ti].control)
+            duration_i =  self.nominal_plan[ti].duration
+
+            ki = np.array(self.ks[current_k])
+
+            du = np.matmul(-ki, xhat - x_i) ;
+
+            ctrl_hat = ctrl_i + du;
+
+            self.cs.copy(self.plan[0].control, ctrl_hat)
+            self.plan.duration = self.simulation_step
+
+            self.context.system_group.propagate(self.start_state, self.plan, self.start_state);
+            segment_duration += self.simulation_step
+
+            current_state = self.start_state.to_list()
+
+            # if np.linalg.norm(np.array(self.start_state) - np.array(self.local_goals[segment])) < 0.07:
+            #     break
+        return self.start_state.to_list()
+
+
 
     def lander_analytical(self, X):
         self.ss.copy_point_from_vector(self.start_state,X)
@@ -370,7 +641,7 @@ class NoisyTimeMap:
             def lander_custom_check_1():
                 # print("Start:", self.start_state,"\tEnd:", self.end_state)
                 # print(getframeinfo(currentframe()).filename, getframeinfo(currentframe()).lineno)
-                return self.ss.at(0) <= -1 
+                return self.ss.at(0) <= -1
 
             def lander_custom_check_2():
                 # print("2) Start:", self.start_state,"\tEnd:", self.end_state)
@@ -388,16 +659,138 @@ class NoisyTimeMap:
             self.checker_gc = prx.condition_check( self.goal_check_2 );
             self.checker.add_condition(self.checker_gc);
 
-            
+
             self.controller_base = prx.lander_meditch_ctrl(self.noisy_plant, "lander_ctrl")
             self.get_noisy_controller()
 
         total_time = self.duration
         if self.t_noise is not None:
-            total_time = self.t_noise.add_noise(total_time) 
+            total_time = self.t_noise.add_noise(total_time)
 
         self.checker.set_check_value(total_time)
         self.checker.reset()
         self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
         # print("1) Start:", self.start_state,"\tEnd:", self.end_state)
+        return self.end_state.to_list()
+
+    def ackermann_lc(self, X):
+
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
+        if self.controller == None:
+            controller_path = self.params["/plant/controller_path"].as_string()
+            controller_path = prx.lib_path + controller_path
+            self.controller = torch.load(controller_path)
+            self.controller.eval()
+            torch.manual_seed(self.params["random_seed"].as_int())
+            self.ut_noise = self.init_noise("/plant/ut_noise", "/plant/ut_noise_params");
+
+        self.ss.copy_from(X)
+        ctrl_input = torch.zeros(1, 6)
+        ctrl = [0, 0]
+
+        duration_so_far = 0
+
+        self.checker.set_check_value(self.duration)
+        self.checker.reset()
+
+        while True:
+            self.noisy_plant.get_state_space().copy_to(self.start_state);
+            ctrl_input[0, 0] = self.start_state[0]
+            ctrl_input[0, 1] = self.start_state[1]
+            ctrl_input[0, 2] = self.start_state[2]
+            ctrl_input[0, 3] = self.goal_state[0]
+            ctrl_input[0, 4] = self.goal_state[1]
+            ctrl_input[0, 5] = self.goal_state[2]
+
+            with torch.no_grad():
+                ctrl_output = self.controller(ctrl_input)[0].cpu()
+
+            ctrl = [-np.pi/3 + ((ctrl_output[0].item() + 1)*np.pi/3),
+                    (ctrl_output[1].item() + 1)*15]
+
+            self.ctrl[0] = ctrl[0]
+            self.ctrl[1] = ctrl[1]
+
+            self.ut_noise.add_noise(self.ctrl);
+            self.context.system_group.propagate_once(prx.MIDDLE_STEP, self.ctrl)
+
+            if self.checker.check():
+                break;
+
+        self.ss.copy_to(self.end_state)
+        return self.end_state.to_list(), True
+
+    def acrobot_lqr(self, X):
+        self.ss.copy(self.start_state,X)
+        self.ss.enforce_bounds()
+
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
+        if self.controller == None:
+            self.Q = prx.matrix.Identity(4, 4)
+            self.Q[0,0] = 10
+            self.Q[1,1] = 10
+            self.Q[2,2] = 1
+            self.Q[3,3] = 1
+            self.R = prx.matrix.Identity(1, 1)
+            self.controller_base = prx.lqr(self.noisy_plant, self.Q, self.R, "LQR")
+            self.controller_base.set_goal(self.goal_state, self.u_goal)
+            self.controller_base.compute_K()
+            self.get_noisy_controller()
+
+        total_time = self.duration
+
+        self.checker.set_check_value(total_time)
+        self.checker.reset()
+        self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
+        # print (self.end_state.to_list())
+        return self.end_state.to_list()
+
+
+    def acrobot_lc(self,X):
+
+
+        if self.noisy_plant == None:
+            self.get_noisy_system()
+
+        if self.controller == None:
+            controller_path = self.params["/plant/controller_path"].as_string()
+            controller_path = prx.lib_path + controller_path
+            self.controller = torch.load(controller_path)
+            self.controller.eval()
+            torch.manual_seed(self.params["random_seed"].as_int())
+            self.ut_noise = self.init_noise("/plant/ut_noise", "/plant/ut_noise_params");
+
+        self.ss.copy_from(X)
+
+
+        ctrl_input = torch.zeros(1,4)
+        ctrl = [0]
+
+        self.checker.set_check_value(self.duration)
+        self.checker.reset()
+
+        while True:
+        # while duration_so_far <= self.time_step and prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, 4) > self.radius:
+            ctrl_input[0,0] = self.start_state[0]
+            ctrl_input[0,1] = self.start_state[1]
+            ctrl_input[0,2] = self.start_state[2]
+            ctrl_input[0,3] = self.start_state[3]
+
+            with torch.no_grad():
+                ctrl_output = self.controller(ctrl_input)
+            ctrl = np.array([-14. + ((ctrl_output + 1.) * 14.)], dtype=np.float64)
+
+            self.ctrl[0] = ctrl[0]
+            self.ut_noise.add_noise(self.ctrl);
+
+            self.context.system_group.propagate_once(prx.MIDDLE_STEP, self.ctrl)
+
+            if self.checker.check():
+                break;
+
+        self.ss.copy_to(self.end_state)
         return self.end_state.to_list()

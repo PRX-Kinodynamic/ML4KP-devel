@@ -5,15 +5,24 @@
 #include "pyprx/utilities/geometry/basic_geoms/basic_geoms_py.hpp"
 
 using namespace boost::python;
-void pyprx_utilities_geometry_py()
+
+namespace pyprx
+{
+namespace utilities
+{
+namespace geometry
 {
 
-   	class_<prx::geometry_t>("geometry", init<prx::geometry_type_t>())
-   	    ;
+void bindings()
+{
+  class_<prx::geometry_t>("geometry", init<prx::geometry_type_t>());
 
-   	pyprx_utilities_geometry_movable_object_py();
-   	pyprx_utilities_geometry_basic_geoms_py();
+  movable_object::bindings();
+  basic_geoms::bindings();
 
-   	// register_ptr_to_python<std::shared_ptr<prx::movable_object_t>>();
-
+  // register_ptr_to_python<std::shared_ptr<prx::movable_object_t>>();
 }
+
+}  // namespace geometry
+}  // namespace utilities
+}  // namespace pyprx

@@ -2,7 +2,7 @@ name: "pendulum"
 path: "pendulum"
 
 # Assume empty environment... Doesn't make sense otherwise
-start_state: [3.0, 0.0]
+start_state: [3.14159, 0.0]
 goal_state:  [0.0, 0.0]
 
 min_steps: 1
@@ -13,15 +13,20 @@ state_space_upper_bound: [ 3.14159,  6.28318]
 
 starting_lower_bound: [-3.14159, -6.28318]
 ending_upper_bound: [ 3.14159,  6.28318]
-# state_space_lower_bound: [-7, -6.28318]
-# state_space_upper_bound: [7,  6.28318]
 
 control_space_lower_bound: [-0.6371781908344007]
 control_space_upper_bound: [0.6371781908344007]
 
+length: &length 0.5
+friction: &friction 0.1
+mass: &mass 0.15
+normalize: &normalize 1
+
+parameters: [*length,*friction,*mass,*normalize]
 
 vis_body: "ball"
 
+lqr_R: [1]
 lqr_Q: [1,1]
 
 controller_path: "examples/tripods/lc/pendulum.pt"
@@ -29,21 +34,23 @@ controller_path: "examples/tripods/lc/pendulum.pt"
 # The following are new parameters. 
 # You can specify "uniform", or "none"
 # If you specify "uniform", specify in noise_params the min and max.
-x_0_noise: "uniform"
-# x_0_noise_params: [-0.25,0.25]
-# x_0_noise_params: [-0.1,0.1]
-x_0_noise_params: [-0.,0.]
+xt_noise: "uniform"
+xt_noise_params: [-0.,0.]
+# xt_noise_params: [-0.003141592654, 0.003141592654]
+# xt_noise_params: [-0.01570796327, 0.01570796327]
+# xt_noise_params: [-0.03141592654,0.03141592654]
 
-u_t_noise: "uniform"
-# u_t_noise_params: [-0.25,0.25]
-# u_t_noise_params: [-0.1,0.1]
-u_t_noise_params: [-0.,0.]
+ut_noise: "uniform"
+ut_noise_params: [-0.,0.]
+# ut_noise_params: [-0.003141592654, 0.003141592654]
+# ut_noise_params: [-0.01570796327, 0.01570796327]
+# ut_noise_params: [-0.03141592654,0.03141592654]
 
-t_noise: "uniform"
-# t_noise_params: [-0.25,0.25]
-# t_noise_params: [-0.05,0.05]
-t_noise_params: [-0.,0.]
+ft_noise: "uniform"
+ft_noise_params: [-0.,0.]
+# ft_noise_params: [-0.003141592654, 0.003141592654]
+# ft_noise_params: [-0.01570796327, 0.01570796327]
+# ft_noise_params: [-0.03141592654,0.03141592654]
 
-f_noise: "uniform"
-f_noise_params: [-0.,0.]
-# f_noise_params: [-0.,0.]
+
+

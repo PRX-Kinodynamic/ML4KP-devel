@@ -1,0 +1,47 @@
+name: "pendulum"
+path: "pendulum"
+
+# Assume empty environment... Doesn't make sense otherwise
+start_state: [3.14159, 0.0]
+goal_state:  [0.0, 0.0]
+
+min_steps: 1
+max_steps: 50
+
+state_space_lower_bound: [-3.14159, -6.28318]
+state_space_upper_bound: [ 3.14159,  6.28318]
+
+starting_lower_bound: [-3.14159, -6.28318]
+ending_upper_bound: [ 3.14159,  6.28318]
+
+control_space_lower_bound: [-0.6371781908344007]
+control_space_upper_bound: [0.6371781908344007]
+
+length: &length 0.5
+friction: &friction 0.1
+mass: &mass 0.15
+normalize: &normalize 1
+
+parameters: [*length,*friction,*mass,*normalize]
+
+vis_body: "ball"
+
+lqr_R: [1]
+lqr_Q: [1,1]
+
+controller_path: "examples/tripods/lc/pendulum.pt"
+
+# The following are new parameters.
+# You can specify "uniform", or "none"
+# If you specify "uniform", specify in noise_params the min and max.
+xt_noise: "uniform"
+xt_noise_params: [-0.0,0.0]
+
+ut_noise: "uniform"
+ut_noise_params: [-0.01,0.01]
+
+t_noise: "uniform"
+t_noise_params: [-0.0,0.0]
+
+ft_noise: "uniform"
+ft_noise_params: [-0.01,0.01]

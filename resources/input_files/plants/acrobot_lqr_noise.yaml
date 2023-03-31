@@ -1,0 +1,37 @@
+name: "Acrobot"
+path: "Acrobot"
+
+# Assume empty environment... Doesn't make sense otherwise
+start_state: [0.0, 0.0, 0.0, 0.0]
+goal_state:  [3.141592653589793, 0.0, 0.0, 0.0]
+
+min_steps: 1
+max_steps: 50
+
+state_space_lower_bound: [0.0, -3.141592653589793, -6, -6]
+state_space_upper_bound: [6.283185307179586, 3.141592653589793, 6, 6]
+
+control_space_lower_bound: [-14]
+control_space_upper_bound: [14]
+
+starting_lower_bound: [0.0, -3.141592653589793, -6, -6]
+ending_upper_bound:   [6.283185307179586, 3.141592653589793, -6, -5.9]
+
+vis_body: "ball"
+
+lqr_Q: [10,10,1,1]
+
+g: 9.81
+mass: 1
+
+# The following are new parameters. 
+# You can specify "uniform", or "none"
+# If you specify "uniform", specify in noise_params the min and max.
+xt_noise: "uniform"
+xt_noise_params: [-0.003, 0.003]
+
+ut_noise: "uniform"
+ut_noise_params: [-0.003, 0.003]
+
+ft_noise: "uniform"
+ft_noise_params: [-0.003, 0.003]

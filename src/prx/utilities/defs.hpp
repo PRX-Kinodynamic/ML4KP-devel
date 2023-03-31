@@ -8,6 +8,11 @@
 #include "prx/utilities/general/progress_bar.hpp"
 #include "prx/utilities/general/template_utils.hpp"
 
+#define PRX_COLOR_NORMAL "\033[0m"
+#define PRX_COLOR_RED "\033[31m"
+#define PRX_COLOR_GREEN "\033[32m"
+#define PRX_COLOR_YELLOW "\033[33m"
+
 #define PRX_DEBUG_PRINT std::cout << __PRETTY_FUNCTION__ << ": " << __LINE__ << std::endl;
 
 #define PRX_NOT_IMPLEMENTED                                                                                            \
@@ -33,6 +38,11 @@
 #define STR_TO_BOOL(VAL) (std::string(VAL) == "True" | std::string(VAL) == "true")
 #define STR_TO_INT(VAR) (std::stoi(VAR))
 #define STR_TO_DOUBLE(VAR) (std::stod(VAR))
+
+#define PRX_DEPRECIATED                                                                                                \
+  std::cout << PRX_COLOR_YELLOW << __PRETTY_FUNCTION__ << " is depreciated." << PRX_COLOR_NORMAL << std::endl;
+#define PRX_DEPRECIATED_1(MSG)                                                                                         \
+  std::cout << PRX_COLOR_YELLOW << __PRETTY_FUNCTION__ << " is depreciated. " << MSG << PRX_COLOR_NORMAL << std::endl;
 
 /**
  * Convert VAR to int and test VAR against CHECK. Eg. STR_TO_INT_AND_CHECK(foo, >= 0) ==> if(foo >= 0): parse(foo) else:

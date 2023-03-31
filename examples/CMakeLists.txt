@@ -5,5 +5,6 @@ add_subdirectory(basic)
 add_subdirectory(intermediate)
 add_subdirectory(advanced)
 add_subdirectory(tripods)
+add_subdirectory(tripods-noise)
 add_subdirectory(bullet)
 

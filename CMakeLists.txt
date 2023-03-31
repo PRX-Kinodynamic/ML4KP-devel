@@ -10,6 +10,8 @@ set(BUILD_FOR_PYTHON ON CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_BULLET OFF CACHE BOOL "Set ON/TRUE for building for PyBullet")
 set(BUILD_FOR_TORCH  OFF CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
+set(PY_VERSION "3" CACHE STRING "Set ON/TRUE for building Python Bindings")
+set(BUILD_QHULL ON CACHE BOOL "Set ON/TRUE to build QHull")
 
 # TODO: go back to c++11?
 add_definitions(-O3 -fPIC -g )
@@ -28,7 +30,6 @@ link_libraries(
 	# ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 	)
 
-
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
@@ -37,14 +38,17 @@ link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})
 
 if(BUILD_FOR_TORCH)
 	if(DEFINED ENV{Torch_DIR})
-        find_package(Torch REQUIRED)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
-    else()
+		message(STATUS "Building with Torch")
+  	find_package(Torch REQUIRED)
+  	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+  else()
+		message(STATUS "NOT building with Torch")
 		message("Please download libtorch C++, place in external folder and setup the enviornmental variable Torch_DIR accordingly.")
-        add_definitions(TORCH_NOT_BUILT)
-    endif()
-else()
     add_definitions(-DTORCH_NOT_BUILT)
+  endif()
+else()
+	message(STATUS "NOT building with Torch")
+  add_definitions(-DTORCH_NOT_BUILT)
 endif()
 
 

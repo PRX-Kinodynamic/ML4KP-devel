@@ -6,9 +6,8 @@ namespace prx
 {
 std::mt19937_64 global_generator;
 
-void init_random(int seed)
+void init_random(std::mt19937_64::result_type seed)
 {
-  srand(seed);
   global_generator.seed(seed);
 }
 
@@ -86,5 +85,12 @@ double gaussian_random()
     flag = 0;
     return t;
   }
+}
+
+std::string generate_uuid()
+{
+  boost::uuids::uuid uuid = boost::uuids::random_generator()();
+  // std::cout << uuid << std::endl;
+  return boost::uuids::to_string(uuid);
 }
 }  // namespace prx

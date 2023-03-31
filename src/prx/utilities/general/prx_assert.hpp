@@ -139,7 +139,8 @@ public:
   }
 #define prx_throw(MESSAGE)                                                                                             \
   {                                                                                                                    \
-    throw prx::prx_assert_t("", __FILE__, __LINE__, (prx::prx_assert_t::stream_t() << MESSAGE));                       \
+    throw prx::prx_assert_t("", __FILE__, __LINE__,                                                                    \
+                            (prx::prx_assert_t::stream_t() << PRX_COLOR_RED << MESSAGE << PRX_COLOR_NORMAL));          \
   }
 #define prx_throw_quiet(MESSAGE)                                                                                       \
   {                                                                                                                    \

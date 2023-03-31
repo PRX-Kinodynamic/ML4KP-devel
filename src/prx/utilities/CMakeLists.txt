@@ -1,5 +1,6 @@
 ## Utilities library of DirtMP
-find_package(YAMLCPP NAMES Yaml-cpp YamlCpp)
+find_package(YAMLCPP NAMES Yaml-cpp YamlCpp yaml-cpp)
+
 include_directories(${YAMLCPP_INCLUDE_DIR} ${YAML_CPP_INCLUDE_DIRS})
 
 file(GLOB_RECURSE SRC_PRX_LIB_UTILITIES  ./*.cpp)
@@ -14,6 +15,6 @@ if (APPLE)
 	list(APPEND YAML_CPP_LIBRARIES yaml-cpp)
 endif(APPLE)
 
-target_link_libraries(${PROJECT_NAME}_utilities INTERFACE ${PROJECT_NAME}_external )
+target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${PROJECT_NAME}_external )
 # target_link_libraries(${PROJECT_NAME}_utilities ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES} )
 target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES})

@@ -15,5 +15,8 @@ checker_type: iterations
 checker_value: 500
 
 goal_region_radius: 0.5
+duration: 5
 
 controller_path: "examples/tripods/lc/pendulum.pt"
+system_name: "pendulum_lc"
+

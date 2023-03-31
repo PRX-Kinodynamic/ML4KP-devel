@@ -173,6 +173,8 @@ class TimeMap:
             torch.manual_seed(params["random_seed"].as_int())
 
         params.print()
+        # This is to ensure that torch ops from a single job only use a single thread.
+        torch.set_num_threads(1)
     
     def mountain_car_lc(self, X):
         self.ss.copy_from_vector(X)

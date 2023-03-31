@@ -1,27 +1,38 @@
 name: "1D_Quadrotor"
 path: "1D_Quadrotor"
 
-start_state: [0.1, 0.0]
-goal_state:  [0.0, 0.0]
+start_state: [4.0, 0.0]
+goal_state:  [80.0, 0]
 
 min_steps: 1
 max_steps: 50
 
-state_space_lower_bound: [-10, -1]
-state_space_upper_bound: [ 10,  1]
+state_space_lower_bound: [10, -15]
+state_space_upper_bound: [30, 3]
 
-starting_lower_bound: [-10, -1]
-ending_upper_bound: [ 10,  1]
-# state_space_lower_bound: [-7, -6.28318]
-# state_space_upper_bound: [7,  6.28318]
+starting_lower_bound: [10, -15]
+ending_upper_bound: [30,  10]
 
-control_space_lower_bound: [-50]
-control_space_upper_bound: [ 50]
+control_space_lower_bound: [0]
+control_space_upper_bound: [2.5]
 
 vis_body: "body"
 
-lqr_Q: [100,10]
-lqr_R: [0.01]
+lqr_Q: [1,1]
+lqr_R: [1]
+
+xt_noise: "uniform"
+xt_noise_params: [-0.0,0.0]
+
+ut_noise: "uniform"
+ut_noise_params: [-0.0,0.0]
+
+t_noise: "uniform"
+t_noise_params: [-0.0,0.0]
+
+ft_noise: "uniform"
+ft_noise_params: [-0.0,0.0]
+
 
 # controller_path: "examples/tripods/lc/pendulum.pt"
 # controller_path: "examples/tripods/lc/pendulum_deterministic.pt"
