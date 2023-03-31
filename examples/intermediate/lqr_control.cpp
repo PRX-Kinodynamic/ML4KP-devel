@@ -1,6 +1,6 @@
 #include <fstream>
 #include "prx/planning/condition_check.hpp"
-#include "prx/planning/world_model.hpp"
+#include "prx/simulation/world_model.hpp"
 #include "prx/simulation/controllers/lqr.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/simulation/plants/plants.hpp"

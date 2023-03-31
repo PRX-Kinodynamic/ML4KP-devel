@@ -3,7 +3,7 @@
 #include "prx/simulation/simulator.hpp"
 #include "prx/simulation/system_group_manager.hpp"
 #include "prx/simulation/collision_checking/collision_checker.hpp"
-#include "prx/planning/world_model.hpp"
+#include "prx/simulation/world_model.hpp"
 
 #include "prx/utilities/general/noise.hpp"
 

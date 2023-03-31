@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include "prx/utilities/defs.hpp"
-#include "prx/planning/world_model.hpp"
+#include "prx/simulation/world_model.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/planning/condition_check.hpp"
 #include "prx/simulation/controllers/lqr.hpp"

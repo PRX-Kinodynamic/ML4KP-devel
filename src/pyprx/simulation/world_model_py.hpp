@@ -1,13 +1,13 @@
 #include <iostream>
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
-#include "prx/planning/world_model.hpp"
+#include "prx/simulation/world_model.hpp"
 #include "prx/simulation/system_group.hpp"
 
 using namespace boost::python;
 namespace pyprx
 {
-namespace planning
+namespace simulation
 {
 namespace world_model
 {
@@ -32,5 +32,5 @@ void bindings()
       ;
 }
 }  // namespace world_model
-}  // namespace planning
+}  // namespace simulation
 }  // namespace pyprx

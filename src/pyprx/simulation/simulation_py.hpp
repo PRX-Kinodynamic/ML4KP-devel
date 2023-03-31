@@ -14,6 +14,7 @@
 #include "pyprx/simulation/system_py.hpp"
 #include "pyprx/simulation/plants/plants_py.hpp"
 #include "pyprx/simulation/playback/playback_py.hpp"
+#include "pyprx/simulation/world_model_py.hpp"
 
 namespace pyprx
 {
@@ -51,6 +52,7 @@ void bindings()
   plants::bindings();
 
   playback::bindings();
+  world_model::bindings();
 }
 
 }  // namespace simulation

@@ -5,7 +5,6 @@
 #include "prx/planning/condition_check.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"
 #include "prx/planning/noisy_world_model.hpp"
-#include "prx/planning/world_model.hpp"
 
 #include "prx/simulation/controllers/lqr.hpp"
 #include "prx/simulation/controllers/noisy_controller.hpp"
@@ -13,6 +12,7 @@
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/simulation/plants/types/noisy_plant.hpp"
+#include "prx/simulation/world_model.hpp"
 
 #include "prx/utilities/data_structures/gnn.hpp"
 #include "prx/utilities/data_structures/tree.hpp"
@@ -179,7 +179,7 @@ std::map<std::string, time_map_function_t> time_map_functions;
 
 time_map_function_t pendulum_lqr = [](const space_point_t& s, time_map_t& tmv)  // no-lint
 {
-  const space_t* ss = tmv._ss;  // no-lint
+  const space_t* ss = tmv._ss;                                                  // no-lint
   ss->copy(tmv.start_state, s);
   // ss->copy_from(tmv.start_state);
   ss->enforce_bounds();
@@ -206,7 +206,7 @@ time_map_function_t pendulum_lqr = [](const space_point_t& s, time_map_t& tmv)  
 
 time_map_function_t pendulum_lc = [](const space_point_t& s, time_map_t& tmv)  // no-lint
 {
-  const space_t* ss = tmv._ss;  // no-lint
+  const space_t* ss = tmv._ss;                                                 // no-lint
   ss->copy_point(tmv.start_state, s);
   ss->enforce_bounds();
 

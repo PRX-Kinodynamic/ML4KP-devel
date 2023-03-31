@@ -4,7 +4,6 @@
 #include "prx/planning/condition_check.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"
 #include "prx/planning/noisy_world_model.hpp"
-#include "prx/planning/world_model.hpp"
 
 #include "prx/simulation/controllers/lqr.hpp"
 #include "prx/simulation/controllers/noisy_controller.hpp"
@@ -13,6 +12,7 @@
 #include "prx/simulation/multivalued_map/systems.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/simulation/plants/types/noisy_plant.hpp"
+#include "prx/simulation/world_model.hpp"
 
 #include "prx/utilities/data_structures/gnn.hpp"
 #include "prx/utilities/data_structures/tree.hpp"
