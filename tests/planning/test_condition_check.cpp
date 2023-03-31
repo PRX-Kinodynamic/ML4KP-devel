@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(condition_check_test)
   prx::space_point_t goal = space_1.make_point();
   prx::space_point_t pt = space_1.make_point();
   prx::space_point_t pt_aux = space_1.make_point();
-  space_1.copy_point_from_vector(goal, { 1, 1, 1 });
+  space_1.copy(goal, { 1, 1, 1 });
 
   // prx::custom_check_t cc = [&]()
   // {
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(condition_check_test)
 
   auto cc = create_default_goal_check(&space_1, goal, 0.1);
 
-  space_1.copy_point_from_vector(pt_aux, { 0, 0, 0 });
+  space_1.copy(pt_aux, { 0, 0, 0 });
   prx::condition_check_t check_2(cc);
   check_1.reset();
   check_1.add_condition(&check_2);
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(condition_check_test)
     (*pt_aux)[0] += 0.1;
     (*pt_aux)[1] += 0.1;
     (*pt_aux)[2] += 0.1;
-    space_1.copy_from_point(pt_aux);
+    space_1.copy_from(pt_aux);
     iters_test++;
   } while (!check_1.check());
 

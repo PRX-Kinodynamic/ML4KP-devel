@@ -3,7 +3,6 @@
 // TODO: Change to <boost/test/unit_test.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "prx/planning/world_model.hpp"
 #include "prx/simulation/plants/rally_car.hpp"
 #include "prx/simulation/plants/treaded_vehicle.hpp"
 #include "prx/simulation/plants/two_dimensional_point.hpp"
@@ -15,6 +14,8 @@
 #include "prx/simulation/plants/racecar_mini.hpp"
 #include "prx/simulation/plants/treaded_vehicle_first_order.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
+#include "prx/simulation/world_model.hpp"
+
 #include "prx/utilities/geometry/basic_geoms/box.hpp"
 
 BOOST_AUTO_TEST_CASE(empty_world_model_test)

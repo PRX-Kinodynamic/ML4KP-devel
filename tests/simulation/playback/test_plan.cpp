@@ -1,4 +1,4 @@
-#define BOOST_AUTO_TEST_MAIN bang_bang_ctrls
+#define BOOST_AUTO_TEST_MAIN plan_test
 #include <string>
 #include <boost/test/unit_test.hpp>
 

@@ -2,7 +2,7 @@
 #include <string>
 #include <boost/test/unit_test.hpp>
 
-#include "prx/planning/world_model.hpp"
+#include "prx/simulation/world_model.hpp"
 
 // Using acrobot due to its trajectories diverging fasts
 // when changing integration step

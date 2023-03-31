@@ -40,10 +40,5 @@ public:
   {
     return static_cast<T*>(this);
   }
-
-  /**
-   * @brief The space point associated with this node.
-   * */
-  // space_point_t point;
 };
 }  // namespace prx

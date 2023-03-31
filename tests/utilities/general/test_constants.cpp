@@ -1,6 +1,8 @@
-#define BOOST_AUTO_TEST_MAIN constants_test
+#define BOOST_AUTO_TEST_MAIN prx_utilities_constants
 #include <string>
-#include <boost/test/unit_test.hpp>
+#include <boost/test/auto_unit_test.hpp>
+// #include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include "prx/utilities/general/constants.hpp"
 
 BOOST_AUTO_TEST_CASE(paths_test)
@@ -42,3 +44,5 @@ BOOST_AUTO_TEST_CASE(norm_angle_pi_test)
   a1 = upper;
   BOOST_CHECK(prx::norm_angle_pi(a1, lower, upper) == a1);
 }
+
+// BOOST_AUTO_TEST_SUITE_END()

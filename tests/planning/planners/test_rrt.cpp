@@ -1,15 +1,19 @@
 #define BOOST_AUTO_TEST_MAIN rrt_test
-#include <boost/test/unit_test.hpp>
 #include <string>
+
+#include <boost/test/unit_test.hpp>
 
 #include "prx/planning/planner_statistics.hpp"
 #include "prx/planning/planners/planner.hpp"
 #include "prx/planning/planners/rrt.hpp"
-#include "prx/planning/world_model.hpp"
+
 #include "prx/simulation/plants/plants.hpp"
+#include "prx/simulation/world_model.hpp"
+
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/general/statistics.hpp"
 #include "prx/utilities/geometry/basic_geoms/box.hpp"
+
 #include "prx/visualization/three_js_group.hpp"
 
 #ifdef __cpp_lib_filesystem
