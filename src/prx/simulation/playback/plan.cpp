@@ -134,30 +134,6 @@ void plan_t::copy_to(const double start_time, const double duration, plan_t& t)
   // std::cout<<duration<<" Copy to: "<<t.duration()<<std::endl;
 }
 
-void plan_t::copy_onto_back(Eigen::VectorXd v_control, double time)
-{
-  // PRX_DEPRECIATED;
-  control_space->copy_from(v_control);
-  append_onto_back(time, true);
-}
-
-void plan_t::copy_onto_back(space_point_t control, double time)
-{
-  if ((num_steps + 1) >= max_num_steps)
-  {
-    increase_buffer();
-    end_iterator = steps.begin();
-    const_end_iterator = steps.begin();
-    std::advance(end_iterator, num_steps);
-    std::advance(const_end_iterator, num_steps);
-  }
-  control_space->copy_point((*end_iterator).control, control);
-  (*end_iterator).duration = time;
-  ++end_iterator;
-  ++const_end_iterator;
-  ++num_steps;
-}
-
 void plan_t::copy_onto_front(space_point_t control, double time)
 {
   if ((num_steps + 1) >= max_num_steps)

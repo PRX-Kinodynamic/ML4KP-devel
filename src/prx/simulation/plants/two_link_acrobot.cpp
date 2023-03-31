@@ -125,38 +125,6 @@ void two_link_acrobot_t::compute_derivative()
   _theta2dotdot = theta2dot_dot;
 }
 
-double two_link_acrobot_t::kinetic_energy()
-{
-  const double theta2 = _theta2;
-  const double theta1 = _theta1 - M_PI / 2.0;
-  const double theta1dot = _theta1dot;
-  const double theta2dot = _theta2dot;
-
-  const double lc1 = l1 / 2.0;
-  const double lc2 = l2 / 2.0;
-  // TODO: Change to m1 & m2
-  double m = mass;
-
-  const double d11 = m * lc1 * lc1 + m * (l1 * l1 + lc2 * lc2 + 2 * l1 * lc1 * cos(theta2)) + I1 + I2;
-  const double d22 = m * lc2 * lc2 + I2;
-  const double d12 = m * (lc2 * lc2 + l1 * lc2 * cos(theta2)) + I2;
-  const double d21 = d12;
-
-  Eigen::Vector2d th_dot;
-  Eigen::Matrix2d M;
-
-  th_dot(0) = theta1dot;
-  th_dot(1) = theta2dot;
-  M(0, 0) = d11;
-  M(1, 0) = d21;
-  M(0, 1) = d12;
-  M(1, 1) = d22;
-  return 0.5 * th_dot.transpose() * M * th_dot;
-  // return (0.5) * d11 * theta1dot * theta1dot +
-  // 				   d12 * theta1dot * theta2dot +
-  // 		 (0.5) * d22 * theta2dot * theta2dot;
-}
-
 void two_link_acrobot_t::compute_control()
 {
   const double theta2 = _theta2;
@@ -208,21 +176,6 @@ void two_link_acrobot_t::compute_control()
   // _tau = u[1];
 
   // get_control_space() -> copy_from_vector(u);
-}
-
-double two_link_acrobot_t::potential_energy()
-{
-  const double theta2 = _theta2;
-  const double theta1 = _theta1 - M_PI / 2.0;
-  const double theta1dot = _theta1dot;
-  const double theta2dot = _theta2dot;
-  const double lc1 = l1 / 2.0;
-  const double lc2 = l2 / 2.0;
-
-  double m1 = mass;
-  double m2 = mass;
-
-  return m1 * g * lc1 * std::sin(theta1) + m2 * g * l1 * std::sin(theta1) + m2 * g * lc2 * std::sin(theta1 + theta2);
 }
 
 bool two_link_acrobot_t::linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D,
@@ -340,17 +293,4 @@ bool two_link_acrobot_t::linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen
   return true;
 }
 
-// bool two_link_acrobot_t::linearize()
-// {
-
-// }
-
-// bool two_link_acrobot_t::linearize(space_point_t xt, space_point_t ut, double epsilon)
-// {
-//   // if (xt->at(0) == PRX_PI && xt->at(1) == 0 && xt->at(2) == 0 && xt->at(3) == 0)
-//   // {
-//   //   return linearize();
-//   // }
-//   return ltv_t::linearize(xt, ut, epsilon);
-// }
 }  // namespace prx

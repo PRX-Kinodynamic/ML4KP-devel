@@ -8,12 +8,10 @@
 #define system_group first
 #define collision_group second
 
-#define system_group first
-#define collision_group second
-
 namespace prx
 {
-typedef std::pair<std::shared_ptr<system_group_t>, std::shared_ptr<collision_group_t>> world_model_context;
+using world_model_context_t = std::pair<std::shared_ptr<system_group_t>, std::shared_ptr<collision_group_t>>;
+using world_model_context = std::pair<std::shared_ptr<system_group_t>, std::shared_ptr<collision_group_t>>;
 
 class world_model_t : public simulator_t
 {
@@ -23,8 +21,6 @@ public:
                          const std::vector<std::shared_ptr<movable_object_t>>& all_obstacles)
     : simulator_t(plant_type::ANALYTICAL)
   {
-    // PRX_DEBUG_PRINT
-
     collision_groups = std::make_shared<collision_checker_t>();
 
     this->add_group(all_systems);
@@ -35,14 +31,20 @@ public:
     }
   }
 
-  // world_model_t(const std::vector<system_ptr_t>& all_systems,const std::vector<std::shared_ptr<movable_object_t>>&
-  // all_obstacles) 	: world_model_t<system_group_manager_t, collision_checker_t>(all_systems, all_obstacles)
-  // 	{};
-
   ~world_model_t(){
     // delete system_groups;
     // delete collision_groups;
   };
+
+  static std::shared_ptr<system_group_t> get_system_group(const world_model_context& context)
+  {
+    return context.first;
+  }
+
+  static std::shared_ptr<collision_group_t> get_collision_group(const world_model_context& context)
+  {
+    return context.second;
+  }
 
   inline world_model_context get_context(const std::string& context_name)
   {
@@ -50,12 +52,15 @@ public:
                           collision_groups->get_collision_group(context_name));
   }
 
-  // QUESTION: what about separating this in two stages:
-  // 				1) add_context
-  // 				2) initialize_simulation
-  // 				With the benefit of analytical and bullet being more alike
   void create_context(const std::string& context_name, const std::vector<std::string>& system_names,
                       const std::vector<std::string>& obstacle_names)
+  {
+    // Changing the order, adding here this for backwards compatibility
+    create_context(system_names, obstacle_names, context_name);
+  }
+
+  void create_context(const std::vector<std::string>& system_names, const std::vector<std::string>& obstacle_names,
+                      const std::string& context_name = "default_context")
   {
     // auto ptr = std::static_pointer_cast<world_model_t>(this -> shared_ptr());
     // std::shared_ptr<world_model_t> ptr;
@@ -63,7 +68,7 @@ public:
     // auto ptr = this -> shared_ptr();
     system_groups->link_simulator(this);
 
-    all_context_names.push_back(context_name);
+    all_context_names.insert(context_name);
     std::vector<system_ptr_t> context_systems;
     std::vector<std::shared_ptr<movable_object_t>> context_obstacles;
     for (auto&& s : system_names)
@@ -81,15 +86,17 @@ public:
 
   inline std::vector<std::string> get_all_context_names()
   {
-    return all_context_names;
+    return std::vector<std::string>(all_context_names.begin(), all_context_names.end());
   }
 
   // TODO: is stepping all contexts ok?
   virtual void step_simulation(propagate_step step) override
   {
+    world_change_function();
     for (auto s : this->systems)
     {
       s.second->propagate(simulation_step, step);
+      s.second->get_state_space()->enforce_bounds();
     }
     // system_groups -> propagate(step);
     // int steps = (int)((duration / simulation_step) + .1);
@@ -104,12 +111,12 @@ public:
     prx_throw("World model doesn't implement reset");
   }
 
-protected:
+  std::function<void()> world_change_function = []() {};
+
+private:
   // SGM* system_groups;
   // CC* collision_groups;
 
   std::unordered_map<std::string, std::shared_ptr<movable_object_t>> obstacles;
-
-  std::vector<std::string> all_context_names;
 };
 }  // namespace prx

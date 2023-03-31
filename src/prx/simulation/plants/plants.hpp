@@ -10,7 +10,6 @@
 #include "prx/simulation/plants/omnirobot_FO.hpp"
 #include "prx/simulation/plants/quadrotor_1d.hpp"
 #include "prx/simulation/plants/quadrotor_2d.hpp"
-#include "prx/simulation/plants/planar_2link.hpp"
 #include "prx/simulation/plants/treaded_vehicle.hpp"
 #include "prx/simulation/plants/two_link_acrobot.hpp"
 #include "prx/simulation/plants/double_integrator_2d.hpp"

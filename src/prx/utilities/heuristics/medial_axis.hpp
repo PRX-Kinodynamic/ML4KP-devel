@@ -15,6 +15,7 @@
 #include "prx/utilities/data_structures/gnn.hpp"
 #include "prx/utilities/data_structures/undirected_graph.hpp"
 
+#include "prx/simulation/playback/trajectory.hpp"
 // #include "prx/planning/planner_functions/planner_functions.hpp"
 
 // #define z_obstacle std::complex<double>(std::numeric_limits<double>::max(),std::numeric_limits<double>::max())

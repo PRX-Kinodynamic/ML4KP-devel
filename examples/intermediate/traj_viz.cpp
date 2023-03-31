@@ -4,14 +4,16 @@
 #include <iostream>
 
 #include "prx/utilities/defs.hpp"
-#include "prx/planning/world_model.hpp"
-#include "prx/simulation/plants/plants.hpp"
-#include "prx/simulation/general/condition_check.hpp"
-// #include "prx/simulation/controllers/lqr.hpp"
-#include "prx/visualization/three_js_group.hpp"
 #include "prx/utilities/general/param_loader.hpp"
+
+#include "prx/simulation/general/condition_check.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
+#include "prx/simulation/plants/plants.hpp"
+#include "prx/simulation/world_model.hpp"
+
 #include "prx/planning/planner_functions/planner_functions.hpp"
+
+#include "prx/visualization/three_js_group.hpp"
 
 using namespace prx;
 

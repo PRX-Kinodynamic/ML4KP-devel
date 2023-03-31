@@ -4,7 +4,7 @@
 file(GLOB_RECURSE SRC_PRX_LIB_EXTERNAL_PQP  PQP/*.cpp)
 
 add_library(${PROJECT_NAME}_external SHARED ${SRC_PRX_LIB_EXTERNAL_PQP} ) 
-
+set(EXTERNAL_LINKING_LIBS "")
 if(BUILD_QHULL)
 	if(NOT ExternalProject)
 	  # include(FetchContent)
@@ -78,8 +78,13 @@ endmacro()
 	set_property(TARGET libqhullcpp PROPERTY IMPORTED_LOCATION_RELEASE ${qhull_static})
 	set_property(TARGET libqhullcpp PROPERTY INTERFACE_LINK_LIBRARIES libqhullstatic_r)
 	add_dependencies(libqhullcpp QHull)
-	target_link_libraries(${PROJECT_NAME}_external PUBLIC libqhullcpp)
-	target_link_libraries(${PROJECT_NAME}_external PUBLIC libqhullstatic_r)
+
+	# target_link_libraries(${PROJECT_NAME}_external PUBLIC libqhullcpp)
+	# target_link_libraries(${PROJECT_NAME}_external PUBLIC libqhullstatic_r)
+
+	list(APPEND EXTERNAL_LINKING_LIBS libqhullcpp)
+	list(APPEND EXTERNAL_LINKING_LIBS libqhullstatic_r)
+
 endif(BUILD_QHULL)
 
 target_include_directories(${PROJECT_NAME}_external PUBLIC ".")
@@ -88,5 +93,9 @@ target_include_directories(${PROJECT_NAME}_external PUBLIC ".")
 set_target_properties(${PROJECT_NAME}_external PROPERTIES COMPILE_FLAGS "-w")
 
 if(BUILD_FOR_TORCH AND DEFINED ENV{Torch_DIR})
-	target_link_libraries(${PROJECT_NAME}_external ${TORCH_LIBRARIES})
+	# target_link_libraries(${PROJECT_NAME}_external ${TORCH_LIBRARIES})
+	list(APPEND ${EXTERNAL_LINKING_LIBS} ${TORCH_LIBRARIES})
 endif()
+
+message(STATUS "EXTERNAL_LINKING_LIBS: ${EXTERNAL_LINKING_LIBS}")
+target_link_libraries(${PROJECT_NAME}_external PUBLIC ${EXTERNAL_LINKING_LIBS})

@@ -15,6 +15,7 @@ set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
 set(PY_VERSION "3" CACHE STRING "Set ON/TRUE for building Python Bindings")
 set(BUILD_QHULL ON CACHE BOOL "Set ON/TRUE to build QHull")
+set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 
 add_definitions(-Og -fPIC -g -Werror )
 if(APPLE)

@@ -195,13 +195,13 @@ int main(int argc, char** argv)
     {
       Y.insert(dgnn_im[n]->id);
     }
-    PRX_DEBUG_ITERABLE("Y: ", Y);
+    PRX_DEBUG_ITERABLE(Y);
     F[v_idx].insert(Y.begin(), Y.end());
     for (auto y : Y)
     {
       std::vector<std::size_t> sp = dijkstra_t::shortest_path(v_idx, y, get_neighbors, node_distance);
       PRX_DEBUG_VAR_2(v_idx, y);
-      PRX_DEBUG_ITERABLE("sp: ", sp);
+      PRX_DEBUG_ITERABLE(sp);
       F[v_idx].insert(sp.begin(), sp.end());
     }
 
@@ -226,7 +226,7 @@ int main(int argc, char** argv)
     //   }
     //   idx++;
     // }
-    PRX_DEBUG_ITERABLE("F: ", F[v_idx]);
+    PRX_DEBUG_ITERABLE(F[v_idx]);
 
     std::ofstream ofs_sites;
     std::ofstream ofs_voronoi;

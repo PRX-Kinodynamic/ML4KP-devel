@@ -165,7 +165,7 @@ struct time_map_t
   std::shared_ptr<prx::plan_t> nominal_plan;
   std::shared_ptr<prx::plan_t> plan;
   prx::distance_function_t df;
-  std::shared_ptr<prx::graph_nearest_neighbors_t> gnn;
+  std::shared_ptr<prx::graph_nearest_neighbors_t<prx::space_point_t>> gnn;
   std::vector<std::shared_ptr<prx::tree_node_t>> tree_nodes;
   std::vector<Eigen::Vector2d> ki;
   std::shared_ptr<prx::trajectory_t> resulting_trajectory;
@@ -347,7 +347,7 @@ time_map_function_t pendulum_trajectory_ilqr = [](const space_point_t& s, time_m
 
     tmv.df = std::bind(prx::space_t::euclidean_2d, std::placeholders::_1, std::placeholders::_2, 0,
                        tmv._ss->get_dimension());
-    tmv.gnn = std::make_shared<prx::graph_nearest_neighbors_t>(tmv.df);
+    tmv.gnn = std::make_shared<prx::graph_nearest_neighbors_t<prx::space_point_t>>(tmv.df);
 
     double k_dur;
     Eigen::Vector2d k;

@@ -1,7 +1,7 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 
-#include "prx/planning/world_model.hpp"
+#include "prx/simulation/world_model.hpp"
 
 #include "prx/simulation/controllers/lqr.hpp"
 #include "prx/simulation/general/condition_check.hpp"

@@ -22,10 +22,6 @@ public:
                          space_point_t xt = nullptr, space_point_t ut = nullptr, double epsilon = 1e-3) override final;
   // bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) override;
 
-  virtual double kinetic_energy() override;
-
-  virtual double potential_energy() override;
-
   virtual void compute_control() override;
 
 protected:

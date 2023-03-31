@@ -62,7 +62,7 @@ public:
     set_goal(_x_goal);
   }
 
-  void set_goal(const space_point_t& _goal) override
+  void set_goal(const space_point_t& _goal)
   {
     ltv->get_state_space()->copy(X_goal, _goal);
     ltv->get_state_space()->copy(goal, _goal);

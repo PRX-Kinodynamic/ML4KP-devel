@@ -9,7 +9,7 @@
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/simulation/system_group.hpp"
 
-#include "prx/planning/world_model.hpp"
+#include "prx/simulation/world_model.hpp"
 
 namespace prx
 {
