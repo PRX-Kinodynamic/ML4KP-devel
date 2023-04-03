@@ -20,3 +20,4 @@
 #include "prx/simulation/plants/quadrotor_1d.hpp"
 #include "prx/simulation/plants/quadrotor_2d.hpp"
 #include "prx/simulation/plants/mountain_car.hpp"
+#include "prx/simulation/plants/car_like.hpp"
