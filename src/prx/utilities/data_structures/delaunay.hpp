@@ -211,7 +211,7 @@ public:
   }
 
   template <typename Pt, std::enable_if_t<!prx::utils::is_ptr_type<Pt>{}, bool> = true>
-  void add_point(const Pt& p)
+  std::size_t add_point(const Pt& p)
   {
     std::size_t i{ 0 };
     Point pt{ Point::Zero(_dimension) };
@@ -226,12 +226,13 @@ public:
     new_node->point = pt;
     _nodes[_point_count] = new_node;
     _point_count++;
+    return new_node->id;
   }
 
   template <typename Pt, std::enable_if_t<prx::utils::is_ptr_type<Pt>{}, bool> = true>
-  void add_point(const Pt& p)
+  std::size_t add_point(const Pt& p)
   {
-    add_point(*p);
+    return add_point(*p);
   }
 
   const inline NodePtr operator[](const std::size_t& idx)

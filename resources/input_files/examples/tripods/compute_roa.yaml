@@ -10,7 +10,8 @@ environment: "environments/empty.yaml"
 
 goal_region_radius: 0.1
 
-duration: 0.5
+# duration: 0.5
+duration: 2
 state_increment: 0.5
 system_name: "pendulum_lqr"
 # system_name: "pendulum_lc"
@@ -24,6 +25,8 @@ num_samples: 1
 
 total_files: 1
 file_number: 0
+
+v_query: 146
 
 nominal_traj: "traj_tracking/pend_nominal_traj_2.0000000.000000.txt"
 nominal_plan: "traj_tracking/pend_nominal_plan_2.0000000.000000.txt"

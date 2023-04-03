@@ -36,9 +36,9 @@ void to_file(delaunay_graph_prx* dg, const std::string filename)
   dg->to_file(filename, _mode);
 }
 
-void add_prx_point(delaunay_graph_prx* graph, prx::space_point_t pt)
+std::size_t add_prx_point(delaunay_graph_prx* graph, prx::space_point_t pt)
 {
-  graph->add_point(pt);
+  return graph->add_point(pt);
 }
 
 void bindings()

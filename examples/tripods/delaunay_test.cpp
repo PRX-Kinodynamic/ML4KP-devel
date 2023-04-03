@@ -130,102 +130,89 @@ int main(int argc, char** argv)
   using DelaunayGraph = prx::utilities::delaunay_graph_t<2>;
   using DelaunayNodePtr = DelaunayGraph::NodePtr;
   DelaunayGraph dgnn(df);
-  DelaunayGraph dgnn_im(df);
+  // DelaunayGraph dgnn_im(df);
 
   Eigen::Vector2d result_state;
+
+  std::unordered_map<std::size_t, std::size_t> im_map;
+  std::size_t start_id{ 0 };
+  std::size_t image_id{ 0 };
   do
   {
-    // trajs.emplace_back(sg->get_state_space());
-    // tm(state, result_state);
-    dgnn.add_point(state);
     tm(state, result_state);
-    // PRX_DEBUG_VAR_2(node.second->point, result_state);
-    dgnn_im.add_point(result_state);
-    // dgnn_im.add_point(result_state);
-    pointCount++;
+    start_id = dgnn.add_point(state);
+    image_id = dgnn.add_point(result_state);
+    im_map[start_id] = image_id;
 
   } while (state_space_step(*state, 0.5, dimension, lower_bounds, upper_bounds));
 
-  std::cout << "Total points: " << pointCount << std::endl;
+  std::cout << "Total points: " << (im_map.size() * 2) << std::endl;
   try
   {
     dgnn.qhull_to_delaunay();
-    // PRX_DEBUG_PRINT;
-    // for (auto node : dgnn)
-    // {
-    //   tm(node->point, result_state);
-    //   // PRX_DEBUG_VAR_2(node.second->point, result_state);
-    //   dgnn_im.add_point(result_state);
-    // }
-    // PRX_DEBUG_PRINT;
-    dgnn_im.qhull_to_delaunay();
-    dgnn.to_file(prx::out_path + "delaunay_start_states.txt");
-    dgnn_im.to_file(prx::out_path + "delaunay_end_states.txt");
     // dgnn_im.qhull_to_delaunay();
-    // dgnn_im.to_file(prx::out_path + "delaunay.txt");
 
-    // std::function<std::vector<std::size_t>(const std::size_t, const std::size_t)> path_from_v_to_y =
-    //     [&](const std::size_t from, const std::size_t to) {
-    //       std::queue<std::size_t> to_explore;
-    //       std::size_t current{ 0 };
-    //       while (current != to)
-    //       {
-    //         current = to_explore.front();
-    //         to_explore.pop();
-    //       }
-    //     };
+    std::ofstream ofs_ss((prx::out_path + "delaunay_start_states.txt").c_str(), std::ofstream::trunc);
+    std::ofstream ofs_im((prx::out_path + "delaunay_end_states.txt").c_str(), std::ofstream::trunc);
+    std::ofstream ofs_edges((prx::out_path + "delaunay_edges.txt").c_str(), std::ofstream::trunc);
+
+    // dgnn.to_file(prx::out_path + "delaunay_start_states.txt");
+    // dgnn_im.to_file(prx::out_path + "delaunay_end_states.txt");
+
+    for (auto ss_id : im_map)
+    {
+      start_id = ss_id.first;
+      image_id = ss_id.second;
+      ofs_ss << start_id << " " << dgnn[start_id]->point.transpose() << "\n";
+      ofs_im << image_id << " " << dgnn[image_id]->point.transpose() << "\n";
+    }
+    for (auto node : dgnn)
+    {
+      for (auto neighbor : node->neighbors)
+      {
+        ofs_edges << node->point.transpose() << " ";
+        ofs_edges << dgnn[neighbor]->point.transpose() << " ";
+        ofs_edges << "\n";
+      }
+    }
 
     std::function<std::unordered_set<std::size_t>(const std::size_t&)> get_neighbors = [&](const std::size_t& id) {
-      return dgnn_im[id]->neighbors;
+      return dgnn[id]->neighbors;
     };
     std::function<double(const std::size_t&, const std::size_t&)> node_distance =
-        [&](const std::size_t& a, const std::size_t& b) { return (dgnn_im[a]->point - dgnn_im[b]->point).norm(); };
+        [&](const std::size_t& a, const std::size_t& b) { return (dgnn[a]->point - dgnn[b]->point).norm(); };
 
-    std::size_t v_idx{ 85 };
-    // std::size_t v_idx{ 87 };
+    // std::size_t v_idx{ 85 };
+    std::size_t v_idx{ params["v_query"].as<std::size_t>() };
     std::unordered_map<std::size_t, std::unordered_set<std::size_t>> F;
 
-    // std::unordered_map<std::size_t, bool> added;
-    // std::queue<std::size_t> candidates;
-    // added[v_idx] = true;
-    F[v_idx] = { v_idx };
+    std::size_t v_im{ im_map[v_idx] };
+    F[v_idx] = { v_im };
     auto N = dgnn[v_idx]->neighbors;
-    std::unordered_set<std::size_t> Y{};
+    // std::unordered_set<std::size_t> Y{};
+    // for (auto n : N)
+    // {
+    //   Y.insert(im_map[n]);
+    // }
+    // PRX_DEBUG_ITERABLE("Y: ", Y);
+    // F[v_idx].insert(Y.begin(), Y.end());
+    // for (auto y : Y)
     for (auto n : N)
     {
-      Y.insert(dgnn_im[n]->id);
-    }
-    PRX_DEBUG_ITERABLE("Y: ", Y);
-    F[v_idx].insert(Y.begin(), Y.end());
-    for (auto y : Y)
-    {
-      std::vector<std::size_t> sp = dijkstra_t::shortest_path(v_idx, y, get_neighbors, node_distance);
-      PRX_DEBUG_VAR_2(v_idx, y);
-      PRX_DEBUG_ITERABLE("sp: ", sp);
-      F[v_idx].insert(sp.begin(), sp.end());
+      if (im_map.count(n) > 0)  // if n has an image (pre-computed)
+      {
+        const std::size_t y{ im_map[n] };
+        std::vector<std::size_t> sp = dijkstra_t::shortest_path(v_im, y, get_neighbors, node_distance);
+        PRX_DEBUG_VAR_3(n, v_im, y);
+        PRX_DEBUG_ITERABLE("sp: ", sp);
+        F[v_idx].insert(sp.begin(), sp.end());
+      }
+      else
+      {
+        // F[v_idx].insert(n); // <= this produces a unconected set
+      }
     }
 
-    // {
-    //   auto path = path_from_v_to_y(v_idx, y);
-    // }
-    // while (Y.size() > 0)
-    // {
-    //   next = F[v_idx][idx];
-    //   auto M = dgnn_im[next]->neighbors;
-    //   for (auto m : M)
-    //   {
-    //     if (added.count(m) > 0)
-    //       continue;
-    //     added[m] = true;
-    //     F[v_idx].push_back(m);
-    //     if (Y.count(m) > 0)
-    //     {
-    //       Y.erase(m);
-    //     }
-    //     // F[v_idx].insert(M.begin(), M.end());
-    //   }
-    //   idx++;
-    // }
     PRX_DEBUG_ITERABLE("F: ", F[v_idx]);
 
     std::ofstream ofs_sites;
@@ -242,7 +229,7 @@ int main(int argc, char** argv)
     }
     for (auto idx : F[v_idx])
     {
-      ofs_voronoi << idx << " " << dgnn_im[idx]->point.transpose() << "\n";
+      ofs_voronoi << idx << " " << dgnn[idx]->point.transpose() << "\n";
     }
 
     // Eigen::Vector2d query_node{ 0.0, 0.0 };

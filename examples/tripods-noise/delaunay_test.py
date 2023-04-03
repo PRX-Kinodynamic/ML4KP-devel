@@ -28,61 +28,83 @@ if __name__ == "__main__":
   dimension = 2;
   delaunay_metric = prx.delaunay_metric.wrap(prx.default_delaunay_metric);
   dgnn = prx.delaunay_graph(delaunay_metric, dimension);
-  dgnn_im = prx.delaunay_graph(delaunay_metric, dimension);
+  im_map = {};
 
   point_count = 0;
   is_there_next = True
-  while(is_there_next):
+  result_traj = prx.trajectory(ss)
+
+  # Code for start-end trajectories
+  for i in range(100):
     ss.sample(random_state);
     ss.copy(start_state, random_state)
-    # ss.copy(start_state, state)
-    time_map(start_state, result_state);
-    dgnn.add_point(start_state);
-    dgnn_im.add_point(result_state);
+    time_map(start_state, result_traj);
+    start_id = dgnn.add_point(result_traj[0]);
+    for j in np.arange(0.1,1,0.05):
+      state = result_traj.interpolate(j)
+      image_id = dgnn.add_point(state);
+      im_map[start_id] = image_id;
+      start_id = image_id
+  
+  # Code for start-end states
+  # while(is_there_next):
+  #   ss.sample(random_state);
+  #   ss.copy(start_state, random_state)
+  #   # ss.copy(start_state, state)
+  #   time_map(start_state, result_state);
+  #   start_id = dgnn.add_point(start_state);
+  #   image_id = dgnn.add_point(result_state);
+  #   im_map[start_id] = image_id;
 
-    point_count += 1
-    is_there_next=prx.state_space_step(state, 0.5, dimension, lower_bounds, upper_bounds);
+  #   is_there_next=prx.state_space_step(state, 0.5, dimension, lower_bounds, upper_bounds);
 
   dgnn.qhull_to_delaunay();
-  dgnn_im.qhull_to_delaunay();
-  dgnn.to_file(prx.out_path + "py_delaunay_start_states.txt");
-  dgnn_im.to_file(prx.out_path + "py_delaunay_end_states.txt");
+
+  ofs_ss = open((prx.out_path + "py_delaunay_start_states.txt"), "w");
+  ofs_im = open((prx.out_path + "py_delaunay_end_states.txt"), "w");
+  ofs_edges = open((prx.out_path + "py_delaunay_edges.txt"), "w");
+
+  for start_id in im_map:
+    image_id = im_map[start_id];
+    ofs_ss.write(str(start_id) + " " + str(dgnn[start_id].point.transpose())+ "\n")
+    ofs_im.write(str(image_id) + " " + str(dgnn[image_id].point.transpose())+ "\n")
+    
+  for node in dgnn:
+    for neighbor in node.neighbors:
+      ofs_edges.write(str(node.point.transpose()) + " ")
+      ofs_edges.write(str(dgnn[neighbor].point.transpose()) + " ")
+      ofs_edges.write("\n")
 
   def neighbors_query_py(idx):
-    return dgnn_im[idx].neighbors
+    return dgnn[idx].neighbors
   def dijkstra_distance_py(a, b):
-    return (dgnn_im[a].point - dgnn_im[b].point).norm();
+    return (dgnn[a].point - dgnn[b].point).norm();
   neighbors_query = prx.neighbors_query.wrap(neighbors_query_py)
   dijkstra_distance = prx.dijkstra_distance.wrap(dijkstra_distance_py)
 
   F = {};
-  # v_idx = 87
 
-  for node in dgnn:
-    v_idx = node.id
-    F[v_idx] = {v_idx}
+  for v_idx in im_map:
+    v_im = im_map[v_idx]
+    F[v_idx] = {v_im}
     N = dgnn[v_idx].neighbors;
-    Y = set();
     for n in N:
-      Y.add(dgnn_im[n].id)
-
-    F[v_idx] |= Y;
-
-    for y in Y:
-      sp = prx.dijkstra.shortest_path(v_idx, y, neighbors_query, dijkstra_distance);
-      for s in sp:
-        F[v_idx].add(s)
+      if n in im_map:
+        y = im_map[n] ;
+        sp = prx.dijkstra.shortest_path(v_im, y, neighbors_query, dijkstra_distance);
+        for s in sp:
+          F[v_idx].add(s)
 
   sites_filename = prx.out_path + "py_delaunay_ss_f.txt";
   voronoi_filename = prx.out_path + "py_delaunay_es_f.txt";
   ofs_sites = open(sites_filename, "w");
   ofs_voronoi = open(voronoi_filename, "w");
 
-  v_idx = 85
+  v_idx = int(param["v_query"])
   ofs_sites.write(str(v_idx) + " " + str(dgnn[v_idx].point.transpose()) +"\n");
   for idx in dgnn[v_idx].neighbors:
     ofs_sites.write(str(idx) + " " + str(dgnn[idx].point.transpose()) +"\n");
   for idx in F[v_idx]:
-    ofs_voronoi.write(str(idx) + " " + str(dgnn_im[idx].point.transpose()) +"\n");
+    ofs_voronoi.write(str(idx) + " " + str(dgnn[idx].point.transpose()) +"\n");
 
 
