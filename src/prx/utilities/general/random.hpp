@@ -79,4 +79,6 @@ namespace prx
     */
     int roll_weighted_die(std::vector<double> const& weights);
 
+    int roll_weighted_die_unnormalized(std::vector<double> const& weights);
+
 }

@@ -72,11 +72,11 @@ yaml_to_dump["environment"]["geometries"].append(lower_row)
 yaml_to_dump["environment"]["geometries"].append(right_row)
 yaml_to_dump["environment"]["geometries"].append(left_row)
 
-thickness = 1.0
+thickness = 2.0
 width = 2.0
-big_width = 3.0
+big_width = 2.0
 
-num_passages = 2
+num_passages = 4
 
 landmarks = []
 

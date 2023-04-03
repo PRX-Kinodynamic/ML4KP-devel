@@ -31,6 +31,21 @@ namespace prx
 		return val;
 	}
 
+	int roll_weighted_die_unnormalized(std::vector<double> const& weights)
+	{
+		std::vector<double> normalized_weights;
+		double sum = 0;
+		for( unsigned i = 0; i < weights.size(); i++ )
+		{
+			sum += weights[i];
+		}
+		for( unsigned i = 0; i < weights.size(); i++ )
+		{
+			normalized_weights.push_back(weights[i] / sum);
+		}
+		return roll_weighted_die(normalized_weights);
+	}
+
 	int roll_weighted_die(std::vector<double> const& weights)
 	{
 		int event_index = -1;

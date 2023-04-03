@@ -32,6 +32,8 @@ namespace prx
 		control_space = rrt_spec->control_space;
 		metric = new graph_nearest_neighbors_t(distance_function);
 		//we now have spaces and necessary functions
+
+		current_solution_sim_time = 0;
 	}
 
 	bool rrt_t::_preprocess()

@@ -15,10 +15,10 @@ namespace prx
 
         control_memory = {&dphi,&dv};
         input_control_space = new space_t("EE",control_memory,"CarLikeControl");
-        input_control_space -> set_bounds({-1.0, -0.3},{1.0, 0.3});
+        input_control_space -> set_bounds({-0.5236, -0.1},{0.5236, 0.1});
 
         geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
-        geometries["body"]->initialize_geometry({.9,.6,.25});
+        geometries["body"]->initialize_geometry({1.0,.6,.25});
         geometries["body"]->generate_collision_geometry();
         geometries["body"]->set_visualization_color("0xff00ff");
         configurations["body"]= std::make_shared<transform_t>();
@@ -47,8 +47,11 @@ namespace prx
 
     void car_like_t::compute_derivative()
     {
-        dx = v * cos(theta) * cos(phi);
-        dy = v * sin(theta) * cos(phi);
-        dtheta = v * sin(phi) / L;
+        // dx = v * cos(theta) * cos(phi);
+        // dy = v * sin(theta) * cos(phi);
+        // dtheta = v * sin(phi) / L;
+        dx = v * cos(theta);
+        dy = v * sin(theta);
+        dtheta = v * tan(phi) / L;
     }
 }
