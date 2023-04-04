@@ -45,7 +45,7 @@ namespace prx
 	public:
 		rrt_specification_t(std::shared_ptr<system_group_t> sg,std::shared_ptr<collision_group_t> cg)
 		{
-			bnb = true;
+			bnb = true; //branch and bound
 			use_replanning = false;
 			state_space = sg->get_state_space();
 			control_space = sg->get_control_space();

@@ -8,7 +8,7 @@ struct landmark_vertex_t
 {
     space_point_t point;
 };
-
+ 
 struct landmark_edge_t
 {
     node_index_t end;
