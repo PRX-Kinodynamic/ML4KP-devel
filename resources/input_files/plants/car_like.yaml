@@ -11,6 +11,6 @@ control_space_lower_bound: [-0.5236, -0.1]
 control_space_upper_bound: [ 0.5236,  0.1]
 
 min_steps: 5
-max_steps: 10
+max_steps: 15
 
 vis_body: "body"

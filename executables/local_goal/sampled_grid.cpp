@@ -61,71 +61,26 @@ int main(int argc, char* argv[])
         auto sg = context.first;
 
         dirt_specification_t dirt_spec(context.first,context.second);
-        dirt_query_t dirt_query(ss,cs);
-        dirt_query.start_state = ss -> make_point();
-        dirt_query.goal_state  = ss -> make_point();
-        dirt_query.get_visualization = true;
-
-        dirt_query.goal_region_radius = params["goal_radius"].as<double>();
-
-        dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
+        dirt_spec.sample_state = [&,ss](space_point_t a)
         {
-            std::vector <double> diff = {a->at(0)-b->at(0),a->at(1)-b->at(1),
-            norm_angle_pi(a->at(2)-b->at(2))};
-
-            double accum = 0.;
-            for (auto v: diff) {
-                accum += v*v;
-            }
-            return sqrt(accum);
+            ss -> sample(a);
+            a -> at(0) = uniform_random(-9.,9.);
+            a -> at(1) = uniform_random(-5.,5.);
         };
-
-        learned_controller_t controller(params);
-
-        dirt_query.goal_check = [&,dirt_spec,ss](space_point_t s)
-        {
-            return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
-        };
-
-        dirt_t dirt("dirt");
-        dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
-        dirt_spec.max_control_steps = params["/plant/max_steps"].as<int>();
-        dirt_spec.blossom_number = 1;
-        dirt_spec.use_pruning = false;
-
-        std::vector<double> s = params["start_state"].as<std::vector<double>>();
-        std::vector<double> g = params["goal_state"].as<std::vector<double>>();
-        ss -> copy_point_from_vector(dirt_query.start_state,s);
-        ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
         space_point_t current = ss -> make_point();
-        std::vector<double> xs = linspace(-10.,10.,20);
-        std::vector<double> ys = linspace(-6.,6.,12);
-        // std::vector<double> xs = linspace(1.0, 29.0, 28);
-        // std::vector<double> ys = linspace(1.0, 17.0, 16);
-        // std::vector<double> ts = {0, PRX_PI/2, PRX_PI, -PRX_PI/2};
-        std::vector<double> ts = {0, PRX_PI/4, PRX_PI/2, 3*PRX_PI/4, PRX_PI, -PRX_PI/4, -PRX_PI/2, -3*PRX_PI/4};
-
-        trajectory_t traj(ss); plan_t plan(cs);
         std::vector<space_point_t> verification_points;
+        int num_points = 1000;
 
-        std::vector<double> ps = linspace(-.2,.2,3);
-        for (auto x : xs)
+        for (int i = 0; i < num_points; i++)
         {
-            for (auto y : ys)
+            do
             {
-                for (auto t : ts)
-                {
-                    current -> at(0) = x;
-                    current -> at(1) = y;
-                    current -> at(2) = t;
+                dirt_spec.sample_state(current);
+            } while(!dirt_spec.valid_state(current));
+            current -> at(3) = current -> at(4) = 0;
 
-                    if (dirt_spec.valid_state(current))
-                    {
-                        verification_points.push_back(ss -> clone_point(current));
-                    }
-                }
-            }
+            verification_points.push_back(ss -> clone_point(current));
         }
 
         std::ofstream fout;
