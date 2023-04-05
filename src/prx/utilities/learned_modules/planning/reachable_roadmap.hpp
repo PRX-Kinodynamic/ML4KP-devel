@@ -67,6 +67,7 @@ class reachable_roadmap_t
     void get_indices(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
     {
         c_indices.clear();
+        v_indices.clear();
 
         a_costs.clear();
         d_costs.clear();
@@ -160,6 +161,7 @@ class reachable_roadmap_t
     void add_edge(node_index_t s, node_index_t t, double cost)
     {
         prx_assert(s != t, "Cannot add edge between the same node.");
+        prx_assert(cost != 0, "Cannot add edge with cost 0.");
         if (edges.find(s) == edges.end())
         {
             edges[s] = std::vector<ground_truth_edge_t*>();
@@ -215,7 +217,8 @@ class reachable_roadmap_t
                         }
                     }
                 }
-                if(add_node){
+                if(add_node)
+                {
                     auto vertex = new ground_truth_vertex_t();
                     vertex -> point = spec.state_space -> clone_point(pt);         //add new vertex to map
                     vertices.insert(std::make_pair(vertex_counter, vertex));
@@ -259,7 +262,6 @@ class reachable_roadmap_t
             {
                 delete *e;
                 e = edges[s].erase(e);
-                edge_counter--;
             }
             else
             {
