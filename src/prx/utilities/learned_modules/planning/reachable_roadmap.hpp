@@ -58,7 +58,7 @@ class reachable_roadmap_t
         {
             for (auto e2 : e.second)
             {
-                all_edges.push_back(std::make_pair(e.first, e2.end));
+                all_edges.push_back(std::make_pair(e.first, e2->end));
             }
         }
         return std::make_pair(all_edges.begin(), all_edges.end());
@@ -116,28 +116,6 @@ class reachable_roadmap_t
         }
     }
 
-    std::pair<node_index_t, node_index_t> find_closest_indices(std::vector<node_index_t> c1, std::vector<node_index_t> c2, rrt_specification_t& spec, double max_dist=10)
-    {
-        double min_dist = std::numeric_limits<double>::max();
-        node_index_t min_index_1 = -1;
-        node_index_t min_index_2 = -1;
-        for (auto i : c1)
-        {
-            for (auto j : c2)
-            {
-                double dist = spec.distance_function(vertices[i] -> point, vertices[j] -> point);
-                if (dist < min_dist)
-                {
-                    min_dist = dist;
-                    min_index_1 = i;
-                    min_index_2 = j;
-                }
-            }
-        }
-        if (min_dist > max_dist) return std::make_pair(-1, -1);
-        return std::make_pair(min_index_1, min_index_2);
-    }
-
     bool check_edge_exists(node_index_t d, node_index_t a)
     {
         if (edges.find(d) == edges.end()) return false;
@@ -168,10 +146,10 @@ class reachable_roadmap_t
             {
                 for (auto e : edges[curr])
                 {
-                    if (visited.find(e.end) == visited.end())
+                    if (visited.find(e->end) == visited.end())
                     {
-                        stack.push_back(e.end);
-                        visited.insert(e.end);
+                        stack.push_back(e->end);
+                        visited.insert(e->end);
                     }
                 }
             }
@@ -282,14 +260,14 @@ class reachable_roadmap_t
     {
         for (auto e : edges[v])
         {
-            remove_edge(e.end, v);
+            remove_edge(e->end, v);
         }
         // Locate the vertex in other vertices' edges.
         for (auto e : edges)
         {
             for (auto edge : e.second)
             {
-                if (edge.end == v)
+                if (edge->end == v)
                 {
                     remove_edge(e.first, v);
                 }
@@ -406,71 +384,6 @@ class reachable_roadmap_t
         return vertex_counter-1;
     }
 
-    bool is_connected()
-    {
-        if (components.size() > 1)
-        {
-            std::cout << "Roadmap is not fully connected." << std::endl;
-            std::cout << "Found " << components.size() << " components." << std::endl;
-            for (auto c : components)
-            {
-                std::cout << "Component: ";
-                for (auto v : *c)
-                {
-                    std::cout << v << " ";
-                }
-                std::cout << std::endl;
-            }
-            return false;
-        }
-        else
-        {
-            std::cout << "Roadmap is fully connected." << std::endl;
-            return true;
-        }
-    }
-
-    void strongconnect(node_index_t v, node_index_t& index, std::vector<node_index_t>& indices, std::vector<node_index_t>& lowlinks, std::vector<node_index_t>& stack, std::vector<bool>& on_stack, std::vector<std::vector<node_index_t>>& components)
-    {
-        indices[v] = index;
-        lowlinks[v] = index;
-        index++;
-        stack.push_back(v);
-        on_stack[v] = true;
-
-        if (edges.find(v) != edges.end())
-        {
-            for (auto e : edges[v])
-            {
-                node_index_t w = e.end;
-                if (indices[w] == -1)
-                {
-                    strongconnect(w, index, indices, lowlinks, stack, on_stack, components);
-                    lowlinks[v] = std::min(lowlinks[v], lowlinks[w]);
-                }
-                else if (on_stack[w])
-                {
-                    lowlinks[v] = std::min(lowlinks[v], indices[w]);
-                }
-            }
-        }
-
-        if (lowlinks[v] == indices[v])
-        {
-            std::vector<node_index_t> component;
-            node_index_t w;
-            do
-            {
-                w = stack.back();
-                stack.pop_back();
-                on_stack[w] = false;
-                component.push_back(w);
-            }
-            while (w != v);
-            components.push_back(component);
-        }
-    }
-
     std::vector<node_index_t> get_shortest_path(node_index_t s, node_index_t g)
     {
         // Apply Dijkstra's with a priority queue.
@@ -502,12 +415,12 @@ class reachable_roadmap_t
             {
                 for (auto e : edges[u.second])
                 {
-                    double alt = dist[u.second] + e.cost;
-                    if (alt < dist[e.end])
+                    double alt = dist[u.second] + e->cost;
+                    if (alt < dist[e->end])
                     {
-                        dist[e.end] = alt;
-                        prev[e.end] = u.second;
-                        pq.push(std::make_pair(alt, e.end));
+                        dist[e->end] = alt;
+                        prev[e->end] = u.second;
+                        pq.push(std::make_pair(alt, e->end));
                     }
                 }
             }
@@ -525,41 +438,5 @@ class reachable_roadmap_t
         // std::reverse(path.begin(), path.end());
 
         return path;
-    }
-
-    node_index_t get_best_node(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
-    {
-        v_indices.clear();
-
-        for (auto v_idx : path)
-        {
-            auto v = vertices[v_idx];
-            spec.state_space -> copy_point(query.goal_state, v -> point);
-            spec.state_space -> copy_point(query.start_state, s);
-
-            controller.fulfill_query(query, spec);
-
-            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
-            {
-                return v_idx;
-                // a_indices.push_back(v_idx);
-            }
-            
-            query.clear_outputs();
-        }
-
-        // double min_cost = PRX_INFINITY;
-        // node_index_t min_index = -1;
-
-        // for (auto i : a_indices)
-        // {
-        //     if (costs_to_goal[i] < min_cost)
-        //     {
-        //         min_cost = costs_to_goal[i];
-        //         min_index = i;
-        //     }
-        // }
-
-        return -1;
     }
 };
