@@ -3,7 +3,7 @@ random_seed: 210896
 simulation_step: 0.1
 
 # environment: "environments/bar.yaml"
-environment: "environments/landmark.yaml"
+environment: "environments/simple_obstacle.yaml"
 
 plant: !file "plants/car_like.yaml"
 

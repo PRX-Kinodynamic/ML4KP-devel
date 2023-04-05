@@ -11,7 +11,7 @@ robot_dims = [.9,0.6]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 
 # environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/bar.yaml"
-environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/landmark.yaml"
+environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/simple_obstacle.yaml"
 
 with open(environment_file, 'r') as stream:
     try:
@@ -30,7 +30,7 @@ for obstacle in obstacles:
 plt.xlim(-11,11)
 plt.ylim(-11,11)
 
-roadmap_dir = os.environ["DIRTMP_PATH"] + "out/1208/"
+roadmap_dir = os.environ["DIRTMP_PATH"] + "out/ablation/"
 
 for fname in os.listdir(roadmap_dir):
     if fname.endswith(".txt"):
@@ -76,4 +76,4 @@ if mode == "edges":
         else:
             plt.arrow(vertex_from[0],vertex_from[1],vertex_to[0]-vertex_from[0],vertex_to[1]-vertex_from[1],
             head_width=0.25, head_length=0.25, fc='k', ec='k')
-plt.show()
+plt.savefig('foo.png')

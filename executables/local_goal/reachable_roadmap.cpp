@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
         if (argc <= 1)
         {
             // prx_throw("This executable needs a parameter file!");
-            // params_file = "local_goal/car_like.yaml";
+            params_file = "local_goal/car_like.yaml";
             params_file = "local_goal/annotate_treaded.yaml";
         }
         else 
@@ -151,16 +151,16 @@ int main(int argc, char* argv[])
         vertex_file.close();
         edge_file.close();
         
-        // auto roadmap_edges = rrr.get_all_edges();
-        // for (auto e = roadmap_edges.first; e != roadmap_edges.second; ++e)
-        // {
-        //     auto edge = *e;
-        //     std::string traj_fname = out_path + "traj_" + std::to_string(edge.first) + "_" + std::to_string(edge.second) + ".txt";
-        //     std::ofstream fout;
-        //     fout.open(traj_fname);
-        //     fout << rrr.print_edge_traj(edge.first,edge.second,dirt_query,dirt_spec,controller);
-        //     fout.close();
-        // }
+        auto roadmap_edges = rrr.get_all_edges();
+        for (auto e = roadmap_edges.first; e != roadmap_edges.second; ++e)
+        {
+            auto edge = *e;
+            std::string traj_fname = out_path + "traj_" + std::to_string(edge.first) + "_" + std::to_string(edge.second) + ".txt";
+            std::ofstream fout;
+            fout.open(traj_fname);
+            rrr.print_edge_traj(edge.first,edge.second,dirt_query,dirt_spec,controller);
+            fout.close();
+        }
 
         // If the output directory does not exist, create it
         if (!fs::exists(out_path))

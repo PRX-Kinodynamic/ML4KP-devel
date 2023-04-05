@@ -22,6 +22,7 @@ class reachable_roadmap_t
         std::unordered_map<node_index_t,ground_truth_vertex_t*> vertices;
         std::unordered_map<node_index_t,double> costs_to_goal;
         std::unordered_map<node_index_t, std::vector<ground_truth_edge_t>> edges;
+        std::vector<std::pair<node_index_t, node_index_t>> all_edges;
         node_index_t vertex_counter;
         std::vector<node_index_t> path;
         std::unordered_set<std::unordered_set<node_index_t>*> components;
@@ -49,6 +50,20 @@ class reachable_roadmap_t
 
     space_point_t get_point(node_index_t index) { return vertices[index]->point; }
     
+    std::pair<std::vector<std::pair<node_index_t, node_index_t>>::iterator,std::vector<std::pair<node_index_t, node_index_t>>::iterator> get_all_edges()
+    {
+        // Re-compute all edges.
+        all_edges.clear();
+        for (auto e : edges)
+        {
+            for (auto e2 : e.second)
+            {
+                all_edges.push_back(std::make_pair(e.first, e2.end));
+            }
+        }
+        return std::make_pair(all_edges.begin(), all_edges.end());
+    }
+
     void get_indices(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
     {
         c_indices.clear();
@@ -255,8 +270,6 @@ class reachable_roadmap_t
         } while (num_failures < max_failures); 
     }
 
-
-
     void remove_edge(node_index_t s, node_index_t t)
     {
         edges[s].erase(std::remove_if(edges[s].begin(), edges[s].end(), [t](ground_truth_edge_t e) { return e.end == t; }), edges[s].end());
@@ -292,6 +305,32 @@ class reachable_roadmap_t
         }
         return out.str();
     }
+
+    std::string print_edge_traj(node_index_t s, node_index_t t,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, bool verify = false)
+    {
+        if (check_edge_exists(s,t) && s != t)
+        {
+            query.clear_outputs();
+
+            spec.state_space -> copy_point(query.start_state, vertices[s] -> point);
+            spec.state_space -> copy_point(query.goal_state, vertices[t] -> point);
+            std::cout<<query.start_state<<std::endl;
+            std::cout<<query.goal_state<<std::endl;
+
+            controller.fulfill_query(query, spec);
+            std::cout<<query.solution_traj.size()<<std::endl;
+            if (query.solution_traj.size() == 0)
+            {
+                std::cout << "empty traj: ";
+                std::cout << s << " " << t << std::endl;
+                return "";
+            }
+
+            return query.solution_traj.print();
+        }
+        return "";
+    }
+
 
     std::string print_edges()
     {
