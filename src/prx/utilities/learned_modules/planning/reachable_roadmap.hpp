@@ -21,7 +21,7 @@ class reachable_roadmap_t
     private:
         std::unordered_map<node_index_t,ground_truth_vertex_t*> vertices;
         std::unordered_map<node_index_t,double> costs_to_goal;
-        std::unordered_map<node_index_t, std::vector<ground_truth_edge_t>> edges;
+        std::unordered_map<node_index_t, std::vector<ground_truth_edge_t*>> edges;
         std::vector<std::pair<node_index_t, node_index_t>> all_edges;
         node_index_t vertex_counter;
         std::vector<node_index_t> path;
@@ -71,8 +71,10 @@ class reachable_roadmap_t
         a_costs.clear();
         d_costs.clear();
 
-        for (auto c : components){
-            for (auto v : *c){
+        for (auto c : components)
+        {
+            for (auto v : *c)
+            {
                 bool arriveable = false;
                 bool departable = false;
                 double a_cost;
@@ -85,7 +87,7 @@ class reachable_roadmap_t
                 if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
                 {
                     arriveable = true;
-                    a_cost = query.solution_traj.size();
+                    a_cost = (query.solution_traj.size()-1)*simulation_step;
                 }
                 
                 query.clear_outputs();
@@ -96,10 +98,11 @@ class reachable_roadmap_t
                 if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
                 {
                     departable = true;
-                    d_cost = query.solution_traj.size();
+                    d_cost = (query.solution_traj.size()-1)*simulation_step;
                 }
 
-                if(arriveable && departable){
+                if(arriveable && departable)
+                {
                     v_indices.push_back(v);
                     c_indices.insert(c);
                     a_costs[v] = a_cost;
@@ -140,7 +143,7 @@ class reachable_roadmap_t
         if (edges.find(d) == edges.end()) return false;
         for (auto e : edges[d])
         {
-            if (e.end == a) return true;
+            if (e->end == a) return true;
         }
         return false;
     }
@@ -181,11 +184,11 @@ class reachable_roadmap_t
         prx_assert(s != t, "Cannot add edge between the same node.");
         if (edges.find(s) == edges.end())
         {
-            edges[s] = std::vector<ground_truth_edge_t>();
+            edges[s] = std::vector<ground_truth_edge_t*>();
         }
-        ground_truth_edge_t e;
-        e.end = t;
-        e.cost = cost;
+        ground_truth_edge_t* e = new ground_truth_edge_t;
+        e->end = t;
+        e->cost = cost;
         edges[s].push_back(e);
     }
     
@@ -235,9 +238,9 @@ class reachable_roadmap_t
                     }
                 }
                 if(add_node){
-                    auto v = new ground_truth_vertex_t();
-                    v -> point = spec.state_space -> clone_point(pt);         //add new vertex to map
-                    vertices.insert(std::make_pair(vertex_counter, v));
+                    auto vertex = new ground_truth_vertex_t();
+                    vertex -> point = spec.state_space -> clone_point(pt);         //add new vertex to map
+                    vertices.insert(std::make_pair(vertex_counter, vertex));
 
                     std::unordered_set<node_index_t>* component = new std::unordered_set<node_index_t>{vertex_counter};
                     components.insert(component);                             //add new component to components
@@ -339,7 +342,7 @@ class reachable_roadmap_t
         {
             for (auto e2 : e.second)
             {
-                out << e.first << "," << e2.end << "," << e2.cost << std::endl;
+                out << e.first << "," << e2->end << "," << e2->cost << std::endl;
             }
         }
         return out.str();
