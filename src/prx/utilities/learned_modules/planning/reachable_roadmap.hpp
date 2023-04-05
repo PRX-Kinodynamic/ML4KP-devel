@@ -253,11 +253,24 @@ class reachable_roadmap_t
 
     void remove_edge(node_index_t s, node_index_t t)
     {
-        edges[s].erase(std::remove_if(edges[s].begin(), edges[s].end(), [t](ground_truth_edge_t e) { return e.end == t; }), edges[s].end());
+        for (auto e = edges[s].begin(); e != edges[s].end();)
+        {
+            if ((*e)->end == t)
+            {
+                delete *e;
+                e = edges[s].erase(e);
+                edge_counter--;
+            }
+            else
+            {
+                ++e;
+            }
+        }
     }
 
     void remove_vertex(node_index_t v)
     {
+        std::cout << "Removing vertex " << v << std::endl;
         for (auto e : edges[v])
         {
             remove_edge(e->end, v);
@@ -274,8 +287,10 @@ class reachable_roadmap_t
             }
         }
         edges.erase(v);
-        vertices.erase(v);
+        // Free the memory.
+        delete vertices[v];
     }
+
 
     std::string print_vertices(space_t* space)
     {
