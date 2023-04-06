@@ -51,6 +51,12 @@ else()
   add_definitions(-DTORCH_NOT_BUILT)
 endif()
 
+if(BUILD_QHULL)
+	message(STATUS "Building Qhull")
+else()
+	message(STATUS "Not building Qhull")
+  add_definitions(-DQHULL_NOT_BUILT)
+endif(BUILD_QHULL)
 
 if(BUILD_FOR_BULLET)
 	include_directories(src/prx/bullet_sim)

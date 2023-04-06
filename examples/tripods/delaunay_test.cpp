@@ -1,3 +1,4 @@
+#ifndef QHULL_NOT_BUILT
 #include "libqhullcpp/RboxPoints.h"
 #include "libqhullcpp/QhullError.h"
 #include "libqhullcpp/QhullQh.h"
@@ -969,3 +970,11 @@ int user_eg3(int argc, char** argv)
   PRX_DEBUG_PRINT;
   return 0;
 }  // user_eg3
+#else
+#include "prx/utilities/defs.hpp"
+
+int main()
+{
+  prx_throw("Not built with Qhull");
+}
+#endif

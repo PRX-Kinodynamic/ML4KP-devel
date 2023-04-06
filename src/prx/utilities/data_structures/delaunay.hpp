@@ -1,5 +1,5 @@
 #pragma once
-
+#ifndef QHULL_NOT_BUILT
 #include "libqhullcpp/RboxPoints.h"
 #include "libqhullcpp/QhullError.h"
 #include "libqhullcpp/QhullQh.h"
@@ -296,3 +296,5 @@ protected:
 };
 }  // namespace utilities
 }  // namespace prx
+
+#endif

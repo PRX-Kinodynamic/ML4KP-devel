@@ -1,4 +1,5 @@
 #pragma once
+#ifndef QHULL_NOT_BUILT
 #include <iostream>
 #include <boost/python.hpp>
 #include <boost/python/copy_const_reference.hpp>
@@ -115,3 +116,20 @@ void bindings()
 }  // namespace data_structures
 }  // namespace utilities
 }  // namespace pyprx
+#else
+namespace pyprx
+{
+namespace utilities
+{
+namespace data_structures
+{
+namespace delaunay
+{
+void bindings()
+{
+}
+}  // namespace delaunay
+}  // namespace data_structures
+}  // namespace utilities
+}  // namespace pyprx
+#endif

@@ -27,43 +27,7 @@ if(BUILD_QHULL)
     # INSTALL_COMMAND "c"
     # TEST_COMMAND "ctest"
 		)
-	macro(print_all_variables)
-    message(STATUS "print_all_variables------------------------------------------{")
-    get_cmake_property(_variableNames VARIABLES)
-    foreach (_variableName ${_variableNames})
-        message(STATUS "${_variableName}=${${_variableName}}")
-    endforeach()
-    message(STATUS "print_all_variables------------------------------------------}")
-endmacro()
-	# add_subdirectory(${CMAKE_BINARY_DIR}/external/qhull/)
-	# message("qhull_LIBRARY ${QHULL_SOURCE_DIR}/QhullExport")
-	# find_package(QHull REQUIRED PATHS ${QHULL_SOURCE_DIR}/QhullExport NO_DEFAULT_PATH)
-	# print_all_variables()
-	# SET(QHULL_LIBS ${QHULL_BINARY_DIR}/libqhull_r.dylib)
-	# TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME}_external PUBLIC ${QHULL_SOURCE_DIR}/src/libqhullcpp)
-	# TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME}_external PUBLIC ${QHULL_SOURCE_DIR}/src)
-	# TARGET_LINK_DIRECTORIES(${PROJECT_NAME}_external PUBLIC ${QHULL_SOURCE_DIR}/build)
-	# SET(QHULL_LIBS ${QHULL_BINARY_DIR}/libqhullstatic_r.a)
-	# list(APPEND QHULL_LIBS ${QHULL_BINARY_DIR}/libqhullcpp.a)
 
-	# message("QHULL_LIBS ${QHULL_LIBS}" )
-
-	# add_library(QHull_lib SHARED IMPORTED)
-	# set_target_properties(QHull_lib PROPERTIES IMPORTED_LOCATION ${QHULL_LIBS})
-	# set_target_properties(ForexConnect PROPERTIES IMPORTED_LOCATION ${FXCM_LIB_DIR}/libForexConnect.so)
-
-	# message("qhull_LIBRARY ${CMAKE_BINARY_DIR}/qhull-build/libqhull_r.dylib")
-	# target_include_directories(${PROJECT_NAME}_external PUBLIC ${qhull_SOURCE_DIR}/qhull-src/src)
-	# target_link_directories(${PROJECT_NAME}_external PUBLIC ${CMAKE_BINARY_DIR}/qhull-build/)
-	# target_link_libraries(${PROJECT_NAME}_external PUBLIC QHull_lib)
-	# target_link_libraries(${PROJECT_NAME}_external PUBLIC ${qhull_LIBRARIES} )
-	# add_dependencies(${PROJECT_NAME}_external QHull)
-	# target_link_libraries(${PROJECT_NAME}_external PUBLIC 
-	# 	${QHULL_BINARY_DIR}/libqhull_r.8.0.2.dylib
-	# 	${QHULL_BINARY_DIR}/libqhullstatic_r.a
-	# 	)
-
-	# set(qhull_static_r ${QHULL_BINARY_DIR}/libqhullstatic_r.a)
 	set(qhull_static_r ${QHULL_BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}qhullstatic_r${CMAKE_STATIC_LIBRARY_SUFFIX})
 	set(qhull_static ${QHULL_BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}qhullcpp${CMAKE_STATIC_LIBRARY_SUFFIX})
 	
@@ -80,6 +44,9 @@ endmacro()
 	add_dependencies(libqhullcpp QHull)
 	target_link_libraries(${PROJECT_NAME}_external PUBLIC libqhullcpp)
 	target_link_libraries(${PROJECT_NAME}_external PUBLIC libqhullstatic_r)
+else()
+	message(STATUS "Not building Qhull")
+    add_definitions(-DQHULL_NOT_BUILT)
 endif(BUILD_QHULL)
 
 target_include_directories(${PROJECT_NAME}_external PUBLIC ".")
