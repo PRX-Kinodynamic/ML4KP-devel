@@ -109,8 +109,7 @@ public:
     _gnn = std::make_shared<DelaunayGnn>(distance_function);
   }
   template <Eigen::Index di = Dim, std::enable_if_t<(di == Eigen::Dynamic), bool> = true>
-  delaunay_graph_t(DelaunayMetric& distance_function, Eigen::Index dimension)
-    : _dimension(dimension), _point_count(0)
+  delaunay_graph_t(DelaunayMetric& distance_function, Eigen::Index dimension) : _dimension(dimension), _point_count(0)
   {
     _gnn = std::make_shared<DelaunayGnn>(distance_function);
     _gnn->init_query_point(Eigen::VectorXd::Zero(_dimension));
@@ -218,9 +217,9 @@ public:
   {
     std::size_t i{ 0 };
     Point pt{ Point::Zero(_dimension) };
-    for (std::size_t i=0; i < p.size(); ++i)
+    for (std::size_t i = 0; i < p.size(); ++i)
     {
-	auto e  = p[i];
+      auto e = p[i];
       _points_data.push_back(e);
       pt[i] = e;
       i++;
