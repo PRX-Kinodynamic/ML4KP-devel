@@ -9,6 +9,14 @@
 #include <Eigen/Dense>
 #include <Eigen/Core>
 
+#if EIGEN_VERSION_AT_LEAST(3,4,0)
+#else
+namespace Eigen
+{
+template <typename Type, int Size>
+using Vector = Matrix<Type, Size, 1>;
+}
+#endif
 namespace prx
 {
 	/** @brief A column vector of dimension <i>N</i>. */

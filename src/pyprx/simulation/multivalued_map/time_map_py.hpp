@@ -137,9 +137,8 @@ void bindings()
       .def("__init__", make_constructor(&init_as_ptr<time_map_t, prx::param_loader&>, default_call_policies(),
                                         (arg("param_loader"))))
       .def("__init__",
-           make_constructor(&init_as_ptr<time_map_t, const std::string, const prx::system_ptr_t,
-                                         const std::shared_ptr<prx::system_group_t>>,
-                            default_call_policies(), (arg("system_name"), arg("system_ptr"), arg("system_group"))))
+           make_constructor(&init_as_ptr<time_map_t, std::string, prx::system_ptr_t, std::shared_ptr<prx::system_group_t>>,
+                            default_call_policies()))
       .def("set_duration", &time_map_t::set_duration)
       .def("__call__", timemap_call_pyobject<boost::python::list, boost::python::list>)
       .def("__call__", timemap_call_pyobject<boost::python::list, prx::space_point_t>)

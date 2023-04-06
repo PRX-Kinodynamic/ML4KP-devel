@@ -1,6 +1,8 @@
 #pragma once
 #ifndef QHULL_NOT_BUILT
-#include "libqhullcpp/RboxPoints.h"
+
+#include <Eigen/Dense>
+
 #include "libqhullcpp/QhullError.h"
 #include "libqhullcpp/QhullQh.h"
 #include "libqhullcpp/QhullFacet.h"
@@ -15,6 +17,7 @@
 
 #include "prx/utilities/data_structures/gnn.hpp"
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/transforms.hpp"
 #include <unordered_set>
 namespace prx
 {
@@ -106,7 +109,7 @@ public:
     _gnn = std::make_shared<DelaunayGnn>(distance_function);
   }
   template <Eigen::Index di = Dim, std::enable_if_t<(di == Eigen::Dynamic), bool> = true>
-  delaunay_graph_t(DelaunayMetric& distance_function, const Eigen::Index dimension)
+  delaunay_graph_t(DelaunayMetric& distance_function, Eigen::Index dimension)
     : _dimension(dimension), _point_count(0)
   {
     _gnn = std::make_shared<DelaunayGnn>(distance_function);
@@ -215,8 +218,9 @@ public:
   {
     std::size_t i{ 0 };
     Point pt{ Point::Zero(_dimension) };
-    for (auto e : p)
+    for (std::size_t i=0; i < p.size(); ++i)
     {
+	auto e  = p[i];
       _points_data.push_back(e);
       pt[i] = e;
       i++;

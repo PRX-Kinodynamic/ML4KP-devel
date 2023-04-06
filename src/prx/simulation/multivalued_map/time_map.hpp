@@ -1,4 +1,5 @@
 #pragma once
+#include <mutex> 
 #include "prx/simulation/multivalued_map/tm_controllers.hpp"
 #include "prx/simulation/system.hpp"
 #include "prx/simulation/system_group.hpp"
@@ -54,8 +55,8 @@ public:
     init_spaces();
   }
 
-  time_map_t(const std::string system_name, const system_ptr_t system_ptr,
-             const std::shared_ptr<system_group_t> system_group)
+  time_map_t(std::string system_name, system_ptr_t system_ptr,
+             std::shared_ptr<system_group_t> system_group)
     : _data()
   {
     _data._system_group = system_group;

@@ -75,7 +75,7 @@ void bindings()
 
   class_<delaunay_graph_prx, delaunay_graph_prx*, boost::noncopyable>("delaunay_graph", no_init)
       .def("__init__",
-           make_constructor(&init_as_ptr<delaunay_graph_prx, delaunay_graph_prx::DelaunayMetric, const Eigen::Index>,
+           make_constructor(&init_as_ptr<delaunay_graph_prx, delaunay_graph_prx::DelaunayMetric&, Eigen::Index>,
                             default_call_policies()))
       .def("qhull_to_delaunay", &delaunay_graph_prx::qhull_to_delaunay)
       .def("add_point", &delaunay_graph_prx::add_point<std::vector<double>>)
