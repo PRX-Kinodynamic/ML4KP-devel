@@ -3,7 +3,7 @@ set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/tests )
 message("Building tests")
 enable_testing()
 
-ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
+#ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
 file(GLOB_RECURSE TESTS_FILES
 	${PROJECT_SOURCE_DIR}/tests/simulation/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/planning/*.cpp

@@ -2,8 +2,11 @@
 # include_directories("${PROJECT_SOURCE_DIR}/src/prx/external")
 
 file(GLOB_RECURSE SRC_PRX_LIB_EXTERNAL_PQP  PQP/*.cpp)
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
 
 add_library(${PROJECT_NAME}_external ${SRC_PRX_LIB_EXTERNAL_PQP} ) 
+target_include_directories(${PROJECT_NAME}_external PUBLIC ${Boost_INCLUDE_DIRS})
 
 if(BUILD_QHULL)
 	if(NOT ExternalProject)
@@ -42,8 +45,11 @@ if(BUILD_QHULL)
 	set_property(TARGET libqhullcpp PROPERTY IMPORTED_LOCATION_RELEASE ${qhull_static})
 	set_property(TARGET libqhullcpp PROPERTY INTERFACE_LINK_LIBRARIES libqhullstatic_r)
 	add_dependencies(libqhullcpp QHull)
-	target_link_libraries(${PROJECT_NAME}_external PUBLIC libqhullcpp)
-	target_link_libraries(${PROJECT_NAME}_external PUBLIC libqhullstatic_r)
+	set(QHULL_LIBS libqhullcpp)
+	list(APPEND QHULL_LIBS libqhullstatic_r)
+	target_link_libraries(${PROJECT_NAME}_external PUBLIC ${QHULL_LIBS})
+	#target_link_libraries(${PROJECT_NAME}_external PUBLIC libqhullcpp)
+	#target_link_libraries(${PROJECT_NAME}_external PUBLIC libqhullstatic_r)
 	target_include_directories(${PROJECT_NAME}_external PUBLIC ${CMAKE_BINARY_DIR}/external/qhull/src )
 else()
 	message(STATUS "Not building Qhull")
@@ -54,7 +60,7 @@ target_include_directories(${PROJECT_NAME}_external PUBLIC ".")
 
 # Silencing all warning for the external (non-prx) code
 set_target_properties(${PROJECT_NAME}_external PROPERTIES COMPILE_FLAGS "-w")
-
+target_link_libraries(${PROJECT_NAME}_external PUBLIC ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 if(BUILD_FOR_TORCH AND DEFINED ENV{Torch_DIR})
 	target_link_libraries(${PROJECT_NAME}_external ${TORCH_LIBRARIES})
 endif()
