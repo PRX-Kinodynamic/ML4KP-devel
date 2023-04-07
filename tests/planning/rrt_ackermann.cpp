@@ -1,6 +1,6 @@
-#define BOOST_AUTO_TEST_MAIN rrt_ackermann_test
+#define BOOST_TEST_MODULE rrt_ackermann_test
 #include <string>
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include "prx/utilities/defs.hpp"
 #include "prx/simulation/world_model.hpp"

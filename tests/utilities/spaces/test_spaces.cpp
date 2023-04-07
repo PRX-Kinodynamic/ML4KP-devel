@@ -1,6 +1,6 @@
-#define BOOST_AUTO_TEST_MAIN spaces_test
+#define BOOST_TEST_MODULE spaces_test
+#include <boost/test/included/unit_test.hpp>
 #include <string>
-#include <boost/test/unit_test.hpp>
 #include "prx/utilities/spaces/space.hpp"
 
 BOOST_AUTO_TEST_CASE(test_space_is_built_correctly)

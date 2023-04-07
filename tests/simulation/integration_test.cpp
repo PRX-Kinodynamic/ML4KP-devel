@@ -1,7 +1,7 @@
-#define BOOST_AUTO_TEST_MAIN integrators
+#define BOOST_TEST_MODULE integrators
+#include <boost/test/included/unit_test.hpp>
 #include <string>
-#include <boost/test/unit_test.hpp>
-
+// #include <boost/test/unit_test.hpp>
 #include "prx/simulation/world_model.hpp"
 
 // Using acrobot due to its trajectories diverging fasts

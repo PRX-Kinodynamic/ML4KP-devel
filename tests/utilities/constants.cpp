@@ -1,6 +1,6 @@
-#define BOOST_AUTO_TEST_MAIN constants_test
+#define BOOST_TEST_MODULE constants_test
+#include <boost/test/included/unit_test.hpp>
 #include <string>
-#include <boost/test/unit_test.hpp>
 #include "prx/utilities/general/constants.hpp"
 
 BOOST_AUTO_TEST_CASE(constants_test)

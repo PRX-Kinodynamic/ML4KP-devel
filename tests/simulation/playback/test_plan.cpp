@@ -1,6 +1,6 @@
-#define BOOST_AUTO_TEST_MAIN bang_bang_ctrls
+#define BOOST_TEST_MODULE bang_bang_ctrls
+#include <boost/test/included/unit_test.hpp>
 #include <string>
-#include <boost/test/unit_test.hpp>
 
 #include "prx/simulation/playback/plan.hpp"
 

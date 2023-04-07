@@ -1,7 +1,6 @@
-#define BOOST_AUTO_TEST_MAIN world_model_test
+#define BOOST_TEST_MODULE world_model_test
+#include <boost/test/included/unit_test.hpp>
 #include <string>
-// TODO: Change to <boost/test/unit_test.hpp>
-#include <boost/test/unit_test.hpp>
 
 #include "prx/simulation/plants/rally_car.hpp"
 #include "prx/simulation/plants/treaded_vehicle.hpp"

@@ -1,6 +1,6 @@
-#define BOOST_AUTO_TEST_MAIN time_map_test
+#define BOOST_TEST_MODULE time_map_test
+#include <boost/test/included/unit_test.hpp>
 #include <string>
-#include <boost/test/unit_test.hpp>
 #include "prx/utilities/defs.hpp"
 #include "prx/simulation/multivalued_map/systems.hpp"
 #include "prx/simulation/multivalued_map/tm_controllers.hpp"

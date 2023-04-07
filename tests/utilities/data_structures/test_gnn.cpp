@@ -1,6 +1,6 @@
-#define BOOST_AUTO_TEST_MAIN gnn_test
+#define BOOST_TEST_MODULE gnn_test
+#include <boost/test/included/unit_test.hpp>
 #include <string>
-#include <boost/test/unit_test.hpp>
 #include "prx/utilities/data_structures/gnn.hpp"
 
 BOOST_AUTO_TEST_CASE(gnn_builds_ok)
