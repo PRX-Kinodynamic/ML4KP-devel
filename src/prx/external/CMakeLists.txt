@@ -5,6 +5,12 @@ file(GLOB_RECURSE SRC_PRX_LIB_EXTERNAL_PQP  PQP/*.cpp)
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
 
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
+
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
+
 add_library(${PROJECT_NAME}_external ${SRC_PRX_LIB_EXTERNAL_PQP} ) 
 target_include_directories(${PROJECT_NAME}_external PUBLIC ${Boost_INCLUDE_DIRS})
 
@@ -55,6 +61,18 @@ else()
 	message(STATUS "Not building Qhull")
     add_definitions(-DQHULL_NOT_BUILT)
 endif(BUILD_QHULL)
+
+target_include_directories(${PROJECT_NAME}_external PUBLIC ${Boost_INCLUDE_DIRS})
+# link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})
+target_link_libraries(${PROJECT_NAME}_external  ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
+
+
+
+target_include_directories(${PROJECT_NAME}_external PUBLIC ${Boost_INCLUDE_DIRS})
+# link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})
+target_link_libraries(${PROJECT_NAME}_external  ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
+
+
 
 target_include_directories(${PROJECT_NAME}_external PUBLIC ".")
 
