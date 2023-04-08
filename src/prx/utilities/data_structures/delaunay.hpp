@@ -222,7 +222,6 @@ public:
       auto e = p[i];
       _points_data.push_back(e);
       pt[i] = e;
-      i++;
     }
     NodePtr new_node = new Node();
     new_node->id = _point_count;

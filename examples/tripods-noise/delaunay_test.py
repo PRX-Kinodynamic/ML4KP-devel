@@ -35,13 +35,15 @@ if __name__ == "__main__":
   result_traj = prx.trajectory(ss)
 
   # Code for start-end trajectories
-  for i in range(100):
+  for i in range(500):
     ss.sample(random_state);
     ss.copy(start_state, random_state)
     time_map(start_state, result_traj);
     start_id = dgnn.add_point(result_traj[0]);
     for j in np.arange(0.1,1,0.05):
       state = result_traj.interpolate(j)
+      if (state.vector().norm() < 0.1):
+        break;
       image_id = dgnn.add_point(state);
       im_map[start_id] = image_id;
       start_id = image_id
