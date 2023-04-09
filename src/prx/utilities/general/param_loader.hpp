@@ -61,7 +61,7 @@ public:
 
   inline bool exists(const std::string& key)
   {
-    return !params[key].IsNull();
+    return bool(params[key]);
   }
 
   template <typename T = std::string>

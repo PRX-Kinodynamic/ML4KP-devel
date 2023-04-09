@@ -86,6 +86,8 @@ void bindings()
       .def("to_file", to_file)
       .def("__getitem__", &delaunay_graph_prx::at, return_value_policy<copy_non_const_reference>())
       .def("__iter__", iterator<delaunay_graph_prx, return_internal_reference<>>())
+      .def("__len__", &delaunay_graph_prx::size)
+      .def("size", &delaunay_graph_prx::size)
       // Comment to force ; to the next one
       ;
 

@@ -286,6 +286,11 @@ public:
     }
   }
 
+  inline std::size_t size() const
+  {
+    return _nodes.size();
+  }
+
 protected:
   const Eigen::Index _dimension;
   std::shared_ptr<DelaunayGnn> _gnn;
