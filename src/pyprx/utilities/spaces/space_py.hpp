@@ -265,6 +265,11 @@ void py_copy_2(const prx::space_t* space, boost::python::list& py_list_to, const
   vector_to_pyobject(py_list_to, vec_aux_to);
 }
 
+inline Eigen::VectorXd py_to_vector(prx::space_point_t pt)
+{
+  return pt->vector<Eigen::VectorXd>();
+}
+
 void bindings()
 {
   class_<prx::space_point_t>("space_point", init<>())
@@ -276,6 +281,7 @@ void bindings()
       .def("__str__", &prx_to_str<prx::space_point_t>)
       .def("__repr__", &prx_print<prx::space_point_t>)
       .def("to_list", &space_point_to_pylist)
+      .def("vector", &py_to_vector)
       // Comment to force ; to the next one
       ;
   enum_<prx::space_t::topology_t>("topology")
