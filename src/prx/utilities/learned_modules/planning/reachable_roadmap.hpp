@@ -263,8 +263,8 @@ class reachable_roadmap_t
                     std::unordered_set<component_index_t>* backward_set = new std::unordered_set<component_index_t>{component_counter};
                     components.insert(std::make_pair(component_counter, component));                             //add new component to components
                     component_map.insert(std::make_pair(vertex_counter,component_counter));
-                    Fw.insert(std::make_pair(component_counter, std::copy(forward_set->begin, forward_set->end)));
-                    Bw.insert(std::make_pair(component_counter, std::copy(backward_set->begin, backward_set->end)));
+                    Fw.insert(std::make_pair(component_counter, new std::unordered_set<component_index_t>(forward_set->begin(), forward_set->end())));
+                    Bw.insert(std::make_pair(component_counter, new std::unordered_set<component_index_t>(backward_set->begin(), backward_set->end())));
                     
                     for (auto a : *arrivals)
                     {
@@ -446,7 +446,7 @@ class reachable_roadmap_t
         {
             // cost = spec.distance_function(vertices[d] -> point, pt);
             cost = a_costs[a];
-            add_edge(d, vertex_counter, cost);
+            add_edge(a, vertex_counter, cost);
         }
 
         vertex_counter++;
