@@ -1,11 +1,11 @@
 name: "car_like"
 path: "car_like"
 
-start_state: [-8., 0., 0., 0.0, 0.0]
-goal_state:  [ 8., 0., 0., 0.0, 0.0]
+start_state: [3.3333,-8.5000,0.0000,0.0000,0.0000]
+goal_state:  [ 3.3333,8.5000,0.0000,0.0000,0.0000]
 
-state_space_lower_bound: [-10,-10,-3.15,-0.5236,-1.]
-state_space_upper_bound: [ 10, 10, 3.15, 0.5236, 1.]
+state_space_lower_bound: [-10,-7,-3.15,-0.5236,-1.]
+state_space_upper_bound: [ 10, 7, 3.15, 0.5236, 1.]
 
 control_space_lower_bound: [-1.0,-0.3]
 control_space_upper_bound: [ 1.0, 0.3]

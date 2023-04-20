@@ -1,14 +1,22 @@
 #pragma once
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/learned_modules/learned_controller.hpp"
-#include "prx/utilities/learned_modules/planning/strict_reachable_roadmap.hpp"
 
 using namespace prx;
 
-typedef long unsigned int component_index_t;
+struct ground_truth_vertex_t
+{
+    space_point_t point;
+};
 
+struct ground_truth_edge_t
+{
+    node_index_t end;
+    double cost;
+    trajectory_t* traj;
+};
 
-class reachable_roadmap_t
+class strict_reachable_roadmap_t
 {
     private:
         std::unordered_map<node_index_t,ground_truth_vertex_t*> vertices;
@@ -17,12 +25,8 @@ class reachable_roadmap_t
         std::vector<std::pair<node_index_t, node_index_t>> all_edges;
         node_index_t vertex_counter;
         std::vector<node_index_t> path;
-
-        component_index_t component_counter;
-        std::unordered_map<component_index_t, std::unordered_set<node_index_t>*> components;
-        std::unordered_map<node_index_t, component_index_t> component_map;
-        std::unordered_map<component_index_t, std::unordered_set<component_index_t>*> Fw;
-        std::unordered_map<component_index_t, std::unordered_set<component_index_t>*> Bw;
+        std::unordered_set<std::unordered_set<node_index_t>*> components;
+        std::unordered_map<node_index_t, std::unordered_set<node_index_t>*> component_map;
 
     protected:
         int max_failures, num_failures;
@@ -30,17 +34,15 @@ class reachable_roadmap_t
         std::vector<double> pt_vec;
         double cost;
 
-        std::vector<node_index_t> a_indices;
-        std::vector<node_index_t> d_indices;
+        std::vector<node_index_t> v_indices;
+        std::unordered_set<std::unordered_set<node_index_t>*> c_indices;
         std::unordered_map<node_index_t, double> a_costs;
         std::unordered_map<node_index_t, double> d_costs;
 
     public:
-        reachable_roadmap_t() : max_failures(100), num_failures(0), vertex_counter(0), component_counter(0) {}
-        ~reachable_roadmap_t() {
-            for(auto c : components) delete c.second;
-            for(auto c : Fw) delete c.second;
-            for(auto c : Bw) delete c.second;
+        strict_reachable_roadmap_t() : max_failures(100), num_failures(0), vertex_counter(0) {}
+        ~strict_reachable_roadmap_t() {
+            for(auto c : components) delete c;
 
         }
     
@@ -64,49 +66,49 @@ class reachable_roadmap_t
 
     void get_indices(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
     {
-        a_indices.clear();
-        d_indices.clear();
+        c_indices.clear();
+        v_indices.clear();
+
         a_costs.clear();
         d_costs.clear();
 
         for (auto c : components)
         {
-            bool arriveable = false;
-            bool departable = false;
-            for (auto v : *(c.second))
+            for (auto v : *c)
             {
-                
+                bool arriveable = false;
+                bool departable = false;
                 double a_cost;
                 double d_cost;
                 
-                if(!arriveable){
-                    query.clear_outputs();
-                    spec.state_space -> copy_point(query.goal_state, vertices[v] -> point);
-                    spec.state_space -> copy_point(query.start_state, pt);
-                    controller.fulfill_query(query, spec);
+                spec.state_space -> copy_point(query.goal_state, vertices[v] -> point);
+                spec.state_space -> copy_point(query.start_state, pt);
+                controller.fulfill_query(query, spec);
 
-                    if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
-                    {
-                        arriveable = true;
-                        a_indices.push_back(v);
-                        a_costs[v] = (query.solution_traj.size()-1)*simulation_step;
-                    }
+                if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+                {
+                    arriveable = true;
+                    a_cost = (query.solution_traj.size()-1)*simulation_step;
                 }
-                if(!departable){
-                    query.clear_outputs();
-                    spec.state_space -> copy_point(query.goal_state, pt);
-                    spec.state_space -> copy_point(query.start_state, vertices[v] -> point);
-                    controller.fulfill_query(query, spec);
+                
+                query.clear_outputs();
+                spec.state_space -> copy_point(query.goal_state, pt);
+                spec.state_space -> copy_point(query.start_state, vertices[v] -> point);
+                controller.fulfill_query(query, spec);
 
-                    if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
-                    {
-                        departable = true;
-                        d_indices.push_back(v);
-                        d_costs[v] = (query.solution_traj.size()-1)*simulation_step;
-                    }
+                if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+                {
+                    departable = true;
+                    d_cost = (query.solution_traj.size()-1)*simulation_step;
                 }
+
                 if(arriveable && departable)
                 {
+                    v_indices.push_back(v);
+                    c_indices.insert(c);
+                    a_costs[v] = a_cost;
+                    d_costs[v] = d_cost;
+                    query.clear_outputs();
                     break;
                 }
             
@@ -169,27 +171,6 @@ class reachable_roadmap_t
         e->cost = cost;
         edges[s].push_back(e);
     }
-
-    void merge_components(component_index_t t, component_index_t s){
-        for(auto v : *(components[s]))                
-        {
-            component_map[v] = t;
-        }
-        for(auto c : *Fw[s]){
-            //update bw
-            Bw[c]->erase(s);
-        }
-        for(auto c : *Bw[s]){
-            //update fw
-            Fw[c]->erase(s);
-        }
-        Fw[t]->merge(*Fw[s]);
-        Bw[t]->merge(*Bw[s]);
-        Fw.erase(s);
-        Bw.erase(s);
-        components[t]->merge(*(components[s]));
-        components.erase(s);
-    }
     
     void build_roadmap(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, bool verify = false)
     {
@@ -206,48 +187,31 @@ class reachable_roadmap_t
 
             get_indices(query,spec,controller);
 
-            if (a_indices.size() == 0 && d_indices.size() == 0)  // sample connected to no nodes, becomes a guard
+            if (v_indices.size() == 0)  // sample connected to no guards, becomes a guard
             {
-                auto vertex = new ground_truth_vertex_t();
-                vertex -> point = spec.state_space -> clone_point(pt);         //add new vertex to map
-                vertices.insert(std::make_pair(vertex_counter, vertex));
-
+                auto v = new ground_truth_vertex_t();
+                v -> point = spec.state_space -> clone_point(pt);         //add new vertex to map
+                vertices.insert(std::make_pair(vertex_counter, v));
+                
                 std::unordered_set<node_index_t>* component = new std::unordered_set<node_index_t>{vertex_counter};
-                std::unordered_set<component_index_t>* forward_set  = new std::unordered_set<component_index_t>{component_counter};
-                std::unordered_set<component_index_t>* backward_set = new std::unordered_set<component_index_t>{component_counter};
-                components.insert(std::make_pair(component_counter, component));                             //add new component to components
-                component_map.insert(std::make_pair(vertex_counter,component_counter));
-                Fw.insert(std::make_pair(component_counter, forward_set));
-                Bw.insert(std::make_pair(component_counter, backward_set));
+                components.insert(component);                             //add new component to components
+                component_map.insert(std::make_pair(vertex_counter,component));
 
                 vertex_counter++;
-                component_counter++;
-                num_failures = 0;
             }
-            else if(a_indices.size() > 0 && d_indices.size() > 0) // sample connected to multiple guards, becomes connection, merges guards
+            else if(c_indices.size() == 1) // sample connected to exactly one guard, discarded
+            {
+                num_failures++;
+                output_progress_bar(1.0*num_failures/max_failures);
+            }
+            else                           // sample connected to multiple guards, becomes connection, merges guards
             {
                 bool add_node = false;
-                auto arrivals = new std::unordered_set<node_index_t>;
-                auto departures = new std::unordered_set<node_index_t>;
-                auto merges = new std::unordered_set<component_index_t>;
-                for(auto av : a_indices){
-                    for(auto dv : d_indices){
-                        component_index_t ac = component_map[av];
-                        component_index_t dc = component_map[dv];
-                        if(ac == dc){                             // S fully connected to component
-                            merges->insert(ac);
-                            arrivals->insert(av);
-                            departures->insert(dv);
-                        }
-                        else if(!Fw[ac]->contains(dc))
-                        {
-                            add_node = true;
-                            arrivals->insert(av);
-                            departures->insert(dv);
-                            if(Bw[ac]->contains(dc)){                // loop closure
-                                for( auto c : *Bw[ac]){
-                                    if(Fw[dc]->contains(c)) merges->insert(c);
-                                }
+                for(auto av : v_indices){
+                    for(auto dv : v_indices){
+                        if(av != dv){
+                            if(!check_connected(dv,av)){
+                                add_node = true;
                             }
                         }
                     }
@@ -259,66 +223,33 @@ class reachable_roadmap_t
                     vertices.insert(std::make_pair(vertex_counter, vertex));
 
                     std::unordered_set<node_index_t>* component = new std::unordered_set<node_index_t>{vertex_counter};
-                    std::unordered_set<component_index_t>* forward_set  = new std::unordered_set<component_index_t>{component_counter};
-                    std::unordered_set<component_index_t>* backward_set = new std::unordered_set<component_index_t>{component_counter};
-                    components.insert(std::make_pair(component_counter, component));                             //add new component to components
-                    component_map.insert(std::make_pair(vertex_counter,component_counter));
-                    Fw.insert(std::make_pair(component_counter, std::copy(forward_set->begin, forward_set->end)));
-                    Bw.insert(std::make_pair(component_counter, std::copy(backward_set->begin, backward_set->end)));
-                    
-                    for (auto a : *arrivals)
-                    {
-                        cost = a_costs[a];
-                        add_edge(a, vertex_counter, cost);
-                        backward_set->insert(component_map[a]);
-                    }
-                    for (auto d : *departures)
-                    {
-                        cost = d_costs[d];
-                        add_edge(d, vertex_counter, cost);
-                        forward_set->insert(component_map[d]);
-                    }
-                    for (auto c : *merges)
-                    {
-                        merge_components(component_counter,c);
-                    }
-                    
-                    // update forward and backward sets 
-                    // this step assumes an acyclic graph, should be satisfied by merge step
-                    for (auto A : *backward_set){
-                        for (auto C : *Bw[A]){
-                            Bw[component_counter]->insert(C);
-                        }
-                    }
-                    for (auto D : *forward_set){
-                        for (auto C : *Fw[D]){
-                            Fw[component_counter]->insert(C);
-                        }
-                    }
-                    for (auto B : *Bw[component_counter]){
-                        for (auto C : *Fw[component_counter]){
-                            Fw[B]->insert(C);
-                        }
-                    }
-                    for (auto F : *Fw[component_counter]){
-                        for (auto C : *Bw[component_counter]){
-                            Bw[F]->insert(C);
-                        }
-                    }
+                    components.insert(component);                             //add new component to components
+                    component_map.insert(std::make_pair(vertex_counter,component));
 
-
-                    delete forward_set;
-                    delete backward_set;
                     vertex_counter++;
-                    component_counter++;
-                    num_failures = 0;
-                        
+
+                    for (auto v : v_indices)
+                    {
+                        cost = d_costs[v];
+                        add_edge(v, vertex_counter-1, cost);
+
+                        cost = a_costs[v];
+                        add_edge(vertex_counter-1, v, cost);
+                    
+                        if (component_map[v] != component){
+                            auto old_c = component_map[v];
+                            for(auto v2 : *(component_map[v]))                 //merge v's component with sample's component
+                            {
+                                component_map[v2] = component;
+                            }
+                            component->merge(*old_c);
+                            components.erase(old_c);
+                            delete old_c;
+                        }
+                    }
                 }
             }
-            else{
-                num_failures++;
-                output_progress_bar(1.0*num_failures/max_failures);
-            }
+            
 
         } while (num_failures < max_failures); 
         
@@ -403,7 +334,7 @@ class reachable_roadmap_t
         for (auto c : components)
         {
             std::cout << "component: ";
-            for (auto v : *(c.second))
+            for (auto v : *c)
             {
                 std::cout << v;
                 std::cout << " ";
@@ -437,15 +368,15 @@ class reachable_roadmap_t
         v -> point = spec.state_space -> clone_point(pt);
         vertices.insert(std::make_pair(vertex_counter, v));
 
-        if (a_indices.size() == 0)
+        if (v_indices.size() == 0)
         {
             return -1;
         }
 
-        for (auto a : a_indices)
+        for (auto d : v_indices)
         {
             // cost = spec.distance_function(vertices[d] -> point, pt);
-            cost = a_costs[a];
+            cost = d_costs[d];
             add_edge(d, vertex_counter, cost);
         }
 
@@ -466,16 +397,16 @@ class reachable_roadmap_t
         v -> point = spec.state_space -> clone_point(pt);
         vertices.insert(std::make_pair(vertex_counter, v));
 
-        if (d_indices.size() == 0)
+        if (v_indices.size() == 0)
         {
             return -1;
         }
 
-        for (auto d : d_indices) // only need to depart from start.
+        for (auto a : v_indices)
         {
             // cost = spec.distance_function(vertices[a] -> point, pt);
-            cost = d_costs[d];
-            add_edge(vertex_counter, d, cost);
+            cost = a_costs[a];
+            add_edge(vertex_counter, a, cost);
         }
 
         vertex_counter++;

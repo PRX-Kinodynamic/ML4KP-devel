@@ -1,0 +1,255 @@
+environment:
+  geometries:
+  - collision_geometry:
+      dims:
+      - 13.5
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - 0.7071080798594735
+      - 0.7071054825112363
+      position:
+      - -9.9226
+      - -0.018331
+      - 0.0
+    name: obstacle_Wall_7
+  - collision_geometry:
+      dims:
+      - 20.0
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - 0.0
+      - 1.0
+      position:
+      - -0.023262
+      - -6.76923
+      - 0.0
+    name: obstacle_Wall_18
+  - collision_geometry:
+      dims:
+      - 4.25
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - 0.0
+      - 1.0
+      position:
+      - 1.88252
+      - 0.156868
+      - 0.0
+    name: obstacle_Wall_36
+  - collision_geometry:
+      dims:
+      - 1.0
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - -0.7071080798594735
+      - 0.7071054825112363
+      position:
+      - -0.202658
+      - -3.92672
+      - 0.0
+    name: obstacle_Wall_31
+  - collision_geometry:
+      dims:
+      - 20.0
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - 0.0
+      - 1.0
+      position:
+      - 0.023262
+      - 6.76923
+      - 0.0
+    name: obstacle_Wall_16
+  - collision_geometry:
+      dims:
+      - 6.25
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - 0.0
+      - 1.0
+      position:
+      - 2.84734
+      - -4.35172
+      - 0.0
+    name: obstacle_Wall_32
+  - collision_geometry:
+      dims:
+      - 13.5
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - 0.7071080798594735
+      - 0.7071054825112363
+      position:
+      - 9.9274
+      - -0.018331
+      - 0.0
+    name: obstacle_Wall_13
+  - collision_geometry:
+      dims:
+      - 2.25
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - 0.0
+      - 1.0
+      position:
+      - 8.83292
+      - -4.34601
+      - 0.0
+    name: obstacle_Wall_34
+  - collision_geometry:
+      dims:
+      - 5.25
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - -0.7071080798594735
+      - 0.7071054825112363
+      position:
+      - -0.202658
+      - 0.691353
+      - 0.0
+    name: obstacle_Wall_29
+  - collision_geometry:
+      dims:
+      - 2.0
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - -0.7071080798594735
+      - 0.7071054825112363
+      position:
+      - -0.167479
+      - 5.8103
+      - 0.0
+    name: obstacle_Wall_27
+  - collision_geometry:
+      dims:
+      - 4.25
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - 0.0
+      - 1.0
+      position:
+      - 7.81267
+      - 0.171933
+      - 0.0
+    name: obstacle_Wall_38
+  - collision_geometry:
+      dims:
+      - 1.25
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - 0.7071080798594735
+      - 0.7071054825112363
+      position:
+      - -2.9934
+      - -6.21656
+      - 0.0
+    name: obstacle_Wall_25
+  - collision_geometry:
+      dims:
+      - 10.75
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - -0.7071080798594735
+      - 0.7071054825112363
+      position:
+      - -2.97875
+      - 1.37885
+      - 0.0
+    name: obstacle_Wall_23
+  - collision_geometry:
+      dims:
+      - 10.0
+      - 0.15
+      - 2.5
+      material: red
+      type: box
+    config:
+      orientation:
+      - 0.0
+      - 0.0
+      - 0.7071080798594735
+      - 0.7071054825112363
+      position:
+      - -5.77018
+      - -1.79504
+      - 0.0
+    name: obstacle_Wall_21
+  type: obstacle

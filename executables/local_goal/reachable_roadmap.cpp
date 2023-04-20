@@ -2,6 +2,7 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/utilities/learned_modules/learned_controller.hpp"
+#include "prx/utilities/learned_modules/planning/strict_reachable_roadmap.hpp"
 #include "prx/utilities/learned_modules/planning/reachable_roadmap.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/planning/planners/dirt.hpp"
@@ -49,7 +50,7 @@ int main(int argc, char* argv[])
         {
             // prx_throw("This executable needs a parameter file!");
             params_file = "local_goal/car_like.yaml";
-            params_file = "local_goal/annotate_treaded.yaml";
+            // params_file = "local_goal/annotate_treaded.yaml";
         }
         else 
         {
@@ -85,10 +86,15 @@ int main(int argc, char* argv[])
         auto sg = context.first;
 
         dirt_specification_t dirt_spec(context.first,context.second);
+        dirt_spec.sample_state = [ss](space_point_t& s)
+        {
+        ss -> sample(s); s -> at(3) = s -> at(4) = 0.0;
+        };
         dirt_query_t dirt_query(ss,cs);
         dirt_query.start_state = ss -> make_point();
         dirt_query.goal_state  = ss -> make_point();
         dirt_query.get_visualization = true;
+        
 
         dirt_query.goal_region_radius = params["goal_radius"].as<double>();
 
@@ -125,8 +131,9 @@ int main(int argc, char* argv[])
         std::string output_dir = params["output_dir"].as<std::string>();
         std::string out_path = output_path + output_dir;
         
-        reachable_roadmap_t rrr;
-        
+        strict_reachable_roadmap_t rrr;
+        rrr.set_max_failures(params["num_failures"].as<int>());
+
         std::string points_fname = out_path + "points.txt";
         std::cout << "Reading points from: " << points_fname << std::endl;
         std::vector<std::vector<double>> dataset = read_comma_separated_file(points_fname);
@@ -136,7 +143,6 @@ int main(int argc, char* argv[])
         rrr.build_roadmap(dirt_query, dirt_spec, controller);
         double time_taken = timer.measure_reset();
         std::cout << "Time taken to build roadmap: " << time_taken << std::endl;
-        std::cout << rrr.is_connected() << std::endl;
 
         // Output graph to file.
         std::string vertex_fname = out_path + "vertices.txt";
@@ -158,7 +164,7 @@ int main(int argc, char* argv[])
             std::string traj_fname = out_path + "traj_" + std::to_string(edge.first) + "_" + std::to_string(edge.second) + ".txt";
             std::ofstream fout;
             fout.open(traj_fname);
-            rrr.print_edge_traj(edge.first,edge.second,dirt_query,dirt_spec,controller);
+            fout << rrr.print_edge_traj(edge.first,edge.second,dirt_query,dirt_spec,controller);
             fout.close();
         }
 
@@ -175,15 +181,14 @@ int main(int argc, char* argv[])
         ss -> copy_point_from_vector(dirt_query.start_state,s);
         ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
-        std::cout << ss -> print_point(dirt_query.start_state) << std::endl;
-        std::cout << ss -> print_point(dirt_query.goal_state) << std::endl;
+        rrr.print_components();
+        // std::cout << ss -> print_point(dirt_query.start_state) << std::endl;
+        // std::cout << ss -> print_point(dirt_query.goal_state) << std::endl;
 
-        prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
+        // prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
         
-        auto path = rrr.get_shortest_path(s_nn,g_nn);
+        // auto path = rrr.get_shortest_path(s_nn,g_nn);
 
-        
-        
     }
     catch(const prx_assert_t& e) 
     {

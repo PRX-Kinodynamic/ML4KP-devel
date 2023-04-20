@@ -3,7 +3,7 @@ random_seed: 210896
 simulation_step: 0.1
 
 # environment: "environments/bar.yaml"
-environment: "environments/simple_obstacle.yaml"
+environment: "environments/indoor.yaml"
 
 plant: !file "plants/car_like.yaml"
 
@@ -22,8 +22,8 @@ num_failures: 100
 stretch_factor: 3.0
 termination_classifier: !file "networks/svm_classifier.yaml"
 
-start_state: [3.3333,-8.5000,0.0000,0.0000,0.0000]
-goal_state:  [ 3.3333,8.5000,0.0000,0.0000,0.0000]
+start_state: [-5.0000,-8.0000,0.0000,0.0000,0.0000]
+goal_state:  [5.0000 ,8.0000,0.0000,0.0000,0.0000]
 
 debug: false
 

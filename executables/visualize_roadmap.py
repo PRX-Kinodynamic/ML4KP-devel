@@ -3,6 +3,18 @@ import matplotlib.pyplot as plt
 import yaml
 import os
 from matplotlib.patches import Rectangle
+from xml.dom import minidom
+
+def quat2euler(quat):
+    # Function that converts a quaternion [w,x,y,z] to euler angles [roll,pitch,yaw]
+    # Source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+    # Assumes that the quaternion is normalized
+    w,x,y,z = quat
+    roll = np.arctan2(2*(w*x+y*z),1-2*(x**2+y**2))
+    pitch = np.arcsin(2*(w*y-z*x))
+    yaw = np.arctan2(2*(w*z+x*y),1-2*(y**2+z**2))
+    return yaw
+
 
 # mode = "edges"
 mode = "trajs"
@@ -11,22 +23,41 @@ robot_dims = [.9,0.6]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 
 # environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/bar.yaml"
-environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/simple_obstacle.yaml"
+environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/indoor.xml"
+env_file_type= "xml" #"yaml"
 
-with open(environment_file, 'r') as stream:
-    try:
-        env_params = yaml.safe_load(stream)
-    except yaml.YAMLError as exc:
-        print(exc)
-
-obstacles = env_params["environment"]["geometries"]
 plt.figure(figsize=(8,8))
-for obstacle in obstacles:
-    box_center = obstacle["config"]["position"][:2]
-    box_dims = obstacle["collision_geometry"]["dims"][:2]
-    rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
-    linewidth=1,edgecolor='r',facecolor='r')
-    plt.gca().add_patch(rect)
+
+if(env_file_type == "xml"):
+    xmldoc = minidom.parse(environment_file)
+    # Get all <body> <geom> tags
+    body_list = xmldoc.getElementsByTagName('body')
+    for body in body_list:
+        geom_list = body.getElementsByTagName('geom')
+        for geom in geom_list:
+            if geom.attributes['type'].value == "box":
+                angle = 0
+                if 'euler' in geom.attributes.keys():
+                    angle = np.degrees([float(x) for x in geom.attributes['euler'].value.split()][2])
+                box_center = [float(x) for x in geom.attributes['pos'].value.split()]
+                box_dims   = [float(x) for x in geom.attributes['size'].value.split()]
+                rect = Rectangle((box_center[0]-box_dims[0], box_center[1]-box_dims[1]), 2*box_dims[0], 2*box_dims[1], \
+                    color='red', angle=angle, rotation_point='center')
+                plt.gca().add_patch(rect)
+elif(env_file_type == "yaml"):
+    with open(environment_file, 'r') as stream:
+        try:
+            env_params = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    obstacles = env_params["environment"]["geometries"]
+    for obstacle in obstacles:
+        box_center = obstacle["config"]["position"][:2]
+        box_dims = obstacle["collision_geometry"]["dims"][:2]
+        rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
+        linewidth=1,edgecolor='r',facecolor='r')
+        plt.gca().add_patch(rect)
 plt.xlim(-11,11)
 plt.ylim(-11,11)
 
