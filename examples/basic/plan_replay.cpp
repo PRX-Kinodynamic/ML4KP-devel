@@ -1,5 +1,5 @@
 #include "prx/utilities/defs.hpp"
-#include "prx/simulation/world_model.hpp"
+#include "prx/planning/world_model.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/visualization/three_js_group.hpp"
 #include "prx/utilities/general/param_loader.hpp"
@@ -35,6 +35,10 @@ int main(int argc, char* argv[])
   auto upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
   ss->set_bounds(lower_bounds, upper_bounds);
 
+  lower_bounds = params["/plant/control_space_lower_bound"].as<std::vector<double>>();
+  upper_bounds = params["/plant/control_space_upper_bound"].as<std::vector<double>>();
+  cs->set_bounds(lower_bounds, upper_bounds);
+
   std::string plan_filename{ params["plan_file"].as<>() };
 
   auto start_state = ss->make_point();
@@ -48,6 +52,8 @@ int main(int argc, char* argv[])
   plan.from_file(plan_filename);
 
   sg->propagate(start_state, plan, solution_traj);
+
+  solution_traj.to_file(params["solution_trajectory_file"].as<>());
 
   three_js_group_t* vis_group = new three_js_group_t({ plant }, { obstacle_list });
 

@@ -1,0 +1,36 @@
+random_seed: 210896
+# random_seed: 101193
+simulation_step: 0.1
+
+# environment: "environments/bar.yaml"
+environment: "environments/landmark.yaml"
+
+plant: !file "plants/car_like.yaml"
+
+# use_learned_controller: true
+# learned_controller: !file "networks/car_like_controller.yaml"
+
+use_learned_controller: true
+learned_controller: !file "networks/car_like_controller.yaml"
+
+
+random_local_goal: false
+planner_name: "roadmap"
+goal_radius: 0.5
+
+num_trajectories: 100
+sample_around: true
+verify_edge: true
+validate: true
+num_failures: 100
+stretch_factor: 3.0
+# termination_classifier: !file "networks/svm_classifier.yaml"
+
+start_state: [3.3333,-8.5000,0.0000,0.0000,0.0000]
+goal_state:  [ 3.3333,8.5000,0.0000,0.0000,0.0000]
+
+debug: true
+
+output_dir: "ablation/"
+roadmap_dir: "ablation/roadmap_medium_3.0/"
+
