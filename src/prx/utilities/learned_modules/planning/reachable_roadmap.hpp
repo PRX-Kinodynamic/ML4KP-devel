@@ -85,7 +85,7 @@ class reachable_roadmap_t
                     spec.state_space -> copy_point(query.start_state, pt);
                     controller.fulfill_query(query, spec);
 
-                    if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+                    if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 1)
                     {
                         arriveable = true;
                         a_indices.push_back(v);
@@ -98,7 +98,7 @@ class reachable_roadmap_t
                     spec.state_space -> copy_point(query.start_state, vertices[v] -> point);
                     controller.fulfill_query(query, spec);
 
-                    if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+                    if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 1)
                     {
                         departable = true;
                         d_indices.push_back(v);
@@ -177,6 +177,8 @@ class reachable_roadmap_t
         }
         Fw[s]->erase(s);
         Bw[s]->erase(s);
+        Fw[t]->erase(s);
+        Bw[t]->erase(s);
         for(auto c : *Fw[s]){
             //update bw
             Bw[c]->erase(s);
@@ -282,39 +284,42 @@ class reachable_roadmap_t
                     }
                     for (auto c : *merges)
                     {
-                        std::cout<<"Merging "<<c<<" into "<<component_counter<<std::endl;
+                        //std::cout<<"Merging "<<c<<" into "<<component_counter<<std::endl;
                         forward_set->erase(c);
                         backward_set->erase(c);
                         merge_components(component_counter,c);
+                        //print_BwFw();
                     }
-                    print_components();
+                    //print_components();
                     // update forward and backward sets 
                     // this step assumes an acyclic graph, should be satisfied by merge step
                     for (auto A : *backward_set){
-                        std::cout<<"Backward Element A: "<<A<<std::endl;
+                        //std::cout<<"Backward Element A: "<<A<<std::endl;
                         for (auto C : *Bw[A]){
-                            std::cout<<"*BW[A] "<<C<<std::endl;
+                            //std::cout<<"*BW[A] "<<C<<std::endl;
                             Bw[component_counter]->insert(C);
                         }
                     }
                     for (auto D : *forward_set){
-                        std::cout<<"Forward Element D:"<<D<<std::endl;
+                        //std::cout<<"Forward Element D:"<<D<<std::endl;
                         for (auto C : *Fw[D]){
-                            std::cout<<"*FW[D] "<<C<<std::endl;
+                            //std::cout<<"*FW[D] "<<C<<std::endl;
                             Fw[component_counter]->insert(C);
                         }
                     }
+
                     for (auto B : *Bw[component_counter]){
-                        std::cout<<"Backward Element B:"<<B<<std::endl;
+                        //std::cout<<"Backward Element B:"<<B<<std::endl;
                         for (auto C : *Fw[component_counter]){
-                            std::cout<<"FW[B] <-"<<C<<std::endl;
+                            //std::cout<<"FW[B] <-"<<C<<std::endl;
                             Fw[B]->insert(C);
                         }
                     }
+                    
                     for (auto F : *Fw[component_counter]){
-                        std::cout<<"Forward Element F:"<<F<<std::endl;
+                        //std::cout<<"Forward Element F:"<<F<<std::endl;
                         for (auto C : *Bw[component_counter]){
-                            std::cout<<"Bw[F] <-"<<C<<std::endl;
+                            //std::cout<<"Bw[F] <-"<<C<<std::endl;
                             Bw[F]->insert(C);
                         }
                     }
@@ -427,6 +432,7 @@ class reachable_roadmap_t
         std::cout << "--  --" << std::endl;
     }
     void print_BwFw(){
+        std::cout<<"printing BwFw"<<std::endl;
         for (auto c : Bw)
         {
             std::cout << "Bw["<<c.first<<"]: ";
