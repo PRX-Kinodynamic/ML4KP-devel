@@ -175,6 +175,8 @@ class reachable_roadmap_t
         {
             component_map[v] = t;
         }
+        Fw[s]->erase(s);
+        Bw[s]->erase(s);
         for(auto c : *Fw[s]){
             //update bw
             Bw[c]->erase(s);
