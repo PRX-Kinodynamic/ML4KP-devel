@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
         std::string output_dir = params["output_dir"].as<std::string>();
         std::string out_path = output_path + output_dir;
         
-        strict_reachable_roadmap_t rrr;
+        reachable_roadmap_t rrr;
         rrr.set_max_failures(params["num_failures"].as<int>());
 
         std::string points_fname = out_path + "points.txt";
