@@ -16,8 +16,7 @@ public:
   virtual void update_configuration() override;
 
   // virtual bool linearize() override final;
-  virtual bool linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D,
-                         space_point_t xt = nullptr, space_point_t ut = nullptr, double epsilon = 1e-3) override final;
+  virtual bool linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B) override final;
 
   // virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3) override final;
 

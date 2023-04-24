@@ -1,9 +1,11 @@
 #pragma once
 
 #include "prx/simulation/defs.hpp"
+#include "prx/simulation/system_factory.hpp"
+
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/spaces/space.hpp"
-#include "prx/simulation/system_factory.hpp"
+#include "prx/utilities/math/first_order_derivative.hpp"
 
 #include <memory>
 
@@ -68,15 +70,6 @@ public:
   }
 
   virtual void set_state_space_bounds(const std::vector<double>& lower, const std::vector<double>& upper) = 0;
-
-  // virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon = 1e-3)
-
-  virtual bool linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D,
-                         space_point_t xt = nullptr, space_point_t ut = nullptr, double epsilon = 1e-3)
-  {
-    // PRX_NOT_IMPLEMENTED
-    return false;
-  };
 
   inline std::string get_pathname()
   {

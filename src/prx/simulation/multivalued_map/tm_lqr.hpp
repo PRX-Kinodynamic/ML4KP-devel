@@ -13,6 +13,7 @@ static controller_ptr_t pendulum_lqr(const time_map_data_t& tm)
   auto lqr = std::make_shared<lqr_t>(tm._system, Q, R, "pendulum_lqr");
   lqr->set_goal(tm.x_goal, tm.u_goal);
   lqr->compute_K();
+  PRX_DEBUG_VAR_1(lqr->get_K());
   return lqr;
 }
 

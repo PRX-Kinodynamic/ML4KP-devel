@@ -1,5 +1,5 @@
 #pragma once
-#include <mutex> 
+#include <mutex>
 #include "prx/simulation/multivalued_map/tm_controllers.hpp"
 #include "prx/simulation/system.hpp"
 #include "prx/simulation/system_group.hpp"
@@ -47,23 +47,24 @@ public:
     _data._params.add_file(param_filename);
     init_from_param_loader();
     init_spaces();
+    init_controller();
   }
   time_map_t(prx::param_loader& param) : _data()
   {
     _data._params = param;
     init_from_param_loader();
     init_spaces();
+    init_controller();
   }
 
-  time_map_t(std::string system_name, system_ptr_t system_ptr,
-             std::shared_ptr<system_group_t> system_group)
-    : _data()
+  time_map_t(std::string system_name, system_ptr_t system_ptr, std::shared_ptr<system_group_t> system_group) : _data()
   {
     _data._system_group = system_group;
     _data._system_name = system_name;
     _data._system = system_ptr;
     _data._checker = new condition_check_t("sim_time", 1);
     init_spaces();
+    init_controller();
   }
 
   void set_duration(const double duration)
@@ -81,6 +82,12 @@ public:
   space_t* get_state_space()
   {
     return _data._state_space;
+  }
+
+  void init_controller()
+  {
+    auto controller_generator = time_map_controllers_t::get_controller(_data._system_name);
+    _data._controller = controller_generator(_data);
   }
 
   time_map_data_t _data;
@@ -113,8 +120,6 @@ protected:
     _data._parameter_space = _data._system_group->get_parameter_space();
     _data.x_goal = _data._state_space->make_point();
     _data.u_goal = _data._control_space->make_point();
-    auto controller_generator = time_map_controllers_t::get_controller(_data._system_name);
-    _data._controller = controller_generator(_data);
   }
 };
 

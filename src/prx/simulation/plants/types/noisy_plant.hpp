@@ -46,9 +46,14 @@ public:
   }
 
   virtual bool linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B, Eigen::MatrixXd& C, Eigen::MatrixXd& D,
-                         space_point_t xt = nullptr, space_point_t ut = nullptr, double epsilon = 1e-3) override
+                         space_point_t xt = nullptr, space_point_t ut = nullptr) override
   {
-    return plant->linearize(A, B, C, D, xt, ut, epsilon);
+    if (xt != nullptr)
+    {
+      get_state_space()->copy_from(xt);
+      get_control_space()->copy_from(ut);
+    }
+    return plant->linearize(A, B);
   }
 
 private:

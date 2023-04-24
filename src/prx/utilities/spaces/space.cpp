@@ -447,7 +447,7 @@ void space_t::integrate(const space_point_t& point, const space_t* derivative, d
 
 void space_t::integrate(const space_t* derivative, double delta_t)
 {
-  for (unsigned i = 0; i < dimension; i++)
+  for (std::size_t i = 0; i < dimension; ++i)
   {
     if (topology[i] == topology_t::EUCLIDEAN || topology[i] == topology_t::ROTATIONAL)
     {

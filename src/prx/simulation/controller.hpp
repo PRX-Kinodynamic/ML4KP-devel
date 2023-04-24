@@ -1,6 +1,6 @@
 #pragma once
 
-#include "prx/simulation/system.hpp"
+#include "prx/simulation/plant.hpp"
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 
@@ -17,9 +17,9 @@ class controller_t : public std::enable_shared_from_this<controller_t>
 public:
   controller_t(const controller_t& other) = default;
 
-  controller_t(system_ptr_t _plant, std::string _name = "base_controller")
+  controller_t(system_ptr_t system_in, std::string _name = "base_controller")
   {
-    plant = _plant;
+    plant = std::dynamic_pointer_cast<plant_t>(system_in);
     name = _name;
     goal = plant->get_state_space()->make_point();
     u_goal = plant->get_control_space()->make_point();
@@ -52,7 +52,7 @@ public:
   }
   virtual void propagate(const double simulation_step, const propagate_step step)
   {
-    plant->propagate(simulation_step, step);
+    plant->propagate(simulation_step);
   }
 
   virtual void set_plan(const plan_t& _plan)
@@ -70,16 +70,17 @@ public:
     plan = std::make_shared<plan_t>(get_control_space());
   }
 
-  virtual void set_goal(const space_point_t& _goal)
+  template <typename State>
+  void set_goal(const State& _goal)
   {
     plant->get_state_space()->copy(goal, _goal);
   }
 
-  template <typename X, typename U>
-  void set_goal(const X& x_goal, const U& u_goal)
+  template <typename State, typename Control>
+  void set_goal(const State& x_goal, const Control& u_goal_in)
   {
     plant->get_state_space()->copy(goal, x_goal);
-    plant->get_control_space()->copy(u_goal, u_goal);
+    plant->get_control_space()->copy(u_goal, u_goal_in);
   }
 
   std::shared_ptr<controller_t> get_ptr()
@@ -95,7 +96,7 @@ protected:
     goal = other->goal;
     plan = other->plan;
   };
-  system_ptr_t plant;
+  std::shared_ptr<plant_t> plant;
   std::string name;
 
   space_point_t goal;

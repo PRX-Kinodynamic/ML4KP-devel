@@ -9,8 +9,13 @@ lqr_t::~lqr_t()
 
 void lqr_t::compute_K()
 {
-  Eigen::MatrixXd A = ltv->get_A();
-  Eigen::MatrixXd B = ltv->get_B();
+  const std::size_t ss_dim{ plant->get_state_space()->get_dimension() };
+  const std::size_t cs_dim{ plant->get_control_space()->get_dimension() };
+  Eigen::MatrixXd A{ Eigen::MatrixXd::Zero(ss_dim, ss_dim) };
+  Eigen::MatrixXd B{ Eigen::MatrixXd::Zero(cs_dim, cs_dim) };
+  plant->linearize(A, B);
+  // PRX_DEBUG_VAR_1(B);
+  // PRX_DEBUG_VAR_1(A);
   Eigen::MatrixXd S = care::solve(A, B, Q, R);
   K = R.inverse() * (B.transpose() * S);
 }

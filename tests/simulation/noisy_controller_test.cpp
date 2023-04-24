@@ -29,7 +29,7 @@ void check(prx::system_ptr_t plant)
   auto lqr_ctrl = std::make_shared<prx::lqr_t>(plant, Q, R, "lqr");
   // auto lqr_ctrl_ptr = lqr_ctrl.get_ptr();
   BOOST_CHECK(lqr_ctrl != nullptr);
-  lqr_ctrl->get_linearized_plant()->linearize();
+  // lqr_ctrl->get_linearized_plant()->linearize();
   lqr_ctrl->compute_K();
   prx::noisy_controller_t<std::uniform_real_distribution<double>> n_ctrl(lqr_ctrl, -0.5, 0.5);
 
