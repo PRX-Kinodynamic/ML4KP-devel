@@ -332,6 +332,9 @@ class reachable_roadmap_t
                     component_counter++;
                     num_failures = 0;
                         
+                }else{
+                    num_failures++;
+                    output_progress_bar(1.0*num_failures/max_failures);
                 }
                 delete arrivals;
                 delete departures;
