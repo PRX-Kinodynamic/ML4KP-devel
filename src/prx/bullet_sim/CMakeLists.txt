@@ -1,5 +1,9 @@
 ## Bullet_sim submodule of DirtMP
 
+set(BUILD_BULLET OFF CACHE BOOL "Set ON/TRUE for building Bullet")
+
+if(BUILD_BULLET)
+else()
 # TODO: Use submodule? if we are using a fork might as well integratated it here...
 # Right now it has to be done manually, the following code needs to be 
 # corrected to use the bullet submodule.
@@ -181,3 +185,4 @@ target_link_libraries(${PROJECT_NAME}_bullet_sim PUBLIC pthread
 	Bullet3Common 
 	clsocket
 	)
+endif()
