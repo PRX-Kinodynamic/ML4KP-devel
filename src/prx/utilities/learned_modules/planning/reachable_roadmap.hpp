@@ -81,8 +81,8 @@ class reachable_roadmap_t
                 
                 if(!arriveable){
                     query.clear_outputs();
-                    spec.state_space -> copy_point(query.goal_state, vertices[v] -> point);
-                    spec.state_space -> copy_point(query.start_state, pt);
+                    spec.state_space -> copy_point(query.start_state, vertices[v] -> point);
+                    spec.state_space -> copy_point(query.goal_state, pt);
                     controller.fulfill_query(query, spec);
 
                     if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 1)
@@ -94,8 +94,8 @@ class reachable_roadmap_t
                 }
                 if(!departable){
                     query.clear_outputs();
-                    spec.state_space -> copy_point(query.goal_state, pt);
-                    spec.state_space -> copy_point(query.start_state, vertices[v] -> point);
+                    spec.state_space -> copy_point(query.start_state, pt);
+                    spec.state_space -> copy_point(query.goal_state, vertices[v] -> point);
                     controller.fulfill_query(query, spec);
 
                     if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 1)
@@ -243,7 +243,7 @@ class reachable_roadmap_t
                             arrivals->insert(av);
                             departures->insert(dv);
                         }
-                        else if(!Fw[ac]->contains(dc))
+                        else if(!(Fw[ac]->contains(dc)))
                         {
                             add_node = true;
                             arrivals->insert(av);
@@ -274,12 +274,13 @@ class reachable_roadmap_t
                     {
                         cost = a_costs[a];
                         add_edge(a, vertex_counter, cost);
+
                         backward_set->insert(component_map[a]);
                     }
                     for (auto d : *departures)
                     {
                         cost = d_costs[d];
-                        add_edge(d, vertex_counter, cost);
+                        add_edge(vertex_counter, d, cost);
                         forward_set->insert(component_map[d]);
                     }
                     for (auto c : *merges)
@@ -332,6 +333,9 @@ class reachable_roadmap_t
                     num_failures = 0;
                         
                 }
+                delete arrivals;
+                delete departures;
+                delete merges;
             }
             else{
                 num_failures++;

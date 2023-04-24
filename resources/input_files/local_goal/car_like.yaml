@@ -18,7 +18,7 @@ num_trajectories: 100
 sample_around: true
 verify_edge: true
 validate: true
-num_failures: 100
+num_failures: 50
 stretch_factor: 3.0
 termination_classifier: !file "networks/svm_classifier.yaml"
 

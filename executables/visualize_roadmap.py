@@ -71,7 +71,7 @@ for fname in os.listdir(roadmap_dir):
             plt.plot(traj[:,0],traj[:,1],color='black')
             # Plot an arrow in the middle of the trajectory
             mid = int(len(traj)/2)
-            plt.arrow(traj[mid,0],traj[mid,1],traj[mid+10,0]-traj[mid,0],traj[mid+10,1]-traj[mid,1],color='black',width=0.1)
+            plt.arrow(traj[mid,0],traj[mid,1],traj[mid+1,0]-traj[mid,0],traj[mid+1,1]-traj[mid,1],color='black',width=0.1)
 
 vertices_raw = np.loadtxt(roadmap_dir+"vertices.txt",delimiter=",")
 
