@@ -10,7 +10,6 @@ set(BUILD_SHARED_LIBS True)
 cmake_policy(SET CMP0079 NEW)
 
 set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
-set(BUILD_FOR_BULLET OFF CACHE BOOL "Set ON/TRUE for building for PyBullet")
 set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
 set(PY_VERSION "3" CACHE STRING "Set ON/TRUE for building Python Bindings")
@@ -56,15 +55,6 @@ if(BUILD_FOR_TORCH)
 else()
 	message(STATUS "NOT building with Torch")
   add_definitions(-DTORCH_NOT_BUILT)
-endif()
-
-
-if(BUILD_FOR_BULLET)
-	include_directories(src/prx/bullet_sim)
-	add_subdirectory(src/prx/bullet_sim)
-else()
-	message("Not building for bullet")
-    add_definitions(-DBULLET_NOT_BUILT)
 endif()
 
 
