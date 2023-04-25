@@ -63,6 +63,7 @@ if __name__ == "__main__":
 
   number_of_points = N * (len(ARANGE) + 1) # fix this later
 
+
   
   # Code for start-end states
   # while(is_there_next):
