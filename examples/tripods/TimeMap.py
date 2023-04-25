@@ -40,13 +40,14 @@ class TimeMap:
 
         obstacle_list = []
         obstacle_names = []
-        if params["use_obstacle"].as_bool() and system_type == "ackermann_lc":
-            obs_pose = prx.transform()
-            obs_pose.setIdentity()
-            obs_pose.translation(prx.vector(5.,0.,1.))
-            box = prx.box.create_obstacle("box",3.,3.,2.,obs_pose)
-            obstacle_list = [box]
-            obstacle_names = ["box"]
+        if params.exists("use_obstacle"):
+            if bool(params["use_obstacle"]) and system_type == "ackermann_lc":
+                obs_pose = prx.transform()
+                obs_pose.setIdentity()
+                obs_pose.translation(prx.vector(5.,0.,1.))
+                box = prx.box.create_obstacle("box",3.,3.,2.,obs_pose)
+                obstacle_list = [box]
+                obstacle_names = ["box"]
 
         # For some reason the below code doesn't work.
         # 

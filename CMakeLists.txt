@@ -21,14 +21,8 @@ else()
 	add_definitions(-lstdc++fs)
 	link_libraries(stdc++fs)
 endif()
-#find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
-#include_directories(${Boost_INCLUDE_DIRS})
-# link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})
-#link_libraries(
-#	${Boost_FILESYSTEM_LIBRARY}
-#	${Boost_SYSTEM_LIBRARY}
-	# ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-#	)
+
+
 
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})

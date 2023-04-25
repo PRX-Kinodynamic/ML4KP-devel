@@ -56,6 +56,13 @@ else()
     add_definitions(-DQHULL_NOT_BUILT)
 endif(BUILD_QHULL)
 
+
+target_include_directories(${PROJECT_NAME}_external PUBLIC ${Boost_INCLUDE_DIRS})
+# link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})
+target_link_libraries(${PROJECT_NAME}_external PUBLIC ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} )
+
+
+
 target_include_directories(${PROJECT_NAME}_external PUBLIC ".")
 
 # Silencing all warning for the external (non-prx) code
