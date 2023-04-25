@@ -62,6 +62,7 @@ if __name__ == "__main__":
       start_id = image_id
 
   number_of_points = N * (len(ARANGE) + 1) # fix this later
+  
 
 
   
