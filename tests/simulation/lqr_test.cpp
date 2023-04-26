@@ -48,9 +48,9 @@ BOOST_AUTO_TEST_CASE(acrobot_lqr_test)
   auto system_ptr = prx::system_factory_t::create_system(plant_name, plant_path);
   auto plant = std::dynamic_pointer_cast<prx::plant_t>(system_ptr);
 
-  const auto ss = plant->get_state_space();
-  const auto cs = plant->get_control_space();
-  const auto ps = plant->get_parameter_space();
+  auto ss = plant->get_state_space();
+  auto cs = plant->get_control_space();
+  auto ps = plant->get_parameter_space();
 
   ss->set_bounds({ 0, -M_PI, -6, -6 }, { 2.0 * M_PI, M_PI, 6, 6 });
   cs->set_bounds({ -7 }, { 7 });

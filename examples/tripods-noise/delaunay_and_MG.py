@@ -90,10 +90,12 @@ if __name__ == "__main__":
     ofs_im.write(str(image_id) + " " + str(dgnn[image_id].point.transpose())+ "\n")
     
   for node in dgnn:
+    # ofs_edges.write(str(node.id) + " ")
+    ofs_edges.write(str(node.point.transpose()) + " ")
     for neighbor in node.neighbors:
-      ofs_edges.write(str(node.point.transpose()) + " ")
+      # ofs_edges.write(str(neighbor) + " ")
       ofs_edges.write(str(dgnn[neighbor].point.transpose()) + " ")
-      ofs_edges.write("\n")
+    ofs_edges.write("\n")
 
   def neighbors_query_py(idx):
     return dgnn[idx].neighbors

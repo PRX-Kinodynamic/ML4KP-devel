@@ -45,8 +45,12 @@ add_library(py${PROJECT_NAME} MODULE pyprx.cpp)
 
 target_include_directories(py${PROJECT_NAME} PUBLIC ".")
 
-target_link_libraries(py${PROJECT_NAME} INTERFACE  ${PYTHON_LIBRARIES})
 target_link_libraries(py${PROJECT_NAME} PUBLIC ${Boost_PY_LIBS})
+if (APPLE)
+    target_link_libraries(py${PROJECT_NAME} PUBLIC ${PYTHON_LIBRARIES})
+else()
+    target_link_libraries(py${PROJECT_NAME} INTERFACE ${PYTHON_LIBRARIES})
+endif()
 target_link_libraries(py${PROJECT_NAME} PUBLIC ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES})
 target_link_libraries(py${PROJECT_NAME} PUBLIC ${PROJECT_NAME}_external)
 target_link_libraries(py${PROJECT_NAME} PUBLIC ${PROJECT_NAME}_utilities)
