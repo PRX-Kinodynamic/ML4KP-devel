@@ -261,6 +261,34 @@ public:
     }
     return result_neighbors;
   }
+
+  void filter_edges_larger_than(const double length)
+  {
+    std::function<bool(const NodePtr, const NodePtr)> filter = [&length](const NodePtr a, const NodePtr b)  // no-lint
+    { return (a->point - b->point).norm() > length; };
+    filter_edges(filter);
+  }
+
+  template <typename FilterFunction>
+  void filter_edges(FilterFunction& filter_function)
+  {
+    auto delaunay_nodes = _nodes;
+    for (auto node : delaunay_nodes)
+    {
+      auto neighbors = node.second->neighbors;
+
+      typename Node::Neighbors new_neighbors;
+      for (auto iter = neighbors.begin(); iter != neighbors.end(); iter++)
+      {
+        if (!filter_function(node.second, _nodes[(*iter)]))
+        {
+          new_neighbors.insert(*iter);
+        }
+      }
+      node.second->neighbors.swap(new_neighbors);
+    }
+  }
+
   inline std::vector<NodePtr> get_neighbors(const std::size_t idx) const
   {
     return get_neighbors(_nodes[idx]);
@@ -276,10 +304,10 @@ public:
     {
       for (auto neighbor : node.second->neighbors)
       {
-        auto site = _nodes[neighbor];
-        prx_assert(site != nullptr, "Site is nullptr");
+        auto curr_node = _nodes[neighbor];
+        prx_assert(curr_node != nullptr, "Site is nullptr");
         ofs_sites << node.second->point.transpose() << " ";
-        ofs_sites << site->point.transpose() << " ";
+        ofs_sites << curr_node->point.transpose() << " ";
         ofs_sites << "\n";
       }
     }

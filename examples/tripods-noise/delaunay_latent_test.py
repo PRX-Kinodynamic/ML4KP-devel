@@ -38,5 +38,5 @@ if __name__ == "__main__":
     start_id = dgnn.add_point(pt);
   
   dgnn.qhull_to_delaunay();
-
+  dgnn.filter_edges_larger_than(2.0);
   dgnn.to_file(prx.out_path + "latent_test.txt");    

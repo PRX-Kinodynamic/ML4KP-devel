@@ -88,6 +88,7 @@ void bindings()
       .def("__iter__", iterator<delaunay_graph_prx, return_internal_reference<>>())
       .def("__len__", &delaunay_graph_prx::size)
       .def("size", &delaunay_graph_prx::size)
+      .def("filter_edges_larger_than", &delaunay_graph_prx::filter_edges_larger_than)
       // Comment to force ; to the next one
       ;
 
