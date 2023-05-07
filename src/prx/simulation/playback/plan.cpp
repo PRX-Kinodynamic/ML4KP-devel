@@ -239,11 +239,10 @@ namespace prx
     std::string plan_t::print( unsigned precision ) const
     {
         std::stringstream out(std::stringstream::out);
-        out << "\n";
         for(const plan_step_t& step : *this)
         {
-            out << "[" << control_space->print_point(step.control, precision)
-                    << " , " << step.duration << "s]" << std::endl;
+            out << control_space->print_point(step.control, precision)
+                    << "," << step.duration << std::endl;
         }
         return out.str();
     }
