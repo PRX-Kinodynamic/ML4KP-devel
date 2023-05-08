@@ -8,6 +8,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
 set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
+set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 OFF CACHE BOOL "Set ON/TRUE for building tests")
 
 # TODO: go back to c++11?
@@ -47,6 +48,14 @@ if(BUILD_FOR_TORCH)
     # endif()
 else()
     add_definitions(-DTORCH_NOT_BUILT)
+endif()
+
+if(BUILD_FOR_MUJOCO)
+	include_directories(src/prx/mujoco)
+	add_subdirectory(src/prx/mujoco)
+else()
+	message("Not building with mujoco.")
+	add_definitions(-DMUJOCO_NOT_BUILT)
 endif()
 
 include_directories(src/prx/external)

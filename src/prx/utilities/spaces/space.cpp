@@ -47,6 +47,11 @@ namespace prx
 					lower_bounds.push_back(new double(0));
 					upper_bounds.push_back(new double(std::numeric_limits<int>::max()));
 					break;
+				case 'Q':
+					topology.push_back(topology_t::QUATERNION);
+					lower_bounds.push_back(new double(-1));
+					upper_bounds.push_back(new double(1));
+					break;
 				default:
 					prx_throw("Bad topology identifier '"<<c<<"' from topology string "<<topo);
 			}
@@ -267,11 +272,9 @@ namespace prx
 	void space_t::copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const
 	{
 		prx_assert(source->parent->space_name==space_name,"Point and space have different names: "<<source->parent->space_name<<" and "<<space_name);
-		// prx_assert(source->parent->dimension==destination.size(),"Point and vector have different sizes: "<<source->parent->dimension<<" and "<<destination.size());
-		destination.clear();
+		//prx_assert(source->parent->dimension==destination.size(),"Point and vector have different sizes: "<<source->parent->dimension<<" and "<<destination.size());
 		for(unsigned i=0;i<dimension;++i)
 		{
-			// destination[i]=source->memory[i];
 			destination.push_back(source->memory[i]);
 		}
 	}
@@ -339,12 +342,39 @@ namespace prx
 	{
 		prx_assert(point->parent->space_name==space_name,
 			"Point and space have different names: "<<point->parent->space_name<<" and "<<space_name);
-		for(unsigned i=0;i<dimension;i++)
+		unsigned i = 0;
+		while (i < dimension)
 		{
-			point->memory[i] = uniform_random(*lower_bounds[i],*upper_bounds[i]);
-			if(topology[i]==topology_t::DISCRETE)
-				point->memory[i] = round(point->memory[i]);
+			if (topology[i] == topology_t::QUATERNION)
+			{
+				quaternion_t quat = Eigen::Quaterniond::UnitRandom();
+				point->memory[i] = quat.w();
+				point->memory[i + 1] = quat.x();
+				point->memory[i + 2] = quat.y();
+				point->memory[i + 3] = quat.z();
+				i += 4;
+			}
+			else
+			{
+				point->memory[i] = uniform_random(*lower_bounds[i],*upper_bounds[i]);
+				if(topology[i]==topology_t::DISCRETE)
+					point->memory[i] = round(point->memory[i]);
+				i++;
+			}
 		}
+		
+		// quaternion_t quat;
+		// quat.UnitRandom();
+		// for(unsigned i=0;i<dimension;i++)
+		// {
+		// 	point->memory[i] = uniform_random(*lower_bounds[i],*upper_bounds[i]);
+		// 	if(topology[i]==topology_t::QUATERNION)
+		// 	{
+		// 		prx_throw("Quaternions are not supported yet");
+		// 	}
+		// 	if(topology[i]==topology_t::DISCRETE)
+		// 		point->memory[i] = round(point->memory[i]);
+		// }
 	}
 
 	std::vector<std::pair<double,double>> space_t::get_bounds() const
@@ -381,6 +411,10 @@ namespace prx
 			{
 				continue;
 			}
+			else if(topology[i] == topology_t::QUATERNION)
+			{
+				prx_warn("Quaternions are not supported in integrate yet.");
+			}
 		}
 		enforce_bounds();
 	}
@@ -416,6 +450,10 @@ namespace prx
 					result->memory[i] = (int)point2->memory[i];
 				else
 					result->memory[i] = (int)point1->memory[i];
+			}
+			else if(topology[i]==topology_t::QUATERNION)
+			{
+				prx_warn("Quaternions are not supported in interpolate yet.");
 			}
 			else
 				result->memory[i] = (1-t)*point1->memory[i] + t*point2->memory[i];

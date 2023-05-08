@@ -33,6 +33,8 @@ namespace prx
 	const std::string output_path = lib_path + "out/";
 	const std::string js_path = lib_path + "resources/js/";
 
+	const bool MUJOCO_VIS = false;
+
 	enum propagate_step { FIRST_STEP, MIDDLE_STEP, FINAL_STEP };
 	enum plant_type { ANALYTICAL, MUJOCO };
 

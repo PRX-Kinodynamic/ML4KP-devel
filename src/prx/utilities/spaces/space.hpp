@@ -132,9 +132,12 @@ namespace prx
 
         friend std::ostream& operator<< (std::ostream& os, const space_snapshot_t& obj) 
         {
+			bool first = true;
         	for (auto e : obj.memory)
         	{
-        		os << std::setprecision(2) << std::fixed << e << " ";
+				if(!first) os << " ";
+				first = false;
+        		os << std::setprecision(2) << std::fixed << e ;
         	}
         	// os << std::endl;
         	return os;
@@ -170,7 +173,8 @@ namespace prx
 			EUCLIDEAN=0,
 			ROTATIONAL=1,
 			DISCRETE=2,
-			IDLE=3
+			IDLE=3,
+			QUATERNION=4
 		};
 
 		space_t(const std::string& topology, const std::vector<double*>& addresses, const std::string& name);
