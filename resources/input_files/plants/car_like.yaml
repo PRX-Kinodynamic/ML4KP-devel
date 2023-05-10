@@ -7,7 +7,7 @@ goal_state:  [ 3.3333,8.5000,0.0000,0.0000,0.0000]
 state_space_lower_bound: [-10,-7,-3.15,-0.5236,-1.]
 state_space_upper_bound: [ 10, 7, 3.15, 0.5236, 1.]
 
-control_space_lower_bound: [ 0.0,-0.3]
+control_space_lower_bound: [-1.0,-0.3]
 control_space_upper_bound: [ 1.0, 0.3]
 
 min_steps: 5

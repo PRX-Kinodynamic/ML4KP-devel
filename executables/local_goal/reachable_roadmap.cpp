@@ -133,6 +133,7 @@ int main(int argc, char* argv[])
         
         reachable_roadmap_t rrr;
         rrr.set_max_failures(params["num_failures"].as<int>());
+        rrr.set_collect_reachability(params["collect_reachability"].as<bool>());
 
         std::string points_fname = out_path + "points.txt";
         std::cout << "Reading points from: " << points_fname << std::endl;
@@ -182,13 +183,13 @@ int main(int argc, char* argv[])
         ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
         rrr.print_components();
-        // std::cout << ss -> print_point(dirt_query.start_state) << std::endl;
-        // std::cout << ss -> print_point(dirt_query.goal_state) << std::endl;
+        std::cout << ss -> print_point(dirt_query.start_state) << std::endl;
+        std::cout << ss -> print_point(dirt_query.goal_state) << std::endl;
 
-        // prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
+        prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
         
-        // auto path = rrr.get_shortest_path(s_nn,g_nn);
-
+        auto path = rrr.get_shortest_path(s_nn,g_nn);
+        
     }
     catch(const prx_assert_t& e) 
     {

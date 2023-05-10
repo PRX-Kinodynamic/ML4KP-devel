@@ -26,6 +26,7 @@ class reachable_roadmap_t
 
     protected:
         int max_failures, num_failures;
+        bool collect_reachability;
         space_point_t pt;
         std::vector<double> pt_vec;
         double cost;
@@ -36,7 +37,7 @@ class reachable_roadmap_t
         std::unordered_map<node_index_t, double> d_costs;
 
     public:
-        reachable_roadmap_t() : max_failures(100), num_failures(0), vertex_counter(0), component_counter(0) {}
+        reachable_roadmap_t() : max_failures(100), num_failures(0), vertex_counter(0), component_counter(0), collect_reachability(false) {}
         ~reachable_roadmap_t() {
             for(auto c : components) delete c.second;
             for(auto c : Fw) delete c.second;
@@ -45,6 +46,7 @@ class reachable_roadmap_t
         }
     
     void set_max_failures(int max_failures) { this->max_failures = max_failures; }
+    void set_collect_reachability(bool collect_reachability) { this->collect_reachability = collect_reachability; }
 
     space_point_t get_point(node_index_t index) { return vertices[index]->point; }
     
@@ -196,7 +198,13 @@ class reachable_roadmap_t
     }
     
     void build_roadmap(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, bool verify = false)
-    {
+    {       
+        std::ofstream outfile;
+        std::string fname = output_path + "visibility_data.txt";
+        outfile.open(fname); // append instead of overwrite 
+        outfile<<""; 
+        outfile.close();
+
         pt = spec.state_space -> make_point();
         do
         {
@@ -210,7 +218,7 @@ class reachable_roadmap_t
 
             get_indices(query,spec,controller);
 
-            if (a_indices.size() == 0 && d_indices.size() == 0)  // sample connected to no nodes, becomes a guard
+            if (a_indices.size() == 0 || d_indices.size() == 0)  // sample connected to no nodes, becomes a guard
             {
                 auto vertex = new ground_truth_vertex_t();
                 vertex -> point = spec.state_space -> clone_point(pt);         //add new vertex to map
@@ -224,11 +232,17 @@ class reachable_roadmap_t
                 Fw.insert(std::make_pair(component_counter, forward_set));
                 Bw.insert(std::make_pair(component_counter, backward_set));
 
+                //todo: add all a_indices and d_indices as edges
+
+                //std::cout<<"add Guard: "<<component_counter<<std::endl;
                 vertex_counter++;
+
+                if(collect_reachability) record_visibility(num_failures, spec, query, controller);
+                
                 component_counter++;
                 num_failures = 0;
             }
-            else if(a_indices.size() > 0 && d_indices.size() > 0) // sample connected to multiple guards, becomes connection, merges guards
+            else // sample connected to multiple guards, becomes connection, merges guards
             {
                 bool add_node = false;
                 auto arrivals = new std::unordered_set<node_index_t>;
@@ -325,10 +339,12 @@ class reachable_roadmap_t
                         }
                     }
 
+                    vertex_counter++;
+                    
+                    if(collect_reachability) record_visibility(num_failures, spec, query, controller);
 
                     delete forward_set;
                     delete backward_set;
-                    vertex_counter++;
                     component_counter++;
                     num_failures = 0;
                         
@@ -340,13 +356,102 @@ class reachable_roadmap_t
                 delete departures;
                 delete merges;
             }
-            else{
-                num_failures++;
-                output_progress_bar(1.0*num_failures/max_failures);
-            }
+
+            
 
         } while (num_failures < max_failures); 
         
+    }
+
+    bool test_arriveable(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
+    {
+        
+        //get largest component
+        int max_size = 0;
+        component_index_t largest_component;
+        for (auto c : components)
+        {
+            if((c.second)->size() > max_size){
+                largest_component = c.first;
+                max_size=(c.second)->size();
+            }
+        }
+
+        for (auto v : *(components[largest_component]))
+        {
+            query.clear_outputs();
+            spec.state_space -> copy_point(query.start_state, vertices[v] -> point);
+            spec.state_space -> copy_point(query.goal_state, pt);
+            controller.fulfill_query(query, spec);
+
+            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 1)
+            {
+                return true;
+            }
+            query.clear_outputs();
+        }
+        return false;
+    }
+
+    bool test_departable(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
+    {
+        
+        //get largest component
+        int max_size = 0;
+        component_index_t largest_component;
+        for (auto c : components)
+        {
+            if((c.second)->size() > max_size){
+                largest_component = c.first;
+                max_size=(c.second)->size();
+            }
+        }
+
+        for (auto v : *(components[largest_component]))
+        {
+            query.clear_outputs();
+            spec.state_space -> copy_point(query.start_state, pt);
+            spec.state_space -> copy_point(query.goal_state, vertices[v] -> point);
+            controller.fulfill_query(query, spec);
+
+            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 1)
+            {
+                return true;
+            }
+            query.clear_outputs();
+        }
+        return false;
+    }
+
+    void record_visibility(int n_try, rrt_specification_t& spec, rrt_query_t& query, learned_controller_t controller){
+        int num_v_samples = 1000;
+        double a_count = 0.0;
+        double d_count = 0.0;
+        
+        
+        for(int i = 0; i<num_v_samples; i++){
+            pt = spec.state_space -> make_point();
+            do{
+                spec.sample_state(pt);
+            } while (!spec.valid_state(pt));
+
+            if(test_arriveable(query, spec, controller)) a_count++;
+            if(test_departable(query, spec, controller)) d_count++;
+        }
+
+        double arriveability = a_count/num_v_samples;
+        double departability = a_count/num_v_samples;
+        double p_visibility = 0; 
+        if(n_try != 0) p_visibility = 1.0- (1.0/n_try);
+
+        char line[100];
+        sprintf(line, "%ld,%f,%f,%f\n", vertex_counter, p_visibility, arriveability, departability);
+        std::ofstream outfile;
+        std::string fname = output_path + "visibility_data.txt";
+        outfile.open(fname, std::ios_base::app); // append instead of overwrite 
+        outfile<<line; 
+        outfile.close();
+
     }
 
     void remove_edge(node_index_t s, node_index_t t)
@@ -387,7 +492,6 @@ class reachable_roadmap_t
         // Free the memory.
         delete vertices[v];
     }
-
 
     std::string print_vertices(space_t* space)
     {
@@ -438,6 +542,7 @@ class reachable_roadmap_t
         }
         std::cout << "--  --" << std::endl;
     }
+    
     void print_BwFw(){
         std::cout<<"printing BwFw"<<std::endl;
         for (auto c : Bw)
