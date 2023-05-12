@@ -7,6 +7,11 @@
 #include "prx/mujoco/mj_utils.hpp"
 #include "prx/mujoco/mj_sensor.hpp"
 // #include "prx/mujoco/mj_plant.hpp"
+#include <opencv2/core/hal/interface.h>
+#include <opencv2/core/eigen.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 
 #include "GLFW/glfw3.h"
 #include "mujoco/mujoco.h"
@@ -15,7 +20,7 @@ using prx::mujoco::mujoco_sensor_t;
 
 namespace prx
 {
-// class mujoco_plant_t;
+class mujoco_plant_t;
 class mujoco_simulator_t : public simulator_t
 {
 private:
@@ -43,8 +48,14 @@ protected:
     , button_middle(false)
     , lastx(0)
     , lasty(0)
+    , _recorded_secs(0.0)
+    , _record_video(false)
+    , _video_name(prx::out_path + "mj_recording.mp4")
   {
+    _plugin_fn = []() {};
   }
+
+  void add_frame();
 
 public:
   mujoco_simulator_t(const std::string& model_path, bool visualize = true);
@@ -62,7 +73,10 @@ public:
   }
   void init_simulator();
 
+  void init_simulator(std::shared_ptr<prx::mujoco_plant_t> mj_plant);
+
   virtual void step_simulation(propagate_step step) override;
+
   virtual void forward_simulation()
   {
     mj_forward(_mj_model, _mj_data);
@@ -87,6 +101,19 @@ public:
 
   MujocoState get_state();
 
+  void set_record_video(const bool record_video);
+
+  void set_video_name(const std::string& name)
+  {
+    _video_name = name;
+  }
+
+  void close_video()
+  {
+    if (_output_video.isOpened())
+      _output_video.release();
+  }
+
   mjModel* _mj_model;
   mjData* _mj_data;
 
@@ -96,6 +123,18 @@ public:
   std::unordered_map<std::string, std::shared_ptr<mujoco_sensor_t>> sensors;
 
   std::vector<double*> actuator_internal_state;
+
+  std::function<void()> _plugin_fn;
+
+private:
+  // Variables associated to recording a video
+  // ToDo: Test recording while visualizing, might be too much overhead.
+  bool _record_video;
+  cv::VideoWriter _output_video;
+  mjuiState uistate;
+  double _recorded_secs;
+  const double _fps{ 24 };
+  std::string _video_name;
 };
 
 class mujoco_collision_group_t : public collision_group_t

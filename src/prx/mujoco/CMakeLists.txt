@@ -1,4 +1,6 @@
 if(BUILD_FOR_MUJOCO)
+    find_package( OpenCV REQUIRED )
+    include_directories( ${OpenCV_INCLUDE_DIRS} )
     if(DEFINED ENV{MJ_PATH})
         message("MuJoCo found at $ENV{MJ_PATH}")
         include_directories($ENV{MJ_PATH}/include)
@@ -46,7 +48,7 @@ if(BUILD_FOR_MUJOCO)
     endif()
     # TODO: Take care of this for Linux
     link_directories(${PROJECT_NAME}_mjsim PUBLIC ${MJ_LIB_DIR})
-
+    target_link_libraries(${PROJECT_NAME}_mjsim PUBLIC ${OpenCV_LIBS} )
 else()
     message("Not building with mujoco.")
     add_definitions(-DMUJOCO_NOT_BUILT)

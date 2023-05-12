@@ -183,7 +183,7 @@ space_point_t trajectory_t::interpolate(double s) const
 
   const double closest_index = s * (num_states - 1);  // this scales into the index space of the traj
   const unsigned lower_index = std::floor(closest_index);
-  if (lower_index == (num_states - 1))  // handle the border case
+  if (lower_index == (num_states - 1))                // handle the border case
     return back();
   const double interpolation_value = closest_index - lower_index;
   auto inter_point = state_space->make_point();
@@ -222,7 +222,6 @@ void trajectory_t::to_file(const std::string file_name, const std::ios_base::ope
   {
     ofs_map << states[i] << "\n";
   }
-  ofs_map << "\n";
 
   ofs_map.close();
 }

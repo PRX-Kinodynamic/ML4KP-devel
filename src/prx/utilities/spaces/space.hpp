@@ -1,12 +1,12 @@
 #pragma once
-
-#include "prx/utilities/defs.hpp"
-
 #include <fstream>
 #include <memory>
 #include <numeric>
 #include <string>
 #include <vector>
+
+#include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/type_convertions.hpp"
 
 namespace prx
 {
@@ -43,7 +43,7 @@ public:
    * @param index The index of the dimension.
    * @return Value of the space snapshot at the index.
    */
-  double& at(unsigned index)
+  double& at(const std::size_t index)
   {
     return memory[index];
   }
@@ -53,9 +53,18 @@ public:
    * @param index The index of the dimension.
    * @return Value of the space snapshot at the index.
    */
-  const double at(unsigned index) const
+  inline const double at(const std::size_t index) const
   {
     return memory[index];
+  }
+
+  double& operator[](const std::size_t idx)
+  {
+    return memory[idx];
+  }
+  inline const double operator[](const std::size_t idx) const
+  {
+    return memory[idx];
   }
 
   space_snapshot_t(const space_t* const in_parent);
@@ -70,7 +79,7 @@ public:
    * @brief Gets the dimensionality of the space snapshot.
    * @return Dimensionality of the space snapshot.
    */
-  inline const std::size_t size()
+  inline const std::size_t size() const
   {
     return memory.size();
   }
@@ -141,10 +150,6 @@ public:
     return memory.end();
   }
 
-  double& operator[](const int i)
-  {
-    return at(i);
-  }
   operator std::string() const
   {
     std::stringstream ss;
@@ -224,6 +229,7 @@ public:
     IDLE = 3,
     QUATERNION = 4
   };
+  space_t() : dimension(0){};
 
   space_t(const std::string& topology, const std::vector<double*>& addresses, const std::string& name);
 
@@ -232,6 +238,8 @@ public:
   space_t(const std::vector<const space_t*>& spaces);
 
   ~space_t();
+
+  void push_back(const std::string& topo, const std::vector<double*>& ads, const std::string& name);
 
   inline virtual void operator()() const {};
 
@@ -317,51 +325,23 @@ public:
 
   template <typename T, typename F, std::enable_if_t<prx::utils::is_ptr_type<T>{}, bool> = true,
             std::enable_if_t<prx::utils::is_ptr_type<F>{}, bool> = true>
-  void copy(const T& to, const F& from) const
+  inline void copy(const T& to, const F& from) const
   {
-    prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                      << typeid(decltype(*from)).name() << " ( "
-                                                                      << from->size() << " )");
-    prx_assert(to->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                    << typeid(decltype(*to)).name() << " ( "
-                                                                    << to->size() << " )");
-    for (int i = 0; i < from->size(); ++i)
-    {
-      to->at(i) = from->at(i);
-    }
+    copy((*to), (*from));
   }
 
   template <typename T, typename F, std::enable_if_t<prx::utils::is_ptr_type<T>{}, bool> = true,
             std::enable_if_t<!prx::utils::is_ptr_type<F>{}, bool> = true>
-  void copy(const T& to, const F& from) const
+  inline void copy(const T& to, const F& from) const
   {
-    prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                     << typeid(decltype(from)).name() << " ( "
-                                                                     << from.size() << " )");
-    prx_assert(to->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                    << typeid(decltype(*to)).name() << " ( "
-                                                                    << to->size() << " )");
-
-    for (int i = 0; i < from.size(); ++i)
-    {
-      (*to)[i] = from[i];
-    }
+    copy((*to), from);
   }
 
   template <typename T, typename F, std::enable_if_t<!prx::utils::is_ptr_type<T>{}, bool> = true,
             std::enable_if_t<prx::utils::is_ptr_type<F>{}, bool> = true>
-  void copy(T& to, const F& from) const
+  inline void copy(T& to, const F& from) const
   {
-    prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                      << typeid(decltype(*from)).name() << " ( "
-                                                                      << from->size() << " )");
-    prx_assert(to.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                   << typeid(decltype(to)).name() << " ( " << to.size()
-                                                                   << " )");
-    for (int i = 0; i < from->size(); ++i)
-    {
-      to[i] = (*from)[i];
-    }
+    copy(to, (*from));
   }
 
   template <typename T, typename F, std::enable_if_t<!prx::utils::is_ptr_type<T>{}, bool> = true,
@@ -376,7 +356,7 @@ public:
                                                                      << from.size() << " )");
     for (int i = 0; i < from.size(); ++i)
     {
-      to[i] = from[i];
+      to[i] = prx::utilities::convert_to<double>(from[i]);
     }
   }
 
@@ -406,11 +386,7 @@ public:
                  "Point is of space ( " << aux->parent->space_name << " ), but space is ( " << space_name << ").");
     }
 
-    for (int i = 0; i < from->size(); ++i)
-    {
-      *addresses[i] = from->at(i);
-    }
-    this->operator()();
+    copy_from((*from));
   }
 
   template <typename T>
@@ -429,16 +405,11 @@ public:
     prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
                                                                      << typeid(decltype(from)).name() << " ( "
                                                                      << from.size() << " )");
-    // std::cout << " ";
     for (int i = 0; i < from.size(); ++i)
     {
-      *addresses[i] = from[i];
-      // std::cout << *addresses[i] << " ";
+      *addresses[i] = prx::utilities::convert_to<double>(from[i]);
     }
-    // std::cout << "A: " << (*addresses[0]) << " ";
-    // std::cout << (*this) << " ";
     this->operator()();
-    // std::cout << (*this) << " ";
   }
 
   template <typename T, std::enable_if_t<prx::utils::is_ptr_type<T>{}, bool> = true>
@@ -454,16 +425,13 @@ public:
                  "Point is of space ( " << aux->parent->space_name << " ), but space is ( " << space_name << ").");
     }
 
-    this->operator()();
-    for (int i = 0; i < to->size(); ++i)
-    {
-      to->at(i) = *addresses[i];
-    }
+    copy_to((*to));
   }
 
   template <typename T, std::enable_if_t<!prx::utils::is_ptr_type<T>{}, bool> = true>
   void copy_to(T& to) const
   {
+    using ToMemberType = typename std::remove_reference<decltype(to[0])>::type;
     prx_assert(to.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
                                                                    << typeid(decltype(to)).name() << " ( " << to.size()
                                                                    << " )");
@@ -471,7 +439,7 @@ public:
     this->operator()();
     for (int i = 0; i < to.size(); ++i)
     {
-      to[i] = *addresses[i];
+      to[i] = prx::utilities::convert_to<ToMemberType>(*addresses[i]);
     }
   }
 
@@ -781,8 +749,6 @@ protected:
   std::vector<topology_t> topology;
   std::string space_name;
   bool owned_values;
-
-  space_t(){};
 
   // For linearization... there must be a better way to handle this
   Eigen::VectorXd x_plus;

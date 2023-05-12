@@ -42,6 +42,7 @@
 #include "friction_maps.hpp"
 namespace fs = std::filesystem;
 using namespace prx;
+using namespace prx::friction_map;
 
 const int X_DIM{ 3 };
 const int U_DIM{ 2 };

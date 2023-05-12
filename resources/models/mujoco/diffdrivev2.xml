@@ -1,4 +1,5 @@
 <mujoco model="test">
+    <option timestep="0.002" integrator="RK4"/>
     <compiler angle="radian" coordinate="local" inertiafromgeom="true"/>
     <size njmax="500" nconmax="100" />
     <default>

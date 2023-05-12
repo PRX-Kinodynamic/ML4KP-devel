@@ -3,11 +3,12 @@ simulation_step: 0.01
 
 plant: !file "plants/pendulum.yaml"
 # plant: !file "plants/lander_LD.yaml"
-environment: "environments/pendulum_one_obstacle.yaml"
+environment: "environments/empty.yaml"
+# environment: "environments/pendulum_one_obstacle.yaml"
 
 goal_region_radius: 0.1
 
-duration: 5
+duration: 2
 state_increment: 0.01
 system_name: "pendulum_lqr"
 # system_name: "pendulum_lc"

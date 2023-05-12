@@ -62,20 +62,20 @@ public:
       error = compute_error(th_t, theta_values, weight_values);
       if (H)
       {
-        derivative_thp.model = [&](const theta_t& th_tp) { return compute_error(th_tp, theta_values, weight_values); };
+        derivative_thp._model = [&](const theta_t& th_tp) { return compute_error(th_tp, theta_values, weight_values); };
         (*H)[0] = derivative_thp(theta_values[0]);
 
         const std::size_t half_hs{ ((*H).size() - 1) / 2 };
         for (int i = 1; i < half_hs; ++i)
         {
-          derivative_thetas.model = [&](const theta_t& th_change) {
+          derivative_thetas._model = [&](const theta_t& th_change) {
             std::vector<theta_t> tv{ theta_values };
             tv[i] = th_change;
             return compute_error(th_t, tv, weight_values);
           };
           (*H)[i] = derivative_thetas(theta_values[i]);
 
-          derivative_weights.model = [&](const weight_t& w_change) {
+          derivative_weights._model = [&](const weight_t& w_change) {
             std::vector<weight_t> wv{ weight_values };
             wv[i] = w_change;
             return compute_error(th_t, theta_values, wv);

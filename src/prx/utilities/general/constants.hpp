@@ -159,7 +159,7 @@ static inline vector_t string_to_rgb(std::string input)
 template <typename T>
 std::vector<T> linspace(T a, T b, std::size_t N)
 {
-  T h = (b - a) / static_cast<T>(N - 1);
+  T h = static_cast<T>((b - a) / static_cast<T>(N - 1));
   std::vector<T> xs(N);
   typename std::vector<T>::iterator x;
   T val;

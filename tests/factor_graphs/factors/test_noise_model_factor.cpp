@@ -13,6 +13,7 @@ struct test_noise_model_1factor : public prx::fg::noise_model_1factor_t<2>
   {
   }
 
+  // Error <- (x0^2, x1^2)
   virtual X0 compute_error(const X0& x0) const override
   {
     return X0(std::pow(x0[0], 2), std::pow(x0[1], 2));
@@ -98,8 +99,8 @@ BOOST_AUTO_TEST_CASE(noise_model_3factor_test)
   // The error is: X0 - f(X1-X2)l f=norm()
   // d norm/dx = x/sqrt(x^2+y^2)
   // d norm/dy = y/sqrt(x^2+y^2)
-  Eigen::MatrixXd expected_H1(1, 2);  // [d norm/dx, d norm/dy]
-  Eigen::MatrixXd expected_H2(1, 2);  // [-d norm/dx, -d norm/dy]
+  Eigen::MatrixXd expected_H1(1, 2);            // [d norm/dx, d norm/dy]
+  Eigen::MatrixXd expected_H2(1, 2);            // [-d norm/dx, -d norm/dy]
   expected_H0 << 1;
   expected_H1 << 0.9938837347, 0.1104315261;    //
   expected_H2 << -0.9938837347, -0.1104315261;  //

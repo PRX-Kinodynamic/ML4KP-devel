@@ -44,7 +44,7 @@ public:
 
   virtual void set_state_space_bounds(const std::vector<double>& lower, const std::vector<double>& upper) override;
 
-  virtual inline space_t* get_derivative_space()
+  virtual inline space_t* get_derivative_space() const
   {
     return derivative_space;
   }

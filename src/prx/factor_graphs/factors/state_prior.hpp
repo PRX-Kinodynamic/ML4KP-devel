@@ -26,18 +26,25 @@ template <Eigen::Index Dim>
 class state_prior_factor_t : public noise_model_1factor_t<Dim>
 {
   using Base = noise_model_1factor_t<Dim>;
+  using NoiseModel = typename Base::NoiseModel;
 
 public:
   using State = typename Base::X0;
 
   template <typename T>
-  state_prior_factor_t(gtsam::Key x0_key, const T& value, const space_t* ss,
-                       const gtsam::noiseModel::Base::shared_ptr& cost_model)
-    : Base(x0_key, cost_model), _ss(ss)
+  state_prior_factor_t(gtsam::Key x0_key, const T& value, const space_t* ss, const NoiseModel& cost_model,
+                       Eigen::Index state_dim, const double h = simulation_step)
+    : Base(x0_key, cost_model, state_dim, h), _ss(ss)
   {
     _prior = ss->make_point();
     _result = ss->make_point();
     _ss->copy(_prior, value);
+  }
+  template <typename T, Eigen::Index StateDim = Dim, std::enable_if_t<(StateDim != Eigen::Dynamic), bool> = true>
+  state_prior_factor_t(gtsam::Key x0_key, const T& value, const space_t* ss, const NoiseModel& cost_model,
+                       const double h = simulation_step)
+    : state_prior_factor_t(x0_key, value, ss, cost_model, Dim, h)
+  {
   }
 
   virtual State compute_error(const State& state) const override

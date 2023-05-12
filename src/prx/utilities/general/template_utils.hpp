@@ -50,5 +50,18 @@ struct is_iterable<T, std::void_t<decltype(std::begin(std::declval<T>())), declt
 // Here is a helper:
 template <typename T>
 constexpr bool is_iterable_v = is_iterable<T>::value;
+
+template <typename T, typename = void>
+struct is_streamable : std::false_type
+{
+};
+
+template <typename T>
+struct is_streamable<T, std::void_t<decltype(std::declval<std::ostream&>() << std::declval<T>())>>
+  // struct is_streamable<T, std::void_t<typename std::is_convertible<
+  // decltype(std::declval<std::ostream&>() << std::declval<T>()), std::ostream&>::value>>
+  : std::true_type
+{
+};
 }  // namespace utils
 }  // namespace prx

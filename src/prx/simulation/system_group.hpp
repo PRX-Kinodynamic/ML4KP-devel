@@ -121,6 +121,15 @@ public:
     sim = simulator;
   }
 
+  std::size_t size() const
+  {
+    return group.size();
+  }
+  system_ptr_t get_plant(const std::size_t idx) const
+  {
+    return group[idx];
+  }
+
 protected:
   void propagate_steps(const std::size_t& steps)
   {

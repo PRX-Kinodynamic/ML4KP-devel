@@ -1,0 +1,47 @@
+<!-- TODO -->
+<!-- (1) correct mass/inertial matricies (just weight for now) -->
+<mujoco model="passive_walker">
+  <compiler angle="degree" coordinate="local" meshdir="meshes"/>
+  <size nconmax="100" njmax="500"/>
+  <option integrator="RK4" timestep="0.01"/>
+  <!-- <include file="friction_floor_1.xml"/>-->
+  <!-- <include file="friction_floor_uniform.xml"/>-->
+  <asset>
+    <texture builtin="gradient" height="100" name="a" rgb1="1 1 1" rgb2="0 0 0" type="skybox" width="100"/>
+    <texture builtin="checker" height="50" mark="cross" markrgb=".8 .8 .8" name="texplane0" rgb1="0 0 0" rgb2="0.8 0.8 0.8" type="2d" width="50"/>
+    <material name="matplane0" reflectance="0.3" texrepeat="4 4" texture="texplane0" texuniform="true"/>
+    <mesh file="foot_left.stl" name="foot_left"/>
+    <mesh file="foot_right.stl" name="foot_right"/>
+  </asset>
+  <visual>
+    <headlight ambient="0.6 0.6 0.6" diffuse="0.5 0.5 0.5" specular="0.2 0.2 0.2"/>
+    <map znear="0.001"/>
+  </visual>
+  <worldbody>
+    <geom euler="3 0 0" material="matplane0" name="floor" pos="0 0 0" size="0 0 0.01" type="plane"/>
+    <body euler="0 5 0" name="Hip" pos="0.0 0.0 1.9">
+      <joint name="free" type="free"/>
+      <geom euler="0 90 0" mass="0.1" name="center" rgba="0 0 0 1" size="0.02 0.3" type="cylinder"/>
+      <body euler="0 0 0" name="LeftLeg" pos="0 0.0 0">
+        <joint axis="1 0 0" name="HipLeftJoint" pos="0 0 0" type="hinge"/>
+        <geom mass="2" name="LeftLegGeom" pos="-0.2 0 -0.8" rgba="0.2 0.2 0.2 1" size="0.05 0.2 0.9" type="box"/>
+        <body euler="0 0 0" pos="0 0.0 -1.8">
+          <geom euler="0 0 0" mass="2" mesh="foot_left" name="left_foot" pos="0 0.35 0" type="mesh"/>
+          <body pos="0 0 0">
+            <geom mass="5" name="left_weight" pos="-0.2 0 0.1" size="0.01" type="sphere" rgba="1 0 0 1"/>
+          </body>
+        </body>
+      </body>
+      <body euler="0 0 0" name="RightLeg" pos="0.0 0.0 0.0">
+        <joint axis="1 0 0" name="HipRightJoint" pos="0 0 0" type="hinge"/>
+        <geom mass="2" name="RightLegGeom" pos="0.2 0 -0.8" rgba="0.2 0.2 0.2 1" size="0.05 0.2 0.9" type="box"/>
+        <body euler="0 0 0" pos="0 0 -1.8">
+          <geom euler="0 0 0" mass="2" mesh="foot_right" name="right_foot" pos="0 0.35 0" type="mesh"/>
+          <body pos="0 0 0">
+            <geom mass="5" name="right_weight" pos="0.2 0 .1" size="0.01" type="sphere" rgba="1 0 0 1"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

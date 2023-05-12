@@ -76,7 +76,6 @@ public:
       lower_bounds[i] = _bounds[i].first;
       upper_bounds[i] = _bounds[i].second;
       steps[i] = get_cell_length(i);
-      PRX_DEBUG_VAR_1(steps[i]);
     }
     int i = 0;
     do
@@ -252,19 +251,28 @@ public:
   }
 
   template <typename FormattingFunction>
-  void to_file(const std::string filename, FormattingFunction& formatter,
+  void to_file(const std::string filename, FormattingFunction formatter,
                const std::ios_base::openmode _mode = std::ofstream::trunc) const
   {
     std::ofstream ofs;
     ofs.open(filename.c_str(), _mode);
+    const std::size_t one{ 1 };
 
     for (auto cell : memory)
     {
       std::array<double, dimension> uk = unmap_key<std::array<double, dimension>>(cell.first);
-      for (int i = 0; i < dimension; ++i)
+      for (std::size_t j = 0; j < dimension; ++j)
       {
-        ofs << uk[i];
-        ofs << " ";
+        // const std::size_t mask{ one << j };
+        // const std::size_t masked{ i & mask };
+        // const std::size_t val{ masked >> j };
+        ofs << uk[j];
+        ofs << prx::separating_value;
+      }
+      for (std::size_t j = 0; j < dimension; ++j)
+      {
+        ofs << get_cell_length(j);
+        ofs << prx::separating_value;
       }
       ofs << formatter(cell.second) << "\n";
     }
@@ -321,7 +329,6 @@ public:
       ans &= _bounds[i].first <= values[i];
       ans &= values[i] <= _bounds[i].second;
     }
-    // return memory[mapping(values)];
     return ans;
   }
 
@@ -331,7 +338,7 @@ private:
     std::array<int, dimension> key{};
     for (int i = 0; i < dimension; ++i)
     {
-      key[i] = lambda[i] * std::max(std::min(raw_key[i], _bounds[i].second), _bounds[i].first);
+      key[i] = std::floor(lambda[i] * std::max(std::min(raw_key[i], _bounds[i].second), _bounds[i].first));
     }
     return key;
   }

@@ -9,11 +9,18 @@ file(GLOB_RECURSE TESTS_FILES
 	${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/utilities/*.cpp
 	)
+if (BUILD_FOR_MUJOCO)
+	file(GLOB_RECURSE MUJOCO_TEST_FILES
+		${PROJECT_SOURCE_DIR}/tests/mujoco/*.cpp
+		)
+	list(APPEND TESTS_FILES ${MUJOCO_TEST_FILES})
+endif()
+
 if (BUILD_FOR_FACTOR_GRAPHS)
-	file(GLOB_RECURSE FACTOR_GRAPH_FILES
+	file(GLOB_RECURSE FACTOR_GRAPH_TEST_FILES
 		${PROJECT_SOURCE_DIR}/tests/factor_graphs/*.cpp
 		)
-	list(APPEND TESTS_FILES ${FACTOR_GRAPH_FILES})
+	list(APPEND TESTS_FILES ${FACTOR_GRAPH_TEST_FILES})
 endif()
 
 foreach(f ${TESTS_FILES})
@@ -31,9 +38,11 @@ foreach(f ${TESTS_FILES})
 	if(BUILD_FOR_BULLET)
 		target_link_libraries(${fname} ${PROJECT_NAME}_bullet_sim )
 	endif()
+	if (BUILD_FOR_MUJOCO)
+		target_link_libraries(${fname} ${PROJECT_NAME}_mjsim )
+	endif()
 	if (BUILD_FOR_FACTOR_GRAPHS)
 		target_link_libraries(${fname} ${PROJECT_NAME}_factor_graphs )
-
 	endif()
 	target_link_libraries(${fname} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 	add_test(NAME "${fname}" COMMAND "${fname}" )

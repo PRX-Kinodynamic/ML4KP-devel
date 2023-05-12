@@ -46,13 +46,7 @@ struct first_order_derivative_table_t
   // clang-format on
 };  // namespace math
 
-// template<typename InputState, std::enable_if_t<Eigen::Dynamic, bool> = true>
-// static constexpr get_rows()
-// {
-
-// }
-
-template <class Function, typename InputState, S Evaluations, I_min MinDifference = 0>
+template <class Function, typename InputState, S Evaluations, I_min MinDifference = -1>
 class first_order_derivative_t
 {
   using Scalar = typename InputState::Scalar;
@@ -65,77 +59,117 @@ class first_order_derivative_t
   using epsilon_matrix_t = Eigen::Matrix<Scalar, NInputs, NInputs>;
 
 public:
-  first_order_derivative_t() = delete;
+  first_order_derivative_t(const double h, const Eigen::Index n_inputs, const Eigen::Index n_outputs)
+    : _h(h)
+    , _n_inputs(n_inputs)
+    , _n_outputs(n_outputs)
+    , _epsilon_matrix(_h * epsilon_matrix_t::Identity(_n_inputs, _n_inputs))
+    , _zero_matrix(output_matrix_t::Zero(_n_outputs, _n_inputs))
+    , _dh(_d * _h)
+  {
+    static_assert(_d != 0, "Invalid approximation_table for first_order_derivative_t");
+  }
 
-  first_order_derivative_t(const double _h = 0.01, const Eigen::Index n_inputs = NInputs,
-                           const Eigen::Index n_outputs = NOutputs)
-    : h(_h)
-    , epsilon_matrix(_h * epsilon_matrix_t::Identity(n_inputs, n_inputs))
-    , zero_matrix(output_matrix_t::Zero(n_outputs, n_inputs))
+  template <Eigen::Index InputDim = NInputs, std::enable_if_t<(InputDim != Eigen::Dynamic), bool> = true>
+  first_order_derivative_t(const double h = 0.01) : first_order_derivative_t(h, NInputs, NOutputs)
   {
   }
 
-  first_order_derivative_t(Function& _model, const double _h = 0.01, const Eigen::Index n_inputs = NInputs,
-                           const Eigen::Index n_outputs = NOutputs)
-    : model(_model)
-    , h(_h)
-    , epsilon_matrix(_h * epsilon_matrix_t::Identity(n_inputs, n_inputs))
-    , zero_matrix(output_matrix_t::Zero(n_outputs, n_inputs))
+  first_order_derivative_t(Function& model, const double h, const Eigen::Index n_inputs, const Eigen::Index n_outputs)
+    : first_order_derivative_t(h, n_inputs, n_outputs)
+  {
+    _model = model;
+  }
+
+  template <Eigen::Index InputDim = NInputs, std::enable_if_t<(InputDim != Eigen::Dynamic), bool> = true>
+  first_order_derivative_t(Function& model, const double h = 0.01)
+    : first_order_derivative_t(model, h, NInputs, NOutputs)
   {
   }
 
   output_matrix_t operator()(const InputState& state) const
   {
-    const D d{ std::get<0>(approximation_row) };
-    const N_i n1{ std::get<1>(approximation_row) };
-    const N_i n2{ std::get<2>(approximation_row) };
-    const N_i n3{ std::get<3>(approximation_row) };
-    const N_i n4{ std::get<4>(approximation_row) };
-    const N_i n5{ std::get<5>(approximation_row) };
-    const N_i n6{ std::get<6>(approximation_row) };
-    const N_i n7{ std::get<7>(approximation_row) };
-    const N_i n8{ std::get<8>(approximation_row) };
-    const N_i n9{ std::get<9>(approximation_row) };
-    static_assert(d != 0, "Invalid approximation_table for first_order_derivative_t");
+    output_matrix_t derivative{ _zero_matrix };
+    iterate_columns<0>(state, derivative);
 
-    output_matrix_t derivative{ zero_matrix };
-    for (int i = 0; i < NInputs; ++i)
-    {
-      const OutputState F1 = evaluate<n1, 1 - 5>(state, i, OutputState::Zero());
-      const OutputState F2 = evaluate<n2, 2 - 5>(state, i, F1);
-      const OutputState F3 = evaluate<n3, 3 - 5>(state, i, F2);
-      const OutputState F4 = evaluate<n4, 4 - 5>(state, i, F3);
-      const OutputState F5 = evaluate<n5, 5 - 5>(state, i, F4);
-      const OutputState F6 = evaluate<n6, 6 - 5>(state, i, F5);
-      const OutputState F7 = evaluate<n7, 7 - 5>(state, i, F6);
-      const OutputState F8 = evaluate<n8, 8 - 5>(state, i, F7);
-      const OutputState F9 = evaluate<n9, 9 - 5>(state, i, F8);
-
-      derivative.col(i) = F9 / (d * h);
-    }
     return derivative;
   }
 
-  Function model;
+  Function _model;
 
 private:
   static constexpr approximation_row_t approximation_row{ first_order_derivative_table_t::approximation_table(
       Evaluations, MinDifference) };
 
-  template <N_i n_i, int hi, std::enable_if_t<(n_i != 0), bool> = true>
-  inline OutputState evaluate(const InputState& input, const int col_i, const OutputState& AccumSum) const
+  template <N_i n_i, int i, std::enable_if_t<(n_i != 0), bool> = true>
+  inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative) const
   {
-    return AccumSum + n_i * model(input + hi * epsilon_matrix.col(col_i));
+    derivative.col(col_i) += n_i * _model(input + i * _epsilon_matrix.col(col_i));
   }
-  template <N_i n_i, int hi, std::enable_if_t<(n_i == 0), bool> = true>
-  inline OutputState evaluate(const InputState& input, const int col_i, const OutputState& AccumSum) const
+  template <N_i n_i, int i, std::enable_if_t<(n_i == 0), bool> = true>
+  inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative) const
   {
-    return AccumSum;
   }
 
-  double h;
-  epsilon_matrix_t epsilon_matrix;
-  const output_matrix_t zero_matrix;
+  template <Eigen::Index I, std::enable_if_t<(NInputs != Eigen::Dynamic) && (I == NInputs), bool> = true>
+  inline void iterate_columns(const InputState& state, output_matrix_t& derivative) const
+  {
+  }
+  // If the vector size is known at compile time, avoid a for and rely on compiler/templates optimization
+  template <Eigen::Index I, std::enable_if_t<(NInputs != Eigen::Dynamic) && (I < NInputs), bool> = true>
+  inline void iterate_columns(const InputState& state, output_matrix_t& derivative) const
+  {
+    // PRX_DEBUG_VAR_1(I);
+    compute_column(I, state, derivative);
+    iterate_columns<I + 1>(state, derivative);
+  }
+
+  // When the vector size is not known at compilation time. Compiler won't be able to optimize the for (unwrap)
+  template <Eigen::Index I, std::enable_if_t<(NInputs == Eigen::Dynamic) && (I >= 0), bool> = true>
+  void iterate_columns(const InputState& state, output_matrix_t& derivative) const
+  {
+    for (std::size_t i = 0; i < _n_inputs; ++i)
+    {
+      compute_column(i, state, derivative);
+    }
+  }
+
+  inline void compute_column(const std::size_t col_i, const InputState& state, output_matrix_t& derivative) const
+  {
+    // OutputState Fi{ OutputState::Zero(_n_outputs) };
+    // auto& Fi =
+    evaluate<_n1, 1 - 5>(state, col_i, derivative);
+    evaluate<_n2, 2 - 5>(state, col_i, derivative);
+    evaluate<_n3, 3 - 5>(state, col_i, derivative);
+    evaluate<_n4, 4 - 5>(state, col_i, derivative);
+    evaluate<_n5, 5 - 5>(state, col_i, derivative);
+    evaluate<_n6, 6 - 5>(state, col_i, derivative);
+    evaluate<_n7, 7 - 5>(state, col_i, derivative);
+    evaluate<_n8, 8 - 5>(state, col_i, derivative);
+    evaluate<_n9, 9 - 5>(state, col_i, derivative);
+
+    derivative.col(col_i) /= _dh;
+  }
+
+  static constexpr D _d{ std::get<0>(approximation_row) };
+  static constexpr N_i _n1{ std::get<1>(approximation_row) };
+  static constexpr N_i _n2{ std::get<2>(approximation_row) };
+  static constexpr N_i _n3{ std::get<3>(approximation_row) };
+  static constexpr N_i _n4{ std::get<4>(approximation_row) };
+  static constexpr N_i _n5{ std::get<5>(approximation_row) };
+  static constexpr N_i _n6{ std::get<6>(approximation_row) };
+  static constexpr N_i _n7{ std::get<7>(approximation_row) };
+  static constexpr N_i _n8{ std::get<8>(approximation_row) };
+  static constexpr N_i _n9{ std::get<9>(approximation_row) };
+
+  const double _h;
+  const double _dh;
+
+  const Eigen::Index _n_inputs;
+  const Eigen::Index _n_outputs;
+
+  const output_matrix_t _zero_matrix;
+  const epsilon_matrix_t _epsilon_matrix;
 };
 template <class Function, typename InputState, S Evaluations, I_min MinDifference>
 constexpr approximation_row_t

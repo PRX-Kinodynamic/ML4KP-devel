@@ -13,6 +13,8 @@
 using Evals = uint8_t;
 namespace prx
 {
+extern double simulation_step;
+
 namespace fg
 {
 /**
@@ -27,12 +29,20 @@ class noise_model_1factor_t : public gtsam::NoiseModelFactor1<Eigen::Vector<doub
 {
 protected:
   using X0 = Eigen::Vector<double, Dim_X0>;
-  using partial_X0 = std::function<Eigen::Vector<double, Dim_X0>(const X0&)>;
+  using PartialX0 = std::function<X0(const X0&)>;
   using Base = gtsam::NoiseModelFactor1<X0>;
+  using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
 
 public:
-  noise_model_1factor_t(gtsam::Key key_x0, const gtsam::noiseModel::Base::shared_ptr& cost_model)
-    : Base(cost_model, key_x0), derivative_x0(partial_x0, 0.01)
+  noise_model_1factor_t(gtsam::Key key_x0, const NoiseModel& cost_model, const Eigen::Index input_dim,
+                        const double h = prx::simulation_step)
+    : Base(cost_model, key_x0), derivative_x0(h, input_dim, input_dim)
+  {
+  }
+
+  template <Eigen::Index Dim = Dim_X0, std::enable_if_t<(Dim != Eigen::Dynamic), bool> = true>
+  noise_model_1factor_t(gtsam::Key key_x0, const NoiseModel& cost_model, const double h = prx::simulation_step)
+    : noise_model_1factor_t(key_x0, cost_model, Dim_X0, h)
   {
   }
 
@@ -46,7 +56,7 @@ public:
     auto error = compute_error(x0);
     if (H0)
     {
-      derivative_x0.model = [&](const X0& _x0) { return compute_error(_x0); };
+      derivative_x0._model = [&](const X0& _x0) { return compute_error(_x0); };
       *H0 = derivative_x0(x0);
     }
 
@@ -56,9 +66,9 @@ public:
   virtual X0 compute_error(const X0& x0) const = 0;
 
 private:
-  partial_X0 partial_x0;
+  PartialX0 partial_x0;
 
-  mutable prx::math::first_order_derivative_t<partial_X0, X0, Evaluations> derivative_x0;
+  mutable prx::math::first_order_derivative_t<PartialX0, X0, Evaluations> derivative_x0;
 };
 
 /**
@@ -77,13 +87,23 @@ class noise_model_2factor_t
 protected:
   using X0 = Eigen::Vector<double, Dim_X0>;
   using X1 = Eigen::Vector<double, Dim_X1>;
-  using partial_X0 = std::function<Eigen::Vector<double, Dim_X0>(const X0&)>;
-  using partial_X1 = std::function<Eigen::Vector<double, Dim_X0>(const X1&)>;
+  using PartialX0 = std::function<Eigen::Vector<double, Dim_X0>(const X0&)>;
+  using PartialX1 = std::function<Eigen::Vector<double, Dim_X0>(const X1&)>;
   using Base = gtsam::NoiseModelFactor2<X0, X1>;
+  using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
 
 public:
-  noise_model_2factor_t(gtsam::Key key_x0, gtsam::Key key_x1, const gtsam::noiseModel::Base::shared_ptr& cost_model)
-    : Base(cost_model, key_x0, key_x1), derivative_x0(partial_x0, 0.01), derivative_x1(partial_x1, 0.01)
+  noise_model_2factor_t(gtsam::Key key_x0, gtsam::Key key_x1, const NoiseModel& cost_model, const Eigen::Index x0_dim,
+                        const Eigen::Index x1_dim, const double h = prx::simulation_step)
+    : Base(cost_model, key_x0, key_x1), derivative_x0(h, x0_dim, x0_dim), derivative_x1(h, x1_dim, x0_dim)
+  {
+  }
+
+  template <Eigen::Index DimX0 = Dim_X0, Eigen::Index DimX1 = Dim_X1,
+            std::enable_if_t<(DimX0 != Eigen::Dynamic) && (DimX1 != Eigen::Dynamic), bool> = true>
+  noise_model_2factor_t(gtsam::Key key_x0, gtsam::Key key_x1, const gtsam::noiseModel::Base::shared_ptr& cost_model,
+                        const double h = prx::simulation_step)
+    : noise_model_2factor_t(key_x0, key_x1, cost_model, Dim_X0, Dim_X1, h)
   {
   }
 
@@ -98,13 +118,13 @@ public:
     auto error = compute_error(x0, x1);
     if (H0)
     {
-      derivative_x0.model = [&](const X0& _x0) { return compute_error(_x0, x1); };
+      derivative_x0._model = [&](const X0& _x0) { return compute_error(_x0, x1); };
       *H0 = derivative_x0(x0);
     }
 
     if (H1)
     {
-      derivative_x1.model = [&](const X1& _x1) { return compute_error(x0, _x1); };
+      derivative_x1._model = [&](const X1& _x1) { return compute_error(x0, _x1); };
       *H1 = derivative_x1(x1);
     }
 
@@ -114,11 +134,11 @@ public:
   virtual X0 compute_error(const X0& x0, const X1& x1) const = 0;
 
 private:
-  partial_X0 partial_x0;
-  partial_X1 partial_x1;
+  PartialX0 partial_x0;
+  PartialX1 partial_x1;
 
-  mutable prx::math::first_order_derivative_t<partial_X0, X0, Evaluations> derivative_x0;
-  mutable prx::math::first_order_derivative_t<partial_X1, X1, Evaluations> derivative_x1;
+  mutable prx::math::first_order_derivative_t<PartialX0, X0, Evaluations> derivative_x0;
+  mutable prx::math::first_order_derivative_t<PartialX1, X1, Evaluations> derivative_x1;
 };
 
 /**
@@ -143,14 +163,25 @@ protected:
   using partial_X1 = std::function<Eigen::Vector<double, Dim_X0>(const X1&)>;
   using partial_X2 = std::function<Eigen::Vector<double, Dim_X0>(const X2&)>;
   using Base = gtsam::NoiseModelFactor3<X0, X1, X2>;
+  using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
 
 public:
-  noise_model_3factor_t(gtsam::Key key_x0, gtsam::Key key_x1, gtsam::Key key_x2,
-                        const gtsam::noiseModel::Base::shared_ptr& cost_model)
+  noise_model_3factor_t(gtsam::Key key_x0, gtsam::Key key_x1, gtsam::Key key_x2, const NoiseModel& cost_model,
+                        const Eigen::Index x0_dim, const Eigen::Index x1_dim, const Eigen::Index x2_dim,
+                        const double h = prx::simulation_step)
     : Base(cost_model, key_x0, key_x1, key_x2)
-    , derivative_x0(partial_x0, 0.01)
-    , derivative_x1(partial_x1, 0.01)
-    , derivative_x2(partial_x2, 0.01)
+    , derivative_x0(h, x0_dim, x0_dim)
+    , derivative_x1(h, x1_dim, x0_dim)
+    , derivative_x2(h, x2_dim, x0_dim)
+  {
+  }
+
+  template <Eigen::Index DimX0 = Dim_X0, Eigen::Index DimX1 = Dim_X1, Eigen::Index DimX2 = Dim_X2,
+            std::enable_if_t<(DimX0 != Eigen::Dynamic) && (DimX1 != Eigen::Dynamic) && (DimX2 != Eigen::Dynamic),
+                             bool> = true>
+  noise_model_3factor_t(gtsam::Key key_x0, gtsam::Key key_x1, gtsam::Key key_x2, const NoiseModel& cost_model,
+                        const double h = prx::simulation_step)
+    : noise_model_3factor_t(key_x0, key_x1, key_x2, cost_model, Dim_X0, Dim_X1, Dim_X2, h)
   {
   }
 
@@ -166,19 +197,19 @@ public:
     auto error = compute_error(x0, x1, x2);
     if (H0)
     {
-      derivative_x0.model = [&](const X0& _x0) { return compute_error(_x0, x1, x2); };
+      derivative_x0._model = [&](const X0& _x0) { return compute_error(_x0, x1, x2); };
       *H0 = derivative_x0(x0);
     }
 
     if (H1)
     {
-      derivative_x1.model = [&](const X1& _x1) { return compute_error(x0, _x1, x2); };
+      derivative_x1._model = [&](const X1& _x1) { return compute_error(x0, _x1, x2); };
       *H1 = derivative_x1(x1);
     }
 
     if (H2)
     {
-      derivative_x2.model = [&](const X2& _x2) { return compute_error(x0, x1, _x2); };
+      derivative_x2._model = [&](const X2& _x2) { return compute_error(x0, x1, _x2); };
       *H2 = derivative_x2(x2);
     }
 
@@ -225,13 +256,21 @@ protected:
 
 public:
   noise_model_4factor_t(gtsam::Key key_x0, gtsam::Key key_x1, gtsam::Key key_x2, gtsam::Key key_x3,
-                        const gtsam::noiseModel::Base::shared_ptr& cost_model)
+                        const gtsam::noiseModel::Base::shared_ptr& cost_model, const Eigen::Index x0_dim,
+                        const Eigen::Index x1_dim, const Eigen::Index x2_dim, const Eigen::Index x3_dim,
+                        const Eigen::Index output_dim)
     : Base(cost_model, key_x0, key_x1, key_x2, key_x3)
-    , derivative_x0(partial_x0, 0.01)
-    , derivative_x1(partial_x1, 0.01)
-    , derivative_x2(partial_x2, 0.01)
-    , derivative_x3(partial_x3, 0.01)
+    , derivative_x0(partial_x0, 0.01, x0_dim, output_dim)
+    , derivative_x1(partial_x1, 0.01, x1_dim, output_dim)
+    , derivative_x2(partial_x2, 0.01, x2_dim, output_dim)
+    , derivative_x3(partial_x3, 0.01, x3_dim, output_dim)
     , computing_derivative(false)
+  {
+  }
+  template <Eigen::Index Dim = Dim_X0, std::enable_if_t<(Dim != Eigen::Dynamic), bool> = true>
+  noise_model_4factor_t(gtsam::Key key_x0, gtsam::Key key_x1, gtsam::Key key_x2, gtsam::Key key_x3,
+                        const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : noise_model_4factor_t(key_x0, key_x1, key_x2, key_x3, cost_model, Dim_X0, Dim_X1, Dim_X2, Dim_X3, Dim_X0)
   {
   }
 
@@ -250,25 +289,25 @@ public:
     computing_derivative = true;
     if (H0)
     {
-      derivative_x0.model = [&](const X0& _x0) { return compute_error(_x0, x1, x2, x3); };
+      derivative_x0._model = [&](const X0& _x0) { return compute_error(_x0, x1, x2, x3); };
       *H0 = derivative_x0(x0);
     }
 
     if (H1)
     {
-      derivative_x1.model = [&](const X1& _x1) { return compute_error(x0, _x1, x2, x3); };
+      derivative_x1._model = [&](const X1& _x1) { return compute_error(x0, _x1, x2, x3); };
       *H1 = derivative_x1(x1);
     }
 
     if (H2)
     {
-      derivative_x2.model = [&](const X2& _x2) { return compute_error(x0, x1, _x2, x3); };
+      derivative_x2._model = [&](const X2& _x2) { return compute_error(x0, x1, _x2, x3); };
       *H2 = derivative_x2(x2);
     }
 
     if (H3)
     {
-      derivative_x3.model = [&](const X3& _x3) { return compute_error(x0, x1, x2, _x3); };
+      derivative_x3._model = [&](const X3& _x3) { return compute_error(x0, x1, x2, _x3); };
       *H3 = derivative_x3(x3);
     }
     return error;
@@ -349,31 +388,31 @@ public:
     auto error = compute_error(x0, x1, x2, x3, x4);
     if (H0)
     {
-      derivative_x0.model = [&](const X0& _x0) { return compute_error(_x0, x1, x2, x3, x4); };
+      derivative_x0._model = [&](const X0& _x0) { return compute_error(_x0, x1, x2, x3, x4); };
       *H0 = derivative_x0(x0);
     }
 
     if (H1)
     {
-      derivative_x1.model = [&](const X1& _x1) { return compute_error(x0, _x1, x2, x3, x4); };
+      derivative_x1._model = [&](const X1& _x1) { return compute_error(x0, _x1, x2, x3, x4); };
       *H1 = derivative_x1(x1);
     }
 
     if (H2)
     {
-      derivative_x2.model = [&](const X2& _x2) { return compute_error(x0, x1, _x2, x3, x4); };
+      derivative_x2._model = [&](const X2& _x2) { return compute_error(x0, x1, _x2, x3, x4); };
       *H2 = derivative_x2(x2);
     }
 
     if (H3)
     {
-      derivative_x3.model = [&](const X3& _x3) { return compute_error(x0, x1, x2, _x3, x4); };
+      derivative_x3._model = [&](const X3& _x3) { return compute_error(x0, x1, x2, _x3, x4); };
       *H3 = derivative_x3(x3);
     }
 
     if (H4)
     {
-      derivative_x4.model = [&](const X4& _x4) { return compute_error(x0, x1, x2, x3, _x4); };
+      derivative_x4._model = [&](const X4& _x4) { return compute_error(x0, x1, x2, x3, _x4); };
       *H4 = derivative_x4(x4);
     }
 
@@ -447,37 +486,37 @@ public:
     auto error = compute_error(x0, x1, x2, x3, x4, x5);
     if (H0)
     {
-      derivative_x0.model = [&](const X0& _x0) { return compute_error(_x0, x1, x2, x3, x4, x5); };
+      derivative_x0._model = [&](const X0& _x0) { return compute_error(_x0, x1, x2, x3, x4, x5); };
       *H0 = derivative_x0(x0);
     }
 
     if (H1)
     {
-      derivative_x1.model = [&](const X1& _x1) { return compute_error(x0, _x1, x2, x3, x4, x5); };
+      derivative_x1._model = [&](const X1& _x1) { return compute_error(x0, _x1, x2, x3, x4, x5); };
       *H1 = derivative_x1(x1);
     }
 
     if (H2)
     {
-      derivative_x2.model = [&](const X2& _x2) { return compute_error(x0, x1, _x2, x3, x4, x5); };
+      derivative_x2._model = [&](const X2& _x2) { return compute_error(x0, x1, _x2, x3, x4, x5); };
       *H2 = derivative_x2(x2);
     }
 
     if (H3)
     {
-      derivative_x3.model = [&](const X3& _x3) { return compute_error(x0, x1, x2, _x3, x4, x5); };
+      derivative_x3._model = [&](const X3& _x3) { return compute_error(x0, x1, x2, _x3, x4, x5); };
       *H3 = derivative_x3(x3);
     }
 
     if (H4)
     {
-      derivative_x4.model = [&](const X4& _x4) { return compute_error(x0, x1, x2, x3, _x4, x5); };
+      derivative_x4._model = [&](const X4& _x4) { return compute_error(x0, x1, x2, x3, _x4, x5); };
       *H4 = derivative_x4(x4);
     }
 
     if (H5)
     {
-      derivative_x5.model = [&](const X5& _x5) { return compute_error(x0, x1, x2, x3, x4, _x5); };
+      derivative_x5._model = [&](const X5& _x5) { return compute_error(x0, x1, x2, x3, x4, _x5); };
       *H5 = derivative_x5(x5);
     }
 

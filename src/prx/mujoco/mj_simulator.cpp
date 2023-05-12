@@ -9,10 +9,7 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path, bool visua
   set_visualiztion(visualize);
   std::string full_model_path = mj_models_path + model_path;
   _mj_model = mj_loadXML(full_model_path.c_str(), NULL, NULL, 0);
-  if (!_mj_model)
-  {
-    prx_throw("Error loading model: " << full_model_path);
-  }
+  prx_assert(_mj_model, "Error loading model: " << full_model_path);
   _mj_data = mj_makeData(_mj_model);
 
   for (std::size_t idx = 0; idx < _mj_model->nsensor; idx++)
@@ -28,39 +25,42 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path, bool visua
   simulation_step = _mj_model->opt.timestep;
   std::cout << "Using simulation step: " << simulation_step << std::endl;
 
-  // if (_visualize)
-  // {
-  if (!glfwInit())
-    prx_throw("Error in initializing GLFW.");
+  if (_visualize)
+  {
+    mjv_defaultCamera(&cam);
+    mjv_defaultOption(&opt);
+    mjv_defaultScene(&scn);
+    mjr_defaultContext(&con);
+    mjv_makeScene(_mj_model, &scn, 1000);
+    // mjr_setBuffer(mjtFramebuffer::mjFB_OFFSCREEN, &con);
+    if (!glfwInit())
+      prx_throw("Error in initializing GLFW.");
 
-  window = glfwCreateWindow(1200, 900, "MuJoCo", NULL, NULL);
-  if (!window)
-    prx_throw("Error in creating GLFW window.") glfwMakeContextCurrent(window);
-  glfwSwapInterval(1);
+    window = glfwCreateWindow(1200, 900, "MuJoCo", NULL, NULL);
+    // window = glfwCreateWindow(640, 480, "MuJoCo", NULL, NULL);
+    if (!window)
+      prx_throw("Error in creating GLFW window.");
+    glfwMakeContextCurrent(window);
+    mjr_makeContext(_mj_model, &con, mjFONTSCALE_150);
+    glfwSwapInterval(1);
+    mjr_resizeOffscreen(1200, 900, &con);
 
-  mjv_defaultCamera(&cam);
-  mjv_defaultOption(&opt);
-  mjv_defaultScene(&scn);
-  mjr_defaultContext(&con);
-  mjv_makeScene(_mj_model, &scn, 1000);
-  mjr_makeContext(_mj_model, &con, mjFONTSCALE_150);
-
-  glfwSetWindowUserPointer(window, this);
-  glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) {
-    auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
-    sim->mouse_move(window, xpos, ypos);
-  });
-  glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods) {
-    auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
-    sim->mouse_button(window, button, action, mods);
-  });
-  glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset) {
-    auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
-    sim->scroll(window, xoffset, yoffset);
-  });
-  glfwSetWindowCloseCallback(
-      window, [](GLFWwindow* window) { prx_throw("Closing the visualizer will cause the simulation to crash.") });
-  // }
+    glfwSetWindowUserPointer(window, this);
+    glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) {
+      auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
+      sim->mouse_move(window, xpos, ypos);
+    });
+    glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods) {
+      auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
+      sim->mouse_button(window, button, action, mods);
+    });
+    glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset) {
+      auto sim = static_cast<mujoco_simulator_t*>(glfwGetWindowUserPointer(window));
+      sim->scroll(window, xoffset, yoffset);
+    });
+    glfwSetWindowCloseCallback(
+        window, [](GLFWwindow* window) { prx_throw("Closing the visualizer will cause the simulation to crash.") });
+  }
   // number of generalized coordinates
   std::cout << "nq = " << _mj_model->nq << std::endl;
   // number of degrees of freedom
@@ -69,19 +69,18 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path, bool visua
   std::cout << "nu = " << _mj_model->nu << std::endl;
   // number of activation states
   std::cout << "na = " << _mj_model->na << std::endl;
-
-  if (_mj_model->na != 0)
-  {
-    prx_throw("This system has actuator states, which is not supported right now.")
-  }
+  // ToDo: Implement this?
+  // prx_assert(_mj_model->na == 0, "This system has actuator states, which is not supported right now.");
 
   get_mj_joint_info(_mj_model, joint_info);
+  std::cout << "joint_info:\n";
   for (auto& info : joint_info)
   {
     std::cout << *info << std::endl;
   }
 
   get_mj_actuator_info(_mj_model, actuator_info);
+  std::cout << "actuator_info:\n";
   for (auto& info : actuator_info)
   {
     std::cout << *info << std::endl;
@@ -92,7 +91,8 @@ mujoco_simulator_t::~mujoco_simulator_t()
 {
   mjv_freeScene(&scn);
   mjr_freeContext(&con);
-  glfwTerminate();
+  if (_visualize)
+    glfwTerminate();
 
   mj_deleteData(_mj_data);
   mj_deleteModel(_mj_model);
@@ -119,14 +119,70 @@ void mujoco_simulator_t::init_simulator()
   collision_groups->add_collision_group(context_name, context_systems, {});
 }
 
+void mujoco_simulator_t::set_record_video(const bool record_video)
+{
+  _record_video = record_video;
+  if (_record_video)
+  {
+    mjv_defaultCamera(&cam);
+    mjv_defaultOption(&opt);
+    mjv_defaultScene(&scn);
+    mjr_defaultContext(&con);
+    mjv_makeScene(_mj_model, &scn, 1000);
+
+    if (!glfwInit())
+      prx_throw("Error in initializing GLFW.");
+
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    window = glfwCreateWindow(1200, 900, "MuJoCo", NULL, NULL);
+    if (!window)
+      prx_throw("Error in creating GLFW window.");
+    glfwMakeContextCurrent(window);
+    mjr_makeContext(_mj_model, &con, mjFONTSCALE_150);
+
+    mjv_defaultFreeCamera(_mj_model, &cam);
+    cam.type = mjtCamera::mjCAMERA_TRACKING;
+    cam.trackbodyid = _mj_model->body_parentid[0];
+  }
+};
+void mujoco_simulator_t::init_simulator(std::shared_ptr<prx::mujoco_plant_t> mj_plant)
+{
+  system_groups->link_simulator(this);
+  std::string context_name = "mujoco";
+  std::vector<system_ptr_t> context_systems;
+
+  // system_ptr_t system;
+  // system.reset(new mujoco_plant_t("mujoco_plant"));
+  context_systems.push_back(mj_plant);
+  // auto mj_ptr = std::dynamic_pointer_cast<mujoco_plant_t>(system);
+  auto sim_ptr = std::static_pointer_cast<mujoco_simulator_t>(this->shared_ptr());
+  // mj_ptr->initialize(sim_ptr);
+
+  system_groups->add_system_group(context_name, context_systems);
+
+  // TODO: Need to set up collision stuff here.
+  collision_groups.reset(new mujoco_collision_checker_t(sim_ptr));
+  collision_groups->add_collision_group(context_name, context_systems, {});
+}
+
 void mujoco_simulator_t::step_simulation(propagate_step step)
 {
+  if (_record_video)
+  {
+    add_frame();
+  }
   // Set the warmstart acceleration to be zero (for determinism)
   for (int i = 0; i < _mj_model->nv; i++)
   {
     _mj_data->qacc_warmstart[i] = 0;
   }
+
+  _plugin_fn();
+
+  // mj_printData(_mj_model, _mj_data, (prx::out_path + "mj_data.txt").c_str());
   mj_step(_mj_model, _mj_data);
+  // mj_step1(_mj_model, _mj_data);
+  // mj_step2(_mj_model, _mj_data);
   if (_visualize)
   {
     mjrRect viewport = { 0, 0, 0, 0 };
@@ -136,6 +192,37 @@ void mujoco_simulator_t::step_simulation(propagate_step step)
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
+}
+
+void mujoco_simulator_t::add_frame()
+{
+  // std::unique_ptr<unsigned char[]> rgb(new unsigned char[3 * width * height]);
+  if (!_output_video.isOpened())
+  {
+    const auto rect = mjr_maxViewport(&con);
+    const cv::Size vid_size(rect.width, rect.height);
+    const int fourcc{ cv::VideoWriter::fourcc('m', 'p', '4', 'v') };
+    _output_video.open(_video_name, fourcc, _fps, vid_size, true);
+    prx_assert(_output_video.isOpened(), "Failed to open video output!");
+  }
+  // Only add a frame at the specified fps
+  if (std::fmod(_recorded_secs, 1.0 / _fps) < prx::simulation_step)
+  {
+    mjrRect viewport = mjr_maxViewport(&con);
+    int height = viewport.height;
+    int width = viewport.width;
+    glfwGetFramebufferSize(window, &width, &height);
+    mjv_updateScene(_mj_model, _mj_data, &opt, NULL, &cam, mjCAT_ALL, &scn);
+    mjr_render(viewport, &scn, &con);
+    glfwSwapBuffers(window);
+
+    cv::Mat cv_pixels(height, width, CV_8UC3);
+    mjr_readPixels(cv_pixels.data, nullptr, viewport, &con);
+    cvtColor(cv_pixels, cv_pixels, cv::COLOR_RGB2BGR);
+    cv::flip(cv_pixels, cv_pixels, 0);
+    _output_video << cv_pixels;
+  }
+  _recorded_secs += prx::simulation_step;
 }
 
 void mujoco_simulator_t::reset_simulation()

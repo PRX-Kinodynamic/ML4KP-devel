@@ -121,6 +121,11 @@ public:
     return os;
   }
 
+  inline std::vector<double*>& get_parameter_memory()
+  {
+    return parameter_memory;
+  }
+
   friend std::ostream& operator<<(std::ostream& os, const system_ptr_t& obj)
   {
     os << "state_space: " << *(obj->state_space) << "\tcontrol_space: " << *(obj->input_control_space);

@@ -7,7 +7,7 @@
   </asset>
   <default>
     <default class="buddy_wheel">
-      <geom fitscale="1.2" type="ellipsoid" friction="0. 0. 0.0" contype="1" conaffinity="1" mesh="mesh_buddy_mushr_wheel" mass="0.498952" condim="6"/>
+      <geom fitscale="1.2" type="ellipsoid" friction="0 0. 0.0" contype="1" conaffinity="1" mesh="mesh_buddy_mushr_wheel" mass="0.498952" condim="6"/>
     </default>
     <default class="buddy_steering">
       <joint type="hinge" axis="0 0 1" limited="true" frictionloss="0.01" damping="0.001" armature="0.0002" range="-0.38 0.38"/>
@@ -17,9 +17,9 @@
     </default>
   </default>
   <worldbody>
-    <body name="buddy" pos="0.0 0.0 0" euler="0 0 0.0">
+    <body name="buddy" pos="0.0 0.0 0.05" euler="0 0 0.0">
       <camera name="buddy_third_person" mode="fixed" pos="-1 0 1" xyaxes="0 -1 0 0.707 0 0.707"/>
-      <joint type="free"/>
+      <joint name="free" type="free"/>
 
       <camera name="buddy_realsense_d435i" mode="fixed" pos="-0.005 0 .165" euler="0 4.712 4.712"/>
       <site name="buddy_imu" pos="-0.005 0 .165"/>
@@ -30,7 +30,7 @@
 
       <body name="buddy_steering_wheel" pos="0.1385 0 0.0488">
         <joint class="buddy_steering" name="buddy_steering_wheel"/>
-        <geom name="buddy_wheel" class="buddy_wheel" contype="0" conaffinity="0" mass="0.01" rgba="0 0 0 0.01"/>
+        <geom name="buddy_wheel" class="buddy_wheel" contype="1" conaffinity="1" mass="0.1" rgba="0 0 0 0.01"/>
       </body>
 
       <body name="buddy_wheel_fl" pos="0.1385 0.115 0.0488">
@@ -63,10 +63,10 @@
   </actuator>
   <equality>
     <!-- taylor expansion of delta_l = arctan(L/(L/tan(delta) - W/2)) with L,W in reference to kinematic car model -->
-    <joint joint1="buddy_wheel_fl_steering" joint2="buddy_steering_wheel" polycoef="0 1 0.375 0.140625 -0.0722656"/>
+    <joint name="fl_wheel_joint" joint1="buddy_wheel_fl_steering" joint2="buddy_steering_wheel" polycoef="0 1 0.375 0.140625 -0.0722656"/>
 
     <!-- taylor expansion of delta_r = arctan(L/(L/tan(delta) + W/2)) with L,W in reference to kinematic car model -->
-    <joint joint1="buddy_wheel_fr_steering" joint2="buddy_steering_wheel" polycoef="0 1 -0.375 0.140625 0.0722656"/>
+    <joint name="fr_wheel_joint" joint1="buddy_wheel_fr_steering" joint2="buddy_steering_wheel" polycoef="0 1 -0.375 0.140625 0.0722656"/>
   </equality>
   <tendon>
     <fixed name="buddy_throttle">

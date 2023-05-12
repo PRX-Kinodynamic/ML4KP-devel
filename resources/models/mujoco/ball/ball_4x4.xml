@@ -1,0 +1,33 @@
+<!-- TODO -->
+<!-- (1) correct mass/inertial matricies (just weight for now) -->
+<mujoco model="ball">
+  <compiler angle="radian"/>
+  <size nconmax="100" njmax="500"/>
+  <option integrator="RK4" timestep="0.01"/>
+  <!-- <include file="friction_floor_1.xml"/> -->
+  <!-- <include file="friction_floor_uniform.xml"/> -->
+  <include file="../friction_floors/friction_floor_4x4.xml"/>
+  <asset>
+    <texture builtin="checker" height="100" mark="cross" markrgb=".8 .8 .8" name="texplane" rgb1="0.26 0.12 0.36" rgb2="0.23 0.09 0.33" type="2d" width="100"/>
+    <material name="matplane" reflectance="0.3" texrepeat="30 30" texture="texplane" texuniform="true"/>
+  </asset>
+  <visual>
+    <headlight ambient="0.6 0.6 0.6" diffuse="0.5 0.5 0.5" specular="0.2 0.2 0.2"/>
+    <map znear="0.001"/>
+  </visual>
+  <worldbody>
+    <body name="Ball" pos="0.0 0.0 0.1">
+      <geom mass="2" name="ball_geom" size="0.1" type="sphere" friction="0.0 0.0 0.000" rgba="0.0 0.0 0.9 1" condim="6"/>
+      <joint name="free" type="free"/>
+      <site name="rateX" pos="0 0 0" quat="1. 0. 0. 0." rgba="0.3 0.8 0.3 1" size="0.012 0.012 0.025" type="box"/>
+      <site name="rateY" pos="0 0 0" quat="1. 0. 0. 0." rgba="0.3 0.8 0.3 1" size="0.012 0.012 0.025" type="box"/>
+      <site name="rateZ" pos="0 0 0" quat="1. 0. 0. 0." rgba="0.3 0.8 0.3 1" size="0.012 0.012 0.025" type="box"/>
+    </body>
+  </worldbody>
+  <actuator>
+    <!-- <motor ctrllimited="true" ctrlrange="0.0 7.0" gear="0  0. 1. 0. 0. 0." site="thrust"/> -->
+    <motor ctrllimited="false" ctrlrange="-1 1" gear="0. 0. 0. 1. 0. 0." site="rateX"/>
+    <motor ctrllimited="false" ctrlrange="-1 1" gear="0. 0. 0. 0. 1. 0." site="rateY"/>
+    <motor ctrllimited="false" ctrlrange="-1 1" gear="0. 0. 0. 0. 0. 1." site="rateZ"/>
+  </actuator>
+</mujoco>

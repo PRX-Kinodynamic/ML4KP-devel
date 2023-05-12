@@ -49,7 +49,7 @@ public:
     epsilon = _epsilon;
     ss->copy(_upper_bound, _ss->get_upper_bounds());
     ss->copy(_lower_bound, _ss->get_lower_bounds());
-    _derivative.model = [&](const state_t& xi) { return compute_error(xi); };
+    _derivative._model = [&](const state_t& xi) { return compute_error(xi); };
   }
 
   virtual ~space_limit_factor_t()
@@ -71,7 +71,7 @@ public:
     const Eigen::VectorXd error{ compute_error(state) };
     if (H_q)
     {
-      // _derivative.model = [&](const Eigen::VectorXd& xi) { return compute_error(xi); };
+      // _derivative._model = [&](const Eigen::VectorXd& xi) { return compute_error(xi); };
       *H_q = _derivative(state);
     }
     return error;

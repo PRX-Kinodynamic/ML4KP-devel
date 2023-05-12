@@ -70,7 +70,7 @@ public:
    * A plan {(u_1,t_1),(u_2,t_2),...,(u_M,t_M)} has <i> M </i> steps.
    * @return Number of steps in the plan.
    */
-  inline unsigned size() const
+  inline std::size_t size() const
   {
     return num_steps;
   }
@@ -276,9 +276,9 @@ private:
 
   const_iterator const_end_iterator;
 
-  unsigned num_steps;
+  std::size_t num_steps;
 
-  unsigned max_num_steps;
+  std::size_t max_num_steps;
 
   std::deque<plan_step_t> steps;
 };

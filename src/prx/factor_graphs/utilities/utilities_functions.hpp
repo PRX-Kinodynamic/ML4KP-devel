@@ -23,7 +23,7 @@ namespace utilities
 {
 
 const gtsam::Values& optimize_and_log(gtsam::NonlinearOptimizer& nl_opt, const gtsam::NonlinearOptimizerParams& params,
-                                      factor_graph_logger_t& logger, const int extra_iters = 0,
+                                      logger_t& logger, const int extra_iters = 0,
                                       condition_check_t* checker_0 = nullptr);
 
 void values_to_plan_and_traj(const gtsam::Values& vals, trajectory_t* traj, plan_t* plan, const int total_steps);
@@ -75,12 +75,12 @@ void value_to_ostream(T values, std::ostream& ost = std::cout)
 template <typename T>
 void values_to_ostream(gtsam::Values& values, std::ostream& ost = std::cout)
 {
-  auto filtered = values.filter<T>();
+  auto filtered = values.extract<T>();
 
   for (auto key_value : filtered)
   {
-    ost << prx::symbol_factory_t::formatter(key_value.key) << " ";
-    value_to_ostream(key_value.value, ost);
+    ost << prx::symbol_factory_t::formatter(key_value.first) << " ";
+    value_to_ostream(key_value.second, ost);
     ost << "\n";
   }
 }

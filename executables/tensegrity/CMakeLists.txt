@@ -1,10 +1,11 @@
 file(GLOB EXECUTABLES_TENSEGRITY_FILES *.cpp)
 
 set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/tensegrity )
-	
+
+find_package(apriltag REQUIRED)
 
 if(BUILD_FOR_FACTOR_GRAPHS)
-	find_package( OpenCV REQUIRED )
+	# find_package( OpenCV REQUIRED )
 	include_directories( ${OpenCV_INCLUDE_DIRS} )
 	# add_executable( DisplayImage DisplayImage.cpp )
 	foreach(f ${EXECUTABLES_TENSEGRITY_FILES})
@@ -17,8 +18,9 @@ if(BUILD_FOR_FACTOR_GRAPHS)
 			${PROJECT_NAME}_planning 	
 			${PROJECT_NAME}_visualization 
 			${PROJECT_NAME}_factor_graphs
+			apriltag::apriltag 
 			)
-		target_link_libraries( ${F_EXEC} ${OpenCV_LIBS} )
+		# target_link_libraries( ${F_EXEC} ${OpenCV_LIBS} )
 		if(BUILD_FOR_BULLET)
 			target_link_libraries(${F_EXEC} ${PROJECT_NAME}_bullet_sim )
 		endif(BUILD_FOR_BULLET)

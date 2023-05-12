@@ -137,31 +137,31 @@ public:
     auto error = compute_error(x0, x1, u0, t0, theta0);
     if (H1)
     {
-      derivative_x0.model = [&](const VALUE1& _x0) { return compute_error(_x0, x1, u0, t0, theta0); };
+      derivative_x0._model = [&](const VALUE1& _x0) { return compute_error(_x0, x1, u0, t0, theta0); };
       *H1 = derivative_x0(x0);
     }
 
     if (H2)
     {
-      derivative_x1.model = [&](const VALUE2& _x1) { return compute_error(x0, _x1, u0, t0, theta0); };
+      derivative_x1._model = [&](const VALUE2& _x1) { return compute_error(x0, _x1, u0, t0, theta0); };
       *H2 = derivative_x1(x1);
     }
 
     if (H3)
     {
-      derivative_u0.model = [&](const VALUE3& _u0) { return compute_error(x0, x1, _u0, t0, theta0); };
+      derivative_u0._model = [&](const VALUE3& _u0) { return compute_error(x0, x1, _u0, t0, theta0); };
       *H3 = derivative_u0(u0);
     }
 
     if (H4)
     {
-      derivative_t0.model = [&](const VALUE4& _t0) { return compute_error(x0, x1, u0, _t0, theta0); };
+      derivative_t0._model = [&](const VALUE4& _t0) { return compute_error(x0, x1, u0, _t0, theta0); };
       *H4 = derivative_t0(t0);
     }
 
     if (H5)
     {
-      derivative_theta0.model = [&](const VALUE5& _theta0) { return compute_error(x0, x1, u0, t0, _theta0); };
+      derivative_theta0._model = [&](const VALUE5& _theta0) { return compute_error(x0, x1, u0, t0, _theta0); };
       *H5 = derivative_theta0(theta0);
     }
     return error;
@@ -277,19 +277,19 @@ public:
     // PRX_DEBUG_VAR_1(error);
     if (H1)
     {
-      derivative_x0.model = [&](const X& _x0) { return compute_error(_x0, x1, u0); };
+      derivative_x0._model = [&](const X& _x0) { return compute_error(_x0, x1, u0); };
       *H1 = derivative_x0(x0);
     }
 
     if (H2)
     {
-      derivative_x1.model = [&](const X& _x1) { return compute_error(x0, _x1, u0); };
+      derivative_x1._model = [&](const X& _x1) { return compute_error(x0, _x1, u0); };
       *H2 = derivative_x1(x1);
     }
 
     if (H3)
     {
-      derivative_u0.model = [&](const U& _u0) { return compute_error(x0, x1, _u0); };
+      derivative_u0._model = [&](const U& _u0) { return compute_error(x0, x1, _u0); };
       *H3 = derivative_u0(u0);
     }
 

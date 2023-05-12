@@ -29,6 +29,11 @@ std::ostream& operator<<(std::ostream& os, const mjJointInfo& info)
   os << "Dofadr: " << info.dofadr << std::endl;
   return os;
 }
+std::ostream& operator<<(std::ostream& os, const mjJointInfo* info)
+{
+  os << (*info);
+  return os;
+}
 
 void get_mj_actuator_info(mjModel* m, std::vector<mjActuatorInfo*>& actuator_info)
 {

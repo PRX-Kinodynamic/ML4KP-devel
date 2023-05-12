@@ -596,9 +596,9 @@ int main(int argc, char* argv[])
         trajectory_values.insert(time_symbol, t_vec);
         trajectory_values.insert(param_symbol, (Eigen::VectorXd(1) << 1).finished());
 
-        const basis_vector_t weight_i{ compute_weights_vector(frictions_grid, traj_real[xi]->vector<state_t>()) };
-        weights_values.insert(weights_symbol, weight_i);
-        weights_graph.addPrior(weights_symbol, weight_i, weight_nm);
+        // const basis_vector_t weight_i{ compute_weights_vector(frictions_grid, traj_real[xi]->vector<state_t>()) };
+        // weights_values.insert(weights_symbol, weight_i);
+        // weights_graph.addPrior(weights_symbol, weight_i, weight_nm);
         if (xi + increment >= traj_real.size() - increment - 1)
         {
           trajectory_graph.addPrior(next_state_symbol, traj_real[xi + increment]->vector<>(), x_sigma);
@@ -606,8 +606,8 @@ int main(int argc, char* argv[])
         }
         trajectory_graph.add(propagation_factor_5_t<3, 4, 1>(state_symbol, next_state_symbol, control_symbol,
                                                              time_symbol, param_symbol, dm, sg));
-        weights_graph.add(
-            fg::friction_fusion_factor_t<TH_DIM, BASIS_DIM>(ff_nm, param_symbol_basis, weights_symbol, param_symbol));
+        weights_graph.add(fg::friction_fusion_factor_t<TH_DIM, BASIS_DIM, X_DIM, decltype(frictions_grid)>(
+            ff_nm, param_symbol_basis, param_symbol));
       }
     }
 

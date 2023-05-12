@@ -57,11 +57,18 @@ using graph_values_t = std::pair<gtsam::NonlinearFactorGraph, gtsam::Values>;
 using Distance = Eigen::Vector<double, 1>;
 using Position = Eigen::Vector<double, 3>;
 
-const double rod_length{ 28.0 };
-const double center_position{ 6.02 };
-const double initial_end_position{ 19.7989898732233 };
-// const gtsam::SharedNoiseModel all_constraint_3d = gtsam::noiseModel::Constrained::All(1);
-const gtsam::SharedNoiseModel all_constraint_3d = gtsam::noiseModel::Isotropic::Sigma(1, 1);
+const double rod_length{ 25.2354205434 };
+const double center_position{ 3.465 };
+const double initial_end_position_x{ 23.13 };
+const double initial_end_position_y{ 23.13 };
+const double initial_end_position_z{ 19.28 };
+
+const double initial_length_v{ 38.56 };
+const double initial_length_h{ 32.7107596976897 };
+
+const gtsam::SharedNoiseModel all_constraint_3d = gtsam::noiseModel::Constrained::All(1);
+// const gtsam::SharedNoiseModel all_constraint_3d = gtsam::noiseModel::Isotropic::Sigma(1, 1);
+const gtsam::SharedNoiseModel fix_distance = gtsam::noiseModel::Isotropic::Sigma(1, 1e-0);
 logger_t rods_logger(prx::out_path + "tensegrity/fg_out_rods.txt");
 
 graph_values_t create_tensegrity_graph()
@@ -75,23 +82,24 @@ graph_values_t create_tensegrity_graph()
     const std::string i_str{ "0" + std::to_string(i) };
     const prx_symbol_t start_rod_pos_i{ symbol_factory_t::create_hashed_symbol("start_rod_pos", i_str) };
     const prx_symbol_t end_rod_pos_i{ symbol_factory_t::create_hashed_symbol("end_rod_pos", i_str) };
-    graph.add(euclidian_distance_factor_t<3>(rod_length, start_rod_pos_i, end_rod_pos_i, values));
+    graph.add(euclidian_distance_factor_t<3>(rod_length, start_rod_pos_i, end_rod_pos_i, values, fix_distance));
     // The rods are numbered clockwise, with the frame in the center on the tensegrity
     // The least significant bit is z.
     const int x_sign{ (i > 2) ? -1 : 1 };
     const int z_sign{ i & 0x02 ? -1 : 1 };
 
     const Position start_position{ x_sign * center_position, 0, z_sign * center_position };
-    const Position end_position{ x_sign * initial_end_position, 0, z_sign * initial_end_position };
+    const Position end_position{ x_sign * initial_end_position_x, 0, z_sign * initial_end_position_z };
     graph.addPrior(start_rod_pos_i, start_position);
     values.insert(start_rod_pos_i, start_position);
     values.insert(end_rod_pos_i, end_position);
     // values.insert(end_rod_pos_i, end_position);
-    // PRX_DEBUG_VAR_2(start_position.transpose(), i_str);
-    PRX_DEBUG_VAR_2(end_position.transpose(), i_str);
+    // PRX_DEBUG_VAR_3(i_str, start_position.transpose(), start_position.norm());
+    // PRX_DEBUG_VAR_3(i_str, end_position.transpose(), end_position.norm());
+    // PRX_DEBUG_VAR_1((start_position - end_position).norm());
+    // PRX_DEBUG_VAR_2(end_position.transpose(), i_str);
     // PRX_DEBUG_VAR_1((start_position).norm());
     // PRX_DEBUG_VAR_1((end_position).norm());
-    // PRX_DEBUG_VAR_1((start_position - end_position).norm());
   }
   for (int i = 1; i < 4; i += 2)
   {
@@ -100,7 +108,7 @@ graph_values_t create_tensegrity_graph()
     const prx_symbol_t cable_length_symbol{ symbol_factory_t::create_hashed_symbol("sensor", i_str, ip1_str) };
     const prx_symbol_t end_rod_pos_i{ symbol_factory_t::create_hashed_symbol("end_rod_pos", i_str) };
     const prx_symbol_t end_rod_pos_ip1{ symbol_factory_t::create_hashed_symbol("end_rod_pos", ip1_str) };
-    graph.add(euclidian_distance_factor_t<3>(cable_length_symbol, end_rod_pos_i, end_rod_pos_ip1, all_constraint_3d));
+    graph.add(euclidian_distance_factor_t<3>(cable_length_symbol, end_rod_pos_i, end_rod_pos_ip1, fix_distance));
   }
 
   // YZ plane
@@ -116,12 +124,13 @@ graph_values_t create_tensegrity_graph()
     const int z_sign{ i & 0x02 ? -1 : 1 };
 
     const Position start_position{ 0, y_sign * center_position, z_sign * center_position };
-    const Position end_position{ 0, y_sign * initial_end_position, z_sign * initial_end_position };
+    const Position end_position{ 0, y_sign * initial_end_position_y, z_sign * initial_end_position_z };
     graph.addPrior(start_rod_pos_i, start_position);
     values.insert(start_rod_pos_i, start_position);
     values.insert(end_rod_pos_i, end_position);
-    // PRX_DEBUG_VAR_2(start_position.transpose(), i_str);
-    PRX_DEBUG_VAR_2(end_position.transpose(), i_str);
+    // PRX_DEBUG_VAR_3(i_str, start_position.transpose(), start_position.norm());
+    // PRX_DEBUG_VAR_3(i_str, end_position.transpose(), end_position.norm());
+    // PRX_DEBUG_VAR_1((start_position - end_position).norm());
   }
   for (int i = 1; i < 4; i += 2)
   {
@@ -130,7 +139,7 @@ graph_values_t create_tensegrity_graph()
     const prx_symbol_t cable_length_symbol{ symbol_factory_t::create_hashed_symbol("sensor", i_str, ip1_str) };
     const prx_symbol_t end_rod_pos_i{ symbol_factory_t::create_hashed_symbol("end_rod_pos", i_str) };
     const prx_symbol_t end_rod_pos_ip1{ symbol_factory_t::create_hashed_symbol("end_rod_pos", ip1_str) };
-    graph.add(euclidian_distance_factor_t<3>(cable_length_symbol, end_rod_pos_i, end_rod_pos_ip1, all_constraint_3d));
+    graph.add(euclidian_distance_factor_t<3>(cable_length_symbol, end_rod_pos_i, end_rod_pos_ip1, fix_distance));
   }
 
   // Z+ plane
@@ -169,24 +178,28 @@ void rods_to_file(gtsam::Values& values)
       const prx_symbol_t end_rod_pos_i{ symbol_factory_t::create_hashed_symbol("end_rod_pos", i + j) };
       const Position start_position{ values.at<Position>(start_rod_pos_i) };
       const Position end_position{ values.at<Position>(end_rod_pos_i) };
-      rods_logger.log(start_position.transpose(), end_position.transpose());
+      rods_logger.log<false>(start_position.transpose(), end_position.transpose());
+      // PRX_DEBUG_VAR_2(i + j, (end_position - start_position).norm());
     }
   }
+  rods_logger.newline();
 }
 
-void add_sensor_value(gtsam::Values& values, std::string name, double value)
+// void add_sensor_value(gtsam::Values& values, std::string name, double value)
+void add_sensor_value(gtsam::Values& values, std::string sensor_1, std::string sensor_2, double value)
 {
   // Find two digits: Expecting "name" to be sensor_dd_dd
-  std::regex word_regex("(\\d\\d)");
-  std::vector<std::string> matches;
+  // std::regex word_regex("(\\d\\d)");
+  // std::vector<std::string> matches;
 
-  std::copy(std::sregex_token_iterator(name.begin(), name.end(), word_regex), std::sregex_token_iterator(),
-            std::back_inserter(matches));
-  prx_assert(matches.size() == 2,
-             "Expected matches in sensor name '" << name << "' to be exactly 2. Got " << matches.size());
-  const prx_symbol_t cable_length_symbol{ symbol_factory_t::create_hashed_symbol("sensor", matches[0], matches[1]) };
-  auto key_str = prx::symbol_factory_t::formatter(cable_length_symbol);
-  PRX_DEBUG_VAR_3(name, key_str, value);
+  // std::copy(std::sregex_token_iterator(name.begin(), name.end(), word_regex), std::sregex_token_iterator(),
+  //           std::back_inserter(matches));
+  // prx_assert(matches.size() == 2,
+  //            "Expected matches in sensor name '" << name << "' to be exactly 2. Got " << matches.size());
+  const prx_symbol_t cable_length_symbol{ symbol_factory_t::create_hashed_symbol("sensor", sensor_1, sensor_2) };
+  // auto key_str = prx::symbol_factory_t::formatter(cable_length_symbol);
+  // auto sensor = sensor_1 + sensor_2;
+  // PRX_DEBUG_VAR_3(sensor, key_str, value);
   values.insert_or_assign(cable_length_symbol, Distance(value));
 }
 
@@ -196,7 +209,7 @@ int main(int argc, char* argv[])
   simulation_step = params["simulation_step"].as<double>();
   init_random(params["random_seed"].as<int>());
 
-  std::string data_file{ prx::out_path + params["tensegrity_data"].as<>() };
+  std::string data_file{ params["tensegrity_data"].as<>() };
   std::string graph_file{ prx::out_path + "/tensegrity/fix_fg.dot" };
   std::cout << data_file << std::endl;
   prx::utilities::csv_reader_t reader(data_file);
@@ -205,17 +218,25 @@ int main(int argc, char* argv[])
   gtsam::Values values;
   std::tie(graph, values) = create_tensegrity_graph();
 
+  std::function<double(const double&)> sensor_transform = [](const double& x) { return x * 18.84 / 1788.0; };
   while (reader.has_next_line())
   {
-    auto block = reader.next_block();
-    for (auto line : block)
-    {
-      const std::string sensor_name{ line[0] };
-      const double value{ std::stod(line[1]) };
-      add_sensor_value(values, sensor_name, value);
-      /* code */
-    }
-    // auto line = reader.next_line();
+    auto line = reader.next_line<double>();
+    PRX_DEBUG_ITERABLE(line);
+    add_sensor_value(values, "04", "14", initial_length_h - sensor_transform(line[0]));
+    add_sensor_value(values, "04", "11", initial_length_h - sensor_transform(line[1]));
+    add_sensor_value(values, "01", "11", initial_length_h - sensor_transform(line[2]));
+    add_sensor_value(values, "01", "14", initial_length_h - sensor_transform(line[3]));
+    add_sensor_value(values, "02", "13", initial_length_h - sensor_transform(line[4]));
+    add_sensor_value(values, "13", "14", initial_length_v - sensor_transform(line[5]));
+    add_sensor_value(values, "03", "13", initial_length_h - sensor_transform(line[6]));
+    add_sensor_value(values, "03", "04", initial_length_v - sensor_transform(line[7]));
+    add_sensor_value(values, "11", "12", initial_length_v - sensor_transform(line[8]));
+    add_sensor_value(values, "03", "12", initial_length_h - sensor_transform(line[9]));
+    add_sensor_value(values, "02", "12", initial_length_h - sensor_transform(line[10]));
+    add_sensor_value(values, "01", "02", initial_length_v - sensor_transform(line[11]));
+
+    // graph.printErrors(values, "Errors: ", prx::symbol_factory_t::formatter);
     gtsam::LevenbergMarquardtParams lm_params{ prx::fg::utilities::default_levenberg_marquardt_parameters() };
     gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
     values = optimizer.optimize();

@@ -60,13 +60,13 @@ public:
     const Eigen::VectorXd error{ compute_error(x0, x1) };
     if (H1)
     {
-      derivative_x0.model = [&](const X0& _x0) { return compute_error(_x0, x1); };
+      derivative_x0._model = [&](const X0& _x0) { return compute_error(_x0, x1); };
       *H1 = derivative_x0(x0);
     }
 
     if (H2)
     {
-      derivative_x1.model = [&](const X1& _x1) { return compute_error(x0, _x1); };
+      derivative_x1._model = [&](const X1& _x1) { return compute_error(x0, _x1); };
       *H2 = derivative_x1(x1);
     }
 
@@ -124,19 +124,19 @@ public:
     const Eigen::VectorXd error{ compute_error(x0, x1, x2) };
     if (H1)
     {
-      derivative_x0.model = [&](const X0& _x0) { return compute_error(_x0, x1, x2); };
+      derivative_x0._model = [&](const X0& _x0) { return compute_error(_x0, x1, x2); };
       *H1 = derivative_x0(x0);
     }
 
     if (H2)
     {
-      derivative_x1.model = [&](const X1& _x1) { return compute_error(x0, _x1, x2); };
+      derivative_x1._model = [&](const X1& _x1) { return compute_error(x0, _x1, x2); };
       *H2 = derivative_x1(x1);
     }
 
     if (H3)
     {
-      derivative_x2.model = [&](const X2& _x2) { return compute_error(x0, x1, _x2); };
+      derivative_x2._model = [&](const X2& _x2) { return compute_error(x0, x1, _x2); };
       *H3 = derivative_x2(x2);
     }
 

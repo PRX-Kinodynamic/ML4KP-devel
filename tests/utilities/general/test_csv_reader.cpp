@@ -1,4 +1,4 @@
-#define BOOST_AUTO_TEST_MAIN abstract_node
+#define BOOST_AUTO_TEST_MAIN csv_reader_tests
 #include <string>
 #include <boost/test/unit_test.hpp>
 #include "prx/utilities/general/csv_reader.hpp"
@@ -96,4 +96,41 @@ BOOST_AUTO_TEST_CASE(csv_reader_iterator_iterates)
     total_lines++;
   }
   BOOST_CHECK(total_lines == expected_total_lines);
+}
+BOOST_AUTO_TEST_CASE(read_column_test)
+{
+  csv_reader_t reader(test_file, ' ');
+  const std::size_t column_to_read{ 2 };
+  const std::vector<int> expected_column = { 1, 4, 7, 1, 4, 7 };
+
+  std::vector<int> column_read = reader.read_column<int>(column_to_read);
+
+  BOOST_REQUIRE(column_read.size() == expected_column.size());
+  for (int i = 0; i < expected_column.size(); ++i)
+  {
+    BOOST_CHECK_MESSAGE(expected_column[i] == column_read[i], EXPECTED_GOT(expected_column[i], column_read[i]));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(read_columns_test)
+{
+  using Columns = std::vector<std::vector<int>>;
+  csv_reader_t reader(test_file, ' ');
+  const std::vector<std::size_t> columns_to_read = { 2, 3, 4 };
+  const Columns expected_columns = { { 1, 4, 7, 1, 4, 7 },  // no-lint
+                                     { 2, 5, 8, 2, 5, 8 },  // no-lint
+                                     { 3, 6, 9, 3, 6, 9 } };
+
+  const Columns columns_read = reader.read_columns<int>(columns_to_read);
+
+  BOOST_REQUIRE(columns_read.size() == expected_columns.size());
+  for (int i = 0; i < expected_columns.size(); ++i)
+  {
+    BOOST_REQUIRE(columns_read[i].size() == expected_columns[i].size());
+    for (int j = 0; j < expected_columns[i].size(); ++j)
+    {
+      BOOST_CHECK_MESSAGE(expected_columns[i][j] == columns_read[i][j],
+                          EXPECTED_GOT(expected_columns[i][j], columns_read[i][j]));
+    }
+  }
 }

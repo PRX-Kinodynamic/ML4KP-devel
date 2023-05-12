@@ -136,6 +136,13 @@ void param_loader::replace_env_var(YAML::Node& node)
       }
     }
   }
+  else if (node.IsSequence())
+  {
+    for (auto n : node)
+    {
+      replace_env_var(n);
+    }
+  }
 }
 
 void param_loader::add_opts(int argc, char* argv[])

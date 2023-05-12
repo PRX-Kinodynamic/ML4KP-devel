@@ -8,8 +8,7 @@ namespace utilities
 {
 
 const gtsam::Values& optimize_and_log(gtsam::NonlinearOptimizer& nl_opt, const gtsam::NonlinearOptimizerParams& params,
-                                      factor_graph_logger_t& logger, const int extra_iters,
-                                      condition_check_t* checker_0)
+                                      logger_t& logger, const int extra_iters, condition_check_t* checker_0)
 {
   double currentError = nl_opt.error();
 

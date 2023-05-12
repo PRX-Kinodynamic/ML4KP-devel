@@ -43,6 +43,9 @@
 #define STR_TO_INT(VAR) (std::stoi(VAR))
 #define STR_TO_DOUBLE(VAR) (std::stod(VAR))
 
+// To use in tests
+#define EXPECTED_GOT(expected, got) "Expected: " << expected << ". Got: " << got
+
 /**
  * Convert VAR to int and test VAR against CHECK. Eg. STR_TO_INT_AND_CHECK(foo, >= 0) ==> if(foo >= 0): parse(foo) else:
  * THROW

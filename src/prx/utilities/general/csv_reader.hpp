@@ -2,6 +2,7 @@
 #include <fstream>
 
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/type_convertions.hpp"
 
 namespace prx
 {
@@ -31,7 +32,6 @@ public:
       {
         if (_ptr->has_next_line())
           _line = _ptr->next_line();
-        PRX_DEBUG_VAR_1(_line.size());
       }
     }
 
@@ -77,7 +77,7 @@ public:
   }
 
   csv_reader_t() = delete;
-  csv_reader_t(const std::string filename, const char separator = ' ')
+  csv_reader_t(const std::string filename, const char separator = prx::separating_value)
     : _filename(filename), _sep(separator), file(filename.c_str())
   {
   }
@@ -151,6 +151,31 @@ public:
       block.emplace_back(line);
     }
     return block;
+  }
+
+  template <typename T>
+  std::vector<T> read_column(const std::size_t idx)
+  {
+    std::vector<std::size_t> col = { idx };
+    return read_columns<T>(col)[0];
+  }
+
+  template <typename T, typename Container>
+  std::vector<std::vector<T>> read_columns(const Container container)
+  {
+    std::vector<std::vector<T>> columns(container.size());
+    while (has_next_line())
+    {
+      auto line = next_line();
+      for (int i = 0; i < container.size(); ++i)
+      {
+        const std::size_t idx{ container[i] };
+        if (line.size() < idx)
+          continue;
+        columns[i].push_back(prx::utilities::convert_to<T>(line[idx]));
+      }
+    }
+    return columns;
   }
 
 private:

@@ -20,9 +20,13 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
 
   // [qpos, qvel] is the state of the system that we will use for planning.
   // [ctrl] is the control of the system that we will use for planning.
+  //
+  // ToDo: We could avoid adding "empty" pointers and just add the pointers to the vector directly...
   for (int i = 0; i < sim->_mj_model->nq; i++)
     state_memory.push_back(new double);
   for (int i = 0; i < sim->_mj_model->nv; i++)
+    state_memory.push_back(new double);
+  for (int i = 0; i < sim->_mj_model->na; i++)
     state_memory.push_back(new double);
   for (int i = 0; i < sim->_mj_model->nu; i++)
     control_memory.push_back(new double);
@@ -31,13 +35,14 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
   std::string control_topo_string = "";
   std::vector<double> ss_lb, ss_ub, cs_lb, cs_ub;
   unsigned next_qpos = 0;
-  unsigned idx = 0;
+  std::size_t idx = 0;
+  std::size_t offset = 0;
 
   std::string ss_name{};
   for (int i = 0; i < sim->joint_info.size(); i++)
   {
     auto joint = sim->joint_info[i];
-    ss_name += joint->name;
+    ss_name += joint->name + ":";
     if (joint->qposadr != next_qpos)
     {
       std::cout << "joint: " << joint->name << std::endl;
@@ -52,33 +57,31 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
         prx_warn("This is a free joint. Setting limits arbitrarily.");
         // These are the qpos positions
         state_topo_string += "EEE";
-        for (int i = 0; i < 3; i++)
+        offset = 0;
+        for (; offset < 3; idx++, offset++)
         {
-          state_memory[idx + i] = &sim->_mj_data->qpos[joint->qposadr + i];
+          state_memory[idx] = &sim->_mj_data->qpos[joint->qposadr + offset];
+          ss_lb.push_back(std::numeric_limits<double>::lowest());
+          ss_ub.push_back(std::numeric_limits<double>::max());
         }
-        ss_lb.push_back(-10);
-        ss_lb.push_back(-10);
-        ss_lb.push_back(0);
-        ss_ub.push_back(10);
-        ss_ub.push_back(10);
-        ss_ub.push_back(10);
         // These are the qpos rotations
         state_topo_string += "QQQQ";
-        for (int i = 3; i < 7; i++)
+        //  offset \in [3,7]
+        for (; offset < 7; idx++, offset++)
         {
+          state_memory[idx] = &sim->_mj_data->qpos[joint->qposadr + offset];
           ss_lb.push_back(-1);
           ss_ub.push_back(1);
-          state_memory[idx + i] = &sim->_mj_data->qpos[joint->qposadr + i];
         }
         // These are the qvel
         state_topo_string += "EEEEEE";
-        for (int i = 0; i < 6; i++)
+        for (offset = 0; offset < 6; idx++, offset++)
         {
-          ss_lb.push_back(-10.);
-          ss_ub.push_back(10.);
-          state_memory[idx + i + 7] = &sim->_mj_data->qvel[joint->dofadr + i];
+          ss_lb.push_back(std::numeric_limits<double>::lowest());
+          ss_ub.push_back(std::numeric_limits<double>::max());
+          state_memory[idx] = &sim->_mj_data->qvel[joint->dofadr + offset];
         }
-        idx += 13;
+        // idx += state_topo_string.size();
         next_qpos += 7;
         break;
       case mjtJoint_::mjJNT_SLIDE:
@@ -131,29 +134,9 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
         next_qpos++;
         break;
       case mjtJoint_::mjJNT_BALL:
-        // std::cout << "range[0] = " << joint->range[0] << std::endl;
-        // std::cout << "range[1] = " << joint->range[1] << std::endl;
-
-        // if (joint->limited)
-        // {
-        //   PRX_DEBUG_PRINT;
-        //   state_topo_string += "EEE";
-        //   ss_lb.insert(ss_lb.end(), 3, joint->range[0]);
-        //   ss_ub.insert(ss_ub.end(), 3, joint->range[1]);
-        //   //   ss_lb.push_back(joint->range[0]);
-        //   //   ss_ub.push_back(joint->range[1]);
-        //   //   ss_lb.push_back(joint->range[0]);
-        //   //   ss_ub.push_back(joint->range[1]);
-        // }
-        // else
-        // {
         state_topo_string += "QQQQ";
         ss_lb.insert(ss_lb.end(), 4, -1);
         ss_ub.insert(ss_ub.end(), 4, 1);
-        // ss_lb.push_back(-10.);
-        // ss_ub.push_back(10.);
-        // }
-        //
         state_topo_string += "EEE";
         ss_lb.insert(ss_lb.end(), 3, -10.);
         ss_ub.insert(ss_ub.end(), 3, 10.);
@@ -162,10 +145,12 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
         state_memory[idx + i + 7] = &sim->_mj_data->qvel[joint->dofadr];
         idx += 4;
         next_qpos += 4;
+        PRX_DEBUG_VAR_2(idx, next_qpos);
         break;
       default:
         prx_throw("Joint " << *joint << " not supported (yet)");
     }
+    PRX_DEBUG_VAR_1(ss_lb.size());
   }
 
   if (next_qpos != sim->_mj_model->nq)
@@ -181,7 +166,7 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
     control_topo_string += "E";
     control_memory[i] = &sim->_mj_data->ctrl[i];
 
-    actuator_name += actuator->name;
+    actuator_name += actuator->name + ":";
     if (actuator->limited)
     {
       cs_lb.push_back(actuator->range[0]);
@@ -194,11 +179,21 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
     }
   }
 
+  for (int offset = 0; offset < sim->_mj_model->na; offset++)
+  {
+    state_topo_string += "E";
+    state_memory[idx] = &sim->_mj_data->act[offset];
+    ss_lb.push_back(std::numeric_limits<double>::lowest());
+    ss_ub.push_back(std::numeric_limits<double>::max());
+  }
+
   std::cout << "state space name: " << ss_name << std::endl;
   std::cout << "control space name: " << actuator_name << std::endl;
   std::cout << "control topology name: " << control_topo_string << std::endl;
   state_space = new space_t(state_topo_string, state_memory, ss_name);
   input_control_space = new space_t(control_topo_string, control_memory, actuator_name);
+
+  parameter_space = new space_t();
 
   state_space->set_bounds(ss_lb, ss_ub);
   input_control_space->set_bounds(cs_lb, cs_ub);

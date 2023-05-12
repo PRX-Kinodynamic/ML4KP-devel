@@ -13,7 +13,7 @@ public:
   mujoco_plant_t(const std::string& path);
   virtual ~mujoco_plant_t();
 
-  void initialize(std::shared_ptr<mujoco_simulator_t> sim);
+  virtual void initialize(std::shared_ptr<mujoco_simulator_t> sim);
 
   virtual void update_configuration() override;
 
@@ -23,7 +23,6 @@ public:
 
   virtual void compute_control() override;
 
-protected:
   std::shared_ptr<mujoco_simulator_t> sim;
 };
 }  // namespace prx

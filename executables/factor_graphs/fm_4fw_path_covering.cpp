@@ -648,10 +648,10 @@ int main(int argc, char* argv[])
             frictions_grid, wheel_transform(state_vec[0], state_vec[1], state_vec[2], 2)) };
         const basis_vector_t weight_w3{ compute_weights_vector(
             frictions_grid, wheel_transform(state_vec[0], state_vec[1], state_vec[2], 3)) };
-        weights_values.insert(weights_symbol_0, weight_w0);
-        weights_values.insert(weights_symbol_1, weight_w1);
-        weights_values.insert(weights_symbol_2, weight_w2);
-        weights_values.insert(weights_symbol_3, weight_w3);
+        // weights_values.insert(weights_symbol_0, weight_w0);
+        // weights_values.insert(weights_symbol_1, weight_w1);
+        // weights_values.insert(weights_symbol_2, weight_w2);
+        // weights_values.insert(weights_symbol_3, weight_w3);
         weights_graph.addPrior(weights_symbol_0, weight_w0, weight_nm);
         weights_graph.addPrior(weights_symbol_1, weight_w1, weight_nm);
         weights_graph.addPrior(weights_symbol_2, weight_w2, weight_nm);
@@ -663,14 +663,12 @@ int main(int argc, char* argv[])
         }
         trajectory_graph.add(propagation_factor_5_t<3, 4, 4>(state_symbol, next_state_symbol, control_symbol,
                                                              time_symbol, param_symbol, dm, sg));
-        weights_graph.add(
-            fg::friction_fusion_factor_t<1, BASIS_DIM>(ff_nm, param_symbol_basis, weights_symbol_0, param_symbol));
-        weights_graph.add(
-            fg::friction_fusion_factor_t<1, BASIS_DIM>(ff_nm, param_symbol_basis, weights_symbol_1, param_symbol));
-        weights_graph.add(
-            fg::friction_fusion_factor_t<1, BASIS_DIM>(ff_nm, param_symbol_basis, weights_symbol_2, param_symbol));
-        weights_graph.add(
-            fg::friction_fusion_factor_t<1, BASIS_DIM>(ff_nm, param_symbol_basis, weights_symbol_3, param_symbol));
+        using FusionFactor = fg::friction_fusion_factor_t<1, BASIS_DIM, X_DIM, decltype(frictions_grid)>;
+
+        weights_graph.add(FusionFactor(ff_nm, param_symbol_basis, param_symbol));
+        weights_graph.add(FusionFactor(ff_nm, param_symbol_basis, param_symbol));
+        weights_graph.add(FusionFactor(ff_nm, param_symbol_basis, param_symbol));
+        weights_graph.add(FusionFactor(ff_nm, param_symbol_basis, param_symbol));
       }
     }
 

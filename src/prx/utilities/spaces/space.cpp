@@ -110,6 +110,50 @@ space_t::space_t(const std::vector<const space_t*>& spaces)
   dimension = addresses.size();
 }
 
+void space_t::push_back(const std::string& topo, const std::vector<double*>& ads, const std::string& name)
+{
+  prx_assert(topo.size() == ads.size(), "Topology " << topo << " does not match addresses size " << ads.size());
+  for (double* v : ads)
+  {
+    addresses.push_back(v);
+  }
+  dimension += addresses.size();
+  for (auto c : topo)
+  {
+    switch (c)
+    {
+      case 'E':
+        topology.push_back(topology_t::EUCLIDEAN);
+        lower_bounds.push_back(new double(std::numeric_limits<double>::min()));
+        upper_bounds.push_back(new double(std::numeric_limits<double>::max()));
+        break;
+      case 'R':
+        topology.push_back(topology_t::ROTATIONAL);
+        lower_bounds.push_back(new double(-PRX_PI));
+        upper_bounds.push_back(new double(PRX_PI));
+        break;
+      case 'D':
+        topology.push_back(topology_t::DISCRETE);
+        lower_bounds.push_back(new double(0));
+        upper_bounds.push_back(new double(std::numeric_limits<int>::max()));
+        break;
+      case 'I':
+        topology.push_back(topology_t::IDLE);
+        lower_bounds.push_back(new double(0));
+        upper_bounds.push_back(new double(std::numeric_limits<int>::max()));
+        break;
+      case 'Q':
+        topology.push_back(topology_t::QUATERNION);
+        lower_bounds.push_back(new double(-1));
+        upper_bounds.push_back(new double(1));
+        break;
+      default:
+        prx_throw("Bad topology identifier '" << c << "' from topology string " << topo);
+    }
+  }
+  space_name += name;
+}
+
 space_t::~space_t()
 {
   // std::cout << "space_name: " << space_name << std::endl;

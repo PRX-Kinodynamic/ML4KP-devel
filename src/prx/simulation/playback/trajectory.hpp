@@ -111,6 +111,12 @@ public:
     ++const_end_iterator;
     ++num_states;
   }
+
+  template <typename State>
+  inline void push_back(const State state)
+  {
+    copy_onto_back(state);
+  }
   // void copy_onto_back(const Eigen::Ref<Eigen::VectorXd> v_state);
   void copy_onto_back(const space_t* space);
 

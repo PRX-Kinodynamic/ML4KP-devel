@@ -26,14 +26,22 @@ int main(int argc, char** argv)
   space_point_t start = ss->make_point();
   trajectory_t traj(ss);
 
-  ss->copy(start, params["start_state"].as<std::vector<double>>());
-  ss->copy_from(start);
+  if (params["use_default_start"].as<bool>())
+  {
+    ss->copy_to(start);
+    std::cout << "Start state: " << start << "\n";
+  }
+  else
+  {
+    ss->copy(start, params["start_state"].as<std::vector<double>>());
+    ss->copy_from(start);
+  }
 
   plan_t plan(cs);
   plan.from_file(control_filename);
 
   context.first->propagate(start, plan, traj);
-  usleep(int(1e6));
+  // usleep(int(1e6));
   // std::cout << ss->print_point(end, 3) << std::endl;
 
   traj.to_file(prx::out_path + "traj_playback.txt");
