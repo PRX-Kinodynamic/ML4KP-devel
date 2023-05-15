@@ -8,6 +8,9 @@ find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
 add_library(${PROJECT_NAME}_external ${SRC_PRX_LIB_EXTERNAL_PQP} ) 
 target_include_directories(${PROJECT_NAME}_external PUBLIC ${Boost_INCLUDE_DIRS})
 
+find_package(CGAL REQUIRED)
+
+
 if(BUILD_QHULL)
 	if(NOT ExternalProject)
 	  # include(FetchContent)
@@ -65,9 +68,13 @@ target_link_libraries(${PROJECT_NAME}_external PUBLIC ${Boost_FILESYSTEM_LIBRARY
 
 target_include_directories(${PROJECT_NAME}_external PUBLIC ".")
 
+
 # Silencing all warning for the external (non-prx) code
 set_target_properties(${PROJECT_NAME}_external PROPERTIES COMPILE_FLAGS "-w")
 target_link_libraries(${PROJECT_NAME}_external PUBLIC ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+target_link_libraries(${PROJECT_NAME}_external PUBLIC CGAL::CGAL)
+
+
 if(BUILD_FOR_TORCH AND DEFINED ENV{Torch_DIR})
 	target_link_libraries(${PROJECT_NAME}_external ${TORCH_LIBRARIES})
 endif()
