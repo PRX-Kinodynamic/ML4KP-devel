@@ -131,9 +131,14 @@ int main(int argc, char* argv[])
         std::string output_dir = params["output_dir"].as<std::string>();
         std::string out_path = output_path + output_dir;
         
-        reachable_roadmap_t rrr;
+        strict_reachable_roadmap_t rrr;
         rrr.set_max_failures(params["num_failures"].as<int>());
         rrr.set_collect_reachability(params["collect_reachability"].as<bool>(),  out_path + "visibility_data.txt");
+
+        std::string points_fname = out_path + "points.txt";
+        std::cout << "Reading points from: " << points_fname << std::endl;
+        std::vector<std::vector<double>> dataset = read_comma_separated_file(points_fname);
+        space_point_t current = ss -> make_point();
 
         timer.reset();
         rrr.build_roadmap(dirt_query, dirt_spec, controller);

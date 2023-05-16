@@ -17,7 +17,7 @@ def quat2euler(quat):
 
 
 # mode = "edges"
-mode = "trajs"
+mode = "paths"
 # robot_dims = [1.1,0.842]
 robot_dims = [.9,0.6]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
@@ -61,40 +61,57 @@ elif(env_file_type == "yaml"):
 plt.xlim(-11,11)
 plt.ylim(-11,11)
 
-roadmap_dir = os.environ["DIRTMP_PATH"] + "out/ablation/"
+roadmap_dir = os.environ["DIRTMP_PATH"] + "out/ablation/drrm200/"
 
 for fname in os.listdir(roadmap_dir):
     if fname.endswith(".txt"):
         if mode == "trajs" and fname.startswith("traj"):
             traj = np.loadtxt(roadmap_dir+fname,delimiter=",")
             if len(traj) == 0: continue
+            if isinstance(traj[0], np.float64 ) : continue
             plt.plot(traj[:,0],traj[:,1],color='black')
             # Plot an arrow in the middle of the trajectory
             mid = int(len(traj)/2)
             plt.arrow(traj[mid,0],traj[mid,1],traj[mid+1,0]-traj[mid,0],traj[mid+1,1]-traj[mid,1],color='black',width=0.1)
+        if mode == "paths" and fname.startswith("path"):
+            traj = np.loadtxt(roadmap_dir+fname,delimiter=",")
+            if len(traj) == 0: continue
+            if isinstance(traj[0], np.float64 ) : continue
+            plt.plot(traj[:,0],traj[:,1],color='black')
+            
+            for v in traj:
+                rectangle_corner = np.array([v[0]-diag_len*np.cos(0.25*np.pi+v[2]),
+                                    v[1]-diag_len*np.sin(0.25*np.pi+v[2])])
+                rect = Rectangle((rectangle_corner[0],rectangle_corner[1]),
+                    robot_dims[0],robot_dims[1],
+                    edgecolor='purple',facecolor='purple',angle=180.*v[2]/np.pi)
+                plt.gca().add_patch(rect)
 
-vertices_raw = np.loadtxt(roadmap_dir+"vertices.txt",delimiter=",")
 
-vertices = {}
-for i in range(vertices_raw.shape[0]):
-    vertices[int(vertices_raw[i,0])] = vertices_raw[i,1:]
+if(mode != "paths"):
+    vertices_raw = np.loadtxt(roadmap_dir+"vertices.txt",delimiter=",")
 
-# plt.scatter(vertices_raw[:,1],vertices_raw[:,2],marker='o',s=100)
-for k,v in vertices.items():
-    rectangle_corner = np.array([v[0]-diag_len*np.cos(0.25*np.pi+v[2]),
-                                v[1]-diag_len*np.sin(0.25*np.pi+v[2])])
-    rect = Rectangle((rectangle_corner[0],rectangle_corner[1]),
-                robot_dims[0],robot_dims[1],
-                edgecolor='purple',facecolor='purple',angle=180.*v[2]/np.pi)
-    plt.gca().add_patch(rect)
-    # Label vertices with their idx
-    # for i in range(vertices_raw.shape[0]):
-    #     plt.annotate(str(int(vertices_raw[i,0])),(vertices_raw[i,1],vertices_raw[i,2]))
+    vertices = {}
+    for i in range(vertices_raw.shape[0]):
+        vertices[int(vertices_raw[i,0])] = vertices_raw[i,1:]
 
-edges_fname = roadmap_dir+"edges.txt"
-edges = np.loadtxt(edges_fname,delimiter=",")
+    # plt.scatter(vertices_raw[:,1],vertices_raw[:,2],marker='o',s=100)
+    for k,v in vertices.items():
+        rectangle_corner = np.array([v[0]-diag_len*np.cos(0.25*np.pi+v[2]),
+                                    v[1]-diag_len*np.sin(0.25*np.pi+v[2])])
+        rect = Rectangle((rectangle_corner[0],rectangle_corner[1]),
+                    robot_dims[0],robot_dims[1],
+                    edgecolor='purple',facecolor='purple',angle=180.*v[2]/np.pi)
+        plt.gca().add_patch(rect)
+        # Label vertices with their idx
+        # for i in range(vertices_raw.shape[0]):
+        #     plt.annotate(str(int(vertices_raw[i,0])),(vertices_raw[i,1],vertices_raw[i,2]))
+
+
 
 if mode == "edges":
+    edges_fname = roadmap_dir+"edges.txt"
+    edges = np.loadtxt(edges_fname,delimiter=",")
     for edge in edges:
         vertex_from = vertices[int(edge[0])]
         vertex_to = vertices[int(edge[1])]
@@ -107,4 +124,7 @@ if mode == "edges":
         else:
             plt.arrow(vertex_from[0],vertex_from[1],vertex_to[0]-vertex_from[0],vertex_to[1]-vertex_from[1],
             head_width=0.25, head_length=0.25, fc='k', ec='k')
+
+
+
 plt.savefig('foo.png')

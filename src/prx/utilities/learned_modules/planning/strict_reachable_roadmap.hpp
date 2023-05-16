@@ -1,20 +1,11 @@
 #pragma once
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/learned_modules/learned_controller.hpp"
+#include "prx/utilities/learned_modules/planning/reachable_roadmap.hpp"
 
 using namespace prx;
 
-struct ground_truth_vertex_t
-{
-    space_point_t point;
-};
 
-struct ground_truth_edge_t
-{
-    node_index_t end;
-    double cost;
-    trajectory_t* traj;
-};
 
 class strict_reachable_roadmap_t
 {
@@ -25,33 +16,36 @@ class strict_reachable_roadmap_t
         std::vector<std::pair<node_index_t, node_index_t>> all_edges;
         node_index_t vertex_counter;
         std::vector<node_index_t> path;
-        std::unordered_set<std::unordered_set<node_index_t>*> components;
-        std::unordered_map<node_index_t, std::unordered_set<node_index_t>*> component_map;
+        component_index_t component_counter;
+        std::unordered_map<component_index_t, std::unordered_set<node_index_t>*> components;
+        std::unordered_map<node_index_t, component_index_t> component_map;
 
     protected:
         int max_failures, num_failures;
+        bool collect_reachability;
         space_point_t pt;
         std::vector<double> pt_vec;
         double cost;
+        std::string reachability_file_path;
 
         std::vector<node_index_t> v_indices;
-        std::unordered_set<std::unordered_set<node_index_t>*> c_indices;
+        std::unordered_set<component_index_t> c_indices;
         std::unordered_map<node_index_t, double> a_costs;
         std::unordered_map<node_index_t, double> d_costs;
 
     public:
-        strict_reachable_roadmap_t() : max_failures(100), num_failures(0), vertex_counter(0) {}
+        strict_reachable_roadmap_t() : max_failures(100), num_failures(0), vertex_counter(0), collect_reachability(false) {}
         ~strict_reachable_roadmap_t() {
-            for(auto c : components) delete c;
+            for(auto c : components) delete c.second;
 
         }
     
     void set_max_failures(int max_failures) { this->max_failures = max_failures; }
+    void set_collect_reachability(bool collect_reachability, std::string path) { this->collect_reachability = collect_reachability; this->reachability_file_path = path;}
 
     space_point_t get_point(node_index_t index) { return vertices[index]->point; }
     
-    std::pair<std::vector<std::pair<node_index_t, node_index_t>>::iterator,std::vector<std::pair<node_index_t, node_index_t>>::iterator> get_all_edges()
-    {
+    std::pair<std::vector<std::pair<node_index_t, node_index_t>>::iterator,std::vector<std::pair<node_index_t, node_index_t>>::iterator> get_all_edges(){
         // Re-compute all edges.
         all_edges.clear();
         for (auto e : edges)
@@ -64,18 +58,15 @@ class strict_reachable_roadmap_t
         return std::make_pair(all_edges.begin(), all_edges.end());
     }
 
-    void get_indices(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
-    {
+    void get_indices(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller){
         c_indices.clear();
         v_indices.clear();
 
         a_costs.clear();
         d_costs.clear();
 
-        for (auto c : components)
-        {
-            for (auto v : *c)
-            {
+        for (auto c : components){
+            for (auto v : *(c.second)){
                 bool arriveable = false;
                 bool departable = false;
                 double a_cost;
@@ -85,8 +76,7 @@ class strict_reachable_roadmap_t
                 spec.state_space -> copy_point(query.start_state, pt);
                 controller.fulfill_query(query, spec);
 
-                if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
-                {
+                if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0){
                     arriveable = true;
                     a_cost = (query.solution_traj.size()-1)*simulation_step;
                 }
@@ -96,16 +86,14 @@ class strict_reachable_roadmap_t
                 spec.state_space -> copy_point(query.start_state, vertices[v] -> point);
                 controller.fulfill_query(query, spec);
 
-                if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
-                {
+                if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0){
                     departable = true;
                     d_cost = (query.solution_traj.size()-1)*simulation_step;
                 }
 
-                if(arriveable && departable)
-                {
+                if(arriveable && departable){
                     v_indices.push_back(v);
-                    c_indices.insert(c);
+                    c_indices.insert(c.first);
                     a_costs[v] = a_cost;
                     d_costs[v] = d_cost;
                     query.clear_outputs();
@@ -117,18 +105,15 @@ class strict_reachable_roadmap_t
         }
     }
 
-    bool check_edge_exists(node_index_t d, node_index_t a)
-    {
+    bool check_edge_exists(node_index_t d, node_index_t a){
         if (edges.find(d) == edges.end()) return false;
-        for (auto e : edges[d])
-        {
+        for (auto e : edges[d]){
             if (e->end == a) return true;
         }
         return false;
     }
 
-    bool check_connected(node_index_t d, node_index_t a)
-    {
+    bool check_connected(node_index_t d, node_index_t a){
         // If d and a are connected, DFS on the graph starting from d should contain a.
         std::vector<node_index_t> stack;
         std::unordered_set<node_index_t> visited;
@@ -136,19 +121,15 @@ class strict_reachable_roadmap_t
         stack.push_back(d);
         visited.insert(d);
 
-        while (!stack.empty())
-        {
+        while (!stack.empty()){
             node_index_t curr = stack.back();
             stack.pop_back();
 
             if (curr == a) return true;
 
-            if (edges.find(curr) != edges.end())
-            {
-                for (auto e : edges[curr])
-                {
-                    if (visited.find(e->end) == visited.end())
-                    {
+            if (edges.find(curr) != edges.end()){
+                for (auto e : edges[curr]){
+                    if (visited.find(e->end) == visited.end()){
                         stack.push_back(e->end);
                         visited.insert(e->end);
                     }
@@ -160,8 +141,9 @@ class strict_reachable_roadmap_t
 
     void add_edge(node_index_t s, node_index_t t, double cost)
     {
+        //std::cout << s << "->"<<t<<":"<<cost << std::endl;
         prx_assert(s != t, "Cannot add edge between the same node.");
-        prx_assert(cost != 0, "Cannot add edge with cost 0.");
+        //prx_assert(cost != 0, "Cannot add edge with cost 0.");
         if (edges.find(s) == edges.end())
         {
             edges[s] = std::vector<ground_truth_edge_t*>();
@@ -174,6 +156,11 @@ class strict_reachable_roadmap_t
     
     void build_roadmap(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, bool verify = false)
     {
+        std::ofstream outfile;
+        outfile.open(reachability_file_path); // append instead of overwrite 
+        outfile<<""; 
+        outfile.close();
+
         pt = spec.state_space -> make_point();
         do
         {
@@ -194,10 +181,13 @@ class strict_reachable_roadmap_t
                 vertices.insert(std::make_pair(vertex_counter, v));
                 
                 std::unordered_set<node_index_t>* component = new std::unordered_set<node_index_t>{vertex_counter};
-                components.insert(component);                             //add new component to components
-                component_map.insert(std::make_pair(vertex_counter,component));
+                components.insert(std::make_pair(component_counter, component));                             //add new component to components
+                component_map.insert(std::make_pair(vertex_counter,component_counter));
 
+                if(collect_reachability) record_visibility(num_failures, spec, query, controller);
                 vertex_counter++;
+                component_counter++;
+                num_failures = 0;
             }
             else if(c_indices.size() == 1) // sample connected to exactly one guard, discarded
             {
@@ -223,36 +213,103 @@ class strict_reachable_roadmap_t
                     vertices.insert(std::make_pair(vertex_counter, vertex));
 
                     std::unordered_set<node_index_t>* component = new std::unordered_set<node_index_t>{vertex_counter};
-                    components.insert(component);                             //add new component to components
-                    component_map.insert(std::make_pair(vertex_counter,component));
+                    components.insert(std::make_pair(component_counter, component));                             //add new component to components
+                    component_map.insert(std::make_pair(vertex_counter,component_counter));
 
-                    vertex_counter++;
+                    
 
                     for (auto v : v_indices)
                     {
-                        cost = d_costs[v];
-                        add_edge(v, vertex_counter-1, cost);
+                        add_edge(v, vertex_counter, a_costs[v]);
 
-                        cost = a_costs[v];
-                        add_edge(vertex_counter-1, v, cost);
+                        add_edge(vertex_counter, v, d_costs[v]);
                     
-                        if (component_map[v] != component){
+                        if (component_map[v] != component_counter){
                             auto old_c = component_map[v];
-                            for(auto v2 : *(component_map[v]))                 //merge v's component with sample's component
+                            for(auto v2 : *(components[old_c]))                 //merge v's component with sample's component
                             {
-                                component_map[v2] = component;
+                                component_map[v2] = component_counter;
                             }
-                            component->merge(*old_c);
+                            components[component_counter]->merge(*(components[old_c]));
                             components.erase(old_c);
-                            delete old_c;
                         }
                     }
+
+                    if(collect_reachability) record_visibility(num_failures, spec, query, controller);
+                    vertex_counter++;
+                    component_counter++;
+                    num_failures = 0;
                 }
             }
             
 
         } while (num_failures < max_failures); 
         
+    }
+
+
+    bool test_reachable(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
+    {
+        
+        //get largest component
+        int max_size = 0;
+        component_index_t largest_component;
+        for (auto c : components)
+        {
+            if((c.second)->size() > max_size){
+                largest_component = c.first;
+                max_size=(c.second)->size();
+            }
+        }
+
+        for (auto v : *(components[largest_component]))
+        {
+            query.clear_outputs();
+            spec.state_space -> copy_point(query.start_state, vertices[v] -> point);
+            spec.state_space -> copy_point(query.goal_state, pt);
+            controller.fulfill_query(query, spec);
+
+            if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 1)
+            {
+                query.clear_outputs();
+                spec.state_space -> copy_point(query.goal_state, vertices[v] -> point);
+                spec.state_space -> copy_point(query.start_state, pt);
+                controller.fulfill_query(query, spec);
+
+                if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 1)
+                {
+                    return true;
+                }
+            }
+            query.clear_outputs();
+        }
+        return false;
+    }
+
+    void record_visibility(int n_try, rrt_specification_t& spec, rrt_query_t& query, learned_controller_t controller){
+        int num_v_samples = 1000;
+        double a_count = 0.0;
+        
+        for(int i = 0; i<num_v_samples; i++){
+            pt = spec.state_space -> make_point();
+            do{
+                spec.sample_state(pt);
+            } while (!spec.valid_state(pt));
+
+            if(test_reachable(query, spec, controller)) a_count++;
+        }
+
+        double reachability = a_count/num_v_samples;
+        double p_visibility = 0; 
+        if(n_try != 0) p_visibility = 1.0- (1.0/n_try);
+
+        char line[100];
+        sprintf(line, "%ld,%f,%f\n", vertex_counter, p_visibility, reachability);
+        std::ofstream outfile;
+        outfile.open(reachability_file_path, std::ios_base::app); // append instead of overwrite 
+        outfile<<line; 
+        outfile.close();
+
     }
 
     void remove_edge(node_index_t s, node_index_t t)
@@ -331,16 +388,18 @@ class strict_reachable_roadmap_t
     }
 
     void print_components(){
+        std::cout << "-- Components --" << std::endl;
         for (auto c : components)
         {
             std::cout << "component: ";
-            for (auto v : *c)
+            for (auto v : *(c.second))
             {
                 std::cout << v;
                 std::cout << " ";
             }
             std::cout<<std::endl;
         }
+        std::cout << "--  --" << std::endl;
     }
 
     std::string print_edges()
@@ -375,9 +434,8 @@ class strict_reachable_roadmap_t
 
         for (auto d : v_indices)
         {
-            // cost = spec.distance_function(vertices[d] -> point, pt);
-            cost = d_costs[d];
-            add_edge(d, vertex_counter, cost);
+            
+            add_edge(d, vertex_counter, d_costs[d]);
         }
 
         vertex_counter++;
@@ -405,8 +463,7 @@ class strict_reachable_roadmap_t
         for (auto a : v_indices)
         {
             // cost = spec.distance_function(vertices[a] -> point, pt);
-            cost = a_costs[a];
-            add_edge(vertex_counter, a, cost);
+            add_edge(vertex_counter, a, a_costs[a]);
         }
 
         vertex_counter++;
@@ -465,8 +522,36 @@ class strict_reachable_roadmap_t
             curr = prev[curr];
         }
 
-        // std::reverse(path.begin(), path.end());
+        std::reverse(path.begin(), path.end());
 
         return path;
     }
+
+    double get_edge_len(node_index_t s, node_index_t t){
+        if (edges.find(s) == edges.end()){
+            prx_throw("invalid edge");
+        } 
+            
+        for (auto e : edges[s])
+        {
+            if (e->end == t){
+                return e->cost;
+            }
+        }
+        prx_throw("invalid edge");
+        return 0.0;
+    }
+
+    std::string print_path(node_index_t s, node_index_t g, rrt_specification_t& spec, unsigned precision = 3){
+        std::vector<node_index_t> path_ids = get_shortest_path(s,g);
+        std::stringstream out(std::stringstream::out);
+
+        for(node_index_t id : path_ids){
+            out << spec.state_space->print_point(vertices[id]->point, precision) << std::endl;
+        }
+
+        return out.str();
+        
+    }
+
 };

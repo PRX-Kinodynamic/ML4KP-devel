@@ -7,6 +7,18 @@ using namespace prx;
 
 typedef long unsigned int component_index_t;
 
+struct ground_truth_vertex_t
+{
+    space_point_t point;
+};
+
+struct ground_truth_edge_t
+{
+    node_index_t end;
+    double cost;
+    trajectory_t* traj;
+};
+
 
 class reachable_roadmap_t
 {
@@ -27,6 +39,7 @@ class reachable_roadmap_t
     protected:
         int max_failures, num_failures;
         bool collect_reachability;
+        std::string reachability_file_path;
         space_point_t pt;
         std::vector<double> pt_vec;
         double cost;
@@ -46,7 +59,7 @@ class reachable_roadmap_t
         }
     
     void set_max_failures(int max_failures) { this->max_failures = max_failures; }
-    void set_collect_reachability(bool collect_reachability) { this->collect_reachability = collect_reachability; }
+    void set_collect_reachability(bool collect_reachability, std::string path) { this->collect_reachability = collect_reachability; this->reachability_file_path = path;}
 
     space_point_t get_point(node_index_t index) { return vertices[index]->point; }
     
@@ -197,11 +210,9 @@ class reachable_roadmap_t
         components.erase(s);
     }
     
-    void build_roadmap(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, bool verify = false)
-    {       
+    void build_roadmap(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, bool verify = false){       
         std::ofstream outfile;
-        std::string fname = output_path + "visibility_data.txt";
-        outfile.open(fname); // append instead of overwrite 
+        outfile.open(reachability_file_path); // append instead of overwrite 
         outfile<<""; 
         outfile.close();
 
@@ -440,15 +451,14 @@ class reachable_roadmap_t
         }
 
         double arriveability = a_count/num_v_samples;
-        double departability = a_count/num_v_samples;
+        double departability = d_count/num_v_samples;
         double p_visibility = 0; 
         if(n_try != 0) p_visibility = 1.0- (1.0/n_try);
 
         char line[100];
         sprintf(line, "%ld,%f,%f,%f\n", vertex_counter, p_visibility, arriveability, departability);
         std::ofstream outfile;
-        std::string fname = output_path + "visibility_data.txt";
-        outfile.open(fname, std::ios_base::app); // append instead of overwrite 
+        outfile.open(reachability_file_path, std::ios_base::app); // append instead of overwrite 
         outfile<<line; 
         outfile.close();
 
@@ -689,8 +699,37 @@ class reachable_roadmap_t
             curr = prev[curr];
         }
 
-        // std::reverse(path.begin(), path.end());
+        std::reverse(path.begin(), path.end());
 
         return path;
     }
+    
+    double get_edge_len(node_index_t s, node_index_t t)
+    {
+        if (edges.find(s) == edges.end()){
+            prx_throw("invalid edge");
+        } 
+            
+        for (auto e : edges[s])
+        {
+            if (e->end == t){
+                return e->cost;
+            }
+        }
+        prx_throw("invalid edge");
+        return 0.0;
+    }
+
+    std::string print_path(node_index_t s, node_index_t g, rrt_specification_t& spec, unsigned precision = 3){
+        std::vector<node_index_t> path_ids = get_shortest_path(s,g);
+        std::stringstream out(std::stringstream::out);
+
+        for(node_index_t id : path_ids){
+            out << spec.state_space->print_point(vertices[id]->point, precision) << std::endl;
+        }
+
+        return out.str();
+        
+    }
+
 };

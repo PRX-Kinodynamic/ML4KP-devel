@@ -925,4 +925,20 @@ class landmark_roadmap_t
 
         return path;
     }
+    
+    double get_edge_len(node_index_t s, node_index_t t)
+    {
+        if (edges.find(s) == edges.end()){
+            prx_throw("invalid edge");
+        } 
+            
+        for (auto e : edges[s])
+        {
+            if (e->end == t){
+                return e->cost;
+            }
+        }
+        prx_throw("invalid edge");
+        return 0.0;
+    }
 };

@@ -19,7 +19,7 @@ with open(environment_file, 'r') as stream:
 obstacles = env_params["environment"]["geometries"]
 
 
-roadmap_dir = os.environ["DIRTMP_PATH"] + "out/1212/test/"
+roadmap_dir = os.environ["DIRTMP_PATH"] + "out/ablation/drrm100/"
 
 vertices_raw = np.loadtxt(roadmap_dir+"vertices.txt",delimiter=",")
 
@@ -29,6 +29,7 @@ for i in range(vertices_raw.shape[0]):
 
 paths_prefix = "path"
 plt.figure(figsize=(8,8))
+
 
 for fname in os.listdir(roadmap_dir):
     if fname.startswith(paths_prefix) and fname.endswith(".txt"):
