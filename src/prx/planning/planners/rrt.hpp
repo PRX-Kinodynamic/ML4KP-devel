@@ -5,6 +5,7 @@
 #include "prx/utilities/data_structures/gnn.hpp"
 #include "prx/utilities/data_structures/tree.hpp"
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/logger.hpp"
 #include "prx/utilities/general/timer.hpp"
 #include "prx/utilities/data_structures/sigma.hpp"
 
@@ -186,5 +187,8 @@ protected:
   bool use_replanning;
 
   int print_statistics_count;
+
+  prx::logger_t tree_logger;
+  bool log_tree;
 };
 }  // namespace prx
