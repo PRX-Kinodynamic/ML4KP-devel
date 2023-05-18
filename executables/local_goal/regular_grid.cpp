@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
         std::vector<double> ts = {0, PRX_PI/4, PRX_PI/2, 3*PRX_PI/4, PRX_PI, -PRX_PI/4, -PRX_PI/2, -3*PRX_PI/4};
 
         trajectory_t traj(ss); plan_t plan(cs);
-        std::vector<space_point_t> verification_points;
+        std::vector<std::pair<space_point_t, double>> verification_points;
 
         std::vector<double> ps = linspace(-.2,.2,3);
         for (auto x : xs)
@@ -120,9 +120,22 @@ int main(int argc, char* argv[])
                     current -> at(1) = y;
                     current -> at(2) = t;
 
-                    if (dirt_spec.valid_state(current))
+                    bool add_flag = true;
+                    add_flag &= dirt_spec.valid_state(current);
+
+                    auto obs_dist = dirt_spec.obstacle_distance_function(current);
+                    double min_obs_dist = PRX_INFINITY;
+                    for (auto dist : obs_dist.distances)
                     {
-                        verification_points.push_back(ss -> clone_point(current));
+                        if (dist < min_obs_dist)
+                        {
+                            min_obs_dist = dist;
+                        }
+                    }
+
+                    if (add_flag)
+                    {
+                        verification_points.push_back(std::make_pair(ss -> clone_point(current),min_obs_dist));
                     }
                 }
             }
@@ -136,7 +149,7 @@ int main(int argc, char* argv[])
 
         for (auto pt : verification_points)
         {
-            fout << ss -> print_point(pt,4) << std::endl;
+            fout << ss -> print_point(pt.first,4) << "," << pt.second << std::endl;
         }
 
         fout.close();

@@ -42,6 +42,16 @@ class landmark_node_t : public abstract_node_t
             node_cost = c;
         }
 
+        double get_node_cost_to_go()
+        {
+            return node_cost_to_go;
+        }
+
+        void set_node_cost_to_go(double c)
+        {
+            node_cost_to_go = c;
+        }
+
         bool is_reached()
         {
             return reached;
@@ -56,7 +66,7 @@ class landmark_node_t : public abstract_node_t
         bool reached;
         node_index_t index;
         int node_successor;
-        double node_cost;
+        double node_cost_to_go, node_cost;
 };
 
 struct landmark_edge_t
@@ -89,7 +99,7 @@ class landmark_roadmap_t
         std::unordered_map<node_index_t, double> a_costs, d_costs;
 
     public:
-        std::vector<space_point_t> verification_set;
+        std::vector<std::pair<space_point_t, double>> verification_set;
         landmark_roadmap_t() : vertex_counter(0), edge_counter(0), stretch_factor(3.0) {}
         ~landmark_roadmap_t() {}
     
@@ -593,7 +603,7 @@ class landmark_roadmap_t
             node_index_t v_idx = unconsidered[idx];
             unconsidered.erase(unconsidered.begin() + idx);
 
-            spec.state_space -> copy_point(pt, verification_set[v_idx]);
+            spec.state_space -> copy_point(pt, verification_set[v_idx].first);
 
             get_indices(query,spec,controller);
 
@@ -1150,7 +1160,7 @@ class landmark_roadmap_t
         return paths;
     }
 
-    void compute_wavefront(node_index_t goal)
+    void compute_wavefront(node_index_t goal, bool use_gap_cost = false)
     {
         // Computes the wavefront from a given start node.
         // The wavefront is a map from nodes to the cost of the shortest path from the start node to the node.
@@ -1178,6 +1188,7 @@ class landmark_roadmap_t
             {
                 node_index_t v = e->end;
                 double alt = vertex_costs[u.second] + e->cost;
+                if (use_gap_cost) alt = vertex_costs[u.second] + 1;
                 if (alt < vertex_costs[v])
                 {
                     vertex_costs[v] = alt;
@@ -1191,9 +1202,9 @@ class landmark_roadmap_t
         for (auto v : vertices)
         {
             auto vertex = vertices[v.first];
-            vertex -> set_node_cost(vertex_costs[v.first]);
+            vertex -> set_node_cost_to_go(vertex_costs[v.first]);
             vertex -> set_successor(parent[v.first]);
-            std::cout << v.first << "," << parent[v.first] << "," << vertex_costs[v.first] << std::endl;
+            // std::cout << v.first << "," << parent[v.first] << "," << vertex_costs[v.first] << std::endl;
         }
     }
     

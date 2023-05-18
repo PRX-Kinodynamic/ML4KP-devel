@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
         {
             return ss -> euclidean_2d(s,d,0,2);
         };
-
+        
         dirt_query.goal_check = [&,dirt_spec,ss](space_point_t s)
         {
             // return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
@@ -137,9 +137,12 @@ int main(int argc, char* argv[])
         space_point_t current = ss -> make_point();
         for (auto row: dataset)
         {
+            double obs_dist = row.back();
+            std::cout << row.size() << std::endl;
             ss -> copy_point_from_vector(current,row);
-            rrr.verification_set.push_back(ss -> clone_point(current));
+            rrr.verification_set.push_back(std::make_pair(ss -> clone_point(current),obs_dist));
         }
+        return -1;
 
         int verification_set_size = rrr.verification_set.size();
         std::cout << "Verification set size: " << verification_set_size << std::endl;
@@ -164,16 +167,16 @@ int main(int argc, char* argv[])
         vertex_file.close();
         edge_file.close();
         
-        auto roadmap_edges = rrr.get_all_edges();
-        for (auto e = roadmap_edges.first; e != roadmap_edges.second; ++e)
-        {
-            auto edge = *e;
-            std::string traj_fname = out_path + "traj_" + std::to_string(edge.first) + "_" + std::to_string(edge.second) + ".txt";
-            std::ofstream fout;
-            fout.open(traj_fname);
-            fout << rrr.print_edge_traj(edge.first,edge.second,dirt_query,dirt_spec,controller);
-            fout.close();
-        }
+        // auto roadmap_edges = rrr.get_all_edges();
+        // for (auto e = roadmap_edges.first; e != roadmap_edges.second; ++e)
+        // {
+        //     auto edge = *e;
+        //     std::string traj_fname = out_path + "traj_" + std::to_string(edge.first) + "_" + std::to_string(edge.second) + ".txt";
+        //     std::ofstream fout;
+        //     fout.open(traj_fname);
+        //     fout << rrr.print_edge_traj(edge.first,edge.second,dirt_query,dirt_spec,controller);
+        //     fout.close();
+        // }
 
         // If the output directory does not exist, create it
         if (!fs::exists(out_path))

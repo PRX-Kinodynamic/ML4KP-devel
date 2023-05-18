@@ -39,7 +39,7 @@ class dense_roadmap_t
         std::unordered_map<node_index_t, double> a_costs, d_costs;
 
     public:
-        std::vector<space_point_t> verification_set;
+        std::vector<std::pair<space_point_t, double>> verification_set;
         dense_roadmap_t() : vertex_counter(0), edge_counter(0), stretch_factor(3.0) {}
         ~dense_roadmap_t() {}
     
@@ -462,7 +462,7 @@ class dense_roadmap_t
             node_index_t v_idx = unconsidered[idx];
             unconsidered.erase(unconsidered.begin() + idx);
 
-            spec.state_space -> copy_point(pt, verification_set[v_idx]);
+            spec.state_space -> copy_point(pt, verification_set[v_idx].first);
 
             get_indices(query,spec,controller);
 

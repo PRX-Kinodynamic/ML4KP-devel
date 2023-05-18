@@ -404,6 +404,7 @@ namespace prx
 				std::cout<< " nodes:" << metric->get_nr_nodes() <<std::endl;
 				std::cout << "sim time: " << simulation_time << std::endl;
 				bnb(start_vertex,current_solution);
+				tree.remove_vertices();
 			}
 		}
 	}
@@ -466,7 +467,8 @@ namespace prx
 			node->indices.clear();
 
 			//remove the node
-			tree.remove_vertex(v);
+			// tree.remove_vertex(v);
+			tree.mark_vertex_for_removal(v);
 		}
 	}
 }
