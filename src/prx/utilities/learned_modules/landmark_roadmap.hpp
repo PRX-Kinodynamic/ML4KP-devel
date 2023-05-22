@@ -929,7 +929,9 @@ class landmark_roadmap_t
     double get_edge_len(node_index_t s, node_index_t t)
     {
         if (edges.find(s) == edges.end()){
-            prx_throw("invalid edge");
+            if(edges.find(t) == edges.end()){
+                prx_throw("invalid edge");
+            }
         } 
             
         for (auto e : edges[s])
@@ -938,7 +940,24 @@ class landmark_roadmap_t
                 return e->cost;
             }
         }
+        for (auto e : edges[t])
+        {
+            if (e->end == s){
+                return e->cost;
+            }
+        }
         prx_throw("invalid edge");
         return 0.0;
+    }
+    std::string print_path(node_index_t s, node_index_t g, rrt_specification_t& spec, unsigned precision = 3){
+        std::vector<node_index_t> path_ids = get_shortest_path(s,g);
+        std::stringstream out(std::stringstream::out);
+
+        for(node_index_t id : path_ids){
+            out << spec.state_space->print_point(vertices[id]->point, precision) << std::endl;
+        }
+
+        return out.str();
+        
     }
 };

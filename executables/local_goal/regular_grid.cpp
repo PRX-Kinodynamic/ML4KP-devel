@@ -99,8 +99,8 @@ int main(int argc, char* argv[])
         ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
         space_point_t current = ss -> make_point();
-        std::vector<double> xs = linspace(-10.,10.,10);
-        std::vector<double> ys = linspace(-10.,10.,10);
+        std::vector<double> xs = linspace( 0. ,30., 20);
+        std::vector<double> ys = linspace( 0. ,18., 12);
         std::vector<double> ts = linspace(-PRX_PI, PRX_PI, 8);
 
         trajectory_t traj(ss); plan_t plan(cs);

@@ -1,7 +1,9 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 import yaml
+import sys
 import os
+import argparse
 from matplotlib.patches import Rectangle
 from xml.dom import minidom
 
@@ -15,18 +17,25 @@ def quat2euler(quat):
     yaw = np.arctan2(2*(w*z+x*y),1-2*(y**2+z**2))
     return yaw
 
+argParser = argparse.ArgumentParser()
+argParser.add_argument("-c", "--connection", help="connection type: trajs, edges, paths")
+argParser.add_argument("-e", "--environment", help="environment file in resources/input_files/environments/")
+argParser.add_argument("-o", "--outfile", help="target file for visualization", default='foo.png')
+argParser.add_argument("-d", "--directory", help="directory where roadmap files can be found (in out/)")
 
-# mode = "edges"
-mode = "paths"
+
+args = argParser.parse_args()
+
+mode = args.connection
 # robot_dims = [1.1,0.842]
 robot_dims = [.9,0.6]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 
 # environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/bar.yaml"
-environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/indoor.xml"
-env_file_type= "xml" #"yaml"
+environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/" + args.environment
+env_file_type= "yaml" #"yaml"
 
-plt.figure(figsize=(8,8))
+plt.figure(figsize=(15,9))
 
 if(env_file_type == "xml"):
     xmldoc = minidom.parse(environment_file)
@@ -58,10 +67,10 @@ elif(env_file_type == "yaml"):
         rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
         linewidth=1,edgecolor='r',facecolor='r')
         plt.gca().add_patch(rect)
-plt.xlim(-11,11)
-plt.ylim(-11,11)
+plt.xlim(0,30)
+plt.ylim(0,18)
 
-roadmap_dir = os.environ["DIRTMP_PATH"] + "out/ablation/drrm200/"
+roadmap_dir = os.environ["DIRTMP_PATH"] + "out/"+ args.directory
 
 for fname in os.listdir(roadmap_dir):
     if fname.endswith(".txt"):
@@ -73,19 +82,25 @@ for fname in os.listdir(roadmap_dir):
             # Plot an arrow in the middle of the trajectory
             mid = int(len(traj)/2)
             plt.arrow(traj[mid,0],traj[mid,1],traj[mid+1,0]-traj[mid,0],traj[mid+1,1]-traj[mid,1],color='black',width=0.1)
+
         if mode == "paths" and fname.startswith("path"):
             traj = np.loadtxt(roadmap_dir+fname,delimiter=",")
             if len(traj) == 0: continue
             if isinstance(traj[0], np.float64 ) : continue
             plt.plot(traj[:,0],traj[:,1],color='black')
             
+            i = 0
             for v in traj:
-                rectangle_corner = np.array([v[0]-diag_len*np.cos(0.25*np.pi+v[2]),
-                                    v[1]-diag_len*np.sin(0.25*np.pi+v[2])])
-                rect = Rectangle((rectangle_corner[0],rectangle_corner[1]),
-                    robot_dims[0],robot_dims[1],
-                    edgecolor='purple',facecolor='purple',angle=180.*v[2]/np.pi)
-                plt.gca().add_patch(rect)
+                # rectangle_corner = np.array([v[0]-diag_len*np.cos(0.25*np.pi+v[2]),
+                #                     v[1]-diag_len*np.sin(0.25*np.pi+v[2])])
+                # rect = Rectangle((rectangle_corner[0],rectangle_corner[1]),
+                #     robot_dims[0],robot_dims[1],
+                #     edgecolor='purple',facecolor='purple',angle=180.*v[2]/np.pi)
+                # plt.gca().add_patch(rect)
+                plt.arrow(v[0],v[1],0.5*np.cos(v[2]),0.5*np.sin(v[2]),color='purple', width = 0.1,zorder=10)
+                plt.annotate(i,(v[0],v[1]))
+                i+=1
+            
 
 
 if(mode != "paths"):
@@ -97,15 +112,11 @@ if(mode != "paths"):
 
     # plt.scatter(vertices_raw[:,1],vertices_raw[:,2],marker='o',s=100)
     for k,v in vertices.items():
-        rectangle_corner = np.array([v[0]-diag_len*np.cos(0.25*np.pi+v[2]),
-                                    v[1]-diag_len*np.sin(0.25*np.pi+v[2])])
-        rect = Rectangle((rectangle_corner[0],rectangle_corner[1]),
-                    robot_dims[0],robot_dims[1],
-                    edgecolor='purple',facecolor='purple',angle=180.*v[2]/np.pi)
-        plt.gca().add_patch(rect)
-        # Label vertices with their idx
-        # for i in range(vertices_raw.shape[0]):
-        #     plt.annotate(str(int(vertices_raw[i,0])),(vertices_raw[i,1],vertices_raw[i,2]))
+        plt.arrow(v[0],v[1],0.5*np.cos(v[2]),0.5*np.sin(v[2]),color='purple', width = 0.1,zorder=10)
+
+    #Label vertices with their idx
+    for i in range(vertices_raw.shape[0]):
+            plt.annotate(str(int(vertices_raw[i,0])),(vertices_raw[i,1],vertices_raw[i,2]))
 
 
 
@@ -127,4 +138,4 @@ if mode == "edges":
 
 
 
-plt.savefig('foo.png')
+plt.savefig(args.outfile)

@@ -4,12 +4,12 @@ simulation_step: 0.1
 
 # "environments/bar.yaml"
 # "environments/indoor.yaml"
-environment: "environments/warehouse.yaml"
+environment: "environments/bar.yaml"
 
-plant: !file "plants/car_like_wh.yaml"
+plant: !file "plants/forward_car_like.yaml"
 
 use_learned_controller: true
-learned_controller: !file "networks/car_like_controller.yaml"
+learned_controller: !file "networks/forward_car_like_controller.yaml"
 
 random_local_goal: false
 planner_name: "roadmap"
@@ -29,5 +29,5 @@ goal_state:  [ 29.0000, 17.0000, 0.0000, 0.0000, 0.0000]
 
 debug: false
 
-output_dir: "ablation/wh_srrm100/"
+output_dir: "ablation/dc_drrm100/"
 roadmap_dir: "ablation/roadmap_medium_3.0/"

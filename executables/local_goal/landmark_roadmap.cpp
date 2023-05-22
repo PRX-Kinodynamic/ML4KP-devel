@@ -191,6 +191,31 @@ int main(int argc, char* argv[])
         
         auto path = rrr.get_shortest_path(s_nn,g_nn);
 
+
+        
+        std::cout << "Path: " << std::endl;
+        for (auto v: path)
+        {
+            std::cout << v << " ";
+        }
+        std::cout << std::endl;
+
+        auto iter = path.begin()+1;
+
+        double path_len = 0.0;
+        for(iter; iter < path.end(); iter++)
+        {
+            path_len += rrr.get_edge_len(*(iter-1),*iter);
+        }
+
+        std::string path_fname = out_path + "path.txt";
+        fout.open(path_fname);
+        fout << rrr.print_path(s_nn,g_nn,dirt_spec);
+        fout.close();
+
+
+        std::cout << "Path len (with gaps): "<< path_len << std::endl;
+        
         /*
         dirt_query_t controller_query(ss,cs);
         controller_query.start_state = ss -> make_point();

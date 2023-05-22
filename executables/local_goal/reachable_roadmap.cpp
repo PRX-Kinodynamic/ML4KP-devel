@@ -184,6 +184,7 @@ int main(int argc, char* argv[])
         prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
         
         auto path = rrr.get_shortest_path(s_nn,g_nn);
+        
         std::cout << "Path: " << std::endl;
         for (auto v: path)
         {
