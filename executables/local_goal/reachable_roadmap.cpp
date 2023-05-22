@@ -49,11 +49,12 @@ int main(int argc, char* argv[])
         if (argc <= 1)
         {
             // prx_throw("This executable needs a parameter file!");
-            params_file = "local_goal/car_like.yaml";
+            params_file = "local_goal/forward_car_like.yaml";
             // params_file = "local_goal/annotate_treaded.yaml";
         }
         else 
         {
+            
             params_file = std::string(argv[1]);
         }
         
@@ -76,6 +77,7 @@ int main(int argc, char* argv[])
         std::vector<double> lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
         std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
         plant -> set_state_space_bounds(lower_bounds,upper_bounds);
+
 
         world_model_t world_model({plant},{obstacle_list});
         world_model.create_context("planning_context",{plant_name},{obstacle_names});

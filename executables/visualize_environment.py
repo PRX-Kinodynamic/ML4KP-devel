@@ -4,7 +4,7 @@ import yaml
 import os
 from matplotlib.patches import Rectangle
 
-environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/landmark.yaml"
+environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/narrow.yaml"
 
 with open(environment_file, 'r') as stream:
     try:
@@ -61,4 +61,4 @@ for edge in edges:
         plt.arrow(vertex_from[0],vertex_from[1],vertex_to[0]-vertex_from[0],vertex_to[1]-vertex_from[1],
         head_width=0.25, head_length=0.25, fc='k', ec='k')
 '''
-plt.show()
+plt.savefig("foo.png")
