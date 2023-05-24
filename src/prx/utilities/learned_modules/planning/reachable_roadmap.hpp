@@ -216,6 +216,10 @@ class reachable_roadmap_t
         outfile<<""; 
         outfile.close();
 
+        int num_g = 0;
+        int num_c = 0;
+        int num_ft = 0;
+
         pt = spec.state_space -> make_point();
         do
         {
@@ -244,8 +248,9 @@ class reachable_roadmap_t
                 Bw.insert(std::make_pair(component_counter, backward_set));
 
                 //todo: add all a_indices and d_indices as edges
-
-                //std::cout<<"add Guard: "<<component_counter<<std::endl;
+                //num_g++;
+                //std::cout<<"Guards: "<<num_g<<"; connections: "<< num_c <<"; failures total: "<< num_ft <<std::endl;
+                
                 vertex_counter++;
 
                 if(collect_reachability) record_visibility(num_failures, spec, query, controller);
@@ -259,6 +264,9 @@ class reachable_roadmap_t
                 auto arrivals = new std::unordered_set<node_index_t>;
                 auto departures = new std::unordered_set<node_index_t>;
                 auto merges = new std::unordered_set<component_index_t>;
+
+                //std::cout<<"non Guard: a: "<<a_indices.size()<<" d:"<<d_indices.size()<<" = "<< spec.state_space -> print_point(pt) <<std::endl;
+
                 for(auto av : a_indices){
                     for(auto dv : d_indices){
                         component_index_t ac = component_map[av];
@@ -283,6 +291,10 @@ class reachable_roadmap_t
                 }
                 if(add_node)
                 {
+                    //num_c++;
+                    //std::cout<<"Guards: "<<num_g<<"; connections: "<< num_c <<"; failures total"<< num_ft <<std::endl;
+
+
                     auto vertex = new ground_truth_vertex_t();
                     vertex -> point = spec.state_space -> clone_point(pt);         //add new vertex to map
                     vertices.insert(std::make_pair(vertex_counter, vertex));
@@ -360,6 +372,8 @@ class reachable_roadmap_t
                     num_failures = 0;
                         
                 }else{
+                    //num_ft++;
+                    //std::cout<<"Guards: "<<num_g<<"; connections: "<< num_c <<"; failures total"<< num_ft <<std::endl;
                     num_failures++;
                     output_progress_bar(1.0*num_failures/max_failures);
                 }

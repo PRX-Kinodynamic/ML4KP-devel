@@ -1,5 +1,6 @@
 import numpy as np 
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import yaml
 import sys
 import os
@@ -35,7 +36,7 @@ diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/" + args.environment
 env_file_type= "yaml" #"yaml"
 
-plt.figure(figsize=(15,9))
+plt.figure(figsize=(9,9))
 
 if(env_file_type == "xml"):
     xmldoc = minidom.parse(environment_file)
@@ -67,8 +68,8 @@ elif(env_file_type == "yaml"):
         rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
         linewidth=1,edgecolor='r',facecolor='r')
         plt.gca().add_patch(rect)
-plt.xlim(0,30)
-plt.ylim(0,18)
+plt.xlim(-11,11)
+plt.ylim(-11,11)
 
 roadmap_dir = os.environ["DIRTMP_PATH"] + "out/"+ args.directory
 
@@ -97,8 +98,14 @@ for fname in os.listdir(roadmap_dir):
                 #     robot_dims[0],robot_dims[1],
                 #     edgecolor='purple',facecolor='purple',angle=180.*v[2]/np.pi)
                 # plt.gca().add_patch(rect)
-                plt.arrow(v[0],v[1],0.5*np.cos(v[2]),0.5*np.sin(v[2]),color='purple', width = 0.1,zorder=10)
-                plt.annotate(i,(v[0],v[1]))
+
+                arrow1 = mpatches.FancyArrow(v[0],v[1],0.5*np.cos(v[2]-.5),0.5*np.sin(v[2]-.5), length_includes_head=True, color='purple', width = 0.05, zorder=10)
+                arrow2 = mpatches.FancyArrow(v[0],v[1],0.5*np.cos(v[2]+.5),0.5*np.sin(v[2]+.5), length_includes_head=True, color='purple', width = 0.05, zorder=10)
+                circle = mpatches.Circle((v[0],v[1]),radius = 0.5, color = 'xkcd:light purple', zorder = 9)
+                plt.gca().add_patch(arrow1)
+                plt.gca().add_patch(arrow2)
+                plt.gca().add_patch(circle)
+                plt.annotate(i,(v[0],v[1]), (v[0]+0.5,v[1]+0.5), zorder = 11)
                 i+=1
             
 
@@ -112,11 +119,16 @@ if(mode != "paths"):
 
     # plt.scatter(vertices_raw[:,1],vertices_raw[:,2],marker='o',s=100)
     for k,v in vertices.items():
-        plt.arrow(v[0],v[1],0.5*np.cos(v[2]),0.5*np.sin(v[2]),color='purple', width = 0.1,zorder=10)
+        arrow1 = mpatches.FancyArrow(v[0],v[1],0.5*np.cos(v[2]-.5),0.5*np.sin(v[2]-.5), length_includes_head=True, color='purple', width = 0.05, zorder=10)
+        arrow2 = mpatches.FancyArrow(v[0],v[1],0.5*np.cos(v[2]+.5),0.5*np.sin(v[2]+.5), length_includes_head=True, color='purple', width = 0.05, zorder=10)
+        circle = mpatches.Circle((v[0],v[1]),radius = 0.5, color = 'xkcd:light purple', zorder = 9)
+        plt.gca().add_patch(arrow1)
+        plt.gca().add_patch(arrow2)
+        plt.gca().add_patch(circle)
 
     #Label vertices with their idx
     for i in range(vertices_raw.shape[0]):
-            plt.annotate(str(int(vertices_raw[i,0])),(vertices_raw[i,1],vertices_raw[i,2]))
+            plt.annotate(str(int(vertices_raw[i,0])),(vertices_raw[i,1],vertices_raw[i,2]),(vertices_raw[i,1]+.5,vertices_raw[i,2]+.5), zorder = 11)
 
 
 
