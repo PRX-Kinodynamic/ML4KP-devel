@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
         if (argc <= 1)
         {
             // prx_throw("This executable needs a parameter file!");
-            params_file = "local_goal/forward_car_like.yaml";
+            params_file = "local_goal/car_like.yaml";
             // params_file = "local_goal/annotate_treaded.yaml";
         }
         else 

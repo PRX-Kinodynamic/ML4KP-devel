@@ -36,7 +36,7 @@ diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/" + args.environment
 env_file_type= "yaml" #"yaml"
 
-plt.figure(figsize=(9,9))
+plt.figure(figsize=(15,9))
 
 if(env_file_type == "xml"):
     xmldoc = minidom.parse(environment_file)
@@ -68,8 +68,8 @@ elif(env_file_type == "yaml"):
         rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
         linewidth=1,edgecolor='r',facecolor='r')
         plt.gca().add_patch(rect)
-plt.xlim(-11,11)
-plt.ylim(-11,11)
+plt.xlim(0,30)
+plt.ylim(0,18)
 
 roadmap_dir = os.environ["DIRTMP_PATH"] + "out/"+ args.directory
 
@@ -82,7 +82,7 @@ for fname in os.listdir(roadmap_dir):
             plt.plot(traj[:,0],traj[:,1],color='black')
             # Plot an arrow in the middle of the trajectory
             mid = int(len(traj)/2)
-            plt.arrow(traj[mid,0],traj[mid,1],traj[mid+1,0]-traj[mid,0],traj[mid+1,1]-traj[mid,1],color='black',width=0.1)
+            plt.arrow(traj[mid,0],traj[mid,1],traj[mid+1,0]-traj[mid,0],traj[mid+1,1]-traj[mid,1],color='black',width=0.1, zorder=12)
 
         if mode == "paths" and fname.startswith("path"):
             traj = np.loadtxt(roadmap_dir+fname,delimiter=",")

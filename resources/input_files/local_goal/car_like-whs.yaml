@@ -29,5 +29,5 @@ goal_state:  [ 29.0000, 17.0000, 0.0000, 0.0000, 0.0000]
 
 debug: false
 
-output_dir: "ablation/wh_drrm100-c/"
+output_dir: "ablation/wh_srrm100-c/"
 roadmap_dir: "ablation/roadmap_medium_3.0/"
