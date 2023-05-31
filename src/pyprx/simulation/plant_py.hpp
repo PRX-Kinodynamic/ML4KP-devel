@@ -38,6 +38,7 @@ PRX_GETTER(plant_t, derivative_space)
 
 // PRX_SETTER(plant_t, derivative_memory)
 // PRX_GETTER(plant_t, derivative_memory)
+bool (prx::plant_t::*linearize_2)(Eigen::MatrixXd&, Eigen::MatrixXd&) = &prx::plant_t::linearize;
 
 void bindings()
 {
@@ -50,6 +51,7 @@ void bindings()
       .def("compute_derivative", pure_virtual(&plant_wrap::compute_derivative))
       .def("set_integrator", &plant_t::set_integrator)
       .def("set_state_space_bounds", &plant_t::set_state_space_bounds)
+      .def("linearize", linearize_2)
       // Comment to force ; to the next one
       ;
 

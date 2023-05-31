@@ -27,19 +27,22 @@ mass: 1
 # The following are new parameters. 
 # You can specify "uniform", or "none"
 # If you specify "uniform", specify in noise_params the min and max.
-xt_noise: "uniform"
+# xt_noise: "uniform"
+xt_noise: "None"
 # xt_noise_params: [-0.1,0.1]
 # xt_noise_params: [-0.03141592654,0.03141592654]
-xt_noise_params: [-0.003,0.003]
-# xt_noise_params: [-0.,0.]
+# xt_noise_params: [-0.003,0.003]
+xt_noise_params: [-0.,0.]
 
-ut_noise: "uniform"
+# ut_noise: "uniform"
+ut_noise: "None"
 # u_t_noise_params: [-0.25,0.25]
 # u_t_noise_params: [-0.1,0.1]
 ut_noise_params: [-0.,0.]
 
-ft_noise: "uniform"
+# ft_noise: "uniform"
+ft_noise: "None"
 # ft_noise_params: [-0.03141592654,0.03141592654]
-ft_noise_params: [-0.003,0.003]
-# ft_noise_params: [-0.,0.]
+# ft_noise_params: [-0.003,0.003]
+ft_noise_params: [-0.,0.]
 # f_noise_params: [-0.,0.]

@@ -47,18 +47,16 @@ if __name__ == "__main__":
     fout_roa = open(roa_file_name, "w", buffering=2^10)
     print("Output file: ", roa_file_name)
     for _ in tqdm(range(total_states)):
-        
         fout_roa.write(str(pt))
         reached = 0
         for x in range(num_samples):
             end_state_vec = TM.g_func(pt.to_list())
-
-            # if TM.check_goal_reached(2): reached += 1
             if TM.goal_check(): reached += 1
 
 
         fout_roa.write(str(reached/num_samples) + " ")
-        fout_roa.write(str(TM.end_state))
+        fout_roa.write(str(TM.checker.iterations()))
+        # fout_roa.write(str(TM.end_state))
         fout_roa.write("\n")
 
         # fout_roa.write("\n")

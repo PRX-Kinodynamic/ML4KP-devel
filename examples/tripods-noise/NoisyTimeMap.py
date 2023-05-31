@@ -91,6 +91,8 @@ class NoisyTimeMap:
 
         self.checker = prx.condition_check("sim_time" , self.duration );
         self.goal_check = prx.create_default_goal_check(self.ss, self.goal_state, params["goal_region_radius"].as_float() );
+        # self.goal_reached_f = lambda : self.check_goal_reached(self.ss.get_dimension());
+        # self.goal_check = prx.custom_check.wrap( self.goal_reached_f );
         self.obstacle_check = prx.custom_check.wrap(self.in_collision_py );
         self.checker_gc = prx.condition_check( self.goal_check );
         self.checker_obstacle = prx.condition_check( self.obstacle_check );
@@ -150,7 +152,7 @@ class NoisyTimeMap:
             exit(-1)
 
     def check_goal_reached(self, dim):
-        return prx.space_t.euclidean_2d(self.start_state, self.goal_state, 0, dim) <= self.radius
+        return prx.space_t.euclidean_2d(self.end_state, self.goal_state, 0, dim) <= self.radius
 
     def pendulum_lc(self, X):
 
@@ -267,9 +269,15 @@ class NoisyTimeMap:
         if self.controller == None:
             self.Q = prx.matrix.Identity(2, 2)
             self.R = prx.matrix.Identity(1, 1)
+            self.A = prx.matrix.Identity(2, 2)
+            self.B = prx.matrix.Identity(2, 1)
             self.controller_base = prx.lqr(self.noisy_plant, self.Q, self.R, "LQR")
             self.controller_base.set_goal(self.goal_state, self.u_goal)
-            self.controller_base.compute_K()
+            self.ss.copy_from([0,0])
+            self.cs.copy_from([0])
+            self.plant.linearize(self.A, self.B)
+            self.controller_base.compute_K(self.A, self.B)
+            print("K", self.controller_base.get_K())
             self.get_noisy_controller()
 
         total_time = self.duration
@@ -730,6 +738,8 @@ class NoisyTimeMap:
             self.get_noisy_system()
 
         if self.controller == None:
+            self.A = prx.matrix.Identity(4, 4)
+            self.B = prx.matrix.Identity(4, 1)
             self.Q = prx.matrix.Identity(4, 4)
             self.Q[0,0] = 10
             self.Q[1,1] = 10
@@ -738,15 +748,30 @@ class NoisyTimeMap:
             self.R = prx.matrix.Identity(1, 1)
             self.controller_base = prx.lqr(self.noisy_plant, self.Q, self.R, "LQR")
             self.controller_base.set_goal(self.goal_state, self.u_goal)
-            self.controller_base.compute_K()
+            self.ss.copy_from([prx.PRX_PI,0,0,0])
+            self.cs.copy_from([0])
+            self.plant.linearize(self.A, self.B)
+            self.controller_base.compute_K(self.A, self.B)
+            # print("A",self.A)
+            # print("B",self.B)
+            # self.controller_base.compute_K()
+            # K = self.controller_base.get_K()
+            # K = prx.matrix.Identity(1, 4)
+            # K[0,0] = -80.5271  
+            # K[0,1] = -21.9918    
+            # K[0,2] = -60.3118  
+            # K[0,3] = -23.9024
+            # self.controller_base.set_K(K)
+            # print("K:", self.controller_base.get_K())
             self.get_noisy_controller()
 
-        total_time = self.duration
+        # total_time = self.duration
 
-        self.checker.set_check_value(total_time)
+        # self.checker.set_check_value(total_time)
         self.checker.reset()
+        # str_ = "Pre:" + str(self.checker.iterations())
         self.context.system_group.propagate(self.start_state, self.controller, self.checker, self.end_state);
-        # print (self.end_state.to_list())
+        # print(str_, "post:", self.checker.iterations(), self.end_state)
         return self.end_state.to_list()
 
 

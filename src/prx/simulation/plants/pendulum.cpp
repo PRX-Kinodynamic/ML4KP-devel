@@ -114,6 +114,8 @@ bool pendulum_t::linearize(Eigen::MatrixXd& A, Eigen::MatrixXd& B)
     A = Tx_inv * A * Tx;
     B = Tx_inv * B * Tu;
   }
+  PRX_DEBUG_VAR_2("A", A);
+  PRX_DEBUG_VAR_2("B", B);
 
   return true;
 }

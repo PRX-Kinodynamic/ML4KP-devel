@@ -17,9 +17,9 @@ public:
     int m = plant->get_control_space()->get_dimension();
     X.resize(n);
     U.resize(m);
-    X_goal.resize(n);
-    X_goal = Eigen::VectorXd::Zero(n);
-    goal = plant->get_state_space()->make_point();
+    // X_goal.resize(n);
+    // X_goal = Eigen::VectorXd::Zero(n);
+    // goal = plant->get_state_space()->make_point();
     // ltv = std::make_shared<ltv_t>(plant);
     u = plant->get_control_space()->make_point();
   }
@@ -48,6 +48,7 @@ public:
   virtual void compute_controls() override;
 
   void compute_K();
+  void compute_K(Eigen::MatrixXd& A, Eigen::MatrixXd& B);
 
   void set_K(Eigen::MatrixXd k)
   {
@@ -66,7 +67,7 @@ protected:
   Eigen::VectorXd X;
   Eigen::VectorXd U;
 
-  Eigen::VectorXd X_goal;
+  // Eigen::VectorXd X_goal;
 
   // std::shared_ptr<ltv_t> ltv;
 

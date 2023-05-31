@@ -16,7 +16,9 @@ void set_goal(std::shared_ptr<prx::lqr_t> l, Types... args)
 
 // BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(lqr_compute_controls_overloads, prx::lqr_t::compute_controls, 0, 1)
 void (prx::lqr_t::*lqr_compute_controls_0)() = &prx::lqr_t::compute_controls;
-void (prx::lqr_t::*lqr_compute_controls_1)(prx::space_point_t&) = &prx::controller_t::compute_controls;
+void (prx::lqr_t::*lqr_compute_controls_1)(prx::space_point_t&) = &prx::lqr_t::compute_controls;
+void (prx::lqr_t::*compute_K_0)() = &prx::lqr_t::compute_K;
+void (prx::lqr_t::*compute_K_2)(Eigen::MatrixXd&, Eigen::MatrixXd&) = &prx::lqr_t::compute_K;
 
 void bindings()
 {
@@ -34,8 +36,10 @@ void bindings()
       // .def("compute_controls", &prx::lqr_t::compute_controls, lqr_compute_controls_overloads())
       .def("compute_controls", lqr_compute_controls_0)
       .def("compute_controls", lqr_compute_controls_1)
-      .def("compute_K", &prx::lqr_t::compute_K)
+      .def("compute_K", compute_K_0)
+      .def("compute_K", compute_K_2)
       .def("get_K", &prx::lqr_t::get_K)
+      .def("set_K", &prx::lqr_t::set_K)
       .def("set_goal", &set_goal<Eigen::VectorXd>)
       .def("set_goal", &set_goal<Eigen::VectorXd, Eigen::VectorXd>)
       .def("set_goal", &set_goal<prx::space_point_t>)
