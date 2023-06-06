@@ -1,5 +1,6 @@
 #pragma once
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/transforms.hpp"
 
 std::vector<double> extract_state(const std::vector<double>& state, const std::vector<int>& indices)
 {
@@ -13,6 +14,19 @@ std::vector<double> extract_state(const std::vector<double>& state, const std::v
         extracted_state.push_back(state[indices[i]]);
     }
     return extracted_state;
+}
+
+std::vector<double> extract_state_with_quat(const std::vector<double>& state)
+{
+    std::vector<double> extract_state;
+    extract_state.push_back(state[0]);
+    extract_state.push_back(state[1]);
+
+    prx::quaternion_t quat = prx::quaternion_t(state[3], state[4], state[5], state[6]);
+    auto euler = quat.toRotationMatrix().eulerAngles(0, 1, 2);
+    extract_state.push_back(euler(2));
+
+    return extract_state;
 }
 
 std::vector<double> normalize_vector(const std::vector<double>& state, const std::vector<double>& lower_bounds, const std::vector<double>& upper_bounds)

@@ -123,34 +123,35 @@ namespace prx
         }
         mj_step(m, d);
         
-        /*
-        glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
-        mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
-
-        // Refer here: https://github.com/deepmind/mujoco/issues/132 
-        // and here: https://roboti.us/forum/index.php?threads/rendering-geoms.3460/#post-3963 
-        if (goal_pos.size() != 0)
+        if (MUJOCO_VIS)
         {
-            mjvGeom* goal_geom = scn.geoms + scn.ngeom++;
-            mjv_initGeom(goal_geom, mjGEOM_SPHERE, NULL, NULL, NULL, NULL);
-            goal_geom -> rgba[0] = 0.0;
-            goal_geom -> rgba[1] = 1.0;
-            goal_geom -> rgba[2] = 0.0;
-            goal_geom -> rgba[3] = 0.25;
-            goal_geom -> size[0] = goal_radius;
-            goal_geom -> size[1] = goal_radius;
-            goal_geom -> size[2] = goal_radius;
-            goal_geom -> pos[0] = goal_pos[0];
-            goal_geom -> pos[1] = goal_pos[1];
-            goal_geom -> pos[2] = goal_pos[2];
+            glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+            mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
 
-            // TODO: Add a quat2euler to visualize the orientation
+            // Refer here: https://github.com/deepmind/mujoco/issues/132 
+            // and here: https://roboti.us/forum/index.php?threads/rendering-geoms.3460/#post-3963 
+            if (goal_pos.size() != 0)
+            {
+                mjvGeom* goal_geom = scn.geoms + scn.ngeom++;
+                mjv_initGeom(goal_geom, mjGEOM_SPHERE, NULL, NULL, NULL, NULL);
+                goal_geom -> rgba[0] = 0.0;
+                goal_geom -> rgba[1] = 1.0;
+                goal_geom -> rgba[2] = 0.0;
+                goal_geom -> rgba[3] = 0.25;
+                goal_geom -> size[0] = goal_radius;
+                goal_geom -> size[1] = goal_radius;
+                goal_geom -> size[2] = goal_radius;
+                goal_geom -> pos[0] = goal_pos[0];
+                goal_geom -> pos[1] = goal_pos[1];
+                goal_geom -> pos[2] = goal_pos[2];
+
+                // TODO: Add a quat2euler to visualize the orientation
+            }
+
+            mjr_render(viewport, &scn, &con);
+            glfwSwapBuffers(window);
+            glfwPollEvents();
         }
-
-        mjr_render(viewport, &scn, &con);
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-        */
         
     }
 

@@ -48,6 +48,12 @@ int main(int argc, char* argv[])
     spec.distance_function = [](const space_point_t& a, const space_point_t& b)
     {
         double diff = (a->at(0) - b->at(0)) * (a->at(0) - b->at(0)) + (a->at(1) - b->at(1)) * (a->at(1) - b->at(1));
+        return sqrt(diff);
+    };
+
+    distance_function_t goal_dist = [](const space_point_t& a, const space_point_t& b)
+    {
+        double diff = (a->at(0) - b->at(0)) * (a->at(0) - b->at(0)) + (a->at(1) - b->at(1)) * (a->at(1) - b->at(1));
         // Get the Euler angles between the two quaternions
         quaternion_t quat1 = Eigen::Quaterniond(a->at(3), a->at(4), a->at(5), a->at(6));
         quaternion_t quat2 = Eigen::Quaterniond(b->at(3), b->at(4), b->at(5), b->at(6));
@@ -57,9 +63,9 @@ int main(int argc, char* argv[])
     };
 
     query.goal_region_radius = 0.5;
-    query.goal_check = [&,spec](const space_point_t& point)
+    query.goal_check = [&](const space_point_t& point)
     {
-        return spec.distance_function(point,query.goal_state) < query.goal_region_radius;
+        return goal_dist(point,query.goal_state) < query.goal_region_radius;
     };
 
     query.clear_outputs();

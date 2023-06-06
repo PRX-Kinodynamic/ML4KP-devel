@@ -138,11 +138,10 @@ int main(int argc, char* argv[])
         for (auto row: dataset)
         {
             double obs_dist = row.back();
-            std::cout << row.size() << std::endl;
+            row.pop_back();
             ss -> copy_point_from_vector(current,row);
             rrr.verification_set.push_back(std::make_pair(ss -> clone_point(current),obs_dist));
         }
-        return -1;
 
         int verification_set_size = rrr.verification_set.size();
         std::cout << "Verification set size: " << verification_set_size << std::endl;

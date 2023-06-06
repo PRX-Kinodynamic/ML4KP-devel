@@ -15,7 +15,7 @@ class learned_controller_t
     private:
         torch::jit::script::Module controller;
     protected:
-        bool normalize_input, delta_input, debug_controller;
+        bool normalize_input, delta_input, debug_controller, goal_uses_quaternion;
         double control_duration, max_duration;
         std::vector<double> state_upper_bounds, state_lower_bounds, control_upper_bounds, control_lower_bounds;
         std::vector<int> state_indices, goal_indices;
@@ -31,6 +31,8 @@ class learned_controller_t
         // Get some controller parameters.
         normalize_input = params["/learned_controller/normalize_input"].as<bool>();
         delta_input = params["/learned_controller/delta_input"].as<bool>();
+        goal_uses_quaternion = params["/learned_controller/goal_uses_quaternion"].as<bool>();
+        
         control_duration = params["/learned_controller/control_duration"].as<double>();
         max_duration = params["/learned_controller/max_duration"].as<double>();
         debug_controller = params["/learned_controller/debug_controller"].as<bool>();
@@ -48,6 +50,7 @@ class learned_controller_t
         {
             std::cout << input_path + controller_file << std::endl;
             controller = torch::jit::load(input_path+controller_file,device);
+            torch::set_num_threads(1);
         }
         catch(const c10::Error& e)
         {
@@ -104,6 +107,7 @@ class learned_controller_t
 
         if (normalize_input)
         {
+            if (goal_uses_quaternion) prx_throw("Not implemented yet!");
             for (int i = 0; i < states.size(); i++)
             {
                 normalized_states.push_back(extract_state(normalize_vector(states[i],state_lower_bounds,state_upper_bounds),state_indices));
@@ -115,7 +119,10 @@ class learned_controller_t
             for (int i = 0; i < states.size(); i++)
             {
                 normalized_states.push_back(extract_state(states[i],state_indices));
-                normalized_goals.push_back(extract_state(goals[i],goal_indices));
+                if (!goal_uses_quaternion)
+                    normalized_goals.push_back(extract_state(goals[i],goal_indices));
+                else
+                    normalized_goals.push_back(extract_state_with_quat(goals[i]));
             }
         }
         if (delta_input)
@@ -168,13 +175,17 @@ class learned_controller_t
         std::vector<double> normalized_state, normalized_goal;
         if (normalize_input)
         {
+            if (goal_uses_quaternion) prx_throw("Not implemented yet!");
             normalized_state = extract_state(normalize_vector(state,state_lower_bounds,state_upper_bounds),state_indices);
             normalized_goal = extract_state(normalize_vector(goal,state_lower_bounds,state_upper_bounds),goal_indices);
         }
         else
         {
             normalized_state = extract_state(state,state_indices);
-            normalized_goal = extract_state(goal,goal_indices);
+            if (!goal_uses_quaternion)
+                normalized_goal = extract_state(goal,goal_indices);
+            else
+                normalized_goal = extract_state_with_quat(goal);
         }
         if (delta_input)
         {
@@ -282,9 +293,9 @@ class learned_controller_t
             spec.state_space -> copy_vector_from_point(state_vec,current);
             spec.control_space -> copy_point_from_vector(query.solution_plan.back().control,get_control(state_vec,goal_vec));
             spec.control_space -> copy_point(step_plan.back().control,query.solution_plan.back().control);
-            if (debug_controller) std::cout << spec.control_space -> print_point(query.solution_plan.back().control,4) << " " << query.solution_plan.back().duration << std::endl;
+            if (debug_controller) std::cout << "Predicted control: " << spec.control_space -> print_point(query.solution_plan.back().control,4) << " " << query.solution_plan.back().duration << std::endl;
             spec.propagate(current, step_plan, step_traj);
-            if (debug_controller) std::cout << spec.state_space -> print_point(step_traj.back(),4) << std::endl;
+            if (debug_controller) std::cout << "Next state: " << spec.state_space -> print_point(step_traj.back(),4) << std::endl;
             spec.state_space -> copy_point(current,step_traj.back());
             for (unsigned i = 0; i < step_traj.size() - 1; i++)
             {

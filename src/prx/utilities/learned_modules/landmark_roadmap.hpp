@@ -108,6 +108,8 @@ class landmark_roadmap_t
     space_point_t get_point(node_index_t index) { return vertices[index]->point; }
     
     void set_stretch_factor(double factor) { stretch_factor = factor; }
+
+    std::pair<std::unordered_map<node_index_t,landmark_node_t*>::iterator,std::unordered_map<node_index_t,landmark_node_t*>::iterator> get_vertices() { return std::make_pair(vertices.begin(), vertices.end()); }
     
     std::pair<std::vector<std::pair<node_index_t, node_index_t>>::iterator,std::vector<std::pair<node_index_t, node_index_t>>::iterator> get_all_edges()
     {
@@ -216,6 +218,7 @@ class landmark_roadmap_t
 
     int get_next_local_goal(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller,int vertex_id)
     {
+        if (vertex_id == -1) return -1;
         auto v = vertices[vertex_id];
         int best_idx = -1;
 

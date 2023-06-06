@@ -4,6 +4,7 @@ random_seed: 111093
 
 state_indices: [0,1,2,3,4]
 goal_indices: [0,1,2]
+goal_uses_quaternion: false
 
 normalize_input: false
 delta_input: false

@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
         dirt_specification_t dirt_spec(context.first,context.second);
         dirt_spec.min_control_steps = params["/plant/min_steps"].as<double>()/simulation_step;
         dirt_spec.max_control_steps = params["/plant/max_steps"].as<double>()/simulation_step;
-        dirt_spec.blossom_number = 1;
+        dirt_spec.blossom_number = 5;
         dirt_spec.use_pruning = false;
         space_point_t sample_point = ss -> make_point();
 
@@ -164,8 +164,8 @@ int main(int argc, char* argv[])
             stats.link_planner(&dirt);
             stats.link_criterion(&checker);
             simulation_time = 0.0;
-            // stats.repeat_data_gathering(60);
-            stats.repeat_data_gathering(20);
+            stats.repeat_data_gathering(60);
+            // stats.repeat_data_gathering(20);
             simulation_time = 0.0;
 
             std::string full_name = out_path + params["planner_name"].as<std::string>()+"_"+ std::to_string(i) + ".txt";

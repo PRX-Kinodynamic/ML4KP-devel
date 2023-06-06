@@ -51,6 +51,7 @@ int main(int argc, char* argv[])
         std::vector<double> lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
         std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
         plant -> set_state_space_bounds(lower_bounds,upper_bounds);
+        PRX_DEBUG_PRINT
 
         world_model_t world_model({plant},{obstacle_list});
         world_model.create_context("planning_context",{plant_name},{obstacle_names});
@@ -99,12 +100,15 @@ int main(int argc, char* argv[])
         ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
         space_point_t current = ss -> make_point();
-        std::vector<double> xs = linspace(-10.,10.,20);
-        std::vector<double> ys = linspace(-6.,6.,12);
-        // std::vector<double> xs = linspace(1.0, 29.0, 28);
-        // std::vector<double> ys = linspace(1.0, 17.0, 16);
+
+        // std::vector<double> xs = linspace(-9.,9.,18);
+        // std::vector<double> ys = linspace(-9.,9.,18);
         // std::vector<double> ts = {0, PRX_PI/2, PRX_PI, -PRX_PI/2};
-        std::vector<double> ts = {0, PRX_PI/4, PRX_PI/2, 3*PRX_PI/4, PRX_PI, -PRX_PI/4, -PRX_PI/2, -3*PRX_PI/4};
+        // std::vector<double> ts = {0, PRX_PI/4, PRX_PI/2, 3*PRX_PI/4, PRX_PI, -PRX_PI/4, -PRX_PI/2, -3*PRX_PI/4};
+
+        std::vector<double> xs = linspace(1.0, 29.0, 28);
+        std::vector<double> ys = linspace(1.0, 17.0, 16);
+        std::vector<double> ts = {0, PRX_PI/2, PRX_PI, -PRX_PI/2};
 
         trajectory_t traj(ss); plan_t plan(cs);
         std::vector<std::pair<space_point_t, double>> verification_points;

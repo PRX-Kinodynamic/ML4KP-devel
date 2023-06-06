@@ -136,7 +136,8 @@ namespace prx
 	bool default_valid_state(space_point_t& s,space_t* ss,std::shared_ptr<collision_group_t> cg)
 	{
 		ss->copy_from_point(s);
-		if(cg->in_collision() || !ss->satisfies_bounds(s))
+		// if(cg->in_collision() || !ss->satisfies_bounds(s))
+		if(cg->in_collision())
 		{
 			return false;
 		}

@@ -2,6 +2,8 @@
 
 #include "prx/planning/planners/dirt.hpp"
 
+#include <fstream>
+
 namespace prx
 {
     class dirt_roadmap_node_t : public dirt_node_t
@@ -9,21 +11,34 @@ namespace prx
         public:
         dirt_roadmap_node_t() : dirt_node_t()
         {
+			achieved_goal = 0;
+			reachable_goal = -1;
+			expand_num = 0;
+			roadmap_cost_to_go = PRX_INFINITY;
         }
         virtual ~dirt_roadmap_node_t() = default;
-        std::vector<unsigned*> roadmap_path_indices;
-		int expand_number;
-		bool greedy_child;
+		int expand_num;
+		double roadmap_cost_to_go;
+        int achieved_goal, reachable_goal;
+		space_point_t local_goal;
     };
+
+	typedef std::function<void (dirt_roadmap_node_t*, std::vector<plan_t*>&, std::vector<trajectory_t*>&)> node_expand_t;
+	typedef std::function<double (const space_point_t&)> roadmap_heuristic_function_t;
+
     class dirt_roadmap_specification_t : public dirt_specification_t
     { 
     public:
         dirt_roadmap_specification_t(std::shared_ptr<system_group_t> sg,std::shared_ptr<collision_group_t> cg) : dirt_specification_t(sg,cg)
         {
+			start_node_reachable_goal = -1;
         }
         virtual ~dirt_roadmap_specification_t() = default;
 
         roadmap_expand_t roadmap_expand;
+		roadmap_heuristic_function_t roadmap_h;
+		node_expand_t node_expand;
+		int start_node_reachable_goal;
     };
 
     class dirt_roadmap_query_t : public dirt_query_t
@@ -54,13 +69,17 @@ namespace prx
 		dirt_roadmap_specification_t* dirt_spec;
 		dirt_roadmap_query_t* dirt_query;
 
+		void log_trajectory(std::shared_ptr<dirt_roadmap_node_t> node, char action, double time);
 
 		virtual void bnb(node_index_t v, double cost_bound, bool delete_flag = false) override;
 
 
 	private:
         heuristic_function_t h;
+		roadmap_heuristic_function_t roadmap_h;
         roadmap_expand_t roadmap_expand;
+		node_expand_t node_expand;
+		std::ofstream log_fout;
 
 		double max_radius;
 		bool child_extension;

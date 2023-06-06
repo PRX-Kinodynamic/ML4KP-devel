@@ -1,0 +1,15 @@
+controller_path: "networks/mushr.pt"
+random_seed: 21081996
+
+state_indices: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
+                16,17,18,19,20,21,22,23,24,25,26]
+goal_indices: [0,1,2]
+
+normalize_input: false
+delta_input: true
+goal_uses_quaternion: true
+
+control_duration: 1.0
+max_duration: 10.0
+
+debug_controller: false
