@@ -4,7 +4,7 @@ import yaml
 import os
 from matplotlib.patches import Rectangle
 
-environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/narrow.yaml"
+environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/indoor.yaml"
 
 with open(environment_file, 'r') as stream:
     try:
