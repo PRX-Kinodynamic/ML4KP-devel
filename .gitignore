@@ -21,3 +21,4 @@ experiments/
 plot generator/
 executables/ablation/indoors/0/random_0.txt
 resources/input_files/roadmaps/indoors_superdense_5/traj/*
+results/*
