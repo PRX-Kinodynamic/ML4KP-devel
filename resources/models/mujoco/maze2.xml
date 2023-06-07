@@ -1,0 +1,51 @@
+<mujoco model = "obstacles">
+<worldbody>
+
+<body name="bound_left">
+	<geom name="bound_left" type="box" pos="-10 -4 0" size="1.0 5.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="bound_bottom">
+	<geom name="bound_bottom" type="box" pos="-4 -10 0" size="5.0 1.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="bound_right">
+	<geom name="bound_right" type="box" pos="-4 2 0" size="5.0 1.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="bound_top">
+	<geom name="bound_top" type="box" pos="2 -4 0" size="1.0 5.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+
+<body name="obstacle_box_8">
+	<geom name="obstacle_box_8" type="box" pos="-8 -6 0" size="1.0 1.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+
+<body name="obstacle_box_11">
+	<geom name="obstacle_box_11" type="box" pos="-6 -2 0" size="1.0 1.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_12">
+	<geom name="obstacle_box_12" type="box" pos="-6 0 0" size="1.0 1.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_15">
+	<geom name="obstacle_box_15" type="box" pos="-4 -6 0" size="1.0 1.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+
+<body name="obstacle_box_18">
+	<geom name="obstacle_box_18" type="box" pos="-2 -6 0" size="1.0 1.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_19">
+	<geom name="obstacle_box_19" type="box" pos="-2 -4 0" size="1.0 1.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_20">
+	<geom name="obstacle_box_20" type="box" pos="-2 0 0" size="1.0 1.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+
+
+<body name="obstacle_box_23">
+	<geom name="obstacle_box_23" type="box" pos="0 -6 0" size="1.0 1.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+<body name="obstacle_box_24">
+	<geom name="obstacle_box_24" type="box" pos="0 -4 0" size="1.0 1.0 0.1"rgba="1.0 0.0 0.0 1"/>
+</body>
+
+
+
+</worldbody></mujoco>

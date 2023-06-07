@@ -11,19 +11,19 @@ from matplotlib.patches import Circle, Rectangle
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--target', type=str, default="roadmap_tree_0")
+parser.add_argument('--target', type=str, default="box_c2")
 args = parser.parse_args()
 target = args.target
 
-fname = os.environ['DIRTMP_PATH'] + "out/ablation/indoors/"+ target+"/"
+fname = os.environ['DIRTMP_PATH'] + "out/ablation/"+ target+"/"
 env_fname_prefix = os.environ['DIRTMP_PATH'] + "resources/models/mujoco/"
-env_fname = "indoor.xml"
-goal_state = np.array([-9.,-5.])
+env_fname = "box_c2.xml"
+goal_state = np.array([-0.6, 1.1])
 goal_radius = 0.5
 
 plt.figure(figsize=(8, 8))
-plt.xlim(-10,10)
-plt.ylim(-10,10)
+plt.xlim(-1.5,1.5)
+plt.ylim(-2,2)
 
 
 print('matplotlib: {}'.format(matplotlib.__version__))

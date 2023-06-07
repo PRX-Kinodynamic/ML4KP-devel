@@ -169,13 +169,13 @@ int main(int argc, char* argv[])
     unsigned counter = 0;
     for (auto& traj : dirt_query.tree_visualization)
     {
-        fout.open(output_path + "tree" + std::to_string(counter) + ".txt");
+        fout.open(output_path + params["output_dir"].as<std::string>() + "tree" + std::to_string(counter) + ".txt");
         fout << traj.print(2);
         fout.close();
         counter++;
     }
 
-    fout.open(output_path + "solution.txt");
+    fout.open(output_path + params["output_dir"].as<std::string>() + "solution.txt");
     fout << dirt_query.solution_traj.print(4);
     fout.close();
 

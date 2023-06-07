@@ -1,0 +1,39 @@
+environment:
+  geometries:
+  - collision_geometry:
+      dims: [4, 1, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [0, 2, 0]
+    dynamic: false
+    name: upper
+  - collision_geometry:
+      dims: [4, 1, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [0, -2, 0]
+    dynamic: false
+    name: lower
+  - collision_geometry:
+      dims: [1, 5, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [1.5, 0, 0]
+    dynamic: false
+    name: right
+  - collision_geometry:
+      dims: [1, 5, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-1.5, 0, 0]
+    dynamic: false
+    name: left
+  type: obstacle
