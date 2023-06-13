@@ -101,7 +101,7 @@ class landmark_roadmap_t
 
     public:
         std::vector<std::pair<space_point_t, double>> verification_set;
-        landmark_roadmap_t(bool use_sparse = false) : vertex_counter(0), edge_counter(0), stretch_factor(3.0) {this.use_sparse = use_sparse;}
+        landmark_roadmap_t(bool use_sparse = false) : vertex_counter(0), edge_counter(0), stretch_factor(3.0) {this->use_sparse = use_sparse;}
         ~landmark_roadmap_t() {}
     
     landmark_node_t* get_vertex(node_index_t index) { return vertices[index]; }
@@ -696,7 +696,7 @@ class landmark_roadmap_t
             }
             else 
             {
-                auto v = new dense_vertex_t();
+                auto v = new landmark_node_t();
                 v -> point = spec.state_space -> clone_point(pt);
                 vertices.insert(std::make_pair(vertex_counter, v));
 

@@ -36,16 +36,25 @@ class ScriptRunner:
     def run(self, start, goal, mode, name, id=0):
         self.planner_params["start_state"] = start.tolist()
         self.planner_params["goal_state"] = goal.tolist()
-        self.planner_params["output_dir"] = "ablation/"+mode+"/"+str(id)+"/"
-        if name == "roadmap" or name == "blossom":
-            self.planner_params["planner_name"] = self.planner_params["roadmap_dir"].split("/")[1]
-        else:
-            self.planner_params["planner_name"] = name
+        # Todo: Clean this up
+        self.planner_params["output_dir"] = "rooms_" + mode + "/planning/"+str(id)+"/"
+        # self.planner_params["output_dir"] = "warehouse_" + mode + "/planning/"+str(id)+"/"
+        # self.planner_params["output_dir"] = "indoor_" + mode + "/planning/"+str(id)+"/"
             
         if name == "random":
             self.planner_params["random_local_goal"] = False 
+            self.planner_params["planner_name"] = "Random"
+            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/random_rlg","examples/"+test_yaml_fname]
         elif name == "rlg":
             self.planner_params["random_local_goal"] = True
+            self.planner_params["planner_name"] = "RLG"
+            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/random_rlg","examples/"+test_yaml_fname]
+        elif name == "greedy":
+            self.planner_params["planner_name"] = "GreedyRoGuE"
+            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/rogue_greedy","examples/"+test_yaml_fname]
+        elif name == "shortcut":
+            self.planner_params["planner_name"] = "ShortcutRoGuE"
+            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/rogue_shortcut","examples/"+test_yaml_fname]
 
         # test_yaml_fname = "test_"+mode+"_"+name+"_"+str(id)+".yaml"
         test_yaml_fname = "test.yaml"
@@ -59,21 +68,12 @@ class ScriptRunner:
                 f.write("learned_controller: !file \"networks/car_like_controller.yaml\"\n")
             f.write("termination_classifier: !file \"networks/svm_classifier.yaml\"\n")
 
-        if name == "roadmap":
-            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/landmark_roadmap","examples/"+test_yaml_fname]
-        elif name == "blossom":
-            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/roadmap_from_file","examples/"+test_yaml_fname]
-            # cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/k_paths_test","examples/"+test_yaml_fname]
-            # cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/access_roadmap","examples/"+test_yaml_fname]
-        else:
-            cmd = [os.environ["DIRTMP_PATH"]+"bin/executables/local_goal/rlg_test","examples/"+test_yaml_fname]
         popen = subprocess.Popen(cmd)
         time.sleep(1)
         # popen.wait()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--run', action='store_true')
     parser.add_argument('--mode', type=str, default="car")
     parser.add_argument('--name', type=str, default='roadmap')
 
@@ -82,57 +82,13 @@ if __name__ == "__main__":
     mode = args.mode
     name = args.name
 
-    if run:
-        sr = ScriptRunner(mode)
-        landmarks = np.loadtxt(os.environ["DIRTMP_PATH"]+"out/0123/landmarks.txt",delimiter=",")
-        counter = 0
-        for i in tqdm(range(landmarks.shape[0])):
-            s = landmarks[i,:5]
-            g = landmarks[i,5:]
-            sr.run(s,g,mode,name,counter)
-            counter += 1
-    else:
-        environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/landmark.yaml"
-        with open(environment_file, 'r') as f:
-            try:
-                env_params = yaml.safe_load(f)
-            except yaml.YAMLError as exc:
-                print(exc)
-        
-        landmarks = np.loadtxt(os.environ["DIRTMP_PATH"]+"out/landmarks.txt",delimiter=",")
-
-        obstacles = env_params["environment"]["geometries"]
-        plt.figure(figsize=(8,8))
-        for obstacle in obstacles:
-            box_center = obstacle["config"]["position"][:2]
-            box_dims = obstacle["collision_geometry"]["dims"][:2]
-            rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
-            linewidth=1,edgecolor='r',facecolor='r')
-            plt.gca().add_patch(rect)
-        plt.xlim(-11,11)
-        plt.ylim(-11,11)
-
-        plt.scatter(landmarks[:,0],landmarks[:,1],c="b")
-
-        out_dir = os.environ["DIRTMP_PATH"]+"out/1212/"+mode+"/"
-        
-        for f in os.listdir(out_dir):
-            if os.path.isdir(out_dir+f):
-                with open(out_dir+f+"/traj.txt") as f:
-                    path = np.loadtxt(f,delimiter=",")
-                    if path.shape[0] != 0:
-                        plt.plot(path[:,0],path[:,1],c="black")
-        
-        plt.show()
-
-        for i, f in enumerate(os.listdir(out_dir)):
-            if os.path.isdir(out_dir+f):
-                with open(out_dir+f+"/solution.txt") as f:
-                    path = np.loadtxt(f,delimiter=",")
-                    print(i,",",path[0],",",path[1])
-
-        
-        
-
-        
-
+    sr = ScriptRunner(mode)
+    landmarks = np.loadtxt(os.environ['DIRTMP_PATH']+"out/rooms_car/landmarks.txt",delimiter=",")
+    # landmarks = np.loadtxt(os.environ["DIRTMP_PATH"]+"out/warehouse_car/landmarks.txt",delimiter=",")
+    # landmarks = np.loadtxt(os.environ["DIRTMP_PATH"]+"out/indoor_car/landmarks.txt",delimiter=",")
+    counter = 0
+    for i in tqdm(range(landmarks.shape[0])):
+        s = landmarks[i,:5]
+        g = landmarks[i,5:]
+        sr.run(s,g,mode,name,counter)
+        counter += 1

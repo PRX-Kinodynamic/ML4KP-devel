@@ -100,14 +100,11 @@ int main(int argc, char* argv[])
         ss -> copy_point_from_vector(dirt_query.goal_state,g);
 
         space_point_t current = ss -> make_point();
+        std::vector<double> xlims = params["env_xlims"].as<std::vector<double>>();
+        std::vector<double> ylims = params["env_ylims"].as<std::vector<double>>();
 
-        // std::vector<double> xs = linspace(-9.,9.,18);
-        // std::vector<double> ys = linspace(-9.,9.,18);
-        // std::vector<double> ts = {0, PRX_PI/2, PRX_PI, -PRX_PI/2};
-        // std::vector<double> ts = {0, PRX_PI/4, PRX_PI/2, 3*PRX_PI/4, PRX_PI, -PRX_PI/4, -PRX_PI/2, -3*PRX_PI/4};
-
-        std::vector<double> xs = linspace(1.0, 29.0, 28);
-        std::vector<double> ys = linspace(1.0, 17.0, 16);
+        std::vector<double> xs = linspace(xlims[0],xlims[1],params["env_xres"].as<int>());
+        std::vector<double> ys = linspace(ylims[0],ylims[1],params["env_yres"].as<int>());
         std::vector<double> ts = {0, PRX_PI/2, PRX_PI, -PRX_PI/2};
 
         trajectory_t traj(ss); plan_t plan(cs);

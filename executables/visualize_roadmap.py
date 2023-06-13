@@ -3,6 +3,17 @@ import matplotlib.pyplot as plt
 import yaml
 import os
 from matplotlib.patches import Rectangle
+from tqdm import tqdm
+
+def quat2euler(quat):
+    # Function that converts a quaternion [w,x,y,z] to euler angles [roll,pitch,yaw]
+    # Source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+    # Assumes that the quaternion is normalized
+    x,y,z,w = quat
+    roll = np.arctan2(2*(w*x+y*z),1-2*(x**2+y**2))
+    pitch = np.arcsin(2*(w*y-z*x))
+    yaw = np.arctan2(2*(w*z+x*y),1-2*(y**2+z**2))
+    return yaw
 
 # mode = "edges"
 mode = "trajs"
@@ -10,8 +21,10 @@ mode = "trajs"
 robot_dims = [.9,0.6]
 diag_len = 0.25 * np.sqrt(robot_dims[0]**2 + robot_dims[1]**2)
 
-# environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/bar.yaml"
-environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/landmark.yaml"
+# environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/landmark.yaml"
+# environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/warehouse.yaml"
+environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/indoor.yaml"
+# environment_file = os.environ["DIRTMP_PATH"]+"resources/input_files/environments/city.yaml"
 
 with open(environment_file, 'r') as stream:
     try:
@@ -22,17 +35,24 @@ with open(environment_file, 'r') as stream:
 obstacles = env_params["environment"]["geometries"]
 plt.figure(figsize=(8,8))
 for obstacle in obstacles:
+    angle = quat2euler(obstacle["config"]["orientation"])
     box_center = obstacle["config"]["position"][:2]
     box_dims = obstacle["collision_geometry"]["dims"][:2]
-    rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
-    linewidth=1,edgecolor='r',facecolor='r')
+    try:
+        rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
+        linewidth=1,edgecolor='r',facecolor='r',angle=180.*angle/np.pi,rotation_point='center')
+    except:
+        rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
+        linewidth=1,edgecolor='r',facecolor='r',angle=180.*angle/np.pi)
     plt.gca().add_patch(rect)
-plt.xlim(-11,11)
-plt.ylim(-11,11)
+# plt.xlim(-2,32)
+# plt.ylim(-2,20)
+plt.xlim(-10,10)
+plt.ylim(-10,10)
 
-roadmap_dir = os.environ["DIRTMP_PATH"] + "out/1208/"
+roadmap_dir = os.environ["DIRTMP_PATH"] + "out/indoor_car/roadmap_stretch/"
 
-for fname in os.listdir(roadmap_dir):
+for fname in tqdm(os.listdir(roadmap_dir)):
     if fname.endswith(".txt"):
         if mode == "trajs" and fname.startswith("traj"):
             traj = np.loadtxt(roadmap_dir+fname,delimiter=",")
@@ -40,8 +60,9 @@ for fname in os.listdir(roadmap_dir):
             plt.plot(traj[:,0],traj[:,1],color='black')
             # Plot an arrow in the middle of the trajectory
             mid = int(len(traj)/2)
-            plt.arrow(traj[mid,0],traj[mid,1],traj[mid+10,0]-traj[mid,0],traj[mid+10,1]-traj[mid,1],color='black',width=0.1)
+            plt.arrow(traj[mid,0],traj[mid,1],traj[mid+5,0]-traj[mid,0],traj[mid+5,1]-traj[mid,1],color='black',width=0.1)
 
+# '''
 vertices_raw = np.loadtxt(roadmap_dir+"vertices.txt",delimiter=",")
 
 vertices = {}
