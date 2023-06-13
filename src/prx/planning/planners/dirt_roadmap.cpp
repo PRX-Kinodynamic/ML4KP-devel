@@ -167,7 +167,7 @@ namespace prx
 			end_heuristic = h(eg.second->back(),dirt_query->goal_state);
 
 			// bnb
-			if((goal_vertex!=start_vertex && closest_node->cost_to_come + edge_cost + closest_node->cost_to_go > current_solution))
+			if((goal_vertex!=start_vertex && closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
 			{
 				delete eg.first;
 				delete eg.second;

@@ -200,7 +200,7 @@ namespace prx
 
 				//bnb
 				if((goal_vertex!=start_vertex && 
-					closest_node->cost_to_come + edge_cost + closest_node->cost_to_go > current_solution))
+					closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
 				{
 					delete eg.first;
 					delete eg.second;
