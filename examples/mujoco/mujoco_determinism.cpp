@@ -16,11 +16,10 @@ int main(int argc, char** argv)
     space_point_t start = ss -> make_point();
     space_point_t end  = ss -> make_point();
     ss -> copy_from_point(start);
-    for (int i = 0; i < 1000; i++)
+    for (int i = 0; i < 100; i++)
     {
         sim -> step_simulation(propagate_step::FIRST_STEP);
     }
-    ss -> copy_to_point(start);
     std::cout << ss -> print_point(start,4) << std::endl;
 
     plan_t plan(cs);

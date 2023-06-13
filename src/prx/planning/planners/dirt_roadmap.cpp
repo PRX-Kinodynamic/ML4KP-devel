@@ -261,7 +261,6 @@ namespace prx
 		new_tree_node->blossom_number = dirt_spec->blossom_number;
 		new_tree_node->dir_radius = new_node_dir_radius;
 
-		// new_tree_node->achieved_goal = closest_node->achieved_goal;
 		new_tree_node->reachable_goal = closest_node->reachable_goal;
 
 		// log_trajectory(new_tree_node, 'A', condition->time());

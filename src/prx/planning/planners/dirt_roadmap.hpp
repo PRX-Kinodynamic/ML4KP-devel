@@ -11,7 +11,6 @@ namespace prx
         public:
         dirt_roadmap_node_t() : dirt_node_t()
         {
-			achieved_goal = 0;
 			reachable_goal = -1;
 			expand_num = 0;
 			roadmap_cost_to_go = PRX_INFINITY;
@@ -19,7 +18,7 @@ namespace prx
         virtual ~dirt_roadmap_node_t() = default;
 		int expand_num;
 		double roadmap_cost_to_go;
-        int achieved_goal, reachable_goal;
+        int reachable_goal;
 		space_point_t local_goal;
     };
 

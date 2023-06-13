@@ -88,6 +88,7 @@ class landmark_roadmap_t
         std::vector<std::vector<node_index_t>> paths;
         std::vector<std::vector<node_index_t>> components;
         int closest_index;
+        bool use_sparse;
 
     protected:
         space_point_t pt;
@@ -100,7 +101,7 @@ class landmark_roadmap_t
 
     public:
         std::vector<std::pair<space_point_t, double>> verification_set;
-        landmark_roadmap_t() : vertex_counter(0), edge_counter(0), stretch_factor(3.0) {}
+        landmark_roadmap_t(bool use_sparse = false) : vertex_counter(0), edge_counter(0), stretch_factor(3.0) {this.use_sparse = use_sparse;}
         ~landmark_roadmap_t() {}
     
     landmark_node_t* get_vertex(node_index_t index) { return vertices[index]; }
@@ -285,21 +286,10 @@ class landmark_roadmap_t
     {
         return path[idx];
     }
-
-    void update_achieved_goal(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, unsigned& achieved_goal, unsigned& reachable_goal)
-    {
-        auto v = vertices[path[reachable_goal]];
-        spec.state_space -> copy_point(query.goal_state, v -> point);
-        if (query.goal_check(s))
-        {
-            std::cout << "Reached goal: " << reachable_goal << std::endl;
-            achieved_goal = reachable_goal;
-        }
-    }
     
     int get_best_index(space_point_t s,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, unsigned& achieved_goal, unsigned& reachable_goal)
     {
-        std::cout << "Achieved goal: " << achieved_goal << " Reachable goal: " << reachable_goal << std::endl;
+        // std::cout << "Achieved goal: " << achieved_goal << " Reachable goal: " << reachable_goal << std::endl;
         int new_goal = -1;
         if (reachable_goal == 0)
         {
@@ -312,7 +302,7 @@ class landmark_roadmap_t
             new_goal = get_best_node_forward(s, query, spec, controller, reachable_goal);
         }
 
-        std::cout << "New target: " << new_goal << std::endl;
+        // std::cout << "New target: " << new_goal << std::endl;
         return new_goal;
     }
 
@@ -610,11 +600,104 @@ class landmark_roadmap_t
 
             get_indices(query,spec,controller);
 
-            if (a_indices.size() == 0 || d_indices.size() == 0)
+            if(use_sparse)
             {
-                auto v = new landmark_node_t();
+                if (a_indices.size() == 0 || d_indices.size() == 0)
+                {
+                    auto v = new landmark_node_t();
+                    v -> point = spec.state_space -> clone_point(pt);
+                    v -> set_index(vertex_counter);
+                    vertices.insert(std::make_pair(vertex_counter, v));
+
+                    for (auto a : a_indices)
+                    {
+                        cost = a_costs[a];
+                        if (!check_edge_exists(vertex_counter,a))
+                        {
+                            add_edge(vertex_counter, a, cost);
+                        }
+                    }
+
+                    for (auto d : d_indices)
+                    {
+                        cost = d_costs[d];
+                        if (!check_edge_exists(d, vertex_counter))
+                        {
+                            add_edge(d, vertex_counter, cost);
+                        }
+                    }
+
+                    vertex_counter++;
+                }
+                else
+                {
+                    bool vertex_created = false;
+                    for (auto d : d_indices)
+                    {
+                        for (auto a : a_indices)
+                        {
+                            if (d == a) continue;
+                            bool connected = check_connected(d, a);
+                            if (!connected || (connected && get_path_cost(d, a) > stretch_factor * (a_costs[a] + d_costs[d])))
+                            {
+                                // if (connected)
+                                // {
+                                //     std::cout << "Original path cost: " << get_path_cost(d, a) << std::endl;
+                                // }
+                                query.clear_outputs();
+                                spec.state_space -> copy_point(query.start_state, vertices[d] -> point);
+                                spec.state_space -> copy_point(query.goal_state, pt);
+
+                                bool add_flag = true;
+                                
+                                add_flag &= !query.goal_check(query.start_state);
+
+                                controller.fulfill_query(query, spec);
+
+                                if (add_flag && spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+                                {
+                                    spec.state_space -> copy_point(query.start_state, query.solution_traj.back());
+                                    spec.state_space -> copy_point(query.goal_state, vertices[a] -> point);
+                                    trajectory_t buffer_traj(query.solution_traj);
+                                    query.clear_outputs();
+
+                                    add_flag &= !query.goal_check(query.start_state);
+
+                                    controller.fulfill_query(query, spec);
+
+                                    if (add_flag && spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
+                                    {
+                                        if (!vertex_created)
+                                        {
+                                            auto v = new landmark_node_t();
+                                            v -> point = spec.state_space -> clone_point(pt);
+                                            v -> set_index(vertex_counter);
+                                            vertices.insert(std::make_pair(vertex_counter, v));
+                                            vertex_created = true;
+                                            vertex_counter++;
+                                        }
+                                        cost = d_costs[d];
+                                        if (!check_edge_exists(d, vertex_counter - 1))
+                                        {
+                                            add_edge(d, vertex_counter - 1, cost);
+                                        }
+
+                                        cost = a_costs[a];
+                                        if (!check_edge_exists(vertex_counter - 1, a))
+                                        {
+                                            add_edge(vertex_counter - 1, a, cost);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else 
+            {
+                auto v = new dense_vertex_t();
                 v -> point = spec.state_space -> clone_point(pt);
-                v -> set_index(vertex_counter);
                 vertices.insert(std::make_pair(vertex_counter, v));
 
                 for (auto a : a_indices)
@@ -637,78 +720,8 @@ class landmark_roadmap_t
 
                 vertex_counter++;
             }
-            else
-            {
-                bool vertex_created = false;
-                for (auto d : d_indices)
-                {
-                    for (auto a : a_indices)
-                    {
-                        if (d == a) continue;
-                        bool connected = check_connected(d, a);
-                        if (!connected || (connected && get_path_cost(d, a) > stretch_factor * (a_costs[a] + d_costs[d])))
-                        {
-                            // if (connected)
-                            // {
-                            //     std::cout << "Original path cost: " << get_path_cost(d, a) << std::endl;
-                            // }
-                            query.clear_outputs();
-                            spec.state_space -> copy_point(query.start_state, vertices[d] -> point);
-                            spec.state_space -> copy_point(query.goal_state, pt);
 
-                            bool add_flag = true;
-                            
-                            add_flag &= !query.goal_check(query.start_state);
-
-                            controller.fulfill_query(query, spec);
-
-                            if (add_flag && spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
-                            {
-                                spec.state_space -> copy_point(query.start_state, query.solution_traj.back());
-                                spec.state_space -> copy_point(query.goal_state, vertices[a] -> point);
-                                trajectory_t buffer_traj(query.solution_traj);
-                                query.clear_outputs();
-
-                                add_flag &= !query.goal_check(query.start_state);
-
-                                controller.fulfill_query(query, spec);
-
-                                if (add_flag && spec.valid_check(query.solution_traj) && query.solution_traj.size() > 0)
-                                {
-                                    if (!vertex_created)
-                                    {
-                                        auto v = new landmark_node_t();
-                                        v -> point = spec.state_space -> clone_point(pt);
-                                        v -> set_index(vertex_counter);
-                                        vertices.insert(std::make_pair(vertex_counter, v));
-                                        vertex_created = true;
-                                        vertex_counter++;
-                                    }
-                                    // cost = spec.distance_function(vertices[d] -> point, pt);
-                                    cost = d_costs[d];
-                                    if (!check_edge_exists(d, vertex_counter - 1))
-                                    {
-                                        add_edge(d, vertex_counter - 1, cost);
-                                    }
-
-                                    // cost = spec.distance_function(vertices[a] -> point, pt);
-                                    cost = a_costs[a];
-                                    if (!check_edge_exists(vertex_counter - 1, a))
-                                    {
-                                        add_edge(vertex_counter - 1, a, cost);
-                                    }
-                                }
-
-                                // if (connected && add_flag)
-                                // {
-                                //     std::cout << "New path cost: " << get_path_cost(d,a) << std::endl;
-                                // }
-
-                            }
-                        }
-                    }
-                }
-            }
+            
             if (unconsidered.size() % 10 == 0)
             {
                 std::cout << unconsidered.size() << " configurations remaining." << std::endl;

@@ -10,6 +10,7 @@ random_local_goal: false
 planner_name: "roadmap"
 goal_radius: 0.5
 
+# These are related to a classifier-based roadmap. Ignore for now.
 num_trajectories: 100
 sample_around: true
 verify_edge: true
@@ -18,22 +19,28 @@ num_failures: 100
 stretch_factor: 2.0
 termination_classifier: !file "networks/svm_classifier.yaml"
 
-environment: "environments/landmark.yaml"
-start_state: [-8.0, 0.0,0.00,0.0000,0.0000]
-goal_state:  [ 8.0, 0.0,0.00,0.0000,0.0000]
-output_dir: "ablation/"
-roadmap_dir: "ablation/roadmap_sparse/"
-
 # environment: "environments/warehouse.yaml"
 # start_state: [29.0,17.0,3.14,0.0000,0.0000]
 # goal_state:  [ 1.0, 1.0,0.00,0.0000,0.0000]
 # output_dir: "warehouse_car/"
 # roadmap_dir: "warehouse_car/roadmap_dense/"
+# env_xlims: [1.0, 29.0]
+# env_ylims: [1.0, 17.0]
 
 # environment: "environments/indoor.yaml"
 # start_state: [-9.0,-5.0,0.00,0.0,0.0]
 # goal_state:  [ 9.0, 5.0,0.00,0.0,0.0]
 # output_dir: "indoor_car/"
 # roadmap_dir: "indoor_car/roadmap_densev2/"
+# env_xlims: [-9.0, 9.0]
+# env_ylims: [-5.0, 5.]
+
+environment: "environments/rooms.yaml"
+start_state: [-9.0,-9.0,0.0,0.0000,0.0000]
+goal_state:  [ 9.0, 9.0,0.00,0.0000,0.0000]
+output_dir: "rooms_car/"
+roadmap_dir: "rooms_car/roadmap/"
+env_xlims: [-9.0, 9.0]
+env_ylims: [-9.0, 9.0]
 
 debug: false

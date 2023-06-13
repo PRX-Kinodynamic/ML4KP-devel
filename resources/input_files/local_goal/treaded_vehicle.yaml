@@ -1,0 +1,46 @@
+random_seed: 210896
+simulation_step: 0.1
+
+plant: !file "plants/treaded_vehicle.yaml"
+
+use_learned_controller: true
+learned_controller: !file "networks/treaded_vehicle_controller.yaml"
+
+random_local_goal: true
+planner_name: "rlg"
+goal_radius: 0.5
+
+# These are related to a classifier-based roadmap. Ignore for now.
+num_trajectories: 100
+sample_around: true
+verify_edge: true
+validate: true
+num_failures: 100
+stretch_factor: 2.0
+termination_classifier: !file "networks/svm_classifier.yaml"
+
+# environment: "environments/indoor.yaml"
+# start_state: [-9,-5,0.00,0.0000,0.0000]
+# goal_state:  [ 9, 5,0.00,0.0000,0.0000]
+# output_dir: "indoor_treaded/"
+# roadmap_dir: "indoor_treaded/roadmap/"
+# env_xlims: [1.0, 29.0]
+# env_ylims: [1.0, 17.0]
+# env_xlims: [-9.0, 9.0]
+# env_ylims: [-5.0, 5.]
+
+# environment: "environments/warehouse.yaml"
+# start_state: [ 1.0,17.0,0.0,0.0000,0.0000]
+# goal_state:  [29.0, 1.0,0.00,0.0000,0.0000]
+# output_dir: "warehouse_treaded/"
+# roadmap_dir: "warehouse_treaded/roadmap/"
+
+environment: "environments/rooms.yaml"
+start_state: [-9.5,-9.5,0.0,0.0000,0.0000]
+goal_state:  [ 9.5, 9.5,0.00,0.0000,0.0000]
+output_dir: "rooms_treaded/"
+roadmap_dir: "rooms_treaded/roadmap/"
+env_xlims: [-9.0, 9.0]
+env_ylims: [-9.0, 9.0]
+
+debug: false
