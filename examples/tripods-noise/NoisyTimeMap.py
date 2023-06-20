@@ -756,12 +756,15 @@ class NoisyTimeMap:
             # print("B",self.B)
             # self.controller_base.compute_K()
             # K = self.controller_base.get_K()
-            # K = prx.matrix.Identity(1, 4)
-            # K[0,0] = -80.5271  
-            # K[0,1] = -21.9918    
-            # K[0,2] = -60.3118  
-            # K[0,3] = -23.9024
-            # self.controller_base.set_K(K)
+            # >>>>>>>> For "Regular Acrobot", comment from HERE <<<<<<<<<<<
+            print("Using custom gain")
+            K = prx.matrix.Identity(1, 4)
+            K[0,0] = -80.5271  
+            K[0,1] = -21.9918    
+            K[0,2] = -60.3118  
+            K[0,3] = -23.9024
+            self.controller_base.set_K(K)
+            # >>>>>>>>>> TO HERE <<<<<<<<<
             # print("K:", self.controller_base.get_K())
             self.get_noisy_controller()
 
