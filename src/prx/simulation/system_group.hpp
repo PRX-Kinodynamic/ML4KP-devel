@@ -10,46 +10,55 @@
 #include "prx/simulation/collision_checking/collision_checker.hpp"
 namespace prx
 {
-	class simulator_t;
-	class system_group_manager_t;
+class simulator_t;
+class system_group_manager_t;
 
-	class system_group_t
-	{
-	public:
-		// system_group_t(const std::vector<system_ptr_t>& sys_group);
-		system_group_t(const std::vector<system_ptr_t>& sys_group, plant_type p_type = plant_type::ANALYTICAL);
-		~system_group_t();
+class system_group_t
+{
+public:
+  // system_group_t(const std::vector<system_ptr_t>& sys_group);
+  system_group_t(const std::vector<system_ptr_t>& sys_group, plant_type p_type = plant_type::ANALYTICAL);
+  ~system_group_t();
 
-		void propagate(space_point_t start_state, const plan_t& plan, space_point_t result);
-		
-		void propagate(space_point_t start_state, const plan_t& plan, trajectory_t& traj);
-		
-		void propagate(int steps, space_point_t control = nullptr, trajectory_t* traj = nullptr);
+  void propagate(space_point_t start_state, const plan_t& plan, space_point_t result);
 
-		void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, space_point_t result);
+  void propagate(space_point_t start_state, const plan_t& plan, trajectory_t& traj);
 
-		void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, trajectory_t& result);
+  void propagate(int steps, space_point_t control = nullptr, trajectory_t* traj = nullptr);
 
-		void compute_stopping_maneuver(space_point_t start_state, std::vector<double>&, std::vector<double>&);
-		inline space_t* get_state_space()
-		{
-			return state_space;
-		}
+  void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, space_point_t result);
 
-		inline space_t* get_control_space()
-		{
-			return control_space;
-		}
+  void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, trajectory_t& result);
 
-		void propagate_once(propagate_step step, space_point_t control = nullptr);
+  void compute_stopping_maneuver(space_point_t start_state, std::vector<double>&, std::vector<double>&);
+  inline space_t* get_state_space()
+  {
+    return state_space;
+  }
 
-	protected:
+  inline space_t* get_control_space()
+  {
+    return control_space;
+  }
 
-		std::vector<system_ptr_t> group;
-		space_t* state_space;
-		space_t* control_space;
-		simulator_t* sim;
+  void propagate_once(propagate_step step, space_point_t control = nullptr);
 
-		friend system_group_manager_t;
-	};
-}
+  std::vector<system_ptr_t>::iterator begin()
+  {
+    return group.begin();
+  }
+
+  std::vector<system_ptr_t>::iterator end()
+  {
+    return group.end();
+  }
+
+protected:
+  std::vector<system_ptr_t> group;
+  space_t* state_space;
+  space_t* control_space;
+  simulator_t* sim;
+
+  friend system_group_manager_t;
+};
+}  // namespace prx
