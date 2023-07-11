@@ -165,9 +165,11 @@ public:
 #define prx_warn(MESSAGE)                                                                                              \
   std::cerr << PRX_COLOR_YELLOW << "[PRX WARN] " << __PRETTY_FUNCTION__ << ":" << __LINE__ << " " << MESSAGE           \
             << PRX_COLOR_NORMAL << std::endl;
+
 #define prx_warn_cond(EXPRESSION, MESSAGE)                                                                             \
   if (!(EXPRESSION))                                                                                                   \
   {                                                                                                                    \
     prx_warn(#EXPRESSION << " " << MESSAGE)                                                                            \
   }
+
 }  // namespace prx

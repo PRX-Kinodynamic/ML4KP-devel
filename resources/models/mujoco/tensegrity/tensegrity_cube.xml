@@ -2,471 +2,193 @@
     <compiler angle="degree" coordinate="local" inertiafromgeom="true">
         <lengthrange timestep="0.001"/>
     </compiler>
-    
-    <option timestep="0.001"
-            gravity="0 0 -9.81"
-            solver="Newton"
-            integrator="Euler"
-            iterations="100">
-        <flag sensornoise="disable"
-              warmstart="disable"
-              frictionloss="enable"/>
+    <option gravity="0 0 -9.81" integrator="Euler" iterations="100" solver="Newton" timestep="0.001">
+        <flag frictionloss="enable" sensornoise="disable" warmstart="disable"/>
     </option>
-
     <visual>
-        <global offwidth="1024" offheight="768"/>
+        <global offheight="768" offwidth="1024"/>
     </visual>
-
-    <default class='tensegrity'>
-        <geom condim="6" material="geom" rgba="1 .84 0 1" size="0.5"
-              density="1000" friction=".10 1.0 1.0" solref="-10000 -20" solimp="0.9 0.95 0.001 0.5 2"/>
-        <site type="sphere" size="0.005"/>
-        <tendon width="0.05" rgba="1 0 0 1" frictionloss='0' damping="5000" stiffness="50000"/>
-        <!-- <joint type="ball" limited="false" range="0 10" damping="100000" armature="1" /> -->
-        <joint type="ball" limited="true" damping="100000" stiffness="10000" armature="1" />
+    <default class="tensegrity">
+        <geom condim="6" density="1000" friction="1 0.10 0.5" material="geom" rgba="1 .84 0 1" size="0.5" solimp="0.9 0.95 0.001 0.5 2" solref="-10000 -20"/>
+        <site size="0.005" type="sphere"/>
+        <tendon damping="1" frictionloss="0" rgba="1 0 0 1" stiffness="1" width="0.05"/>
+        <!-- <joint type="ball" limited="false" range="0 10" damping="100000" armature="1" />-->
+        <joint armature="1" damping="100000" limited="true" stiffness="10000" type="ball"/>
         <default class="cable_length">
-            <general gaintype="affine" biastype="affine" ctrllimited="true" ctrlrange="-50 50"/>
+            <general biastype="affine" ctrllimited="true" ctrlrange="-50 50" gaintype="affine"/>
         </default>
         <default class="rod_joint">
-            <joint type="ball"  limited="true" range="0 45" pos="0 0 0"/>
+            <joint limited="true" pos="0 0 0" range="0 45" type="ball"/>
         </default>
     </default>
-
     <asset>
-        <texture name='a' builtin="gradient" height="100" rgb1="1 1 1" rgb2="0 0 0" type="skybox"
-                 width="100"/>
-        <texture builtin="flat" height="1278" mark="cross" markrgb="1 1 1" name="texgeom"
-                 random="0.01" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" type="cube" width="127"/>
-        <texture builtin="checker" height="100" name="texplane" rgb1="0 0 0" rgb2="0.8 0.8 0.8"
-                 type="2d" width="100"/>
-        <material name="MatPlane" reflectance="0.5" shininess="1" specular="1" texrepeat="30 30"
-                  texture="texplane"/>
+        <texture builtin="gradient" height="100" name="a" rgb1="1 1 1" rgb2="0 0 0" type="skybox" width="100"/>
+        <texture builtin="flat" height="1278" mark="cross" markrgb="1 1 1" name="texgeom" random="0.01" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" type="cube" width="127"/>
+        <texture builtin="checker" height="100" name="texplane" rgb1="0 0 0" rgb2="0.8 0.8 0.8" type="2d" width="100"/>
+        <material name="MatPlane" reflectance="0.5" shininess="1" specular="1" texrepeat="30 30" texture="texplane"/>
         <material name="geom" texture="texgeom" texuniform="true"/>
     </asset>
-
     <worldbody>
-
-        <light name='mylight' cutoff="100" diffuse="1 1 1" dir="-0 0 -1.3" directional="true" exponent="1"
-               pos="0 0 1.3" specular=".1 .1 .1"/>
-        <geom conaffinity="1" material="MatPlane" name="floor" pos="0 0 -26.5"
-              rgba="0.8 0.9 0.8 1" size="400 400 0.1" type="plane"/>
-
-        <camera name="camera" pos="0 -80 50" axisangle="1 0 0 90"/>
-
+        <light cutoff="100" diffuse="1 1 1" dir="-0 0 -1.3" directional="true" exponent="1" name="mylight" pos="0 0 1.3" specular=".1 .1 .1"/>
+        <geom conaffinity="1" material="MatPlane" name="floor" pos="0 0 -26.5" rgba="0.8 0.9 0.8 1" size="400 400 0.1" type="plane"/>
+        <camera axisangle="1 0 0 90" name="camera" pos="0 -80 50"/>
         <!-- ======= RODS ======= -->
         <body name="center">
             <freejoint name="freejoint_1"/>
-            <geom name="center"
-                  size="1.44 4.5041"
-                  type="cylinder"
-                  mass="160"/>
-            <site 
-                name="site_c01" 
-                type="sphere"
-                pos="2.1213203436 0 2.1213203436" 
-                rgba="1 0 0 1" 
-                size=".5 .5"/>
-            <site 
-                name="site_c02" 
-                type="sphere"
-                pos="2.1213203436 0 -2.1213203436" 
-                rgba="1 0 0 1" 
-                size="0.5 0.5"/>
-            <site 
-                name="site_c03" 
-                type="sphere"
-                pos="-2.1213203436 0 -2.1213203436" 
-                rgba="1 0 0 1" 
-                size="0.5 0.5"/>
-            <site 
-                name="site_c04" 
-                type="sphere"
-                pos="-2.1213203436 0 2.1213203436" 
-                rgba="1 0 0 1" 
-                size="0.5 0.5"/>
-            <site 
-                name="site_c11" 
-                type="sphere"
-                pos="0 2.1213203436 2.1213203436" 
-                rgba="1 0 0 1" 
-                size="0.5 0.5"/>
-            <site 
-                name="site_c12" 
-                type="sphere"
-                pos="0 2.1213203436 -2.1213203436" 
-                rgba="1 0 0 1" 
-                size="0.5 0.5"/>
-            <site 
-                name="site_c13" 
-                type="sphere"
-                pos="0 -2.1213203436 -2.1213203436" 
-                rgba="1 0 0 1" 
-                size="0.5 0.5"/>
-            <site 
-                name="site_c14" 
-                type="sphere"
-                pos="0 -2.1213203436 2.1213203436" 
-                rgba="1 0 0 1" 
-                size="0.5 0.5"/>
-            <body name="r01" >
-                <geom name="r01_geom"
-                      fromto="3.465 0 3.465 23.13 0 19.28"
-                      type="cylinder"
-                      mass="5"/>
-                <joint name="joint_01" class="rod_joint"/>
-                <body name="r01_cap" 
-                    pos="28.07974746831 0 22.78"
-                    euler="0 0 45">
-                    <geom name="r01_cap_geom"
-                      size="3.5 3.5 3.5"
-                      type="box"
-                      mass="130"/>
-                    <site 
-                        name="site_01_x" 
-                        type="box"
-                        pos="-3.5 0 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_01_y" 
-                        type="box"
-                        pos="0 3.5 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_01_z" 
-                        type="box"
-                        pos="0 0 -3.5" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                </body>
-                <site 
-                    name="site_01" 
-                    type="box"
-                    pos="28.07974746831 0 22.78"
-                    rgba="1 0 0 1" 
-                    size="1 1 1"/>
-                <site 
-                    name="site_01c" 
-                    type="sphere"
-                    pos="3.465 0 3.465" 
-                    rgba="1 0 0 1" 
-                    size="0.5 0.5"/>
+            <geom mass="160" name="center_cylinder" size="1.44 4.5" type="cylinder"/>
+            <geom mass="160" name="center_1" size="2.6 1 2.6" euler="0 45 0" type="box"/>
+            <geom mass="160" name="center_2" size="1 2.6 2.6" euler="45 0 0" type="box"/>
+            <body name="connector01B0" pos="2.6 0 2.7" euler="0 -40 0">
+                <composite count="6 3 3" prefix="connector01" spacing="0.425" type="box">
+                    <joint damping="0.005" stiffness="0.005" kind="main"/>
+                    <joint damping="0.005" stiffness="0.005" kind="twist"/>
+                    <joint damping="0.005" stiffness="0.005" kind="stretch"/>
+                    <geom rgba=".8 .2 .1 1" size=".15" type="sphere"/>
+                </composite>
             </body>
-            <body name="r02" >
-                <geom name="r02_geom"
-                      fromto="3.465 0 -3.465 23.13 0 -19.28"
-                      type="cylinder"
-                      mass="5"/>
-                <joint name="joint_02" class="rod_joint"/>
-                <body name="r02_cap" 
-                    pos="28.07974746831 0 -22.78"
-                    euler="0 0 45">
-                    <geom name="r02_cap_geom"
-                      size="3.5 3.5 3.5"
-                      type="box"
-                      mass="130"/>
-                    <site 
-                        name="site_02_x" 
-                        type="box"
-                        pos="-3.5 0 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_02_y" 
-                        type="box"
-                        pos="0 3.5 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_02_z" 
-                        type="box"
-                        pos="0 0 3.5" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                </body>
-                <site 
-                    name="site_02" 
-                    type="box"
-                    pos="28.07974746831 0 -22.78"
-                    rgba="1 0 0 1" 
-                    size="1 1 1"/>
-                <site 
-                    name="site_02c" 
-                    type="sphere"
-                    pos="3.465 0 -3.465" 
-                    rgba="1 0 0 1" 
-                    size="0.5 0.5"/>
+            <body name="connector02B0" pos="2.6 0 -2.7" euler="0 40 0">
+                <composite count="6 3 3" prefix="connector02" spacing="0.425" type="box">
+                    <joint damping="0.005" stiffness="0.005" kind="main"/>
+                    <joint damping="0.005" stiffness="0.005" kind="twist"/>
+                    <joint damping="0.005" stiffness="0.005" kind="stretch"/>
+                    <geom rgba=".8 .2 .1 1" size=".15" type="sphere"/>
+                </composite>
             </body>
-            <body name="r03" >
-                <geom name="r03_geom"
-                      fromto="-3.465 0 -3.465 -23.13 0 -19.28"
-                      type="cylinder"
-                      mass="5"/>
-                <joint name="joint_03" class="rod_joint"/>
-                <body name="r03_cap" 
-                    pos="-28.07974746831 0 -22.78"
-                    euler="0 0 45">
-                    <geom name="r03_cap_geom"
-                      size="3.5 3.5 3.5"
-                      type="box"
-                      mass="130"/>
-                    <site 
-                        name="site_03_x" 
-                        type="box"
-                        pos="3.5 0 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_03_y" 
-                        type="box"
-                        pos="0 -3.5 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_03_z" 
-                        type="box"
-                        pos="0 0 3.5" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                </body>
-                <site 
-                    name="site_03" 
-                    type="box"
-                    pos="-28.07974746831 0 -22.78"
-                    rgba="1 0 0 1" 
-                    size="1 1 1"/>
-                <site 
-                    name="site_03c" 
-                    type="sphere"
-                    pos="-3.465 0 -3.465" 
-                    rgba="1 0 0 1" 
-                    size="0.5 0.5"/>
+            <body name="connector03B0" pos="-2.6 0 -2.7" euler="0 140 0">
+                <composite count="6 3 3" prefix="connector03" spacing="0.425" type="box">
+                    <joint damping="0.005" stiffness="0.005" kind="main"/>
+                    <joint damping="0.005" stiffness="0.005" kind="twist"/>
+                    <joint damping="0.005" stiffness="0.005" kind="stretch"/>
+                    <geom rgba=".8 .2 .1 1" size=".15" type="sphere"/>
+                </composite>
             </body>
-            <body name="r04" >
-                <geom name="r04_geom"
-                      fromto="-3.465 0 3.465 -23.13 0 19.28"
-                      type="cylinder"
-                      mass="5"/>
-                <joint name="joint_04" class="rod_joint"/>
-                <body name="r04_cap" 
-                    pos="-28.07974746831 0 22.78"
-                    euler="0 0 45">
-                    <geom name="r04_cap_geom"
-                      size="3.5 3.5 3.5"
-                      type="box"
-                      mass="130"/>
-                    <site 
-                        name="site_04_x" 
-                        type="box"
-                        pos="3.5 0 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_04_y" 
-                        type="box"
-                        pos="0 -3.5 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_04_z" 
-                        type="box"
-                        pos="0 0 -3.5" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                </body>
-                <site 
-                    name="site_04" 
-                    type="box"
-                    pos="-28.07974746831 0 22.78"
-                    rgba="1 0 0 1" 
-                    size="1 1 1"/>
-                <site 
-                    name="site_04c" 
-                    type="sphere"
-                    pos="-3.465 0 3.465" 
-                    rgba="1 0 0 1" 
-                    size="0.5 0.5"/>
+            <body name="connector04B0" pos="-2.6 0 2.7" euler="0 220 0">
+                <composite count="6 3 3" prefix="connector04" spacing="0.425" type="box">
+                    <joint damping="0.005" stiffness="0.005" kind="main"/>
+                    <joint damping="0.005" stiffness="0.005" kind="twist"/>
+                    <joint damping="0.005" stiffness="0.005" kind="stretch"/>
+                    <geom rgba=".8 .2 .1 1" size=".15" type="sphere"/>
+                </composite>
             </body>
-            <body name="r11" >
-                <geom name="r11_geom"
-                      fromto="0 3.465 3.465 0 23.13 19.28"
-                      type="cylinder"
-                      mass="5"/>
-                <joint name="joint_11" class="rod_joint"/>
-                <body name="r11_cap" 
-                    pos="0 28.07974746831 22.78"
-                    euler="0 0 45">
-                    <geom name="r11_cap_geom"
-                      size="3.5 3.5 3.5"
-                      type="box"
-                      mass="130"/>
-                    <site 
-                        name="site_11_x" 
-                        type="box"
-                        pos="-3.5 0 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_11_y" 
-                        type="box"
-                        pos="0 -3.5 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_11_z" 
-                        type="box"
-                        pos="0 0 -3.5" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                </body>
-                <site 
-                    name="site_11" 
-                    type="box"
-                    pos="0 28.07974746831 22.78"
-                    rgba="1 0 0 1" 
-                    size="1 1 1"/>
-                <site 
-                    name="site_11c" 
-                    type="sphere"
-                    pos="0 3.465 3.465" 
-                    rgba="1 0 0 1" 
-                    size="0.5 0.5"/>
+            <body name="connector11B0" pos="0 2.6 2.7" euler="40 0 90">
+                <composite count="6 3 3" prefix="connector11" spacing="0.425" type="box">
+                    <joint damping="0.005" stiffness="0.005" kind="main"/>
+                    <joint damping="0.005" stiffness="0.005" kind="twist"/>
+                    <joint damping="0.005" stiffness="0.005" kind="stretch"/>
+                    <geom rgba=".8 .2 .1 1" size=".15" type="sphere"/>
+                </composite>
             </body>
-            <body name="r12" >
-                <geom name="r12_geom"
-                      fromto="0 3.465 -3.465 0 23.13 -19.28"
-                      type="cylinder"
-                      mass="5"/>
-                <joint name="joint_12" class="rod_joint"/>
-                <body name="r12_cap" 
-                    pos="0 28.07974746831 -22.78"
-                    euler="0 0 45">
-                    <geom name="r12_cap_geom"
-                      size="3.5 3.5 3.5"
-                      type="box"
-                      mass="130"/>
-                    <site 
-                        name="site_12_x" 
-                        type="box"
-                        pos="-3.5 0 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_12_y" 
-                        type="box"
-                        pos="0 -3.5 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_12_z" 
-                        type="box"
-                        pos="0 0 3.5" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                </body>
-                <site 
-                    name="site_12" 
-                    type="box"
-                    pos="0 28.07974746831 -22.78"
-                    rgba="1 0 0 1" 
-                    size="1 1 1"/>
-                <site 
-                    name="site_12c" 
-                    type="sphere"
-                    pos="0 3.465 -3.465" 
-                    rgba="1 0 0 1" 
-                    size="0.5 0.5"/>
+            <body name="connector12B0" pos="0 2.6 -2.7" euler="-40 0 90">
+                <composite count="6 3 3" prefix="connector12" spacing="0.425" type="box">
+                    <joint damping="0.005" stiffness="0.005" kind="main"/>
+                    <joint damping="0.005" stiffness="0.005" kind="twist"/>
+                    <joint damping="0.005" stiffness="0.005" kind="stretch"/>
+                    <geom rgba=".8 .2 .1 1" size=".15" type="sphere"/>
+                </composite>
             </body>
-            <body name="r13" >
-                <geom name="r13_geom"
-                      fromto="0 -3.465 -3.465 0 -23.13 -19.28"
-                      type="cylinder"
-                      mass="5"/>
-                <joint name="joint_13" class="rod_joint"/>
-                <body name="r13_cap" 
-                    pos="0 -28.07974746831 -22.78"
-                    euler="0 0 45">
-                    <geom name="r13_cap_geom"
-                      size="3.5 3.5 3.5"
-                      type="box"
-                      mass="130"/>
-                    <site 
-                        name="site_13_x" 
-                        type="box"
-                        pos="3.5 0 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_13_y" 
-                        type="box"
-                        pos="0 3.5 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_13_z" 
-                        type="box"
-                        pos="0 0 3.5" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                </body>
-                <site 
-                    name="site_13" 
-                    type="box"
-                    pos="0 -28.07974746831 -22.78"
-                    rgba="1 0 0 1" 
-                    size="1 1 1"/>
-                <site 
-                    name="site_13c" 
-                    type="sphere"
-                    pos="0 -3.465 -3.465" 
-                    rgba="1 0 0 1" 
-                    size="0.5 0.5"/>
+            <body name="connector13B0" pos="0 -2.6 -2.7" euler="40 0 -90">
+                <composite count="6 3 3" prefix="connector13" spacing="0.425" type="box">
+                    <joint damping="0.005" stiffness="0.005" kind="main"/>
+                    <joint damping="0.005" stiffness="0.005" kind="twist"/>
+                    <joint damping="0.005" stiffness="0.005" kind="stretch"/>
+                    <geom rgba=".8 .2 .1 1" size=".15" type="sphere"/>
+                </composite>
             </body>
-            <body name="r14" >
-                <geom name="r14_geom"
-                      fromto="0 -3.465 3.465 0 -23.13 19.28"
-                      type="cylinder"
-                      mass="5"/>
-                <joint name="joint_14" class="rod_joint"/>
-                <body name="r14_cap" 
-                    pos="0 -28.07974746831 22.78"
-                    euler="0 0 45">
-                    <geom name="r14_cap_geom"
-                      size="3.5 3.5 3.5"
-                      type="box"
-                      mass="130"/>
-                    <site 
-                        name="site_14_x" 
-                        type="box"
-                        pos="3.5 0 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_14_y" 
-                        type="box"
-                        pos="0 3.5 0" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
-                    <site 
-                        name="site_14_z" 
-                        type="box"
-                        pos="0 0 -3.5" 
-                        rgba="1 0 0 1" 
-                        size="1 1 1"/>
+            <body name="connector14B0" pos="0 -2.6 2.7" euler="-40 0 -90">
+                <composite count="6 3 3" prefix="connector14" spacing="0.425" type="box">
+                    <joint damping="0.005" stiffness="0.005" kind="main"/>
+                    <joint damping="0.005" stiffness="0.005" kind="twist"/>
+                    <joint damping="0.005" stiffness="0.005" kind="stretch"/>
+                    <geom rgba=".8 .2 .1 1" size=".15" type="sphere"/>
+                </composite>
+            </body>
+            <body name="r01" pos="3.465 0 3.465">
+                <geom fromto="0 0 0 19.6735 0 15.815" mass="5" name="r01_geom" type="cylinder"/>
+                <joint class="rod_joint" name="joint_01"/>
+                <body euler="0 0 45" name="r01_cap" pos="24.6147474683 0 19.315">
+                    <geom mass="130" name="r01_cap_geom" size="3.5 3.5 3.5" type="box"/>
+                    <site name="site_01_x" pos="-3.5 0 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_01_y" pos="0 3.5 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_01_z" pos="0 0 -3.5" rgba="1 0 0 1" size="1 1 1" type="box"/>
                 </body>
-                <site 
-                    name="site_14" 
-                    type="box"
-                    pos="0 -28.07974746831 22.78"
-                    rgba="1 0 0 1" 
-                    size="1 1 1"/>
-                <site 
-                    name="site_14c" 
-                    type="sphere"
-                    pos="0 -3.465 3.465" 
-                    rgba="1 0 0 1" 
-                    size="0.5 0.5"/>
+                <site name="site_01" pos="24.6147474683 0 19.315" rgba="1 0 0 1" size="1 1 1" type="box"/>
+            </body>
+            <body name="r02" pos="3.465 0 -3.465">
+                <geom fromto="0 0 0 19.6735 0 -15.815" mass="5" name="r02_geom" type="cylinder"/>
+                <joint class="rod_joint" name="joint_02"/>
+                <body euler="0 0 45" name="r02_cap" pos="24.6147474683 0 -19.315">
+                    <geom mass="130" name="r02_cap_geom" size="3.5 3.5 3.5" type="box"/>
+                    <site name="site_02_x" pos="-3.5 0 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_02_y" pos="0 3.5 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_02_z" pos="0 0 3.5" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                </body>
+                <site name="site_02" pos="24.6147474683 0 -19.315" rgba="1 0 0 1" size="1 1 1" type="box"/>
+            </body>
+            <body name="r03" pos="-3.465 0 -3.465">
+                <geom fromto="0 0 0 -19.6735 0 -15.815" mass="5" name="r03_geom" type="cylinder"/>
+                <joint class="rod_joint" name="joint_03"/>
+                <body euler="0 0 45" name="r03_cap" pos="-24.6147474683 0 -19.315">
+                    <geom mass="130" name="r03_cap_geom" size="3.5 3.5 3.5" type="box"/>
+                    <site name="site_03_x" pos="3.5 0 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_03_y" pos="0 -3.5 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_03_z" pos="0 0 3.5" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                </body>
+                <site name="site_03" pos="-24.6147474683 0 -19.315" rgba="1 0 0 1" size="1 1 1" type="box"/>
+            </body>
+            <body name="r04" pos="-3.465 0 3.465">
+                <geom fromto="0 0 0 -19.6735 0 15.815" mass="5" name="r04_geom" type="cylinder"/>
+                <joint class="rod_joint" name="joint_04"/>
+                <body euler="0 0 45" name="r04_cap" pos="-24.6147474683 0 19.315">
+                    <geom mass="130" name="r04_cap_geom" size="3.5 3.5 3.5" type="box"/>
+                    <site name="site_04_x" pos="3.5 0 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_04_y" pos="0 -3.5 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_04_z" pos="0 0 -3.5" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                </body>
+                <site name="site_04" pos="-24.6147474683 0 19.315" rgba="1 0 0 1" size="1 1 1" type="box"/>
+            </body>
+            <body name="r11" pos="0 3.465 3.465">
+                <geom fromto="0 0 0 0 19.6735 15.815" mass="5" name="r11_geom" type="cylinder"/>
+                <joint class="rod_joint" name="joint_11"/>
+                <body euler="0 0 45" name="r11_cap" pos="0 24.6147474683 19.315">
+                    <geom mass="130" name="r11_cap_geom" size="3.5 3.5 3.5" type="box"/>
+                    <site name="site_11_x" pos="-3.5 0 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_11_y" pos="0 -3.5 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_11_z" pos="0 0 -3.5" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                </body>
+                <site name="site_11" pos="0 24.6147474683 19.315" rgba="1 0 0 1" size="1 1 1" type="box"/>
+            </body>
+            <body name="r12" pos="0 3.465 -3.465">
+                <geom fromto="0 0 0 0 19.6735 -15.815" mass="5" name="r12_geom" type="cylinder"/>
+                <joint class="rod_joint" name="joint_12"/>
+                <body euler="0 0 45" name="r12_cap" pos="0 24.6147474683 -19.315">
+                    <geom mass="130" name="r12_cap_geom" size="3.5 3.5 3.5" type="box"/>
+                    <site name="site_12_x" pos="-3.5 0 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_12_y" pos="0 -3.5 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_12_z" pos="0 0 3.5" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                </body>
+                <site name="site_12" pos="0 24.6147474683 -19.315" rgba="1 0 0 1" size="1 1 1" type="box"/>
+            </body>
+            <body name="r13" pos="0 -3.465 -3.465">
+                <geom fromto="0 0 0 0 -19.6735 -15.815" mass="5" name="r13_geom" type="cylinder"/>
+                <joint class="rod_joint" name="joint_13"/>
+                <body euler="0 0 45" name="r13_cap" pos="0 -24.6147474683 -19.315">
+                    <geom mass="130" name="r13_cap_geom" size="3.5 3.5 3.5" type="box"/>
+                    <site name="site_13_x" pos="3.5 0 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_13_y" pos="0 3.5 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_13_z" pos="0 0 3.5" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                </body>
+                <site name="site_13" pos="0 -24.6147474683 -19.315" rgba="1 0 0 1" size="1 1 1" type="box"/>
+            </body>
+            <body name="r14" pos="0 -3.465 3.465">
+                <geom fromto="0 0 0 0 -19.6735 15.815" mass="5" name="r14_geom" type="cylinder"/>
+                <joint class="rod_joint" name="joint_14"/>
+                <body euler="0 0 45" name="r14_cap" pos="0 -24.6147474683 19.315">
+                    <geom mass="130" name="r14_cap_geom" size="3.5 3.5 3.5" type="box"/>
+                    <site name="site_14_x" pos="3.5 0 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_14_y" pos="0 3.5 0" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                    <site name="site_14_z" pos="0 0 -3.5" rgba="1 0 0 1" size="1 1 1" type="box"/>
+                </body>
+                <site name="site_14" pos="0 -24.6147474683 19.315" rgba="1 0 0 1" size="1 1 1" type="box"/>
             </body>
         </body>
     </worldbody>
@@ -523,85 +245,137 @@
             <site site="site_03_x"/>
             <site site="site_12_x"/>
         </spatial>
-
-        <spatial name="tendon_c01" width="0.2">
-            <site site="site_01c"/>
-            <site site="site_c01"/>
-        </spatial>
-        <spatial name="tendon_c02" width="0.2">
-            <site site="site_02c"/>
-            <site site="site_c02"/>
-        </spatial>
-        <spatial name="tendon_c03" width="0.2">
-            <site site="site_03c"/>
-            <site site="site_c03"/>
-        </spatial>
-        <spatial name="tendon_c04" width="0.2">
-            <site site="site_04c"/>
-            <site site="site_c04"/>
-        </spatial>
-
-        <spatial name="tendon_c11" width="0.2">
-            <site site="site_11c"/>
-            <site site="site_c11"/>
-        </spatial>
-        <spatial name="tendon_c12" width="0.2">
-            <site site="site_12c"/>
-            <site site="site_c12"/>
-        </spatial>
-        <spatial name="tendon_c13" width="0.2">
-            <site site="site_13c"/>
-            <site site="site_c13"/>
-        </spatial>
-        <spatial name="tendon_c14" width="0.2">
-            <site site="site_14c"/>
-            <site site="site_c14"/>
-        </spatial>
     </tendon>
     <actuator>
         <!-- Tendons on XZ plane -->
-        <general name="u_01_02" tendon="tendon_01_02" gainprm="200 0 0" gear="200 0 0 0 0 0" biasprm="200 -1 0" class="cable_length"/>
-        <general name="u_03_04" tendon="tendon_03_04" gainprm="200 0 0" gear="200 0 0 0 0 0" biasprm="200 -1 0" class="cable_length" />
+        <general biasprm="500 -1 0" class="cable_length" gainprm="400 0 0" gear="500 0 0 0 0 0" name="u_01_02" tendon="tendon_01_02"/>
+        <general biasprm="500 -1 0" class="cable_length" gainprm="400 0 0" gear="500 0 0 0 0 0" name="u_03_04" tendon="tendon_03_04"/>
         <!-- Tendons on YZ plane -->
-        <general name="u_11_12" tendon="tendon_11_12" gainprm="200 0 0" gear="200 0 0 0 0 0" biasprm="200 -1 0" class="cable_length" />
-        <general name="u_13_14" tendon="tendon_13_14" gainprm="200 0 0" gear="200 0 0 0 0 0" biasprm="200 -1 0" class="cable_length" />
+        <general biasprm="500 -1 0" class="cable_length" gainprm="400 0 0" gear="500 0 0 0 0 0" name="u_11_12" tendon="tendon_11_12"/>
+        <general biasprm="500 -1 0" class="cable_length" gainprm="400 0 0" gear="500 0 0 0 0 0" name="u_13_14" tendon="tendon_13_14"/>
         <!-- Tendons on Z+ plane -->
-        <general name="u_01_11" tendon="tendon_01_11" gainprm="200 0 0" gear="200 0 0 0 0 0" biasprm="200 -1 0" class="cable_length" />
-        <general name="u_01_14" tendon="tendon_01_14" gainprm="200 0 0" gear="200 0 0 0 0 0" biasprm="200 -1 0" class="cable_length" />
-        <general name="u_04_11" tendon="tendon_04_11" gainprm="200 0 0" gear="200 0 0 0 0 0" biasprm="200 -1 0" class="cable_length" />
-        <general name="u_04_14" tendon="tendon_04_14" gainprm="200 0 0" gear="200 0 0 0 0 0" biasprm="200 -1 0" class="cable_length" />
+        <general biasprm="500 -1 0" class="cable_length" gainprm="400 0 0" gear="500 0 0 0 0 0" name="u_01_11" tendon="tendon_01_11"/>
+        <general biasprm="500 -1 0" class="cable_length" gainprm="400 0 0" gear="500 0 0 0 0 0" name="u_01_14" tendon="tendon_01_14"/>
+        <general biasprm="500 -1 0" class="cable_length" gainprm="400 0 0" gear="500 0 0 0 0 0" name="u_04_11" tendon="tendon_04_11"/>
+        <general biasprm="500 -1 0" class="cable_length" gainprm="400 0 0" gear="500 0 0 0 0 0" name="u_04_14" tendon="tendon_04_14"/>
         <!-- Tendons on Z- plane -->
-        <general name="u_02_12" tendon="tendon_02_12" gainprm="200 0 0" gear="200 0 0 0 0 0" biasprm="200 -1 0" class="cable_length" />
-        <general name="u_02_13" tendon="tendon_02_13" gainprm="200 0 0" gear="200 0 0 0 0 0" biasprm="200 -1 0" class="cable_length" />
-        <general name="u_03_12" tendon="tendon_03_12" gainprm="200 0 0" gear="200 0 0 0 0 0" biasprm="200 -1 0" class="cable_length" />
-        <general name="u_03_13" tendon="tendon_03_13" gainprm="200 0 0" gear="200 0 0 0 0 0" biasprm="200 -1 0" class="cable_length" />
-
+        <general biasprm="500 -1 0" class="cable_length" gainprm="400 0 0" gear="500 0 0 0 0 0" name="u_02_12" tendon="tendon_02_12"/>
+        <general biasprm="500 -1 0" class="cable_length" gainprm="400 0 0" gear="500 0 0 0 0 0" name="u_02_13" tendon="tendon_02_13"/>
+        <general biasprm="500 -1 0" class="cable_length" gainprm="400 0 0" gear="500 0 0 0 0 0" name="u_03_12" tendon="tendon_03_12"/>
+        <general biasprm="500 -1 0" class="cable_length" gainprm="400 0 0" gear="500 0 0 0 0 0" name="u_03_13" tendon="tendon_03_13"/>
     </actuator>
     <sensor>
         <!-- Tendons on XZ plane -->
-        <tendonpos name="sensor_01_02" tendon="tendon_01_02" />
-        <tendonpos name="sensor_03_04" tendon="tendon_03_04" />
+        <tendonpos name="sensor_01_02" tendon="tendon_01_02"/>
+        <tendonpos name="sensor_03_04" tendon="tendon_03_04"/>
         <!-- Tendons on YZ plane -->
-        <tendonpos name="sensor_11_12" tendon="tendon_11_12" />
-        <tendonpos name="sensor_13_14" tendon="tendon_13_14" />
+        <tendonpos name="sensor_11_12" tendon="tendon_11_12"/>
+        <tendonpos name="sensor_13_14" tendon="tendon_13_14"/>
         <!-- Tendons on Z+ plane -->
-        <tendonpos name="sensor_01_11" tendon="tendon_01_11" />
-        <tendonpos name="sensor_01_14" tendon="tendon_01_14" />
-        <tendonpos name="sensor_04_11" tendon="tendon_04_11" />
-        <tendonpos name="sensor_04_14" tendon="tendon_04_14" />
+        <tendonpos name="sensor_01_11" tendon="tendon_01_11"/>
+        <tendonpos name="sensor_01_14" tendon="tendon_01_14"/>
+        <tendonpos name="sensor_04_11" tendon="tendon_04_11"/>
+        <tendonpos name="sensor_04_14" tendon="tendon_04_14"/>
         <!-- Tendons on Z- plane -->
-        <tendonpos name="sensor_02_12" tendon="tendon_02_12" />
-        <tendonpos name="sensor_02_13" tendon="tendon_02_13" />
-        <tendonpos name="sensor_03_12" tendon="tendon_03_12" />
-        <tendonpos name="sensor_03_13" tendon="tendon_03_13" />
-
-        <framepos name="end_cup_01" objtype="site" objname="site_01"/>
-        <framepos name="end_cup_02" objtype="site" objname="site_02"/>
-        <framepos name="end_cup_03" objtype="site" objname="site_03"/>
-        <framepos name="end_cup_04" objtype="site" objname="site_04"/>
-        <framepos name="end_cup_11" objtype="site" objname="site_11"/>
-        <framepos name="end_cup_12" objtype="site" objname="site_12"/>
-        <framepos name="end_cup_13" objtype="site" objname="site_13"/>
-        <framepos name="end_cup_14" objtype="site" objname="site_14"/>
+        <tendonpos name="sensor_02_12" tendon="tendon_02_12"/>
+        <tendonpos name="sensor_02_13" tendon="tendon_02_13"/>
+        <tendonpos name="sensor_03_12" tendon="tendon_03_12"/>
+        <tendonpos name="sensor_03_13" tendon="tendon_03_13"/>
+        <framepos name="end_cup_01" objname="site_01" objtype="site"/>
+        <framepos name="end_cup_02" objname="site_02" objtype="site"/>
+        <framepos name="end_cup_03" objname="site_03" objtype="site"/>
+        <framepos name="end_cup_04" objname="site_04" objtype="site"/>
+        <framepos name="end_cup_11" objname="site_11" objtype="site"/>
+        <framepos name="end_cup_12" objname="site_12" objtype="site"/>
+        <framepos name="end_cup_13" objname="site_13" objtype="site"/>
+        <framepos name="end_cup_14" objname="site_14" objtype="site"/>
     </sensor>
+    <equality>
+        <weld body1="r01" body2="connector01B5_0_0" name="weld_01_0_0" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_0_1" name="weld_01_0_1" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_0_2" name="weld_01_0_2" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_1_0" name="weld_01_1_0" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_1_1" name="weld_01_1_1" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_1_2" name="weld_01_1_2" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_2_0" name="weld_01_2_0" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_2_1" name="weld_01_2_1" torquescale="10"/>
+
+        <weld body1="r01" body2="connector01B5_2_2" name="weld_01_2_2" torquescale="10"/>
+        <weld body1="r02" body2="connector02B5_0_0" name="weld_02_0_0" torquescale="10"/>
+        <weld body1="r02" body2="connector02B5_0_1" name="weld_02_0_1" torquescale="10"/>
+        <weld body1="r02" body2="connector02B5_0_2" name="weld_02_0_2" torquescale="10"/>
+        <weld body1="r02" body2="connector02B5_1_0" name="weld_02_1_0" torquescale="10"/>
+        <weld body1="r02" body2="connector02B5_1_1" name="weld_02_1_1" torquescale="10"/>
+        <weld body1="r02" body2="connector02B5_1_2" name="weld_02_1_2" torquescale="10"/>
+        <weld body1="r02" body2="connector02B5_2_0" name="weld_02_2_0" torquescale="10"/>
+        <weld body1="r02" body2="connector02B5_2_1" name="weld_02_2_1" torquescale="10"/>
+        <weld body1="r02" body2="connector02B5_2_2" name="weld_02_2_2" torquescale="10"/>
+
+        <weld body1="r03" body2="connector03B5_0_1" name="weld_03_0_1" torquescale="10"/>
+        <weld body1="r03" body2="connector03B5_0_2" name="weld_03_0_2" torquescale="10"/>
+        <weld body1="r03" body2="connector03B5_1_0" name="weld_03_1_0" torquescale="10"/>
+        <weld body1="r03" body2="connector03B5_1_1" name="weld_03_1_1" torquescale="10"/>
+        <weld body1="r03" body2="connector03B5_1_2" name="weld_03_1_2" torquescale="10"/>
+        <weld body1="r03" body2="connector03B5_2_0" name="weld_03_2_0" torquescale="10"/>
+        <weld body1="r03" body2="connector03B5_2_1" name="weld_03_2_1" torquescale="10"/>
+        <weld body1="r03" body2="connector03B5_2_2" name="weld_03_2_2" torquescale="10"/>
+
+        <weld body1="r04" body2="connector04B5_0_1" name="weld_04_0_1" torquescale="10"/>
+        <weld body1="r04" body2="connector04B5_0_2" name="weld_04_0_2" torquescale="10"/>
+        <weld body1="r04" body2="connector04B5_1_0" name="weld_04_1_0" torquescale="10"/>
+        <weld body1="r04" body2="connector04B5_1_1" name="weld_04_1_1" torquescale="10"/>
+        <weld body1="r04" body2="connector04B5_1_2" name="weld_04_1_2" torquescale="10"/>
+        <weld body1="r04" body2="connector04B5_2_0" name="weld_04_2_0" torquescale="10"/>
+        <weld body1="r04" body2="connector04B5_2_1" name="weld_04_2_1" torquescale="10"/>
+        <weld body1="r04" body2="connector04B5_2_2" name="weld_04_2_2" torquescale="10"/>
+
+        <weld body1="r11" body2="connector11B5_0_0" name="weld_11_0_0" torquescale="10"/>
+        <weld body1="r11" body2="connector11B5_0_1" name="weld_11_0_1" torquescale="10"/>
+        <weld body1="r11" body2="connector11B5_0_2" name="weld_11_0_2" torquescale="10"/>
+        <weld body1="r11" body2="connector11B5_1_0" name="weld_11_1_0" torquescale="10"/>
+        <weld body1="r11" body2="connector11B5_1_1" name="weld_11_1_1" torquescale="10"/>
+        <weld body1="r11" body2="connector11B5_1_2" name="weld_11_1_2" torquescale="10"/>
+        <weld body1="r11" body2="connector11B5_2_0" name="weld_11_2_0" torquescale="10"/>
+        <weld body1="r11" body2="connector11B5_2_1" name="weld_11_2_1" torquescale="10"/>
+        <weld body1="r11" body2="connector11B5_2_2" name="weld_11_2_2" torquescale="10"/>
+
+        <weld body1="r12" body2="connector12B5_0_0" name="weld_12_0_0" torquescale="10"/>
+        <weld body1="r12" body2="connector12B5_0_1" name="weld_12_0_1" torquescale="10"/>
+        <weld body1="r12" body2="connector12B5_0_2" name="weld_12_0_2" torquescale="10"/>
+        <weld body1="r12" body2="connector12B5_1_0" name="weld_12_1_0" torquescale="10"/>
+        <weld body1="r12" body2="connector12B5_1_1" name="weld_12_1_1" torquescale="10"/>
+        <weld body1="r12" body2="connector12B5_1_2" name="weld_12_1_2" torquescale="10"/>
+        <weld body1="r12" body2="connector12B5_2_0" name="weld_12_2_0" torquescale="10"/>
+        <weld body1="r12" body2="connector12B5_2_1" name="weld_12_2_1" torquescale="10"/>
+        <weld body1="r12" body2="connector12B5_2_2" name="weld_12_2_2" torquescale="10"/>
+
+        <weld body1="r13" body2="connector13B5_0_0" name="weld_13_0_0" torquescale="10"/>
+        <weld body1="r13" body2="connector13B5_0_1" name="weld_13_0_1" torquescale="10"/>
+        <weld body1="r13" body2="connector13B5_0_2" name="weld_13_0_2" torquescale="10"/>
+        <weld body1="r13" body2="connector13B5_1_0" name="weld_13_1_0" torquescale="10"/>
+        <weld body1="r13" body2="connector13B5_1_1" name="weld_13_1_1" torquescale="10"/>
+        <weld body1="r13" body2="connector13B5_1_2" name="weld_13_1_2" torquescale="10"/>
+        <weld body1="r13" body2="connector13B5_2_0" name="weld_13_2_0" torquescale="10"/>
+        <weld body1="r13" body2="connector13B5_2_1" name="weld_13_2_1" torquescale="10"/>
+        <weld body1="r13" body2="connector13B5_2_2" name="weld_13_2_2" torquescale="10"/>
+
+        <weld body1="r14" body2="connector14B5_0_0" name="weld_14_0_0" torquescale="10"/>
+        <weld body1="r14" body2="connector14B5_0_1" name="weld_14_0_1" torquescale="10"/>
+        <weld body1="r14" body2="connector14B5_0_2" name="weld_14_0_2" torquescale="10"/>
+        <weld body1="r14" body2="connector14B5_1_0" name="weld_14_1_0" torquescale="10"/>
+        <weld body1="r14" body2="connector14B5_1_1" name="weld_14_1_1" torquescale="10"/>
+        <weld body1="r14" body2="connector14B5_1_2" name="weld_14_1_2" torquescale="10"/>
+        <weld body1="r14" body2="connector14B5_2_0" name="weld_14_2_0" torquescale="10"/>
+        <weld body1="r14" body2="connector14B5_2_1" name="weld_14_2_1" torquescale="10"/>
+        <weld body1="r14" body2="connector14B5_2_2" name="weld_14_2_2" torquescale="10"/>
+
+<!--         <weld body1="r01" body2="connector01B5_0_0" name="weld_01_0_0" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_0_1" name="weld_01_0_1" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_0_2" name="weld_01_0_2" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_1_0" name="weld_01_1_0" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_1_1" name="weld_01_1_1" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_1_2" name="weld_01_1_2" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_2_0" name="weld_01_2_0" torquescale="10"/>
+        <weld body1="r01" body2="connector01B5_2_1" name="weld_01_2_1" torquescale="10"/> -->
+    </equality>
 </mujoco>

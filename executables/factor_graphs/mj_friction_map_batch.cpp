@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <unordered_set>
 #include <utility>
 
 #include <boost/algorithm/string/join.hpp>
@@ -56,7 +57,6 @@ const int GRID_DIVISIONS{ 10 };
 const int BASIS_DIM{ (GRID_DIVISIONS + 1) * (GRID_DIVISIONS + 1) };
 
 const Eigen::Index TH_DIM{ 1 };
-const Eigen::Index StateDim{ Eigen::Dynamic };
 
 using friction_vector_t = Eigen::Vector<double, TH_DIM>;
 using basis_vector_t = Eigen::Vector<double, BASIS_DIM>;
@@ -102,8 +102,8 @@ int main(int argc, char** argv)
   const std::size_t ss_dim{ ss->get_dimension() };
   const std::size_t cs_dim{ cs->get_dimension() };
   const auto ps_dim = ps->get_dimension();
-  PRX_DEBUG_VAR_1(ps_dim);
   // const std::size_t ps_dim{ 1 };
+  // PRX_DEBUG_VAR_1(ps_dim);
 
   // using PropagationMj = prx::fg::mj_friction_propagation_t<Eigen::Dynamic, Eigen::Dynamic, Eigen::Dynamic>;
   using PropagationMj = prx::fg::mj_friction_estimation_t<Eigen::Dynamic, Eigen::Dynamic, Eigen::Dynamic>;
@@ -121,9 +121,18 @@ int main(int argc, char** argv)
   const std::vector<std::pair<double, double>> env_bounds{ std::make_pair(-XMAX, XMAX), std::make_pair(-YMAX, YMAX) };
   prx::regular_grid_t<friction_vector_t, 2> frictions_grid{ env_bounds, GRID_DIVISIONS };
   prx::regular_grid_t<friction_vector_t, 2> visited_grid{ env_bounds, GRID_DIVISIONS };
+  prx::regular_grid_t<prx::prx_symbol_t, 2> basis_grid{ env_bounds, GRID_DIVISIONS };
   const double initial_friction{ params["initial_friction"].as<double>() };
   const Eigen::VectorXd initial_friction_vec{ friction_vector_t::Ones(ps_dim) * initial_friction };
 
+  std::size_t basis_idx{ 0 };
+  using Container2D = std::vector<double>;
+  std::function<prx::prx_symbol_t(const Container2D&)> basis_grid_initializer = [&](const Container2D&) {
+    const prx::prx_symbol_t basis_symbol{ symbol_factory_t::create_hashed_symbol("basis", basis_idx) };
+    basis_idx++;
+    return basis_symbol;
+  };
+  basis_grid.populate_grid(basis_grid_initializer);
   frictions_grid.populate_grid(initial_friction_vec);
   visited_grid.populate_grid(friction_vector_t::Zero());
 
@@ -160,12 +169,12 @@ int main(int argc, char** argv)
   noise.head(3) = Eigen::Vector3d::Ones() * 1e0;
   noise_models["state_space"] = gtsam::noiseModel::Diagonal::Sigmas(noise);
   noise_models["control_space"] = gtsam::noiseModel::Isotropic::Sigma(cs_dim, 1e-3);
-  noise_models["time"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e-3);
+  noise_models["positive_friction"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e-5);
   noise_models["parameter_space"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e0);
-  noise_models["basis"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e0);
+  noise_models["basis"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 0);
   noise_models["propagation"] = gtsam::noiseModel::Isotropic::Sigma(ss_dim, 1e-0);
-  noise_models["friction_fusion"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e-3);
-  noise_models["weight"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e0);
+  noise_models["friction_fusion"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e0);
+  // noise_models["weight"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e0);
   noise_models["positive_basis"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e-5);
   noise_models["guard"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e-5);
   noise_models["small_basis"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e-5);
@@ -252,8 +261,44 @@ int main(int argc, char** argv)
                                                                   "friction_maps/"
                                                                   "batch_mj_friction_map.txt");
 
+    return std::make_tuple(bool_res, pos_res);
+  };
+  prx::fg::create_gml_file(accum_fg, resulting_values, prx::out_path + "friction_maps/mj_friction_map.gml",
+                           variables_positions);
   // const prx_symbol_t param_symbol_basis{ symbol_factory_t::create_hashed_symbol("param_basis", 0) };
   // auto basis = results.at<basis_vector_t>(param_symbol_basis);
+  for (auto x : prx::linspace<double>(-XMAX, XMAX, 100))
+  {
+    for (auto y : prx::linspace<double>(-YMAX, YMAX, 100))
+    {
+      if (visited_grid(x, y)[0] > 0)
+      {
+        Position position_0(x, y);
+        Position position_1(x, y + length_1);
+        Position position_2(x + length_0, y);
+        Position position_3(x + length_0, y + length_1);
+        BasisPosition basis_positions;
+        basis_positions.row(0) = frictions_grid.unmap<Eigen::Vector2d>(position_0[0], position_0[1]);
+        basis_positions.row(1) = frictions_grid.unmap<Eigen::Vector2d>(position_1[0], position_1[1]);
+        basis_positions.row(2) = frictions_grid.unmap<Eigen::Vector2d>(position_2[0], position_2[1]);
+        basis_positions.row(3) = frictions_grid.unmap<Eigen::Vector2d>(position_3[0], position_3[1]);
+        auto weight = prx::fg::compute_weight<Weights>(position_0, length_0, basis_positions);
+
+        auto basis_0 = resulting_values.at<friction_vector_t>(basis_grid(position_0[0], position_0[1]));
+        auto basis_1 = resulting_values.at<friction_vector_t>(basis_grid(position_1[0], position_1[1]));
+        auto basis_2 = resulting_values.at<friction_vector_t>(basis_grid(position_2[0], position_2[1]));
+        auto basis_3 = resulting_values.at<friction_vector_t>(basis_grid(position_3[0], position_3[1]));
+        Eigen::Vector4d basis(basis_0[0], basis_1[0], basis_2[0], basis_3[0]);
+
+        auto friction_at_xy = weight.dot(basis);
+        logs["idd_friction_map"](x, y, friction_at_xy);
+      }
+      else
+      {
+        logs["idd_friction_map"](x, y, 1.0);
+      }
+    }
+  }
 
   prx::friction_map::compute_friction_map<basis_vector_t>(frictions_grid, visited_grid, logs["idd_friction_map"],
                                                           prx::linspace<double>(-XMAX, XMAX, 20),

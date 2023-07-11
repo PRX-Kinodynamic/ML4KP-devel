@@ -1,6 +1,7 @@
 #pragma once
 
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/type_convertions.hpp"
 
 #include <type_traits>
 #include <unordered_map>
@@ -263,9 +264,6 @@ public:
       std::array<double, dimension> uk = unmap_key<std::array<double, dimension>>(cell.first);
       for (std::size_t j = 0; j < dimension; ++j)
       {
-        // const std::size_t mask{ one << j };
-        // const std::size_t masked{ i & mask };
-        // const std::size_t val{ masked >> j };
         ofs << uk[j];
         ofs << prx::separating_value;
       }
@@ -277,6 +275,23 @@ public:
       ofs << formatter(cell.second) << "\n";
     }
     ofs << std::endl;
+  }
+
+  void from_file(const std::string filename)
+  {
+    std::ifstream ifs(filename);
+    std::string line;
+    std::array<double, dimension> values{};
+    while (std::getline(ifs, line))
+    {
+      if (line.size() == 0)
+        break;
+      for (int i = 0; i < dimension; ++i)
+      {
+        values[i] = prx::utilities::convert_to<double>(line[i]);
+      }
+      memory[mapping(values)];
+    }
   }
 
   inline std::size_t size() const

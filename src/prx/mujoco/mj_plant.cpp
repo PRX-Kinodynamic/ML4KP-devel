@@ -215,7 +215,7 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
       case mjtJoint_::mjJNT_FREE:
         PRX_DEBUG_VAR_2(idx, "mjtJoint_::mjJNT_FREE");
         // Free
-        prx_warn("This is a free joint. Setting limits arbitrarily.");
+        // prx_warn_once("Free joint, setting limits arbitrarily.");
         // These are the qpos positions
         state_topo_string += "EEE";
         offset = 0;
@@ -259,7 +259,7 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
         }
         else
         {
-          prx_warn("Slide joint is not limited. Setting limits to (-inf, inf)");
+          // prx_warn_once("Slide joint is not limited. Setting limits to (-inf, inf)");
           ss_lb.push_back(-PRX_INFINITY);
           ss_ub.push_back(PRX_INFINITY);
           ss_lb.push_back(std::numeric_limits<double>::lowest());

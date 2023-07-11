@@ -70,7 +70,7 @@ std::string to_zero_lead(const int value, const unsigned precision)
 
 int main(int argc, char** argv)
 {
-  const std::string params_file{ "executables/factor_graphs/mj_friction_map.yaml" };
+  const std::string params_file{ "executables/factor_graphs/mj_friction_map_eval.yaml" };
   param_loader params(params_file, argc, argv);
 
   init_random(params["random_seed"].as<int>());
@@ -102,96 +102,16 @@ int main(int argc, char** argv)
   const std::size_t cs_dim{ cs->get_dimension() };
   const auto ps_dim = ps->get_dimension();
 
-  using State = Eigen::VectorXd;
-  // using Control = typename PropagationMj::Control;
-  // // using Time = typename PropagationMj::Time;
-  // using Theta = typename PropagationMj::Theta;
-  // using MjFunction = typename PropagationMj::MjFunction;
-
-  logger_t logs;
-  // friction_map::init_logmap(logs);
-
-  prx::utilities::csv_reader_t reader(friction_map_file, ' ');
-  prx_assert(reader.has_next_line(), "Empty file:" << friction_map_file);
-  auto line = reader.next_line();
-  basis_vector_t basis_from_file{};
-  for (int i = 0; i < basis_from_file.size(); ++i)
-  {
-    basis_from_file[i] = prx::utilities::convert_to<double>(line[i + 1]);
-  }
-
   const std::vector<std::pair<double, double>> env_bounds{ std::make_pair(-XMAX, XMAX), std::make_pair(-YMAX, YMAX) };
   prx::regular_grid_t<friction_vector_t, 2> frictions_grid{ env_bounds, GRID_DIVISIONS };
 
-  friction_map::basis_vector_to_grid(basis_from_file, frictions_grid);
+  frictions_grid.from_file(params["friction_map_file"].as<>());
 
-  int floor_id{ 0 };
-  int total_geoms{ sim->_mj_model->ngeom };
-  for (int i = 0; i < total_geoms; ++i)
-  {
-    std::string g1 = std::string(sim->_mj_model->names + sim->_mj_model->name_geomadr[i]);
-    if (g1 == "floor0")
-      floor_id = i;
-  }
-  // MjFunction fg_mjfn = [&](const State& x0, const State& x1, const Control& u, const Theta& th) {
-  //   // sim->_mj_model->geom_friction[floor_id + 2] = th[0];
-  //   ps->copy_from(th);
-  // };
+  friction_vector_t f;
+  f = frictions_grid(-4.0, 4.0);
+  PRX_DEBUG_VAR_1(f.transpose());
+  // std::cout << "friction: " << frictions_grid(0.0, 4.0)[0] << std::endl;
+  // std::cout << "friction: " << frictions_grid(-4.0, 0.0)[0] << std::endl;
 
-  std::size_t total_plan_trajectories_files{ params["total_plan_traj_files_to_use"].as<std::size_t>() };
-  std::string data_path{ params["data_path"].as<std::string>() };
-
-  plan_t plan(cs);
-  trajectory_t trajectory_real(ss);
-  trajectory_t trajectory_eval(ss);
-
-  std::size_t fg_iterations{ 0 };
-  std::vector<prx::prx_symbol_t> weights_used;
-  State xt;
-  for (std::size_t idx = 0; idx < total_plan_trajectories_files; ++idx)
-  {
-    const std::string traj_path = data_path + "/traj_" + to_zero_lead(idx, 5) + ".txt";
-    const std::string plan_path = data_path + "/plan_" + to_zero_lead(idx, 5) + ".txt";
-    plan.clear();
-    trajectory_real.clear();
-    plan.from_file(plan_path);
-    trajectory_real.from_file(traj_path);
-    plan.expand();
-    PRX_DEBUG_VAR_2(plan.size(), trajectory_real.size());
-    if (plan.size() + 1 != trajectory_real.size())
-    {
-      prx_warn("Plan/Traj " << idx << "mismatch on sizes");
-      continue;
-    }
-
-    xt = trajectory_real[0]->vector();
-    for (auto& step : plan)
-    {
-      // Compute th0 given the states
-      // const basis_vector_t weights{ friction_map::weights_vector_given_state<basis_vector_t>(frictions_grid, xt) };
-      // th0 = weights.dot(thetas);
-
-      // Propagate given x1p <- (x0, u0, th0)
-      // ps->copy_from(th);
-      // sg->propagate(x0, plan, trajectory_eval);
-      // x1 = trajectory_real.back();
-      // x1p = trajectory_eval.back();
-
-      // const double error{ (x1 - x1p).norm() };
-    }
-  }
-
-  // const prx_symbol_t param_symbol_basis{ symbol_factory_t::create_hashed_symbol("param_basis", 0) };
-  // auto basis = results.at<basis_vector_t>(param_symbol_basis);
-
-  // prx::friction_map::compute_friction_map<basis_vector_t>(frictions_grid, logs["idd_friction_map"],
-  //                                                         prx::linspace<double>(-XMAX, XMAX, 20),
-  //                                                         prx::linspace<double>(-YMAX, YMAX, 20));
-
-  // for (auto& logger_pair : logs)
-  // {
-  //   std::cout << logger_pair.first << " " << logger_pair.second.get_filename() << "\n";
-  //   logger_pair.second.close();
-  // }
   return 0;
 }

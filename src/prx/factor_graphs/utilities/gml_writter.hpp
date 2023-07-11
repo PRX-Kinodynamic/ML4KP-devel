@@ -24,14 +24,14 @@ gml_list_t create_graphics(const VariablePositions& var_pos, const gtsam::Key& k
     auto position = std::get<1>(tuple);
     // gml_list_t gml_center{};
     gml_graphics.emplace("x", -position[0]);
-    gml_graphics.emplace("y", -position[1]);
+    gml_graphics.emplace("y", position[1]);
 
     // PRX_DEBUG_VAR_1(prx::symbol_factory_t::formatter(key));
     // gml_graphics.emplace("center", gml_center);
   }
 
-  gml_graphics.emplace("w", 75);
-  gml_graphics.emplace("h", 35);
+  gml_graphics.emplace("w", 750);
+  gml_graphics.emplace("h", 350);
   gml_graphics.emplace("type", std::string("ellipse"));
   gml_graphics.emplace("fill", std::string("#ffffff"));
   gml_graphics.emplace("outline", std::string("#000000"));
