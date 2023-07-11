@@ -12,21 +12,21 @@
 namespace prx
 {
 
-	struct planner_wrapper_t
-	{
-		planner_t* planner;
-		planner_specification_t* planner_spec;
-		planner_query_t* planner_query;
-		planner_functions_t* planner_functions;
+struct planner_wrapper_t
+{
+  planner_t* planner;
+  planner_specification_t* planner_spec;
+  planner_query_t* planner_query;
+  planner_functions_t* planner_functions;
 
-		~planner_wrapper_t()
-		{
-			delete planner_query;
-			delete planner_functions;
-			delete planner_spec;
-			delete planner;
-		}
-	};
+  ~planner_wrapper_t()
+  {
+    delete planner_query;
+    delete planner_functions;
+    delete planner_spec;
+    delete planner;
+  }
+};
 
-	planner_wrapper_t* create_planner_wrapper(	std::string planner_context, world_model_context context, param_loader pl);
-}
+planner_wrapper_t* create_planner_wrapper(std::string planner_context, world_model_context context, param_loader pl);
+}  // namespace prx

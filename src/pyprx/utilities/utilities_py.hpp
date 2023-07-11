@@ -7,8 +7,8 @@
 
 void pyprx_utilities_py()
 {
-	pyprx_utilities_spaces();
-	pyprx_utilities_general();
-	pyprx_utilities_geometry_py();
-	pyprx_utilities_data_structures_py();
+  pyprx_utilities_spaces();
+  pyprx_utilities_general();
+  pyprx_utilities_geometry_py();
+  pyprx_utilities_data_structures_py();
 }

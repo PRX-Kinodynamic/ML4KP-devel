@@ -5,7 +5,6 @@
 
 void pyprx_simulation_playback_py()
 {
-
-	pyprx_simulation_playback_trajectory_py();
-	pyprx_simulation_playback_plan_py();
+  pyprx_simulation_playback_trajectory_py();
+  pyprx_simulation_playback_plan_py();
 }

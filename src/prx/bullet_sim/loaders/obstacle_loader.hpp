@@ -8,7 +8,8 @@
 
 namespace prx
 {
-	// TODO: Should we create a class instead?
-	// TODO: Add a way to load from different path
-  std::pair<std::vector<std::string>,std::vector<std::shared_ptr<movable_object_t>>> load_obstacles(std::string obstacles_file,b3RobotSimulatorClientAPI* sim=NULL);
-}
+// TODO: Should we create a class instead?
+// TODO: Add a way to load from different path
+std::pair<std::vector<std::string>, std::vector<std::shared_ptr<movable_object_t>>>
+load_obstacles(std::string obstacles_file, b3RobotSimulatorClientAPI* sim = NULL);
+}  // namespace prx

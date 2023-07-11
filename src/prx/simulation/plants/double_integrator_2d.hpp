@@ -4,20 +4,20 @@
 
 namespace prx
 {
-    class double_integrator_2d_t : public plant_t 
-    {
-        public:
-        double_integrator_2d_t(const std::string& path);
-        virtual ~double_integrator_2d_t();
+class double_integrator_2d_t : public plant_t
+{
+public:
+  double_integrator_2d_t(const std::string& path);
+  virtual ~double_integrator_2d_t();
 
-        virtual void propagate(const double simulation_step) override final;
+  virtual void propagate(const double simulation_step) override final;
 
-		virtual void update_configuration() override;
+  virtual void update_configuration() override;
 
-        protected:
-        virtual void compute_derivative() override final;
+protected:
+  virtual void compute_derivative() override final;
 
-		double x,y,dx,dy,ddx,ddy;
-    };
-}
+  double x, y, dx, dy, ddx, ddy;
+};
+}  // namespace prx
 PRX_REGISTER_SYSTEM(double_integrator_2d_t, 2D_DoubleInt)

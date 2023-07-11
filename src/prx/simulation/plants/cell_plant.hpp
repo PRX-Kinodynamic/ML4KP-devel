@@ -4,21 +4,20 @@
 
 namespace prx
 {
-	class cell_plant_t : public plant_t
-	{
-	public:
-		cell_plant_t(const std::string& path);
-		virtual ~cell_plant_t();
+class cell_plant_t : public plant_t
+{
+public:
+  cell_plant_t(const std::string& path);
+  virtual ~cell_plant_t();
 
-		virtual void propagate(const double simulation_step) override final;
+  virtual void propagate(const double simulation_step) override final;
 
-		virtual void update_configuration() override;
-		void set_geo(double, double);
-	protected:
+  virtual void update_configuration() override;
+  void set_geo(double, double);
 
-		virtual void compute_derivative() override final;
+protected:
+  virtual void compute_derivative() override final;
 
-		double x,y,v,theta,dx,dy;
-
-	};
-}
+  double x, y, v, theta, dx, dy;
+};
+}  // namespace prx

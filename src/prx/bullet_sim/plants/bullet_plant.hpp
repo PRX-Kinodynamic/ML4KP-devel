@@ -21,73 +21,72 @@
 
 namespace prx
 {
-	class bullet_plant_t;
-	typedef std::shared_ptr<bullet_plant_t> bullet_ptr_t;
+class bullet_plant_t;
+typedef std::shared_ptr<bullet_plant_t> bullet_ptr_t;
 
-	class bullet_plant_t : public plant_t
-	{
-	public:
-		bullet_plant_t(const std::string& path);
-		virtual ~bullet_plant_t();
-		
-		virtual void initialize(std::shared_ptr<b3RobotSimulatorClientAPI> sim) = 0;
+class bullet_plant_t : public plant_t
+{
+public:
+  bullet_plant_t(const std::string& path);
+  virtual ~bullet_plant_t();
 
-		virtual void propagate(const double simulation_step, const propagate_step step) override final;
+  virtual void initialize(std::shared_ptr<b3RobotSimulatorClientAPI> sim) = 0;
 
-		virtual void compute_control() override;
+  virtual void propagate(const double simulation_step, const propagate_step step) override final;
 
-		virtual void update_to_bullet(const space_point_t& point);
+  virtual void compute_control() override;
 
-		virtual void update_configuration() override final;
+  virtual void update_to_bullet(const space_point_t& point);
 
-		virtual void purge_saved_states();
+  virtual void update_configuration() override final;
 
-		virtual void reset() = 0;
+  virtual void purge_saved_states();
 
-		/**
-		 * @brief      Gets the state identifier - Within Bullet, each saved state has an unique id.
-		 *
-		 * @return     The state identifier.
-		 */
-		virtual int get_state_id()
-		{
-			return state_space->at(state_space->get_dimension()-1);
-		}
+  virtual void reset() = 0;
 
-        virtual void update_from_bullet(const bool save_sim_state)
-        {
-        	prx_throw("Not implemented");
-        }
+  /**
+   * @brief      Gets the state identifier - Within Bullet, each saved state has an unique id.
+   *
+   * @return     The state identifier.
+   */
+  virtual int get_state_id()
+  {
+    return state_space->at(state_space->get_dimension() - 1);
+  }
 
-		void setBasePositionAndRotation(btVector3 basePosition, btVector3 baseRotation);
+  virtual void update_from_bullet(const bool save_sim_state)
+  {
+    prx_throw("Not implemented");
+  }
 
-		std::vector<double> state_bounds_l, state_bounds_u, control_bounds_l, control_bounds_u;
+  void setBasePositionAndRotation(btVector3 basePosition, btVector3 baseRotation);
 
-		int uniqueId;
+  std::vector<double> state_bounds_l, state_bounds_u, control_bounds_l, control_bounds_u;
 
-		b3RobotSimulatorAddUserDebugLineArgs* lineArgs = new b3RobotSimulatorAddUserDebugLineArgs;
+  int uniqueId;
 
-	protected:
-		std::vector<double> state_vec, control_vec;
-		std::shared_ptr<b3RobotSimulatorClientAPI> sim;
+  b3RobotSimulatorAddUserDebugLineArgs* lineArgs = new b3RobotSimulatorAddUserDebugLineArgs;
 
-		b3RobotSimulatorSetPhysicsEngineParameters physicsArgs;
-        b3RobotSimulatorLoadUrdfFileArgs loadURDFArgs;
+protected:
+  std::vector<double> state_vec, control_vec;
+  std::shared_ptr<b3RobotSimulatorClientAPI> sim;
 
-		int physicsClientId, lastSavedId;
+  b3RobotSimulatorSetPhysicsEngineParameters physicsArgs;
+  b3RobotSimulatorLoadUrdfFileArgs loadURDFArgs;
 
-		std::vector<std::pair<std::pair<int, int>, std::pair<int, int> > > m_CD_exclusion_list;
+  int physicsClientId, lastSavedId;
 
-		virtual void compute_derivative() override final;
+  std::vector<std::pair<std::pair<int, int>, std::pair<int, int> > > m_CD_exclusion_list;
 
-		std::string control_topo;
-		std::string state_topo;
+  virtual void compute_derivative() override final;
 
-		space_point_t current_state;
-		space_point_t current_control;
-        std::vector<double> current_state_vec;
-		// friend bullet_simulator;
-	};
+  std::string control_topo;
+  std::string state_topo;
 
-	
-}
+  space_point_t current_state;
+  space_point_t current_control;
+  std::vector<double> current_state_vec;
+  // friend bullet_simulator;
+};
+
+}  // namespace prx

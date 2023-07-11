@@ -6,85 +6,75 @@
 #include "prx/utilities/spaces/space.hpp"
 // #include "prx/simulation/plants/two_link_acrobot.hpp"
 // #include "prx/simulation/plant.hpp"
- 
+
 using namespace boost::python;
 
 int get_dim_wrapper(prx::space_point_t p)
 {
-    return p -> get_dim();
+  return p->get_dim();
 }
 double space_point_get_item(prx::space_point_t& pt, int i)
 {
-    INDEX_CHECK(i, pt -> get_dim(), "space_point" )
+  INDEX_CHECK(i, pt->get_dim(), "space_point")
 
-    return pt -> at(i);
+  return pt->at(i);
 }
 void space_point_set_item(prx::space_point_t& pt, int i, double val)
 {
-    INDEX_CHECK(i, pt -> get_dim(), "space_point" )
+  INDEX_CHECK(i, pt->get_dim(), "space_point")
 
-    pt -> at(i) = val;
+  pt->at(i) = val;
 }
 
 void space_set_item(prx::space_t& space, int i, double val)
 {
-    INDEX_CHECK(i, space.get_dimension(), "space_t" )
+  INDEX_CHECK(i, space.get_dimension(), "space_t")
 
-    space.at(i) = val;
+  space.at(i) = val;
 }
-
-
 
 // object init_distance_function()
 prx::distance_function_t init_distance_function()
 {
-    prx::distance_function_t default_df = [](const prx::space_point_t& s1, const prx::space_point_t& s2)
-    {
-        return sqrt((s1->at(0)-s2->at(0))*(s1->at(0)-s2->at(0))+
-                    (s1->at(1)-s2->at(1))*(s1->at(1)-s2->at(1)));
-    };
-    // return boost::python::make_function(default_df);
-    return default_df;
+  prx::distance_function_t default_df = [](const prx::space_point_t& s1, const prx::space_point_t& s2) {
+    return sqrt((s1->at(0) - s2->at(0)) * (s1->at(0) - s2->at(0)) + (s1->at(1) - s2->at(1)) * (s1->at(1) - s2->at(1)));
+  };
+  // return boost::python::make_function(default_df);
+  return default_df;
 }
 
 struct distance_function_wrapper : prx::distance_function_t, wrapper<prx::distance_function_t>
 {
-
 };
 
 // void set_distance_function(prx::distance_function_t& self, boost::python::object obj)
 // {
-//     self = 
+//     self =
 // }
 // spam& self, boost::python::object object
 // void set_distance_function(object self, PyObject* f)
 void set_distance_function(object self, PyObject* f)
 {
-    prx::distance_function_t df = extract<prx::distance_function_t>(self.attr("distance_function"));
-    df = [f](const prx::space_point_t& s1, const prx::space_point_t& s2)
-    {
-        return call<double>(f, s1, s2);
-    };
-    // self = df;
+  prx::distance_function_t df = extract<prx::distance_function_t>(self.attr("distance_function"));
+  df = [f](const prx::space_point_t& s1, const prx::space_point_t& s2) { return call<double>(f, s1, s2); };
+  // self = df;
 }
 
 prx::distance_function_t get_df(PyObject* x)
 {
-    std::function<double (const prx::space_point_t&, const prx::space_point_t&)> new_df = [x](const prx::space_point_t& s1, const prx::space_point_t& s2)
-    {
-        return call<double>(x, s1, s2);
-    };
-    return new_df;
+  std::function<double(const prx::space_point_t&, const prx::space_point_t&)> new_df =
+      [x](const prx::space_point_t& s1, const prx::space_point_t& s2) { return call<double>(x, s1, s2); };
+  return new_df;
 }
 
 boost::python::list space_point_to_pylist(const prx::space_point_t& v)
 {
-    boost::python::list l;
-    for (int i = 0; i < v -> get_dim(); ++i)
-    {
-        l.append((*v)[i]);
-    }
-    return l;
+  boost::python::list l;
+  for (int i = 0; i < v->get_dim(); ++i)
+  {
+    l.append((*v)[i]);
+  }
+  return l;
 }
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(space_t_print_point_overloads, prx::space_t::print_point, 1, 2)
@@ -94,142 +84,152 @@ BOOST_PYTHON_FUNCTION_OVERLOADS(space_t_l2_norm_overloads, prx::space_t::l2_norm
 BOOST_PYTHON_FUNCTION_OVERLOADS(space_t_euclidean_2d_overloads, prx::space_t::euclidean_2d, 2, 4)
 // BOOST_PYTHON_FUNCTION_OVERLOADS(space_t_lp_norm_overloads, prx::space_t::lp_norm, 2, 3)
 
+void (prx::space_t::*enforce_bounds0)() const = &prx::space_t::enforce_bounds;
+void (prx::space_t::*enforce_bounds1)(const prx::space_point_t&) const = &prx::space_t::enforce_bounds;
 
-void  (prx::space_t::*enforce_bounds0)() const = &prx::space_t::enforce_bounds;
-void  (prx::space_t::*enforce_bounds1)(const prx::space_point_t&) const = &prx::space_t::enforce_bounds;
+void (prx::space_t::*integrate_0)(const prx::space_point_t&, const prx::space_t*, double) = &prx::space_t::integrate;
+void (prx::space_t::*integrate_1)(const prx::space_t*, double) = &prx::space_t::integrate;
 
-void  (prx::space_t::*integrate_0)(const prx::space_point_t&, const prx::space_t*, double) = &prx::space_t::integrate;
-void  (prx::space_t::*integrate_1)(const prx::space_t*, double) = &prx::space_t::integrate;
+void (prx::space_t::*copy_from_std_vector)(const Eigen::VectorXd& _v) const = &prx::space_t::copy_from_vector;
+void (prx::space_t::*copy_from_eigen_vector)(const std::vector<double>& source) = &prx::space_t::copy_from_vector;
 
-void  (prx::space_t::*copy_from_std_vector)(const Eigen::VectorXd& _v) const = &prx::space_t::copy_from_vector;
-void  (prx::space_t::*copy_from_eigen_vector)(const std::vector<double>& source) = &prx::space_t::copy_from_vector;
+void (prx::space_t::*copy_std_vector_from_point)(
+    std::vector<double>& destination, const prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
+// void  (prx::space_t::*copy_eigen_vector_from_point)(Eigen::Ref<Eigen::VectorXd> destination, const
+// prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
 
-void  (prx::space_t::*copy_std_vector_from_point)(std::vector<double>& destination, const prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
-// void  (prx::space_t::*copy_eigen_vector_from_point)(Eigen::Ref<Eigen::VectorXd> destination, const prx::space_point_t& source) const = &prx::space_t::copy_vector_from_point;
+void (prx::space_t::*copy_point_from_std_vector)(const prx::space_point_t& destination,
+                                                 const std::vector<double>& source) const =
+    &prx::space_t::copy_point_from_vector;
 
-void  (prx::space_t::*copy_point_from_std_vector)(const prx::space_point_t& destination, const std::vector<double>& source) const = &prx::space_t::copy_point_from_vector;
-
-
-void  copy_eigen_vector_from_point(prx::space_t* s, Eigen::VectorXd destination, const prx::space_point_t& source)
+void copy_eigen_vector_from_point(prx::space_t* s, Eigen::VectorXd destination, const prx::space_point_t& source)
 {
-    s -> copy_vector_from_point(destination, source);
-
-} 
+  s->copy_vector_from_point(destination, source);
+}
 
 // double    (prx::space_t::*lp_norm_2)(const prx::space_point_t& p1, const double p)    = &prx::space_t::lp_norm;
 // static double (prx::space_t::*l1_norm_1)(const prx::space_point_t&) = &prx::space_t::l1_norm;
-// static double (prx::space_t::*l1_norm_2)(const prx::space_point_t&, const prx::space_point_t&) = &prx::space_t::l1_norm;
+// static double (prx::space_t::*l1_norm_2)(const prx::space_point_t&, const prx::space_point_t&) =
+// &prx::space_t::l1_norm;
 struct space_memory_py
 {
-    space_memory_py(int size) : mem(size, 0)
+  space_memory_py(int size) : mem(size, 0)
+  {
+    for (int i = 0; i < size; ++i)
     {
-        for (int i = 0; i < size; ++i)
-        {
-            mem_ptr.push_back( &(mem[0] ) );
-        }
+      mem_ptr.push_back(&(mem[0]));
     }
+  }
 
-    const std::vector<double*> get_addresses() const
-    {
-        return mem_ptr;
-    }
+  const std::vector<double*> get_addresses() const
+  {
+    return mem_ptr;
+  }
 
-    private:
-        std::vector<double> mem;
-        std::vector<double*> mem_ptr;
+private:
+  std::vector<double> mem;
+  std::vector<double*> mem_ptr;
 };
 
 prx::space_t* space_constructor_py(const std::string& topo, const space_memory_py& sm, const std::string& name)
 {
-    return new prx::space_t(topo, sm.get_addresses(), name);
+  return new prx::space_t(topo, sm.get_addresses(), name);
 }
 
 void pyprx_utilities_spaces_space()
 {
+  // typedef std::shared_ptr<space_snapshot_t> space_point_t;
+  class_<prx::space_point_t>("space_point", no_init)
+      .def("__len__", &get_dim_wrapper)
+      .def("get_dim", &get_dim_wrapper)
+      .def("__getitem__", &space_point_get_item)
+      .def("__setitem__", &space_point_set_item)
+      // .def("assign", &list_assign<double>)
+      .def("__str__", &prx_to_str<prx::space_point_t>)
+      .def("__repr__", &prx_print<prx::space_point_t>)
+      .def("to_list", &space_point_to_pylist)
+      // .def(str(self))
+      ;
+  enum_<prx::space_t::topology_t>("topology")
+      .value("EUCLIDEAN", prx::space_t::topology_t::EUCLIDEAN)
+      .value("ROTATIONAL", prx::space_t::topology_t::ROTATIONAL)
+      .value("DISCRETE", prx::space_t::topology_t::DISCRETE)
+      .export_values();
 
-   // typedef std::shared_ptr<space_snapshot_t> space_point_t;
-    class_<prx::space_point_t>("space_point", no_init)
-        .def("__len__", &get_dim_wrapper)
-        .def("get_dim", &get_dim_wrapper)
-        .def("__getitem__", &space_point_get_item)
-        .def("__setitem__", &space_point_set_item)
-        // .def("assign", &list_assign<double>)
-        .def("__str__", &prx_to_str<prx::space_point_t>) 
-        .def("__repr__", &prx_print<prx::space_point_t>) 
-        .def("to_list", &space_point_to_pylist)
-        // .def(str(self))
-        ;
-    enum_<prx::space_t::topology_t>("topology")
-        .value("EUCLIDEAN", prx::space_t::topology_t::EUCLIDEAN)
-        .value("ROTATIONAL", prx::space_t::topology_t::ROTATIONAL)
-        .value("DISCRETE", prx::space_t::topology_t::DISCRETE)
-        .export_values()
-        ;    
+  class_<prx::distance_function_t>("distance_function")
+      .def("__call__", &prx::distance_function_t::operator())
+      .def("default", make_function(&init_distance_function, default_call_policies()))
+      .staticmethod("default")
+      // .def("set_df", &get_df).staticmethod("set_df")
+      .def("set_df", &create_function<prx::distance_function_t, double, prx::space_point_t, prx::space_point_t>)
+      .staticmethod("set_df")
+      .def("wrap", &create_function<prx::distance_function_t, double, prx::space_point_t, prx::space_point_t>)
+      .staticmethod("wrap")
+      // .def("wrap", &get_df).staticmethod("wrap")
+      // .def("__setattr__", &set_distance_function).staticmethod("__setattr__")
+      ;
 
-    class_<prx::distance_function_t>("distance_function")
-        .def("__call__", &prx::distance_function_t::operator() )
-        .def("default", make_function(&init_distance_function, default_call_policies())).staticmethod("default")
-        // .def("set_df", &get_df).staticmethod("set_df")
-        .def("set_df", &create_function<prx::distance_function_t, double, prx::space_point_t, prx::space_point_t>).staticmethod("set_df")
-        .def("wrap", &create_function<prx::distance_function_t, double, prx::space_point_t, prx::space_point_t>).staticmethod("wrap")
-        // .def("wrap", &get_df).staticmethod("wrap")
-        // .def("__setattr__", &set_distance_function).staticmethod("__setattr__")
-        ;
+  class_<space_memory_py>("space_memory", init<int>())
+      // .def("get_addresses", &space_memory_py::get_addresses)
+      ;
 
-    class_<space_memory_py>("space_memory", init<int>())
-        // .def("get_addresses", &space_memory_py::get_addresses)
-        ;
-
-   	class_<prx::space_t, std::shared_ptr<prx::space_t>>("space_t", init<std::string, std::vector<double*>, std::string>())
-        .def("__init__", make_constructor(&init_as_ptr<prx::space_t,std::string,std::vector<double*>&>, default_call_policies(), (args("topology"), args("addresses")) ))
-        .def("__init__", make_constructor(&init_as_ptr<prx::space_t,const std::vector<const prx::space_t*>&>, default_call_policies(), (args("spaces")) ))
-        .def("__init__", make_constructor(&space_constructor_py, default_call_policies()))
-        .def("set_bounds", &prx::space_t::set_bounds)
-        .def("make_point", &prx::space_t::make_point)
-        .def("clone_point", &prx::space_t::clone_point)
-        .def("enforce_bounds", enforce_bounds0)
-   	    .def("enforce_bounds", enforce_bounds1)
-        .def("at", &prx::space_t::at, return_value_policy<copy_non_const_reference>())
-        .def("__getitem__", &prx::space_t::at, return_value_policy<copy_non_const_reference>())
-   	    .def("__setitem__", &space_set_item)
-   	    .def("get_dimension", &prx::space_t::get_dimension)
-        .def("copy_to_point", &prx::space_t::copy_to_point)
-        .def("copy_from_point", &prx::space_t::copy_from_point)
-        .def("copy_from_vector", copy_from_std_vector)
-        .def("copy_from_vector", copy_from_eigen_vector)
-        .def("copy_point", &prx::space_t::copy_point)
-        .def("copy_point_from_vector", copy_point_from_std_vector)
-        .def("copy_vector_from_point", copy_std_vector_from_point)
-        .def("copy_vector_from_point", copy_eigen_vector_from_point)
-        .def("is_point_in_space", &prx::space_t::is_point_in_space)
-        .def("split_point", &prx::space_t::split_point)
-   	    .def("print_memory", &prx::space_t::print_memory, space_t_print_memory_overloads())
-        .def("print_point", &prx::space_t::print_point, space_t_print_point_overloads())
-        .def("equal_points", &prx::space_t::equal_points)
-        .def("get_dimension", &prx::space_t::get_dimension)
-        .def("satisfies_bounds", &prx::space_t::satisfies_bounds)
-        .def("sample", &prx::space_t::sample)
-        .def("get_space_name", &prx::space_t::get_space_name)
-        .def("get_lower_bounds", &prx::space_t::get_lower_bounds)
-        .def("get_upper_bounds", &prx::space_t::get_upper_bounds)
-        .def("get_lower_bound", &prx::space_t::get_lower_bound)
-        .def("get_upper_bound", &prx::space_t::get_upper_bound)
-        .def("get_bounds", &prx::space_t::get_bounds)
-        .def("integrate", integrate_0)
-        .def("integrate", integrate_1)
-        .def("interpolate", &prx::space_t::interpolate)
-        .def("l1_norm", (double(*)(const prx::space_point_t& p1, const prx::space_point_t& p2))1, space_t_l1_norm_overloads()).staticmethod("l1_norm")
-        .def("l2_norm", (double(*)(const prx::space_point_t& p1, const prx::space_point_t& p2))1, space_t_l2_norm_overloads()).staticmethod("l2_norm")
-        .def("euclidean_2d", (double(*)(const prx::space_point_t& p1, const prx::space_point_t& p2, int start, int end))2, space_t_euclidean_2d_overloads()).staticmethod("euclidean_2d")
-        .def("print_bounds", &prx::space_t::print_bounds)
-        // .def("lp_norm", lp_norm_2)
-        // .def("l1_norm", (double (prx::space_t::*)(const prx::space_point_t&))&prx::space_t::l1_norm).staticmethod("l1_norm")
-        // .def("l1_norm", &prx::space_t::l1_norm, space_t_l1_norm_overloads(args("p1", "p2"), "l1 norm"))
-        // .def<double (prx::space_t::*)(const prx::space_point_t& p1)>("l1_norm", prx::space_t::l1_norm)//.staticmethod("l1_norm")
-        // .def("l1_norm", l1_norm_2).staticmethod("l1_norm")
-        // .def("", &prx::space_t::)
-        // .def("", &prx::space_t::)
-        // .def("", &prx::space_t::)
-        // .def("", &prx::space_t::)
-   	    ;
+  class_<prx::space_t, std::shared_ptr<prx::space_t>>("space_t", init<std::string, std::vector<double*>, std::string>())
+      .def("__init__", make_constructor(&init_as_ptr<prx::space_t, std::string, std::vector<double*>&>,
+                                        default_call_policies(), (args("topology"), args("addresses"))))
+      .def("__init__", make_constructor(&init_as_ptr<prx::space_t, const std::vector<const prx::space_t*>&>,
+                                        default_call_policies(), (args("spaces"))))
+      .def("__init__", make_constructor(&space_constructor_py, default_call_policies()))
+      .def("set_bounds", &prx::space_t::set_bounds)
+      .def("make_point", &prx::space_t::make_point)
+      .def("clone_point", &prx::space_t::clone_point)
+      .def("enforce_bounds", enforce_bounds0)
+      .def("enforce_bounds", enforce_bounds1)
+      .def("at", &prx::space_t::at, return_value_policy<copy_non_const_reference>())
+      .def("__getitem__", &prx::space_t::at, return_value_policy<copy_non_const_reference>())
+      .def("__setitem__", &space_set_item)
+      .def("get_dimension", &prx::space_t::get_dimension)
+      .def("copy_to_point", &prx::space_t::copy_to_point)
+      .def("copy_from_point", &prx::space_t::copy_from_point)
+      .def("copy_from_vector", copy_from_std_vector)
+      .def("copy_from_vector", copy_from_eigen_vector)
+      .def("copy_point", &prx::space_t::copy_point)
+      .def("copy_point_from_vector", copy_point_from_std_vector)
+      .def("copy_vector_from_point", copy_std_vector_from_point)
+      .def("copy_vector_from_point", copy_eigen_vector_from_point)
+      .def("is_point_in_space", &prx::space_t::is_point_in_space)
+      .def("split_point", &prx::space_t::split_point)
+      .def("print_memory", &prx::space_t::print_memory, space_t_print_memory_overloads())
+      .def("print_point", &prx::space_t::print_point, space_t_print_point_overloads())
+      .def("equal_points", &prx::space_t::equal_points)
+      .def("get_dimension", &prx::space_t::get_dimension)
+      .def("satisfies_bounds", &prx::space_t::satisfies_bounds)
+      .def("sample", &prx::space_t::sample)
+      .def("get_space_name", &prx::space_t::get_space_name)
+      .def("get_lower_bounds", &prx::space_t::get_lower_bounds)
+      .def("get_upper_bounds", &prx::space_t::get_upper_bounds)
+      .def("get_lower_bound", &prx::space_t::get_lower_bound)
+      .def("get_upper_bound", &prx::space_t::get_upper_bound)
+      .def("get_bounds", &prx::space_t::get_bounds)
+      .def("integrate", integrate_0)
+      .def("integrate", integrate_1)
+      .def("interpolate", &prx::space_t::interpolate)
+      .def("l1_norm", (double (*)(const prx::space_point_t& p1, const prx::space_point_t& p2))1,
+           space_t_l1_norm_overloads())
+      .staticmethod("l1_norm")
+      .def("l2_norm", (double (*)(const prx::space_point_t& p1, const prx::space_point_t& p2))1,
+           space_t_l2_norm_overloads())
+      .staticmethod("l2_norm")
+      .def("euclidean_2d",
+           (double (*)(const prx::space_point_t& p1, const prx::space_point_t& p2, int start, int end))2,
+           space_t_euclidean_2d_overloads())
+      .staticmethod("euclidean_2d")
+      .def("print_bounds", &prx::space_t::print_bounds)
+      // .def("lp_norm", lp_norm_2)
+      // .def("l1_norm", (double (prx::space_t::*)(const
+      // prx::space_point_t&))&prx::space_t::l1_norm).staticmethod("l1_norm") .def("l1_norm", &prx::space_t::l1_norm,
+      // space_t_l1_norm_overloads(args("p1", "p2"), "l1 norm")) .def<double (prx::space_t::*)(const prx::space_point_t&
+      // p1)>("l1_norm", prx::space_t::l1_norm)//.staticmethod("l1_norm") .def("l1_norm",
+      // l1_norm_2).staticmethod("l1_norm") .def("", &prx::space_t::) .def("", &prx::space_t::) .def("",
+      // &prx::space_t::) .def("", &prx::space_t::)
+      ;
 }

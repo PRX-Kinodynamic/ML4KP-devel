@@ -7,8 +7,7 @@
 using namespace boost::python;
 void pyprx_utilities_geometry_basic_geoms_py()
 {
-
-	pyprx_utilities_geometry_basic_geoms_box_py();
-	pyprx_utilities_geometry_basic_geoms_cylinder_py();
-	pyprx_utilities_geometry_basic_geoms_sphere_py();
+  pyprx_utilities_geometry_basic_geoms_box_py();
+  pyprx_utilities_geometry_basic_geoms_cylinder_py();
+  pyprx_utilities_geometry_basic_geoms_sphere_py();
 }

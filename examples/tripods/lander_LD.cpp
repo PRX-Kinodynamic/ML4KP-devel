@@ -12,98 +12,95 @@ using namespace prx;
 space_point_t start_state = nullptr;
 space_point_t goal_state = nullptr;
 
-
 int main(int argc, char* argv[])
 {
-    auto params = param_loader("plants/lander_LD.yaml", argc, argv);
+  auto params = param_loader("plants/lander_LD.yaml", argc, argv);
 
-	simulation_step = 0.01;
-    init_random(231192);
+  simulation_step = 0.01;
+  init_random(231192);
 
-    auto obstacles = load_obstacles("environments/empty.yaml");
-    std::vector<std::shared_ptr<movable_object_t>> obstacle_list = obstacles.second;
-    std::vector<std::string> obstacle_names = obstacles.first;
-    PRX_DEBUG_PRINT
+  auto obstacles = load_obstacles("environments/empty.yaml");
+  std::vector<std::shared_ptr<movable_object_t>> obstacle_list = obstacles.second;
+  std::vector<std::string> obstacle_names = obstacles.first;
+  PRX_DEBUG_PRINT
 
-    std::string plant_name = params["name"].as<>();
-    std::string plant_path = params["path"].as<>();
-    auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
-    prx_assert(plant != nullptr, "Plant is nullptr!");
-    PRX_DEBUG_PRINT
+  std::string plant_name = params["name"].as<>();
+  std::string plant_path = params["path"].as<>();
+  auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
+  prx_assert(plant != nullptr, "Plant is nullptr!");
+  PRX_DEBUG_PRINT
 
-    world_model_t world_model({plant},{obstacle_list});
-    world_model.create_context("context",{plant_name},{obstacle_names});
-    auto context = world_model.get_context("context");
+  world_model_t world_model({ plant }, { obstacle_list });
+  world_model.create_context("context", { plant_name }, { obstacle_names });
+  auto context = world_model.get_context("context");
 
-    PRX_DEBUG_PRINT
-    const auto ss = context.first -> get_state_space();
-    const auto cs = context.first -> get_control_space();
-    const auto ps = plant -> get_parameter_space();
+  PRX_DEBUG_PRINT
+  const auto ss = context.first->get_state_space();
+  const auto cs = context.first->get_control_space();
+  const auto ps = plant->get_parameter_space();
 
-    PRX_DEBUG_PRINT
-    auto lower_bounds = params["state_space_lower_bound"].as<std::vector<double>>();
-    auto upper_bounds = params["state_space_upper_bound"].as<std::vector<double>>();
-    ss -> set_bounds(lower_bounds, upper_bounds);
+  PRX_DEBUG_PRINT
+  auto lower_bounds = params["state_space_lower_bound"].as<std::vector<double>>();
+  auto upper_bounds = params["state_space_upper_bound"].as<std::vector<double>>();
+  ss->set_bounds(lower_bounds, upper_bounds);
 
-    auto cs_lb = params["control_space_lower_bound"].as<std::vector<double>>();
-    auto cs_up = params["control_space_upper_bound"].as<std::vector<double>>();
-    cs -> set_bounds(cs_lb, cs_up);
+  auto cs_lb = params["control_space_lower_bound"].as<std::vector<double>>();
+  auto cs_up = params["control_space_upper_bound"].as<std::vector<double>>();
+  cs->set_bounds(cs_lb, cs_up);
 
-    PRX_DEBUG_PRINT
-    if (ps -> get_dimension() > 0)
-    {
-        ps -> copy_from_vector(params["parameters"].as<std::vector<double>>());
-        std::cout << "params: " << ps -> print_memory(2) << std::endl;
-    }
-    PRX_DEBUG_PRINT
+  PRX_DEBUG_PRINT
+  if (ps->get_dimension() > 0)
+  {
+    ps->copy_from_vector(params["parameters"].as<std::vector<double>>());
+    std::cout << "params: " << ps->print_memory(2) << std::endl;
+  }
+  PRX_DEBUG_PRINT
 
-    start_state = ss -> make_point();
-	goal_state = ss -> make_point();
-    auto u_goal = cs -> make_point();
+  start_state = ss->make_point();
+  goal_state = ss->make_point();
+  auto u_goal = cs->make_point();
 
-    ss -> copy_point_from_vector(start_state, params["start_state"].as<std::vector<double>>());
-    ss -> copy_point_from_vector(goal_state, params["goal_state"].as<std::vector<double>>());
-    
+  ss->copy_point_from_vector(start_state, params["start_state"].as<std::vector<double>>());
+  ss->copy_point_from_vector(goal_state, params["goal_state"].as<std::vector<double>>());
 
-    condition_check_t checker("sim_time", 10);
+  condition_check_t checker("sim_time", 10);
 
-    trajectory_t solution_traj(ss);
+  trajectory_t solution_traj(ss);
 
-    // auto ltv = std::dynamic_pointer_cast<prx::ltv_t>(plant);
+  // auto ltv = std::dynamic_pointer_cast<prx::ltv_t>(plant);
 
-    int ss_dim = ss -> get_dimension();
-    int cs_dim = cs -> get_dimension();
-    
-    // auto lqr = create_controller( plant,  params);
-    controller_ptr_t ctrl = std::make_shared<lander_meditch_ctrl_t>(plant, "ctrl");
-    ss -> copy_from_point(start_state);
+  int ss_dim = ss->get_dimension();
+  int cs_dim = cs->get_dimension();
+
+  // auto lqr = create_controller( plant,  params);
+  controller_ptr_t ctrl = std::make_shared<lander_meditch_ctrl_t>(plant, "ctrl");
+  ss->copy_from_point(start_state);
+  solution_traj.copy_onto_back(ss);
+
+  do
+  {
+    std::cout << "[plant] " << plant << std::endl;
+    ctrl->compute_controls();
+    cs->enforce_bounds();
+    plant->propagate(simulation_step);
     solution_traj.copy_onto_back(ss);
-    
-    do
-    {
-        std::cout << "[plant] " << plant << std::endl;
-        ctrl -> compute_controls();
-        cs -> enforce_bounds();
-        plant -> propagate(simulation_step);
-        solution_traj.copy_onto_back(ss);
 
-    }
-    while(!checker.check()); //&& space_t::euclidean_2d(solution_traj.back(), goal_state, 0, ss_dim) > 0.01);
+  } while (!checker.check());  //&& space_t::euclidean_2d(solution_traj.back(), goal_state, 0, ss_dim) > 0.01);
 
-    std::cout << "Last state: " << solution_traj.back() << " distance: " << space_t::euclidean_2d(solution_traj.back(), goal_state, 0, ss_dim) << std::endl;
+  std::cout << "Last state: " << solution_traj.back()
+            << " distance: " << space_t::euclidean_2d(solution_traj.back(), goal_state, 0, ss_dim) << std::endl;
 
-    three_js_group_t* vis_group = new three_js_group_t({plant},{obstacle_list});
+  three_js_group_t* vis_group = new three_js_group_t({ plant }, { obstacle_list });
 
-    std::string body_name = params["name"].as<>() + "/" + params["vis_body"].as<>();
+  std::string body_name = params["name"].as<>() + "/" + params["vis_body"].as<>();
 
-    vis_group -> add_detailed_vis_infos(info_geometry_t::FULL_LINE, solution_traj, 
-        body_name, ss);
+  vis_group->add_detailed_vis_infos(info_geometry_t::FULL_LINE, solution_traj, body_name, ss);
 
-    vis_group -> add_animation(solution_traj, ss, start_state);
+  vis_group->add_animation(solution_traj, ss, start_state);
 
-    vis_group -> output_html("lander_ctrl.html");
+  vis_group->output_html("lander_ctrl.html");
 
-    delete vis_group;
+  delete vis_group;
 
-    params.print();
+  params.print();
 }

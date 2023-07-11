@@ -7,8 +7,8 @@
 
 void pyprx_utilities_data_structures_py()
 {
-	pyprx_utilities_data_structures_gnn_py();
-	pyprx_utilities_data_structures_abstract_edge_py();
-	pyprx_utilities_data_structures_abstract_node_py();
-	pyprx_utilities_data_structures_tree_py();
+  pyprx_utilities_data_structures_gnn_py();
+  pyprx_utilities_data_structures_abstract_edge_py();
+  pyprx_utilities_data_structures_abstract_node_py();
+  pyprx_utilities_data_structures_tree_py();
 }
