@@ -58,18 +58,23 @@ public:
   template <std::size_t I, typename... Tp, std::enable_if_t<(I == sizeof...(Tp) - 1), bool> = true>
   inline static std::string create_hash(std::size_t& hash, const std::tuple<Tp...>& t)
   {
+    // PRX_DEBUG_VAR_3(I, std::get<I>(t), hash);
     std::stringstream str;
     str << std::get<I>(t);
-    prx::hash_combine(hash, std::get<I>(t));
+    // prx::hash_combine(hash, std::get<I>(t));
+    // PRX_DEBUG_VAR_3(I, std::get<I>(t), hash);
     return str.str();
   }
   template <std::size_t I, typename... Tp, std::enable_if_t<(I < sizeof...(Tp) - 1), bool> = true>
   inline static std::string create_hash(std::size_t& hash, const std::tuple<Tp...>& t)
   {
+    // PRX_DEBUG_VAR_3(I, std::get<I>(t), hash);
     std::stringstream str;
     prx::hash_combine(hash, std::get<I>(t));
     str << std::get<I>(t) << "_";
     str << create_hash<I + 1>(hash, t);
+
+    hash = std::hash<std::string>()(str.str());
     return str.str();
   }
   /**

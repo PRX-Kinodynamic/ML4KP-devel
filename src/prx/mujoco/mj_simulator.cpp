@@ -14,9 +14,9 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path, bool visua
 
   for (std::size_t idx = 0; idx < _mj_model->nsensor; idx++)
   {
-    std::shared_ptr<mujoco_sensor_t> sensor = std::make_shared<mujoco_sensor_t>(_mj_model, _mj_data, idx);
-    std::cout << "sensor: " << sensor->get_name() << "\n";
-    sensors[sensor->get_name()] = sensor;
+    // std::shared_ptr<mujoco_sensor_t> sensor = std::make_shared<mujoco_sensor_t>(_mj_model, _mj_data, idx);
+    // std::cout << "sensor: " << sensor->get_name() << "\n";
+    // sensors[sensor->get_name()] = sensor;
   }
   // button_left = button_right = button_middle = false;
   // lastx = lasty = 0;
@@ -167,14 +167,14 @@ void mujoco_simulator_t::init_simulator(std::shared_ptr<prx::mujoco_plant_t> mj_
 
 void mujoco_simulator_t::step_simulation(propagate_step step)
 {
+  // Set the warmstart acceleration to be zero (for determinism)
+  // for (int i = 0; i < _mj_model->nv; i++)
+  // {
+  //   _mj_data->qacc_warmstart[i] = 0;
+  // }
   if (_record_video)
   {
     add_frame();
-  }
-  // Set the warmstart acceleration to be zero (for determinism)
-  for (int i = 0; i < _mj_model->nv; i++)
-  {
-    _mj_data->qacc_warmstart[i] = 0;
   }
 
   _plugin_fn();

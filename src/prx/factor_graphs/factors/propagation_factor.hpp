@@ -20,6 +20,68 @@
 
 namespace prx
 {
+namespace fg
+{
+template <typename X, typename Xdot>
+class propagation_euler_factor_t : public gtsam::NoiseModelFactor3<X, X, Xdot>
+{
+  using Base = gtsam::NoiseModelFactor3<X, X, Xdot>;
+  using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
+
+  using Partial_X0 = std::function<X(const X&)>;
+  using Partial_X1 = std::function<X(const X&)>;
+  using Partial_Xdot = std::function<X(const Xdot&)>;
+
+  static constexpr Eigen::Index NInputs{ X::RowsAtCompileTime };
+  using Identity = Eigen::Matrix<double, NInputs, NInputs>;
+
+public:
+  propagation_euler_factor_t(const gtsam::Key key_x0, const gtsam::Key key_x1, const gtsam::Key key_xdot,
+                             const NoiseModel& cost_model, const double h = prx::simulation_step)
+    : Base(cost_model, key_x0, key_x1, key_xdot), derivative_x0(h), derivative_x1(h), derivative_xdot(h)
+  {
+  }
+
+  virtual Eigen::VectorXd evaluateError(const X& x0, const X& x1, const Xdot& xdot,            // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H_x0 = boost::none,  // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H_x1 = boost::none,  // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H_xdot = boost::none) const override
+  {
+    if (H_x0)
+    {
+      *H_x0 = -1 * Identity::Identity(x0.size(), x0.size());
+      // derivative_x0._model = [&](const X& x0_) { return compute_error(x0_, x1, xdot); };
+    }
+    if (H_x1)
+    {
+      *H_x1 = Identity::Identity(x1.size(), x1.size());
+      // derivative_x1._model = [&](const X& x1_) { return compute_error(x0, x1_, xdot); };
+    }
+    if (H_xdot)
+    {
+      *H_xdot = -simulation_step * Identity::Identity(xdot.size(), xdot.size());
+      // derivative_xdot._model = [&](const Xdot& xdot_) { return compute_error(x0, x1, xdot_); };
+    }
+
+    return compute_error(x0, x1, xdot);
+  }
+
+  X compute_error(const X& x0, const X& x1, const Xdot& xdot) const
+  {
+    return x1 - (x0 + xdot * simulation_step);
+  }
+
+private:
+  Partial_X0 partial_x0;
+  Partial_X1 partial_x1;
+  Partial_Xdot partial_xdot;
+
+  mutable prx::math::first_order_derivative_t<Partial_X0, X, 4> derivative_x0;
+  mutable prx::math::first_order_derivative_t<Partial_X1, X, 4> derivative_x1;
+  mutable prx::math::first_order_derivative_t<Partial_Xdot, Xdot, 4> derivative_xdot;
+};
+}  // namespace fg
+
 class propagation_factor_t : public gtsam::NoiseModelFactor3<Eigen::VectorXd, Eigen::VectorXd, Eigen::VectorXd>
 {
 public:

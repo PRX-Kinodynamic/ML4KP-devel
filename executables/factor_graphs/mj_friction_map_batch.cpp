@@ -41,13 +41,13 @@
 #include "prx/factor_graphs/utilities/fg_logger.hpp"
 #include "prx/factor_graphs/utilities/utilities_functions.hpp"
 #include "prx/factor_graphs/utilities/formatter.hpp"
+#include "prx/factor_graphs/utilities/friction_map.hpp"
 
 #include "prx/mujoco/mj_simulator.hpp"
 #include "prx/mujoco/plants/mj_friction_plant.hpp"
 #include <gtsam/nonlinear/Marginals.h>
 
 #include "friction_maps.hpp"
-
 using namespace prx;
 
 const int XMAX{ 20 };
@@ -113,6 +113,7 @@ int main(int argc, char** argv)
   // using Time = typename PropagationMj::Time;
   using Theta = typename PropagationMj::Theta;
   using MjFunction = typename PropagationMj::MjFunction;
+  using Position = Eigen::Vector<double, 2>;
 
   std::unordered_map<std::string, logger_t> logs{};
   friction_map::init_logmap(logs, "batch_");
@@ -134,12 +135,25 @@ int main(int argc, char** argv)
     if (g1 == "floor0")
       floor_id = i;
   }
-  MjFunction fg_mjfn = [&](const State& x0, const State& x1, const Control& u, const Theta& th) { ps->copy_from(th); };
+  MjFunction fg_mjfn = [&](const State& x0, const State& x1, const Control& u, const Theta& th)  // no-lint
+  {
+    Theta th_transform(Theta::Zero(ps_dim));
+    th_transform[0] = std::exp(-th[0] * 0.1);
+    // th_transform[0] = std::max(1.0 - 0.01 * th[0], 0.0);
+    // th_transform[0] = th[0];
+    // th_transform[0] = th[0] / 100;
 
+    ps->copy_from(th_transform);
+  };
   gtsam::Values results;
   gtsam::Values init_vals;
   gtsam::LevenbergMarquardtParams lm_params{ fg::utilities::default_levenberg_marquardt_parameters() };
-  lm_params.setMaxIterations(1000);
+  lm_params.setUseFixedLambdaFactor(true);
+  lm_params.setMaxIterations(10000);
+  lm_params.setRelativeErrorTol(1e-10);
+  lm_params.setAbsoluteErrorTol(1e-10);
+  lm_params.setlambdaUpperBound(1e64);
+  lm_params.setVerbosityLM("LAMBDA");
 
   std::unordered_map<std::string, gtsam::noiseModel::Base::shared_ptr> noise_models;
   State noise{ State::Ones(ss_dim) * 1e-5 };
@@ -154,114 +168,89 @@ int main(int argc, char** argv)
   noise_models["weight"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e0);
   noise_models["positive_basis"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e-5);
   noise_models["guard"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e-5);
+  noise_models["small_basis"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e-5);
   // gtsam::SharedGaussian basis_nm = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e1);
 
   std::size_t total_plan_trajectories_files{ params["total_plan_traj_files_to_use"].as<std::size_t>() };
+  std::size_t init_traj_id{ params["init_traj_id"].as<std::size_t>() };
   std::string data_path{ params["data_path"].as<std::string>() };
 
   plan_t plan(cs);
   trajectory_t trajectory(ss);
 
-  std::size_t fg_iterations{ 0 };
-  std::vector<prx::prx_symbol_t> weights_used;
+  const double length_0{ frictions_grid.get_cell_length(0) };
+  const double length_1{ frictions_grid.get_cell_length(1) };
 
-  gtsam::NonlinearFactorGraph weights_graph;
-  gtsam::Values weights_values;
-  const prx_symbol_t param_symbol_basis{ symbol_factory_t::create_hashed_symbol("param_basis", 0) };
-  const prx_symbol_t guard_symbol{ symbol_factory_t::create_hashed_symbol("guard") };
-  basis_vector_t big_vector = friction_map::basis_vector_from_grid<basis_vector_t>(frictions_grid);
-  weights_values.insert(param_symbol_basis, big_vector);
-  weights_graph.addPrior(param_symbol_basis, big_vector, noise_models["basis"]);
-  weights_graph.add(fg::positive_vector_factor_t<BASIS_DIM>(param_symbol_basis, noise_models["positive_basis"]));
-  gtsam::NonlinearFactorGraph trajectory_graph;
-  gtsam::Values trajectory_values;
-  for (std::size_t idx = 0; idx < total_plan_trajectories_files; ++idx)
+  prx::fg::mj_friction_map_t<TH_DIM, BASIS_DIM> mj_friction_map(sg, env_bounds, GRID_DIVISIONS, initial_friction_vec);
+  mj_friction_map._fg_mjfn = fg_mjfn;
+  std::size_t fg_iterations{ 0 };
+
+  gtsam::Values batch_values;
+  gtsam::NonlinearFactorGraph batch_graph;
+
+  gtsam::Values batch_results;
+  gtsam::Values previous_values;
+
+  fg::formatter_t graph_formatter;
+
+  // for (std::size_t batch_idx = 0; batch_idx < total_batches; ++batch_idx)
+  // {
+  for (std::size_t idx = init_traj_id; idx < init_traj_id + total_plan_trajectories_files; ++idx)
   {
     const std::string traj_path = data_path + "/traj_" + to_zero_lead(idx, 5) + ".txt";
     const std::string plan_path = data_path + "/plan_" + to_zero_lead(idx, 5) + ".txt";
-    PRX_DEBUG_VAR_1(traj_path);
-    PRX_DEBUG_VAR_1(plan_path);
+
     plan.clear();
     trajectory.clear();
+
     plan.from_file(plan_path);
     trajectory.from_file(traj_path);
+
     plan.expand();
-    PRX_DEBUG_VAR_2(plan.size(), trajectory.size());
+
     if (plan.size() + 1 != trajectory.size())
     {
       prx_warn("Plan/Traj " << idx << "mismatch on sizes");
       continue;
     }
 
-    friction_map::plan_trajectory_t plan_trajectory(&plan, &trajectory);
-
-    std::size_t step_i{ 0 };
-    for (auto state_ctrl_tuple : plan_trajectory)
-    {
-      const prx::space_point_t xi_pt = std::get<0>(state_ctrl_tuple);
-      const prx::plan_step_t ui_pt = std::get<1>(state_ctrl_tuple);
-      const prx::space_point_t xip1_pt = std::get<2>(state_ctrl_tuple);
-
-      const State xi_v{ xi_pt->vector() };
-      const Control ui_v{ ui_pt.control->vector() };
-      const Eigen::VectorXd ti_v{ (Eigen::VectorXd(1) << ui_pt.duration).finished() };
-      const State xip1_v{ xip1_pt->vector() };
-
-      prx_symbol_t state_symbol{ symbol_factory_t::create_hashed_symbol("state_symbol", xi_v[0], xi_v[1]) };
-      prx_symbol_t next_state_symbol{ symbol_factory_t::create_hashed_symbol("state_symbol", xip1_v[0], xip1_v[1]) };
-      prx_symbol_t control_symbol{ symbol_factory_t::create_hashed_symbol("control_symbol", xi_v[0], xi_v[1],
-                                                                          ui_v[0]) };
-      // prx_symbol_t time_symbol{ symbol_factory_t::create_hashed_symbol("time_symbol", idx, step_i) };
-      prx_symbol_t param_symbol{ symbol_factory_t::create_hashed_symbol("param_symbol", xi_v[0], xi_v[1]) };
-      prx_symbol_t weights_symbol{ symbol_factory_t::create_hashed_symbol("weight_symbol", xi_v[0], xi_v[1]) };
-
-      visited_grid(xi_v[0], xi_v[1])[0] = 1;
-      // trajectory_graph.addPrior(state_symbol, xi_v, noise_models["state_space"]);
-      // trajectory_graph.add(
-      //     prx::fg::state_prior_factor_t<Eigen::Dynamic>(state_symbol, xi_v, ss, noise_models["state_space"],
-      //     ss_dim));
-      // trajectory_graph.addPrior(control_symbol, ui_v, noise_models["control_space"]);
-      // trajectory_graph.addPrior(time_symbol, ti_v, noise_models["time"]);
-
-      // trajectory_values.insert(state_symbol, xi_v);
-      // trajectory_values.insert(control_symbol, ui_v);
-      // trajectory_values.insert(time_symbol, ti_v);
-      trajectory_values.insert_or_assign(param_symbol, (Eigen::VectorXd(1) << initial_friction).finished());
-      const basis_vector_t weight_i{ friction_map::weights_vector_given_state<basis_vector_t>(frictions_grid, xi_v) };
-      // weights_used.push_back(weights_symbol);
-
-      // weights_values.insert(weights_symbol, weight_i);
-      // weights_graph.addPrior(weights_symbol, weight_i, noise_models["weight"]);
-
-      trajectory_graph.add(PropagationMj(param_symbol, noise_models["parameter_space"], sg, fg_mjfn, ss_dim, cs_dim,
-                                         ps_dim, xi_pt, xip1_pt, ui_pt.control, prx::simulation_step));
-
-      weights_graph.add(fg::friction_fusion_factor_t<TH_DIM, BASIS_DIM, StateDim, decltype(frictions_grid)>(
-          noise_models["friction_fusion"], param_symbol_basis, param_symbol, guard_symbol, xi_v, &frictions_grid));
-
-      step_i++;
-    }
+    auto values = mj_friction_map.create_factor_graph(trajectory, plan, idx, batch_graph, previous_values);
+    // batch_graph.saveGraph(prx::out_path + "friction_maps/batch_graph_" + std::to_string(idx) + ".txt", values,
+    //                       prx::symbol_factory_t::formatter, graph_formatter);
+    // batch_graph.add_factors(graph_values.first);
+    batch_values.insert_or_assign(values);
+    prx::symbol_factory_t::symbols_to_file();
   }
-  basis_vector_t visited_vector = friction_map::basis_vector_from_grid<basis_vector_t>(visited_grid);
-  weights_graph.addPrior(guard_symbol, visited_vector, noise_models["guard"]);
-  weights_graph.add(fg::positive_vector_factor_t<BASIS_DIM>(guard_symbol, noise_models["positive_basis"]));
-  weights_values.insert(guard_symbol, visited_vector);
-  gtsam::NonlinearFactorGraph graph;
-  graph.add(trajectory_graph);
-  graph.add(weights_graph);
-  gtsam::Values values;
-  values.insert_or_assign(trajectory_values);
-  values.insert_or_assign(weights_values);
-  std::cout << "Graph: " << graph.size() << std::endl;
-  prx::fg::utilities::values_to_file<Eigen::VectorXd, basis_vector_t>(values,
-                                                                      prx::out_path + "mj_friction_map_values.txt");
-  gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
-  results = fg::utilities::optimize_and_log(optimizer, lm_params, logs["fg_log"], fg_iterations);
+  // }
+  std::cout << "Graph: " << batch_graph.size() << std::endl;
+  batch_graph.saveGraph(prx::out_path + "friction_maps/batch_graph.txt", batch_values, prx::symbol_factory_t::formatter,
+                        graph_formatter);
+  prx::fg::utilities::values_to_file<Eigen::VectorXd, basis_vector_t>(batch_values, prx::out_path +
+                                                                                        "batch_mj_friction_map_values."
+                                                                                        "txt");
+  gtsam::LevenbergMarquardtOptimizer optimizer(batch_graph, batch_values, lm_params);
+  batch_results = fg::utilities::optimize_and_log(optimizer, lm_params, logs["fg_log"], fg_iterations);
   logs["thetas_error_log"].log(0, optimizer.error());
 
-  const basis_vector_t new_frictions{ results.at<basis_vector_t>(param_symbol_basis) };
-  prx::friction_map::update_friction_grid(frictions_grid, new_frictions);
-  prx::fg::utilities::values_to_file<basis_vector_t>(results, prx::out_path + "friction_maps/mj_friction_map.txt");
+  std::function<std::tuple<bool, Position>(const gtsam::Values&, const gtsam::Key&)> variables_positions =
+      [&](const gtsam::Values& values, const gtsam::Key& key)  // no-lint
+  {
+    bool bool_res{ false };
+    Position pos_res{ Position::Zero() };
+    if (mj_friction_map._symbol_positions.count(key) > 0)
+    {
+      bool_res = true;
+      pos_res = 1000 * mj_friction_map._symbol_positions[key];
+    }
+
+    return std::make_tuple(bool_res, pos_res);
+  };
+  prx::fg::create_gml_file(batch_graph, batch_results, prx::out_path + "friction_maps/fg_batch.gml",
+                           variables_positions);
+
+  prx::fg::utilities::values_to_file<basis_vector_t>(results, prx::out_path +
+                                                                  "friction_maps/"
+                                                                  "batch_mj_friction_map.txt");
 
   // const prx_symbol_t param_symbol_basis{ symbol_factory_t::create_hashed_symbol("param_basis", 0) };
   // auto basis = results.at<basis_vector_t>(param_symbol_basis);
@@ -270,10 +259,12 @@ int main(int argc, char** argv)
                                                           prx::linspace<double>(-XMAX, XMAX, 20),
                                                           prx::linspace<double>(-YMAX, YMAX, 20));
 
-  frictions_grid.to_file(prx::out_path + "friction_maps/batch_frictions_grid_mj.txt",
-                         [&](const friction_vector_t& v) { return v.transpose(); });
-  visited_grid.to_file(prx::out_path + "friction_maps/batch_visited_grid_mj.txt",
-                       [&](const friction_vector_t& v) { return v.transpose(); });
+  mj_friction_map.to_files(batch_results, "batch");
+
+  // mj_friction_map._frictions_grid.to_file(prx::out_path + "friction_maps/batch_frictions_grid_mj.txt",
+  //                                         [&](const friction_vector_t& v) { return v.transpose(); });
+  // mj_friction_map._visited_grid.to_file(prx::out_path + "friction_maps/batch_visited_grid_mj.txt",
+  //                                       [&](const friction_vector_t& v) { return v.transpose(); });
   for (auto& logger_pair : logs)
   {
     std::cout << logger_pair.first << " " << logger_pair.second.get_filename() << "\n";

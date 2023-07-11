@@ -214,16 +214,15 @@ class friction_local_fusion_factor_t : public noise_model_5factor_t<THETA_DIM, 1
 public:
   friction_local_fusion_factor_t(const gtsam::noiseModel::Base::shared_ptr& cost_model, const gtsam::Key theta,
                                  const gtsam::Key basis_0, const gtsam::Key basis_1, const gtsam::Key basis_2,
-                                 const gtsam::Key basis_3, const Guard guard, const State state,
-                                 const BasisPositions basis_positions, const double cell_size,
-                                 const Eigen::Index theta_dim, const Eigen::Index basis_dim,
+                                 const gtsam::Key basis_3, const State state, const BasisPositions basis_positions,
+                                 const double cell_size, const Eigen::Index theta_dim, const Eigen::Index basis_dim,
                                  const double h = prx::simulation_step)
     : Base(theta, basis_0, basis_1, basis_2, basis_3, cost_model)
     , _derivative_theta(h, theta_dim, theta_dim)
     , _derivative_basis(h, basis_dim, theta_dim)
     , _theta_zero(Theta::Zero(theta_dim))
     , _state(state)
-    , _guard(guard)
+    // , _guard(guard)
     , _basis_positions(basis_positions)
     , _cell_size(cell_size)
     , _guarded_weight(compute_weight(_state, _cell_size, _basis_positions))
@@ -236,11 +235,10 @@ public:
   template <Eigen::Index ThDim = THETA_DIM, std::enable_if_t<(ThDim != Eigen::Dynamic), bool> = true>
   friction_local_fusion_factor_t(const gtsam::noiseModel::Base::shared_ptr& cost_model, const gtsam::Key theta,
                                  const gtsam::Key basis_0, const gtsam::Key basis_1, const gtsam::Key basis_2,
-                                 const gtsam::Key basis_3, const Guard guard, const State state,
-                                 const BasisPositions positions, const double cell_size,
-                                 const double h = prx::simulation_step)
-    : friction_local_fusion_factor_t(cost_model, theta, basis_0, basis_1, basis_2, basis_3, guard, state, cell_size,
-                                     THETA_DIM, BASIS_DIM, h)
+                                 const gtsam::Key basis_3, const State state, const BasisPositions positions,
+                                 const double cell_size, const double h = prx::simulation_step)
+    : friction_local_fusion_factor_t(cost_model, theta, basis_0, basis_1, basis_2, basis_3, state, cell_size, THETA_DIM,
+                                     BASIS_DIM, h)
   {
   }
 

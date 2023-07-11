@@ -28,8 +28,8 @@ int main(int argc, char** argv)
   space_point_t start = ss->make_point();
   trajectory_t traj(ss);
 
-  // ss->copy(start, params["start_state"].as<std::vector<double>>());
-  ss->copy_to(start);
+  ss->copy(start, params["start_state"].as<std::vector<double>>());
+  // ss->copy_to(start);
 
   plan_t plan(cs);
   plan.from_file(control_filename);

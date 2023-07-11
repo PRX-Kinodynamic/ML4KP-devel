@@ -26,6 +26,7 @@ gml_list_t create_graphics(const VariablePositions& var_pos, const gtsam::Key& k
     gml_graphics.emplace("x", -position[0]);
     gml_graphics.emplace("y", -position[1]);
 
+    // PRX_DEBUG_VAR_1(prx::symbol_factory_t::formatter(key));
     // gml_graphics.emplace("center", gml_center);
   }
 
@@ -51,7 +52,7 @@ gml_list_t create_variable_node(const std::size_t& idx, const gtsam::Key& key, c
   return gml_node;
 }
 
-gml_list_t create_factor_node(const std::size_t& idx)
+gml_list_t create_factor_node(const std::size_t& idx, const double x, const double y)
 {
   gml_list_t gml_factor{};
   gml_factor.emplace("id", idx);
@@ -59,6 +60,8 @@ gml_list_t create_factor_node(const std::size_t& idx)
   gml_factor.emplace("label", std::string("factor_") + std::to_string(idx));
 
   gml_list_t gml_graphics{};
+  gml_graphics.emplace("x", x);
+  gml_graphics.emplace("y", y);
   gml_graphics.emplace("w", 35);
   gml_graphics.emplace("h", 35);
   gml_graphics.emplace("type", std::string("ellipse"));
@@ -87,6 +90,7 @@ void create_gml_file(const gtsam::NonlinearFactorGraph& graph, const gtsam::Valu
 
   std::size_t next_idx{ 0 };
   std::unordered_map<gtsam::Key, std::size_t> ids_map;
+  // std::unordered_map<gtsam::Key, std::tuple<double, double, double>> poses_map;
   for (size_t i = 0; i < graph.size(); ++i)
   {
     const gtsam::NonlinearFactor::shared_ptr& factor = graph.at(i);
@@ -95,8 +99,11 @@ void create_gml_file(const gtsam::NonlinearFactorGraph& graph, const gtsam::Valu
       const std::size_t factor_idx{ next_idx };
       next_idx++;
 
-      gml_nodes_edges.emplace("node", create_factor_node(factor_idx));
+      // gml_nodes_edges.emplace("node", create_factor_node(factor_idx));
       const gtsam::KeyVector& factor_keys = factor->keys();
+      double x{ 0.0 };
+      double y{ 0.0 };
+      double count{ 0.0 };
       for (auto& key : factor_keys)
       {
         if (ids_map.count(key) == 0)
@@ -105,8 +112,26 @@ void create_gml_file(const gtsam::NonlinearFactorGraph& graph, const gtsam::Valu
           next_idx++;
           gml_nodes_edges.emplace("node", create_variable_node(ids_map[key], key, values, var_pos));
         }
+        auto tuple = var_pos(values, key);
+        if (std::get<0>(tuple))
+        {
+          auto position = std::get<1>(tuple);
+          x += position[0];
+          y += position[1];
+          count += 1.0;
+          // PRX_DEBUG_VAR_2(prx::symbol_factory_t::formatter(key), count);
+        }
+
+        // PRX_DEBUG_VAR_2(prx::symbol_factory_t::formatter(key), factor_idx);
         gml_nodes_edges.emplace("edge", create_edge(ids_map[key], factor_idx));
       }
+      if (count > 0)
+      {
+        gml_nodes_edges.emplace("node", create_factor_node(factor_idx, -x / count, -y / count));
+        // PRX_DEBUG_VAR_2(-x / count, -y / count);
+      }
+      else
+        gml_nodes_edges.emplace("node", create_factor_node(factor_idx, x, y));
     }
   }
   gml_list_t gml_graph{};

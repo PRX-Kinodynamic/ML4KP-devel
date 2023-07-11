@@ -283,7 +283,7 @@ int main(int argc, char** argv)
       // weights_graph.add(fg::positive_vector_factor_t<TH_DIM>(basis_symbol_3, noise_models["positive_friction"]));
       weights_graph.add(fg::friction_local_fusion_factor_t<TH_DIM, State, BasisPosition>(
           noise_models["small_basis"], param_symbol, basis_symbol_0, basis_symbol_1, basis_symbol_2, basis_symbol_3,
-          Eigen::Vector4d::Ones(), xi_v, basis_positions, length_0, TH_DIM, 1));
+          xi_v, basis_positions, length_0, TH_DIM, 1));
       const Eigen::Vector<double, 1> one(1);
       weights_values.insert_or_assign(basis_symbol_0, one);
       weights_values.insert_or_assign(basis_symbol_1, one);

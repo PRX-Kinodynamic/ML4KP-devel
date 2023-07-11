@@ -47,6 +47,8 @@ int main(int argc, char* argv[])
   std::cout << plan << std::endl;
   sg->propagate(start_state, plan, solution_traj);
 
+  solution_traj.to_file(out_path + plant_name + "_traj.txt");
+  plan.to_file(out_path + plant_name + "_plan.txt");
   three_js_group_t* vis_group = new three_js_group_t({ plant }, { obstacle_list });
 
   std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
