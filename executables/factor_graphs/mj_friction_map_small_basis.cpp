@@ -120,15 +120,32 @@ int main(int argc, char** argv)
   friction_map::init_logmap(logs, "small_");
 
   const std::vector<std::pair<double, double>> env_bounds{ std::make_pair(-XMAX, XMAX), std::make_pair(-YMAX, YMAX) };
-  // prx::regular_grid_t<friction_vector_t, 2> frictions_grid{ env_bounds, GRID_DIVISIONS };
-  // prx::regular_grid_t<friction_vector_t, 2> visited_grid{ env_bounds, GRID_DIVISIONS };
-  // prx::regular_grid_t<prx::prx_symbol_t, 2> basis_grid{ env_bounds, GRID_DIVISIONS };
+  prx::regular_grid_t<friction_vector_t, 2> frictions_grid{ env_bounds, GRID_DIVISIONS };
+  prx::regular_grid_t<friction_vector_t, 2> visited_grid{ env_bounds, GRID_DIVISIONS };
+  prx::regular_grid_t<prx::prx_symbol_t, 2> basis_grid{ env_bounds, GRID_DIVISIONS };
+  const double initial_friction{ params["initial_friction"].as<double>() };
+  const Eigen::VectorXd initial_friction_vec{ friction_vector_t::Ones(ps_dim) * initial_friction };
 
-  const friction_vector_t initial_friction_vec{ friction_vector_t::Ones(ps_dim) *
-                                                params["initial_friction"].as<double>() };
-  prx::fg::mj_friction_map_t<TH_DIM, BASIS_DIM> friction_map(sg, env_bounds, GRID_DIVISIONS, initial_friction_vec);
+  std::size_t basis_idx{ 0 };
+  using Container2D = std::vector<double>;
+  std::function<prx::prx_symbol_t(const Container2D&)> basis_grid_initializer = [&](const Container2D&) {
+    const prx::prx_symbol_t basis_symbol{ symbol_factory_t::create_hashed_symbol("basis", basis_idx) };
+    basis_idx++;
+    return basis_symbol;
+  };
+  basis_grid.populate_grid(basis_grid_initializer);
+  frictions_grid.populate_grid(initial_friction_vec);
+  visited_grid.populate_grid(friction_vector_t::Zero());
 
-  friction_map._fg_mjfn = [&](const State& x0, const State& x1, const Control& u, const Theta& th)  // no-lint
+  int floor_id{ 0 };
+  int total_geoms{ sim->_mj_model->ngeom };
+  for (int i = 0; i < total_geoms; ++i)
+  {
+    std::string g1 = std::string(sim->_mj_model->names + sim->_mj_model->name_geomadr[i]);
+    if (g1 == "floor0")
+      floor_id = i;
+  }
+  MjFunction fg_mjfn = [&](const State& x0, const State& x1, const Control& u, const Theta& th)  // no-lint
   {
     Theta th_transform(Theta::Zero(ps_dim));
     th_transform[0] = std::exp(-th[0]);
@@ -321,74 +338,72 @@ int main(int argc, char** argv)
     // const basis_vector_t new_frictions{ results.at<basis_vector_t>(param_symbol_basis) };
     // prx::friction_map::update_friction_grid(frictions_grid, new_frictions);
     // prx::fg::utilities::values_to_file<basis_vector_t>(results, prx::out_path + "friction_maps/mj_friction_map.txt");
-    resulting_values.insert_or_assign(iter_results);
-    accum_fg.add(graph);
-  }
-  std::function<std::tuple<bool, Position>(const gtsam::Values&, const gtsam::Key&)> variables_positions =
-      [&](const gtsam::Values& values, const gtsam::Key& key)  // no-lint
-  {
-    bool bool_res{ false };
-    Position pos_res{ Position::Zero() };
-    if (symbol_positions.count(key) > 0)
+    std::function<std::tuple<bool, Position>(const gtsam::Values&, const gtsam::Key&)> variables_positions =
+        [&](const gtsam::Values& values, const gtsam::Key& key)  // no-lint
     {
-      bool_res = true;
-      pos_res = 1000 * symbol_positions[key];
-    }
+      bool bool_res{ false };
+      Position pos_res{ Position::Zero() };
+      if (symbol_positions.count(key) > 0)
+      {
+        bool_res = true;
+        pos_res = 1000 * symbol_positions[key];
+      }
 
-    return std::make_tuple(bool_res, pos_res);
-  };
-  prx::fg::create_gml_file(accum_fg, resulting_values, prx::out_path + "friction_maps/mj_friction_map.gml",
-                           variables_positions);
-
-  friction_map.to_files(resulting_values, "small");
+      return std::make_tuple(bool_res, pos_res);
+    };
+    prx::fg::create_gml_file(graph, results, prx::out_path + "friction_maps/mj_friction_map.gml", variables_positions);
+  }
   // const prx_symbol_t param_symbol_basis{ symbol_factory_t::create_hashed_symbol("param_basis", 0) };
   // auto basis = results.at<basis_vector_t>(param_symbol_basis);
-  // for (auto x : prx::linspace<double>(-XMAX, XMAX, 100))
-  // {
-  //   for (auto y : prx::linspace<double>(-YMAX, YMAX, 100))
-  //   {
-  //     if (visited_grid(x, y)[0] > 0)
-  //     {
-  //       Position position_0(x, y);
-  //       Position position_1(x, y + length_1);
-  //       Position position_2(x + length_0, y);
-  //       Position position_3(x + length_0, y + length_1);
-  //       BasisPosition basis_positions;
-  //       basis_positions.row(0) = frictions_grid.unmap<Eigen::Vector2d>(position_0[0], position_0[1]);
-  //       basis_positions.row(1) = frictions_grid.unmap<Eigen::Vector2d>(position_1[0], position_1[1]);
-  //       basis_positions.row(2) = frictions_grid.unmap<Eigen::Vector2d>(position_2[0], position_2[1]);
-  //       basis_positions.row(3) = frictions_grid.unmap<Eigen::Vector2d>(position_3[0], position_3[1]);
-  //       auto weight = fg::friction_local_fusion_factor_t<TH_DIM, State, BasisPosition>::compute_weight(
-  //           position_0, length_0, basis_positions);
+  for (auto x : prx::linspace<double>(-XMAX, XMAX, 100))
+  {
+    for (auto y : prx::linspace<double>(-YMAX, YMAX, 100))
+    {
+      if (visited_grid(x, y)[0] > 0)
+      {
+        Position position_0(x, y);
+        Position position_1(x, y + length_1);
+        Position position_2(x + length_0, y);
+        Position position_3(x + length_0, y + length_1);
+        BasisPosition basis_positions;
+        basis_positions.row(0) = frictions_grid.unmap<Eigen::Vector2d>(position_0[0], position_0[1]);
+        basis_positions.row(1) = frictions_grid.unmap<Eigen::Vector2d>(position_1[0], position_1[1]);
+        basis_positions.row(2) = frictions_grid.unmap<Eigen::Vector2d>(position_2[0], position_2[1]);
+        basis_positions.row(3) = frictions_grid.unmap<Eigen::Vector2d>(position_3[0], position_3[1]);
+        auto weight = fg::friction_local_fusion_factor_t<TH_DIM, State, BasisPosition>::compute_weight(
+            position_0, length_0, basis_positions);
 
-  //       auto basis_0 = resulting_values.at<friction_vector_t>(basis_grid(position_0[0], position_0[1]));
-  //       auto basis_1 = resulting_values.at<friction_vector_t>(basis_grid(position_1[0], position_1[1]));
-  //       auto basis_2 = resulting_values.at<friction_vector_t>(basis_grid(position_2[0], position_2[1]));
-  //       auto basis_3 = resulting_values.at<friction_vector_t>(basis_grid(position_3[0], position_3[1]));
-  //       Eigen::Vector4d basis(basis_0[0], basis_1[0], basis_2[0], basis_3[0]);
+        auto basis_0 = results.at<friction_vector_t>(basis_grid(position_0[0], position_0[1]));
+        auto basis_1 = results.at<friction_vector_t>(basis_grid(position_1[0], position_1[1]));
+        auto basis_2 = results.at<friction_vector_t>(basis_grid(position_2[0], position_2[1]));
+        auto basis_3 = results.at<friction_vector_t>(basis_grid(position_3[0], position_3[1]));
+        Eigen::Vector4d basis(basis_0[0], basis_1[0], basis_2[0], basis_3[0]);
 
-  //       auto friction_at_xy = weight.dot(basis);
-  //       logs["idd_friction_map"](x, y, friction_at_xy);
-  //     }
-  //     else
-  //     {
-  //       logs["idd_friction_map"](x, y, 1.0);
-  //     }
-  //   }
-  // }
+        auto friction_at_xy = weight.dot(basis);
+        logs["idd_friction_map"](x, y, friction_at_xy);
+      }
+      else
+      {
+        logs["idd_friction_map"](x, y, 1.0);
+      }
+    }
+  }
+  // prx::friction_map::compute_friction_map<basis_vector_t>(frictions_grid, logs["idd_friction_map"],
+  //                                                         prx::linspace<double>(-XMAX, XMAX, 50),
+  //                                                         prx::linspace<double>(-YMAX, YMAX, 50));
 
-  // basis_grid.to_file(prx::out_path + "friction_maps/small_frictions_grid_mj.txt", [&](const prx::prx_symbol_t& s) {
-  //   if (resulting_values.exists(s))
-  //     return resulting_values.at<friction_vector_t>(s)[0];
-  //   else
-  //     return -1.0;
-  // });
-  // visited_grid.to_file(prx::out_path + "friction_maps/small_visited_grid_mj.txt",
-  //                      [&](const friction_vector_t& v) { return v.transpose(); });
-  // for (auto& logger_pair : logs)
-  // {
-  //   std::cout << logger_pair.first << " " << logger_pair.second.get_filename() << "\n";
-  //   logger_pair.second.close();
-  // }
+  basis_grid.to_file(prx::out_path + "friction_maps/small_frictions_grid_mj.txt", [&](const prx::prx_symbol_t& s) {
+    if (results.exists(s))
+      return results.at<friction_vector_t>(s)[0];
+    else
+      return -1.0;
+  });
+  visited_grid.to_file(prx::out_path + "friction_maps/small_visited_grid_mj.txt",
+                       [&](const friction_vector_t& v) { return v.transpose(); });
+  for (auto& logger_pair : logs)
+  {
+    std::cout << logger_pair.first << " " << logger_pair.second.get_filename() << "\n";
+    logger_pair.second.close();
+  }
   return 0;
 }

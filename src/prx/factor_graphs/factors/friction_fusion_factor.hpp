@@ -241,9 +241,7 @@ public:
     , _derivative_basis(h, basis_dim, theta_dim)
     , _theta_zero(Theta::Zero(theta_dim))
     , _state(state)
-    , _basis_positions(basis_positions)
-    , _cell_size(cell_size)
-    , _guarded_weight(compute_weight<Weights>(_state, _cell_size, _basis_positions))
+
 
   {
     // const Weights weights{ compute_weight(_state) };
@@ -263,6 +261,7 @@ public:
   virtual ~friction_local_fusion_factor_t()
   {
   }
+
 
   Theta compute_error(const Theta& th_t, const Basis& basis_0, const Basis& basis_1, const Basis& basis_2,
                       const Basis& basis_3) const
@@ -284,6 +283,7 @@ private:
   // mutable math::first_order_derivative_t<partial_weight_fn, Weights, 4> _derivative_weights;
   mutable math::first_order_derivative_t<partial_basis_fn, Basis, 4> _derivative_basis;
   // mutable math::first_order_derivative_t<partial_guard_fn, Guard, 4> _derivative_guard;
+
 
   const Theta _theta_zero;
   const State _state;
