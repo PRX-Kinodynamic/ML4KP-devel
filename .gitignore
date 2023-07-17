@@ -19,4 +19,4 @@ resources/input_files/mazes/*.yaml
 **/._.DS_Store
 # src/prx/bullet_sim/external/bullet3
 experiments/
-data/*
+data/

@@ -110,8 +110,5 @@ BOOST_AUTO_TEST_CASE(lqr_acrobot_test)
   BOOST_CHECK(prx::are_matrices_approx_equal(lqr.get_linearized_plant()->get_B(), B_from_matlab, 1e-5));
   BOOST_CHECK(prx::are_matrices_approx_equal(K, K_from_matlab, 1e-5));
 
-  // BOOST_CHECK(prx::are_approx_equal(K(0,0), 7.39050619, 1e-5));
-  // BOOST_CHECK(prx::are_approx_equal(K(0,1), 2.60611851, 1e-5));
-
   // std::cout << "Acrobot OK" << std::endl;
 }
