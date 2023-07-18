@@ -6,109 +6,101 @@
 
 namespace prx
 {
-	class lander_LD_t : public plant_t
-	{
-	public:
-		lander_LD_t(const std::string& path);
-		virtual ~lander_LD_t();
+class lander_LD_t : public plant_t
+{
+public:
+  lander_LD_t(const std::string& path);
+  virtual ~lander_LD_t();
 
-		virtual void propagate(const double simulation_step) override final;
+  virtual void propagate(const double simulation_step) override final;
 
-		virtual void update_configuration() override;
+  virtual void update_configuration() override;
 
-    	// virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon) override;
+  // virtual bool linearize(space_point_t xt, space_point_t ut, double epsilon) override;
 
+protected:
+  virtual void compute_derivative() override final;
 
-	protected:
+  // double _theta1,_theta2,_theta1dot,_theta2dot,_tau,_theta1dotdot,_theta2dotdot;
+  double h, h_dot, h_ddot;
+  double v, v_dot;
+  double m, m_dot;
+  double u;
 
-		virtual void compute_derivative() override final;
+  // -alpha <= u(t) <= 0
+  // double alpha = ;
 
-		// double _theta1,_theta2,_theta1dot,_theta2dot,_tau,_theta1dotdot,_theta2dotdot;
-		double h, h_dot, h_ddot;
-		double v, v_dot;
-		double m, m_dot;
-		double u;
+  // Mass of the system when no fuel is left
+  double M_0 = 10334;
 
-		// -alpha <= u(t) <= 0
-		// double alpha = ;
+  // Mass of lander without fuel
 
-		// Mass of the system when no fuel is left
-		double M_0 = 10334; 
+  double gravity = 1.62;
+  double k = 2048;  // velocity of the exhaust gases with respect to the spacecraft
+  double _h_neg;
+};
 
-		// Mass of lander without fuel
+class lander_meditch_ctrl_t : public controller_t
+{
+public:
+  lander_meditch_ctrl_t(system_ptr_t _plant, std::string _name = "base_controller") : controller_t(_plant, _name)
+  {
+    _aux = plant->get_control_space()->make_point();
+    std::cout << "control limits: " << std::endl;
+    plant->get_control_space()->print_bounds();
 
- 		double gravity = 1.62;
- 		double k = 2048; // velocity of the exhaust gases with respect to the spacecraft
-		double _h_neg;
+    auto ss = plant->get_state_space();
+    auto cs = plant->get_control_space();
+    auto ps = plant->get_parameter_space();
 
-	};
+    // double x1 = ss -> at(0);
+    // double x2 = ss -> at(1);
+    double M_0 = ps->at(0);
 
-	class lander_meditch_ctrl_t : public controller_t
-	{
-		public:
-		lander_meditch_ctrl_t(system_ptr_t _plant, std::string _name = "base_controller") 
-			: controller_t(_plant, _name)
-		{
-			_aux = plant -> get_control_space() -> make_point();
-        	std::cout << "control limits: " << std::endl;
-        	plant -> get_control_space() -> print_bounds();
+    PRX_DEBUG_VARS(M_0)
 
-        	auto ss = plant -> get_state_space();
-			auto cs = plant -> get_control_space();
-			auto ps = plant -> get_parameter_space();
+    double k = ps->at(1);
+    double g = ps->at(2);
 
-			// double x1 = ss -> at(0);
-			// double x2 = ss -> at(1);
-			double M_0 = ps -> at(0);
+    double alpha = cs->get_upper_bound(0);
 
-			PRX_DEBUG_VARS(M_0)
+    PRX_DEBUG_VARS(k, g, alpha)
 
-			double k   = ps -> at(1);
-			double g   = ps -> at(2);
+    a = 0.5 * (k * alpha - g * M_0) / M_0;
+    b = (k * alpha * alpha) / (2.0 * M_0 * M_0);
+    PRX_DEBUG_VARS(a, b)
+  }
 
-			double alpha = cs -> get_upper_bound(0);
+  virtual void compute_controls() override
+  {
+    auto ss = plant->get_state_space();
+    auto cs = plant->get_control_space();
+    auto ps = plant->get_parameter_space();
 
-			PRX_DEBUG_VARS(k, g, alpha)
+    double x1 = ss->at(0);
+    double x2 = ss->at(1);
+    // double M_0 = ss -> at(2);
 
-        	a = 0.5 * (k * alpha - g * M_0) / M_0;
-			b = (k * alpha * alpha) / ( 2.0 * M_0 * M_0 ); 
-			PRX_DEBUG_VARS(a,b)
-		}
+    // double k   = ps -> at(1);
+    // double g   = ps -> at(2);
 
-		virtual void compute_controls() override
-		{
-			auto ss = plant -> get_state_space();
-			auto cs = plant -> get_control_space();
-			auto ps = plant -> get_parameter_space();
+    // double alpha = cs -> get_upper_bound(0);
 
-			double x1 = ss -> at(0);
-			double x2 = ss -> at(1);
-			// double M_0 = ss -> at(2);
+    auto f = (b / a) * x1 + 2 * a * std::sqrt(x1 / a) + x2;
 
-			// double k   = ps -> at(1);
-			// double g   = ps -> at(2);
+    (*_aux)[0] = 0;
+    if (f <= 0)
+    {
+      (*_aux)[0] = cs->get_upper_bound(0);
+    }
 
-			// double alpha = cs -> get_upper_bound(0);
+    cs->copy_from_point(_aux);
+  }
 
-			
-
-			auto f = (b/a) * x1 + 2*a * std::sqrt(x1/a) + x2;
-
-			(*_aux)[0] = 0;
-			if (f <= 0)
-			{
-				(*_aux)[0] = cs -> get_upper_bound(0);
-			}
-
-			cs -> copy_from_point(_aux);
-
-		}
-
-		private:
-			double a, b;
-			space_point_t _aux;
-	};
-}
-
+private:
+  double a, b;
+  space_point_t _aux;
+};
+}  // namespace prx
 
 PRX_REGISTER_SYSTEM(lander_LD_t, lander_LD)

@@ -9,10 +9,9 @@
 using namespace boost::python;
 void pyprx_planning_py()
 {
-
-   	pyprx_planning_world_model_py();
-   	pyprx_planning_condition_check_py();
-   	pyprx_planning_planner_functions_py();
-   	pyprx_planning_planner_statistics_py();
-   	pyprx_planning_planners_py();
+  pyprx_planning_world_model_py();
+  pyprx_planning_condition_check_py();
+  pyprx_planning_planner_functions_py();
+  pyprx_planning_planner_statistics_py();
+  pyprx_planning_planners_py();
 }

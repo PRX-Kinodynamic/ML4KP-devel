@@ -2,5 +2,5 @@
 
 void pyprx_simulation_loaders()
 {
-	pyprx_simulation_loaders_obstacle_loader();
+  pyprx_simulation_loaders_obstacle_loader();
 }

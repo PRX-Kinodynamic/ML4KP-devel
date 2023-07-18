@@ -3,5 +3,7 @@
 
 namespace prx
 {
-	controller_t::~controller_t(){}
+controller_t::~controller_t()
+{
 }
+}  // namespace prx
