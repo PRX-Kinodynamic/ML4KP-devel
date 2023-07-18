@@ -25,16 +25,23 @@ namespace ackermann
 const Eigen::Index DimQ{ 5 };
 const Eigen::Index DimQdot{ 3 };
 const Eigen::Index DimQdotdot{ 3 };
-const Eigen::Index DimParams{ 2 };
+const Eigen::Index DimModelParams{ 1 };
+const Eigen::Index DimEnvironmentParams{ 1 };
 const Eigen::Index DimForce{ 1 };
 const Eigen::Index DimU{ 2 };
+
+const Eigen::Index DimQz{ 3 };
 
 using Q = Eigen::Vector<double, DimQ>;
 using Qdot = Eigen::Vector<double, DimQdot>;
 using Qdotdot = Eigen::Vector<double, DimQdotdot>;
-using Params = Eigen::Vector<double, DimParams>;
+using ModelParams = Eigen::Vector<double, DimModelParams>;
+using EnvironmentParams = Eigen::Vector<double, DimEnvironmentParams>;
 using Force = Eigen::Vector<double, DimForce>;
+
 using U = Eigen::Vector<double, DimU>;
+
+using Qz = Eigen::Vector<double, DimQz>;
 }  // namespace ackermann
 
 // Factor <- Q, Qdot, U
@@ -220,71 +227,96 @@ private:
 // Factor <- Q, Qdotdot, F
 // Error on Qdotdot
 class ackermann_qdotdot_force_q_t
-  : public gtsam::NoiseModelFactor4<ackermann::Qdotdot, ackermann::Force, ackermann::Q, ackermann::Params>
+  : public gtsam::NoiseModelFactor5<ackermann::Qdotdot, ackermann::Force, ackermann::Q, ackermann::ModelParams,
+                                    ackermann::EnvironmentParams>
 {
   using Q = ackermann::Q;
   using Qdot = ackermann::Qdot;
   using Qdotdot = ackermann::Qdotdot;
   using Force = ackermann::Force;
-  using Params = ackermann::Params;
+  using ModelParams = ackermann::ModelParams;
+  using EnvironmentParams = ackermann::EnvironmentParams;
 
-  using Base = gtsam::NoiseModelFactor4<Qdotdot, Force, Q, Params>;
+  using Base = gtsam::NoiseModelFactor5<Qdotdot, Force, Q, ModelParams, EnvironmentParams>;
   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
 
   using Partial_Qdotdot = std::function<Qdotdot(const Qdotdot&)>;
   using Partial_Force = std::function<Qdotdot(const Force&)>;
   using Partial_Q = std::function<Qdotdot(const Q&)>;
-  using Partial_Params = std::function<Qdotdot(const Params&)>;
+  using Partial_ModelParams = std::function<Qdotdot(const ModelParams&)>;
+  using Partial_EnvironmentParams = std::function<Qdotdot(const EnvironmentParams&)>;
 
 public:
   ackermann_qdotdot_force_q_t(const gtsam::Key key_qdotdot, const gtsam::Key key_force, const gtsam::Key key_q,
-                              const gtsam::Key key_params, const NoiseModel& cost_model, const double wheel_distance,
-                              const double mass, const double h = prx::simulation_step)
-    : Base(cost_model, key_qdotdot, key_force, key_q, key_params)
+                              const gtsam::Key key_model_params, const gtsam::Key key_environment_params,
+                              const NoiseModel& cost_model, const double wheel_distance, const double mass,
+                              const double h = prx::simulation_step)
+    : Base(cost_model, key_qdotdot, key_force, key_q, key_model_params, key_environment_params)
     , derivative_qdotdot(h)
     , derivative_force(h)
     , derivative_q(h)
-    , derivative_params(h)
+    , derivative_model_params(h)
+    , derivative_environment_params(h)
     , _wheel_distance(wheel_distance)
     , _mass(mass)
   {
   }
 
-  virtual Eigen::VectorXd evaluateError(const Qdotdot& qdotdot, const Force& force, const Q& q,
-                                        const Params& params,                                       // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_qdotdot = boost::none,  // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_force = boost::none,    // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_q = boost::none,        // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_params = boost::none) const override
+  virtual Eigen::VectorXd
+  evaluateError(const Qdotdot& qdotdot, const Force& force, const Q& q, const ModelParams& model_params,
+                const EnvironmentParams& environment_params,                     // no-lint
+                boost::optional<Eigen::MatrixXd&> H_qdotdot = boost::none,       // no-lint
+                boost::optional<Eigen::MatrixXd&> H_force = boost::none,         // no-lint
+                boost::optional<Eigen::MatrixXd&> H_q = boost::none,             // no-lint
+                boost::optional<Eigen::MatrixXd&> H_model_params = boost::none,  // no-lint
+                boost::optional<Eigen::MatrixXd&> H_environemnt_params = boost::none) const override
   {
     if (H_qdotdot)
     {
-      derivative_qdotdot._model = [&](const Qdotdot& qdotdot_) { return compute_error(qdotdot_, force, q, params); };
+      derivative_qdotdot._model = [&](const Qdotdot& qdotdot_) {
+        return compute_error(qdotdot_, force, q, model_params, environment_params);
+      };
       *H_qdotdot = derivative_qdotdot(qdotdot);
     }
     if (H_force)
     {
-      derivative_force._model = [&](const Force& force_) { return compute_error(qdotdot, force_, q, params); };
+      derivative_force._model = [&](const Force& force_) {
+        return compute_error(qdotdot, force_, q, model_params, environment_params);
+      };
       *H_force = derivative_force(force);
     }
     if (H_q)
     {
-      derivative_q._model = [&](const Q& q_) { return compute_error(qdotdot, force, q_, params); };
+      derivative_q._model = [&](const Q& q_) {
+        return compute_error(qdotdot, force, q_, model_params, environment_params);
+      };
       *H_q = derivative_q(q);
     }
-    if (H_params)
+    if (H_model_params)
     {
-      derivative_params._model = [&](const Params& params_) { return compute_error(qdotdot, force, q, params_); };
-      *H_params = derivative_params(params);
+      derivative_model_params._model = [&](const ModelParams& model_params_) {
+        return compute_error(qdotdot, force, q, model_params_, environment_params);
+      };
+      *H_model_params = derivative_model_params(model_params);
+    }
+    if (H_environemnt_params)
+    {
+      derivative_environment_params._model = [&](const EnvironmentParams& env_params_) {
+        return compute_error(qdotdot, force, q, model_params, env_params_);
+      };
+      *H_environemnt_params = derivative_environment_params(environment_params);
     }
 
-    return compute_error(qdotdot, force, q, params);
+    return compute_error(qdotdot, force, q, model_params, environment_params);
   };
 
-  Qdotdot compute_error(const Qdotdot& qdotdot, const Force& force, const Q& q, const Params& params) const
+  Qdotdot compute_error(const Qdotdot& qdotdot, const Force& force, const Q& q, const ModelParams& model_params,
+                        const EnvironmentParams environment_params) const
   {
-    const double I{ params[0] };
-    const double mu{ params[1] };
+    const double I{ model_params[0] };
+    // const double mu{ params[1] };
+    const double mu{ std::exp(-environment_params[0] * 0.1) };
+
     const double f{ force[0] };
 
     const double theta{ q[2] };
@@ -305,12 +337,73 @@ private:
   Partial_Qdotdot partial_qdotdot;
   Partial_Force partial_force;
   Partial_Q partial_q;
-  Partial_Params partial_params;
+  Partial_ModelParams partial_model_params;
+  Partial_EnvironmentParams partial_environment_params;
 
   mutable prx::math::first_order_derivative_t<Partial_Qdotdot, Qdotdot, 4> derivative_qdotdot;
   mutable prx::math::first_order_derivative_t<Partial_Force, Force, 4> derivative_force;
   mutable prx::math::first_order_derivative_t<Partial_Q, Q, 4> derivative_q;
-  mutable prx::math::first_order_derivative_t<Partial_Params, Params, 4> derivative_params;
+  mutable prx::math::first_order_derivative_t<Partial_ModelParams, ModelParams, 4> derivative_model_params;
+  mutable prx::math::first_order_derivative_t<Partial_EnvironmentParams, EnvironmentParams, 4>
+      derivative_environment_params;
 };
+
+// Factor <- Q observed aka (x,y,\theta)
+// Error is Q - (x,y,\theta,0,0)
+class ackermann_q_observation_t : public gtsam::NoiseModelFactor2<ackermann::Qz, ackermann::Q>
+{
+  using Q = ackermann::Q;
+  using Qz = ackermann::Qz;
+
+  using Base = gtsam::NoiseModelFactor2<Qz, Q>;
+  using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
+
+  using Partial_Q = std::function<Qz(const Q&)>;
+  using Partial_Qz = std::function<Qz(const Qz&)>;
+
+public:
+  ackermann_q_observation_t(const gtsam::Key key_qz, const gtsam::Key key_q, const NoiseModel& cost_model,
+                            const double h = prx::simulation_step)
+    : Base(cost_model, key_qz, key_q), derivative_qz(h), derivative_q(h)
+  {
+  }
+
+  virtual Eigen::VectorXd evaluateError(const Qz& qz, const Q& q,                              // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H_qz = boost::none,  // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H_q = boost::none) const override
+  {
+    if (H_qz)
+    {
+      derivative_qz._model = [&](const Qz& qz_) { return compute_error(qz_, q); };
+      *H_qz = derivative_qz(qz);
+    }
+    if (H_q)
+    {
+      derivative_q._model = [&](const Q& q_) { return compute_error(qz, q_); };
+      *H_q = derivative_q(q);
+    }
+
+    return compute_error(qz, q);
+  }
+
+  Qz compute_error(const Qz& qz, const Q& q) const
+  {
+    return qz - q.head(3);
+  }
+
+private:
+  Partial_Qz partial_qz;
+  Partial_Q partial_q;
+
+  mutable prx::math::first_order_derivative_t<Partial_Qz, Qz, 4> derivative_qz;
+  mutable prx::math::first_order_derivative_t<Partial_Q, Q, 4> derivative_q;
+};
+
+// Factor <- Q observed aka (x,y,\theta)
+// Error is Q - (x,y,\theta,0,0)
+class ackermann_q_observation_t : public gtsam::NoiseModelFactor2<ackermann::Qz, ackermann::Q>
+{
+};
+
 }  // namespace fg
 }  // namespace prx

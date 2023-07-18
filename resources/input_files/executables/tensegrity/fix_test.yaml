@@ -1,0 +1,6 @@
+simulation_step: 0.01
+random_seed: 231192
+
+# tensegrity_data: 'tensegrity/data_single_frame.txt'
+tensegrity_data: '${HOME}/Downloads/sensors_1.csv'
+

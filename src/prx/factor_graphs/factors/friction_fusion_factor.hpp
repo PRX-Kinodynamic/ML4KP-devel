@@ -192,25 +192,6 @@ private:
   const State _state;
 };
 
-template <typename Weights, typename StateIn, typename Positions>
-Weights compute_weight(const StateIn& state, const double cell_size, const Positions& basis_positions)
-{
-  Weights weights{ Weights::Zero() };
-  const double _D(std::sqrt(cell_size * cell_size + cell_size * cell_size));
-  // PRX_DEBUG_VAR_2(_D, state.head(2).transpose());
-  for (int i = 0; i < 4; ++i)
-  {
-    const Eigen::Vector2d position{ basis_positions.row(i) };
-    const Eigen::Vector2d delta{ position - state.head(2) };
-    // PRX_DEBUG_VAR_2(position.transpose(), delta.transpose());
-    weights[i] = std::max(1.0 - (delta.lpNorm<1>() / _D), 0.0);
-  }
-  // PRX_DEBUG_VAR_1(weights.transpose());
-  weights = weights / weights.sum();
-  // PRX_DEBUG_VAR_1(weights.transpose());
-  return weights;
-}
-
 template <Eigen::Index THETA_DIM, typename State, typename BasisPositions>
 class friction_local_fusion_factor_t : public noise_model_5factor_t<THETA_DIM, 1, 1, 1, 1>
 {
@@ -241,7 +222,10 @@ public:
     , _derivative_basis(h, basis_dim, theta_dim)
     , _theta_zero(Theta::Zero(theta_dim))
     , _state(state)
-
+    // , _guard(guard)
+    , _basis_positions(basis_positions)
+    , _cell_size(cell_size)
+    , _guarded_weight(compute_weight(_state, _cell_size, _basis_positions))
 
   {
     // const Weights weights{ compute_weight(_state) };
@@ -262,6 +246,24 @@ public:
   {
   }
 
+  template <typename StateIn, typename Positions>
+  static Weights compute_weight(const StateIn& state, const double cell_size, const Positions& basis_positions)
+  {
+    Weights weights{ Weights::Zero() };
+    const double _D(std::sqrt(cell_size * cell_size + cell_size * cell_size));
+    // PRX_DEBUG_VAR_2(_D, state.head(2).transpose());
+    for (int i = 0; i < 4; ++i)
+    {
+      const Eigen::Vector2d position{ basis_positions.row(i) };
+      const Eigen::Vector2d delta{ position - state.head(2) };
+      // PRX_DEBUG_VAR_2(position.transpose(), delta.transpose());
+      weights[i] = std::max(1.0 - (delta.lpNorm<1>() / _D), 0.0);
+    }
+    // PRX_DEBUG_VAR_1(weights.transpose());
+    weights = weights / weights.sum();
+    // PRX_DEBUG_VAR_1(weights.transpose());
+    return weights;
+  }
 
   Theta compute_error(const Theta& th_t, const Basis& basis_0, const Basis& basis_1, const Basis& basis_2,
                       const Basis& basis_3) const
@@ -284,7 +286,7 @@ private:
   mutable math::first_order_derivative_t<partial_basis_fn, Basis, 4> _derivative_basis;
   // mutable math::first_order_derivative_t<partial_guard_fn, Guard, 4> _derivative_guard;
 
-
+  const Guard _guard;
   const Theta _theta_zero;
   const State _state;
   const BasisPositions _basis_positions;

@@ -44,7 +44,7 @@
 #include <gtsam/linear/JacobianFactor.h>
 #include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
-
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
 using namespace prx;
 using namespace prx::utilities;
 using namespace prx::fg;

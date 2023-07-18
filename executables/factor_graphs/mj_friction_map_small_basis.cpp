@@ -40,8 +40,8 @@
 #include "prx/factor_graphs/factors/state_prior.hpp"
 #include "prx/factor_graphs/utilities/constants.hpp"
 #include "prx/factor_graphs/utilities/fg_logger.hpp"
-#include "prx/factor_graphs/utilities/friction_map.hpp"
 #include "prx/factor_graphs/utilities/utilities_functions.hpp"
+#include "prx/factor_graphs/utilities/formatter.hpp"
 
 #include "prx/mujoco/mj_simulator.hpp"
 #include "prx/mujoco/plants/mj_friction_plant.hpp"
@@ -152,25 +152,28 @@ int main(int argc, char** argv)
 
     ps->copy_from(th_transform);
   };
+  // MjFunction fg_mjfn = [&](const State& x0, const State& x1, const Control& u, const Theta& th) {};
 
+  gtsam::Values results;
+  gtsam::Values init_vals;
   gtsam::LevenbergMarquardtParams lm_params{ fg::utilities::default_levenberg_marquardt_parameters() };
   lm_params.setUseFixedLambdaFactor(true);
-  lm_params.setMaxIterations(2000);
-  lm_params.setRelativeErrorTol(1e-10);
-  lm_params.setAbsoluteErrorTol(1e-10);
-  lm_params.setlambdaFactor(1);
+  lm_params.setMaxIterations(1000);
 
-  friction_map._noise_models["positive_friction"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e-5);
-  friction_map._noise_models["parameter_space"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e0);
-  friction_map._noise_models["small_basis"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e-5);
-
-  // noise_models["control_space"] = gtsam::noiseModel::Isotropic::Sigma(cs_dim, 1e-3);
-  // noise_models["basis"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 0);
-  // noise_models["propagation"] = gtsam::noiseModel::Isotropic::Sigma(ss_dim, 1e-0);
-  // noise_models["friction_fusion"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e0);
-  // // noise_models["weight"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e0);
-  // noise_models["positive_basis"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e-5);
-  // noise_models["guard"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e-5);
+  std::unordered_map<std::string, gtsam::noiseModel::Base::shared_ptr> noise_models;
+  State noise{ State::Ones(ss_dim) * 1e-5 };
+  noise.head(3) = Eigen::Vector3d::Ones() * 1e0;
+  noise_models["state_space"] = gtsam::noiseModel::Diagonal::Sigmas(noise);
+  noise_models["control_space"] = gtsam::noiseModel::Isotropic::Sigma(cs_dim, 1e-3);
+  noise_models["positive_friction"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e-5);
+  noise_models["parameter_space"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e0);
+  noise_models["basis"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 0);
+  noise_models["propagation"] = gtsam::noiseModel::Isotropic::Sigma(ss_dim, 1e-0);
+  noise_models["friction_fusion"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e0);
+  // noise_models["weight"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e0);
+  noise_models["positive_basis"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e-5);
+  noise_models["guard"] = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e-5);
+  noise_models["small_basis"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e-5);
   // gtsam::SharedGaussian basis_nm = gtsam::noiseModel::Isotropic::Sigma(BASIS_DIM, 1e1);
 
   std::size_t total_plan_trajectories_files{ params["total_plan_traj_files_to_use"].as<std::size_t>() };
@@ -179,14 +182,12 @@ int main(int argc, char** argv)
   plan_t plan(cs);
   trajectory_t trajectory(ss);
 
-  const double length_0{ 4 };
-  const double length_1{ 4 };
+  const double length_0{ frictions_grid.get_cell_length(0) };
+  const double length_1{ frictions_grid.get_cell_length(1) };
+  PRX_DEBUG_VAR_1(length_0);
 
   std::size_t fg_iterations{ 0 };
   std::unordered_map<prx::prx_symbol_t, Position> symbol_positions;
-  std::unordered_map<prx::prx_symbol_t, gtsam::SharedGaussian> basis_covariances;
-  gtsam::Values resulting_values;
-  gtsam::NonlinearFactorGraph accum_fg;
   for (std::size_t idx = 0; idx < total_plan_trajectories_files; ++idx)
   {
     const std::string traj_path = data_path + "/traj_" + to_zero_lead(idx, 5) + ".txt";
@@ -301,38 +302,26 @@ int main(int argc, char** argv)
     graph.add(trajectory_graph);
     graph.add(weights_graph);
     gtsam::Values values;
-    gtsam::NonlinearFactorGraph graph;
-    graph.add(graph_values.first);
-    values.insert_or_assign(graph_values.second);
+    values.insert_or_assign(trajectory_values);
+    values.insert_or_assign(weights_values);
 
     std::cout << "Graph: " << graph.size() << std::endl;
     prx::fg::utilities::values_to_file<Eigen::VectorXd, basis_vector_t>(values,
                                                                         prx::out_path + "mj_friction_map_values.txt");
-    graph.printErrors(values, "Errors", symbol_factory_t::formatter);
     gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
     // graph.printErrors(values, "Errors", symbol_factory_t::formatter);
-    auto iter_results = fg::utilities::optimize_and_log(optimizer, lm_params, logs["fg_log"], fg_iterations);
+    results = fg::utilities::optimize_and_log(optimizer, lm_params, logs["fg_log"], fg_iterations);
     logs["thetas_error_log"].log(idx, optimizer.error());
     fg_iterations += optimizer.iterations();
 
     prx::symbol_factory_t::symbols_to_file();
     // results.print("Results", prx::symbol_factory_t::formatter);
-    // gtsam::Marginals marginals{ graph, iter_results, gtsam::Marginals::Factorization::QR };
+    // graph.printErrors(results, "Errors", symbol_factory_t::formatter);
+    // gtsam::Marginals marginals{ graph, results };
     // graph.saveGraph(fg_graph_file, results, prx::key_formatter, graph_formatter);
 
-    // gtsam::KeyVector basis_joint;
-    // for (auto basis_symbol : basis_used)
-    // {
-    //   basis_joint.push_back(basis_symbol.first);
-    //   std::cout << prx::symbol_factory_t::formatter(basis_symbol.first) << "\t"
-    //             << iter_results.at<friction_vector_t>(basis_symbol.first) << "\t"
-    //             << marginals.marginalInformation(basis_symbol.first) << std::endl;
-    //   auto basis_inf_mat =
-    //   gtsam::noiseModel::Gaussian::Information(marginals.marginalInformation(basis_symbol.first));
-    //   basis_covariances[basis_symbol.first] = basis_inf_mat;
-    // }
-    // marginals.jointMarginalInformation(basis_joint).print("marginal", prx::symbol_factory_t::formatter);
-    // std::cout << "JointInf:\n" << marginals.jointMarginalInformation(basis_joint).fullMatrix() << std::endl;
+    // boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(noise_models["basis"])
+    //     ->Covariance(marginals.marginalCovariance(param_symbol_basis));
 
     // logger.log(std::to_string(extra_iters + nl_opt.iterations()), newError);
     // const basis_vector_t new_frictions{ results.at<basis_vector_t>(param_symbol_basis) };

@@ -1,0 +1,2 @@
+simulation_step: 0.01
+imu_file: "${DIRTMP_PATH}/data/tensegrity/test001/imu.txt"

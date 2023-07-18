@@ -58,7 +58,8 @@ std::unordered_map<std::string, gtsam::noiseModel::Base::shared_ptr> noise_model
 const double WHEEL_DISTANCE{ 0.115 * 2.0 };
 const double MASS{ 0.498952 + 3.542137 + 0.1 };
 
-const prx_symbol_t k_params{ symbol_factory_t::create_hashed_symbol("Theta", 0) };
+const prx_symbol_t k_params_m{ symbol_factory_t::create_hashed_symbol("ThetaModel", 0) };
+const prx_symbol_t k_params_e{ symbol_factory_t::create_hashed_symbol("ThetaEnvironment", 0) };
 
 const fg::ackermann::U u_init{ fg::ackermann::U::Zero() };
 const fg::ackermann::Q q_init{ fg::ackermann::Q::Zero() };
@@ -78,7 +79,8 @@ void create_ackermann_at_idx_fg(gtsam::NonlinearFactorGraph& graph, gtsam::Value
 
   graph.add(ackermann_q_qdot_u_t(k_q0, k_q1, k_qdot, k_u, noise_models["f1"]));
   graph.add(ackermann_q_qdot_qdotdot_t(k_qdot, k_qdotdot, k_q0, noise_models["f2"], WHEEL_DISTANCE));
-  graph.add(ackermann_qdotdot_force_q_t(k_qdotdot, k_force, k_q0, k_params, noise_models["f3"], WHEEL_DISTANCE, MASS));
+  graph.add(ackermann_qdotdot_force_q_t(k_qdotdot, k_force, k_q0, k_params_m, k_params_e, noise_models["f3"],
+                                        WHEEL_DISTANCE, MASS));
 
   // values.insert(k_u, u_init);
   values.insert(k_q0, q_init);
@@ -97,37 +99,67 @@ int main(int argc, char* argv[])
   // std::cout << data_file << std::endl;
   // prx::utilities::csv_reader_t reader(data_file);
 
+  noise_models["Z_prior"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQz, 1e-1);
   noise_models["u_prior"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimU, 1e-5);
   noise_models["q_prior"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQ, 1e-3);
   noise_models["f1"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQ, 1e-0);
   noise_models["f2"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQdot, 1e-0);
   noise_models["f3"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQdotdot, 1e-0);
+  noise_models["fZ"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQz, 1e-3);
 
   gtsam::NonlinearFactorGraph graph;
   gtsam::Values values;
-  const fg::ackermann::Params params_init{ 0.1, 0.50 };
-  values.insert(k_params, params_init);
+  const fg::ackermann::ModelParams model_params_init{ 0.01 };
+  const fg::ackermann::EnvironmentParams environment_params_init{ 0.90 };
+  values.insert(k_params_m, model_params_init);
+  values.insert(k_params_e, environment_params_init);
   // while (reader.has_next_line())
 
-  const std::size_t T{ 5'000 };
+  const std::size_t T{ 4'000 };
   graph.addPrior(symbol_factory_t::create_hashed_symbol("X", 0), q_init, noise_models["q_prior"]);
   fg::ackermann::U u_rand{ fg::ackermann::U::Random() };
   u_rand[0] = 1;
   u_rand[1] = 0.52;
+  std::vector<fg::ackermann::U> ctrls = {
+    { 0.933466, -0.001465 }, { 0.944210, 0.010173 }, { 0.942091, -0.062425 }, { 0.804396, 0.042345 }
+  };
+
   for (std::size_t i = 0; i < T; ++i)
   {
     create_ackermann_at_idx_fg(graph, values, i);
 
-    if (i % 100 == 0)
+    if (i % 1'000 == 0)
     {
-      u_rand = fg::ackermann::U::Random();
-      u_rand[1] *= 0.5;
+      u_rand = ctrls[0];
+      ctrls.erase(ctrls.begin());
     }
     const prx_symbol_t k_u{ symbol_factory_t::create_hashed_symbol("U", i) };
     graph.addPrior(k_u, u_rand, noise_models["u_prior"]);
     values.insert_or_assign(k_u, u_rand);
   }
   values.insert(symbol_factory_t::create_hashed_symbol("X", T), q_init);
+
+  std::string traj_file{ params["traj_file"].as<>() };
+  std::cout << traj_file << std::endl;
+  prx::utilities::csv_reader_t reader(traj_file);
+
+  std::size_t idx{ 0 };
+  while (reader.has_next_line())
+  {
+    auto line = reader.next_line<double>();
+    if (line.size() == 0)
+      continue;
+
+    const prx_symbol_t k_qz{ symbol_factory_t::create_hashed_symbol("Z", idx) };
+    const prx_symbol_t k_q{ symbol_factory_t::create_hashed_symbol("X", idx) };
+    const fg::ackermann::Qz q_z{ line[0], line[1], line[2] };
+
+    graph.add(ackermann_q_observation_t(k_qz, k_q, noise_models["fZ"]));
+    graph.addPrior(k_qz, q_z, noise_models["Z_prior"]);
+    values.insert_or_assign(k_qz, q_z);
+    idx += 10;
+  }
+  symbol_factory_t::symbols_to_file();
 
   gtsam::LevenbergMarquardtParams lm_params{ fg::utilities::default_levenberg_marquardt_parameters() };
   lm_params.verbosityLMTranslator(gtsam::LevenbergMarquardtParams::SILENT);
@@ -158,8 +190,12 @@ int main(int argc, char* argv[])
     results_logger("Force", i, r_Force.transpose());
   }
   const auto r_QT{ results.at<fg::ackermann::Q>(symbol_factory_t::create_hashed_symbol("X", T)) };
-  const auto r_Params{ results.at<fg::ackermann::Params>(symbol_factory_t::create_hashed_symbol("Theta", 0)) };
-  results_logger("Params", r_Params.transpose());
+  const auto r_Params_m{ results.at<fg::ackermann::ModelParams>(
+      symbol_factory_t::create_hashed_symbol("ThetaModel", 0)) };
+  const auto r_Params_e{ results.at<fg::ackermann::EnvironmentParams>(
+      symbol_factory_t::create_hashed_symbol("ThetaEnvironment", 0)) };
+  results_logger("Params_Model", r_Params_m.transpose());
+  results_logger("Params_Environment", r_Params_e.transpose());
   results_logger("Q", T, r_QT.transpose());
 
   return 0;
