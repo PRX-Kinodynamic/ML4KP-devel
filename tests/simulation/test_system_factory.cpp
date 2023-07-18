@@ -3,10 +3,10 @@
 #include <boost/test/unit_test.hpp>
 #include "prx/simulation/plants/plants.hpp"
 
-const std::vector<std::string> expected_system_names{ "2D_Point",           "rally_car",   "treaded_vehicle",
-                                                      "3D_Point",           "Acrobot",     "fixed_wing",
-                                                      "omni_mantis",        "koules",      "racecar_mini",
-                                                      "FO_treaded_vehicle", "Ackermann_FO" };
+const std::vector<std::string> expected_system_names{ "2D_Point",    "rally_car",    "treaded_vehicle",
+                                                      "3D_Point",    "Acrobot",      "fixed_wing",
+                                                      "koules",      "racecar_mini", "FO_treaded_vehicle",
+                                                      "Ackermann_FO" };
 
 const std::vector<std::pair<std::string, std::string>> expected_fn_names{ { "2D_Point", "2D_Point" },
                                                                           { "rally_car", "rally_car" },
