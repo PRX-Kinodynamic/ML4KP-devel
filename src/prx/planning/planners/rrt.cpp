@@ -71,9 +71,9 @@ void rrt_t::_resolve_query(condition_check_t* condition)
   double new_cost;
   double new_duration;
 
-  prx_warn_cond(rrt_spec->blossom_number == 1 == 1, "RRT only uses a blossom number of 1")
-      // run for a certain amount of time
-      do
+  prx_warn_cond(rrt_spec->blossom_number == 1 == 1, "RRT only uses a blossom number of 1");
+  // run for a certain amount of time
+  do
   {
     // sample state
     sample_state(sample_point);
@@ -96,6 +96,10 @@ void rrt_t::_resolve_query(condition_check_t* condition)
       auto node_index = tree.add_vertex<rrt_node_t, rrt_edge_t>();
       auto new_tree_node = tree.get_vertex_as<rrt_node_t>(node_index);
       new_tree_node->point = state_space->clone_point(traj.back());
+
+      new_tree_node->observation = observer.get_observed_space()->make_point();
+      observer(rrt_spec->_sg, new_tree_node->observation);
+
       metric->add_node(new_tree_node.get());
       edge_index_t edge_index = tree.add_edge(closest_node->get_index(), node_index);
       auto new_edge = tree.get_edge_as<rrt_edge_t>(edge_index);
@@ -109,8 +113,7 @@ void rrt_t::_resolve_query(condition_check_t* condition)
     }
     iteration_count++;
   }
-  while (!condition->check())
-    ;
+  while (!condition->check());
 }
 void rrt_t::_fulfill_query()
 {

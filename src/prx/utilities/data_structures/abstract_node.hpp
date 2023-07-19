@@ -45,5 +45,6 @@ public:
    * @brief The space point associated with this node.
    * */
   space_point_t point;
+  space_point_t observation;
 };
 }  // namespace prx

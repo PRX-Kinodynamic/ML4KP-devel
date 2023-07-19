@@ -43,6 +43,16 @@ public:
 
   void propagate_once(propagate_step step, space_point_t control = nullptr);
 
+  std::vector<system_ptr_t>::iterator begin()
+  {
+    return group.begin();
+  }
+
+  std::vector<system_ptr_t>::iterator end()
+  {
+    return group.end();
+  }
+
 protected:
   std::vector<system_ptr_t> group;
   space_t* state_space;

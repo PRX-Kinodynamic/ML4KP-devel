@@ -8,6 +8,8 @@
 #include "prx/utilities/general/timer.hpp"
 #include "prx/utilities/data_structures/sigma.hpp"
 
+#include "prx/simulation/observer.hpp"
+
 #define PLANNER_NAME "RRT"
 namespace prx
 {
@@ -49,6 +51,7 @@ class rrt_specification_t : public planner_specification_t
 public:
   rrt_specification_t(std::shared_ptr<system_group_t> sg, std::shared_ptr<collision_group_t> cg)
   {
+    _sg = sg;
     bnb = true;
     use_replanning = false;
     state_space = sg->get_state_space();
@@ -81,6 +84,7 @@ public:
   virtual ~rrt_specification_t()
   {
   }
+
 
   cost_function_t cost_function;
   distance_function_t distance_function;
@@ -181,5 +185,7 @@ protected:
   bool use_replanning;
 
   int print_statistics_count;
+
+  simulation::observer_t observer;
 };
 }  // namespace prx
