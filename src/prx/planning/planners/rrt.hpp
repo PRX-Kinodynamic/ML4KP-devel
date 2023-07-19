@@ -84,7 +84,7 @@ public:
   virtual ~rrt_specification_t()
   {
   }
-  std::shared_ptr<system_group_t> _sg;
+
 
   cost_function_t cost_function;
   distance_function_t distance_function;

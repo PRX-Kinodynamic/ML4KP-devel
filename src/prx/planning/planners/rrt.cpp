@@ -112,7 +112,8 @@ void rrt_t::_resolve_query(condition_check_t* condition)
       update_goal(node_index);
     }
     iteration_count++;
-  } while (!condition->check());
+  }
+  while (!condition->check());
 }
 void rrt_t::_fulfill_query()
 {

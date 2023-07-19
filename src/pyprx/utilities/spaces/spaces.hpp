@@ -5,6 +5,6 @@
 
 void pyprx_utilities_spaces()
 {
-	pyprx_utilities_spaces_space();
-	pyprx_utilities_spaces_noisy_space();
+  pyprx_utilities_spaces_space();
+  pyprx_utilities_spaces_noisy_space();
 }

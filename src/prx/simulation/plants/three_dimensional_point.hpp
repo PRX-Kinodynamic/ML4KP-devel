@@ -4,23 +4,20 @@
 
 namespace prx
 {
-	class three_dimensional_point_t : public plant_t
-	{
-	public:
-		three_dimensional_point_t(const std::string& path);
-		virtual ~three_dimensional_point_t();
+class three_dimensional_point_t : public plant_t
+{
+public:
+  three_dimensional_point_t(const std::string& path);
+  virtual ~three_dimensional_point_t();
 
-		virtual void propagate(const double simulation_step) override final;
+  virtual void propagate(const double simulation_step) override final;
 
-		virtual void update_configuration() override;
+  virtual void update_configuration() override;
 
-	protected:
+protected:
+  virtual void compute_derivative() override final;
 
-		virtual void compute_derivative() override final;
-
-		double x,y,z,dx,dy,dz;
-
-	};
-}
+  double x, y, z, dx, dy, dz;
+};
+}  // namespace prx
 PRX_REGISTER_SYSTEM(three_dimensional_point_t, 3D_Point)
-
