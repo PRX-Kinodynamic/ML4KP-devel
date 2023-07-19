@@ -4,6 +4,5 @@
 
 void pyprx_simulation_collision_checking_py()
 {
-	pyprx_simulation_collision_checking_collision_group_py();
+  pyprx_simulation_collision_checking_collision_group_py();
 }
-

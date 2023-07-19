@@ -4,5 +4,5 @@
 
 void pyprx_visualization_py()
 {
-	pyprx_visualization_three_js_group_py();
+  pyprx_visualization_three_js_group_py();
 }

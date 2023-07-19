@@ -4,7 +4,7 @@
 
 void pyprx_simulation_plants_types()
 {
-	pyprx_simulation_plants_types_lti();
-	pyprx_simulation_plants_types_ltv();
-	pyprx_simulation_plants_types_noisy_plant();
+  pyprx_simulation_plants_types_lti();
+  pyprx_simulation_plants_types_ltv();
+  pyprx_simulation_plants_types_noisy_plant();
 }
