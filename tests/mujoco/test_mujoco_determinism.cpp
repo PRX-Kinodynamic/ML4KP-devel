@@ -29,13 +29,14 @@ BOOST_AUTO_TEST_CASE(mushr_determinism_test)
     plan.append_onto_back(1.0);
     cs->sample(plan.back().control);
   }
-  std::cout << plan.print() << std::endl;
+  std::cout << plan.print(16) << std::endl;
 
   std::vector<prx::space_point_t> end_states;
   for (int i = 0; i < 30; i++)
   {
     context.first->propagate(start, plan, end);
     end_states.push_back(ss->clone_point(end));
+    printf("%s\n", ss->print_point(end, 16).c_str());
   }
 
   // Compare the end states
@@ -47,8 +48,7 @@ BOOST_AUTO_TEST_CASE(mushr_determinism_test)
         continue;
       for (int k = 0; k < ss->get_dimension(); k++)
       {
-        printf("State values: %f, %f\n", end_states[i]->at(k), end_states[j]->at(k));
-        BOOST_CHECK_CLOSE(end_states[i]->at(k), end_states[j]->at(k), 1e-5);
+        BOOST_CHECK_CLOSE(end_states[i]->at(k), end_states[j]->at(k), 1e-8);
       }
     }
   }
