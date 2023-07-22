@@ -11,6 +11,7 @@ cmake_policy(SET CMP0079 NEW)
 
 set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
+set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
 
 # TODO: go back to c++11?
@@ -49,7 +50,6 @@ else()
     add_definitions(-DTORCH_NOT_BUILT)
 endif()
 
-
 include_directories(src/prx/external)
 include_directories(src/prx/visualization)
 include_directories(src/prx/planning)
@@ -62,6 +62,17 @@ add_subdirectory(src/prx/external)
 add_subdirectory(src/prx/utilities)
 add_subdirectory(src/prx/simulation)
 add_subdirectory(src/prx/visualization)
+
+if(BUILD_FOR_MUJOCO AND DEFINED ENV{MJ_PATH})
+	message("MuJoCo found at $ENV{MJ_PATH}")
+	include_directories($ENV{MJ_PATH}/include)
+    link_directories($ENV{MJ_PATH}/build/lib)
+	include_directories(src/prx/mujoco)
+	add_subdirectory(src/prx/mujoco)
+else()
+	message("Please download MuJoCo, place in src/prx and setup the enviornmental variable MJ_PATH accordingly.")
+	add_definitions(-DMUJOCO_NOT_BUILT)
+endif()
 
 if (BUILD_FOR_PYTHON)
 	add_subdirectory(src/pyprx)

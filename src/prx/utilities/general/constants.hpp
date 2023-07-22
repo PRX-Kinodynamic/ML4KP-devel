@@ -52,6 +52,7 @@ const std::string models_path = lib_path + "resources/models/";
 const std::string input_path = lib_path + "resources/input_files/";
 const std::string js_path = lib_path + "resources/js/";
 const std::string out_path = lib_path + "out/";
+const bool MUJOCO_VIS = false;
 
 enum propagate_step
 {
@@ -62,7 +63,7 @@ enum propagate_step
 enum plant_type
 {
   ANALYTICAL,
-  BULLET
+  MUJOCO
 };
 
 static inline double norm_angle_pi(double angle, double min_angle = -PRX_PI, double max_angle = PRX_PI)

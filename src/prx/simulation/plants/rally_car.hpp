@@ -70,8 +70,7 @@ protected:
 }  // namespace prx
 
 PRX_REGISTER_SYSTEM(rally_car_t, rally_car)
-auto rc_vel_fn = [](prx::system_ptr_t s) {
+PRX_REGISTER_VELOCITY_FN(rally_car, [](prx::system_ptr_t s) {
   return std::sqrt(std::pow(s->get_state_space()->get_bounds()[3].second, 2) +
                    std::pow(s->get_state_space()->get_bounds()[4].second, 2));
-};
-PRX_REGISTER_VELOCITY_FN(rally_car, rc_vel_fn)
+})

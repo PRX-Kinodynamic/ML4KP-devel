@@ -42,7 +42,7 @@ private:
 }  // namespace prx
 PRX_REGISTER_SYSTEM(treaded_vehicle_t, treaded_vehicle)
 
-auto tv_vel_fn = [](prx::system_ptr_t sys_ptr) {
+PRX_REGISTER_VELOCITY_FN(treaded_vehicle, [](prx::system_ptr_t sys_ptr) {
   auto s = std::dynamic_pointer_cast<prx::treaded_vehicle_t>(sys_ptr);
 
   prx::space_point_t bk_state = s->get_state_space()->make_point();
@@ -62,5 +62,4 @@ auto tv_vel_fn = [](prx::system_ptr_t sys_ptr) {
   s->get_state_space()->copy_from_point(bk_state);
   s->derivative_space->copy_from_point(bk_deriv);
   return vel;
-};
-PRX_REGISTER_VELOCITY_FN(treaded_vehicle, tv_vel_fn)
+})

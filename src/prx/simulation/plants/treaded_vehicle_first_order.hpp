@@ -28,7 +28,7 @@ protected:
 }  // namespace prx
 PRX_REGISTER_SYSTEM(treaded_vehicle_first_order_t, FO_treaded_vehicle)
 
-auto tvfo_vel_fn = [](prx::system_ptr_t sys_ptr) {
+PRX_REGISTER_VELOCITY_FN(FO_treaded_vehicle, [](prx::system_ptr_t sys_ptr) {
   auto tv_fo = std::dynamic_pointer_cast<prx::treaded_vehicle_first_order_t>(sys_ptr);
   if (!tv_fo)
     return std::numeric_limits<double>::infinity();
@@ -49,5 +49,4 @@ auto tvfo_vel_fn = [](prx::system_ptr_t sys_ptr) {
   tv_fo->get_state_space()->copy_from_point(bk_state);
   tv_fo->derivative_space->copy_from_point(bk_deriv);
   return vel;
-};
-PRX_REGISTER_VELOCITY_FN(FO_treaded_vehicle, tvfo_vel_fn)
+})
