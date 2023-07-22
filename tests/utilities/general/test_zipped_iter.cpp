@@ -1,5 +1,6 @@
 #define BOOST_AUTO_TEST_MAIN zipped_iter_test
 #include <string>
+#include <cmath>
 #include <boost/test/unit_test.hpp>
 #include "prx/utilities/general/zipped_iter.hpp"
 
