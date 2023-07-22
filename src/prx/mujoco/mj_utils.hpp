@@ -7,8 +7,6 @@
 
 namespace prx
 {
-const std::string mj_models_path = models_path + "mujoco/";
-
 struct mjJointInfo
 {
   std::string name;

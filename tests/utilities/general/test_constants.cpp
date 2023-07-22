@@ -6,7 +6,7 @@
 BOOST_AUTO_TEST_CASE(paths_test)
 {
   BOOST_CHECK(!prx::lib_path.empty());
-  BOOST_CHECK(!prx::models_path.empty());
+  BOOST_CHECK(!prx::mj_models_path.empty());
   BOOST_CHECK(!prx::input_path.empty());
   BOOST_CHECK(!prx::js_path.empty());
   BOOST_CHECK(!prx::out_path.empty());

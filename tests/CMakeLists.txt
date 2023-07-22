@@ -8,6 +8,7 @@ file(GLOB_RECURSE TESTS_FILES
 	${PROJECT_SOURCE_DIR}/tests/simulation/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/utilities/*.cpp
+	if (BUILD_FOR_MUJOCO) ${PROJECT_SOURCE_DIR}/tests/mujoco/*.cpp endif()
 	)
 
 foreach(f ${TESTS_FILES})
@@ -23,6 +24,9 @@ foreach(f ${TESTS_FILES})
 	target_link_libraries(${fname} ${PROJECT_NAME}_simulation )
 	target_link_libraries(${fname} ${PROJECT_NAME}_planning )
 	target_link_libraries(${fname} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+	if (BUILD_FOR_MUJOCO) 
+		target_link_libraries(${fname} ${PROJECT_NAME}_mjsim ) 
+	endif()
 	add_test(NAME "${fname}" COMMAND "${fname}" )
 	# add_test(NAME ${fname}_test COMMAND ${fname} WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
 endforeach()
