@@ -41,7 +41,7 @@ public:
     return control_space;
   }
 
-  void propagate_once(propagate_step step, space_point_t control = nullptr);
+  void propagate_once(space_point_t control = nullptr);
 
   std::vector<system_ptr_t>::iterator begin()
   {

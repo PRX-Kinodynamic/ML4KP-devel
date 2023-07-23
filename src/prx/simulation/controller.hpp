@@ -87,11 +87,6 @@ public:
   {
     plant->propagate(simulation_step);
   }
-  virtual void propagate(const double simulation_step, const propagate_step step)
-  {
-    plant->propagate(simulation_step, step);
-  }
-
   virtual void set_plan(const plan_t& _plan)
   {
     plan = std::make_shared<plan_t>(_plan);

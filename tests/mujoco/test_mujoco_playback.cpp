@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(mushr_without_obstacles_test)
   ss->copy_from_point(start);
   for (int i = 0; i < 100; i++)
   {
-    sim->step_simulation(prx::propagate_step::FIRST_STEP);
+    sim->step_simulation();
   }
 
   prx::plan_t plan(cs);

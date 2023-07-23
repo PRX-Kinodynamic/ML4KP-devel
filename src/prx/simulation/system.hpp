@@ -50,13 +50,6 @@ public:
 
   // Keeping this for analytical plants.
   virtual void propagate(const double simulation_step) = 0;
-  virtual void propagate(const double simulation_step, const propagate_step step)
-  {
-    // The defaul implementation is not using propagate_step
-    // Currently propagate_step is only used inside bullet
-    // It can always be overridden if necessary
-    propagate(simulation_step);
-  }
 
   virtual void compute_control() = 0;
 

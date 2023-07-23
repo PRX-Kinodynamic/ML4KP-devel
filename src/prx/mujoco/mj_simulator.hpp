@@ -41,7 +41,7 @@ public:
 
   void init_simulator();
 
-  virtual void step_simulation(propagate_step step) override;
+  virtual void step_simulation() override;
 
   virtual void reset_simulation() override;
 

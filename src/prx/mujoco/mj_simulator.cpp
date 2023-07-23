@@ -112,7 +112,7 @@ void mujoco_simulator_t::init_simulator()
   collision_groups->add_collision_group(context_name, context_systems, {});
 }
 
-void mujoco_simulator_t::step_simulation(propagate_step step)
+void mujoco_simulator_t::step_simulation()
 {
   // Set the warmstart acceleration to be zero (for determinism)
   for (int i = 0; i < m->nv; i++)

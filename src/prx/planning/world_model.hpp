@@ -85,11 +85,11 @@ public:
   }
 
   // TODO: is stepping all contexts ok?
-  virtual void step_simulation(propagate_step step) override
+  virtual void step_simulation() override
   {
     for (auto s : this->systems)
     {
-      s.second->propagate(simulation_step, step);
+      s.second->propagate(simulation_step);
     }
     // system_groups -> propagate(step);
     // int steps = (int)((duration / simulation_step) + .1);

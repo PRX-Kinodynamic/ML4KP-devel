@@ -54,12 +54,6 @@ const std::string js_path = lib_path + "resources/js/";
 const std::string out_path = lib_path + "out/";
 const bool MUJOCO_VIS = false;
 
-enum propagate_step
-{
-  FIRST_STEP,
-  MIDDLE_STEP,
-  FINAL_STEP
-};
 enum plant_type
 {
   ANALYTICAL,

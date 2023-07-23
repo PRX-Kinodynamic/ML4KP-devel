@@ -23,10 +23,4 @@ void random_walk_t::propagate(const double simulation_step)
   counter += 1;
   controller_t::propagate(simulation_step);
 }
-
-void random_walk_t::propagate(const double simulation_step, const propagate_step step)
-{
-  counter += 1;
-  controller_t::propagate(simulation_step, step);
-}
 }  // namespace prx

@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(mushr_determinism_test)
   ss->copy_from_point(start);
   for (int i = 0; i < 100; i++)
   {
-    sim->step_simulation(prx::propagate_step::FIRST_STEP);
+    sim->step_simulation();
   }
   std::cout << ss->print_point(start, 4) << std::endl;
 
