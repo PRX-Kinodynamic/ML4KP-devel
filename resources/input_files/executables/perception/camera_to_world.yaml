@@ -1,6 +1,10 @@
-markers_file: "/Users/Gary/pracsys/aruco_files/txt_230224_1955.txt"
+images: 
+  - "${HOME}/Downloads/markers_0.png"
+  # - "${HOME}/Downloads/markers_1.png"
+  # - "${HOME}/Downloads/markers_2.png"
+  # - "${HOME}/Downloads/markers_3.png"
 camera_matrix: [378.6584720845774, 0, 829.5421283514238, 0, 1035.18270898237, 506.0056812161438, 0, 0, 1]
 distortion_coeff: [-0.1640440571906086, -0.08399886768158453, 0.03447733785227856, -0.1127516272756932, 0.07381114840364182]
 # camera_matrix: [100.0110482300265, 0, 1012.279656949001, 0, 208.2742615281575, 652.8920501197667, 0, 0, 1]
 # distortion_coeff: [-0.0215236, -0.0129058, -0.124438, -0.105047, 0.00354854]
-marker_length: 0.204
+marker_length: 0.167

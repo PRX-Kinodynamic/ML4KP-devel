@@ -30,8 +30,8 @@ gml_list_t create_graphics(const VariablePositions& var_pos, const gtsam::Key& k
     // gml_graphics.emplace("center", gml_center);
   }
 
-  gml_graphics.emplace("w", 750);
-  gml_graphics.emplace("h", 350);
+  gml_graphics.emplace("w", 75);
+  gml_graphics.emplace("h", 35);
   gml_graphics.emplace("type", std::string("ellipse"));
   gml_graphics.emplace("fill", std::string("#ffffff"));
   gml_graphics.emplace("outline", std::string("#000000"));

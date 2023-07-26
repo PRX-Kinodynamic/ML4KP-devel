@@ -28,3 +28,16 @@ PRX_REGISTER_SYMBOL(scale, "s", 0, 0)
 
 PRX_REGISTER_SYMBOL(aruco_marker_rot, "Ar", 0, 0)
 PRX_REGISTER_SYMBOL(aruco_marker_tra, "At", 0, 0)
+
+#define PRX_FACTOR_OVERLOAD_PRINT(STR_TO_PRINT)                                                                        \
+  void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = symbol_factory_t::formatter)         \
+      const override                                                                                                   \
+  {                                                                                                                    \
+    std::cout << s << "(" << STR_TO_PRINT << ")"                                                                       \
+              << " keys = { ";                                                                                         \
+    for (gtsam::Key key : Base::keys())                                                                                \
+    {                                                                                                                  \
+      std::cout << keyFormatter(key) << " ";                                                                           \
+    }                                                                                                                  \
+    std::cout << "}" << std::endl;                                                                                     \
+  }

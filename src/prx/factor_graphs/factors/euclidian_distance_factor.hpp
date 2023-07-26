@@ -54,5 +54,86 @@ public:
 private:
 };
 
+// Factor to enforce: Distance = norm2(x0 - x1)
+template <Eigen::Index Dim>
+class euclidean_distance_factor_t
+  : public gtsam::NoiseModelFactor2<Eigen::Vector<double, Dim>, Eigen::Vector<double, Dim>>
+{
+  using Base = gtsam::NoiseModelFactor2<Eigen::Vector<double, Dim>, Eigen::Vector<double, Dim>>;
+
+public:
+  using State = Eigen::Vector<double, Dim>;
+
+  euclidean_distance_factor_t(double distance, gtsam::Key x1_key, gtsam::Key x2_key,
+                              const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(cost_model, x1_key, x2_key), _distance(distance)
+  {
+  }
+
+  // error = _distance - norm2(x0 - x1)
+  virtual Eigen::VectorXd evaluateError(const State& x0, const State& x1,  // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H0 = boost::none,
+                                        boost::optional<Eigen::MatrixXd&> H1 = boost::none) const override
+  {
+    const State difference{ x0 - x1 };
+    const double norm2{ difference.norm() };
+    const Eigen::VectorXd error{ (Eigen::VectorXd(1) << _distance - norm2).finished() };
+
+    if (H0)
+    {
+      *H0 = -1.0 * difference.normalized().transpose();
+      // *H0 = (-1.0 * (difference / norm2_nz)).transpose();
+    }
+
+    if (H1)
+    {
+      *H1 = +1.0 * difference.normalized().transpose();
+      // *H1 = (+1.0 * (difference / norm2_nz)).transpose();
+    }
+    // PRX_DEBUG_VAR_1(_distance);
+    // PRX_DEBUG_VAR_1(x0.transpose());
+    // PRX_DEBUG_VAR_1(x1.transpose());
+    // PRX_DEBUG_VAR_2(difference.transpose(), norm2);
+    // PRX_DEBUG_VAR_1(error.transpose());
+    // PRX_DEBUG_VAR_1((-1.0 * difference.normalized()).transpose());
+    // PRX_DEBUG_VAR_1((+1.0 * difference.normalized()).transpose());
+    return error;
+  }
+
+  PRX_FACTOR_OVERLOAD_PRINT("euclidean_distance_factor_t")
+
+private:
+  const double _distance;
+};
+
+template <Eigen::Index Dim>
+class normalize_factor_t : public gtsam::NoiseModelFactor1<Eigen::Vector<double, Dim>>
+{
+  using Base = gtsam::NoiseModelFactor1<Eigen::Vector<double, Dim>>;
+
+public:
+  using State = Eigen::Vector<double, Dim>;
+
+  normalize_factor_t(gtsam::Key x1_key,
+                     const gtsam::noiseModel::Base::shared_ptr& cost_model = gtsam::noiseModel::Constrained::All(1))
+    : Base(cost_model, x1_key)
+  {
+  }
+
+  virtual Eigen::VectorXd evaluateError(const State& x0,  // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H0 = boost::none) const override
+  {
+    const double norm2{ x0.norm() };
+    const Eigen::VectorXd error{ (Eigen::VectorXd(1) << 1.0 - norm2).finished() };
+
+    if (H0)
+    {
+      *H0 = -1.0 * x0.normalized().transpose();
+      // *H0 = (-1.0 * (x0 / norm2)).transpose();
+    }
+
+    return error;
+  }
+};
 }  // namespace fg
 }  // namespace prx

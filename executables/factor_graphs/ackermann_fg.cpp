@@ -87,6 +87,7 @@ void create_ackermann_at_idx_fg(gtsam::NonlinearFactorGraph& graph, gtsam::Value
   values.insert(k_qdot, qdot_init);
   values.insert(k_qdotdot, qdotdot_init);
   values.insert(k_force, force_init);
+  // values.insert(k_params_e, env_params_init);
 }
 
 int main(int argc, char* argv[])

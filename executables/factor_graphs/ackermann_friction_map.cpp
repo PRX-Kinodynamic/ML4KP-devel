@@ -99,8 +99,9 @@ const Qdot qdot_init{ ::Qdot::Zero() };
 const Qdotdot qdotdot_init{ Qdotdot::Zero() };
 const U u_init{ U::Zero() };
 const Force force_init{ Force::Zero() };
-EnvironmentParams env_params_init{ Force::Ones() };
+EnvironmentParams env_params_init{ EnvironmentParams::Ones() };
 double initial_friction = 0.0;
+NoiseModels noise_models;
 
 using namespace std::placeholders;  // for _1, _2, _3...
 auto symbol_U = [](std::size_t idx) { return symbol_factory_t::create_hashed_symbol("U", idx); };
@@ -112,14 +113,14 @@ auto symbol_EnvParams = [](std::size_t idx) { return symbol_factory_t::create_ha
 auto symbol_Force = [](std::size_t idx) { return symbol_factory_t::create_hashed_symbol("F", idx); };
 auto symbol_Zq = [](std::size_t idx) { return symbol_factory_t::create_hashed_symbol("Z", idx); };
 
-void create_ackermann_at_idx_fg(Graph& graph, Values& values, const std::size_t idx, NoiseModels& noise_models)
+void create_ackermann_at_idx_fg(Graph& graph, Values& values, const std::size_t idx)
 {
   const prx_symbol_t k_u{ symbol_U(idx) };
   const prx_symbol_t k_q0{ symbol_Q(idx) };
   const prx_symbol_t k_q1{ symbol_Q(idx + 1) };
   const prx_symbol_t k_qdot{ symbol_Qdot(idx) };
   const prx_symbol_t k_params_m{ symbol_ModelParams(0) };
-  const prx_symbol_t k_params_e{ symbol_EnvParams(idx) };
+  const prx_symbol_t k_params_e{ symbol_EnvParams(0) };
   const prx_symbol_t k_qdotdot{ symbol_Qdotdot(idx) };
 
   const prx_symbol_t k_force{ symbol_Force(idx) };
@@ -134,7 +135,7 @@ void create_ackermann_at_idx_fg(Graph& graph, Values& values, const std::size_t 
   values.insert(k_qdot, qdot_init);
   values.insert(k_qdotdot, qdotdot_init);
   values.insert(k_force, force_init);
-  values.insert(k_params_e, env_params_init);
+  values.insert_or_assign(k_params_e, env_params_init);
 }
 
 template <typename BasisGrid, typename FrictionsGrid, typename SymbolPositions, typename VisitedGrid>
@@ -145,11 +146,7 @@ void friction_map_add(const std::size_t idx, const Z_Q& zq, Graph& graph, Values
   const prx_symbol_t k_q{ symbol_Q(idx) };
   const prx_symbol_t k_zq{ symbol_Zq(idx) };
   // const prx_symbol_t k_params_m{ symbol_ModelParams(idx) };
-  const prx_symbol_t k_params_e{ symbol_EnvParams(idx) };
-
-  graph.add(ackermann_q_observation_t(k_zq, k_q, noise_models["fZ"]));
-  graph.addPrior(k_zq, zq, noise_models["Z_prior"]);
-  values.insert_or_assign(k_zq, zq);
+  const prx_symbol_t k_params_e{ symbol_EnvParams(0) };
 
   const Position z_xy{ zq.head(2) };
   symbol_positions[k_params_e] = z_xy;
@@ -189,11 +186,14 @@ void friction_map_add(const std::size_t idx, const Z_Q& zq, Graph& graph, Values
     }
   }
   auto current_param_value = init_weight.dot(local_basis);
-  // Params
-  values.insert_or_assign(k_params_e, EnvironmentParams{ current_param_value });
 
-  graph.add(BasisFrictionFactor(noise_models["small_basis"], symbol_EnvParams(idx), basis_symbol_0, basis_symbol_1,
-                                basis_symbol_2, basis_symbol_3, zq, basis_positions, length, TH_DIM, 1));
+  for (int i = 0; i < 10; ++i)
+  {
+    // Params
+    values.insert_or_assign(k_params_e, EnvironmentParams{ current_param_value });
+    graph.add(BasisFrictionFactor(noise_models["small_basis"], symbol_EnvParams(idx), basis_symbol_0, basis_symbol_1,
+                                  basis_symbol_2, basis_symbol_3, zq, basis_positions, length, TH_DIM, 1));
+  }
   values.insert_or_assign(basis_symbol_0, (Eigen::VectorXd(1) << local_basis[0]).finished());
   values.insert_or_assign(basis_symbol_1, (Eigen::VectorXd(1) << local_basis[1]).finished());
   values.insert_or_assign(basis_symbol_2, (Eigen::VectorXd(1) << local_basis[2]).finished());
@@ -274,9 +274,10 @@ int main(int argc, char** argv)
   std::unordered_map<prx::prx_symbol_t, Position> symbol_positions;
 
   initial_friction = params["initial_friction"].as<double>();
+  env_params_init = friction_vector_t::Ones(TH_DIM) * initial_friction;
   const Eigen::VectorXd initial_friction_vec{ friction_vector_t::Ones(TH_DIM) * initial_friction };
 
-  frictions_grid.populate_grid(initial_friction_vec);
+  frictions_grid.populate_grid(env_params_init);
   visited_grid.populate_grid(friction_vector_t::Zero());
 
   const double Length_0{ frictions_grid.get_cell_length(0) };
@@ -291,7 +292,6 @@ int main(int argc, char** argv)
   lm_params.setlambdaUpperBound(1e64);
   lm_params.setVerbosityLM("SUMMARY");
 
-  NoiseModels noise_models;
   // noise_models["state_space"] = gtsam::noiseModel::Diagonal::Sigmas(noise);
   noise_models["Z_prior"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQz, 1e-1);
   noise_models["u_prior"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimU, 1e-5);
@@ -306,7 +306,7 @@ int main(int argc, char** argv)
   prx::utilities::csv_reader_t reader(traj_file);
 
   const std::size_t T{ 4'000 };
-  graph.addPrior(symbol_factory_t::create_hashed_symbol("X", 0), q_init, noise_models["q_prior"]);
+  graph.addPrior(symbol_Q(0), q_init, noise_models["q_prior"]);
   fg::ackermann::U u_rand{ fg::ackermann::U::Random() };
   u_rand[0] = 1;
   u_rand[1] = 0.52;
@@ -316,18 +316,18 @@ int main(int argc, char** argv)
 
   for (std::size_t i = 0; i < T; ++i)
   {
-    create_ackermann_at_idx_fg(graph, values, i, noise_models);
+    create_ackermann_at_idx_fg(graph, values, i);
 
     if (i % 1'000 == 0)
     {
       u_rand = ctrls[0];
       ctrls.erase(ctrls.begin());
     }
-    const prx_symbol_t k_u{ symbol_factory_t::create_hashed_symbol("U", i) };
+    const prx_symbol_t k_u{ symbol_U(i) };
     graph.addPrior(k_u, u_rand, noise_models["u_prior"]);
     values.insert_or_assign(k_u, u_rand);
   }
-  values.insert(symbol_factory_t::create_hashed_symbol("X", T), q_init);
+  values.insert(symbol_Q(T), q_init);
 
   const fg::ackermann::ModelParams model_params_init{ 0.01 };
   values.insert(symbol_ModelParams(0), model_params_init);
@@ -338,12 +338,18 @@ int main(int argc, char** argv)
     auto line = reader.next_line<double>();
     if (line.size() == 0)
       continue;
-    const Z_Q zq{ line[0], line[1], line[2] };
-    friction_map_add(idx, zq, graph, values, Length_0, basis_grid, frictions_grid, noise_models, symbol_positions,
-                     visited_grid);
+    const prx_symbol_t k_q{ symbol_Q(idx) };
+    const prx_symbol_t k_zq{ symbol_Zq(idx) };
+    const Z_Q q_z{ line[0], line[1], line[2] };
 
+    graph.add(ackermann_q_observation_t(k_zq, k_q, noise_models["fZ"]));
+    graph.addPrior(k_zq, q_z, noise_models["Z_prior"]);
+    values.insert_or_assign(k_zq, q_z);
+    // friction_map_add(idx, q_z, graph, values, Length_0, basis_grid, frictions_grid, noise_models, symbol_positions,
+    //                  visited_grid);
     idx += 10;
   }
+
   symbol_factory_t::symbols_to_file();
   gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
   logger_t logger(out_path + "ackermann_friction_map.log");

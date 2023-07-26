@@ -51,5 +51,60 @@ public:
   }
 };
 
+class camera_to_world_factor_t : public noise_model_5factor_t<3, 3, 4, 5, 3>
+{
+  using Base = noise_model_5factor_t<3, 3, 4, 5, 3>;
+
+public:
+  using Pixel = Base::X0;
+  using Translation = Base::X1;
+  using Quaternion = Base::X2;
+  using CameraParameters = Base::X3;
+  using WorldPosition = Base::X4;
+
+  camera_to_world_factor_t(gtsam::Key key_pixels, gtsam::Key key_translation, gtsam::Key key_orientation,
+                           gtsam::Key key_params, gtsam::Key key_world,
+                           const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(key_pixels, key_translation, key_orientation, key_params, key_world, cost_model)
+  {
+  }
+
+  virtual Pixel compute_error(const Pixel& pixels, const Translation& translation, const Quaternion& quaternion,
+                              const CameraParameters& cam_params, const WorldPosition& world) const override
+  {
+    Eigen::Matrix3d cam_mat{ Eigen::Matrix3d::Identity() };
+    const Eigen::Quaternion quat{ quaternion[0], quaternion[1], quaternion[2], quaternion[3] };
+    const Eigen::Matrix3d R{ quat };
+    cam_mat(0, 0) = cam_params[0];
+    cam_mat(1, 1) = cam_params[1];
+    cam_mat(0, 2) = cam_params[2];
+    cam_mat(1, 2) = cam_params[3];
+    cam_mat(0, 1) = cam_params[4];
+
+    // cam* R* pos + cam* T;
+    Eigen::Vector3d computed_pixels{ cam_mat * R * world + cam_mat * translation };
+    // PRX_DEBUG_VAR_1(pixels.transpose());
+    // PRX_DEBUG_VAR_1(translation.transpose());
+    // PRX_DEBUG_VAR_1(quat);
+    // PRX_DEBUG_VAR_1(cam_mat);
+    // PRX_DEBUG_VAR_1(world.transpose());
+    // PRX_DEBUG_VAR_1(R);
+    // PRX_DEBUG_VAR_1(computed_pixels.transpose());
+    // PRX_DEBUG_VAR_1((pixels - computed_pixels).transpose());
+    return pixels - computed_pixels;
+  }
+
+  void print(const std::string& s = "",
+             const gtsam::KeyFormatter& keyFormatter = symbol_factory_t::formatter) const override
+  {
+    std::cout << s << "(camera_to_world_factor_t)  keys = { ";
+    for (gtsam::Key key : keys())
+    {
+      std::cout << keyFormatter(key) << " ";
+    }
+    std::cout << "}" << std::endl;
+  }
+};
+
 }  // namespace fg
 }  // namespace prx

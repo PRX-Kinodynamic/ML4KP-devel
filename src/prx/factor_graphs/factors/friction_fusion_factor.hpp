@@ -221,11 +221,9 @@ public:
     , _derivative_theta(h, theta_dim, theta_dim)
     , _derivative_basis(h, basis_dim, theta_dim)
     , _theta_zero(Theta::Zero(theta_dim))
-    , _state(state)
-    // , _guard(guard)
     , _basis_positions(basis_positions)
     , _cell_size(cell_size)
-    , _guarded_weight(compute_weight(_state, _cell_size, _basis_positions))
+    , _guarded_weight(compute_weight(state, _cell_size, _basis_positions))
 
   {
     // const Weights weights{ compute_weight(_state) };
@@ -288,7 +286,6 @@ private:
 
   const Guard _guard;
   const Theta _theta_zero;
-  const State _state;
   const BasisPositions _basis_positions;
   const double _cell_size;
   const Weights _guarded_weight;
