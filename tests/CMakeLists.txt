@@ -8,8 +8,13 @@ file(GLOB_RECURSE TESTS_FILES
 	${PROJECT_SOURCE_DIR}/tests/simulation/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/utilities/*.cpp
-	if (BUILD_FOR_MUJOCO) ${PROJECT_SOURCE_DIR}/tests/mujoco/*.cpp endif()
 	)
+if (BUILD_FOR_MUJOCO)
+	file(GLOB_RECURSE MJ_TEST_FILES
+		${PROJECT_SOURCE_DIR}/tests/mujoco/*.cpp
+		)
+	list(APPEND TESTS_FILES ${MJ_TEST_FILES})
+endif()
 
 foreach(f ${TESTS_FILES})
 	GET_FILENAME_COMPONENT(fname ${f} NAME_WE )
