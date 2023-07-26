@@ -131,7 +131,7 @@ private:
   std::chrono::milliseconds _duration;
   std::thread _thread;
   bool _keep_logging;
-  std::vector<const std::string> strs_to_log;
+  std::vector<std::string> strs_to_log;
   std::vector<std::unique_ptr<base_value_wrapper_t>> values_to_log;
 };
 

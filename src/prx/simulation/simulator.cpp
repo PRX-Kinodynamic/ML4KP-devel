@@ -17,7 +17,7 @@
 // 		group = sys_group;
 // 	}
 
-// 	void simulator_t::step_simulation(propagate_step step)
+// 	void simulator_t::step_simulation()
 // 	{
 // 		for(auto s : group)
 // 		{

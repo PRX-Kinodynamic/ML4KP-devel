@@ -9,6 +9,12 @@ file(GLOB_RECURSE TESTS_FILES
 	${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/utilities/*.cpp
 	)
+if (BUILD_FOR_MUJOCO)
+	file(GLOB_RECURSE MJ_TEST_FILES
+		${PROJECT_SOURCE_DIR}/tests/mujoco/*.cpp
+		)
+	list(APPEND TESTS_FILES ${MJ_TEST_FILES})
+endif()
 
 foreach(f ${TESTS_FILES})
 	GET_FILENAME_COMPONENT(fname ${f} NAME_WE )
@@ -22,15 +28,15 @@ foreach(f ${TESTS_FILES})
 	target_link_libraries(${fname} ${PROJECT_NAME}_visualization )
 	target_link_libraries(${fname} ${PROJECT_NAME}_simulation )
 	target_link_libraries(${fname} ${PROJECT_NAME}_planning )
-	if(BUILD_FOR_BULLET)
-		target_link_libraries(${fname} ${PROJECT_NAME}_bullet_sim )
-	endif()
 	target_link_libraries(${fname} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+	if (BUILD_FOR_MUJOCO) 
+		target_link_libraries(${fname} ${PROJECT_NAME}_mjsim ) 
+	endif()
 	add_test(NAME "${fname}" COMMAND "${fname}" )
 	# add_test(NAME ${fname}_test COMMAND ${fname} WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
 endforeach()
 
-if (BUILD_TESTS)
+if (BUILD_TESTS AND BUILD_FOR_PYTHON)
 	find_package (Python COMPONENTS Interpreter)
     add_test (NAME python-tests
       COMMAND ${Python_EXECUTABLE} -m pytest ${CMAKE_CURRENT_SOURCE_DIR}

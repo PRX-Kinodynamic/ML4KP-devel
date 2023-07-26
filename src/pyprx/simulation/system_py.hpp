@@ -12,10 +12,6 @@ struct system_wrap : prx::system_t, wrapper<prx::system_t>
   {
     this->get_override("propagate")(simulation_step);
   }
-  void propagate_2(const double simulation_step, const prx::propagate_step step)
-  {
-    this->get_override("propagate")(simulation_step, step);
-  }
   void add_system(prx::system_ptr_t& sp)
   {
     this->get_override("add_system")(sp);
@@ -85,7 +81,6 @@ void pyprx_simulation_system_py()
       .def("get_parameter_space", &prx::system_t::get_parameter_space, return_internal_reference<>())
       .def("add_system", pure_virtual(&prx::system_t::add_system))
       .def("propagate", pure_virtual(&system_wrap::propagate))
-      .def("propagate", &system_wrap::propagate_2)
       .def("compute_control", pure_virtual(&prx::system_t::compute_control))
       .def("compute_stopping_maneuver", &prx::system_t::compute_stopping_maneuver)
       .def("finalize_system_tree", &prx::system_t::finalize_system_tree)

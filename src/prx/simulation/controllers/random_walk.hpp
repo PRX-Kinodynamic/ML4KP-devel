@@ -18,8 +18,6 @@ public:
 
   virtual void propagate(const double simulation_step) override;
 
-  virtual void propagate(const double simulation_step, const propagate_step step) override;
-
   double counter;
 };
 }  // namespace prx

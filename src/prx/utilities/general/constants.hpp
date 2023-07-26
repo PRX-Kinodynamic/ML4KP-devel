@@ -48,21 +48,16 @@ static inline bool are_approx_equal(std::vector<T> c1, std::vector<S> c2, double
 }
 
 const std::string lib_path = lib_path_safe("DIRTMP_PATH");
-const std::string models_path = lib_path + "resources/models/";
+const std::string mj_models_path = lib_path + "resources/models/";
 const std::string input_path = lib_path + "resources/input_files/";
 const std::string js_path = lib_path + "resources/js/";
 const std::string out_path = lib_path + "out/";
+const bool MUJOCO_VIS = false;
 
-enum propagate_step
-{
-  FIRST_STEP,
-  MIDDLE_STEP,
-  FINAL_STEP
-};
 enum plant_type
 {
   ANALYTICAL,
-  BULLET
+  MUJOCO
 };
 
 static inline double norm_angle_pi(double angle, double min_angle = -PRX_PI, double max_angle = PRX_PI)

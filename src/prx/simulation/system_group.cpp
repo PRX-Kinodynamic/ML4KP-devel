@@ -55,7 +55,6 @@ system_group_t::~system_group_t()
 void system_group_t::propagate(space_point_t start_state, const plan_t& plan, space_point_t result)
 {
   state_space->copy_from_point(start_state);
-  propagate_step p_step;
 
   for (const plan_step_t& step : plan)
   {
@@ -81,13 +80,12 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
                                space_point_t result)
 {
   state_space->copy_from_point(start_state);
-  propagate_step p_step;
 
   int i = 0;
   do
   {
     ctrl->compute_controls();
-    propagate_once(propagate_step::MIDDLE_STEP, nullptr);
+    propagate_once(nullptr);
   } while (!cond_check.check());
 
   state_space->copy_to_point(result);
@@ -97,13 +95,12 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
                                trajectory_t& result)
 {
   state_space->copy_from_point(start_state);
-  propagate_step p_step;
 
   int i = 0;
   do
   {
     ctrl->compute_controls();
-    propagate_once(propagate_step::MIDDLE_STEP, nullptr);
+    propagate_once(nullptr);
     result.copy_onto_back(state_space);
   } while (!cond_check.check());
 
@@ -113,7 +110,6 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
 void system_group_t::propagate(space_point_t start_state, const plan_t& plan, trajectory_t& traj)
 {
   state_space->copy_from_point(start_state);
-  propagate_step p_step;
 
   traj.clear();
   traj.copy_onto_back(state_space);
@@ -139,17 +135,9 @@ void system_group_t::propagate(space_point_t start_state, const plan_t& plan, tr
 
 void system_group_t::propagate(int steps, space_point_t control, trajectory_t* traj)
 {
-  propagate_step p_step;
   for (int i = 0; i < steps; i++)
   {
-    if (i == 0)
-      p_step = propagate_step::FIRST_STEP;
-    else if (i > 0 && i < steps - 1)
-      p_step = propagate_step::MIDDLE_STEP;
-    else
-      p_step = propagate_step::FINAL_STEP;
-
-    propagate_once(p_step, control);
+    propagate_once(control);
     if (traj != nullptr)
     {
       traj->copy_onto_back(state_space);
@@ -157,7 +145,7 @@ void system_group_t::propagate(int steps, space_point_t control, trajectory_t* t
   }
 }
 
-void system_group_t::propagate_once(propagate_step step, space_point_t control)
+void system_group_t::propagate_once(space_point_t control)
 {
   if (control != nullptr)
   {
@@ -172,7 +160,7 @@ void system_group_t::propagate_once(propagate_step step, space_point_t control)
   // {
   // 	s->propagate(simulation_step, step);
   // }
-  sim->step_simulation(step);
+  sim->step_simulation();
 }
 
 void system_group_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times,
