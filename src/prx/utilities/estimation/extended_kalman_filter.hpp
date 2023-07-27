@@ -50,12 +50,13 @@ class extended_kalman_filter_t
 
   using EkfState = EkfState<State, Observation>;
   using StateJacobian = prx::math::first_order_derivative_t<Model, State, Evaluations>;
-  using MeasurementJacobian = prx::math::first_order_derivative_t<MeasurementFunction, Observation, Evaluations>;
+  using MeasurementJacobian = prx::math::first_order_derivative_t<MeasurementFunction, State, Evaluations>;
 
 public:
   using MatrixNN = Eigen::Matrix<double, StateDim, StateDim>;
   using MatrixMM = Eigen::Matrix<double, ObservationDim, ObservationDim>;
   using MatrixNM = Eigen::Matrix<double, StateDim, ObservationDim>;
+  using MatrixMN = Eigen::Matrix<double, ObservationDim, StateDim>;
 
   using Step = typename EkfState::Step;
   using StateCovariance = typename EkfState::StateCovariance;
@@ -64,7 +65,7 @@ public:
   using KallmanGain = typename EkfState::KallmanGain;
 
   extended_kalman_filter_t(const Model& model, const MeasurementFunction& measure, const double& epsilon = 0.01)
-    : _model(model), _measure(measure), _Im(MatrixMM::Identity()), _epsilon(epsilon)
+    : _model(model), _measure(measure), _Im(MatrixMM::Identity()), _In(MatrixNN::Identity()), _epsilon(epsilon)
   {
   }
 
@@ -119,7 +120,7 @@ protected:
   void correct()
   {
     // Variables at k-1
-    const State z_fk{ _ekf_state.observation };  // z(k-1)
+    // const State z_fk{ _ekf_state.observation };  // z(k-1)
 
     // Variables at k
     const Step k{ _ekf_state.k };                     // k
@@ -130,7 +131,7 @@ protected:
 
     const MeasurementJacobian h_partial_derivative{ _measure, _epsilon };
 
-    const MatrixMM H_k1x = h_partial_derivative(x_f);
+    const MatrixMN H_k1x = h_partial_derivative(x_f);
 
     // Inverse could cause numerical issues. This method is recomended by Eigen, but there could be better for
     // specific cases.
@@ -143,7 +144,7 @@ protected:
 
     _ekf_state.estimation = x_f + K_k * (z_k - _measure(x_f));
 
-    _ekf_state.P_k = (_Im - K_k * H_k1x) * P_k;
+    _ekf_state.P_k = (_In - K_k * H_k1x) * P_k;
   }
 
 private:
@@ -154,6 +155,7 @@ private:
 
   const double _epsilon;
   const MatrixMM _Im;  // identity
+  const MatrixNN _In;  // identity
 };
 }  // namespace estimation
 }  // namespace prx
