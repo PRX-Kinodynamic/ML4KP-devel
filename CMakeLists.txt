@@ -4,9 +4,9 @@ project(DirtMP)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+
 cmake_policy(SET CMP0079 NEW)
 
 set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
@@ -14,21 +14,14 @@ set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
 
-# TODO: go back to c++11?
+# TODO: should have a non-debuging option for increased speed
 add_definitions(-O3 -fPIC -g )
-if(APPLE)
-	set(CMAKE_CXX_STANDARD 14)
-else()
-	add_definitions(-lstdc++fs)
-	link_libraries(stdc++fs)
-endif()
+
 find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
-# link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})
 link_libraries(
 	${Boost_FILESYSTEM_LIBRARY}
 	${Boost_SYSTEM_LIBRARY}
-	# ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
 	)
 
 
