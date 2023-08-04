@@ -1,4 +1,5 @@
 random_seed: 921123
 simulation_step: 0.001
 traj_file: "${HOME}/Downloads/MuSHR_Trajectories/simulated_traj.txt"
+# traj_file: "${HOME}/Downloads/MuSHR_Trajectories/simulated_traj_short.txt"
 initial_friction: 0.9

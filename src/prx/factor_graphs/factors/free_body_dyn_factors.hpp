@@ -55,60 +55,6 @@ using Params = Eigen::Vector<double, DimParams>;
 const prx::math::S Evaluations{ 4 };
 }  // namespace fbd
 
-// Error on X
-// template <typename X, typename Xdot>
-// class propagation_euler_factor_t : public gtsam::NoiseModelFactor3<X, X, Xdot>
-// {
-//   using Base = gtsam::NoiseModelFactor3<X, X, Xdot>;
-//   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
-
-//   using Partial_X0 = std::function<X(const X&)>;
-//   using Partial_X1 = std::function<X(const X&)>;
-//   using Partial_Xdot = std::function<X(const Xdot&)>;
-
-// public:
-//   propagation_euler_factor_t(const gtsam::Key key_x0, const gtsam::Key key_x1, const gtsam::Key key_xdot,
-//                              const NoiseModel& cost_model, const double h = prx::simulation_step)
-//     : Base(cost_model, key_x0, key_x1, key_xdot), derivative_x0(h), derivative_x1(h), derivative_xdot(h)
-//   {
-//   }
-
-//   virtual Eigen::VectorXd evaluateError(const X& x0, const X& x1, const Xdot& xdot,            // no-lint
-//                                         boost::optional<Eigen::MatrixXd&> H_x0 = boost::none,  // no-lint
-//                                         boost::optional<Eigen::MatrixXd&> H_x1 = boost::none,  // no-lint
-//                                         boost::optional<Eigen::MatrixXd&> H_xdot = boost::none) const override
-//   {
-//     if (H_x0)
-//     {
-//       derivative_x0._model = [&](const X& x0_) { return compute_error(x0_, x1, xdot); };
-//     }
-//     if (H_x1)
-//     {
-//       derivative_x1._model = [&](const X& x1_) { return compute_error(x0, x1_, xdot); };
-//     }
-//     if (H_xdot)
-//     {
-//       derivative_xdot._model = [&](const Xdot& xdot_) { return compute_error(x0, x1, xdot_); };
-//     }
-
-//     return compute_error(x0, x1, xdot);
-//   }
-
-//   X compute_error(const X& x0, const X& x1, const Xdot& xdot) const
-//   {
-//     return x1 - (x0 + xdot * simulation_step);
-//   }
-
-// private:
-//   Partial_X0 partial_x0;
-//   Partial_X1 partial_x1;
-//   Partial_Xdot partial_xdot;
-
-//   mutable prx::math::first_order_derivative_t<Partial_X0, X, 4> derivative_x0;
-//   mutable prx::math::first_order_derivative_t<Partial_X1, X, 4> derivative_x1;
-//   mutable prx::math::first_order_derivative_t<Partial_Xdot, Xdot, 4> derivative_xdot;
-// };
-
 class velocity_linear_momentum_factor_t : public noise_model_2factor_t<fbd::DimXdot, fbd::DimP>
 {
   using Base = noise_model_2factor_t<fbd::DimXdot, fbd::DimP>;
@@ -212,6 +158,7 @@ private:
   mutable prx::math::first_order_derivative_t<Partial_W, fbd::W, 4> derivative_w;
 };
 
+//
 // class angular_acceleration_factor_t
 //   : public noise_model_5factor_t<fbd::DimWdot, fbd::DimL, fbd::DimLdot, fbd::DimI, fbd::DimIdot>
 // {

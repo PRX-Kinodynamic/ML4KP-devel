@@ -106,5 +106,202 @@ public:
   }
 };
 
+class camera_projection_factor_t : public noise_model_3factor_t<2, 3, 12>
+{
+  using Base = noise_model_3factor_t<2, 3, 12>;
+  using G = Eigen::Matrix<double, 2, 12>;
+
+public:
+  using Pixel = Base::X0;
+  using WorldPosition = Base::X1;
+  using Projection = Base::X2;
+
+  camera_projection_factor_t(gtsam::Key key_pixel, gtsam::Key key_world_position, gtsam::Key key_projection,
+                             const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(key_pixel, key_world_position, key_projection, cost_model)
+  {
+  }
+
+  virtual Pixel compute_error(const Pixel& pixel, const WorldPosition& position,
+                              const Projection& projection) const override
+  {
+    const double u{ pixel[0] };
+    const double v{ pixel[1] };
+    const Eigen::RowVector4d row_position{ position[0], position[1], position[2], 1 };
+    G g{ G::Zero() };
+
+    g.block<1, 4>(0, 0) = row_position;
+    g.block<1, 4>(1, 4) = row_position;
+    g.block<1, 4>(0, 8) = row_position * u;
+    g.block<1, 4>(1, 8) = row_position * v;
+    // PRX_DEBUG_VAR_1(g);
+    return g * projection;
+  }
+
+  void print(const std::string& s = "",
+             const gtsam::KeyFormatter& keyFormatter = symbol_factory_t::formatter) const override
+  {
+    std::cout << s << "(camera_projection_factor_t)  keys = { ";
+    for (gtsam::Key key : keys())
+    {
+      std::cout << keyFormatter(key) << " ";
+    }
+    std::cout << "}" << std::endl;
+  }
+};
+
+class aruco_camera_projection_factor_t : public noise_model_6factor_t<2, 3, 3, 3, 3, 12>
+{
+  using Base = noise_model_6factor_t<2, 3, 3, 3, 3, 12>;
+  using G = Eigen::Matrix<double, 2, 12>;
+
+public:
+  using Pixel = Base::X0;
+  using Corner0 = Base::X1;
+  using Corner1 = Base::X2;
+  using Corner2 = Base::X3;
+  using Corner3 = Base::X4;
+  using Projection = Base::X5;
+
+  aruco_camera_projection_factor_t(gtsam::Key key_pixel, gtsam::Key key_corner_0, gtsam::Key key_corner_1,
+                                   gtsam::Key key_corner_2, gtsam::Key key_corner_3, gtsam::Key key_projection,
+                                   const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(key_pixel, key_corner_0, key_corner_1, key_corner_2, key_corner_3, key_projection, cost_model)
+  {
+  }
+
+  virtual Pixel compute_error(const Pixel& pixel, const Corner0& corner_0, const Corner1& corner_1,
+                              const Corner2& corner_2, const Corner3& corner_3,
+                              const Projection& projection) const override
+  {
+    const double u{ pixel[0] };
+    const double v{ pixel[1] };
+    const Eigen::Vector3d midpt{ (corner_0 + corner_1 + corner_2 + corner_3) / 4.0 };
+    const Eigen::RowVector4d row_position{ midpt[0], midpt[1], midpt[2], 1 };
+    G g{ G::Zero() };
+
+    g.block<1, 4>(0, 0) = row_position;
+    g.block<1, 4>(1, 4) = row_position;
+    g.block<1, 4>(0, 8) = row_position * u;
+    g.block<1, 4>(1, 8) = row_position * v;
+    // PRX_DEBUG_VAR_1(g);
+    return g * projection;
+  }
+
+  void print(const std::string& s = "",
+             const gtsam::KeyFormatter& keyFormatter = symbol_factory_t::formatter) const override
+  {
+    std::cout << s << "(aruco_camera_projection_factor_t)  keys = { ";
+    for (gtsam::Key key : keys())
+    {
+      std::cout << keyFormatter(key) << " ";
+    }
+    std::cout << "}" << std::endl;
+  }
+};
+
+class projection_to_rotation_factor_t : public noise_model_2factor_t<9, 12>
+{
+  using Base = noise_model_2factor_t<9, 12>;
+
+public:
+  using RotationVec = Base::X0;
+  using Projection = Base::X1;
+
+  projection_to_rotation_factor_t(gtsam::Key key_rot_vec, gtsam::Key key_projection,
+                                  const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(key_rot_vec, key_projection, cost_model)
+  {
+  }
+
+  virtual RotationVec compute_error(const RotationVec& rot_vec, const Projection& projection) const override
+  {
+    const Eigen::Matrix<double, 3, 4> P{ projection.reshaped(3, 4) };
+    const Eigen::Matrix3d B{ P.block<3, 3>(0, 0) };
+    Eigen::Matrix3d K{ B * B.transpose() };
+    K = K / K(2, 2);
+    const double u0{ K(0, 2) };
+    const double v0{ K(1, 2) };
+    const double ku{ K(0, 0) };
+    const double kc{ K(0, 1) };
+    const double kv{ K(1, 1) };
+
+    const double beta{ std::sqrt(ku - v0 * v0) };
+    const double gamma{ (kc - u0 * v0) / beta };
+    const double alpha{ std::sqrt(ku - u0 * u0 - gamma * gamma) };
+    Eigen::Matrix3d A{ Eigen::Matrix3d::Zero() };
+    A << alpha, gamma, u0,  // no-lint
+        0, beta, v0,        // no-lint
+        0, 0, 1;
+
+    const Eigen::Matrix3d Rp{ A.inverse() * B };
+
+    return Rp.reshaped(9, 1) - rot_vec;
+  }
+
+  void print(const std::string& s = "",
+             const gtsam::KeyFormatter& keyFormatter = symbol_factory_t::formatter) const override
+  {
+    std::cout << s << "(projection_to_rotation_factor_t)  keys = { ";
+    for (gtsam::Key key : keys())
+    {
+      std::cout << keyFormatter(key) << " ";
+    }
+    std::cout << "}" << std::endl;
+  }
+};
+
+class projection_to_translation_factor_t : public noise_model_2factor_t<3, 12>
+{
+  using Base = noise_model_2factor_t<3, 12>;
+
+public:
+  using Translation = Base::X0;
+  using Projection = Base::X1;
+
+  projection_to_translation_factor_t(gtsam::Key key_translation, gtsam::Key key_projection,
+                                     const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(key_translation, key_projection, cost_model)
+  {
+  }
+
+  virtual Translation compute_error(const Translation& translation, const Projection& projection) const override
+  {
+    const Eigen::Matrix<double, 3, 4> P{ projection.reshaped(3, 4) };
+    const Eigen::Matrix3d B{ P.block<3, 3>(0, 0) };
+    const Eigen::Vector3d b{ P.block<3, 1>(0, 3) };
+    Eigen::Matrix3d K{ B * B.transpose() };
+    K = K / K(2, 2);
+    const double u0{ K(0, 2) };
+    const double v0{ K(1, 2) };
+    const double ku{ K(0, 0) };
+    const double kc{ K(0, 1) };
+    const double kv{ K(1, 1) };
+
+    const double beta{ std::sqrt(ku - v0 * v0) };
+    const double gamma{ (kc - u0 * v0) / beta };
+    const double alpha{ std::sqrt(ku - u0 * u0 - gamma * gamma) };
+    Eigen::Matrix3d A{ Eigen::Matrix3d::Zero() };
+    A << alpha, gamma, u0,  // no-lint
+        0, beta, v0,        // no-lint
+        0, 0, 1;
+
+    const Eigen::Vector3d tp{ A.inverse() * b };
+
+    return tp - translation;
+  }
+
+  void print(const std::string& s = "",
+             const gtsam::KeyFormatter& keyFormatter = symbol_factory_t::formatter) const override
+  {
+    std::cout << s << "(projection_to_translation_factor_t)  keys = { ";
+    for (gtsam::Key key : keys())
+    {
+      std::cout << keyFormatter(key) << " ";
+    }
+    std::cout << "}" << std::endl;
+  }
+};
+
 }  // namespace fg
 }  // namespace prx

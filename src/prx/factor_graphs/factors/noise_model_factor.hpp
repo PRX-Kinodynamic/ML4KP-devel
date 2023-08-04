@@ -541,5 +541,269 @@ private:
   mutable prx::math::first_order_derivative_t<partial_X4, X4, Evaluations> derivative_x4;
   mutable prx::math::first_order_derivative_t<partial_X5, X5, Evaluations> derivative_x5;
 };
+
+// Noise Model factor for 1 (Known value) + 1 (variables)
+// If the error is known (i.e Zeros), no need to have it as a FG variable. The first template is the dim of the error
+// Error = Xerr - f(X0)
+template <Eigen::Index Dim_Err, Eigen::Index Dim_X0, Evals Evaluations = 4>
+class noise_model_1p1_factor_t : public gtsam::NoiseModelFactor2<Eigen::Vector<double, Dim_X0>>
+{
+protected:
+  using Xerr = Eigen::Vector<double, Dim_Err>;
+  using X0 = Eigen::Vector<double, Dim_X0>;
+  using partial_X0 = std::function<Xerr(const X0&)>;
+  using Base = gtsam::NoiseModelFactor2<X0>;
+
+public:
+  noise_model_1p1_factor_t(gtsam::Key key_x0, const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(cost_model, key_x0), derivative_x0(partial_x0, 0.01)
+  {
+  }
+
+  virtual ~noise_model_1p1_factor_t()
+  {
+  }
+
+  virtual Eigen::VectorXd evaluateError(const X0& x0, boost::optional<Eigen::MatrixXd&> H0 = boost::none) const override
+  {
+    auto error = compute_error(x0);
+
+    if (H0)
+    {
+      derivative_x0._model = [&](const X0& _x0) { return compute_error(_x0); };
+      *H0 = derivative_x0(x0);
+    }
+
+    return error;
+  }
+
+  virtual Xerr compute_error(const X0& x0) const = 0;
+
+  // PRX_FACTOR_OVERLOAD_PRINT("noise_model_1p4_factor_t")
+
+private:
+  partial_X0 partial_x0;
+
+  mutable prx::math::first_order_derivative_t<partial_X0, X0, Evaluations> derivative_x0;
+};
+
+// Noise Model factor for 1 (Known value) + 2 (variables)
+// If the error is known (i.e Zeros), no need to have it as a FG variable. The first template is the dim of the error
+// Error = Xerr - f(X0, X1)
+template <Eigen::Index Dim_Err, Eigen::Index Dim_X0, Eigen::Index Dim_X1, Eigen::Index Dim_X2, Evals Evaluations = 4>
+class noise_model_1p2_factor_t
+  : public gtsam::NoiseModelFactor2<Eigen::Vector<double, Dim_X0>, Eigen::Vector<double, Dim_X1>>
+{
+protected:
+  using Xerr = Eigen::Vector<double, Dim_Err>;
+  using X0 = Eigen::Vector<double, Dim_X0>;
+  using X1 = Eigen::Vector<double, Dim_X1>;
+  using partial_X0 = std::function<Xerr(const X0&)>;
+  using partial_X1 = std::function<Xerr(const X1&)>;
+  using Base = gtsam::NoiseModelFactor2<X0, X1>;
+
+public:
+  noise_model_1p2_factor_t(gtsam::Key key_x0, gtsam::Key key_x1, const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(cost_model, key_x0, key_x1), derivative_x0(partial_x0, 0.01), derivative_x1(partial_x1, 0.01)
+  {
+  }
+
+  virtual ~noise_model_1p2_factor_t()
+  {
+  }
+
+  virtual Eigen::VectorXd evaluateError(const X0& x0, const X1& x1,  // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H0 = boost::none,
+                                        boost::optional<Eigen::MatrixXd&> H1 = boost::none) const override
+  {
+    auto error = compute_error(x0, x1);
+
+    if (H0)
+    {
+      derivative_x0._model = [&](const X0& _x0) { return compute_error(_x0, x1); };
+      *H0 = derivative_x0(x0);
+    }
+
+    if (H1)
+    {
+      derivative_x1._model = [&](const X1& _x1) { return compute_error(x0, _x1); };
+      *H1 = derivative_x1(x1);
+    }
+
+    return error;
+  }
+
+  virtual Xerr compute_error(const X0& x0, const X1& x1) const = 0;
+
+  // PRX_FACTOR_OVERLOAD_PRINT("noise_model_1p4_factor_t")
+
+private:
+  partial_X0 partial_x0;
+  partial_X1 partial_x1;
+
+  mutable prx::math::first_order_derivative_t<partial_X0, X0, Evaluations> derivative_x0;
+  mutable prx::math::first_order_derivative_t<partial_X1, X1, Evaluations> derivative_x1;
+};
+
+// Noise Model factor for 1 (Known value) + 3 (variables)
+// If the error is known (i.e Zeros), no need to have it as a FG variable. The first template is the dim of the error
+// Error = Xerr - f(X0, X1, X2, X3)
+template <Eigen::Index Dim_Err, Eigen::Index Dim_X0, Eigen::Index Dim_X1, Eigen::Index Dim_X2, Evals Evaluations = 4>
+class noise_model_1p3_factor_t
+  : public gtsam::NoiseModelFactor3<Eigen::Vector<double, Dim_X0>, Eigen::Vector<double, Dim_X1>,
+                                    Eigen::Vector<double, Dim_X2>>
+{
+protected:
+  using Xerr = Eigen::Vector<double, Dim_Err>;
+  using X0 = Eigen::Vector<double, Dim_X0>;
+  using X1 = Eigen::Vector<double, Dim_X1>;
+  using X2 = Eigen::Vector<double, Dim_X2>;
+  using partial_X0 = std::function<Xerr(const X0&)>;
+  using partial_X1 = std::function<Xerr(const X1&)>;
+  using partial_X2 = std::function<Xerr(const X2&)>;
+  using Base = gtsam::NoiseModelFactor3<X0, X1, X2>;
+
+public:
+  noise_model_1p3_factor_t(gtsam::Key key_x0, gtsam::Key key_x1, gtsam::Key key_x2,
+                           const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(cost_model, key_x0, key_x1, key_x2)
+    , derivative_x0(partial_x0, 0.01)
+    , derivative_x1(partial_x1, 0.01)
+    , derivative_x2(partial_x2, 0.01)
+  {
+  }
+
+  virtual ~noise_model_1p3_factor_t()
+  {
+  }
+
+  virtual Eigen::VectorXd evaluateError(const X0& x0, const X1& x1, const X2& x2,
+                                        boost::optional<Eigen::MatrixXd&> H0 = boost::none,
+                                        boost::optional<Eigen::MatrixXd&> H1 = boost::none,
+                                        boost::optional<Eigen::MatrixXd&> H2 = boost::none) const override
+  {
+    auto error = compute_error(x0, x1, x2);
+
+    if (H0)
+    {
+      derivative_x0._model = [&](const X0& _x0) { return compute_error(_x0, x1, x2); };
+      *H0 = derivative_x0(x0);
+    }
+
+    if (H1)
+    {
+      derivative_x1._model = [&](const X1& _x1) { return compute_error(x0, _x1, x2); };
+      *H1 = derivative_x1(x1);
+    }
+
+    if (H2)
+    {
+      derivative_x2._model = [&](const X2& _x2) { return compute_error(x0, x1, _x2); };
+      *H2 = derivative_x2(x2);
+    }
+
+    return error;
+  }
+
+  virtual Xerr compute_error(const X0& x0, const X1& x1, const X2& x2) const = 0;
+
+  // PRX_FACTOR_OVERLOAD_PRINT("noise_model_1p4_factor_t")
+
+private:
+  partial_X0 partial_x0;
+  partial_X1 partial_x1;
+  partial_X2 partial_x2;
+
+  mutable prx::math::first_order_derivative_t<partial_X0, X0, Evaluations> derivative_x0;
+  mutable prx::math::first_order_derivative_t<partial_X1, X1, Evaluations> derivative_x1;
+  mutable prx::math::first_order_derivative_t<partial_X2, X2, Evaluations> derivative_x2;
+};
+
+// Noise Model factor for 1 (Known value) + 4 (variables)
+// If the error is known (i.e Zeros), no need to have it as a FG variable. The first template is the dim of the error
+// Error = Xerr - f(X0, X1, X2, X3)
+template <Eigen::Index Dim_Err, Eigen::Index Dim_X0, Eigen::Index Dim_X1, Eigen::Index Dim_X2, Eigen::Index Dim_X3,
+          Evals Evaluations = 4>
+class noise_model_1p4_factor_t
+  : public gtsam::NoiseModelFactor4<Eigen::Vector<double, Dim_X0>, Eigen::Vector<double, Dim_X1>,
+                                    Eigen::Vector<double, Dim_X2>, Eigen::Vector<double, Dim_X3>>
+{
+protected:
+  using Xerr = Eigen::Vector<double, Dim_Err>;
+  using X0 = Eigen::Vector<double, Dim_X0>;
+  using X1 = Eigen::Vector<double, Dim_X1>;
+  using X2 = Eigen::Vector<double, Dim_X2>;
+  using X3 = Eigen::Vector<double, Dim_X3>;
+  using partial_X0 = std::function<Xerr(const X0&)>;
+  using partial_X1 = std::function<Xerr(const X1&)>;
+  using partial_X2 = std::function<Xerr(const X2&)>;
+  using partial_X3 = std::function<Xerr(const X3&)>;
+  using Base = gtsam::NoiseModelFactor4<X0, X1, X2, X3>;
+
+public:
+  noise_model_1p4_factor_t(gtsam::Key key_x0, gtsam::Key key_x1, gtsam::Key key_x2, gtsam::Key key_x3,
+                           const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(cost_model, key_x0, key_x1, key_x2, key_x3)
+    , derivative_x0(partial_x0, 0.01)
+    , derivative_x1(partial_x1, 0.01)
+    , derivative_x2(partial_x2, 0.01)
+    , derivative_x3(partial_x3, 0.01)
+  {
+  }
+
+  virtual ~noise_model_1p4_factor_t()
+  {
+  }
+
+  virtual Eigen::VectorXd evaluateError(const X0& x0, const X1& x1, const X2& x2, const X3& x3,
+                                        boost::optional<Eigen::MatrixXd&> H0 = boost::none,
+                                        boost::optional<Eigen::MatrixXd&> H1 = boost::none,
+                                        boost::optional<Eigen::MatrixXd&> H2 = boost::none,
+                                        boost::optional<Eigen::MatrixXd&> H3 = boost::none) const override
+  {
+    auto error = compute_error(x0, x1, x2, x3);
+
+    if (H0)
+    {
+      derivative_x0._model = [&](const X0& _x0) { return compute_error(_x0, x1, x2, x3); };
+      *H0 = derivative_x0(x0);
+    }
+
+    if (H1)
+    {
+      derivative_x1._model = [&](const X1& _x1) { return compute_error(x0, _x1, x2, x3); };
+      *H1 = derivative_x1(x1);
+    }
+
+    if (H2)
+    {
+      derivative_x2._model = [&](const X2& _x2) { return compute_error(x0, x1, _x2, x3); };
+      *H2 = derivative_x2(x2);
+    }
+
+    if (H3)
+    {
+      derivative_x3._model = [&](const X3& _x3) { return compute_error(x0, x1, x2, _x3); };
+      *H3 = derivative_x3(x3);
+    }
+
+    return error;
+  }
+
+  virtual Xerr compute_error(const X0& x0, const X1& x1, const X2& x2, const X3& x3) const = 0;
+
+  // PRX_FACTOR_OVERLOAD_PRINT("noise_model_1p4_factor_t")
+
+private:
+  partial_X0 partial_x0;
+  partial_X1 partial_x1;
+  partial_X2 partial_x2;
+  partial_X3 partial_x3;
+
+  mutable prx::math::first_order_derivative_t<partial_X0, X0, Evaluations> derivative_x0;
+  mutable prx::math::first_order_derivative_t<partial_X1, X1, Evaluations> derivative_x1;
+  mutable prx::math::first_order_derivative_t<partial_X2, X2, Evaluations> derivative_x2;
+  mutable prx::math::first_order_derivative_t<partial_X3, X3, Evaluations> derivative_x3;
+};
 }  // namespace fg
 }  // namespace prx
