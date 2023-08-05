@@ -11,8 +11,8 @@
 #define PRX_DEBUG_PRINT std::cout << __PRETTY_FUNCTION__ << ": " << __LINE__ << std::endl;
 
 #define PRX_NOT_IMPLEMENTED                                                                                            \
-  std::cout << PRX_COLOR_RED << __PRETTY_FUNCTION__ << " NOT IMPLEMENTED. Is an override needed?" << PRX_COLOR_NORMAL  \
-            << std::endl;
+  std::cout << prx::constants::color::red << __PRETTY_FUNCTION__ << " NOT IMPLEMENTED. Is an override needed?"         \
+            << prx::constants::color::normal << std::endl;
 
 #define PRX_DEBUG_ITERABLE(msg, v)                                                                                     \
   std::cout << "[DBG " << msg << "] ";                                                                                 \
@@ -54,3 +54,11 @@
 
 // Useful for tests
 #define EXPECTED_GOT(expected, got) "Expected: " << expected << ". Got: " << got
+
+#define PRX_DEPRECATED(MSG)                                                                                            \
+  const std::string fx{ __PRETTY_FUNCTION__ };                                                                         \
+  static bool deprecated_print_once = [&fx]() {                                                                        \
+    std::cout << prx::constants::color::yellow << "[DEPRECATED] \"" << fx << "\":" << MSG                              \
+              << prx::constants::color::normal << "\n";                                                                \
+    return true;                                                                                                       \
+  }();

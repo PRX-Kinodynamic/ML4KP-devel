@@ -1,172 +1,19 @@
 #pragma once
 
-#include "prx/utilities/defs.hpp"
-
 #include <vector>
 #include <string>
 #include <memory>
 #include <numeric>
 
+#include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/template_utils.hpp"
+#include "prx/utilities/general/type_conversions.hpp"
+#include "prx/utilities/spaces/space_snapshot.hpp"
+
 namespace prx
 {
 class space_t;
-class space_snapshot_t;
 typedef std::shared_ptr<space_snapshot_t> space_point_t;
-
-/**
- * @brief <b> Stores a single point in a space. </b>
- *
- * Stores a single point in a space.
- *
- * @author Zakary Littlefield
- */
-
-class space_snapshot_t
-{
-public:
-  typedef std::vector<double>::iterator iterator;
-  typedef std::vector<double>::const_iterator const_iterator;
-
-  /**
-   * @brief Destructor.
-   *
-   * Clears the memory of the space snapshot.
-   */
-  ~space_snapshot_t()
-  {
-    memory.clear();
-  }
-
-  /**
-   * @brief Gets the value of the space snapshot along the specified dimension.
-   * @param index The index of the dimension.
-   * @return Value of the space snapshot at the index.
-   */
-  double& at(unsigned index)
-  {
-    return memory[index];
-  }
-
-  /**
-   * @brief Gets the value of the space snapshot along the specified dimension.
-   * @param index The index of the dimension.
-   * @return Value of the space snapshot at the index.
-   */
-  const double at(unsigned index) const
-  {
-    return memory[index];
-  }
-
-  space_snapshot_t(const space_t* const in_parent);
-
-  /**
-   * @brief Gets the dimensionality of the space snapshot.
-   * @return Dimensionality of the space snapshot.
-   */
-  inline const std::size_t size()
-  {
-    return memory.size();
-  }
-
-  /**
-   * @brief Gets the dimensionality of the space snapshot.
-   * @return Dimensionality of the space snapshot.
-   */
-  inline const unsigned int get_dim()
-  {
-    return memory.size();
-  }
-
-  void add(const space_point_t& obj)
-  {
-    prx_assert(obj->get_dim() == memory.size(),
-               "Points have different dimension size!: " << obj->get_dim() << " and " << memory.size());
-
-    for (int i = 0; i < memory.size(); ++i)
-    {
-      memory[i] += obj->at(i);
-    }
-    // return shared_from_this();
-  }
-
-  void multiply(const double& sclr)
-  {
-    for (int i = 0; i < memory.size(); ++i)
-    {
-      memory[i] *= sclr;
-    }
-    // return shared_from_this();
-  }
-
-  /**
-   * @brief Performs yn <- yn + sclr * pt
-   * @details Performs yn <- yn + sclr * pt. Same as add if sclr = 1. Points don't need to be in the same space.
-   *
-   * @param sclr Scalar
-   * @param pt Point to add.
-   */
-  void add_multiply(const double& sclr, const space_point_t& pt)
-  {
-    prx_assert(pt->get_dim() == memory.size(),
-               "Points have different dimension size!: " << pt->get_dim() << " and " << memory.size());
-    for (int i = 0; i < memory.size(); ++i)
-    {
-      memory[i] += (sclr * pt->at(i));
-    }
-  }
-
-  iterator begin()
-  {
-    return memory.begin();
-  }
-  iterator end()
-  {
-    return memory.end();
-  }
-
-  const_iterator begin() const
-  {
-    return memory.begin();
-  }
-  const_iterator end() const
-  {
-    return memory.end();
-  }
-
-  double& operator[](const int i)
-  {
-    return at(i);
-  }
-
-  friend std::ostream& operator<<(std::ostream& os, const space_point_t& obj)
-  {
-    os << *obj;
-    return os;
-  }
-
-  friend std::ostream& operator<<(std::ostream& os, const space_snapshot_t& obj)
-  {
-    for (auto e : obj.memory)
-    {
-      os << e << " ";
-    }
-    // os << std::endl;
-    return os;
-  }
-
-protected:
-  const space_t* const parent;
-
-  std::vector<double> memory;
-
-  friend class space_t;
-
-private:
-  space_snapshot_t() : parent(nullptr)
-  {
-    memory.clear();
-  }
-};
 
 typedef std::function<double(const space_point_t&, const space_point_t&)> distance_function_t;
 
@@ -234,9 +81,9 @@ public:
    * @param pt The point to check
    * @return True if the point belongs to this space, false otherwise
    */
-  bool is_point_in_space(const space_point_t& pt)
+  inline bool is_point_in_space(const space_point_t& pt) const
   {
-    return space_name == pt->parent->space_name;
+    return space_name == pt->_parent->space_name;
   }
 
   /**
@@ -264,7 +111,7 @@ public:
    *
    * @param[in]  Vector to copy from.
    */
-  virtual void copy_from_vector(const Eigen::VectorXd& _v) const;
+  virtual void copy_from_vector(const Eigen::VectorXd& _v);
 
   /**
    * @brief      Copy from a std::vector<double>
@@ -278,10 +125,10 @@ public:
    *
    * @param[in/out]  point  The point to copy to.
    */
-  virtual void copy_to_point(const space_point_t& point) const;
+  virtual void copy_to_point(const space_point_t point) const;
 
-  virtual void copy_from_point(const space_point_t& point) const;
-  virtual void copy_point(const space_point_t& destination, const space_point_t& source) const;
+  virtual void copy_from_point(const space_point_t point) const;
+  virtual void copy_point(const space_point_t destination, const space_point_t source) const;
 
   /**
    * @brief      Copy current memory of the space to the given vector
@@ -291,150 +138,96 @@ public:
   virtual void copy_to_vector(std::vector<double>& destination) const;
   virtual void copy_from_vector(const std::vector<double>& source);
 
-  void copy_point_from_vector(const space_point_t& destination, const std::vector<double>& source) const;
-  void copy_point_from_vector(const space_point_t& destination, Eigen::Ref<Eigen::VectorXd> source) const;
+  void copy_point_from_vector(space_point_t destination, const std::vector<double>& source) const;
+  void copy_point_from_vector(space_point_t destination, Eigen::Ref<Eigen::VectorXd> source) const;
   void copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const;
   void copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, const space_point_t& source) const;
 
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F, std::enable_if_t<(std::is_pointer<F>{} || prx::utils::is_shared_ptr<F>{}), bool> = true>
+  template <typename T, std::enable_if_t<prx::utilities::is_any_ptr<T>::value, bool> = true,  // no-lint
+            typename F, std::enable_if_t<prx::utilities::is_any_ptr<F>::value, bool> = true>
   void copy(T& to, const F& from) const
   {
-    prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                      << typeid(decltype(*from)).name() << " ( "
-                                                                      << from->size() << " )");
-    prx_assert(to->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                    << typeid(decltype(*to)).name() << " ( "
-                                                                    << to->size() << " )");
-    for (int i = 0; i < from->size(); ++i)
-    {
-      to->at(i) = from->at(i);
-    }
+    copy(*to, *from);
   }
 
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F, std::enable_if_t<!(std::is_pointer<F>{} || prx::utils::is_shared_ptr<F>{}), bool> = true>
+  template <typename T, std::enable_if_t<prx::utilities::is_any_ptr<T>::value, bool> = true,  // no-lint
+            typename F, std::enable_if_t<not prx::utilities::is_any_ptr<F>::value, bool> = true>
   void copy(T& to, const F& from) const
   {
-    prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                     << typeid(decltype(from)).name() << " ( "
-                                                                     << from.size() << " )");
-    prx_assert(to->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                    << typeid(decltype(*to)).name() << " ( "
-                                                                    << to->size() << " )");
+    copy(*to, from);
+  }
+
+  template <typename T, std::enable_if_t<not prx::utilities::is_any_ptr<T>::value, bool> = true,  // no-lint
+            typename F, std::enable_if_t<prx::utilities::is_any_ptr<F>::value, bool> = true>
+  void copy(T& to, const F& from) const
+  {
+    copy(to, *from);
+  }
+
+  template <typename T, std::enable_if_t<not prx::utilities::is_any_ptr<T>::value, bool> = true,  // no-lint
+            typename F, std::enable_if_t<not prx::utilities::is_any_ptr<F>::value, bool> = true>
+  void copy(T& to, const F& from) const
+  {
+    assert_point_dimension(to.size());
+    assert_point_dimension(from.size());
     for (int i = 0; i < from.size(); ++i)
     {
-      to->at(i) = from.at(i);
+      to[i] = prx::utilities::convert_to<double>(from[i]);
     }
-  }
-
-  template <typename T, std::enable_if_t<!(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F, std::enable_if_t<(std::is_pointer<F>{} || prx::utils::is_shared_ptr<F>{}), bool> = true>
-  void copy(T& to, const F& from) const
-  {
-    prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                      << typeid(decltype(*from)).name() << " ( "
-                                                                      << from->size() << " )");
-    prx_assert(to.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                   << typeid(decltype(to)).name() << " ( " << to.size()
-                                                                   << " )");
-    for (int i = 0; i < from->size(); ++i)
-    {
-      to.at(i) = from->at(i);
-    }
-  }
-
-  template <typename T, std::enable_if_t<!(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F, std::enable_if_t<!(std::is_pointer<F>{} || prx::utils::is_shared_ptr<F>{}), bool> = true>
-  void copy(T& to, const F& from) const
-  {
-    prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                     << typeid(decltype(from)).name() << " ( "
-                                                                     << from.size() << " )");
-    prx_assert(to.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                   << typeid(decltype(to)).name() << " ( " << to.size()
-                                                                   << " )");
-    for (int i = 0; i < from.size(); ++i)
-    {
-      to.at(i) = from.at(i);
-    }
+    enforce_bounds(to);
   }
 
   // Explicit std::initializer_list copy is needed due to the § 14.8.2.5/5 C++11 standard
   // (std::initializer_list is a non-deduced context for a template argument)
   // No need for [T=prx::space_point_t] since we know from is initializer_list
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F>
+  template <typename T, std::enable_if_t<prx::utilities::is_any_ptr<T>::value, bool> = true, typename F>
   inline void copy(T& to, const std::initializer_list<F> from) const
   {
-    prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                     << typeid(decltype(from)).name() << " ( "
-                                                                     << from.size() << " )");
     std::vector<F> aux_vector = from;
     copy(to, aux_vector);
   }
 
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true>
-  void copy_from(const T& from)
+  template <typename F>
+  inline void copy_from(const std::initializer_list<F> from)
   {
-    prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                      << typeid(decltype(*from)).name() << " ( "
-                                                                      << from->size() << " )");
-    if (std::static_pointer_cast<space_snapshot_t>(from) != nullptr)
-    {
-      const space_point_t aux = std::static_pointer_cast<space_snapshot_t>(from);
-      prx_assert(aux->parent->space_name == space_name,
-                 "Point is of space ( " << aux->parent->space_name << " ), but space is ( " << space_name << ").");
-    }
-
-    for (int i = 0; i < from->size(); ++i)
-    {
-      *addresses[i] = from->at(i);
-    }
+    const std::vector<F> aux_vector = from;
+    copy_from(aux_vector);
   }
 
-  template <typename T, std::enable_if_t<!std::is_pointer<T>{} && !prx::utils::is_shared_ptr<T>{}, bool> = true>
-  void copy_from(const T& from)
+  template <typename T, std::enable_if_t<prx::utilities::is_any_ptr<T>::value, bool> = true>
+  inline void copy_from(const T& from)
   {
-    prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                      << typeid(decltype(from)).name() << " ( "
-                                                                      << from.size() << " )");
-    for (int i = 0; i < from.size(); ++i)
-    {
-      *addresses[i] = from.at(i);
-    }
+    is_space_point_type(from);
+    copy_from(*from);
   }
 
-  // template <typename T, typename std::enable_if_t<std::is_pointer<T>::value || prx::utils::is_shared_ptr<T>::value>>
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true>
-  void copy_to(T& to) const
+  template <typename T, std::enable_if_t<not prx::utilities::is_any_ptr<T>::value, bool> = true>
+  inline void copy_from(const T& from)
   {
-    prx_assert(to->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                    << typeid(decltype(*to)).name() << " ( "
-                                                                    << to->size() << " )");
-    if (std::static_pointer_cast<space_snapshot_t>(to) != nullptr)
+    assert_point_dimension(from.size());
+    for (int i = 0; i < dimension; ++i)
     {
-      const space_point_t aux = std::static_pointer_cast<space_snapshot_t>(to);
-      prx_assert(aux->parent->space_name == space_name,
-                 "Point is of space ( " << aux->parent->space_name << " ), but space is ( " << space_name << ").");
+      *addresses[i] = prx::utilities::convert_to<double>(from[i]);
     }
-
-    for (int i = 0; i < to->size(); ++i)
-    {
-      to->at(i) = *addresses[i];
-    }
+    enforce_bounds();
   }
 
-  template <typename T, std::enable_if_t<!(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true>
-  void copy_to(T& to) const
+  template <typename To, std::enable_if_t<prx::utilities::is_any_ptr<To>::value, bool> = true>
+  inline void copy_to(To& to) const
   {
-    prx_assert(to.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
-                                                                   << typeid(decltype(to)).name() << " ( " << to.size()
-                                                                   << " )");
+    is_space_point_type(to);
 
-    for (int i = 0; i < to.size(); ++i)
+    copy_to(*to);
+  }
+
+  template <typename To, std::enable_if_t<not prx::utilities::is_any_ptr<To>::value, bool> = true>
+  inline void copy_to(To& to) const
+  {
+    assert_point_dimension(to.size());
+
+    for (int i = 0; i < dimension; ++i)
     {
-      to.at(i) = *addresses[i];
+      to[i] = *addresses[i];
     }
   }
 
@@ -448,7 +241,34 @@ public:
     return dimension;
   }
 
-  void enforce_bounds(const space_point_t& point) const;
+  // template <typename Point, std::enable_if_t<(prx::utils::is_any_ptr<Point>{}), bool> = true>
+  template <typename Point,
+            std::enable_if_t<std::is_pointer<Point>{} || prx::utilities::is_shared_ptr<Point>{}, bool> = true>
+  void enforce_bounds(Point point) const
+  {
+    enforce_bounds(*point);
+  }
+
+  template <typename Point,
+            std::enable_if_t<!(std::is_pointer<Point>{} || prx::utilities::is_shared_ptr<Point>{}), bool> = true>
+  void enforce_bounds(Point& point) const
+  {
+    assert_point_dimension(point.size());
+    for (std::size_t i = 0; i < dimension; i++)
+    {
+      double& p = point[i];
+      // double& p{ point->_memory[i] };
+      if (topology[i] == topology_t::ROTATIONAL)
+      {
+        p = norm_angle_pi(p, *lower_bounds[i], *upper_bounds[i]);
+      }
+      else
+      {
+        p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
+      }
+    }
+  }
+
   void enforce_bounds() const;
   bool satisfies_bounds(const space_point_t& point) const;
   virtual void sample(const space_point_t& point) const;
@@ -458,25 +278,25 @@ public:
     return space_name;
   }
 
-  inline double& at(unsigned index) const
+  inline double& at(const std::size_t index) const
   {
     prx_assert(index < dimension, "Trying index into space at index " << index << " with dimension " << dimension);
     return *addresses[index];
   }
 
-  inline double& operator[](unsigned index) const
+  inline double& operator[](const std::size_t index) const
   {
     return at(index);
   }
 
-  inline double get_lower_bound(unsigned i) const
+  inline double get_lower_bound(const std::size_t i) const
   {
     prx_assert(i < dimension,
                "Error: Trying to get bound for " << i << " that is higher than state dimension " << dimension << ".");
     return *lower_bounds[i];
   }
 
-  inline double get_upper_bound(unsigned i) const
+  inline double get_upper_bound(const std::size_t i) const
   {
     prx_assert(i < dimension,
                "Error: Trying to get bound for " << i << " that is higher than state dimension " << dimension << ".");
@@ -496,13 +316,13 @@ public:
 
   void interpolate(const space_point_t& point1, const space_point_t& point2, double t, space_point_t& result) const;
 
-  std::string print_point(const space_point_t& point, unsigned prec = 25) const;
+  std::string print_point(const space_point_t& point, const std::size_t prec = 25) const;
 
-  std::string print_memory(unsigned prec = 25) const;
+  std::string print_memory(const std::size_t prec = 25) const;
 
   friend std::ostream& operator<<(std::ostream& os, const space_t& obj)
   {
-    os << obj.print_memory(3);
+    os << obj.print_memory(prx::constants::precision);
     return os;
   }
 
@@ -609,10 +429,16 @@ public:
     return std::sqrt(accum);
   }
 
+  /**
+   * @brief      Gets the topology as a string in the same format as its input
+   *
+   * @return     A string of the topology.
+   */
+  std::string get_topology() const;
+
 protected:
-  space_t(const space_t* other)
+  space_t(const space_t* other) : dimension{ other->dimension }
   {
-    dimension = other->dimension;
     for (int i = 0; i < dimension; ++i)
     {
       addresses.push_back(other->addresses[i]);
@@ -638,6 +464,33 @@ protected:
   bool owned_values;
 
   space_t(){};
+
+  inline void assert_point_space_name(const space_point_t& point) const
+  {
+    prx_assert(is_point_in_space(point),
+               "Point and space have different names: " << point->_parent->space_name << " and " << space_name);
+  }
+
+  inline void assert_point_dimension(const std::size_t dim) const
+  {
+    prx_assert(dim == dimension, "Dimension mismatch (" << space_name << "): " << dim << " vs " << dimension);
+  }
+
+  template <typename Point,
+            std::enable_if_t<!(std::is_pointer<Point>{} || prx::utilities::is_shared_ptr<Point>{}), bool> = true>
+  inline void is_space_point_type(const Point point) const
+  {
+  }
+  template <typename Point,
+            std::enable_if_t<(std::is_pointer<Point>{} || prx::utilities::is_shared_ptr<Point>{}), bool> = true>
+  inline void is_space_point_type(const Point point) const
+  {
+    if (std::static_pointer_cast<space_snapshot_t>(point) != nullptr)
+    {
+      const space_point_t aux{ std::static_pointer_cast<space_snapshot_t>(point) };
+      assert_point_space_name(aux);
+    }
+  }
 };
 
 typedef std::shared_ptr<space_t> space_ptr_t;

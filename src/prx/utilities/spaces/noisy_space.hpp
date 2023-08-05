@@ -26,7 +26,7 @@ public:
 
   // virtual ~noisy_space_t(){}
 
-  virtual void copy_to_point(const space_point_t& point) const override
+  virtual void copy_to_point(const space_point_t point) const override
   {
     // prx_assert(point->parent->space_name==space_name,"Point and space have different names:
     // "<<point->parent->space_name<<" and "<<space_name);
