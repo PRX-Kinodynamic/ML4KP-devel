@@ -296,8 +296,8 @@ public:
   void copy_vector_from_point(std::vector<double>& destination, const space_point_t& source) const;
   void copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, const space_point_t& source) const;
 
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F, std::enable_if_t<(std::is_pointer<F>{} || prx::utils::is_shared_ptr<F>{}), bool> = true>
+  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utilities::is_shared_ptr<T>{}), bool> = true,
+            typename F, std::enable_if_t<(std::is_pointer<F>{} || prx::utilities::is_shared_ptr<F>{}), bool> = true>
   void copy(T& to, const F& from) const
   {
     prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
@@ -312,8 +312,8 @@ public:
     }
   }
 
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F, std::enable_if_t<!(std::is_pointer<F>{} || prx::utils::is_shared_ptr<F>{}), bool> = true>
+  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utilities::is_shared_ptr<T>{}), bool> = true,
+            typename F, std::enable_if_t<!(std::is_pointer<F>{} || prx::utilities::is_shared_ptr<F>{}), bool> = true>
   void copy(T& to, const F& from) const
   {
     prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
@@ -328,8 +328,8 @@ public:
     }
   }
 
-  template <typename T, std::enable_if_t<!(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F, std::enable_if_t<(std::is_pointer<F>{} || prx::utils::is_shared_ptr<F>{}), bool> = true>
+  template <typename T, std::enable_if_t<!(std::is_pointer<T>{} || prx::utilities::is_shared_ptr<T>{}), bool> = true,
+            typename F, std::enable_if_t<(std::is_pointer<F>{} || prx::utilities::is_shared_ptr<F>{}), bool> = true>
   void copy(T& to, const F& from) const
   {
     prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
@@ -344,8 +344,8 @@ public:
     }
   }
 
-  template <typename T, std::enable_if_t<!(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
-            typename F, std::enable_if_t<!(std::is_pointer<F>{} || prx::utils::is_shared_ptr<F>{}), bool> = true>
+  template <typename T, std::enable_if_t<!(std::is_pointer<T>{} || prx::utilities::is_shared_ptr<T>{}), bool> = true,
+            typename F, std::enable_if_t<!(std::is_pointer<F>{} || prx::utilities::is_shared_ptr<F>{}), bool> = true>
   void copy(T& to, const F& from) const
   {
     prx_assert(from.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
@@ -363,7 +363,7 @@ public:
   // Explicit std::initializer_list copy is needed due to the § 14.8.2.5/5 C++11 standard
   // (std::initializer_list is a non-deduced context for a template argument)
   // No need for [T=prx::space_point_t] since we know from is initializer_list
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true,
+  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utilities::is_shared_ptr<T>{}), bool> = true,
             typename F>
   inline void copy(T& to, const std::initializer_list<F> from) const
   {
@@ -374,7 +374,7 @@ public:
     copy(to, aux_vector);
   }
 
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true>
+  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utilities::is_shared_ptr<T>{}), bool> = true>
   void copy_from(const T& from)
   {
     prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
@@ -393,7 +393,7 @@ public:
     }
   }
 
-  template <typename T, std::enable_if_t<!std::is_pointer<T>{} && !prx::utils::is_shared_ptr<T>{}, bool> = true>
+  template <typename T, std::enable_if_t<!std::is_pointer<T>{} && !prx::utilities::is_shared_ptr<T>{}, bool> = true>
   void copy_from(const T& from)
   {
     prx_assert(from->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
@@ -406,7 +406,7 @@ public:
   }
 
   // template <typename T, typename std::enable_if_t<std::is_pointer<T>::value || prx::utils::is_shared_ptr<T>::value>>
-  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true>
+  template <typename T, std::enable_if_t<(std::is_pointer<T>{} || prx::utilities::is_shared_ptr<T>{}), bool> = true>
   void copy_to(T& to) const
   {
     prx_assert(to->size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "
@@ -425,7 +425,7 @@ public:
     }
   }
 
-  template <typename T, std::enable_if_t<!(std::is_pointer<T>{} || prx::utils::is_shared_ptr<T>{}), bool> = true>
+  template <typename T, std::enable_if_t<!(std::is_pointer<T>{} || prx::utilities::is_shared_ptr<T>{}), bool> = true>
   void copy_to(T& to) const
   {
     prx_assert(to.size() == dimension, "Mismatch on point sizes. " << space_name << " ( " << dimension << " ) vs "

@@ -51,3 +51,6 @@
   CHECK ? STR_TO_DOUBLE(VAR) :                                                                                         \
           throw prx_assert_t(#CHECK, __FILE__, __LINE__,                                                               \
                              (prx_assert_t::stream_t() << "STR TO DOUBLE - CHECK not passed!"))
+
+// Useful for tests
+#define EXPECTED_GOT(expected, got) "Expected: " << expected << ". Got: " << got
