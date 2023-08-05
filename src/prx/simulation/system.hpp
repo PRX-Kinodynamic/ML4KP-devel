@@ -33,7 +33,7 @@ public:
   system_t(const std::string& path);
   virtual ~system_t();
 
-  virtual inline const space_t* get_state_space() const
+  virtual inline space_t* get_state_space() const
   {
     return state_space;
   }
