@@ -8,11 +8,21 @@
 #include <iomanip>
 #include <algorithm>
 
-namespace prx
-{
 #define PRX_PI 3.1415926535897932385
 #define PRX_EPSILON 1e-7
 #define PRX_INFINITY 1e10
+
+namespace prx
+{
+namespace constants
+{
+const double pi{ PRX_PI };
+const double epsilon{ PRX_EPSILON };
+constexpr double infinity{ std::numeric_limits<double>::infinity() };
+
+extern int precision;
+extern char separating_value;
+}  // namespace constants
 
 static inline std::string lib_path_safe(std::string env_var)
 {
