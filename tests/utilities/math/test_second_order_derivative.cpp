@@ -1,6 +1,10 @@
 #define BOOST_AUTO_TEST_MAIN first_order_derivative_test
+
 #include <string>
+#include <chrono>
+
 #include <boost/test/unit_test.hpp>
+
 #include "prx/utilities/math/continuous_algebraic_riccati_equation.hpp"
 #include "prx/utilities/math/second_order_derivative.hpp"
 
@@ -129,8 +133,6 @@ void run_full_derivative_table(const Eigen::Index dim_in, const Eigen::Index dim
   model_test<6, -1, Model>(0.75, 1, dim_in, dim_out);
   model_test<6, -4, Model>(0.75, 1, dim_in, dim_out);
   model_test<6, -5, Model>(0.75, 1, dim_in, dim_out);
-  // model_test<6, -2, Model>(0.2, 1, dim_in, dim_out);
-  // model_test<6, -3, Model>(0.2, 1, dim_in, dim_out);
 }
 BOOST_AUTO_TEST_CASE(model_1D_test)
 {
@@ -157,28 +159,3 @@ BOOST_AUTO_TEST_CASE(model_1D_dynamic_test)
   std::chrono::duration<double> elapsed_seconds = end - start;
   std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
 }
-// BOOST_AUTO_TEST_CASE(model_2D_test)
-// {
-//   using Model = _2D_model_test<2, 1>;
-//   const int DimIn{ 2 };
-//   const int DimOut{ 2 };
-//   auto start = std::chrono::steady_clock::now();
-
-//   run_full_derivative_table<Model>(DimIn, DimOut);
-//   auto end = std::chrono::steady_clock::now();
-//   std::chrono::duration<double> elapsed_seconds = end - start;
-//   std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
-// }
-
-// BOOST_AUTO_TEST_CASE(model_2D_dynamic_test)
-// {
-//   using Model = _2D_model_test<Eigen::Dynamic>;
-//   const int DimIn{ 2 };
-//   const int DimOut{ 2 };
-//   auto start = std::chrono::steady_clock::now();
-//   run_full_derivative_table<Model>(DimIn, DimOut);
-
-//   auto end = std::chrono::steady_clock::now();
-//   std::chrono::duration<double> elapsed_seconds = end - start;
-//   std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
-// }

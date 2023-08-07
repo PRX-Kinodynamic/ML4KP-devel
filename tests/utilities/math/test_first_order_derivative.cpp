@@ -1,6 +1,9 @@
 #define BOOST_AUTO_TEST_MAIN first_order_derivative_test
 #include <string>
+#include <chrono>
+
 #include <boost/test/unit_test.hpp>
+
 #include "prx/utilities/math/continuous_algebraic_riccati_equation.hpp"
 #include "prx/utilities/math/first_order_derivative.hpp"
 
