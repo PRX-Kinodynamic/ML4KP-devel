@@ -2,7 +2,8 @@
 
 namespace prx
 {
-system_controller_t::system_controller_t(const std::string& path) : system_t(path)
+system_controller_t::system_controller_t(system_ptr_t plant, const std::string& path)
+  : system_t(path), _plant(std::dynamic_pointer_cast<prx::plant_t>(plant))
 {
   subsystems.clear();
   composite_state_space = nullptr;

@@ -1,113 +1,137 @@
 #pragma once
 
-#include "prx/simulation/controller.hpp"
-#include "prx/simulation/plants/types/linear_time_variant.hpp"
-#include "prx/simulation/plants/types/linear_time_invariant.hpp"
 #include "prx/utilities/math/continuous_algebraic_riccati_equation.hpp"
 
 namespace prx
 {
-class lqr_t : public controller_t
+// I would prefer to hace a "control" namespace / directory
+namespace simulation
+{
+
+template <Eigen::Index Xdim, Eigen::Index Udim>
+class lqr_t
 {
 public:
-  // template<class S>
-  lqr_t(const system_ptr_t& _sys_ptr, std::string _name) : controller_t(_sys_ptr, _name)
+  using MatrixA = Eigen::Matrix<double, Xdim, Xdim>;
+  using MatrixB = Eigen::Matrix<double, Xdim, Udim>;
+
+  using MatrixQ = Eigen::Matrix<double, Xdim, Xdim>;
+  using MatrixR = Eigen::Matrix<double, Udim, Udim>;
+
+  using MatrixK = Eigen::Matrix<double, Udim, Xdim>;
+
+  using VectorX = Eigen::Vector<double, Xdim>;
+  using VectorU = Eigen::Vector<double, Udim>;
+
+  lqr_t(const std::size_t& xdim, const std::size_t& udim)
+    : _A(MatrixA::Zero(xdim, xdim))
+    , _B(MatrixB::Zero(xdim, udim))
+    , _Q(MatrixQ::Zero(xdim, xdim))
+    , _R(MatrixR::Zero(udim, udim))
+    , _K(MatrixK::Zero(udim, xdim))
   {
-    int n = plant->get_state_space()->get_dimension();
-    int m = plant->get_control_space()->get_dimension();
-    X.resize(n);
-    U.resize(m);
-    X_goal.resize(n);
-    X_goal = Eigen::VectorXd::Zero(n);
-    goal = plant->get_state_space()->make_point();
-    ltv = std::make_shared<ltv_t>(plant);
-    u = plant->get_control_space()->make_point();
   }
 
-  lqr_t(const system_ptr_t& _sys_ptr, Eigen::MatrixXd _Q, Eigen::MatrixXd _R, std::string _name)
-    : lqr_t(_sys_ptr, _name)  //, Q(_Q), R(_R)
-                              // : controller_t(_plant, _name)
+  template <Eigen::Index InputDim = Xdim, std::enable_if_t<(InputDim != Eigen::Dynamic), bool> = true>
+  lqr_t() : lqr_t(Xdim, Udim)
   {
-    // lti = std::dynamic_pointer_cast<lti_t>(_plant);
-    // goal = lti -> get_state_space() -> make_point();
-    // prx_assert(lti != nullptr, "Plant is not an lti_t!");
-    set_Q(_Q);
-    set_R(_R);
-    // int n = lti -> get_state_space() -> get_dimension();
-    // int m = lti -> get_control_space() -> get_dimension();
-    // X.resize(n);
-    // U.resize(m);
-
-    // X_goal.resize(n);
-    // X_goal = Eigen::VectorXd::Zero(n);
   }
 
-  void set_Q(Eigen::MatrixXd _Q)
+  template <typename MatA, typename MatB, typename MatQ, typename MatR, typename Xref>
+  lqr_t(const MatA a, const MatB b, const MatQ q, const MatR r, const Xref x_ref)
+    : _A(a), _B(b), _Q(q), _R(r), _K(MatrixK::Zero())
   {
-    Q = _Q;
+    compute_K();
   }
 
-  void set_R(Eigen::MatrixXd _R)
+  template <typename MatA, typename MatB, typename MatQ, typename MatR>
+  lqr_t(const MatA a, const MatB b, const MatQ q, const MatR r) : lqr_t(a, b, q, r, VectorX::Zero())
   {
-    R = _R;
   }
 
-  void set_goal(Eigen::VectorXd _x_goal, Eigen::VectorXd _u_goal)
+  template <typename MatK>
+  lqr_t(const MatK k) : _A(MatrixA::Zero()), _B(MatrixB::Zero()), _Q(MatrixQ::Zero()), _R(MatrixR::Zero()), _K(k)
   {
-    ltv->get_control_space()->copy_point_from_vector(u, _u_goal);
-    set_goal(_x_goal);
-    // X_goal = _goal;
   }
 
-  void set_goal(Eigen::VectorXd _x_goal)
+  virtual ~lqr_t(){};
+
+  MatrixQ Q() const
   {
-    X_goal = _x_goal;
-    ltv->get_state_space()->copy_point_from_vector(goal, X_goal);
-    ltv->linearize(goal, u);
+    return _Q;
   }
 
-  void set_goal(space_point_t _x_goal, space_point_t _u_goal)
+  MatrixQ& Q()
   {
-    ltv->get_control_space()->copy_point(u, _u_goal);
-    set_goal(_x_goal);
+    return _Q;
   }
 
-  void set_goal(space_point_t _goal) override
+  MatrixR R() const
   {
-    ltv->get_state_space()->copy_vector_from_point(X_goal, _goal);
-    ltv->get_state_space()->copy_point(goal, _goal);
-    ltv->linearize(goal, u);
+    return _R;
   }
 
-  virtual ~lqr_t();
-
-  using controller_t::compute_controls;
-  virtual void compute_controls() override;
-
-  void compute_K();
-
-  Eigen::MatrixXd get_K()
+  MatrixR& R()
   {
-    return K;
+    return _R;
   }
 
-  std::shared_ptr<ltv_t> get_linearized_plant()
+  MatrixK K() const
   {
-    return ltv;
+    return _K;
+  }
+
+  MatrixK& K()
+  {
+    return _K;
+  }
+
+  MatrixA A() const
+  {
+    return _A;
+  }
+
+  MatrixA& A()
+  {
+    return _A;
+  }
+
+  MatrixB B() const
+  {
+    return _B;
+  }
+
+  MatrixB& B()
+  {
+    return _B;
+  }
+
+  void compute_K()
+  {
+    const Eigen::MatrixXd S{ care::solve(_A, _B, _Q, _R) };
+    _K = _R.inverse() * (_B.transpose() * S);
+  }
+
+  // Computes the control u = -K * X;
+  inline VectorU operator()(const VectorX& x) const
+  {
+    return -_K * x;
+  }
+
+  // Computes the control u = -K * (X-X_ref);
+  inline VectorU operator()(const VectorX& x, const VectorX& x_ref) const
+  {
+    return -_K * (x - x_ref);
   }
 
 protected:
-  Eigen::MatrixXd K;
-  Eigen::MatrixXd Q;
-  Eigen::MatrixXd R;
+  MatrixA _A;
+  MatrixB _B;
 
-  Eigen::VectorXd X;
-  Eigen::VectorXd U;
+  MatrixQ _Q;
+  MatrixR _R;
 
-  Eigen::VectorXd X_goal;
-
-  std::shared_ptr<ltv_t> ltv;
-
-  space_point_t u;
+  MatrixK _K;
 };
+}  // namespace simulation
 }  // namespace prx

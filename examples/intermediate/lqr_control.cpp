@@ -88,39 +88,39 @@ int main(int argc, char* argv[])
   Eigen::VectorXd v_goal(ss_dim);
   ss->copy_vector_from_point(v_goal, goal_state);
   PRX_DEBUG_PRINT
-  lqr_t lqr(ltv, Q, R, "LQR");
-  PRX_DEBUG_PRINT
-  lqr.set_goal(v_goal);
-  PRX_DEBUG_PRINT
-  lqr.compute_K();
-  Eigen::MatrixXd K = lqr.get_K();
-  std::cout << "K: " << K << std::endl;
+  // lqr_t lqr(ltv, Q, R, "LQR");
+  // PRX_DEBUG_PRINT
+  // // lqr.set_goal(v_goal);
+  // PRX_DEBUG_PRINT
+  // lqr.compute_K();
+  // Eigen::MatrixXd K = lqr.get_K();
+  // std::cout << "K: " << K << std::endl;
 
-  PRX_DEBUG_PRINT
-  do
-  {
-    lqr.compute_controls();
-    cs->enforce_bounds();
-    plant->propagate(simulation_step);
-    std::cout << "[plant] " << plant << std::endl;
-    solution_traj.copy_onto_back(ss);
+  // PRX_DEBUG_PRINT
+  // do
+  // {
+  //   lqr.compute_controls();
+  //   cs->enforce_bounds();
+  //   plant->propagate(simulation_step);
+  //   std::cout << "[plant] " << plant << std::endl;
+  //   solution_traj.copy_onto_back(ss);
 
-  } while (!checker.check());  //&& space_t::euclidean_2d(solution_traj.back(), goal_state, 0, ss_dim) > 0.01);
+  // } while (!checker.check());  //&& space_t::euclidean_2d(solution_traj.back(), goal_state, 0, ss_dim) > 0.01);
 
-  std::cout << "Last state: " << solution_traj.back()
-            << " distance: " << space_t::euclidean_2d(solution_traj.back(), goal_state, 0, ss_dim) << std::endl;
+  // std::cout << "Last state: " << solution_traj.back()
+  //           << " distance: " << space_t::euclidean_2d(solution_traj.back(), goal_state, 0, ss_dim) << std::endl;
 
-  three_js_group_t* vis_group = new three_js_group_t({ plant }, { obstacle_list });
+  // three_js_group_t* vis_group = new three_js_group_t({ plant }, { obstacle_list });
 
-  std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+  // std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 
-  vis_group->add_detailed_vis_infos(info_geometry_t::FULL_LINE, solution_traj, body_name, ss);
+  // vis_group->add_detailed_vis_infos(info_geometry_t::FULL_LINE, solution_traj, body_name, ss);
 
-  vis_group->add_animation(solution_traj, ss, start_state);
+  // vis_group->add_animation(solution_traj, ss, start_state);
 
-  vis_group->output_html("lqr_ctrl.html");
+  // vis_group->output_html("lqr_ctrl.html");
 
-  delete vis_group;
+  // delete vis_group;
 
-  params.print();
+  // params.print();
 }
