@@ -19,7 +19,6 @@ struct second_order_derivative_table_t
   static constexpr second_order_approximation_row_t approximation_table(S s, I_min i_min)
   {
     // clang-format off
-    //                                                 D  -5  -4   -3  -2   -1    0   1   2   3   4   5
     if (s == 3 && i_min ==  0) return std::make_tuple( 1,  0,  0,   0,  0,   0,   1, -2,   1,   0,  0,  0);
     if (s == 3 && i_min == -1) return std::make_tuple( 1,  0,  0,   0,  0,   1,  -2,  1,   0,   0,  0,  0);
     if (s == 3 && i_min == -2) return std::make_tuple( 1,  0,  0,   0,  1,  -2,   1,  0,   0,   0,  0,  0);
@@ -137,8 +136,6 @@ private:
 
   inline void compute_column(const std::size_t col_i, const InputState& state, output_matrix_t& derivative) const
   {
-    // OutputState Fi{ OutputState::Zero(_n_outputs) };
-    // auto& Fi =
     evaluate<std::get<1>(approximation_row), 1 - 6>(state, col_i, derivative);
     evaluate<std::get<2>(approximation_row), 2 - 6>(state, col_i, derivative);
     evaluate<std::get<3>(approximation_row), 3 - 6>(state, col_i, derivative);
