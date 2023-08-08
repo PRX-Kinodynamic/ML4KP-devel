@@ -237,7 +237,7 @@ void space_t::copy_from_point(const space_point_t point) const
 
 void space_t::copy_point(const space_point_t destination, const space_point_t source) const
 {
-  PRX_DEPRECATED("Use 'space_t::copy' instead");
+//  PRX_DEPRECATED("Use 'space_t::copy' instead");
   prx_assert(destination->_parent->space_name == source->_parent->space_name,
              "Points have different parent spaces: " << destination->_parent->space_name << " and "
                                                      << source->_parent->space_name);

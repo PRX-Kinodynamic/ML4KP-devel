@@ -211,25 +211,25 @@ BOOST_AUTO_TEST_CASE(comparing_speed_of_copy_point_vs_copy)
 
   const std::size_t total_copies{100'000};
 
-  auto start = std::chrono::steady_clock::now();
-  for(std::size_t i = 0; i < total_copies; ++i;)
+  auto start_copy_point = std::chrono::steady_clock::now();
+  for(std::size_t i = 0; i < total_copies; ++i)
   {
-    space.sample(pt_sp1);
-    pt_sp1.copy_point(pt_to, pt_from);
+    space.sample(pt_from);
+    space.copy_point(pt_to, pt_from);
   }
-  auto end = std::chrono::steady_clock::now();
-  const double elapsed_copy_point{(end - start).count()};
+  auto end_copy_point = std::chrono::steady_clock::now();
+  std::chrono::duration<double> elapsed_copy_point{end_copy_point - start_copy_point};
 
-  start = std::chrono::steady_clock::now();
-  for(std::size_t i = 0; i < total_copies; ++i;)
+  auto start_copy = std::chrono::steady_clock::now();
+  for(std::size_t i = 0; i < total_copies; ++i)
   {
-    space.sample(pt_sp1);
-    pt_sp1.copy(pt_to, pt_from);
+    space.sample(pt_from);
+    space.copy(pt_to, pt_from);
   }
-  end = std::chrono::steady_clock::now();
-  const double elapsed_copy{(end - start).count()};
-
-  std::cout << "Results:\n"
-  std::cout << "Copy_point: " << elapsed_copy_point << "s\n";
-  std::cout << "Copy: " << elapsed_copy << "s\n";
+  auto end_copy = std::chrono::steady_clock::now();
+  std::chrono::duration<double> elapsed_copy{end_copy - start_copy};
+  
+  std::cout << "Results:\n";
+  std::cout << "Copy_point: " << elapsed_copy_point.count() << "s\n";
+  std::cout << "Copy: " << elapsed_copy.count() << "s\n";
 }
