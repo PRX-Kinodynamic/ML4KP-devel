@@ -151,13 +151,13 @@ int main(int argc, char* argv[])
     if (line.size() == 0)
       continue;
 
-    const prx_symbol_t k_qz{ symbol_factory_t::create_hashed_symbol("Z", idx) };
+    // const prx_symbol_t k_qz{ symbol_factory_t::create_hashed_symbol("Z", idx) };
     const prx_symbol_t k_q{ symbol_factory_t::create_hashed_symbol("X", idx) };
     const fg::ackermann::Qz q_z{ line[0], line[1], line[2] };
 
-    graph.add(ackermann_q_observation_t(k_qz, k_q, noise_models["fZ"]));
-    graph.addPrior(k_qz, q_z, noise_models["Z_prior"]);
-    values.insert_or_assign(k_qz, q_z);
+    graph.add(ackermann_q_observation_t(q_z, k_q, noise_models["fZ"]));
+    // graph.addPrior(k_qz, q_z, noise_models["Z_prior"]);
+    // values.insert_or_assign(k_qz, q_z);
     idx += 10;
   }
   symbol_factory_t::symbols_to_file();

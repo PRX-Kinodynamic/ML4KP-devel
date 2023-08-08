@@ -360,53 +360,27 @@ private:
 
 // Factor <- Q observed aka (x,y,\theta)
 // Error is Q - (x,y,\theta,0,0)
-class ackermann_q_observation_t : public gtsam::NoiseModelFactor2<ackermann::Qz, ackermann::Q>
+class ackermann_q_observation_t : public noise_model_1p1_factor_t<ackermann::DimQz, ackermann::DimQ>
 {
   using Q = ackermann::Q;
   using Qz = ackermann::Qz;
 
-  using Base = gtsam::NoiseModelFactor2<Qz, Q>;
+  using Base = noise_model_1p1_factor_t<ackermann::DimQz, ackermann::DimQ>;
   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
 
-  using Partial_Q = std::function<Qz(const Q&)>;
-  using Partial_Qz = std::function<Qz(const Qz&)>;
-
 public:
-  ackermann_q_observation_t(const gtsam::Key key_qz, const gtsam::Key key_q, const NoiseModel& cost_model,
-                            const double h = prx::simulation_step)
-    : Base(cost_model, key_qz, key_q), derivative_qz(h), derivative_q(h)
+  ackermann_q_observation_t(const Qz observation, const gtsam::Key key_q, const NoiseModel& cost_model)
+    : Base(key_q, cost_model), _observation(observation)
   {
   }
 
-  virtual Eigen::VectorXd evaluateError(const Qz& qz, const Q& q,                              // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_qz = boost::none,  // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_q = boost::none) const override
+  Qz compute_error(const Q& q) const
   {
-    if (H_qz)
-    {
-      derivative_qz._model = [&](const Qz& qz_) { return compute_error(qz_, q); };
-      *H_qz = derivative_qz(qz);
-    }
-    if (H_q)
-    {
-      derivative_q._model = [&](const Q& q_) { return compute_error(qz, q_); };
-      *H_q = derivative_q(q);
-    }
-
-    return compute_error(qz, q);
-  }
-
-  Qz compute_error(const Qz& qz, const Q& q) const
-  {
-    return qz - q.head(3);
+    return q.head(3) - _observation;
   }
 
 private:
-  Partial_Qz partial_qz;
-  Partial_Q partial_q;
-
-  mutable prx::math::first_order_derivative_t<Partial_Qz, Qz, 4> derivative_qz;
-  mutable prx::math::first_order_derivative_t<Partial_Q, Q, 4> derivative_q;
+  const Qz _observation;
 };
 
 // Factor <- Q observed aka (x,y,\theta)

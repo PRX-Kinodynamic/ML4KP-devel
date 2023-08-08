@@ -132,7 +132,7 @@ void create_ackermann_at_idx_fg(gtsam::NonlinearFactorGraph& graph, gtsam::Value
                                         WHEEL_DISTANCE, MASS));
 
   // values.insert(k_u, u_init);
-  values.insert(k_q0, q_init);
+  // values.insert_or_assign(k_q0, q_init);
   values.insert(k_qdot, qdot_init);
   values.insert(k_qdotdot, qdotdot_init);
   values.insert(k_force, force_init);
@@ -188,13 +188,13 @@ void friction_map_add(const std::size_t idx, const Z_Q& zq, Graph& graph, Values
   }
   auto current_param_value = init_weight.dot(local_basis);
 
-  for (int i = 0; i < 10; ++i)
-  {
-    // Params
-    values.insert_or_assign(k_params_e, EnvironmentParams{ current_param_value });
-    graph.add(BasisFrictionFactor(noise_models["small_basis"], k_params_e, basis_symbol_0, basis_symbol_1,
-                                  basis_symbol_2, basis_symbol_3, zq, basis_positions, length, TH_DIM, 1));
-  }
+  // for (int i = 0; i < 10; ++i)
+  // {
+  // Params
+  values.insert_or_assign(k_params_e, EnvironmentParams{ current_param_value });
+  graph.add(BasisFrictionFactor(noise_models["small_basis"], k_params_e, basis_symbol_0, basis_symbol_1, basis_symbol_2,
+                                basis_symbol_3, zq, basis_positions, length, TH_DIM, 1));
+  // }
   values.insert_or_assign(basis_symbol_0, (Eigen::VectorXd(1) << local_basis[0]).finished());
   values.insert_or_assign(basis_symbol_1, (Eigen::VectorXd(1) << local_basis[1]).finished());
   values.insert_or_assign(basis_symbol_2, (Eigen::VectorXd(1) << local_basis[2]).finished());
@@ -271,13 +271,16 @@ int main(int argc, char* argv[])
   // std::cout << data_file << std::endl;
   // prx::utilities::csv_reader_t reader(data_file);
 
-  noise_models["Z_prior"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQz, 1e-1);
+  // noise_models["Z_prior"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQz, 1e-3);
   noise_models["u_prior"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimU, 1e-5);
   noise_models["q_prior"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQ, 1e-3);
-  noise_models["f1"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQ, 1e-0);
-  noise_models["f2"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQdot, 1e-0);
-  noise_models["f3"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQdotdot, 1e-0);
-  noise_models["fZ"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQz, 1e-3);
+  noise_models["qdot_prior"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQdot, 1e-3);
+  noise_models["f1"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQ, 1e-2);
+  noise_models["f2"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQdot, 1e-1);
+  noise_models["f3"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQdotdot, 1e-1);
+  noise_models["fZ"] = gtsam::noiseModel::Isotropic::Sigma(fg::ackermann::DimQz, 1e4);
+  // const Eigen::Vector3d fz_s{ 1e-1, 0, 0 };
+  // noise_models["fZ"] = gtsam::noiseModel::Diagonal::Sigmas(fz_s);
 
   const std::vector<std::pair<double, double>> env_bounds{ std::make_pair(-XMAX, XMAX), std::make_pair(-YMAX, YMAX) };
   prx::regular_grid_t<friction_vector_t, 2> frictions_grid{ env_bounds, GRID_DIVISIONS };
@@ -320,7 +323,9 @@ int main(int argc, char* argv[])
   std::size_t idx{ 0 };
   std::random_device rd{};
   std::mt19937 gen{ rd() };
-  std::normal_distribution<double> v{ 0, 0.01 };
+  std::normal_distribution<double> n_x{ 0, 0.1 };
+  std::normal_distribution<double> n_y{ 0, 0.1 };
+  std::normal_distribution<double> n_th{ 0, 0.01 };
   logger_t gt_logger(out_path + "ackermann_fg_gt.txt");
   while (reader.has_next_line())
   {
@@ -328,26 +333,44 @@ int main(int argc, char* argv[])
     if (line.size() == 0)
       continue;
 
-    const prx_symbol_t k_qz{ symbol_factory_t::create_hashed_symbol("Z", idx) };
+    // const prx_symbol_t k_qz{ symbol_factory_t::create_hashed_symbol("Z", idx) };
     const prx_symbol_t k_q{ symbol_factory_t::create_hashed_symbol("X", idx) };
-    // const Z_Q q_z{ line[0], line[1], line[2] };
-    traj.emplace_back(line[0], line[1], line[2]);
 
-    visited_grid(traj.back()[0], traj.back()[1])[0] = 1;
-    traj.back()[0] += v(gen);
-    traj.back()[1] += v(gen);
-    traj.back()[2] += v(gen) * 0.01;
+    if (prx::uniform_random(0, 1) > 0.75)
+    {
+      traj.emplace_back(line[0], line[1], line[2]);
 
-    graph.add(ackermann_q_observation_t(k_qz, k_q, noise_models["fZ"]));
+      visited_grid(traj.back()[0], traj.back()[1])[0] = 1;
+      traj.back()[0] += n_x(gen);
+      traj.back()[1] += n_y(gen);
+      traj.back()[2] += n_th(gen);
+      graph.add(ackermann_q_observation_t(traj.back(), k_q, noise_models["fZ"]));
+    }
+    else
+    {
+      traj.emplace_back(traj.back());
+    }
+    const ackermann::Q q{ traj.back()[0], traj.back()[1], traj.back()[2], 0, 0 };
+
     // graph.addPrior(k_qz, traj.back(), noise_models["Z_prior"]);
-    values.insert_or_assign(k_qz, traj.back());
+    for (int i = 0; i < 10; ++i)
+    {
+      values.insert_or_assign(symbol_factory_t::create_hashed_symbol("X", idx + i), q);
+    }
+    // values.insert_or_assign(k_q, q);
     gt_logger(traj.back().transpose());
     idx += 10;
   }
 
   // const std::size_t T{ 100 };
-  const std::size_t T{ 4'000 };
+  const double traj_duration{ params["traj_duration"].as<double>() };
+  const std::size_t T{ static_cast<std::size_t>(traj_duration / prx::simulation_step) };
+  const std::size_t ctrl_dur{ static_cast<std::size_t>(1.0 / prx::simulation_step) };
+  PRX_DEBUG_VAR_2(T, ctrl_dur);
+
   graph.addPrior(symbol_factory_t::create_hashed_symbol("X", 0), q_init, noise_models["q_prior"]);
+  graph.addPrior(symbol_Qdot(0), qdot_init, noise_models["qdot_prior"]);
+  graph.addPrior(symbol_Qdotdot(0), qdotdot_init, noise_models["qdot_prior"]);
   fg::ackermann::U u_rand{ fg::ackermann::U::Random() };
   u_rand[0] = 1;
   u_rand[1] = 0.52;
@@ -364,7 +387,7 @@ int main(int argc, char* argv[])
     {
       traj_idx++;
     }
-    if (i % 1'000 == 0)
+    if (i % ctrl_dur == 0)
     {
       u_rand = ctrls[0];
       ctrls.erase(ctrls.begin());
@@ -384,8 +407,8 @@ int main(int argc, char* argv[])
   lm_params.verbosityLMTranslator(gtsam::LevenbergMarquardtParams::SILENT);
   lm_params.setMaxIterations(50);
   // lm_params.setMaxIterations(10000);
-  lm_params.setRelativeErrorTol(1e-10);
-  lm_params.setAbsoluteErrorTol(1e-10);
+  lm_params.setRelativeErrorTol(1e-8);
+  lm_params.setAbsoluteErrorTol(1e-8);
   lm_params.setlambdaUpperBound(1e64);
   lm_params.print("lm_params");
   gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
