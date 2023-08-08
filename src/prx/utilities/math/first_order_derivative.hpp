@@ -18,12 +18,9 @@ using N_i = int8_t;
 using approximation_row_t = std::tuple<D, N_i, N_i, N_i, N_i, N_i, N_i, N_i, N_i, N_i>;
 struct first_order_derivative_table_t
 {
-  // using approximation_table_t =
-  //     std::map<std::pair<S, I_min>, std::tuple<D, N_i, N_i, N_i, N_i, N_i, N_i, N_i, N_i, N_i>>;
   static constexpr approximation_row_t approximation_table(S s, I_min i_min)
   {
     // clang-format off
-  	//		  	     								                     D  -4  -3  -2  -1   0   1   2   3   4
     if (s == 2 && i_min ==  0) return std::make_tuple( 1,  0,  0,  0,  0, -1,  1,  0,  0,  0);
     if (s == 2 && i_min == -1) return std::make_tuple( 1,  0,  0,  0, -1,  1,  0,  0,  0,  0);
     // --------------------------------------------------------------------------------------
@@ -44,7 +41,7 @@ struct first_order_derivative_table_t
     return std::make_tuple(0,  0,  0,  0,  0, 0,  0,  0,  0,  0); // <== Should never get here
   }
   // clang-format on
-};  // namespace math
+};
 
 template <class Function, typename InputState, S Evaluations, I_min MinDifference = -1>
 class first_order_derivative_t
@@ -119,7 +116,6 @@ private:
   template <Eigen::Index I, std::enable_if_t<(NInputs != Eigen::Dynamic) && (I < NInputs), bool> = true>
   inline void iterate_columns(const InputState& state, output_matrix_t& derivative) const
   {
-    // PRX_DEBUG_VAR_1(I);
     compute_column(I, state, derivative);
     iterate_columns<I + 1>(state, derivative);
   }
@@ -136,8 +132,6 @@ private:
 
   inline void compute_column(const std::size_t col_i, const InputState& state, output_matrix_t& derivative) const
   {
-    // OutputState Fi{ OutputState::Zero(_n_outputs) };
-    // auto& Fi =
     evaluate<_n1, 1 - 5>(state, col_i, derivative);
     evaluate<_n2, 2 - 5>(state, col_i, derivative);
     evaluate<_n3, 3 - 5>(state, col_i, derivative);
