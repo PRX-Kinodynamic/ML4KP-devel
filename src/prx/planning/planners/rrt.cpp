@@ -230,6 +230,7 @@ void rrt_t::update_goal(node_index_t node_index)
       std::cout << " iter:" << current_solution_iters;
       std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
       bnb(start_vertex, current_solution);
+      tree.remove_vertices();
     }
   }
 }
@@ -248,7 +249,8 @@ void rrt_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
   {
     // remove the node
     metric->remove_node(node.get());
-    tree.remove_vertex(v);
+    // tree.remove_vertex(v);
+    tree.mark_vertex_for_removal(v);
   }
 }
 
