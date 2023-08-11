@@ -123,21 +123,22 @@ int main(int argc, char** argv)
   std::size_t cam_id{ 0 };
   std::unordered_set<std::size_t> marker_world_ids{};
 
-  const Eigen::Vector<double, 9> rot_vec_init{ 1, 0, 0, 0, 1, 0, 0, 0, 1 };
-  const Eigen::Vector<double, 3> translation_init{ Eigen::Vector<double, 3>::Ones() };
+  // const Eigen::Vector<double, 9> rot_vec_init{ 1, 0, 0, 0, 1, 0, 0, 0, 1 };
+  // const Eigen::Vector<double, 3> translation_init{ Eigen::Vector<double, 3>::Ones() };
   // Iterate over images
   for (const auto& img_str : images_paths)
   {
     cv::Mat img{ cv::imread(img_str, cv::IMREAD_COLOR) };
-    Eigen::Matrix3d A_init{ Eigen::Matrix3d::Zero() };
-    A_init << 1000, 10, img.cols / 2.0,  // no-lint
-        0, 1000, img.rows / 2.0,         // no-lint
-        0, 0, 1;
-    Eigen::Matrix<double, 3, 4> Rt_init{ Eigen::Matrix<double, 3, 4>::Zero() };
-    Rt_init.block<3, 3>(0, 0) = rot_vec_init.reshaped(3, 3);
-    Rt_init.block<3, 1>(0, 3) = translation_init;
-    PRX_DEBUG_VAR_1(A_init * Rt_init);
-    const projection_factor::Projection camera_projection_init{ (A_init * Rt_init).reshaped(12, 1) };
+    // Eigen::Matrix3d A_init{ Eigen::Matrix3d::Zero() };
+    // A_init << 1000, 10, img.cols / 2.0,  // no-lint
+    // 0, 1000, img.rows / 2.0,         // no-lint
+    // 0, 0, 1;
+    // Eigen::Matrix<double, 3, 4> Rt_init{ Eigen::Matrix<double, 3, 4>::Zero() };
+    // Rt_init.block<3, 3>(0, 0) = rot_vec_init.reshaped(3, 3);
+    // Rt_init.block<3, 1>(0, 3) = translation_init;
+    // PRX_DEBUG_VAR_1(A_init * Rt_init);
+    // const projection_factor::Projection camera_projection_init{ (A_init * Rt_init).reshaped(12, 1) };
+    const projection_factor::Projection camera_projection_init{ projection_factor::Projection::Ones() };
     // uvs.emplace_back(img.rows / 2.0, img.cols / 2.0);
     prx_assert(!img.empty(), "Image cannot be read");
     auto markers = aruconano::MarkerDetector::detect(img);
@@ -208,27 +209,28 @@ int main(int argc, char** argv)
                                     noise_models["coplanar_corners"]));
 
       center = center / 4.0;
-      graph.addPrior(ci_pixel_ar_j, center, noise_models["pixel_value"]);
+      // graph.addPrior(ci_pixel_ar_j, center, noise_models["pixel_value"]);
       // graph.add(partial_positive_3d_vec(Eigen::Vector3d{ 0, 0, 1 }, w_ar_p_i, noise_models["positive_vec"]));
-      // graph.add(projection_factor(ci_pixel_ar_j, w_ar_p_i, key_ci_proj, noise_models["projection"]));
-      graph.add(aruco_projection_factor(ci_pixel_ar_j, sy_w_corner(m.id, 0), sy_w_corner(m.id, 1), sy_w_corner(m.id, 2),
-                                        sy_w_corner(m.id, 3), key_ci_proj, noise_models["projection"]));
+      // graph.add(projection_factor(ci_pixel_ar_j, sy_w_corner(m.id, 0), key_ci_proj, noise_models["projection"]));
+      // graph.add(aruco_projection_factor(ci_pixel_ar_j, sy_w_corner(m.id, 0), sy_w_corner(m.id, 1), sy_w_corner(m.id,
+      // 2),
+      //                                   sy_w_corner(m.id, 3), key_ci_proj, noise_models["projection"]));
 
-      values.insert(ci_pixel_ar_j, center);
+      // values.insert(ci_pixel_ar_j, center);
     }
     values.insert(key_ci_proj, camera_projection_init);
-    values.insert(key_ci_Rv, rot_vec_init);
-    values.insert(key_ci_t, translation_init);
+    // values.insert(key_ci_Rv, rot_vec_init);
+    // values.insert(key_ci_t, translation_init);
 
-    graph.add(prx::fg::projection_to_rotation_factor_t(key_ci_Rv, key_ci_proj, noise_models["proj_rotvec"]));
-    graph.add(prx::fg::projection_to_translation_factor_t(key_ci_t, key_ci_proj, noise_models["proj_trans"]));
-    graph.add(rotation_vec_mat_factor(key_ci_Rv, noise_models["rotation_vec"]));
-    // graph.add(prx::fg::positive_vector_factor_t<12>(key_ci_proj, noise_models["pos_projection"]));
+    // graph.add(prx::fg::projection_to_rotation_factor_t(key_ci_Rv, key_ci_proj, noise_models["proj_rotvec"]));
+    // graph.add(prx::fg::projection_to_translation_factor_t(key_ci_t, key_ci_proj, noise_models["proj_trans"]));
+    // graph.add(rotation_vec_mat_factor(key_ci_Rv, noise_models["rotation_vec"]));
+    graph.add(prx::fg::positive_vector_factor_t<12>(key_ci_proj, noise_models["pos_projection"]));
     graph.add(prx::fg::normalize_factor_t<12>(key_ci_proj, noise_models["norm_projection"]));
 
     cv::imwrite(prx::out_path + "perception/" + fs::path(img_str).filename().string(), img);
-    cam_id++;
   }
+  cam_id++;
   // graph.add(coplanar_factor(sy_w_center(2), sy_w_center(3), sy_w_center(4), sy_w_center(5),
   //                           noise_models["coplanar_markers"]));
 
