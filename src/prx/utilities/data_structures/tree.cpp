@@ -93,7 +93,8 @@ void tree_t::mark_vertex_for_removal(node_index_t v)
 
 void tree_t::remove_vertices()
 {
-  prx_assert(nodes_to_remove < vertex_count, "More nodes to removed than nodes in the tree!");
+  prx_assert(nodes_to_remove <= vertex_count,
+             "More nodes to removed (" << nodes_to_remove << ") than nodes in the tree " << vertex_count << " !");
   std::unordered_map<edge_index_t, bool> edges_to_delete{};
   uint64_t total_edges_to_delete{ 0 };  // could be using edges_to_delete.erase(), but this guarantes cte time
   edges_to_delete.reserve(nodes_to_remove);
@@ -103,11 +104,14 @@ void tree_t::remove_vertices()
     std::shared_ptr<tree_node_t> temp_v = *vertex_iterator;
     node_index_t node_index = temp_v->index;
 
-    // std::cout << "Checking node: " << node_index << std::endl;
     if (temp_v->status == tree_node_status::MARKED_FOR_REMOVAL)
     {
-      edges_to_delete[v_index_map[node_index]->parent_edge] = true;
-      total_edges_to_delete++;
+      // If parent is nullptr, this should to be the root
+      if (vertex_count > 1)
+      {
+        edges_to_delete[v_index_map[node_index]->parent_edge] = true;
+        total_edges_to_delete++;
+      }
       if (v_index_map[temp_v->parent] != nullptr)
       {
         v_index_map[temp_v->parent]->children.remove(node_index);
@@ -122,10 +126,13 @@ void tree_t::remove_vertices()
                                                 "or all have also been marked for removal.");          // no-lint
       }
 
-      temp_v->parent = temp_v->index;
-      v_index_map[node_index] = nullptr;
-      vertex_iterator = vertex_list.erase(vertex_iterator);
-      vertex_count--;
+      if (vertex_count > 0)
+      {
+        temp_v->parent = temp_v->index;
+        v_index_map[node_index] = nullptr;
+        vertex_iterator = vertex_list.erase(vertex_iterator);
+        vertex_count--;
+      }
       nodes_to_remove--;
     }
     else
@@ -150,11 +157,6 @@ void tree_t::remove_vertices()
     {
       edge_iterator++;
     }
-    // auto e_iterator = std::find(edge_list.begin(), e_iter, temp_e);
-    // e_iter--;
-    // const_e_iter--;
-    // *e_iterator = *e_iter;
-    // *e_iter = temp_e;
   }
 }
 
