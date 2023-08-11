@@ -1,104 +1,92 @@
 #define BOOST_AUTO_TEST_MAIN spaces_test
+
+#include <chrono>
 #include <string>
+
 #include <boost/test/unit_test.hpp>
 #include "prx/utilities/spaces/space.hpp"
 
+namespace mock
+{
+struct space3d_t
+{
+  space3d_t() : x(0), y(0), theta(0), address({ &x, &y, &theta }), space("EER", address, "space_test")
+  {
+  }
+  double x, y, theta;
+  std::vector<double*> address;
+  prx::space_t space;
+};
+}  // namespace mock
+
 BOOST_AUTO_TEST_CASE(test_space_is_built_correctly)
 {
-  double x, y, theta;
-  x = y = theta = 1;
-  std::vector<double*> address_1 = { &x, &y, &theta };
-  prx::space_t space_1("EER", address_1, "space_1");
-
-  prx::space_point_t pt_sp1 = space_1.make_point();
-
-  space_1.copy_to_point(pt_sp1);
-
-  BOOST_CHECK((*pt_sp1)[0] == pt_sp1->at(0));
-  BOOST_CHECK((*pt_sp1)[1] == pt_sp1->at(1));
-  BOOST_CHECK((*pt_sp1)[2] == pt_sp1->at(2));
-  BOOST_CHECK(pt_sp1->get_dim() == space_1.get_dimension());
+  mock::space3d_t test;
+  test.x = 1;
+  test.y = 2;
+  test.theta = 3;
+  BOOST_CHECK(test.space.size() == 3);
+  BOOST_CHECK(test.space.get_topology() == "EER");
+  BOOST_CHECK(test.space.at(0) == 1);
+  BOOST_CHECK(test.space.at(1) == 2);
+  BOOST_CHECK(test.space.at(2) == 3);
 }
-BOOST_AUTO_TEST_CASE(test_space_operations_are_correct)
-{
-  double x, y, theta;
-  x = y = theta = 1;
-  std::vector<double*> address_1 = { &x, &y, &theta };
-  prx::space_t space_1("EER", address_1, "space_1");
 
-  prx::space_point_t pt_sp1 = space_1.make_point();
-  space_1.copy_to_point(pt_sp1);
-  // Checking add
-  pt_sp1->add(pt_sp1);
-  BOOST_CHECK((*pt_sp1)[0] == 2);
-  BOOST_CHECK((*pt_sp1)[1] == 2);
-  BOOST_CHECK((*pt_sp1)[2] == 2);
-
-  // Checking multiply
-  pt_sp1->multiply(2);
-  BOOST_CHECK((*pt_sp1)[0] == 4);
-  BOOST_CHECK((*pt_sp1)[1] == 4);
-  BOOST_CHECK((*pt_sp1)[2] == 4);
-
-  // Checking add multiply
-  pt_sp1->add_multiply(2, pt_sp1);
-  BOOST_CHECK((*pt_sp1)[0] == 12);
-  BOOST_CHECK((*pt_sp1)[1] == 12);
-  BOOST_CHECK((*pt_sp1)[2] == 12);
-}
 BOOST_AUTO_TEST_CASE(test_space_copy_and_clone_point)
 {
-  double x, y, theta;
-  x = y = theta = 1;
-  std::vector<double*> address_1 = { &x, &y, &theta };
-  prx::space_t space_1("EER", address_1, "space_1");
+  mock::space3d_t test;
+  prx::space_t& space = test.space;
 
-  prx::space_point_t pt_sp1 = space_1.make_point();
+  prx::space_point_t pt_sp1 = space.make_point();
 
-  space_1.copy_to_point(pt_sp1);
-  prx::space_point_t pt_sp2 = space_1.clone_point(pt_sp1);
-  BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
+  space.copy_to(pt_sp1);
+  prx::space_point_t pt_sp2 = space.clone_point(pt_sp1);
+  BOOST_CHECK(space.equal_points(pt_sp1, pt_sp2));
+
   (*pt_sp1)[0] = 10;
   (*pt_sp1)[1] = 20;
   (*pt_sp1)[2] = 3;
-  space_1.copy_from_point(pt_sp1);
-  space_1.copy_to_point(pt_sp2);
-  BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
+  space.copy_from(pt_sp1);
+  space.copy_to(pt_sp2);
+  BOOST_CHECK(space.equal_points(pt_sp1, pt_sp2));
+
   (*pt_sp1)[0] = -10;
   (*pt_sp1)[1] = -20;
   (*pt_sp1)[2] = -3;
-  space_1.copy_point(pt_sp2, pt_sp1);
-  BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
+  space.copy(pt_sp2, pt_sp1);
+  BOOST_CHECK(space.equal_points(pt_sp1, pt_sp2));
 
-  space_1.copy_point_from_vector(pt_sp2, { 2, 5, 1 });
-  std::vector<double> v;
-  space_1.copy_vector_from_point(v, pt_sp2);
+  space.copy(pt_sp2, { 2, 5, 1 });
+  std::vector<double> v(space.size());
+  space.copy(v, pt_sp2);
   BOOST_CHECK(v[0] == 2 && v[1] == 5 && v[2] == 1);
 }
+
 BOOST_AUTO_TEST_CASE(test_space_bounds)
 {
-  double x, y, theta;
-  x = y = theta = 1;
-  std::vector<double*> address_1 = { &x, &y, &theta };
-  prx::space_t space_1("EER", address_1, "space_1");
+  mock::space3d_t test;
+  prx::space_t& space = test.space;
 
-  prx::space_point_t pt_sp1 = space_1.make_point();
-  space_1.copy_to_point(pt_sp1);
+  prx::space_point_t pt_sp1 = space.make_point();
+  prx::space_point_t pt_sp2 = space.make_point();
 
-  prx::space_point_t pt_sp2 = space_1.clone_point(pt_sp1);
   (*pt_sp1)[0] = (*pt_sp2)[0] = -100;
   (*pt_sp1)[1] = (*pt_sp2)[1] = -200;
   (*pt_sp1)[2] = (*pt_sp2)[2] = 0;
-  BOOST_CHECK(!space_1.satisfies_bounds(pt_sp1));
-  space_1.copy_from_point(pt_sp2);
-  space_1.set_bounds({ -10, -10, -3 }, { 10, 10, 3 });
-  space_1.enforce_bounds(pt_sp1);
-  BOOST_CHECK(space_1.satisfies_bounds(pt_sp1));
-  space_1.enforce_bounds();
-  space_1.copy_to_point(pt_sp2);
-  BOOST_CHECK(space_1.satisfies_bounds(pt_sp2));
-  space_1.sample(pt_sp1);
-  BOOST_CHECK(space_1.satisfies_bounds(pt_sp1));
+
+  space.copy_from(pt_sp2);
+  space.set_bounds({ -10, -10, -3 }, { 10, 10, 3 });
+  space.enforce_bounds(pt_sp1);
+
+  BOOST_CHECK(space.satisfies_bounds(pt_sp1));
+  BOOST_CHECK(!space.satisfies_bounds(pt_sp2));
+
+  space.enforce_bounds();
+  space.copy_to(pt_sp2);
+  BOOST_CHECK(space.satisfies_bounds(pt_sp2));
+
+  space.sample(pt_sp1);
+  BOOST_CHECK(space.satisfies_bounds(pt_sp1));
 }
 
 BOOST_AUTO_TEST_CASE(test_space_norms)
@@ -171,29 +159,77 @@ BOOST_AUTO_TEST_CASE(test_space_copy_to_and_copy_from_point)
 
 BOOST_AUTO_TEST_CASE(test_space_copy)
 {
-  double x, y, theta;
-  x = y = theta = 1;
-  std::vector<double*> address_1 = { &x, &y, &theta };
-  prx::space_t space_1("EER", address_1, "space_1");
+  mock::space3d_t test;
+  prx::space_t& space = test.space;
 
-  prx::space_point_t pt_sp1 = space_1.make_point();
-  prx::space_point_t pt_sp2 = space_1.make_point();
+  prx::space_point_t pt_sp1 = space.make_point();
+  prx::space_point_t pt_sp2 = space.make_point();
 
   // prx::space_point_t <- std::initializer_list
-  space_1.copy(pt_sp1, { 2, 5, 1 });
+  space.copy(pt_sp1, { 2, 5, 1 });
   BOOST_CHECK((*pt_sp1)[0] == 2 && (*pt_sp1)[1] == 5 && (*pt_sp1)[2] == 1);
 
   // prx::space_point_t <- std::vector
   std::vector<double> v = { -2, -5, -1 };
-  space_1.copy(pt_sp2, v);
+  space.copy(pt_sp2, v);
   BOOST_CHECK((*pt_sp2)[0] == -2 && (*pt_sp2)[1] == -5 && (*pt_sp2)[2] == -1);
 
   // std::vector <- prx::space_point_t
-  space_1.copy(v, pt_sp1);
+  space.copy(v, pt_sp1);
   BOOST_CHECK(v[0] == 2 && v[1] == 5 && v[2] == 1);
 
   // prx::space_point_t <- prx::space_point_t
-  BOOST_CHECK(!space_1.equal_points(pt_sp1, pt_sp2));
-  space_1.copy(pt_sp1, pt_sp2);
-  BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
+  BOOST_CHECK(!space.equal_points(pt_sp1, pt_sp2));
+  space.copy(pt_sp1, pt_sp2);
+  BOOST_CHECK(space.equal_points(pt_sp1, pt_sp2));
+}
+
+BOOST_AUTO_TEST_CASE(testing_copy_from_initializer_list)
+{
+  mock::space3d_t test;
+  prx::space_t& space = test.space;
+
+  prx::space_point_t pt_sp1 = space.make_point();
+  prx::space_point_t pt_sp2 = space.make_point();
+
+  (*pt_sp1)[0] = 10;
+  (*pt_sp1)[1] = 20;
+  (*pt_sp1)[2] = 3;
+
+  space.copy_from({ 10, 20, 3 });
+  space.copy_to(pt_sp2);
+  BOOST_CHECK(space.equal_points(pt_sp1, pt_sp2));
+}
+
+BOOST_AUTO_TEST_CASE(comparing_speed_of_copy_point_vs_copy)
+{
+  mock::space3d_t test;
+  prx::space_t& space = test.space;
+
+  prx::space_point_t pt_from = space.make_point();
+  prx::space_point_t pt_to = space.make_point();
+
+  const std::size_t total_copies{100'000};
+
+  auto start_copy_point = std::chrono::steady_clock::now();
+  for(std::size_t i = 0; i < total_copies; ++i)
+  {
+    space.sample(pt_from);
+    space.copy_point(pt_to, pt_from);
+  }
+  auto end_copy_point = std::chrono::steady_clock::now();
+  std::chrono::duration<double> elapsed_copy_point{end_copy_point - start_copy_point};
+
+  auto start_copy = std::chrono::steady_clock::now();
+  for(std::size_t i = 0; i < total_copies; ++i)
+  {
+    space.sample(pt_from);
+    space.copy(pt_to, pt_from);
+  }
+  auto end_copy = std::chrono::steady_clock::now();
+  std::chrono::duration<double> elapsed_copy{end_copy - start_copy};
+  
+  std::cout << "Results:\n";
+  std::cout << "Copy_point: " << elapsed_copy_point.count() << "s\n";
+  std::cout << "Copy: " << elapsed_copy.count() << "s\n";
 }

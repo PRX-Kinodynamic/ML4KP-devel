@@ -13,7 +13,7 @@ public:
   system_controller_t(const std::string& path);
   virtual ~system_controller_t();
 
-  virtual inline const space_t* get_state_space() const override final
+  virtual inline space_t* get_state_space() const override final
   {
     return composite_state_space;
   }
