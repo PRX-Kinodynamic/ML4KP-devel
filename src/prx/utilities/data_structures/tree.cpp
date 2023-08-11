@@ -10,6 +10,7 @@ tree_t::tree_t()
   max_count = 0;
   vertex_id_counter = 0;
   edge_id_counter = 0;
+  nodes_to_remove = 0;
 }
 tree_t::~tree_t()
 {
@@ -19,30 +20,6 @@ edge_index_t tree_t::add_edge(node_index_t from, node_index_t to)
 {
   prx_assert(v_index_map[to]->parent == to,
              "The node with index [" << to << "] already has a parent node [" << v_index_map[to] << "].");
-  prx_assert(edge_count != max_count, "There would now be more edges than vertices in the tree. This cannot happen.");
-
-  v_index_map[from]->children.insert(v_index_map[from]->children.begin(), to);
-  v_index_map[to]->parent = from;
-
-  auto edge = *e_iter;
-  edge->index = edge_id_counter;
-  edge->source = from;
-  edge->target = to;
-  e_index_map[edge_id_counter] = edge;
-  edge_id_counter++;
-  e_iter++;
-  const_e_iter++;
-  edge_count++;
-  v_index_map[to]->parent_edge = edge->index;
-
-  return edge->index;
-}
-
-edge_index_t tree_t::add_safety_edge(node_index_t from, node_index_t to)
-{
-  prx_assert(v_index_map[to]->parent == v_index_map[from]->parent,
-             "The node with index [" << from << "] does not have the same parent as [" << to << "] instead: ["
-                                     << v_index_map[to] << "].");
   prx_assert(edge_count != max_count, "There would now be more edges than vertices in the tree. This cannot happen.");
 
   v_index_map[from]->children.insert(v_index_map[from]->children.begin(), to);
@@ -78,6 +55,11 @@ unsigned tree_t::get_depth(node_index_t v)
 void tree_t::remove_vertex(node_index_t v)
 {
   prx_assert(v_index_map[v]->children.size() == 0, "Can only remove a vertex if it doesn't have any children.");
+  if (v_index_map[v]->status == tree_node_status::MARKED_FOR_REMOVAL)
+  {
+    nodes_to_remove--;
+  }
+
   v_index_map[v_index_map[v]->parent]->children.remove(v);
   edge_index_t e = v_index_map[v]->parent_edge;
 
@@ -99,6 +81,83 @@ void tree_t::remove_vertex(node_index_t v)
   *e_iterator = *e_iter;
   *e_iter = temp_e;
   edge_count--;
+}
+
+void tree_t::mark_vertex_for_removal(node_index_t v)
+{
+  prx_assert(v < v_index_map.size(), "Node index " << v << " out or range.");
+  // std::cout << "Marking for removal: " << v << std::endl;
+  v_index_map[v]->status = tree_node_status::MARKED_FOR_REMOVAL;
+  nodes_to_remove++;
+}
+
+void tree_t::remove_vertices()
+{
+  prx_assert(nodes_to_remove <= vertex_count,
+             "More nodes to removed (" << nodes_to_remove << ") than nodes in the tree " << vertex_count << " !");
+  std::unordered_map<edge_index_t, bool> edges_to_delete{};
+  uint64_t total_edges_to_delete{ 0 };  // could be using edges_to_delete.erase(), but this guarantes cte time
+  edges_to_delete.reserve(nodes_to_remove);
+  auto vertex_iterator = vertex_list.begin();
+  while (nodes_to_remove > 0)
+  {
+    std::shared_ptr<tree_node_t> temp_v = *vertex_iterator;
+    node_index_t node_index = temp_v->index;
+
+    if (temp_v->status == tree_node_status::MARKED_FOR_REMOVAL)
+    {
+      // If parent is nullptr, this should to be the root
+      if (vertex_count > 1)
+      {
+        edges_to_delete[v_index_map[node_index]->parent_edge] = true;
+        total_edges_to_delete++;
+      }
+      if (v_index_map[temp_v->parent] != nullptr)
+      {
+        v_index_map[temp_v->parent]->children.remove(node_index);
+      }
+      for (auto child_index : temp_v->children)
+      {
+        // std::cout << "\tChild is: " << child_index << std::endl;
+        // std::cout << "\tstatus: " << v_index_map[child_index]->status << std::endl;
+        prx_assert(v_index_map[child_index]->status == tree_node_status::MARKED_FOR_REMOVAL,
+                   "Error removing vertex [" << node_index << "]: "                                    // no-lint
+                                             << "A vertex can only be removed if it has no children "  // no-lint
+                                                "or all have also been marked for removal.");          // no-lint
+      }
+
+      if (vertex_count > 0)
+      {
+        temp_v->parent = temp_v->index;
+        v_index_map[node_index] = nullptr;
+        vertex_iterator = vertex_list.erase(vertex_iterator);
+        vertex_count--;
+      }
+      nodes_to_remove--;
+    }
+    else
+    {
+      vertex_iterator++;
+    }
+  }
+
+  auto edge_iterator = edge_list.begin();
+  while (total_edges_to_delete > 0)
+  {
+    const edge_index_t e = (*edge_iterator)->index;
+    if (edges_to_delete[e])
+    {
+      auto temp_e = e_index_map[e];
+      e_index_map[e] = nullptr;
+      edge_iterator = edge_list.erase(edge_iterator);
+      edge_count--;
+      total_edges_to_delete--;
+    }
+    else
+    {
+      edge_iterator++;
+    }
+  }
 }
 
 void tree_t::purge()

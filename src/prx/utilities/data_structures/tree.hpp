@@ -12,6 +12,12 @@ namespace prx
 {
 class tree_t;
 
+enum tree_node_status
+{
+  IDLE,
+  ACTIVE,
+  MARKED_FOR_REMOVAL
+};
 /**
  * @brief <b> A node on a tree. </b>
  *
@@ -22,6 +28,7 @@ class tree_node_t : public abstract_node_t
 public:
   tree_node_t() : abstract_node_t()
   {
+    status = tree_node_status::IDLE;
   }
   virtual ~tree_node_t()
   {
@@ -69,6 +76,7 @@ protected:
   node_index_t parent;
   edge_index_t parent_edge;
   node_index_t index;
+  tree_node_status status;
 
   std::list<node_index_t> children;
 
@@ -144,18 +152,19 @@ public:
   typedef std::list<std::shared_ptr<tree_edge_t>>::iterator edge_iterator;
 
   template <class node_type, class edge_type>
-  void allocate_memory(unsigned new_size)
+  void allocate_memory(uint64_t new_size)
   {
-    unsigned old_size = vertex_count;
+    uint64_t old_size = vertex_count;
     if (max_count < new_size)
     {
       v_index_map.resize(new_size);
       e_index_map.resize(new_size);
-      for (unsigned i = max_count; i < new_size; i++)
+      for (uint64_t i = max_count; i < new_size; i++)
       {
         vertex_list.insert(vertex_list.end(), std::make_shared<node_type>());
         edge_list.insert(edge_list.end(), std::make_shared<edge_type>());
       }
+      max_count = new_size;
     }
     if (old_size == 0)
     {
@@ -175,7 +184,6 @@ public:
       std::advance(e_iter, old_size - 1);
       std::advance(const_e_iter, old_size - 1);
     }
-    max_count = new_size;
   }
 
   template <class node_type, class edge_type>
@@ -193,6 +201,7 @@ public:
     v_iter++;
     const_v_iter++;
     vertex_count++;
+    node->status = tree_node_status::ACTIVE;
     return node->index;
   }
 
@@ -245,7 +254,6 @@ public:
   ~tree_t();
 
   edge_index_t add_edge(node_index_t from, node_index_t to);
-  edge_index_t add_safety_edge(node_index_t from, node_index_t to);
 
   unsigned get_depth(node_index_t v);
 
@@ -255,7 +263,17 @@ public:
 
   void clear();
 
+  uint64_t capacity()
+  {
+    return max_count;
+  }
+
   void transplant(node_index_t root, node_index_t new_parent);
+
+  void mark_vertex_for_removal(node_index_t v);
+
+  void remove_vertices();
+
   unsigned vertex_id_counter;
 
 protected:
@@ -265,10 +283,11 @@ protected:
   edge_iterator e_iter;
   const_vertex_iterator const_v_iter;
   const_edge_iterator const_e_iter;
-  unsigned vertex_count;
-  unsigned edge_count;
-  unsigned max_count;
-  unsigned edge_id_counter;
+  uint64_t vertex_count;
+  uint64_t edge_count;
+  uint64_t max_count;
+  uint64_t edge_id_counter;
+  uint64_t nodes_to_remove;
 
   std::vector<std::shared_ptr<tree_node_t>> v_index_map;
   std::vector<std::shared_ptr<tree_edge_t>> e_index_map;
