@@ -1,4 +1,5 @@
 #define BOOST_AUTO_TEST_MAIN spaces_test
+#include <chrono>
 #include <string>
 #include <boost/test/unit_test.hpp>
 #include "prx/utilities/data_structures/tree.hpp"
