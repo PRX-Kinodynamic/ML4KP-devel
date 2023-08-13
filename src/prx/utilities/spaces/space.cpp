@@ -237,7 +237,7 @@ void space_t::copy_from_point(const space_point_t point) const
 
 void space_t::copy_point(const space_point_t destination, const space_point_t source) const
 {
-//  PRX_DEPRECATED("Use 'space_t::copy' instead");
+  PRX_DEPRECATED("Use 'space_t::copy' instead");
   prx_assert(destination->_parent->space_name == source->_parent->space_name,
              "Points have different parent spaces: " << destination->_parent->space_name << " and "
                                                      << source->_parent->space_name);
@@ -329,12 +329,10 @@ bool space_t::satisfies_bounds(const space_point_t& point) const
     double& p = point->_memory[i];
     if (p < *lower_bounds[i])
     {
-      // printf("%d - lower bound: %.3f, val: %.3f\n", i, *lower_bounds[i], p );
       return false;
     }
     if (p > *upper_bounds[i])
     {
-      // printf("%d - upper bound: %.3f, val: %.3f\n", i, *lower_bounds[i], p );
       return false;
     }
   }
@@ -417,9 +415,10 @@ void space_t::print_bounds() const
 
 void space_t::integrate(const space_point_t& point, const space_t* derivative, double delta_t)
 {
-  prx_assert(derivative->get_dimension() == dimension, "");
-  copy_from_point(point);
-  integrate(derivative, delta_t);
+  // prx_assert(derivative->get_dimension() == dimension, "");
+  // copy_from_point(point);
+  integrate(*point, derivative, delta_t, *point);
+  // integrate(derivative, delta_t);
 }
 
 void space_t::integrate(const space_t* derivative, double delta_t)

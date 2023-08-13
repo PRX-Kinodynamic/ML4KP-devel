@@ -311,6 +311,41 @@ public:
 
   void print_bounds() const;
 
+  // Compute xt1 = xt + derivative * dt;
+  template <typename Point, std::enable_if_t<not prx::utilities::is_any_ptr<Point>::value, bool> = true>
+  void integrate(const Point& xt0, const space_t* derivative, double dt, Point& xt1)
+  {
+    assert_point_dimension(xt0.size());
+    assert_point_dimension(xt1.size());
+    for (unsigned i = 0; i < dimension; i++)
+    {
+      if (topology[i] == topology_t::EUCLIDEAN || topology[i] == topology_t::ROTATIONAL)
+      {
+        xt1[i] = xt0[i] + derivative->at(i) * dt;
+      }
+      else if (topology[i] == topology_t::DISCRETE)
+      {
+        xt1[i] = xt0[i] + derivative->at(i) * dt;
+        xt1[i] = std::roundl(xt1[i]);
+      }
+      else if (topology[i] == topology_t::IDLE)
+      {
+        continue;
+      }
+      else if (topology[i] == topology_t::QUATERNION)
+      {
+        prx_warn("Quaternion integration not implemented yet!");
+      }
+    }
+    enforce_bounds();
+  }
+
+  template <typename Point, std::enable_if_t<prx::utilities::is_any_ptr<Point>::value, bool> = true>
+  inline void integrate(const Point& xt0, const space_t* derivative, double dt, Point& xt1)
+  {
+    integrate(*xt0, derivative, dt, *xt1);
+  }
+
   void integrate(const space_point_t& point, const space_t* derivative, double delta_t);
   void integrate(const space_t* derivative, double delta_t);
 
