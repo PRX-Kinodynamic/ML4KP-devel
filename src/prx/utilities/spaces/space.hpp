@@ -284,9 +284,14 @@ public:
     return *addresses[index];
   }
 
-  inline double& operator[](const std::size_t index) const
+  inline double& operator[](const std::size_t index)
   {
-    return at(index);
+    return *addresses[index];
+  }
+
+  inline double operator[](const std::size_t index) const
+  {
+    return *addresses[index];
   }
 
   inline double get_lower_bound(const std::size_t i) const
@@ -311,9 +316,12 @@ public:
 
   void print_bounds() const;
 
-  // Compute xt1 = xt + derivative * dt;
-  template <typename Point, std::enable_if_t<not prx::utilities::is_any_ptr<Point>::value, bool> = true>
-  void integrate(const Point& xt0, const space_t* derivative, double dt, Point& xt1)
+  // Step the system for dt checking for the topology of each dimension
+  // Implements: xt1 = xt0 + derivative * dt;
+  template <typename PointIn, typename PointOut,
+            std::enable_if_t<not prx::utilities::is_any_ptr<PointIn>::value, bool> = true,
+            std::enable_if_t<not prx::utilities::is_any_ptr<PointOut>::value, bool> = true>
+  void integrate(const PointIn& xt0, const space_t* derivative, double dt, PointOut& xt1)
   {
     assert_point_dimension(xt0.size());
     assert_point_dimension(xt1.size());
@@ -340,14 +348,58 @@ public:
     enforce_bounds();
   }
 
-  template <typename Point, std::enable_if_t<prx::utilities::is_any_ptr<Point>::value, bool> = true>
-  inline void integrate(const Point& xt0, const space_t* derivative, double dt, Point& xt1)
+  // Step the system for dt checking for the topology of each dimension
+  // Implements: xt1 <- xt0 + derivative * dt;
+  template <typename PointIn, typename PointOut,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointIn>::value, bool> = true,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointOut>::value, bool> = true>
+  inline void integrate(const PointIn& xt0, const space_t* derivative, double dt, PointOut& xt1)
   {
     integrate(*xt0, derivative, dt, *xt1);
   }
 
-  void integrate(const space_point_t& point, const space_t* derivative, double delta_t);
-  void integrate(const space_t* derivative, double delta_t);
+  // Step the system for dt checking for the topology of each dimension
+  // Implements: xt1 <- xt0 + derivative * dt;
+  template <typename PointIn, typename PointOut,
+            std::enable_if_t<not prx::utilities::is_any_ptr<PointIn>::value, bool> = true,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointOut>::value, bool> = true>
+  inline void integrate(const PointIn& xt0, const space_t* derivative, double dt, PointOut& xt1)
+  {
+    integrate(xt0, derivative, dt, *xt1);
+  }
+
+  // Step the system for dt checking for the topology of each dimension
+  // Implements: xt1 <- xt0 + derivative * dt;
+  template <typename PointIn, typename PointOut,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointIn>::value, bool> = true,
+            std::enable_if_t<not prx::utilities::is_any_ptr<PointOut>::value, bool> = true>
+  inline void integrate(const PointIn& xt0, const space_t* derivative, double dt, PointOut& xt1)
+  {
+    integrate(*xt0, derivative, dt, xt1);
+  }
+
+  // Integrate and store it in the state space.
+  // Implements: state_space <- point + derivative * dt;
+  template <typename PointIn, std::enable_if_t<not prx::utilities::is_any_ptr<PointIn>::value, bool> = true>
+  void integrate(const PointIn& xt0, const space_t* derivative, double dt)
+  {
+    integrate(xt0, derivative, dt, *this);
+  }
+
+  // Step the system for dt checking for the topology of each dimension
+  // Implements: state_space <- xt0 + derivative * dt;
+  template <typename PointIn, std::enable_if_t<prx::utilities::is_any_ptr<PointIn>::value, bool> = true>
+  void integrate(const PointIn& xt0, const space_t* derivative, double dt)
+  {
+    integrate(*xt0, derivative, dt, *this);
+  }
+
+  // Integrate the point in the state space memory, store it in the state space
+  // Implements: state_space <- state_space + derivative * dt;
+  void integrate(const space_t* derivative, double dt)
+  {
+    integrate(*this, derivative, dt, *this);
+  }
 
   void interpolate(const space_point_t& point1, const space_point_t& point2, double t, space_point_t& result) const;
 
@@ -482,13 +534,19 @@ protected:
       topology.push_back(other->topology[i]);
     }
 
-    // addresses = other -> addresses;
-    // lower_bounds = other -> lower_bounds;
-    // upper_bounds = other -> upper_bounds;
     space_name = other->space_name;
-    // topology = other -> topology;
     owned_values = false;
   }
+
+  // inline double& operator[](const std::size_t index)
+  // {
+  //   return *(addresses[index]);
+  // }
+
+  // inline double operator[](const std::size_t index) const
+  // {
+  //   return *(addresses[index]);
+  // }
 
   std::size_t dimension;
   std::vector<double*> addresses;

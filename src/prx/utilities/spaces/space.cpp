@@ -413,38 +413,30 @@ void space_t::print_bounds() const
   std::cout << ")" << std::endl;
 }
 
-void space_t::integrate(const space_point_t& point, const space_t* derivative, double delta_t)
-{
-  // prx_assert(derivative->get_dimension() == dimension, "");
-  // copy_from_point(point);
-  integrate(*point, derivative, delta_t, *point);
-  // integrate(derivative, delta_t);
-}
-
-void space_t::integrate(const space_t* derivative, double delta_t)
-{
-  for (unsigned i = 0; i < dimension; i++)
-  {
-    if (topology[i] == topology_t::EUCLIDEAN || topology[i] == topology_t::ROTATIONAL)
-    {
-      *(addresses[i]) += delta_t * derivative->at(i);
-    }
-    else if (topology[i] == topology_t::DISCRETE)
-    {
-      *(addresses[i]) += delta_t * derivative->at(i);
-      *(addresses[i]) = round(*(addresses[i]));
-    }
-    else if (topology[i] == topology_t::IDLE)
-    {
-      continue;
-    }
-    else if (topology[i] == topology_t::QUATERNION)
-    {
-      prx_warn("Quaternion integration not implemented yet!");
-    }
-  }
-  enforce_bounds();
-}
+// void space_t::integrate(const space_t* derivative, double delta_t)
+// {
+//   for (unsigned i = 0; i < dimension; i++)
+//   {
+//     if (topology[i] == topology_t::EUCLIDEAN || topology[i] == topology_t::ROTATIONAL)
+//     {
+//       *(addresses[i]) += delta_t * derivative->at(i);
+//     }
+//     else if (topology[i] == topology_t::DISCRETE)
+//     {
+//       *(addresses[i]) += delta_t * derivative->at(i);
+//       *(addresses[i]) = round(*(addresses[i]));
+//     }
+//     else if (topology[i] == topology_t::IDLE)
+//     {
+//       continue;
+//     }
+//     else if (topology[i] == topology_t::QUATERNION)
+//     {
+//       prx_warn("Quaternion integration not implemented yet!");
+//     }
+//   }
+//   enforce_bounds();
+// }
 
 void space_t::interpolate(const space_point_t& point1, const space_point_t& point2, double t,
                           space_point_t& result) const
