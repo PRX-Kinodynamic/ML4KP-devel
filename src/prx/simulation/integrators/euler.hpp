@@ -9,10 +9,7 @@ namespace prx
 class euler_t : public integrator_t
 {
 public:
-  euler_t(space_t* state_space, space_t* derivative_space, std::function<void()> deriv_f);
-
-  euler_t(space_t* state_space, space_t* derivative_space, std::function<void()> deriv_f,
-          const double initial_simulation_step);
+  euler_t(space_t* state_space, space_t* derivative_space, std::function<void()> deriv_f, const double h);
 
   virtual ~euler_t();
 
