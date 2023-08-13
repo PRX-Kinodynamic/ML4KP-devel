@@ -399,61 +399,6 @@ void space_t::print_bounds() const
   std::cout << ")" << std::endl;
 }
 
-void space_t::integrate(const space_point_t& point, const space_t* derivative, double delta_t)
-{
-  prx_assert(derivative->get_dimension() == dimension, "");
-  copy_from(point);
-  integrate(derivative, delta_t);
-}
-
-void space_t::integrate(const space_t* derivative, double delta_t)
-{
-  for (unsigned i = 0; i < dimension;)
-  {
-    if (topology[i] == topology_t::EUCLIDEAN || topology[i] == topology_t::ROTATIONAL)
-    {
-      *(addresses[i]) += delta_t * derivative->at(i);
-      i++;
-    }
-    else if (topology[i] == topology_t::DISCRETE)
-    {
-      *(addresses[i]) += delta_t * derivative->at(i);
-      *(addresses[i]) = round(*(addresses[i]));
-      i++;
-    }
-    else if (topology[i] == topology_t::IDLE)
-    {
-      continue;
-      i++;
-    }
-    else if (topology[i] == topology_t::QUATERNION)
-    {
-      const double w{ *(addresses[i]) };
-      const double x{ *(addresses[i + 1]) };
-      const double y{ *(addresses[i + 2]) };
-      const double z{ *(addresses[i + 3]) };
-
-      const double dw{ derivative->at(i) };
-      const double dx{ derivative->at(i + 1) };
-      const double dy{ derivative->at(i + 2) };
-      const double dz{ derivative->at(i + 3) };
-
-      Eigen::Quaterniond quat{ w, x, y, z };
-      const Eigen::Quaterniond dquat{ dw, dx, dy, dz };
-
-      quat.coeffs() += delta_t * dquat.coeffs();
-      quat.normalize();
-
-      *(addresses[i]) = quat.w();
-      *(addresses[i + 1]) = quat.x();
-      *(addresses[i + 2]) = quat.y();
-      *(addresses[i + 3]) = quat.z();
-      i += 4;
-    }
-  }
-  enforce_bounds();
-}
-
 std::string space_t::print_point(const space_point_t& point, const std::size_t prec) const
 {
   assert_point_space_name(point);
