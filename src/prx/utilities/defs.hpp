@@ -56,8 +56,9 @@
 #define EXPECTED_GOT(expected, got) "Expected: " << expected << ". Got: " << got
 
 #define PRX_DEPRECATED(MSG)                                                                                            \
-  static bool deprecated_print_once = []() {                                                                           \
-    std::cout << prx::constants::color::yellow << "[DEPRECATED] \"" << __PRETTY_FUNCTION__ << "\":" << MSG             \
+  const std::string fx{ __PRETTY_FUNCTION__ };                                                                         \
+  static bool deprecated_print_once = [&fx]() {                                                                        \
+    std::cout << prx::constants::color::yellow << "[DEPRECATED] \"" << fx << "\":" << MSG                              \
               << prx::constants::color::normal << "\n";                                                                \
     return true;                                                                                                       \
   }();
