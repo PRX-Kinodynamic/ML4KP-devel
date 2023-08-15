@@ -1,0 +1,12 @@
+name: "trailer_car"
+path: "trailer_car"
+
+# Assume simple_obstacle environment
+start_state: [-9.5,-9.5, 0.0, 0.0]
+goal_state:  [ 9.5, 9.5, 0.0, 0.0]
+
+state_space_lower_bound: [-11, -11, -3.14, -3.14]
+state_space_upper_bound: [11, 11, 3.14, 3.14]
+
+min_steps: 10
+max_steps: 20

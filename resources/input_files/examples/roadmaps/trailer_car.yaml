@@ -1,0 +1,18 @@
+planner: "RandomDIRT"
+
+random_seed: 210896
+simulation_step: 0.1
+
+environment: "environments/empty.yaml"
+plant: !file "plants/trailer_car.yaml"
+max_speed: 0.5
+
+blossom: 5
+pruning: false
+
+visualize: true
+
+checker_type: time
+checker_value: 1
+
+goal_region_radius: 0.5
