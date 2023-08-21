@@ -5,6 +5,7 @@ simulation_step: 0.1
 
 environment: "environments/empty.yaml"
 plant: !file "plants/trailer_car.yaml"
+controller: "controllers/trailer_car_learned.yaml"
 max_speed: 0.5
 
 blossom: 5

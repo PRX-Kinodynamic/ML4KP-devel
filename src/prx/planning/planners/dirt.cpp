@@ -48,9 +48,6 @@ bool dirt_t::_link_and_setup_query(planner_query_t* query)
     start_node->point = state_space->clone_point(rrt_query->start_state);
     start_node->cost_to_come = 0;
     start_node->dir_radius = 0;
-    start_node->checkpoint_time = 0;
-    // start_node->time_to_come = 0;
-    start_node->is_safety_node = false;
     start_node->cost_to_go = h(start_node->point, dirt_query->goal_state);
     start_node->blossom_number = dirt_spec->blossom_number;
     metric->add_node(start_node.get());
@@ -192,8 +189,7 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       closest_node->indices.pop_back();
 
       // bnb
-      if ((goal_vertex != start_vertex &&
-           closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
+      if ((goal_vertex != start_vertex && closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
       {
         delete eg.first;
         delete eg.second;
@@ -307,7 +303,6 @@ void dirt_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_node_t*
   auto new_tree_node = tree.get_vertex_as<dirt_node_t>(node_index);
   new_tree_node->point = state_space->clone_point(eg.second->back());
   new_tree_node->bridge = true;
-  new_tree_node->is_safety_node = false;
   edge_index_t edge_index = tree.add_edge(closest_node->get_index(), node_index);
   auto new_edge = tree.get_edge_as<rrt_edge_t>(edge_index);
   new_edge->plan = std::make_shared<plan_t>(*eg.first);
@@ -329,7 +324,7 @@ void dirt_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_node_t*
     if (new_tree_node->cost_to_come + new_tree_node->cost_to_go < node->cost_to_come + node->cost_to_go)
     {
       node->dir_radius = std::min(node->dir_radius, sibling_distance);
-      if (dirt_spec->use_pruning && node->dir_radius + sibling_distance < new_node_dir_radius && !node->is_safety_node)
+      if (dirt_spec->use_pruning && node->dir_radius + sibling_distance < new_node_dir_radius)
       {
         if (!node->bridge)
         {
@@ -384,6 +379,7 @@ void dirt_t::update_goal(node_index_t node_index)
       std::cout << " iter:" << current_solution_iters;
       std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
       bnb(start_vertex, current_solution);
+      tree.remove_vertices();
     }
   }
 }
@@ -440,7 +436,7 @@ void dirt_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
     node->indices.clear();
 
     // remove the node
-    tree.remove_vertex(v);
+    tree.mark_vertex_for_removal(v);
   }
 }
 }  // namespace prx

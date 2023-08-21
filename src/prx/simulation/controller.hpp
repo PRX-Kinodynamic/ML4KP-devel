@@ -73,12 +73,12 @@ public:
 
   // wrapper functions for better readability
 
-  inline const space_t* get_state_space() const
+  inline space_t* get_state_space() const
   {
     return plant->get_state_space();
   }
 
-  inline const space_t* get_control_space() const
+  inline space_t* get_control_space() const
   {
     return plant->get_control_space();
   }

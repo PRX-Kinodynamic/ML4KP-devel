@@ -41,9 +41,6 @@ public:
   std::vector<std::pair<plan_t*, trajectory_t*>> edge_generators;
 
   std::vector<int> indices;
-
-  double checkpoint_time;
-  bool is_safety_node;
 };
 
 class dirt_specification_t : public rrt_specification_t
@@ -68,9 +65,6 @@ public:
   int blossom_number;
 
   bool use_pruning;
-
-  double replanning_cycle;
-  int order;
 
   heuristic_function_t h;
   obstacle_distance_function_t obstacle_distance_function;
@@ -112,9 +106,6 @@ protected:
   virtual void bnb(node_index_t v, double cost_bound, bool delete_flag = false) override;
 
 private:
-  int replanning_iteration;
-  double ri_step;  // Time during a replanning cycle
-
   heuristic_function_t h;
   expand_t expand;
 

@@ -1,0 +1,10 @@
+controller_path: "controllers/trailer_car.pt"
+random_seed: 210896
+
+state_indices: [0,1,2,3]
+goal_indices: [0,1,2]
+
+delta_input: false
+
+control_duration: 1.0
+max_duration: 20.0
