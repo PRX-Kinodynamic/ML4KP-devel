@@ -53,6 +53,11 @@ public:
     return group.end();
   }
 
+  system_ptr_t& get_primary_system()
+  {
+    return group[0];
+  }
+  
 protected:
   std::vector<system_ptr_t> group;
   space_t* state_space;

@@ -20,6 +20,19 @@ std::vector<double> extract_state(const std::vector<double>& full_state, const s
   return state;
 }
 
+std::vector<double> extract_state_with_quat(const std::vector<double>& full_state)
+{
+  std::vector<double> state;
+  state.push_back(full_state[0]);
+  state.push_back(full_state[1]);
+
+  prx::quaternion_t quat = prx::quaternion_t(state[3], state[4], state[5], state[6]);
+  auto euler = quat.toRotationMatrix().eulerAngles(0, 1, 2);
+  state.push_back(euler(2));
+
+  return state;
+}
+
 std::vector<double> denormalize_control(const std::vector<double>& control, const std::vector<double>& upper,
                                         const std::vector<double>& lower)
 {
@@ -38,7 +51,7 @@ private:
   system_ptr_t plant;
 
 protected:
-  bool delta_input;
+  bool delta_input, goal_uses_quat;
   double control_duration, max_duration;
   std::vector<int> state_indices, goal_indices;
 
@@ -51,6 +64,7 @@ public:
     std::string controller_path = params["controller_path"].as<std::string>();
     int random_seed = params["random_seed"].as<int>();
     delta_input = params["delta_input"].as<bool>();
+    goal_uses_quat = params["goal_uses_quat"].as<bool>();
     control_duration = params["control_duration"].as<double>();
     max_duration = params["max_duration"].as<double>();
 
@@ -95,7 +109,14 @@ public:
     std::vector<double> state_input_vector, goal_input_vector;
 
     state_input_vector = extract_state(state, state_indices);
-    goal_input_vector = extract_state(goal, goal_indices);
+    if (goal_uses_quat)
+    {
+      goal_input_vector = extract_state(goal, goal_indices);
+    }
+    else
+    {
+      goal_input_vector = extract_state_with_quat(goal);
+    }
 
     if (delta_input)
     {
@@ -137,7 +158,14 @@ public:
     for (int i = 0; i < states.size(); i++)
     {
       state_input_vector.push_back(extract_state(states[i], state_indices));
-      goal_input_vector.push_back(extract_state(goals[i], goal_indices));
+      if (goal_uses_quat)
+      {
+        goal_input_vector.push_back(extract_state(goals[i], goal_indices));
+      }
+      else
+      {
+        goal_input_vector.push_back(extract_state_with_quat(goals[i]));
+      }
     }
 
     if (delta_input)
