@@ -4,6 +4,9 @@
 
 namespace prx
 {
+  /**
+   * Trailer car (Eq. 13.19 from: http://lavalle.pl/planning/)
+  */
 class trailer_car_t : public plant_t
 {
 public:

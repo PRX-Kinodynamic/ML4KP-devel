@@ -10,23 +10,23 @@
 
 namespace prx
 {
-std::vector<double> extract_state(const std::vector<double>& full_state, const std::vector<int>& indices)
+std::vector<double> extract_state(const space_point_t& full_state, const std::vector<int>& indices)
 {
   std::vector<double> state;
   for (auto i : indices)
   {
-    state.push_back(full_state[i]);
+    state.push_back(full_state->at(i));
   }
   return state;
 }
 
-std::vector<double> extract_state_with_quat(const std::vector<double>& full_state)
+std::vector<double> extract_state_with_quat(const space_point_t& full_state)
 {
   std::vector<double> state;
-  state.push_back(full_state[0]);
-  state.push_back(full_state[1]);
+  state.push_back(full_state->at(0));
+  state.push_back(full_state->at(1));
 
-  prx::quaternion_t quat = prx::quaternion_t(state[3], state[4], state[5], state[6]);
+  prx::quaternion_t quat = prx::quaternion_t(full_state->at(3), full_state->at(4), full_state->at(5), full_state->at(6));
   auto euler = quat.toRotationMatrix().eulerAngles(0, 1, 2);
   state.push_back(euler(2));
 
@@ -56,9 +56,8 @@ protected:
   std::vector<int> state_indices, goal_indices;
 
 public:
-  learned_controller_t(const system_ptr_t _plant, std::string params_file) : controller_t(_plant, "learned_controller")
+  learned_controller_t(const system_ptr_t _plant, param_loader params) : controller_t(_plant, "learned_controller")
   {
-    auto params = param_loader(params_file);
     goal = _plant->get_state_space()->make_point();
 
     std::string controller_path = params["controller_path"].as<std::string>();
@@ -95,14 +94,13 @@ public:
   using controller_t::compute_controls;
   void compute_controls() override
   {
-    std::vector<double> state_vec, goal_vec;
-    get_state_space()->copy_to_vector(state_vec);
-    get_state_space()->copy_vector_from_point(goal_vec, goal);
-    std::vector<double> control = get_control(state_vec, goal_vec);
+    space_point_t current = get_state_space()->make_point();
+    get_state_space()->copy_to(current);
+    std::vector<double> control = get_control(current, goal);
     get_control_space()->copy_from_vector(control);
   }
 
-  std::vector<double> get_control(const std::vector<double>& state, const std::vector<double>& goal)
+  std::vector<double> get_control(const space_point_t& state, const space_point_t& goal)
   {
     torch::Device device(torch::kCPU);
     std::vector<torch::jit::IValue> inputs;
@@ -128,12 +126,14 @@ public:
     }
 
     state_input_vector.insert(state_input_vector.end(), goal_input_vector.begin(), goal_input_vector.end());
-    long long int input_size = state_input_vector.size();
+    std::size_t input_size = state_input_vector.size();
     at::Tensor input_tensor = torch::zeros({ 1, input_size }, device);
     for (int i = 0; i < input_size; i++)
     {
       input_tensor[0][i] = state_input_vector[i];
     }
+    // at::Tensor input_tensor = torch::from_blob(state_input_vector.data(), { 1, input_size }, device);
+
     inputs.push_back(input_tensor);
 
     auto output = controller.forward(inputs).toTensor();
@@ -148,8 +148,8 @@ public:
     return control;
   }
 
-  std::vector<std::vector<double>> get_controls(const std::vector<std::vector<double>>& states,
-                                                const std::vector<std::vector<double>>& goals)
+  std::vector<std::vector<double>> get_controls(const std::vector<space_point_t>& states,
+                                                const std::vector<space_point_t>& goals)
   {
     torch::Device device(torch::kCPU);
     std::vector<torch::jit::IValue> inputs;
@@ -186,11 +186,12 @@ public:
                                    goal_input_vector[i].end());
     }
 
-    long long int input_size_0 = state_input_vector.size();
-    long long int input_size_1 = state_input_vector[0].size();
+    std::size_t input_size_0 = state_input_vector.size();
+    std::size_t input_size_1 = state_input_vector[0].size();
     at::Tensor input_tensor = torch::zeros({ input_size_0, input_size_1 }, device);
     for (int i = 0; i < input_size_0; i++)
     {
+      // input_tensor[i] = torch::from_blob(state_input_vector[i].data(), { input_size_1 }, device);
       for (int j = 0; j < input_size_1; j++)
       {
         input_tensor[i][j] = state_input_vector[i][j];
@@ -225,7 +226,6 @@ public:
     trajectory_t step_traj(get_state_space());
     plan_t step_plan(get_control_space());
     space_point_t current = get_state_space()->clone_point(query.start_state);
-    get_state_space()->copy_vector_from_point(goal_vec, query.goal_state);
 
     while (time_so_far < max_duration && !query.goal_check(current))
     {
@@ -236,8 +236,7 @@ public:
       query.solution_plan.append_onto_back(control_duration);
       step_plan.append_onto_back(control_duration);
 
-      get_state_space()->copy_vector_from_point(state_vec, current);
-      get_control_space()->copy_point_from_vector(step_plan.back().control, get_control(state_vec, goal_vec));
+      get_control_space()->copy_point_from_vector(step_plan.back().control, get_control(current, query.goal_state));
       get_control_space()->copy_point(query.solution_plan.back().control, step_plan.back().control);
       spec.propagate(current, step_plan, step_traj);
 
