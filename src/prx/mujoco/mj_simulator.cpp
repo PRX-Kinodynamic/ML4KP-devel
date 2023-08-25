@@ -14,9 +14,9 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path, bool visua
 
   for (std::size_t idx = 0; idx < _mj_model->nsensor; idx++)
   {
-    // std::shared_ptr<mujoco_sensor_t> sensor = std::make_shared<mujoco_sensor_t>(_mj_model, _mj_data, idx);
-    // std::cout << "sensor: " << sensor->get_name() << "\n";
-    // sensors[sensor->get_name()] = sensor;
+    std::shared_ptr<mujoco_sensor_t> sensor = std::make_shared<mujoco_sensor_t>(_mj_model, _mj_data, idx);
+    std::cout << "sensor: " << sensor->get_name() << "\n";
+    sensors[sensor->get_name()] = sensor;
   }
   // button_left = button_right = button_middle = false;
   // lastx = lasty = 0;

@@ -26,6 +26,12 @@ public:
       case mjSENS_FRAMEPOS:
         sensor_topology += euclidean_dimension(sensor_dim, current_dim, model, data, sensor_idx);
         break;
+      case mjSENS_FORCE:
+        sensor_topology += euclidean_dimension(sensor_dim, current_dim, model, data, sensor_idx);
+        break;
+      case mjSENS_TORQUE:
+        sensor_topology += euclidean_dimension(sensor_dim, current_dim, model, data, sensor_idx);
+        break;
       default:
         prx_throw("Type of sensor [" << _sensor_name << "] not supported");
     }
