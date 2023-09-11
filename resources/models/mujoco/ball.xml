@@ -3,9 +3,10 @@
 <mujoco model="ball">
   <compiler angle="radian"/>
   <size nconmax="100" njmax="500"/>
-  <option integrator="RK4" timestep="0.01"/>
+  <option integrator="Euler" timestep="0.01"/>
   <!-- <include file="friction_floor_1.xml"/> -->
-  <include file="friction_floor_uniform.xml"/>
+  <!-- <include file="friction_floors/friction_floor_uniform.xml"/> -->
+  <include file="friction_floors/friction_floor_midpatch.xml"/>
   <!-- <include file="friction_floor_4x4.xml"/> -->
   <asset>
     <texture builtin="checker" height="100" mark="cross" markrgb=".8 .8 .8" name="texplane" rgb1="0.26 0.12 0.36" rgb2="0.23 0.09 0.33" type="2d" width="100"/>

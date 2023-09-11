@@ -213,7 +213,6 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
     switch (joint->type)
     {
       case mjtJoint_::mjJNT_FREE:
-        PRX_DEBUG_VAR_2(idx, "mjtJoint_::mjJNT_FREE");
         // Free
         // prx_warn_once("Free joint, setting limits arbitrarily.");
         // These are the qpos positions
@@ -246,7 +245,6 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
         next_qpos += 7;
         break;
       case mjtJoint_::mjJNT_SLIDE:
-        PRX_DEBUG_VAR_2(idx, "mjtJoint_::mjJNT_SLIDE");
         // Slide
         state_topo_string += "EE";
 
@@ -272,7 +270,6 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
         next_qpos++;
         break;
       case mjtJoint_::mjJNT_HINGE:
-        PRX_DEBUG_VAR_2(idx, "mjtJoint_::mjJNT_HINGE");
         // Hinge
         state_topo_string += "EE";
 
@@ -297,7 +294,6 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
         next_qpos++;
         break;
       case mjtJoint_::mjJNT_BALL:
-        PRX_DEBUG_VAR_2(idx, "mjtJoint_::mjJNT_BALL");
         state_topo_string += "QQQQ";
         ss_lb.insert(ss_lb.end(), 4, -1);
         ss_ub.insert(ss_ub.end(), 4, 1);
@@ -313,7 +309,6 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
       default:
         prx_throw("Joint " << *joint << " not supported (yet)");
     }
-    PRX_DEBUG_VAR_1(ss_lb.size());
   }
 
   if (next_qpos != sim->_mj_model->nq)

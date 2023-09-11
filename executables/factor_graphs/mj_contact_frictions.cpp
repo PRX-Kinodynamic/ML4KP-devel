@@ -6,14 +6,24 @@
 
 using namespace prx;
 
+void insert_start_state(std::vector<double>& start_state, param_loader& params, std::vector<std::string> names)
+{
+  for (auto n : names)
+  {
+    /* code */
+    auto partial_start_state = params["plant/start_state/" + n].as<std::vector<double>>();
+    start_state.insert(start_state.end(), partial_start_state.begin(), partial_start_state.end());
+  }
+}
+
 int main(int argc, char** argv)
 {
-  std::string params_file = "examples/mujoco/playback.yaml";
+  const std::string params_file{ "examples/mujoco/contact_frictions.yaml" };
 
   param_loader params(params_file, argc, argv);
 
   std::string control_filename = params["plan_file"].as<std::string>();
-  std::string model_filename = params["model_file"].as<std::string>();
+  std::string model_filename = params["plant/model_file"].as<std::string>();
   const bool visualize = params["visualize"].as<bool>();
 
   std::shared_ptr<mujoco_simulator_t> sim = std::make_shared<mujoco_simulator_t>(model_filename, visualize);
@@ -28,23 +38,21 @@ int main(int argc, char** argv)
   space_point_t start = ss->make_point();
   trajectory_t traj(ss);
 
-  ss->copy(start, params["start_state"].as<std::vector<double>>());
+  std::vector<double> start_state{};
+  ss->copy_to(start);
+  insert_start_state(start_state, params, { "xyz", "quat", "vels", "other" });
+  ss->copy(start, start_state);
+  PRX_DEBUG_VAR_1(start);
   // ss->copy_to(start);
 
   plan_t plan(cs);
   plan.from_file(control_filename);
   plan.expand();
-  // context.first->propagate(start, plan, traj);
   traj.copy_onto_back(start);
   std::size_t cont{ 0 };
-  // int total_geoms{ sim->_mj_model->ngeom };
-  // for (int i = 0; i < total_geoms; ++i)
-  // {
-  //   std::string g1 = std::string(sim->_mj_model->names + sim->_mj_model->name_geomadr[i]);
-  //   if (g1 == "floor0")
-  //     sim->_mj_model->geom_friction[i + 2] = 0.1;
-  // }
+
   prx::precision = 10;
+  sg->propagate(start, Eigen::VectorXd::Zero(cs->size()), 1, start);
   sg->propagate(start, plan, traj);
   // for (const plan_step_t& step : plan)
   // {

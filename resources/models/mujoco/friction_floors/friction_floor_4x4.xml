@@ -16,7 +16,7 @@
     <map znear="0.001" />
   </visual>
   <worldbody>
-  	<!-- Floor XY -->
+    <!-- Floor XY -->
     <geom contype="1" friction="1 0 0.05" name="floor+5+5" pos="+20 +20 0" euler="0 0 0" size="20 20 0.01" type="box" material="matplane0" condim="6"/> 
     <geom contype="1" friction="1 0 0.01" name="floor+5-5" pos="+20 -20 0" euler="0 0 0" size="20 20 0.01" type="box" material="matplane1" condim="6"/> 
     <geom contype="1" friction="1 0 0.001" name="floor-5-5" pos="-20 -20 0" euler="0 0 0" size="20 20 0.01" type="box" material="matplane2" condim="6"/> 

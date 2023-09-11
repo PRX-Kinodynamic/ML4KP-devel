@@ -271,7 +271,7 @@ public:
     error[0] = th_t[0] - _guarded_weight.dot(basis);
 
     // PRX_DEBUG_VAR_1("--------------");
-    // PRX_DEBUG_VAR_1(guarded_weight.transpose());
+    // PRX_DEBUG_VAR_1(_guarded_weight.transpose());
     // PRX_DEBUG_VAR_1(basis.transpose());
     // PRX_DEBUG_VAR_1(_guarded_weight.transpose());
     // PRX_DEBUG_VAR_3(th_t[0], error[0], _guarded_weight.dot(basis));

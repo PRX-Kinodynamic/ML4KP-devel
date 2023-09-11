@@ -314,7 +314,7 @@ public:
                         const EnvironmentParams environment_params) const
   {
     const double I{ model_params[0] };
-    // const double mu{ params[1] };
+    // const double mu{ environment_params[0] };
     const double mu{ std::exp(-environment_params[0] * 0.1) };
 
     const double f{ force[0] };
@@ -328,15 +328,15 @@ public:
     qdotdot_p[1] = mu * f * std::sin(theta) / _mass;
     qdotdot_p[2] = (r_icc / I) * f;
 
-    // PRX_DEBUG_VAR_1("----------");
+    PRX_DEBUG_VAR_1("----------");
     // PRX_DEBUG_VAR_1(qdotdot.transpose());
     // PRX_DEBUG_VAR_1(force.transpose());
     // PRX_DEBUG_VAR_1(q.transpose());
     // PRX_DEBUG_VAR_1(model_params.transpose());
-    // PRX_DEBUG_VAR_1(environment_params.transpose());
-    // PRX_DEBUG_VAR_1(mu);
+    PRX_DEBUG_VAR_1(environment_params.transpose());
+    PRX_DEBUG_VAR_1(mu);
     // PRX_DEBUG_VAR_1(qdotdot_p.transpose());
-    // PRX_DEBUG_VAR_1((qdotdot - qdotdot_p).transpose());
+    PRX_DEBUG_VAR_1((qdotdot - qdotdot_p).transpose());
     return qdotdot - qdotdot_p;
   }
 
