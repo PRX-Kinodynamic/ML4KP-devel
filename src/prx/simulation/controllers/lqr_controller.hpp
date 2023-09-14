@@ -71,7 +71,7 @@ public:
   }
 
 protected:
-  // \dot{x_t} = dynamics(x_t, u_t)
+  // \dot{x_t} = dynamics(x_t, u_t) --> x_{t+1} = x_t + \dot{x_t}dt
   VectorX dynamics(const VectorX& x_in, const VectorU& u_in)
   {
     _plant->get_state_space()->copy_from(x_in);

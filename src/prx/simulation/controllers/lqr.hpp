@@ -106,10 +106,14 @@ public:
     return _B;
   }
 
+  Eigen::MatrixXd S()
+  {
+    return care::solve(_A, _B, _Q, _R);
+  }
+
   void compute_K()
   {
-    const Eigen::MatrixXd S{ care::solve(_A, _B, _Q, _R) };
-    _K = _R.inverse() * (_B.transpose() * S);
+    _K = _R.inverse() * (_B.transpose() * S());
   }
 
   // Computes the control u = -K * X;

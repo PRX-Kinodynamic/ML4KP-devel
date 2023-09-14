@@ -6,6 +6,7 @@
  * @author Zakary Littlefield, Aravind Sivaramakrishnan
  */
 
+#include <map>
 #include <string>
 
 #include "prx/utilities/general/timer.hpp"
