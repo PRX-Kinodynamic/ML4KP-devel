@@ -1,0 +1,13 @@
+# model_file: "tensegrity/tensegrity_cubes_only.xml"
+model_file: "RoGuE/mushr_indoors.xml"
+# model_file: "tensegrity/tensegrity_cube_fixed.xml"
+# model_file: "tensegrity/cube_tensor_cube.xml"
+# plan_filename: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/solution_plan.txt"
+# plan_filename: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/Roadmap.txt"
+# video_name: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/roadmap.mp4"
+# plan_filename: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/RLG.txt"
+# video_name: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/RLG.mp4"
+plan_filename: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/Random.txt"
+video_name: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/random.mp4"
+visualize: false
+record_video: true

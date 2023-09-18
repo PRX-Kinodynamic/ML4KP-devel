@@ -93,6 +93,33 @@ mujoco_simulator_t::~mujoco_simulator_t()
   mj_deactivate();
 }
 
+void mujoco_simulator_t::set_record_video(const bool record_video)
+{
+  _record_video = record_video;
+  if (_record_video)
+  {
+    mjv_defaultCamera(&cam);
+    mjv_defaultOption(&opt);
+    mjv_defaultScene(&scn);
+    mjr_defaultContext(&con);
+    mjv_makeScene(m, &scn, 1000);
+
+    if (!glfwInit())
+      prx_throw("Error in initializing GLFW.");
+
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    window = glfwCreateWindow(1200, 900, "MuJoCo", NULL, NULL);
+    if (!window)
+      prx_throw("Error in creating GLFW window.");
+    glfwMakeContextCurrent(window);
+    mjr_makeContext(m, &con, mjFONTSCALE_150);
+
+    mjv_defaultFreeCamera(m, &cam);
+    cam.type = mjtCamera::mjCAMERA_TRACKING;
+    cam.trackbodyid = m->body_parentid[0];
+  }
+};
+
 void mujoco_simulator_t::init_simulator()
 {
   system_groups->link_simulator(this);
