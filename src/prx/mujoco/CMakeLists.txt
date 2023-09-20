@@ -1,4 +1,5 @@
 if(DEFINED ENV{MJ_PATH})
+
     include_directories($ENV{MJ_PATH}/include)
     link_directories($ENV{MJ_PATH}/build/lib)
     set(MJ_INCLUDE_DIR "$ENV{MJ_PATH}/include/" CACHE PATH "MuJoCo include directory")
@@ -14,6 +15,7 @@ add_library(${PROJECT_NAME}_mjsim STATIC ${SRC_PRX_LIB_MJSIM})
 target_compile_definitions(${PROJECT_NAME}_mjsim PUBLIC -DMJ_PATH="$ENV{MJ_PATH}")
 target_include_directories(${PROJECT_NAME}_mjsim PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME}_mjsim PUBLIC ${MJ_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME}_mjsim PUBLIC ${OpenCV_LIBS} )
 
 if(APPLE)
     FIND_LIBRARY(COCOA NAMES Cocoa)

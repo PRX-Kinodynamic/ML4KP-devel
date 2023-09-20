@@ -141,6 +141,10 @@ void mujoco_simulator_t::init_simulator()
 
 void mujoco_simulator_t::step_simulation()
 {
+  if (_record_video)
+  {
+    add_frame();
+  }
   // Set the warmstart acceleration to be zero (for determinism)
   for (int i = 0; i < m->nv; i++)
   {
@@ -177,6 +181,37 @@ void mujoco_simulator_t::step_simulation()
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
+}
+
+void mujoco_simulator_t::add_frame()
+{
+  // std::unique_ptr<unsigned char[]> rgb(new unsigned char[3 * width * height]);
+  if (!_output_video.isOpened())
+  {
+    const auto rect = mjr_maxViewport(&con);
+    const cv::Size vid_size(rect.width, rect.height);
+    const int fourcc{ cv::VideoWriter::fourcc('m', 'p', '4', 'v') };
+    _output_video.open(_video_name, fourcc, _fps, vid_size, true);
+    prx_assert(_output_video.isOpened(), "Failed to open video output!");
+  }
+  // Only add a frame at the specified fps
+  if (std::fmod(_recorded_secs, 1.0 / _fps) < prx::simulation_step)
+  {
+    mjrRect viewport = mjr_maxViewport(&con);
+    int height = viewport.height;
+    int width = viewport.width;
+    glfwGetFramebufferSize(window, &width, &height);
+    mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
+    mjr_render(viewport, &scn, &con);
+    glfwSwapBuffers(window);
+
+    cv::Mat cv_pixels(height, width, CV_8UC3);
+    mjr_readPixels(cv_pixels.data, nullptr, viewport, &con);
+    cvtColor(cv_pixels, cv_pixels, cv::COLOR_RGB2BGR);
+    cv::flip(cv_pixels, cv_pixels, 0);
+    _output_video << cv_pixels;
+  }
+  _recorded_secs += prx::simulation_step;
 }
 
 void mujoco_simulator_t::reset_simulation()

@@ -30,6 +30,10 @@ message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 add_definitions(${BUILD_FLAGS})
 
 find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
+find_package( OpenCV REQUIRED )
+
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+
 include_directories(${Boost_INCLUDE_DIRS})
 link_libraries(
 	${Boost_FILESYSTEM_LIBRARY}

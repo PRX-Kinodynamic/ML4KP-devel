@@ -66,6 +66,8 @@ public:
 
   virtual void reset_simulation() override;
 
+  void add_frame();
+
   inline void set_goal(const space_point_t goal)
   {
     goal_pos.clear();
