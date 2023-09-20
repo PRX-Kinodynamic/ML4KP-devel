@@ -84,6 +84,12 @@ public:
 
   MujocoState get_state();
 
+  void close_video()
+  {
+    if (_output_video.isOpened())
+      _output_video.release();
+  }
+
   mjModel* m;
   mjData* d;
 
