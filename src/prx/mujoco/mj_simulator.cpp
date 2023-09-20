@@ -90,7 +90,6 @@ mujoco_simulator_t::~mujoco_simulator_t()
 
   mj_deleteData(d);
   mj_deleteModel(m);
-  mj_deactivate();
 }
 
 void mujoco_simulator_t::set_record_video(const bool record_video)
