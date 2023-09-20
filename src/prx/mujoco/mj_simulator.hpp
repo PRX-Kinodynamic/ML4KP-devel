@@ -7,7 +7,11 @@
 #include "prx/mujoco/mj_plant.hpp"
 
 #include "GLFW/glfw3.h"
-
+#include <opencv2/core/hal/interface.h>
+#include <opencv2/core/eigen.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
 #include "mujoco/mujoco.h"
 
 namespace prx
@@ -97,6 +101,7 @@ public:
   std::vector<mjActuatorInfo*> actuator_info;
 
   std::vector<double*> actuator_internal_state;
+  cv::VideoWriter _output_video;
 };
 
 class mujoco_collision_group_t : public collision_group_t
