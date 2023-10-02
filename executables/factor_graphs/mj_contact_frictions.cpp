@@ -76,4 +76,22 @@ int main(int argc, char** argv)
   // std::cout << ss->print_point(end, 3) << std::endl;
 
   traj.to_file(params["out_traj"].as<>());
+  const double duration{ plan.duration() };
+  const double frequency{ params["observation/frequency"].as<double>() };
+  const std::string observ_file{ params["observation/filename"].as<std::string>() };
+
+  std::ofstream ofs_obs;
+  ofs_obs.open(observ_file.c_str(), std::ofstream::trunc);
+
+  std::size_t idx{ 0 };
+  for (double t = 0; t < duration; t += prx::simulation_step)
+  {
+    if (std::fmod(t, frequency) <= prx::simulation_step)
+    {
+      ofs_obs << traj[idx]->vector().head(3).transpose() << "\n";
+    }
+    idx++;
+  }
+
+  return 0;
 }

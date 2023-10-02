@@ -71,7 +71,7 @@ public:
     // PRX_DEBUG_VAR_3(I, std::get<I>(t), hash);
     std::stringstream str;
     prx::hash_combine(hash, std::get<I>(t));
-    str << std::get<I>(t) << "_";
+    str << std::get<I>(t);
     str << create_hash<I + 1>(hash, t);
 
     hash = std::hash<std::string>()(str.str());

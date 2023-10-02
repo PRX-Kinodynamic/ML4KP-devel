@@ -40,6 +40,7 @@ using EnvironmentParams = Eigen::Vector<double, DimEnvironmentParams>;
 using Force = Eigen::Vector<double, DimForce>;
 
 using U = Eigen::Vector<double, DimU>;
+using Duration = Eigen::Vector<double, 1>;
 
 using Qz = Eigen::Vector<double, DimQz>;
 }  // namespace ackermann
@@ -106,8 +107,8 @@ public:
     const double v_0{ q_0[3] };    // velocity at 0
     const double phi_0{ q_0[4] };  // steer at 0
 
-    const double v_d{ u[0] };    // velocity desired
-    const double phi_d{ u[1] };  // steering angle desired
+    const double phi_d{ u[0] };  // steering angle desired
+    const double v_d{ u[1] };    // velocity desired
 
     const double k_v{ 1 };    // velocity gain
     const double k_phi{ 1 };  // steer gain
@@ -131,6 +132,14 @@ public:
     error = q_1 - q_1p;
     // error[3] = v_1 - q_1p[3];
     return error;
+  }
+  virtual void print(const std::string& s = "ackermann_q_qdot_u_t",
+                     const gtsam::KeyFormatter& formatter = gtsam::DefaultKeyFormatter) const override
+  {
+    std::cout << "ackermann_q_qdot_u_t";
+
+    for (gtsam::Key key : keys_)
+      std::cout << " " << prx::symbol_factory_t::formatter(key);
   }
 
 private:
@@ -210,6 +219,15 @@ public:
     qdot_p1[1] = v * std::sin(theta);
     qdot_p1[2] = (v / _L) * std::tan(phi);
     return qdot_p1 - qdot_c1;
+  }
+
+  virtual void print(const std::string& s = "ackermann_q_qdot_qdotdot_t",
+                     const gtsam::KeyFormatter& formatter = gtsam::DefaultKeyFormatter) const override
+  {
+    std::cout << "ackermann_q_qdot_qdotdot_t";
+
+    for (gtsam::Key key : keys_)
+      std::cout << " " << prx::symbol_factory_t::formatter(key);
   }
 
 private:
@@ -314,8 +332,8 @@ public:
                         const EnvironmentParams environment_params) const
   {
     const double I{ model_params[0] };
-    // const double mu{ environment_params[0] };
-    const double mu{ std::exp(-environment_params[0] * 0.1) };
+    const double mu{ environment_params[0] };
+    // const double mu{ std::exp(-environment_params[0] * 0.1) };
 
     const double f{ force[0] };
 
@@ -328,16 +346,25 @@ public:
     qdotdot_p[1] = mu * f * std::sin(theta) / _mass;
     qdotdot_p[2] = (r_icc / I) * f;
 
-    PRX_DEBUG_VAR_1("----------");
+    // PRX_DEBUG_VAR_1("----------");
     // PRX_DEBUG_VAR_1(qdotdot.transpose());
     // PRX_DEBUG_VAR_1(force.transpose());
     // PRX_DEBUG_VAR_1(q.transpose());
     // PRX_DEBUG_VAR_1(model_params.transpose());
-    PRX_DEBUG_VAR_1(environment_params.transpose());
-    PRX_DEBUG_VAR_1(mu);
+    // PRX_DEBUG_VAR_1(environment_params.transpose());
+    // PRX_DEBUG_VAR_1(mu);
     // PRX_DEBUG_VAR_1(qdotdot_p.transpose());
-    PRX_DEBUG_VAR_1((qdotdot - qdotdot_p).transpose());
+    // PRX_DEBUG_VAR_1((qdotdot - qdotdot_p).transpose());
     return qdotdot - qdotdot_p;
+  }
+
+  virtual void print(const std::string& s = "ackermann_qdotdot_force_q_t",
+                     const gtsam::KeyFormatter& formatter = gtsam::DefaultKeyFormatter) const override
+  {
+    std::cout << "ackermann_qdotdot_force_q_t";
+
+    for (gtsam::Key key : keys_)
+      std::cout << " " << prx::symbol_factory_t::formatter(key);
   }
 
 private:
@@ -374,9 +401,19 @@ public:
   {
   }
 
-  Qz compute_error(const Q& q) const
+  Qz compute_error(const Q& q) const override
   {
     return q.head(3) - _observation;
+  }
+
+  virtual void print(const std::string& s = "ackermann_q_observation_t",
+                     const gtsam::KeyFormatter& formatter = gtsam::DefaultKeyFormatter) const override
+  {
+    std::cout << "ackermann_q_observation_t";
+
+    for (gtsam::Key key : keys_)
+      std::cout << " " << prx::symbol_factory_t::formatter(key);
+    std::cout << " ";
   }
 
 private:

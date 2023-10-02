@@ -16,11 +16,14 @@ namespace prx
 {
 namespace fg
 {
+struct friction_fusion_t
+{
+};
 
 // ThetaPositions(x, y) -> Theta_key; ThetaPositions returns the theta that corresponds to the bottom left corner of the
 // cell
 template <Eigen::Index THETA_DIM, Eigen::Index BASIS_DIM, Eigen::Index StateDim, typename FrictionGrid>
-class friction_fusion_factor_t : public gtsam::NoiseModelFactor
+class friction_fusion_factor_t : public gtsam::NoiseModelFactor, public friction_fusion_t
 {
   using derivative_ff = std::function<Eigen::Vector<double, THETA_DIM>(const Eigen::Vector<double, THETA_DIM>&)>;
 
@@ -193,7 +196,7 @@ private:
 };
 
 template <Eigen::Index THETA_DIM, typename State, typename BasisPositions>
-class friction_local_fusion_factor_t : public noise_model_5factor_t<THETA_DIM, 1, 1, 1, 1>
+class friction_local_fusion_factor_t : public noise_model_5factor_t<THETA_DIM, 1, 1, 1, 1>, public friction_fusion_t
 {
   using derivative_ff = std::function<Eigen::Vector<double, THETA_DIM>(const Eigen::Vector<double, THETA_DIM>&)>;
 

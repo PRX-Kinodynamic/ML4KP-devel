@@ -10,3 +10,5 @@
 #include "prx/factor_graphs/factors/quadratic_cost_factor.hpp"
 #include "prx/factor_graphs/factors/space_limit_factor.hpp"
 #include "prx/factor_graphs/factors/state_propagation_factor.hpp"
+#include "prx/factor_graphs/factors/ackermann_factors.hpp"
+#include "prx/factor_graphs/factors/friction_fusion_factor.hpp"

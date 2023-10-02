@@ -178,12 +178,12 @@ std::string trajectory_t::print(unsigned precision) const
 
 space_point_t trajectory_t::interpolate(double s) const
 {
-  s = (s < 0 ? 0 : s);
-  s = (s > 1 ? 1 : s);
+  prx_assert(0 <= s, "Intepolation point is negative, must be in [0,1]");
+  prx_assert(s <= 1.0, "Intepolation point is greater than 1, must be in [0,1]");
 
   const double closest_index = s * (num_states - 1);  // this scales into the index space of the traj
   const unsigned lower_index = std::floor(closest_index);
-  if (lower_index == (num_states - 1))                // handle the border case
+  if (lower_index == (num_states - 1))  // handle the border case
     return back();
   const double interpolation_value = closest_index - lower_index;
   auto inter_point = state_space->make_point();
