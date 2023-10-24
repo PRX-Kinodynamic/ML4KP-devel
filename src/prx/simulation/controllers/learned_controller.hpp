@@ -28,7 +28,7 @@ std::vector<double> extract_state_with_quat(const space_point_t& full_state)
 
   prx::quaternion_t quat = prx::quaternion_t(full_state->at(3), full_state->at(4), full_state->at(5), full_state->at(6));
   auto euler = quat.toRotationMatrix().eulerAngles(0, 1, 2);
-  state.push_back(euler(2));
+  state.push_back(euler[2]);
 
   return state;
 }
@@ -107,7 +107,7 @@ public:
     std::vector<double> state_input_vector, goal_input_vector;
 
     state_input_vector = extract_state(state, state_indices);
-    if (goal_uses_quat)
+    if (!goal_uses_quat)
     {
       goal_input_vector = extract_state(goal, goal_indices);
     }
@@ -158,7 +158,7 @@ public:
     for (int i = 0; i < states.size(); i++)
     {
       state_input_vector.push_back(extract_state(states[i], state_indices));
-      if (goal_uses_quat)
+      if (!goal_uses_quat)
       {
         goal_input_vector.push_back(extract_state(goals[i], goal_indices));
       }
@@ -216,7 +216,7 @@ public:
     return controls;
   }
 
-  void fulfill_query(planner_query_t& query, rrt_specification_t& spec)
+  void fulfill_query(rrt_specification_t& spec,planner_query_t& query)
   {
     query.solution_plan.clear();
     query.solution_traj.clear();

@@ -6,4 +6,4 @@ add_subdirectory(intermediate)
 add_subdirectory(advanced)
 add_subdirectory(tripods)
 add_subdirectory(roadmaps)
-
+add_subdirectory(mujoco)

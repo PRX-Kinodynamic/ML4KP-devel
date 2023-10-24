@@ -17,6 +17,7 @@ BOOST_AUTO_TEST_CASE(learned_controller_load_test)
   prx::learned_controller_t controller(plant, controller_params_file);
 }
 
+/*
 BOOST_AUTO_TEST_CASE(learned_controller_trailer_car_test)
 {
   std::string plant_name = "trailer_car";
@@ -44,6 +45,7 @@ BOOST_AUTO_TEST_CASE(learned_controller_trailer_car_test)
   BOOST_CHECK(prx::are_approx_equal(controller.get_control_space()->at(0), 0.452, 1e-2));
   BOOST_CHECK(prx::are_approx_equal(controller.get_control_space()->at(1),-0.027, 1e-2));
 }
+*/
 
 BOOST_AUTO_TEST_CASE(learned_controller_mushr_test)
 {

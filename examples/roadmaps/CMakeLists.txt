@@ -3,6 +3,8 @@ if(BUILD_FOR_TORCH)
 
     set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/roadmaps)
 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-narrowing")
+
     foreach(f ${ROADMAPS_FILES})
         GET_FILENAME_COMPONENT(F_EXEC ${f} NAME_WE )
         add_executable(${F_EXEC} ${f})

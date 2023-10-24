@@ -1,0 +1,16 @@
+name: "car_like"
+path: "car_like"
+
+start_state: [-8., 0., 0., 0.0, 0.0]
+goal_state:  [ 8., 0., 0., 0.0, 0.0]
+
+state_space_lower_bound: [-30,-30,-3.15,-1.0472,-1.]
+state_space_upper_bound: [ 30, 30, 3.15, 1.0472, 1.]
+
+control_space_lower_bound: [-0.5236, -0.1]
+control_space_upper_bound: [ 0.5236,  0.1]
+
+min_steps: 5
+max_steps: 15
+
+vis_body: "body"
