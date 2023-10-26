@@ -14,6 +14,7 @@
 #include <gtsam/linear/NoiseModel.h>
 
 #include "prx/factor_graphs/utilities/fg_logger.hpp"
+#include "prx/factor_graphs/utilities/symbols_factory.hpp"
 
 namespace prx
 {
@@ -89,7 +90,7 @@ template <std::size_t I, typename... Tp, std::enable_if_t<(I == sizeof...(Tp) - 
 inline static void print_values_1(gtsam::Values& values, std::ostream& ost = std::cout)
 {
   // typename std::tuple_element<I, std::tuple<Tp...> >::type T;
-  using type = typename std::tuple_element<I, std::tuple<Tp...> >::type;
+  using type = typename std::tuple_element<I, std::tuple<Tp...>>::type;
   values_to_ostream<type>(values, ost);
 }
 
@@ -97,7 +98,7 @@ template <std::size_t I, typename... Tp, std::enable_if_t<(I < sizeof...(Tp) - 1
 inline static void print_values_1(gtsam::Values& values, std::ostream& ost = std::cout)
 {
   // typename std::tuple_element<I, std::tuple<Tp...> >::type T;
-  using Type = typename std::tuple_element<I, std::tuple<Tp...> >::type;
+  using Type = typename std::tuple_element<I, std::tuple<Tp...>>::type;
   values_to_ostream<Type>(values, ost);
   print_values_1<I + 1, Tp...>(values, ost);
 }
@@ -115,6 +116,45 @@ void values_to_file(gtsam::Values& values, const std::string& filename,
   ofs.open(filename.c_str(), _mode);
   print_values<Ts...>(values, ofs);
   ofs.close();
+}
+
+template <typename ValueType>
+void values_to_file(gtsam::Values& values, const std::string regex, const std::string filename,
+                    const std::string regex_key_to_number, const std::string sep = " ",
+                    const std::ios_base::openmode _mode = std::ofstream::trunc)
+{
+  using ::prx::utilities::convert_to;
+  using StrValuePair = std::pair<std::size_t, ValueType>;
+  std::ofstream ofs(filename.c_str(), _mode);
+  std::regex key_regex(regex);
+  std::regex key_to_number_regex(regex_key_to_number);
+  std::smatch base_match;
+  std::vector<StrValuePair> list;
+  for (auto key_value : values)
+  {
+    const prx::prx_symbol_t key{ key_value.key };
+    const std::string key_str{ prx::symbol_factory_t::formatter(key) };
+    if (std::regex_match(key_str, base_match, key_regex))
+    {
+      const ValueType value{ values.at<ValueType>(key) };  // Must be a better way of doing this.
+      std::stringstream result;
+      std::regex_replace(std::ostream_iterator<char>(result), key_str.begin(), key_str.end(), key_to_number_regex, "");
+
+      list.push_back(std::make_pair(convert_to<std::size_t>(result.str()), value));
+    }
+  }
+  std::sort(list.begin(), list.end(), [](StrValuePair& a, StrValuePair& b) { return a.first < b.first; });
+  for (auto pair : list)
+  {
+    const std::size_t key_str{ pair.first };
+    const ValueType value{ pair.second };
+    ofs << key_str << sep;
+    for (auto e : value)
+    {
+      ofs << e << sep;
+    }
+    ofs << "\n";
+  }
 }
 
 }  // namespace utilities

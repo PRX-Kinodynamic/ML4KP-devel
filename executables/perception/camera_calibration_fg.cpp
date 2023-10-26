@@ -233,7 +233,7 @@ int main(int argc, char** argv)
   while (reader.has_next_line())
   {
     // auto line = reader.next_line();
-    auto line = reader.next_line("/camera_logitech/pracsys/markers", 0);
+    auto line = reader.next_line<std::string>("/camera_logitech/pracsys/markers", 0);
     // PRX_DEBUG_ITERABLE(line);
     if (line.size() == 0 || std::stoi(line[7]) == 0)
       continue;

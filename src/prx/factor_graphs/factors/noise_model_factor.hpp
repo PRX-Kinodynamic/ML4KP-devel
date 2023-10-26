@@ -590,7 +590,7 @@ private:
 // Noise Model factor for 1 (Known value) + 2 (variables)
 // If the error is known (i.e Zeros), no need to have it as a FG variable. The first template is the dim of the error
 // Error = Xerr - f(X0, X1)
-template <Eigen::Index Dim_Err, Eigen::Index Dim_X0, Eigen::Index Dim_X1, Eigen::Index Dim_X2, Evals Evaluations = 4>
+template <Eigen::Index Dim_Err, Eigen::Index Dim_X0, Eigen::Index Dim_X1, Evals Evaluations = 4>
 class noise_model_1p2_factor_t
   : public gtsam::NoiseModelFactor2<Eigen::Vector<double, Dim_X0>, Eigen::Vector<double, Dim_X1>>
 {

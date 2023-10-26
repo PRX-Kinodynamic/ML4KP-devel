@@ -11,19 +11,21 @@ namespace utilities
 class csv_reader_t
 {
 public:
-  using Line = std::vector<std::string>;
-  using Block = std::vector<std::vector<std::string>>;
-
+  template <typename T>
+  using Line = std::vector<T>;
+  template <typename T>
+  using Block = Line<Line<T>>;  // A block is a 'line' of lines
   // member typedefs provided through inheriting from std::iterator
+  template <typename T = std::string>
   class iterator
   {
     using iterator_category = std::output_iterator_tag;
-    using value_type = Line;  // crap
-    using difference_type = Line;
-    using pointer = const Line*;
-    using reference = Line;
+    using value_type = Line<T>;  // crap
+    using difference_type = Line<T>;
+    using pointer = const Line<T>*;
+    using reference = Line<T>;
     csv_reader_t* _ptr;
-    Line _line;
+    Line<T> _line;
 
   public:
     explicit iterator(csv_reader_t* ptr) : _ptr(ptr), _line()
@@ -31,7 +33,7 @@ public:
       if (_ptr != nullptr)
       {
         if (_ptr->has_next_line())
-          _line = _ptr->next_line();
+          _line = _ptr->next_line<T>();
       }
     }
 
@@ -39,12 +41,12 @@ public:
     {
       if (_ptr != nullptr && _ptr->has_next_line())
       {
-        _line = _ptr->next_line();
+        _line = _ptr->next_line<T>();
       }
       else
       {
         _ptr = nullptr;
-        _line = Line();
+        _line = Line<T>();
       }
       return *this;
     }
@@ -67,11 +69,14 @@ public:
       return _line;
     }
   };
-  iterator begin()
+  template <typename T = std::string>
+  iterator<T> begin()
   {
     return iterator(this);
   }
-  iterator end()
+
+  template <typename T = std::string>
+  iterator<T> end()
   {
     return iterator(nullptr);
   }
@@ -95,34 +100,35 @@ public:
     return file.is_open();
   }
 
-  Line next_line()
-  {
-    std::string line;
-    std::getline(file, line);
-    return prx::split<std::string>(line, _sep);
-  }
-
-  template <typename T>
-  std::vector<T> next_line()
+  template <typename T = std::string>
+  Line<T> next_line()
   {
     std::string line;
     std::getline(file, line);
     return prx::split<T>(line, _sep);
   }
 
-  template <typename Function>
-  Line next_line(Function f)
+  // template <typename T>
+  // <T>  next_line()
+  // {
+  //   std::string line;
+  //   std::getline(file, line);
+  //   return prx::split<T>(line, _sep);
+  // }
+
+  template <typename T = std::string, typename Function>
+  Line<T> next_line(Function f)
   {
-    Line line;
+    Line<T> line;
     do
     {
-      line = next_line();
+      line = next_line<T>();
       if (f(line))
       {
         return line;
       }
     } while (has_next_line());
-    return Line();
+    return Line<T>();
   }
 
   /**
@@ -133,19 +139,21 @@ public:
    *
    * @return     Line that satisfies "line[idx] == value"
    */
-  Line next_line(const std::string& value, const std::size_t idx)
+  template <typename T>
+  Line<T> next_line(const T& value, const std::size_t idx)
   {
-    return next_line([&](const Line& line) { return line.size() > idx && line[idx] == value; });
+    return next_line<T>([&](const Line<T>& line) { return line.size() > idx && line[idx] == value; });
   }
 
-  Block next_block()
+  template <typename T = std::string>
+  Block<T> next_block()
   {
-    Line line;
-    Block block;
+    Line<T> line;
+    Block<T> block;
 
     while (has_next_line())
     {
-      line = next_line();
+      line = next_line<T>();
       if (line.size() == 0)
         break;
       block.emplace_back(line);
@@ -154,19 +162,19 @@ public:
   }
 
   template <typename T>
-  std::vector<T> read_column(const std::size_t idx)
+  Line<T> read_column(const std::size_t idx)
   {
     std::vector<std::size_t> col = { idx };
     return read_columns<T>(col)[0];
   }
 
   template <typename T, typename Container>
-  std::vector<std::vector<T>> read_columns(const Container container)
+  Block<T> read_columns(const Container container)
   {
-    std::vector<std::vector<T>> columns(container.size());
+    Block<T> columns(container.size());
     while (has_next_line())
     {
-      auto line = next_line();
+      auto line = next_line<T>();
       for (int i = 0; i < container.size(); ++i)
       {
         const std::size_t idx{ container[i] };

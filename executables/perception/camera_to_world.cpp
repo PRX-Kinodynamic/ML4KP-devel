@@ -9,6 +9,7 @@
 #include "prx/external/aruco_nano.h"
 #include "prx/utilities/general/logger.hpp"
 #include "prx/utilities/general/csv_reader.hpp"
+#include "prx/utilities/general/type_convertions.hpp"
 
 #include "prx/factor_graphs/defs.hpp"
 #include "prx/factor_graphs/utilities/perception/camera.hpp"
@@ -21,6 +22,7 @@
 #include "prx/factor_graphs/utilities/constants.hpp"
 #include "prx/factor_graphs/utilities/fg_logger.hpp"
 #include "prx/factor_graphs/utilities/formatter.hpp"
+#include "prx/factor_graphs/utilities/fg_to_csv.hpp"
 
 #include <opencv2/aruco.hpp>
 #include <opencv2/calib3d.hpp>
@@ -52,6 +54,8 @@ using corner_angle_factor = typename prx::fg::angle_between_3_3d_points_factor_t
 using corner_offset_factor = typename prx::fg::point_offset_in_local_frame_factor_t;
 using rotation_vec_mat_factor = typename prx::fg::rotation_vector_matrix_factor_t;
 using global_offset_factor = typename prx::fg::point_offset_in_global_frame_factor_t;
+using camera_phi_factor = typename prx::fg::camera_phi_factor_t;
+using csv_reader_t = prx::utilities::csv_reader_t;
 
 using Pixel = Eigen::Vector2d;
 
@@ -70,18 +74,64 @@ auto sy_p_center = [](std::size_t cam_id, std::size_t mid) {
   return sf::create_hashed_symbol("C", cam_id, "PIXEL_AR", mid);
 };
 
+auto sy_marker_pixel = [](std::size_t cam_id, std::size_t mid) {
+  return sf::create_hashed_symbol("M^{", cam_id, "}_{", mid, "}");
+};
+auto sy_marker_position = [](std::size_t mid) { return sf::create_hashed_symbol("M^{POS}_{", mid, "}"); };
+auto dyn_marker_position = [](std::size_t mid, std::size_t t) {
+  return sf::create_hashed_symbol("M^{", t, "}_{", mid, "}");
+};
+
 auto sy_p_corner = [](std::size_t cam_id, std::size_t mid, std::size_t corner_id) {
   return sf::create_hashed_symbol("C", cam_id, "PIXEL_AR", mid, "CORNER", corner_id);
 };
+auto sy_projection = [](std::size_t cam_id) { return sf::create_hashed_symbol("C^{PROJECTION}_", cam_id); };
 // Create symbol of marker's center from markers id
 // auto sy_w_center = [](std::size_t mid) { return sf::create_hashed_symbol("W_AR_P", mid); };
 auto sy_rot_vec = [](std::size_t cam_id) { return sf::create_hashed_symbol("R", cam_id); };
 auto sy_tra_vec = [](std::size_t cam_id) { return sf::create_hashed_symbol("t", cam_id); };
+auto sy_scale = [](std::size_t cam_id) { return sf::create_hashed_symbol("s_", cam_id); };
 
+std::vector<std::string> get_filenames(const std::string path)
+{
+  std::vector<std::string> files;
+  if (std::filesystem::is_directory(path))
+  {
+    for (auto const& dir_entry : std::filesystem::directory_iterator{ path })
+    {
+      files.push_back(dir_entry.path());
+    }
+  }
+
+  return files;
+}
+
+template <typename ValueType, typename Ids, typename SymbolFunction, typename SymbolPositions>
+void update_symbol_positions(const Ids& ids, const SymbolFunction& symbol_function, SymbolPositions& symbol_positions,
+                             gtsam::Values& values)
+{
+  for (auto m : ids)
+  {
+    const prx::prx_symbol_t symbol{ symbol_function(m) };
+    symbol_positions[symbol] = values.at<ValueType>(symbol).head(2);
+  }
+}
 int main(int argc, char** argv)
 {
-  auto params = prx::param_loader("executables/perception/camera_to_world.yaml", argc, argv);
-  std::vector<std::string> images_paths = params["images"].as<std::vector<std::string>>();
+  prx::param_loader params{ "executables/perception/camera_to_world.yaml", argc, argv };
+  const bool use_image_dir{ params["use_image_dir"].as<bool>() };
+  std::vector<std::string> images_paths;
+  if (use_image_dir)
+  {
+    const std::string image_dir{ params["image_dir"].as<std::string>() };
+    images_paths = get_filenames(image_dir);
+  }
+  else
+  {
+    images_paths = params["images"].as<std::vector<std::string>>();
+  }
+  std::string markers_file{ params["markers_file"].as<std::string>() };
+  std::unordered_map<prx::prx_symbol_t, Pixel> symbol_positions;
 
   Eigen::Matrix3d camera_matrix;
   Eigen::Vector<double, 5> distortion_coeff;
@@ -119,42 +169,36 @@ int main(int argc, char** argv)
   noise_models["rotation_vec"] = gtsam::noiseModel::Isotropic::Sigma(9, 1e-1);
   noise_models["proj_trans"] = gtsam::noiseModel::Isotropic::Sigma(3, 1e0);
   noise_models["proj_rotvec"] = gtsam::noiseModel::Isotropic::Sigma(9, 1e0);
+  noise_models["markers_prior"] = gtsam::noiseModel::Isotropic::Sigma(3, 1e-2);
+  noise_models["camera_phi"] = gtsam::noiseModel::Isotropic::Sigma(3, 1e0);
+  noise_models["scale"] = gtsam::noiseModel::Isotropic::Sigma(1, 1e-5);
 
   std::size_t cam_id{ 0 };
   std::unordered_set<std::size_t> marker_world_ids{};
 
-  // const Eigen::Vector<double, 9> rot_vec_init{ 1, 0, 0, 0, 1, 0, 0, 0, 1 };
-  // const Eigen::Vector<double, 3> translation_init{ Eigen::Vector<double, 3>::Ones() };
+  std::vector<std::vector<aruconano::Marker>> markers_set;
   // Iterate over images
   for (const auto& img_str : images_paths)
   {
     cv::Mat img{ cv::imread(img_str, cv::IMREAD_COLOR) };
-    // Eigen::Matrix3d A_init{ Eigen::Matrix3d::Zero() };
-    // A_init << 1000, 10, img.cols / 2.0,  // no-lint
-    // 0, 1000, img.rows / 2.0,         // no-lint
-    // 0, 0, 1;
-    // Eigen::Matrix<double, 3, 4> Rt_init{ Eigen::Matrix<double, 3, 4>::Zero() };
-    // Rt_init.block<3, 3>(0, 0) = rot_vec_init.reshaped(3, 3);
-    // Rt_init.block<3, 1>(0, 3) = translation_init;
-    // PRX_DEBUG_VAR_1(A_init * Rt_init);
-    // const projection_factor::Projection camera_projection_init{ (A_init * Rt_init).reshaped(12, 1) };
-    const projection_factor::Projection camera_projection_init{ projection_factor::Projection::Ones() };
+
     // uvs.emplace_back(img.rows / 2.0, img.cols / 2.0);
     prx_assert(!img.empty(), "Image cannot be read");
-    auto markers = aruconano::MarkerDetector::detect(img);
-
-    const prx_symbol_t key_ci_proj{ symbol_factory_t::create_hashed_symbol("C", cam_id, "PROJECTION") };
-    const prx_symbol_t key_ci_Rv{ sy_rot_vec(cam_id) };
-    const prx_symbol_t key_ci_t{ sy_tra_vec(cam_id) };
-
-    // Iterate over Markers
+    std::vector<aruconano::Marker> markers{ aruconano::MarkerDetector::detect(img) };
+    markers_set.push_back(markers);
     for (const auto& m : markers)
     {
-      // if (m.id != 2 ||)
-      // if (m.id == 1 || m.id > 3)
-      if (m.id == 1)
-        continue;
       m.draw(img);
+    }
+    cv::imwrite(prx::out_path + "perception/" + fs::path(img_str).filename().string(), img);
+  }
+  // Iterate over Markers
+  for (const auto& markers : markers_set)
+  {
+    for (const auto& m : markers)
+    {
+      if (m.id == 0)
+        continue;
       std::size_t corner_id{ 0 };
       Eigen::Vector2d center{ Eigen::Vector2d::Zero() };
 
@@ -166,224 +210,147 @@ int main(int argc, char** argv)
       for (auto pt : m)
       {
         const Eigen::Vector2d pixels_corner{ pt.x, pt.y };
-        const Eigen::Vector3d rand_vec{ corners[corner_id] };
+        const Eigen::Vector3d corner_vec{ corners[corner_id] };
 
         const prx_symbol_t w_ar_p_i_corner_j{ sy_w_corner(m.id, corner_id) };
-        const prx_symbol_t ci_pixel_ar_j_corner_k{ sy_p_corner(cam_id, m.id, corner_id) };
         corner_id++;
-        const prx_symbol_t w_ar_p_i_corner_jp1{ sy_w_corner(m.id, (corner_id % 4)) };
-        const prx_symbol_t ci_pixel_ar_j_corner_kp1{ sy_p_corner(cam_id, m.id, (corner_id % 4)) };
+        // const prx_symbol_t w_ar_p_i_corner_jp1{ sy_w_corner(m.id, (corner_id % 4)) };
 
         center += pixels_corner;
-
-        graph.add(corner_offset_factor(corners[corner_id], key_ci_Rv, key_ci_t, w_ar_p_i_corner_j,
-                                       noise_models["corner_offset"]));
-
-        // graph.add(distance_3d_factor(marker_length, w_ar_p_i_corner_j, w_ar_p_i_corner_jp1,
-        //                              noise_models["in_markers_distance"]));
-        // graph.add(
-        // distance_3d_factor(marker_to_center, w_ar_p_i_corner_j, w_ar_p_i, noise_models["in_markers_distance"]));
-
-        graph.addPrior(ci_pixel_ar_j_corner_k, pixels_corner, noise_models["pixel_value"]);
-        graph.add(
-            projection_factor(ci_pixel_ar_j_corner_k, w_ar_p_i_corner_j, key_ci_proj, noise_models["projection"]));
-
-        values.insert(ci_pixel_ar_j_corner_k, pixels_corner);
-        values.insert_or_assign(w_ar_p_i_corner_j, rand_vec);
       }
-      // graph.add(distance_3d_factor(2 * marker_to_center, sy_w_corner(m.id, 0), sy_w_corner(m.id, 2),
-      //                              noise_models["corners_dist"]));
-      // graph.add(distance_3d_factor(2 * marker_to_center, sy_w_corner(m.id, 1), sy_w_corner(m.id, 3),
-      //                              noise_models["corners_dist"]));
-      graph.add(coplanar_factor(sy_w_corner(m.id, 0), sy_w_corner(m.id, 1), sy_w_corner(m.id, 2), sy_w_corner(m.id, 3),
-                                noise_models["coplanar_corners"]));
-      // graph.add(coplanar_factor(sy_w_center(m.id), sy_w_corner(m.id, 1), sy_w_corner(m.id, 2), sy_w_corner(m.id, 3),
-      //                           noise_models["coplanar_corners"]));
-      graph.add(corner_angle_factor(PRX_PI / 2.0, sy_w_corner(m.id, 0), sy_w_corner(m.id, 1), sy_w_corner(m.id, 3),
-                                    noise_models["coplanar_corners"]));
-      graph.add(corner_angle_factor(PRX_PI / 2.0, sy_w_corner(m.id, 1), sy_w_corner(m.id, 2), sy_w_corner(m.id, 0),
-                                    noise_models["coplanar_corners"]));
-      graph.add(corner_angle_factor(PRX_PI / 2.0, sy_w_corner(m.id, 2), sy_w_corner(m.id, 3), sy_w_corner(m.id, 1),
-                                    noise_models["coplanar_corners"]));
-      graph.add(corner_angle_factor(PRX_PI / 2.0, sy_w_corner(m.id, 3), sy_w_corner(m.id, 0), sy_w_corner(m.id, 2),
-                                    noise_models["coplanar_corners"]));
-
       center = center / 4.0;
-      // graph.addPrior(ci_pixel_ar_j, center, noise_models["pixel_value"]);
-      // graph.add(partial_positive_3d_vec(Eigen::Vector3d{ 0, 0, 1 }, w_ar_p_i, noise_models["positive_vec"]));
-      // graph.add(projection_factor(ci_pixel_ar_j, sy_w_corner(m.id, 0), key_ci_proj, noise_models["projection"]));
-      // graph.add(aruco_projection_factor(ci_pixel_ar_j, sy_w_corner(m.id, 0), sy_w_corner(m.id, 1), sy_w_corner(m.id,
-      // 2),
-      //                                   sy_w_corner(m.id, 3), key_ci_proj, noise_models["projection"]));
-
-      // values.insert(ci_pixel_ar_j, center);
+      graph.add(projection_factor(sy_marker_position(m.id), sy_projection(cam_id), center, noise_models["projection"]));
+      // values.insert_or_assign(w_ar_p_i_corner_j, corner_vec);
     }
-    values.insert(key_ci_proj, camera_projection_init);
-    // values.insert(key_ci_Rv, rot_vec_init);
-    // values.insert(key_ci_t, translation_init);
-
-    // graph.add(prx::fg::projection_to_rotation_factor_t(key_ci_Rv, key_ci_proj, noise_models["proj_rotvec"]));
-    // graph.add(prx::fg::projection_to_translation_factor_t(key_ci_t, key_ci_proj, noise_models["proj_trans"]));
-    // graph.add(rotation_vec_mat_factor(key_ci_Rv, noise_models["rotation_vec"]));
-    graph.add(prx::fg::positive_vector_factor_t<12>(key_ci_proj, noise_models["pos_projection"]));
-    graph.add(prx::fg::normalize_factor_t<12>(key_ci_proj, noise_models["norm_projection"]));
-
-    cv::imwrite(prx::out_path + "perception/" + fs::path(img_str).filename().string(), img);
   }
-  cam_id++;
-  // graph.add(coplanar_factor(sy_w_center(2), sy_w_center(3), sy_w_center(4), sy_w_center(5),
-  //                           noise_models["coplanar_markers"]));
 
-  for (int i = 0; i < 4; ++i)
+  std::unordered_set<std::size_t> markers_ids{};
+  csv_reader_t reader(markers_file, ' ');
+  gtsam::Values values_markers;
+  gtsam::NonlinearFactorGraph graph_markers;
+  for (auto line : reader)
   {
-    // graph.add(distance_3d_factor(1.220, sy_w_corner(2, i), sy_w_corner(3, i), noise_models["in_markers_distance"]));
-    // graph.add(distance_3d_factor(2.550, sy_w_corner(5, i), sy_w_corner(3, i), noise_models["in_markers_distance"]));
-    // graph.add(distance_3d_factor(1.240, sy_w_corner(5, i), sy_w_corner(4, i), noise_models["in_markers_distance"]));
-    // graph.add(distance_3d_factor(2.500, sy_w_corner(2, i), sy_w_corner(4, i), noise_models["in_markers_distance"]));
-    // graph.add(distance_3d_factor(2.650, sy_w_corner(2, i), sy_w_corner(5, i), noise_models["in_markers_distance"]));
-    // graph.add(distance_3d_factor(2.610, sy_w_corner(3, i), sy_w_corner(4, i), noise_models["in_markers_distance"]));
-    const Eigen::Vector3d offset_zero{ Eigen::Vector3d::Zero() };
-    const Eigen::Vector3d offset_x{ Eigen::Vector3d{ 2.5, 0, 0 } };
-    const Eigen::Vector3d offset_y{ Eigen::Vector3d{ 0, 1.220, 0 } };
-    const Eigen::Vector3d offset_xy{ offset_x + offset_y };
-    const Eigen::Vector3d init_val_m2{ corners[i] };
-    const Eigen::Vector3d init_val_m3{ corners[i] + offset_y };
-    const Eigen::Vector3d init_val_m4{ corners[i] + offset_x };
-    const Eigen::Vector3d init_val_m5{ corners[i] + offset_xy };
-    graph.add(global_offset_factor(offset_y, sy_w_corner(2, i), sy_w_corner(3, i), noise_models["markers_offset"]));
-    graph.add(global_offset_factor(offset_x, sy_w_corner(5, i), sy_w_corner(3, i), noise_models["markers_offset"]));
-    graph.add(global_offset_factor(offset_y, sy_w_corner(5, i), sy_w_corner(4, i), noise_models["markers_offset"]));
-    graph.add(global_offset_factor(offset_x, sy_w_corner(2, i), sy_w_corner(4, i), noise_models["markers_offset"]));
-    graph.add(global_offset_factor(offset_xy, sy_w_corner(2, i), sy_w_corner(5, i), noise_models["markers_offset"]));
-    graph.add(global_offset_factor(offset_xy, sy_w_corner(3, i), sy_w_corner(4, i), noise_models["markers_offset"]));
-
-    values.insert_or_assign(sy_w_corner(2, i), init_val_m2);
-    values.insert_or_assign(sy_w_corner(3, i), init_val_m3);
-    values.insert_or_assign(sy_w_corner(4, i), init_val_m4);
-    values.insert_or_assign(sy_w_corner(5, i), init_val_m5);
+    const std::size_t marker_id{ prx::utilities::convert_to<std::size_t>(line[0]) };
+    const std::size_t x_val{ prx::utilities::convert_to<std::size_t>(line[1]) };
+    const std::size_t y_val{ prx::utilities::convert_to<std::size_t>(line[2]) };
+    const std::size_t z_val{ prx::utilities::convert_to<std::size_t>(line[3]) };
+    graph_markers.addPrior(sy_marker_position(marker_id), Eigen::Vector3d(x_val, y_val, z_val),
+                           noise_models["markers_prior"]);
+    values_markers.insert(sy_marker_position(marker_id), Eigen::Vector3d(x_val, y_val, z_val));
+    symbol_positions[sy_marker_position(marker_id)] = Eigen::Vector2d(x_val, y_val);
+    markers_ids.insert(marker_id);
   }
-  // for (auto mid : marker_world_ids)
-  // {
-  //   const prx_symbol_t w_ar_p_i{ sy_w_center(mid) };
-  //   const Eigen::Vector3d rand_vec{ Zero_3 + Eigen::Vector3d(uniform_random(), uniform_random(), 0) };
-  //   values.insert(w_ar_p_i, rand_vec);
-  // }
-  // graph.addPrior(sf::create_hashed_symbol("W_AR_P", 2), Zero_3, noise_models["zero_frame"]);
-  // values.insert_or_assign(sf::create_hashed_symbol("W_AR_P", 2), Zero_3);
-  // Eigen::Vector3d init_3 = Zero_3 + Eigen::Vector3d(0, 1, 0);
-  // values.insert_or_assign(sf::create_hashed_symbol("W_AR_P", 3), init_3);
+
+  values.insert(values_markers);
+  graph.add(graph_markers);
+
+  const projection_factor::Projection camera_projection_init{ projection_factor::Projection::Ones() };
+  values.insert(sy_projection(cam_id), camera_projection_init);
+  graph.add(prx::fg::positive_vector_factor_t<12>(sy_projection(cam_id), noise_models["pos_projection"]));
+  graph.add(prx::fg::camera_projection_norm_factor_t(sy_projection(cam_id), noise_models["norm_projection"]));
+  // graph.add(prx::fg::normalize_factor_t<12>(sy_projection(cam_id), noise_models["norm_projection"]));
+  cam_id++;
+
+  std::function<std::tuple<bool, Pixel>(const gtsam::Values&, const gtsam::Key&)> variables_positions =
+      [&](const gtsam::Values& values, const gtsam::Key& key)  // no-lint
+  {
+    bool bool_res{ false };
+    Pixel pos_res{ Pixel::Zero() };
+    if (symbol_positions.count(key) > 0)
+    {
+      bool_res = true;
+      pos_res = symbol_positions[key];
+    }
+
+    return std::make_tuple(bool_res, pos_res);
+  };
 
   logger_t fg_log(prx::out_path + "ctw.log");
   gtsam::LevenbergMarquardtParams lm_params{ fg::utilities::default_levenberg_marquardt_parameters() };
   lm_params.setUseFixedLambdaFactor(true);
   // lm_params.setUseFixedLambdaFactor(false);
-  lm_params.setMaxIterations(1000000);
+  // lm_params.setMaxIterations(1000000);
+  lm_params.setMaxIterations(1000);
   lm_params.setRelativeErrorTol(1e-10);
   lm_params.setAbsoluteErrorTol(1e-10);
   lm_params.setlambdaUpperBound(1e64);
   // lm_params.setVerbosityLM("TERMINATION");
 
+  prx::fg::fg_to_csv<2>(graph, values, prx::out_path + "/mj_ctw_in.txt", variables_positions);
+
   symbol_factory_t::symbols_to_file();
   gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
   auto results = fg::utilities::optimize_and_log(optimizer, lm_params, fg_log, 0);
-  graph.printErrors(results, "graph", prx::symbol_factory_t::formatter);
-  results.print("ctw", prx::symbol_factory_t::formatter);
 
-  logger_t results_logger(out_path + "camera_to_world_results.txt");
-  // for (int i = 0; i < marker_world_locations.size(); ++i)
-  for (auto mid : marker_world_ids)
+  update_symbol_positions<Eigen::Vector3d>(markers_ids, sy_marker_position, symbol_positions, results);
+  prx::fg::fg_to_csv<2>(graph, results, prx::out_path + "/mj_ctw_out_1.txt", variables_positions);
+  // graph.printErrors(results, "graph", prx::symbol_factory_t::formatter);
+  // results.print("ctw", prx::symbol_factory_t::formatter);
+
+  gtsam::NonlinearFactorGraph graph_2;
+  gtsam::Values values_2;
+  cam_id = 0;
+
+  projection_factor::Projection P0_vec{ results.at<projection_factor::Projection>(sy_projection(cam_id)) };
+  PRX_DEBUG_VAR_1(P0_vec);
+  std::size_t t_marker{ 0 };
+  logger_t logger(prx::out_path + "/ctw_traj.txt", ' ');
+  // values_2.insert(sy_projection(cam_id), results.at<projection_factor::Projection>(sy_projection(cam_id)));
+
+  for (const auto& markers : markers_set)
   {
-    // sy_p_center
-    // sy_p_corner
-    for (int cid = 0; cid < cam_id; ++cid)
+    for (const auto& m : markers)
     {
-      const prx_symbol_t sy_p{ sy_p_center(cid, mid) };
-      const auto res_pixel{ results.at<Pixel>(sy_p) };
-      results_logger("Pi", sf::formatter(sy_p), res_pixel.transpose(), mid);
-    }
-    Eigen::Vector3d w_center{ Eigen::Vector3d::Zero() };
-    for (int j = 0; j < 4; ++j)
-    {
-      const prx_symbol_t sy_w_c{ sy_w_corner(mid, j) };
-      const auto res_w_c{ results.at<Eigen::Vector3d>(sy_w_c) };
-      w_center += res_w_c;
-      results_logger("Wci", sf::formatter(sy_w_c), res_w_c.transpose(), j);
-      for (int cid = 0; cid < cam_id; ++cid)
+      Eigen::Vector2d center{ Eigen::Vector2d::Zero() };
+
+      for (auto pt : m)
       {
-        const prx_symbol_t sy_p_c{ sy_p_corner(cid, mid, j) };
-        const auto res_p_c{ results.at<Pixel>(sy_p_c) };
-        results_logger("Pci", sf::formatter(sy_p_c), res_p_c.transpose(), j);
+        const Eigen::Vector2d pixel{ pt.x, pt.y };
+        center += pixel;
       }
-    }
-    w_center = w_center / 4.0;
-    results_logger("Wi", mid, w_center.transpose());
-    for (auto nid : marker_world_ids)
-    {
-      if (mid != nid)
+      center = center / 4.0;
+      logger("UV", m.id, center.transpose());
+      if (m.id == 0)
       {
-        Eigen::Vector3d w_center_j{ Eigen::Vector3d::Zero() };
-        for (int j = 0; j < 4; ++j)
-        {
-          const prx_symbol_t sy_w_c{ sy_w_corner(nid, j) };
-          const auto res_w_c{ results.at<Eigen::Vector3d>(sy_w_c) };
-          w_center_j += res_w_c;
-        }
-        w_center_j = w_center_j / 4;
-        results_logger("distance", w_center.transpose(), w_center_j.transpose(), (w_center - w_center_j).norm());
+        graph_2.add(camera_phi_factor(dyn_marker_position(m.id, t_marker), sy_projection(cam_id), sy_scale(cam_id),
+                                      center, noise_models["camera_phi"]));
+
+        const Eigen::Vector3d init_pos{ Eigen::Vector3d::Zero() };
+        results.insert(dyn_marker_position(m.id, t_marker), init_pos);
+        t_marker++;
+      }
+      else
+      {
+        graph_2.add(camera_phi_factor(sy_marker_position(m.id), sy_projection(cam_id), sy_scale(cam_id), center,
+                                      noise_models["camera_phi"]));
       }
     }
   }
+  results.insert(sy_scale(cam_id), Eigen::Vector<double, 1>(1.0));
+  graph_2.add(graph_markers);
+  graph_2.add(prx::fg::positive_vector_factor_t<1>(sy_scale(cam_id), noise_models["scale"]));
+  graph_2.addPrior(sy_scale(cam_id), Eigen::Vector<double, 1>(1.0), noise_models["scale"]);
+  graph_2.add(prx::fg::positive_vector_factor_t<12>(sy_projection(cam_id), noise_models["pos_projection"]));
+  symbol_factory_t::symbols_to_file();
+  gtsam::LevenbergMarquardtOptimizer optimizer_2(graph_2, results, lm_params);
+  auto results_2 = fg::utilities::optimize_and_log(optimizer_2, lm_params, fg_log, 0);
+  graph_2.printErrors(results_2, "graph", prx::symbol_factory_t::formatter);
+  // results_2.print("ctw", prx::symbol_factory_t::formatter);
 
-  for (int i = 0; i < cam_id; ++i)
+  update_symbol_positions<Eigen::Vector3d>(markers_ids, sy_marker_position, symbol_positions, results_2);
+
+  prx::fg::fg_to_csv<2>(graph_2, results_2, prx::out_path + "/mj_ctw_out_2.txt", variables_positions);
+
+  for (std::size_t i = 0; i < t_marker; ++i)
   {
-    const prx_symbol_t key_ci_proj{ symbol_factory_t::create_hashed_symbol("C", i, "PROJECTION") };
-    const projection_factor::Projection res_ci_proj{ results.at<projection_factor::Projection>(key_ci_proj) };
-    const Eigen::Matrix<double, 3, 4> P{ res_ci_proj.reshaped(3, 4) };
-    const Eigen::Matrix3d B{ P.block<3, 3>(0, 0) };
-    const Eigen::Vector3d b{ P.block<3, 1>(0, 3) };
-    Eigen::Matrix3d K{ B * B.transpose() };
-    K = K / K(2, 2);
-    const double u0{ K(0, 2) };
-    const double v0{ K(1, 2) };
-    const double ku{ K(0, 0) };
-    const double kc{ K(0, 1) };
-    const double kv{ K(1, 1) };
-
-    const double beta{ std::sqrt(ku - v0 * v0) };
-    const double gamma{ (kc - u0 * v0) / beta };
-    const double alpha{ std::sqrt(ku - u0 * u0 - gamma * gamma) };
-    Eigen::Matrix3d A{ Eigen::Matrix3d::Zero() };
-    A << alpha, gamma, u0,  // no-lint
-        0, beta, v0,        // no-lint
-        0, 0, 1;
-    Eigen::Matrix3d AAt{ A * A.transpose() };
-    const Eigen::Matrix3d R{ A.inverse() * B };
-    const Eigen::Vector3d t{ A.inverse() * b };
-    PRX_DEBUG_VAR_1(P);
-    PRX_DEBUG_VAR_1(K);
-    PRX_DEBUG_VAR_1(A);
-    PRX_DEBUG_VAR_1(AAt);
-    PRX_DEBUG_VAR_1(R);
-    PRX_DEBUG_VAR_1(R * R.transpose());
-    PRX_DEBUG_VAR_1(t);
-    // results_logger("distance", res_w_ar_i.transpose(), res_w_ar_j.transpose(), (res_w_ar_i - res_w_ar_j).norm());
+    camera_phi_factor::Position position{ results_2.at<camera_phi_factor::Position>(dyn_marker_position(0, i)) };
+    logger("R", i, position.transpose());
   }
-
-  std::function<std::tuple<bool, Eigen::Vector<double, 2>>(const gtsam::Values&, const gtsam::Key&)>
-      variables_positions = [&](const gtsam::Values& values, const gtsam::Key& key)  // no-lint
+  for (std::size_t idx : { 62, 50, 51, 54, 64, 55 })
   {
-    bool bool_res{ false };
-    Eigen::Vector<double, 2> pos_res{ Eigen::Vector<double, 2>::Zero() };
-    if (marker_world_ids.count(key) > 0)
-    {
-      const auto res_w_ar_i{ results.at<Eigen::Vector3d>(key) };
-      bool_res = true;
-      pos_res = 1000 * res_w_ar_i.head(2);
-    }
-
-    return std::make_tuple(bool_res, pos_res);
-  };
-  prx::fg::create_gml_file(graph, results, prx::out_path + "perception/ctw.gml", variables_positions);
+    camera_phi_factor::Position position{ results_2.at<camera_phi_factor::Position>(sy_marker_position(idx)) };
+    logger("M", idx, position.transpose());
+  }
 
   return 0;
 }

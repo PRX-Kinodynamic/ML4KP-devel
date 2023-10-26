@@ -48,10 +48,11 @@ BOOST_AUTO_TEST_CASE(csv_reader_reads_all_blocks)
 
 BOOST_AUTO_TEST_CASE(csv_reader_reads_blocks_without_empty_line)
 {
+  using Block = csv_reader_t::Block<std::string>;
   csv_reader_t reader(test_file, ' ');
   while (reader.has_next_line())
   {
-    csv_reader_t::Block block = reader.next_block();
+    Block block{ reader.next_block() };
     for (auto line : block)
     {
       BOOST_CHECK(line.size() > 0);
@@ -66,18 +67,19 @@ BOOST_AUTO_TEST_CASE(csv_reader_reads_lines_with_value)
   while (reader.has_next_line())
   {
     total_lines++;
-    auto line = reader.next_line("block1", 0);
+    auto line = reader.next_line<std::string>("block1", 0);
   }
   BOOST_CHECK(total_lines == 3);
 }
 
 BOOST_AUTO_TEST_CASE(csv_reader_reads_lines_with_custom_function)
 {
+  using Line = csv_reader_t::Line<std::string>;
   csv_reader_t reader(test_file, ' ');
   std::size_t total_lines{ 0 };
   while (reader.has_next_line())
   {
-    auto line = reader.next_line([](const csv_reader_t::Line& line) { return line.size() > 2 && line[2] == "4"; });
+    Line line{ reader.next_line([](const Line& line) { return line.size() > 2 && line[2] == "4"; }) };
     if (line.size() > 0)
       total_lines++;
   }
