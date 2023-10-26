@@ -21,3 +21,6 @@ resources/input_files/mazes/*.yaml
 experiments/
 data/
 resources/roadmaps/
+results/*
+resources/input_files/roadmaps/*
+.gitignore

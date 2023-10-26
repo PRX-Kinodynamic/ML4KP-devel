@@ -51,7 +51,7 @@ private:
   system_ptr_t plant;
 
 protected:
-  bool delta_input, goal_uses_quat;
+  bool delta_input, goal_uses_quat, debug;
   double control_duration, max_duration;
   std::vector<int> state_indices, goal_indices;
 
@@ -64,6 +64,7 @@ public:
     int random_seed = params["random_seed"].as<int>();
     delta_input = params["delta_input"].as<bool>();
     goal_uses_quat = params["goal_uses_quat"].as<bool>();
+    debug = params["debug_controller"].as<bool>();
     control_duration = params["control_duration"].as<double>();
     max_duration = params["max_duration"].as<double>();
 
@@ -229,6 +230,10 @@ public:
 
     while (time_so_far < max_duration && !query.goal_check(current))
     {
+
+      if(debug){
+        std::cout<<"<DBG>: "<<get_state_space()->print_point(current)<<std::endl;
+      }
       state_vec.clear();
       step_traj.clear();
       step_plan.clear();

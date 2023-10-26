@@ -1,12 +1,20 @@
-random_seed: 210896
+planner: "RandomDIRT"
 
-xml_path: "mushr/mushr.xml"
-controller: "controllers/mushr_full_state_learned.yaml"
+random_seed: 21096
+simulation_step: 0.1
 
-env_xlims: [-9.0, 9.0]
-env_ylims: [-9.0, 9.0]
-env_xres: 19
-env_yres: 19
+environment: "environments/empty.yaml"
+plant: !file "plants/car_like.yaml"
+controller: "controllers/car_like_learned.yaml"
+max_speed: 0.5
+
+blossom: 5
+pruning: false
+
+visualize: true
+
+checker_type: time
+checker_value: 1
 
 roadmap_dir: "mushr_test/"
 
