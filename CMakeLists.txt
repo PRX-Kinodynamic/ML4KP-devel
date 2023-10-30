@@ -117,7 +117,7 @@ configure_package_config_file(cmake/ML4KPConfig.cmake.in
   PATH_VARS INCLUDE_INSTALL_DIR LIB_INSTALL_DIR)
 
 write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/ClimbingStats/ClimbingStatsConfigVersion.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/ML4KPConfigVersion.cmake"
   VERSION ${${PROJECT_NAME}_VERSION}
   COMPATIBILITY AnyNewerVersion
 )
