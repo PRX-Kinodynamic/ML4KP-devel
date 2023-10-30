@@ -1,13 +1,30 @@
-# model_file: "tensegrity/tensegrity_cubes_only.xml"
-model_file: "RoGuE/mushr_indoors.xml"
-# model_file: "tensegrity/tensegrity_cube_fixed.xml"
-# model_file: "tensegrity/cube_tensor_cube.xml"
-# plan_filename: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/solution_plan.txt"
-# plan_filename: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/Roadmap.txt"
-# video_name: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/roadmap.mp4"
-# plan_filename: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/RLG.txt"
-# video_name: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/RLG.mp4"
-plan_filename: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/Random.txt"
-video_name: "${DIRTMP_PATH}/resources/models/mujoco/RoGuE/random.mp4"
+
 visualize: false
 record_video: true
+cam_distance: 5.0
+cam_elevation: -30
+cam_azimuth: 90
+
+model_file: "mushr/mushr_maze.xml"
+plan_filename: "/home/aravind/repos/ML4KP-devel/out/mushr_maze/rogue.txt"
+video_name: "/home/aravind/repos/ML4KP-devel/out/mushr_maze/rogue.mp4"
+start_config: [-3.0, -3.0, 0.0, 0.0, 0.0, 0.0]
+goal_config: [2.0, 2.0, 0.0, 0.0, 0.0, 0.0]
+
+# model_file: "mushr/mushr_elevation.xml"
+# plan_filename: "/home/aravind/repos/ML4KP-devel/out/mushr_elevation/rlg.txt"
+# video_name: "/home/aravind/repos/ML4KP-devel/out/mushr_elevation/rlg.mp4"
+# start_config: [-5.0, 3.0, 0.0, 0.0, 0.0, 0.0]
+# goal_config: [4.0, -1.0, 0.0, 0.0, 0.0, 0.0]
+
+# model_file: "mushr/mushr_friction_floor.xml"
+# plan_filename: "/home/aravind/repos/ML4KP-devel/out/mushr_friction/rlg.txt"
+# video_name: "/home/aravind/repos/ML4KP-devel/out/mushr_friction/rlg.mp4"
+# start_config: [-4.0, -4.0, 0.2, 0.0, 0.0, 0.0]
+# goal_config: [4.0, -4.0, 0.2, 0.0, 0.0, 0.0]
+
+# model_file: "skydio/quadrotor_obstacle.xml"
+# plan_filename: "/home/aravind/repos/ML4KP-devel/out/quadrotor/rogue.txt"
+# video_name: "/home/aravind/repos/ML4KP-devel/out/quadrotor/rogue.mp4"
+# start_config: [-5.0, -5.0, 0.0, 0.0, 0.0, 0.0]
+# goal_config: [5.0, 5.0, 5.0, 0.0, 0.0, 0.0]

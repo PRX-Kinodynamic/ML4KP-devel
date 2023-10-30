@@ -22,7 +22,7 @@ class mujoco_simulator_t : public simulator_t
 private:
   bool _record_video;
   double _recorded_secs;
-  const double _fps{ 24 };
+  const double _fps{ 30 };
   std::string _video_name;
   mjvCamera cam;
   mjvOption opt;
@@ -68,13 +68,28 @@ public:
 
   void add_frame();
 
-  inline void set_goal(const space_point_t goal)
+  inline void set_goal(const std::vector<double> goal)
   {
     goal_pos.clear();
     for (int i = 0; i < 3; i++)
     {
-      // goal_pos.push_back(goal->at(i));
+      goal_pos.push_back(goal.at(i));
     }
+  }
+
+  inline void set_cam_elevation(const double elevation)
+  {
+    cam.elevation = elevation;
+  }
+
+  inline void set_cam_distance(const double distance)
+  {
+    cam.distance = distance;
+  }
+
+  inline void set_cam_azimuth(const double azimuth)
+  {
+    cam.azimuth = azimuth;
   }
 
   inline void set_goal_radius(double radius)
@@ -87,6 +102,8 @@ public:
   void set_state(const MujocoState& state);
 
   void set_record_video(const bool record_video);
+
+  void set_video_name(const std::string& video_name);
 
   MujocoState get_state();
 
