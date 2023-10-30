@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+
+#include("@CMAKE_INSTALL_PREFIX@/lib/.cmake")
+
+set_and_check(@CMAKE_PROJECT_NAME@_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@")
+set_and_check(@CMAKE_PROJECT_NAME@_LIBRARIES "@PACKAGE_LIB_INSTALL_DIR@")
+
+check_required_components(@CMAKE_PROJECT_NAME@)
