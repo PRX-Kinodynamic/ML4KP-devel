@@ -17,6 +17,7 @@ set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
 set(${PROJECT_NAME}_VERSION 1.0)
 set(${PROJECT_NAME}_HEADERS "" CACHE STRING "Headers to be exported")
 set(${PROJECT_NAME}_LIBRARIES "" CACHE STRING "Libraries to be exported")
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 if( NOT CMAKE_BUILD_TYPE )
 	set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build types" FORCE)
@@ -45,6 +46,9 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})
+
+find_package(Threads REQUIRED)
+link_libraries(Threads::Threads)
 
 if(BUILD_FOR_TORCH)
 	if(DEFINED ENV{Torch_DIR})
