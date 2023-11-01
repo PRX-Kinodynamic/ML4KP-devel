@@ -96,7 +96,7 @@ mujoco_simulator_t::~mujoco_simulator_t()
 
   mj_deleteData(_mj_data);
   mj_deleteModel(_mj_model);
-  mj_deactivate();
+  // mj_deactivate();
 }
 
 void mujoco_simulator_t::init_simulator()

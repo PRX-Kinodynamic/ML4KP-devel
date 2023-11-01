@@ -70,13 +70,11 @@ else()
     add_definitions(-DTORCH_NOT_BUILT)
 endif()
 
-
-
 include_directories(src/prx/external)
-include_directories(src/prx/visualization)
+include_directories(src/prx/utilities)
 include_directories(src/prx/simulation)
 include_directories(src/prx/planning)
-include_directories(src/prx/utilities)
+include_directories(src/prx/visualization)
 
 if(BUILD_FOR_MUJOCO)
     message("Building with mujoco.")
