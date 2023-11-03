@@ -7,6 +7,12 @@ namespace fg
 namespace utilities
 {
 
+const gtsam::Values& optimize_and_log(gtsam::NonlinearOptimizer& nl_opt, const gtsam::NonlinearOptimizerParams& params)
+{
+  prx::logger_t logger(prx::out_path + "fg_opt.log");
+  return optimize_and_log(nl_opt, params, logger);
+}
+
 const gtsam::Values& optimize_and_log(gtsam::NonlinearOptimizer& nl_opt, const gtsam::NonlinearOptimizerParams& params,
                                       logger_t& logger, const int extra_iters, condition_check_t* checker_0)
 {

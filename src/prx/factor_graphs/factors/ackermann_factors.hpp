@@ -42,43 +42,45 @@ using EnvironmentParams = Eigen::Vector<double, DimEnvironmentParams>;
 using Force = Eigen::Vector<double, DimForce>;
 
 using U = Eigen::Vector<double, DimU>;
+double& steering(const U& u)
+{
+  return u[0];
+};
+
+double& velocity(const U& u)
+{
+  return u[1];
+};
+
 using Duration = Eigen::Vector<double, 1>;
 
 using Qz = Eigen::Vector<double, DimQz>;
-}  // namespace ackermann
 
-// Factor <- Q, Qdot, U
-// Error on Q
-class ackermann_q_qdot_u_t : public gtsam::NoiseModelFactor4<ackermann::Q, ackermann::Q, ackermann::Qdot, ackermann::U>
+// Factor <- U_real, U_desired
+// Error on U
+class q_prop_factor_t : public gtsam::NoiseModelFactor3<ackermann::Q, ackermann::Q, ackermann::Qdot>
 {
   using Q = ackermann::Q;
   using Qdot = ackermann::Qdot;
-  using U = ackermann::U;
 
-  using Base = gtsam::NoiseModelFactor4<Q, Q, Qdot, U>;
+  using Base = gtsam::NoiseModelFactor3<Q, Q, Qdot>;
   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
 
   using Partial_Q0 = std::function<Q(const Q&)>;
   using Partial_Q1 = std::function<Q(const Q&)>;
   using Partial_Qdot = std::function<Q(const Qdot&)>;
-  using Partial_U = std::function<Q(const U&)>;
 
 public:
   ackermann_q_qdot_u_t(const gtsam::Key key_q0, const gtsam::Key key_q1, const gtsam::Key key_qdot,
-                       const gtsam::Key key_u, const NoiseModel& cost_model, const double h = prx::simulation_step)
-    : Base(cost_model, key_q0, key_q1, key_qdot, key_u)
-    , derivative_q0(h)
-    , derivative_q1(h)
-    , derivative_qdot(h)
-    , derivative_u(h)
+                       const NoiseModel& cost_model, const double h = prx::simulation_step)
+    : Base(cost_model, key_q0, key_q1, key_qdot), derivative_q0(h), derivative_q1(h), derivative_qdot(h)
   {
   }
 
-  virtual Eigen::VectorXd evaluateError(const Q& q0, const Q& q1, const Qdot& qdot, const U& u,  // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_q0 = boost::none,    // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_q1 = boost::none,    // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_qdot = boost::none,  // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_u = boost::none) const override
+  virtual Eigen::VectorXd evaluateError(const Q& q0, const Q& q1, const Qdot& qdot,            // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H_q0 = boost::none,  // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H_q1 = boost::none,  // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H_qdot = boost::none) const override
   {
     if (H_q0)
     {
@@ -95,54 +97,24 @@ public:
       derivative_qdot._model = [&](const Qdot& qdot_) { return compute_error(q0, q1, qdot_, u); };
       *H_qdot = derivative_qdot(qdot);
     }
-    if (H_u)
-    {
-      derivative_u._model = [&](const U& u_) { return compute_error(q0, q1, qdot, u_); };
-      *H_u = derivative_u(u);
-    }
 
-    return compute_error(q0, q1, qdot, u);
+    return compute_error(q0, q1, qdot);
   }
 
-  Q compute_error(const Q& q_0, const Q& q_1, const Qdot& qdot, const U& u) const
+  Q compute_error(const Q& q_0, const Q& q_1, const Qdot& qdot) const
   {
-    const double v_0{ q_0[3] };    // velocity at 0
-    const double phi_0{ q_0[4] };  // steer at 0
-
-    const double phi_d{ u[0] };  // steering angle desired
-    const double v_d{ u[1] };    // velocity desired
-
-    const double k_v{ 0.01 };   // velocity gain
-    const double k_phi{ 0.1 };  // steer gain
-
-    const double x_dot{ qdot[0] };  // x velocity
-    const double y_dot{ qdot[1] };  // y velocity
-    // const double phi_dot{ qdot[2] };  // phi velocity
-
-    const double v_1{ std::sqrt(x_dot * x_dot + y_dot * y_dot) };  // velocity at 1
-
-    Q q_1p{ Q::Zero() };
-
-    q_1p.head(3) = q_0.head(3) + qdot * simulation_step;
-
-    // q_1p[3] = v_1 + k_v * (v_d - v_1);
-    // q_1p[4] = phi_0 + k_phi * (phi_0 - phi_d);
-
-    q_1p[3] = v_1;
-    q_1p[4] = phi_0;
-
-    // q_1p[2] = norm_angle_pi(q_1p[2]);
-
-    Q error{ Q::Zero() };
-    // error = q_1 - q_1p;
-    error.head(3) = q_1.head(3) - q_1p.head(3);
-    // error[3] = v_1 - q_1p[3];
+    Q q1_expected{ q_0 + qdot * prx::simulation_step };
+    q1_expected[2] = norm_angle_pi(q1_expected[2]);
+    Q error{ q_1 - q1_expected };
+    error[2] = prx::fg::utilities::angle_diff(q_1[2], q1_expected[2]);
     return error;
   }
-  virtual void print(const std::string& s = "ackermann_q_qdot_u_t",
+
+  // PRX_FACTOR_OVERLOAD_PRINT("ackermann_q_qdot_t");
+  virtual void print(const std::string& s = "ackermann_q_qdot_t",
                      const gtsam::KeyFormatter& formatter = gtsam::DefaultKeyFormatter) const override
   {
-    std::cout << "ackermann_q_qdot_u_t";
+    std::cout << "ackermann_q_qdot_t";
 
     for (gtsam::Key key : keys_)
       std::cout << " " << prx::symbol_factory_t::formatter(key);
@@ -153,130 +125,71 @@ private:
   Partial_Q0 partial_q0;
   Partial_Q1 partial_q1;
   Partial_Qdot partial_qdot;
-  Partial_U partial_u;
 
   mutable prx::math::first_order_derivative_t<Partial_Q0, Q, 4> derivative_q0;
   mutable prx::math::first_order_derivative_t<Partial_Q1, Q, 4> derivative_q1;
   mutable prx::math::first_order_derivative_t<Partial_Qdot, Qdot, 4> derivative_qdot;
-  mutable prx::math::first_order_derivative_t<Partial_U, U, 4> derivative_u;
 };
 
-class ackermann_q_qdot_u_dt_t
-  : public gtsam::NoiseModelFactor4<ackermann::Q, ackermann::Q, ackermann::Qdot, ackermann::U>
+class p_ctrl_factor_t : public gtsam::NoiseModelFactor2<U, U>
 {
-  using Q = ackermann::Q;
-  using Qdot = ackermann::Qdot;
-  using U = ackermann::U;
+  using Gains = Eigen::DiagonalMatrix<double, DimU>;
 
-  using Base = gtsam::NoiseModelFactor4<Q, Q, Qdot, U>;
+  using Base = gtsam::NoiseModelFactor2<U, U>;
   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
 
-  using Partial_Q0 = std::function<Q(const Q&)>;
-  using Partial_Q1 = std::function<Q(const Q&)>;
-  using Partial_Qdot = std::function<Q(const Qdot&)>;
   using Partial_U = std::function<Q(const U&)>;
 
 public:
-  ackermann_q_qdot_u_dt_t(const gtsam::Key key_q0, const gtsam::Key key_q1, const gtsam::Key key_qdot,
-                          const gtsam::Key key_u, const NoiseModel& cost_model, const double dt,
-                          const double h = prx::simulation_step)
-    : Base(cost_model, key_q0, key_q1, key_qdot, key_u)
-    , derivative_q0(h)
-    , derivative_q1(h)
-    , derivative_qdot(h)
-    , derivative_u(h)
-    , _dt(dt)
+  p_ctrl_factor_t(const gtsam::Key key_ur, const gtsam::Key key_ud, const NoiseModel& cost_model, const double ks,
+                  const double kv, const double h = prx::simulation_step)
+    : Base(cost_model, key_ur, key_ud), derivative_ur(h), derivative_ur(h), _gains(ks, kv)
   {
   }
 
-  virtual Eigen::VectorXd evaluateError(const Q& q0, const Q& q1, const Qdot& qdot, const U& u,  // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_q0 = boost::none,    // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_q1 = boost::none,    // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_qdot = boost::none,  // no-lint
-                                        boost::optional<Eigen::MatrixXd&> H_u = boost::none) const override
+  virtual Eigen::VectorXd evaluateError(const U& ur, const U& ud,                              // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H_ur = boost::none,  // no-lint
+                                        boost::optional<Eigen::MatrixXd&> H_ud = boost::none) const override
   {
-    if (H_q0)
+    if (H_ur)
     {
-      derivative_q0._model = [&](const Q& q0_) { return compute_error(q0_, q1, qdot, u); };
-      *H_q0 = derivative_q0(q0);
+      _derivative_ur._model = [&](const U& ur_) { return compute_error(u_, ud); };
+      *H_ur = _derivative_ur(ur);
     }
-    if (H_q1)
+    if (H_ud)
     {
-      derivative_q1._model = [&](const Q& q1_) { return compute_error(q0, q1_, qdot, u); };
-      *H_q1 = derivative_q1(q1);
-    }
-    if (H_qdot)
-    {
-      derivative_qdot._model = [&](const Qdot& qdot_) { return compute_error(q0, q1, qdot_, u); };
-      *H_qdot = derivative_qdot(qdot);
-    }
-    if (H_u)
-    {
-      derivative_u._model = [&](const U& u_) { return compute_error(q0, q1, qdot, u_); };
-      *H_u = derivative_u(u);
+      _derivative_ud._model = [&](const U& ud) { return compute_error(ur, _ud); };
+      *H_ud = _derivative_ur(ud);
     }
 
-    return compute_error(q0, q1, qdot, u);
+    return compute_error(ur, ud);
   }
 
-  Q compute_error(const Q& q_0, const Q& q_1, const Qdot& qdot, const U& u) const
+  U compute_error(const U& ur, const U& ud) const
   {
-    const double v_0{ q_0[3] };    // velocity at 0
-    const double phi_0{ q_0[4] };  // steer at 0
-
-    const double phi_d{ u[0] };  // steering angle desired
-    const double v_d{ u[1] };    // velocity desired
-
-    const double k_v{ 0.01 };   // velocity gain
-    const double k_phi{ 0.1 };  // steer gain
-
-    const double x_dot{ qdot[0] };  // x velocity
-    const double y_dot{ qdot[1] };  // y velocity
-    // const double phi_dot{ qdot[2] };  // phi velocity
-
-    const double v_1{ std::sqrt(x_dot * x_dot + y_dot * y_dot) };  // velocity at 1
-
-    Q q_1p{ Q::Zero() };
-    q_1p.head(3) = q_0.head(3);
-    for (double t = 0; t < _dt; t += prx::simulation_step)
-    {
-      q_1p.head(3) = q_1p.head(3) + qdot * simulation_step;
-    }
-
-    // q_1p[3] = v_1 + k_v * (v_d - v_1);
-    // q_1p[4] = phi_0 + k_phi * (phi_0 - phi_d);
-
-    q_1p[3] = v_1;
-    q_1p[4] = phi_0;
-
-    // q_1p[2] = norm_angle_pi(q_1p[2]);
-
-    Q error{ Q::Zero() };
-    error = q_1 - q_1p;
-    // error[3] = v_1 - q_1p[3];
+    const U u_next{ ur + _gains * (ud - ur) };
+    const U error{ u_next - ur };
     return error;
   }
-  virtual void print(const std::string& s = "ackermann_q_qdot_u_t",
-                     const gtsam::KeyFormatter& formatter = gtsam::DefaultKeyFormatter) const override
-  {
-    std::cout << "ackermann_q_qdot_u_t";
+  // PRX_FACTOR_OVERLOAD_PRINT("p_ctrl_factor_t");
+  // virtual void print(const std::string& s = "ackermann_q_qdot_u_t",
+  //                    const gtsam::KeyFormatter& formatter = gtsam::DefaultKeyFormatter) const override
+  // {
+  //   std::cout << "ackermann_q_qdot_u_t";
 
-    for (gtsam::Key key : keys_)
-      std::cout << " " << prx::symbol_factory_t::formatter(key);
-    std::cout << " ";
-  }
+  //   for (gtsam::Key key : keys_)
+  //     std::cout << " " << prx::symbol_factory_t::formatter(key);
+  //   std::cout << " ";
+  // }
 
 private:
-  Partial_Q0 partial_q0;
-  Partial_Q1 partial_q1;
-  Partial_Qdot partial_qdot;
-  Partial_U partial_u;
+  const Gains _gains;  // velocity gain
 
-  const double _dt;
-  mutable prx::math::first_order_derivative_t<Partial_Q0, Q, 4> derivative_q0;
-  mutable prx::math::first_order_derivative_t<Partial_Q1, Q, 4> derivative_q1;
-  mutable prx::math::first_order_derivative_t<Partial_Qdot, Qdot, 4> derivative_qdot;
-  mutable prx::math::first_order_derivative_t<Partial_U, U, 4> derivative_u;
+  Partial_U _partial_ur;
+  Partial_U _partial_ud;
+
+  mutable prx::math::first_order_derivative_t<Partial_U, U, 4> _derivative_ur;
+  mutable prx::math::first_order_derivative_t<Partial_U, U, 4> _derivative_ud;
 };
 
 // Factor <- Q, Qdot, Qdotdot
@@ -553,6 +466,7 @@ private:
 // class ackermann_q_observation_t : public gtsam::NoiseModelFactor2<ackermann::Qz, ackermann::Q>
 // {
 // };
+}  // namespace ackermann
 
 }  // namespace fg
 }  // namespace prx

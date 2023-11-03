@@ -7,6 +7,12 @@ namespace fg
 {
 namespace utilities
 {
+
+double angle_diff(const double& a0, const double& a1)
+{
+  return std::min((2 * PRX_PI) - std::fabs(a0 - a1), std::fabs(a0 - a1));
+}
+
 gtsam::LevenbergMarquardtParams default_levenberg_marquardt_parameters()
 {
   gtsam::LevenbergMarquardtParams lm_params;

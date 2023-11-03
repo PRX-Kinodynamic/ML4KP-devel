@@ -1,5 +1,3 @@
-
-
 if(BUILD_FOR_FACTOR_GRAPHS)
 	if(UNIX)
     # find_package(TBB 4.4 COMPONENTS tbb tbbmalloc)
@@ -25,11 +23,11 @@ if(BUILD_FOR_FACTOR_GRAPHS)
 	# PRINT_CMAKE_VARS(sources)
 	# PRINT_CMAKE_VARS(gt)
 
-	file(GLOB_RECURSE SRC_PRX_LIB_FACTOR_GRAPHS 
-		planning/*.cpp
-		utilities/*.cpp
-		factors/*.cpp
-		)
+	file(GLOB_RECURSE HEADER_PRX_FACTOR_GRAPHS RELATIVE ${CMAKE_SOURCE_DIR}/src ./*.hpp)
+	file(GLOB_RECURSE SRC_PRX_LIB_FACTOR_GRAPHS ./*.cpp)
+
+	set(${PROJECT_NAME}_HEADERS "${${PROJECT_NAME}_HEADERS};${HEADER_PRX_FACTOR_GRAPHS}" PARENT_SCOPE)
+
 	add_library(${PROJECT_NAME}_factor_graphs STATIC ${SRC_PRX_LIB_FACTOR_GRAPHS})
 
 	target_include_directories(${PROJECT_NAME}_factor_graphs PUBLIC ".")
@@ -37,6 +35,8 @@ if(BUILD_FOR_FACTOR_GRAPHS)
 	# target_include_directories(${PROJECT_NAME}_factor_graphs PUBLIC ${SDFormat_INCLUDE_DIRS})
 	# link_directories(${SDFormat_LIBRARY_DIRS})
 	target_link_libraries(${PROJECT_NAME}_factor_graphs PUBLIC "/Users/Gary/pracsys/gtsam/install/lib/libgtsam.4.dylib")
+	
+	set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};${PROJECT_NAME}_factor_graphs" PARENT_SCOPE)
 
 	# message(STATUS "GTSAM_LIBS:${GTSAM_LIBS}")
 	# target_link_libraries(${PROJECT_NAME}_factor_graphs INTERFACE fmt::fmt-header-only)
