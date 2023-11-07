@@ -7,18 +7,21 @@ file(GLOB_RECURSE SRC_PRX_LIB_UTILITIES  ./*.cpp)
 
 set(${PROJECT_NAME}_HEADERS "${${PROJECT_NAME}_HEADERS};${HEADER_PRX_LIB_UTILITIES}" PARENT_SCOPE)
 
-add_library(${PROJECT_NAME}_utilities ${SRC_PRX_LIB_UTILITIES})
+add_library(Utilities ${SRC_PRX_LIB_UTILITIES})
 
-target_include_directories(${PROJECT_NAME}_utilities PUBLIC ".")
+target_include_directories(Utilities PUBLIC
+														PUBLIC
+														"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+                            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+														)
 
-set_target_properties(${PROJECT_NAME}_utilities PROPERTIES COMPILE_FLAGS "-Wno-deprecated")
+set_target_properties(Utilities PROPERTIES COMPILE_FLAGS "-Wno-deprecated")
 
-if (APPLE)
-	list(APPEND YAML_CPP_LIBRARIES yaml-cpp)
-endif(APPLE)
+# if (APPLE)
+# 	list(APPEND YAML_CPP_LIBRARIES yaml-cpp)
+# endif(APPLE)
 
-target_link_libraries(${PROJECT_NAME}_utilities INTERFACE ${PROJECT_NAME}_external )
-# target_link_libraries(${PROJECT_NAME}_utilities ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES} )
-target_link_libraries(${PROJECT_NAME}_utilities PUBLIC ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES})
+target_link_libraries(Utilities INTERFACE External )
+target_link_libraries(Utilities PUBLIC yaml-cpp::yaml-cpp)
 
-set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};${PROJECT_NAME}_utilities" PARENT_SCOPE)
+set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};Utilities" PARENT_SCOPE)
