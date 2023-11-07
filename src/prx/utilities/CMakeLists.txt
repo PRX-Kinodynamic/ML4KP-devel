@@ -21,7 +21,13 @@ set_target_properties(Utilities PROPERTIES COMPILE_FLAGS "-Wno-deprecated")
 # 	list(APPEND YAML_CPP_LIBRARIES yaml-cpp)
 # endif(APPLE)
 
+if(TARGET yaml-cpp )
+	target_link_libraries(Utilities PUBLIC yaml-cpp)
+elseif(TARGET yaml-cpp::yaml-cpp )
+	target_link_libraries(Utilities PUBLIC yaml-cpp::yaml-cpp)
+
+endif()
+
 target_link_libraries(Utilities INTERFACE External )
-target_link_libraries(Utilities PUBLIC yaml-cpp::yaml-cpp)
 
 set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};Utilities" PARENT_SCOPE)
