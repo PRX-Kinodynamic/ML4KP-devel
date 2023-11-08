@@ -3,6 +3,7 @@
 #include("@CMAKE_INSTALL_PREFIX@/lib/.cmake")
 
 find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
+find_package(Threads REQUIRED)
 
 if(@BUILD_FOR_TORCH@)
 	if(DEFINED ENV{Torch_DIR})

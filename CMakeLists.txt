@@ -45,7 +45,7 @@ include_directories("${PROJECT_SOURCE_DIR}/src")
 link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})
 
 find_package(Threads REQUIRED)
-link_libraries(Threads::Threads)
+# link_libraries(Threads::Threads)
 
 if(BUILD_FOR_TORCH)
 	if(DEFINED ENV{Torch_DIR})
