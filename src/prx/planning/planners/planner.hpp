@@ -88,7 +88,7 @@ public:
  *	  +-------------+Finalize Query++
  *
  */
-class planner_t
+class planner_t : public std::enable_shared_from_this<planner_t>
 {
 public:
   planner_t(const std::string& new_name);
