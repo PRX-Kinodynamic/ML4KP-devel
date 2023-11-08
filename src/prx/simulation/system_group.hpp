@@ -1,10 +1,10 @@
 #pragma once
 
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/condition_check.hpp"
+
 #include "prx/simulation/system.hpp"
-// #include "prx/simulation/simulator.hpp"
 #include "prx/simulation/controller.hpp"
-#include "prx/planning/condition_check.hpp"
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/simulation/collision_checking/collision_checker.hpp"

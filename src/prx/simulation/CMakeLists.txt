@@ -14,6 +14,6 @@ target_include_directories(Simulation
 														)
 
 target_link_libraries(Simulation INTERFACE Utilities )
-target_link_libraries(Simulation INTERFACE Planning )
+# target_link_libraries(Simulation INTERFACE Planning )
 # target_link_libraries(Simulation INTERFACE ${PROJECT_NAME}_external )
 set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};Simulation" PARENT_SCOPE)
