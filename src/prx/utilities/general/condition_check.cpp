@@ -1,5 +1,5 @@
 #include "prx/utilities/defs.hpp"
-#include "prx/planning/condition_check.hpp"
+#include "prx/utilities/general/condition_check.hpp"
 
 namespace prx
 {

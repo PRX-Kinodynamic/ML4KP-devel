@@ -1,9 +1,10 @@
 #pragma once
 
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/condition_check.hpp"
+
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
-#include "prx/planning/condition_check.hpp"
 
 namespace prx
 {

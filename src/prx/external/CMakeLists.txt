@@ -21,6 +21,6 @@ if(BUILD_FOR_TORCH AND DEFINED ENV{Torch_DIR})
 	message(STATUS "Linking Torch: ${TORCH_LIBRARIES}")
 	target_link_libraries(External PUBLIC ${TORCH_LIBRARIES})
 endif()
-target_link_libraries(External PUBLIC Boost::filesystem Boost::system)
+target_link_libraries(External PUBLIC Boost::filesystem Boost::system Threads::Threads)
 
 set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};External" PARENT_SCOPE)
