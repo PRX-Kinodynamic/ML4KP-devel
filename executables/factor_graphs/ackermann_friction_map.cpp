@@ -126,10 +126,10 @@ void create_ackermann_at_idx_fg(gtsam::NonlinearFactorGraph& graph, gtsam::Value
   const prx_symbol_t k_force{ symbol_Force(idx) };
   const prx_symbol_t k_params_e{ symbol_EnvParams(idx) };
 
-  graph.add(ackermann_q_qdot_u_t(k_q0, k_q1, k_qdot, k_u, noise_models["f1"]));
-  graph.add(ackermann_q_qdot_qdotdot_t(k_qdot, k_qdotdot, k_q0, noise_models["f2"], WHEEL_DISTANCE));
-  graph.add(ackermann_qdotdot_force_q_t(k_qdotdot, k_force, k_q0, k_params_m, k_params_e, noise_models["f3"],
-                                        WHEEL_DISTANCE, MASS));
+  // graph.add(ackermann_q_qdot_u_t(k_q0, k_q1, k_qdot, k_u, noise_models["f1"]));
+  // graph.add(ackermann_q_qdot_qdotdot_t(k_qdot, k_qdotdot, k_q0, noise_models["f2"], WHEEL_DISTANCE));
+  // graph.add(ackermann_qdotdot_force_q_t(k_qdotdot, k_force, k_q0, k_params_m, k_params_e, noise_models["f3"],
+  //                                       WHEEL_DISTANCE, MASS));
 
   // values.insert(k_u, u_init);
   // values.insert_or_assign(k_q0, q_init);
@@ -344,13 +344,13 @@ int main(int argc, char* argv[])
       traj.back()[0] += n_x(gen);
       traj.back()[1] += n_y(gen);
       traj.back()[2] += n_th(gen);
-      graph.add(ackermann_q_observation_t(traj.back(), k_q, noise_models["fZ"]));
+      // graph.add(ackermann_q_observation_t(traj.back(), k_q, noise_models["fZ"]));
     }
     else
     {
       traj.emplace_back(traj.back());
     }
-    const ackermann::Q q{ traj.back()[0], traj.back()[1], traj.back()[2], 0, 0 };
+    const ackermann::Q q{ traj.back()[0], traj.back()[1], traj.back()[2] };
 
     // graph.addPrior(k_qz, traj.back(), noise_models["Z_prior"]);
     for (int i = 0; i < 10; ++i)

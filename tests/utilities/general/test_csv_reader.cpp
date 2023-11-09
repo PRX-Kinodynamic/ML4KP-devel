@@ -103,9 +103,9 @@ BOOST_AUTO_TEST_CASE(read_column_test)
 {
   csv_reader_t reader(test_file, ' ');
   const std::size_t column_to_read{ 2 };
-  const std::vector<int> expected_column = { 1, 4, 7, 1, 4, 7 };
+  const std::vector<int> expected_column{ { 1, 4, 7, 1, 4, 7 } };
 
-  std::vector<int> column_read = reader.read_column<int>(column_to_read);
+  const std::vector<int> column_read{ reader.read_column<int>(column_to_read) };
 
   BOOST_REQUIRE(column_read.size() == expected_column.size());
   for (int i = 0; i < expected_column.size(); ++i)

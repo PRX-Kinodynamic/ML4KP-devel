@@ -63,10 +63,10 @@ BOOST_AUTO_TEST_CASE(hashed_symbols_creation_test)
   const gtsam::Key s2{ prx::symbol_factory_t::create_hashed_symbol("test", 2) };
   const gtsam::Key s3{ prx::symbol_factory_t::create_hashed_symbol("test", 3) };
 
-  std::string expected_0{ "test_0" };
-  std::string expected_1{ "test_1" };
-  std::string expected_2{ "test_2" };
-  std::string expected_3{ "test_3" };
+  const std::string expected_0{ "test0" };
+  const std::string expected_1{ "test1" };
+  const std::string expected_2{ "test2" };
+  const std::string expected_3{ "test3" };
 
   std::string result_0{ prx::symbol_factory_t::formatter(s0) };
   std::string result_1{ prx::symbol_factory_t::formatter(s1) };
@@ -84,8 +84,8 @@ BOOST_AUTO_TEST_CASE(repeated_hashed_symbols_creation_test)
   const gtsam::Key s0_0{ prx::symbol_factory_t::create_hashed_symbol("test", 0) };
   const gtsam::Key s0_1{ prx::symbol_factory_t::create_hashed_symbol("test", 0) };
 
-  std::string expected_0_0{ "test_0" };
-  std::string expected_0_1{ "test_0" };
+  std::string expected_0_0{ "test0" };
+  std::string expected_0_1{ "test0" };
 
   std::string result_0_0{ prx::symbol_factory_t::formatter(s0_0) };
   std::string result_0_1{ prx::symbol_factory_t::formatter(s0_1) };

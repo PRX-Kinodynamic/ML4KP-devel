@@ -77,10 +77,10 @@ void create_ackermann_at_idx_fg(gtsam::NonlinearFactorGraph& graph, gtsam::Value
 
   const prx_symbol_t k_force{ symbol_factory_t::create_hashed_symbol("F", idx) };
 
-  graph.add(ackermann_q_qdot_u_t(k_q0, k_q1, k_qdot, k_u, noise_models["f1"]));
-  graph.add(ackermann_q_qdot_qdotdot_t(k_qdot, k_qdotdot, k_q0, noise_models["f2"], WHEEL_DISTANCE));
-  graph.add(ackermann_qdotdot_force_q_t(k_qdotdot, k_force, k_q0, k_params_m, k_params_e, noise_models["f3"],
-                                        WHEEL_DISTANCE, MASS));
+  // graph.add(ackermann_q_qdot_u_t(k_q0, k_q1, k_qdot, k_u, noise_models["f1"]));
+  // graph.add(ackermann_q_qdot_qdotdot_t(k_qdot, k_qdotdot, k_q0, noise_models["f2"], WHEEL_DISTANCE));
+  // graph.add(ackermann_qdotdot_force_q_t(k_qdotdot, k_force, k_q0, k_params_m, k_params_e, noise_models["f3"],
+  // WHEEL_DISTANCE, MASS));
 
   // values.insert(k_u, u_init);
   values.insert(k_q0, q_init);
@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
     const prx_symbol_t k_q{ symbol_factory_t::create_hashed_symbol("X", idx) };
     const fg::ackermann::Qz q_z{ line[0], line[1], line[2] };
 
-    graph.add(ackermann_q_observation_t(q_z, k_q, noise_models["fZ"]));
+    // graph.add(ackermann_q_observation_t(q_z, k_q, noise_models["fZ"]));
     // graph.addPrior(k_qz, q_z, noise_models["Z_prior"]);
     // values.insert_or_assign(k_qz, q_z);
     idx += 10;

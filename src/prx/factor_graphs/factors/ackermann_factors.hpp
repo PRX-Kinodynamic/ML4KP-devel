@@ -9,9 +9,11 @@
 #include "prx/utilities/math/math_functions.hpp"
 #include "prx/utilities/math/first_order_derivative.hpp"
 // #include "prx/factor_graphs/utilities/prx_symbols.hpp"
-#include "prx/factor_graphs/factors/noise_model_factor.hpp"
-#include "prx/factor_graphs/utilities/symbols_factory.hpp"
 #include "prx/simulation/plants/types/linear_time_variant.hpp"
+
+#include "prx/factor_graphs/factors/noise_model_factor.hpp"
+#include "prx/factor_graphs/utilities/constants.hpp"
+#include "prx/factor_graphs/utilities/symbols_factory.hpp"
 
 namespace prx
 {
@@ -20,11 +22,11 @@ namespace fg
 
 namespace ackermann
 {
-// Q = (x, y, \theta, V, \phi) --> position, velocity, steering angle
+// Q = (x, y, \theta) --> position, velocity, steering angle
 // Qdot = (\dot{x}, \dot{y}, \dot{\theta}) --> velocities
 // Qdotdot = (\ddot{x}, \ddot{y}, \ddot{\theta}) --> acelerations
 //
-const Eigen::Index DimQ{ 5 };
+const Eigen::Index DimQ{ 3 };
 const Eigen::Index DimQdot{ 3 };
 const Eigen::Index DimQdotdot{ 3 };
 const Eigen::Index DimModelParams{ 1 };
@@ -42,15 +44,14 @@ using EnvironmentParams = Eigen::Vector<double, DimEnvironmentParams>;
 using Force = Eigen::Vector<double, DimForce>;
 
 using U = Eigen::Vector<double, DimU>;
-double& steering(const U& u)
-{
-  return u[0];
-};
 
-double& velocity(const U& u)
-{
-  return u[1];
-};
+// clang-format off
+inline double& steering(U& u) { return u[0]; };
+inline double& velocity(U& u) { return u[1]; };
+
+// double steering(const U& u) { return u[0]; };
+// double velocity(const U& u) { return u[1]; };
+// clang-format on
 
 using Duration = Eigen::Vector<double, 1>;
 
@@ -71,8 +72,8 @@ class q_prop_factor_t : public gtsam::NoiseModelFactor3<ackermann::Q, ackermann:
   using Partial_Qdot = std::function<Q(const Qdot&)>;
 
 public:
-  ackermann_q_qdot_u_t(const gtsam::Key key_q0, const gtsam::Key key_q1, const gtsam::Key key_qdot,
-                       const NoiseModel& cost_model, const double h = prx::simulation_step)
+  q_prop_factor_t(const gtsam::Key key_q0, const gtsam::Key key_q1, const gtsam::Key key_qdot,
+                  const NoiseModel& cost_model, const double h = prx::simulation_step)
     : Base(cost_model, key_q0, key_q1, key_qdot), derivative_q0(h), derivative_q1(h), derivative_qdot(h)
   {
   }
@@ -84,17 +85,17 @@ public:
   {
     if (H_q0)
     {
-      derivative_q0._model = [&](const Q& q0_) { return compute_error(q0_, q1, qdot, u); };
+      derivative_q0._model = [&](const Q& q0_) { return compute_error(q0_, q1, qdot); };
       *H_q0 = derivative_q0(q0);
     }
     if (H_q1)
     {
-      derivative_q1._model = [&](const Q& q1_) { return compute_error(q0, q1_, qdot, u); };
+      derivative_q1._model = [&](const Q& q1_) { return compute_error(q0, q1_, qdot); };
       *H_q1 = derivative_q1(q1);
     }
     if (H_qdot)
     {
-      derivative_qdot._model = [&](const Qdot& qdot_) { return compute_error(q0, q1, qdot_, u); };
+      derivative_qdot._model = [&](const Qdot& qdot_) { return compute_error(q0, q1, qdot_); };
       *H_qdot = derivative_qdot(qdot);
     }
 
@@ -138,12 +139,12 @@ class p_ctrl_factor_t : public gtsam::NoiseModelFactor2<U, U>
   using Base = gtsam::NoiseModelFactor2<U, U>;
   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
 
-  using Partial_U = std::function<Q(const U&)>;
+  using Partial_U = std::function<U(const U&)>;
 
 public:
   p_ctrl_factor_t(const gtsam::Key key_ur, const gtsam::Key key_ud, const NoiseModel& cost_model, const double ks,
                   const double kv, const double h = prx::simulation_step)
-    : Base(cost_model, key_ur, key_ud), derivative_ur(h), derivative_ur(h), _gains(ks, kv)
+    : Base(cost_model, key_ur, key_ud), _derivative_ur(h), _derivative_ud(h), _gains(ks, kv)
   {
   }
 
@@ -153,12 +154,12 @@ public:
   {
     if (H_ur)
     {
-      _derivative_ur._model = [&](const U& ur_) { return compute_error(u_, ud); };
+      _derivative_ur._model = [&](const U& ur_) { return compute_error(ur_, ud); };
       *H_ur = _derivative_ur(ur);
     }
     if (H_ud)
     {
-      _derivative_ud._model = [&](const U& ud) { return compute_error(ur, _ud); };
+      _derivative_ud._model = [&](const U& ud_) { return compute_error(ur, ud_); };
       *H_ud = _derivative_ur(ud);
     }
 

@@ -173,10 +173,10 @@ void create_ackermann_at_idx_fg(gtsam::NonlinearFactorGraph& graph, gtsam::Value
   const prx_symbol_t k_force{ symbol_Force(traj_id, idx) };
   const prx_symbol_t k_params_e{ symbol_EnvParams(traj_id, idx) };
 
-  graph.add(ackermann_q_qdot_u_t(k_q0, k_q1, k_qdot, k_u, noise_models["f1"], h));
-  graph.add(ackermann_q_qdot_qdotdot_t(k_qdot, k_qdotdot, k_q0, noise_models["f2"], WHEEL_DISTANCE, h));
-  graph.add(ackermann_qdotdot_force_q_t(k_qdotdot, k_force, k_q0, k_params_m, k_params_e, noise_models["f3"],
-                                        WHEEL_DISTANCE, MASS, h));
+  // graph.add(ackermann_q_qdot_u_t(k_q0, k_q1, k_qdot, k_u, noise_models["f1"], h));
+  // graph.add(ackermann_q_qdot_qdotdot_t(k_qdot, k_qdotdot, k_q0, noise_models["f2"], WHEEL_DISTANCE, h));
+  // graph.add(ackermann_qdotdot_force_q_t(k_qdotdot, k_force, k_q0, k_params_m, k_params_e, noise_models["f3"],
+  //                                       WHEEL_DISTANCE, MASS, h));
   // ackermann_qdotdot_force_q_t
   // values.insert(k_u, u_init);
   // values.insert_or_assign(k_q0, q_init);
@@ -396,7 +396,7 @@ int main(int argc, char* argv[])
     if (line.size() == 0)
       continue;
     // const Eigen::Quaternion<double> quat(line[3], line[4], line[5], line[6]);
-    traj.emplace_back(line[0], line[1], line[3], 0, 0);
+    traj.emplace_back(line[0], line[1], line[3]);
   }
   std::size_t idx{ 0 };
   std::size_t idx_traj{ 0 };
@@ -406,7 +406,7 @@ int main(int argc, char* argv[])
     const Z_Q zq{ q.head(3) };
     PRX_DEBUG_VAR_2(prx::symbol_factory_t::formatter(symbol_Q(idx_traj, idx)), q.transpose());
 
-    graph.add(ackermann_q_observation_t(zq, symbol_Q(idx_traj, idx), noise_models["fZ"]));
+    // graph.add(ackermann_q_observation_t(zq, symbol_Q(idx_traj, idx), noise_models["fZ"]));
     values.insert_or_assign(symbol_Q(idx_traj, idx), q);
     symbol_positions[symbol_Q(idx_traj, idx)] = zq.head(2);
 

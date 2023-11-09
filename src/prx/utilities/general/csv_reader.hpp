@@ -174,7 +174,7 @@ public:
     Block<T> columns(container.size());
     while (has_next_line())
     {
-      auto line = next_line<T>();
+      auto line = next_line<std::string>();
       for (int i = 0; i < container.size(); ++i)
       {
         const std::size_t idx{ container[i] };
