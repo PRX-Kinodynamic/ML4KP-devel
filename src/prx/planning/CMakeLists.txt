@@ -5,10 +5,14 @@ file(GLOB_RECURSE SRC_PRX_LIB_PLANNING  ./*.cpp)
 
 set(${PROJECT_NAME}_HEADERS "${${PROJECT_NAME}_HEADERS};${HEADER_PRX_LIB_PLANNING}" PARENT_SCOPE)
 
-add_library(${PROJECT_NAME}_planning  ${SRC_PRX_LIB_PLANNING})
+add_library(Planning  ${SRC_PRX_LIB_PLANNING})
 
-target_include_directories(${PROJECT_NAME}_planning PUBLIC ".")
+target_include_directories(Planning PUBLIC 
+														PUBLIC
+														"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+                            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+														)
 
-target_link_libraries(${PROJECT_NAME}_planning INTERFACE ${PROJECT_NAME}_simulation )
+target_link_libraries(Planning INTERFACE Simulation )
 
-set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};${PROJECT_NAME}_planning" PARENT_SCOPE)
+set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};Planning" PARENT_SCOPE)
