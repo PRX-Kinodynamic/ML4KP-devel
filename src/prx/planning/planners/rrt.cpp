@@ -112,8 +112,7 @@ void rrt_t::_resolve_query(condition_check_t* condition)
       update_goal(node_index);
     }
     iteration_count++;
-  }
-  while (!condition->check());
+  } while (!condition->check());
 }
 void rrt_t::_fulfill_query()
 {
@@ -262,4 +261,58 @@ void rrt_t::print_statistics()
   std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
 }
 
+void rrt_t::to_files(const std::string file_prefix, const std::string directory)
+{
+  using prx::constants::separating_value;
+
+  const std::string filename_trajs{ directory + "/" + file_prefix + "_trajectories.txt" };
+  const std::string filename_tree{ directory + "/" + file_prefix + "_tree.txt" };
+
+  std::ofstream ofs_trajs{ filename_trajs.c_str(), std::ofstream::trunc };
+  std::ofstream ofs_tree{ filename_tree.c_str(), std::ofstream::trunc };
+
+  std::queue<node_index_t> queue{ { start_vertex } };
+
+  ofs_trajs << "#" << separating_value;
+  ofs_trajs << "edge_idx" << separating_value;
+  ofs_trajs << "state\n";
+
+  ofs_tree << "#" << separating_value;
+  ofs_tree << "parent_idx" << separating_value;
+  ofs_tree << "edge_idx" << separating_value;
+  ofs_tree << "node_idx" << separating_value;
+  ofs_tree << "node_state\n";
+
+  while (not queue.empty())
+  {
+    const node_index_t node_idx{ queue.front() };
+    const std::shared_ptr<rrt_node_t> node{ tree.get_vertex_as<rrt_node_t>(node_idx) };
+    const edge_index_t edge_idx{ node->get_parent_edge() };
+    const node_index_t parent_idx{ node->get_parent() };
+
+    ofs_tree << parent_idx << prx::constants::separating_value;
+    ofs_tree << edge_idx << prx::constants::separating_value;
+    ofs_tree << node_idx << prx::constants::separating_value;
+    ofs_tree << node->point << "\n";
+
+    // queue children
+    for (auto child_idx : node->get_children())
+    {
+      const std::shared_ptr<rrt_node_t> child_node{ tree.get_vertex_as<rrt_node_t>(child_idx) };
+      const edge_index_t node_child_edge_idx{ child_node->get_parent_edge() };
+      const std::shared_ptr<rrt_edge_t> edge{ tree.get_edge_as<rrt_edge_t>(node_child_edge_idx) };
+
+      for (auto state : *(edge->traj))
+      {
+        ofs_trajs << node_child_edge_idx << prx::constants::separating_value << state << "\n";
+      }
+      ofs_trajs << "\n";
+      queue.emplace(child_idx);
+    }
+
+    queue.pop();
+  }
+  ofs_trajs.close();
+  ofs_tree.close();
+}
 }  // namespace prx

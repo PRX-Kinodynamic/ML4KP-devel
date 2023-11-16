@@ -237,10 +237,10 @@ void plan_t::pop_back()
 std::string plan_t::print(unsigned precision) const
 {
   std::stringstream out(std::stringstream::out);
-  out << "\n";
   for (const plan_step_t& step : *this)
   {
-    out << "[" << control_space->print_point(step.control, precision) << " , " << step.duration << "s]" << std::endl;
+    out << step.duration << prx::constants::separating_value;
+    out << step.control << "\n";
   }
   return out.str();
 }
@@ -264,4 +264,52 @@ void plan_t::increase_buffer()
     const_end_iterator = steps.begin();
   }
 }
+
+void plan_t::to_file(const std::string file_name, const std::ios_base::openmode _mode) const
+{
+  std::ofstream ofs_map;
+  ofs_map.open(file_name.c_str(), _mode);
+
+  for (unsigned i = 0; i < num_steps; ++i)
+  {
+    ofs_map << steps[i].duration << prx::constants::separating_value;
+    ofs_map << steps[i].control;
+    ofs_map << "\n";
+  }
+
+  ofs_map.close();
+}
+
+void plan_t::from_file(const std::string file_name)
+{
+  const char sep{ prx::constants::separating_value };
+  std::ifstream ifs(file_name);
+  std::string line;
+
+  space_point_t aux{ control_space->make_point() };
+  double time{ 0 };
+  while (std::getline(ifs, line))
+  {
+    if (line.size() == 0)
+      break;
+    std::istringstream ss(line);
+    std::string token;
+    std::vector<std::string> ctrl{};
+
+    int i = 0;
+    while (std::getline(ss, token, sep))
+    {
+      if (i == 0)
+        time = std::stod(token);
+      else
+        ctrl.push_back(token);
+      i++;
+    }
+    PRX_DEBUG_ITERABLE("Ctrl:", ctrl);
+    control_space->copy(aux, ctrl);
+    PRX_DEBUG_VAR_2(time, aux);
+    copy_onto_back(aux, time);
+  }
+}
+
 }  // namespace prx

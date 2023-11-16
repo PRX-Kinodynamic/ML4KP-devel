@@ -36,13 +36,17 @@ system_group_t::system_group_t(const std::vector<system_ptr_t>& sys_group, plant
   // compose the state spaces and control spaces
   std::vector<const space_t*> state_spaces;
   std::vector<const space_t*> control_spaces;
+  std::vector<const space_t*> parameter_spaces;
+
   for (auto g1 : group)
   {
     state_spaces.push_back(g1->get_state_space());
     control_spaces.push_back(g1->get_control_space());
+    parameter_spaces.push_back(g1->get_parameter_space());
   }
   state_space = new space_t(state_spaces);
   control_space = new space_t(control_spaces);
+  _parameter_space = new space_t(parameter_spaces);
 }
 
 system_group_t::~system_group_t()
@@ -109,7 +113,7 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
 
 void system_group_t::propagate(space_point_t start_state, const plan_t& plan, trajectory_t& traj)
 {
-  state_space->copy_from_point(start_state);
+  state_space->copy_from(start_state);
 
   traj.clear();
   traj.copy_onto_back(state_space);

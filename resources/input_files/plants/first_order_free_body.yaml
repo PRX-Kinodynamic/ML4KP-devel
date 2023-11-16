@@ -1,0 +1,31 @@
+name: "first_order_free_body"
+path: "first_order_free_body"
+
+# Assume empty environment... Doesn't make sense otherwise
+
+min_steps: 1
+max_steps: 10
+
+# [Position, Quaternion] -> [x,y,z, w,x,y,z]
+start_state: [0.0, 0.0, 0.028, 1,0,0,0]
+goal_state:  [0.0, 0.0, 0.038,1,0,0,0]
+
+state_space:
+  lower_bound: [-0.02, -0.02, 0, -1, -1, -1, -1]
+  upper_bound: [ 0.02, 0.02, 0.04, 1, 1, 1, 1]
+
+
+control_space:
+  _ctrl_min: &ctrl_min -0.50
+  _ctrl_max: &ctrl_max 0.50
+  lower_bound: [*ctrl_min,*ctrl_min,*ctrl_min,*ctrl_min,*ctrl_min,*ctrl_min]
+  upper_bound: [*ctrl_max,*ctrl_max,*ctrl_max,*ctrl_max,*ctrl_max,*ctrl_max]
+
+parameter_space:
+  _width: &width 0.015957
+  _depth: &depth 0.009910
+  _length: &length 0.050
+  values: [*width, *depth, *length]
+
+vis_body: "body"
+

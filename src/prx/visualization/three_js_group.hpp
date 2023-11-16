@@ -14,7 +14,8 @@ enum class info_geometry_t
   LINE = 0,
   QUAD = 1,
   FULL_LINE = 2,
-  CIRCLE = 3
+  CIRCLE = 3,
+  SPHERE
 };
 
 class three_js_group_t

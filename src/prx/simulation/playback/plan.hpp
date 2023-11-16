@@ -1,9 +1,10 @@
 #pragma once
 
+#include <deque>
+#include <fstream>
+
 #include "prx/utilities/spaces/space.hpp"
 #include "prx/utilities/defs.hpp"
-
-#include <deque>
 
 namespace prx
 {
@@ -182,6 +183,15 @@ public:
    * @return A string object that outputs the plan.
    */
   std::string print(unsigned precision = 3) const;
+
+  void to_file(const std::string, const std::ios_base::openmode _mode = std::ofstream::trunc) const;
+  void from_file(const std::string file_name);
+
+  friend std::ostream& operator<<(std::ostream& os, const plan_t& obj)
+  {
+    os << obj.print() << " ";
+    return os;
+  }
 
 private:
   void increase_buffer();

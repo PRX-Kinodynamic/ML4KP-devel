@@ -168,9 +168,10 @@ std::string trajectory_t::print(unsigned precision) const
 
   int counter = 0;
 
-  for (const space_point_t& st : *this)
+  for (const space_point_t& state : *this)
   {
-    out << counter << ": [" << state_space->print_point(st, precision) << "]" << std::endl;
+    out << counter << " " << state << " "
+        << "\n";
     counter++;
   }
   return out.str();

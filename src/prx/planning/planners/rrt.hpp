@@ -1,5 +1,7 @@
 #pragma once
 
+#include <queue>
+
 #include "prx/planning/planners/planner.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"
 #include "prx/utilities/data_structures/gnn.hpp"
@@ -134,6 +136,7 @@ public:
 
   virtual std::vector<std::string> get_statistics_header() override;
   virtual std::vector<double> get_statistics() override;
+  virtual void to_files(const std::string file_prefix, const std::string directory = prx::out_path);
 
 protected:
   virtual void update_goal(node_index_t node_index);
@@ -149,9 +152,6 @@ protected:
 
   rrt_specification_t* rrt_spec;
   rrt_query_t* rrt_query;
-
-  // virtual void _link_and_setup_spec_shared(std::shared_ptr<planner_specification_t> spec) override;
-  // virtual bool _link_and_setup_query_shared(std::shared_ptr<planner_query_t> query) override;
 
   std::string planner_name;
 

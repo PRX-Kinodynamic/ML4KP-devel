@@ -59,6 +59,8 @@ public:
 
   void print();
 
+  void replace_env_var(YAML::Node& node);
+
   inline bool exists(const std::string& key)
   {
     return !params[key].IsNull();

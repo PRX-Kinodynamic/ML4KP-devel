@@ -17,7 +17,7 @@ void aorrt_t::_link_and_setup_spec(planner_specification_t* spec)
   // reset is always called before this
   aorrt_spec = dynamic_cast<aorrt_specification_t*>(spec);
   prx_assert(aorrt_spec != nullptr, "RRT_2 received an incorrect specification.");
-  distance_function = aorrt_spec->distance_function;
+  distance_function = aorrt_spec->Y_distance_function;
   cost_function = aorrt_spec->cost_function;
   sample_state = aorrt_spec->sample_state;
   sample_plan = aorrt_spec->sample_plan;
@@ -118,16 +118,7 @@ void aorrt_t::_resolve_query(condition_check_t* condition)
     plan_t plan(*plans.front());
     trajectory_t traj(*trajs.front());
 
-    // propagate
-    //  plan_t plan(control_space);
-    //  trajectory_t traj(X_state_space);
-    //  propagate(X_aux_pt,plan,traj);
-
     c_new = cost_aux_pt->at(0) + cost_function(traj, plan);
-    // collision check and bnb
-    //  printf("valid_check: %s\tcost_comp: %s\n", valid_check(traj)?"true":"false", (c_new <
-    //  Y_min_cost)?"true":"false"); printf("c_new = %.4f + %.4f = %.4f\n", cost_aux_pt -> at(0),
-    //  cost_function(traj,plan), c_new);
 
     if (valid_check(traj) && c_new < Y_min_cost)
     {
@@ -232,7 +223,6 @@ void aorrt_t::update_goal(node_index_t node_index)
   auto tree_edge = tree.get_edge_as<aorrt_edge_t>(new_tree_node->get_parent_edge());
 
   space_point_t pt = tree_edge->traj->back();
-  // if(distance_function(aorrt_query->goal_state, traj.back()) < aorrt_query->goal_region_radius
   if (aorrt_query->goal_check(pt) && c_new < Y_min_cost)
   {
     // statics
