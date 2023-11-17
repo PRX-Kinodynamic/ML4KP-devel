@@ -1,0 +1,51 @@
+environment:
+    type: obstacle
+    root_configuration:
+      position: [0,0,0]
+      orientation: [0,0,0,1]
+    geometries:
+      -
+        name: box_A
+        collision_geometry:
+          type: box
+          dims: [ 0.004, 0.025, 0.025]
+          material: 0x0015ff
+        config:
+          position: [0.0105, 0, 0.0155]
+          orientation: [0,0,0,1]
+      -
+        name: box_B
+        collision_geometry:
+          type: box
+          dims: [ 0.017, 0.007, 0.025]
+          material: 0x0015ff
+        config:
+          position: [0, -0.009, 0.0155]
+          orientation: [0,0,0,1]
+      -
+        name: box_C
+        collision_geometry:
+          type: box
+          dims: [ 0.004, 0.025, 0.025]
+          material: 0x0015ff
+        config:
+          position: [-0.0105, 0, 0.0155]
+          orientation: [0,0,0,1]
+      -
+        name: box_D
+        collision_geometry:
+          type: box
+          dims: [ 0.017, 0.007, 0.025]
+          material: 0x0015ff
+        config:
+          position: [0, 0.009, 0.0155]
+          orientation: [0,0,0,1]
+      -
+        name: base
+        collision_geometry:
+          type: box
+          dims: [ 0.040, 0.040, 0.003]
+          material: 0x0015ff
+        config:
+          position: [0, 0, 0.0015]
+          orientation: [0,0,0,1]

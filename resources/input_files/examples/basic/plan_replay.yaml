@@ -1,0 +1,19 @@
+random_seed: 231192
+simulation_step: 0.1
+
+environment: "environments/empty.yaml"
+# plant: !file "plants/pendulum.yaml"
+# plant: !file "plants/acrobot.yaml"
+# plant: !file "plants/racecar_mini.yaml"
+plant: !file "plants/car_like.yaml"
+
+visualize: true
+
+checker_type: sim_time
+checker_value: 30
+
+goal_region_radius: 0.5
+
+# plan_file: "${DIRTMP_PATH}/resources/input_files/examples/basic/plan_to_replay.txt"
+plan_file: "${DIRTMP_PATH}/data/trajopt/plan_1.txt"
+solution_trajectory_file: "${DIRTMP_PATH}/data/trajopt/traj_1.txt"
