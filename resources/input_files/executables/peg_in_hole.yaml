@@ -6,9 +6,9 @@ visualize: true
 
 planner: 
   name: "AORRT"
-  goal_region_radius: 0.25
+  goal_region_radius: 0.01
   checker_type: "time"
-  checker_value: 500
+  checker_value: 1000
 
 plant: !file "plants/first_order_free_body.yaml"
 

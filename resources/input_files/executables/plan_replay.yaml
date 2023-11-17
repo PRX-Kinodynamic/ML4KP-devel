@@ -6,4 +6,4 @@ visualize: true
 
 plant: !file "plants/first_order_free_body.yaml"
 # plan: "${DIRTMP_PATH}/bin/plan_dbg.txt"
-plan: "${DIRTMP_PATH}/out/peg_in_hole/pih_00_sln_plan.txt"
+plan: "${DIRTMP_PATH}/out/peg_in_hole/pih_0001_sln_plan.txt"
