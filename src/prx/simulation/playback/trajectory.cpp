@@ -1,4 +1,3 @@
-
 #include "prx/simulation/playback/trajectory.hpp"
 
 namespace prx
@@ -213,4 +212,35 @@ void trajectory_t::increase_buffer()
     const_end_iterator = states.begin();
   }
 }
+void trajectory_t::to_file(const std::string filename, const std::ios_base::openmode _mode) const
+{
+  std::ofstream ofs;
+  ofs.open(filename.c_str(), _mode);
+
+  for (unsigned i = 0; i < num_states; ++i)
+  {
+    ofs << states[i] << "\n";
+  }
+
+  ofs.close();
+}
+
+void trajectory_t::from_file(const std::string filename)
+{
+  std::ifstream ifs(filename);
+  std::string line;
+
+  space_point_t aux{ state_space->make_point() };
+
+  while (std::getline(ifs, line))
+  {
+    if (line.size() == 0)
+      break;
+
+    const std::vector<double> state{ split<double>(line) };
+    state_space->copy(aux, state);
+    copy_onto_back(aux);
+  }
+}
+
 }  // namespace prx

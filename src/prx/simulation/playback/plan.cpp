@@ -305,9 +305,7 @@ void plan_t::from_file(const std::string file_name)
         ctrl.push_back(token);
       i++;
     }
-    PRX_DEBUG_ITERABLE("Ctrl:", ctrl);
     control_space->copy(aux, ctrl);
-    PRX_DEBUG_VAR_2(time, aux);
     copy_onto_back(aux, time);
   }
 }

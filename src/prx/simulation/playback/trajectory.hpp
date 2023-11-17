@@ -4,6 +4,7 @@
 #include "prx/utilities/defs.hpp"
 
 #include <deque>
+#include <fstream>
 
 namespace prx
 {
@@ -98,9 +99,32 @@ public:
 
   std::string print(unsigned precision = 3) const;
 
+  void to_file(const std::string, const std::ios_base::openmode _mode = std::ofstream::trunc) const;
+  void from_file(const std::string);
+
+  friend std::ostream& operator<<(std::ostream& os, const trajectory_t* obj)
+  {
+    os << *obj;
+    return os;
+  }
   friend std::ostream& operator<<(std::ostream& os, const trajectory_t& obj)
   {
-    os << obj.print() << " ";
+    if (obj.num_states < 10)
+    {
+      os << obj.print() << " ";
+    }
+    else
+    {
+      for (unsigned i = 0; i < 5; ++i)
+      {
+        os << obj[i] << "\n";
+      }
+      os << "(...)\n";
+      for (unsigned i = obj.num_states - 5; i < obj.num_states; ++i)
+      {
+        os << obj[i] << "\n";
+      }
+    }
     // os << std::endl;
     return os;
   }

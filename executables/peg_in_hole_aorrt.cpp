@@ -107,6 +107,7 @@ int main(int argc, char* argv[])
 
   aorrt.to_files(file_prefix, out_dir);
   aorrt_query.solution_plan.to_file(out_dir + "/" + file_prefix + "_sln_plan.txt");
+  aorrt_query.solution_traj.to_file(out_dir + "/" + file_prefix + "_sln_traj.txt");
 
   // aorrt_query.solution_traj.to_file();
 
