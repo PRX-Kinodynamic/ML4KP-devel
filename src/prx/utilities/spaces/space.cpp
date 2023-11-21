@@ -438,7 +438,7 @@ void space_t::interpolate(const space_point_t& point1, const space_point_t& poin
   assert_point_space_name(point2);
   assert_point_space_name(result);
 
-  prx_assert(t >= 0 && t <= 1, "Interpolation requires a value between 0 and 1: given " << t);
+  prx_assert(0.0 <= t && t <= 1.0, "Interpolation requires a value between 0 and 1: given `" << t << "`");
 
   for (unsigned i = 0; i < dimension;)
   {
@@ -481,12 +481,12 @@ void space_t::interpolate(const space_point_t& point1, const space_point_t& poin
       Eigen::Quaterniond quat1{ w1, x1, y1, z1 };
       const Eigen::Quaterniond quat2{ w2, x2, y2, z2 };
 
-      quat1.slerp(t, quat2);
+      const Eigen::Quaterniond q_res{ quat1.slerp(t, quat2) };
 
-      result->_memory[i] = quat1.w();
-      result->_memory[i + 1] = quat1.x();
-      result->_memory[i + 2] = quat1.y();
-      result->_memory[i + 3] = quat1.z();
+      result->_memory[i] = q_res.w();
+      result->_memory[i + 1] = q_res.x();
+      result->_memory[i + 2] = q_res.y();
+      result->_memory[i + 3] = q_res.z();
       i += 4;
     }
     else

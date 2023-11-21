@@ -1,0 +1,6 @@
+simulation_step: 0.01666666667
+random_seed: 112392
+
+plant: !file "plants/first_order_free_body.yaml"
+
+eta: 10
