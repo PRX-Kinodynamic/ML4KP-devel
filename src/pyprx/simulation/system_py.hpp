@@ -2,6 +2,13 @@
 #include <boost/python.hpp>
 #include "prx/simulation/system.hpp"
 
+namespace pyprx
+{
+namespace simulation
+{
+namespace system
+{
+
 struct system_wrap : prx::system_t, wrapper<prx::system_t>
 {
   system_wrap(const std::string& path) : prx::system_t(path){};
@@ -56,22 +63,8 @@ struct system_wrap : prx::system_t, wrapper<prx::system_t>
   }
 };
 
-void set_simulation_step(double ss)
+void bindings()
 {
-  prx::simulation_step = ss;
-}
-
-double get_simulation_step()
-{
-  return prx::simulation_step;
-}
-
-void pyprx_simulation_system_py()
-{
-  // scope().attr("simulation_step") = prx::simulation_step;
-  def("set_simulation_step", &set_simulation_step);
-  def("get_simulation_step", &get_simulation_step);
-
   class_<system_wrap, boost::noncopyable>("system", init<std::string>())
       // .def("__init__", make_constructor(&init_as_ptr<system_wrap, std::string>, default_call_policies()))
       // .def("__init__", make_constructor(&system_wrap, default_call_policies(), (arg("path")) ))
@@ -103,3 +96,6 @@ void pyprx_simulation_system_py()
 
   class_<std::vector<prx::system_ptr_t>>("vector_system").def(vector_indexing_suite<std::vector<prx::system_ptr_t>>());
 }
+}  // namespace system
+}  // namespace simulation
+}  // namespace pyprx

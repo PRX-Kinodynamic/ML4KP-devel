@@ -4,6 +4,16 @@
 
 using namespace boost::python;
 
+namespace pyprx
+{
+namespace planning
+{
+namespace planners
+{
+namespace planner
+{
+using prx::planner_query_t;
+
 PRX_SETTER(planner_query_t, solution_traj)
 PRX_GETTER(planner_query_t, solution_traj)
 
@@ -48,7 +58,7 @@ struct planner_wrapper : prx::planner_t, wrapper<prx::planner_t>
   }
   // {std::cout << "\"_preprocess\" is virtual! Needs to be overriden" << std::endl;
   //  return false;};
-  virtual bool _link_and_setup_query(prx::planner_query_t* query) override
+  virtual bool _link_and_setup_query(planner_query_t* query) override
   {
     return this->get_override("_link_and_setup_query");
   }
@@ -71,10 +81,10 @@ struct planner_wrapper : prx::planner_t, wrapper<prx::planner_t>
   // {std::cout << "\"_reset\" is virtual! Needs to be overriden" << std::endl;};
 };
 
-void pyprx_planning_planners_planner_py()
+void bindings()
 {
-  class_<prx::planner_query_t, std::shared_ptr<prx::planner_query_t>>("planner_query", no_init)
-      .def("__init__", make_constructor(&init_as_ptr<prx::planner_query_t, prx::space_t*, prx::space_t*>,
+  class_<planner_query_t, std::shared_ptr<planner_query_t>>("planner_query", no_init)
+      .def("__init__", make_constructor(&init_as_ptr<planner_query_t, prx::space_t*, prx::space_t*>,
                                         default_call_policies(), (arg("state_space"), arg("control_space"))))
       .add_property("start_state", &get_planner_query_t_start_state<prx::space_point_t>,
                     &set_planner_query_t_start_state<prx::space_point_t>)
@@ -91,16 +101,22 @@ void pyprx_planning_planners_planner_py()
       .add_property("solution_cost", &get_planner_query_t_solution_cost<double>,
                     &set_planner_query_t_solution_cost<double>)
       .add_property("tree_visualization", &get_planner_query_t_tree_visualization<std::vector<prx::trajectory_t>>,
-                    &set_planner_query_t_tree_visualization<std::vector<prx::trajectory_t>>);
-  class_<prx::planner_specification_t, std::shared_ptr<prx::planner_specification_t>, boost::noncopyable>(
-      "planner_specification", init<>());
-
-  class_<prx::goal_check_t>("goal_check").def("__call__", &prx::goal_check_t::operator())
-      // .def("wrap", &create_function<prx::goal_check_t, bool, prx::space_point_t&>).staticmethod("wrap")
+                    &set_planner_query_t_tree_visualization<std::vector<prx::trajectory_t>>)
+      // Comment to force ; to the next one
       ;
 
+  class_<prx::planner_specification_t, std::shared_ptr<prx::planner_specification_t>, boost::noncopyable>(
+      "planner_specification", init<>())
+      // Comment to force ; to the next one
+      ;
+
+  scope().attr("goal_check") = scope().attr("valid_state");
+
+  // class_<prx::goal_check_t>("goal_check").def("__call__", &prx::goal_check_t::operator())
+  //     // Comment to force ; to the next one
+  //     ;
+
   class_<planner_wrapper, boost::noncopyable>("planner", no_init)
-      // class_<std::shared_ptr<planner_wrapper>>("planner", no_init)
       .def("__init__",
            make_constructor(&init_as_ptr<planner_wrapper, std::string>, default_call_policies(), (arg("new_name"))))
       .def("link_and_setup_spec", &prx::planner_t::link_and_setup_spec)
@@ -116,6 +132,10 @@ void pyprx_planning_planners_planner_py()
       .def("_resolve_query", &planner_wrapper::_resolve_query)
       .def("_fulfill_query", &planner_wrapper::_fulfill_query)
       .def("_reset", &planner_wrapper::_reset)
-      // .def("", &prx::planner_t:: )
+      // Comment to force ; to the next one
       ;
 }
+}  // namespace planner
+}  // namespace planners
+}  // namespace planning
+}  // namespace pyprx

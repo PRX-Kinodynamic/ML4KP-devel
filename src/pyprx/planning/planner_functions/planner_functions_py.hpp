@@ -4,6 +4,12 @@
 
 using namespace boost::python;
 
+namespace pyprx
+{
+namespace planning
+{
+namespace planner_functions
+{
 prx::heuristic_function_t init_heuristic_function()
 {
   prx::heuristic_function_t default_h = [](const prx::space_point_t& s1, const prx::space_point_t& s2) {
@@ -13,55 +19,64 @@ prx::heuristic_function_t init_heuristic_function()
   return default_h;
 }
 
-void pyprx_planning_planner_functions_py()
+void bindings()
 {
-  // class_<prx::heuristic_function_t>("heuristic_function")
-  //     .def("__call__", &prx::heuristic_function_t::operator() )
-  //     .def("default", make_function(&init_heuristic_function, default_call_policies())).staticmethod("default")
-  //     .def("set_f", &create_function<prx::heuristic_function_t, double, const prx::space_point_t&, const
-  //     prx::space_point_t&>).staticmethod("set_f")
-  //     ;
   def("default_valid_state", &prx::default_valid_state);
   class_<prx::valid_state_t>("valid_state")
       .def("__call__", &prx::valid_state_t::operator())
-      // .def("set_f", &create_function<prx::valid_state_t, bool, prx::space_point_t>).staticmethod("set_f")
       .def("wrap", &create_function<prx::valid_state_t, bool, prx::space_point_t>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
-  // typedef std::function<bool (trajectory_t&)> valid_trajectory_t;
   def("default_valid_trajectory", &prx::default_valid_trajectory);
   class_<prx::valid_trajectory_t>("valid_trajectory")
       .def("__call__", &prx::valid_trajectory_t::operator())
       .def("set_f", &create_function<prx::valid_trajectory_t, bool, prx::trajectory_t>)
       .staticmethod("set_f")
       .def("wrap", &create_function<prx::valid_trajectory_t, bool, prx::trajectory_t>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::sample_state_t>("sample_state")
       .def("__call__", &prx::sample_state_t::operator())
       .def("wrap", &create_function<prx::sample_state_t, void, prx::space_point_t&>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::sample_plan_t>("sample_plan")
       .def("__call__", &prx::sample_plan_t::operator())
       .def("wrap", &create_function<prx::sample_plan_t, void, prx::plan_t, prx::space_point_t>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::valid_stop_t>("valid_stop")
       .def("__call__", &prx::valid_stop_t::operator())
       .def("wrap", &create_function<prx::valid_stop_t, bool, prx::space_point_t, prx::plan_t*, prx::trajectory_t*>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::propagate_t>("propagate")
       .def("__call__", &prx::propagate_t::operator())
       .def("wrap", &create_function<prx::propagate_t, void, prx::space_point_t, prx::plan_t&, prx::trajectory_t&>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::expand_t>("expand")
       .def("__call__", &prx::expand_t::operator())
       .def("wrap", &create_function<prx::expand_t, void, prx::space_point_t&, std::vector<prx::plan_t*>&,
                                     std::vector<prx::trajectory_t*>&, int, bool>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   def("create_default_goal_check", &prx::create_default_goal_check);
 }
+}  // namespace planner_functions
+}  // namespace planning
+}  // namespace pyprx
