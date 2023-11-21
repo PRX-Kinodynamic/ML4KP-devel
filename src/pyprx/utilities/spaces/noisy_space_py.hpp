@@ -6,6 +6,15 @@
 #include "prx/utilities/spaces/space.hpp"
 #include "prx/utilities/spaces/noisy_space.hpp"
 
+namespace pyprx
+{
+namespace utilities
+{
+namespace spaces
+{
+namespace noisy_space
+{
+
 template <class T, class S>
 void copy_to_vector_wrapper(T& s, S& pt)
 {
@@ -24,7 +33,12 @@ void bind_noisy_space(const std::string& name)
       .def("copy_to_vector", copy_to_vector_wrapper<prx::noisy_space_t<T>, Eigen::VectorXd>);
 }
 
-void pyprx_utilities_spaces_noisy_space()
+void bindings()
 {
   bind_noisy_space<prx::uniform_noise_t, double, double>("uniform_noisy_space");
 }
+
+}  // namespace noisy_space
+}  // namespace spaces
+}  // namespace utilities
+}  // namespace pyprx

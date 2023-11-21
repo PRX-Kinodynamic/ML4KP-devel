@@ -1,7 +1,7 @@
 import os
 import math
 import pytest
-import libpyDirtMP as prx
+import PyML4KP as prx
 
 def test_one_dimension_bang_bang_ctrl_build_correct():
 	plant = prx.system_factory.create_system("pendulum", "pendulum-noisy")

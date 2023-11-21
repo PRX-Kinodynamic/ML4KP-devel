@@ -7,11 +7,20 @@
 #include "pyprx/planning/planners/dirt_py.hpp"
 
 using namespace boost::python;
-void pyprx_planning_planners_py()
+namespace pyprx
 {
-  pyprx_planning_planners_planner_py();
-  pyprx_planning_planners_rrt_py();
-  pyprx_planning_planners_sst_py();
-  pyprx_planning_planners_dirt_py();
+namespace planning
+{
+namespace planners
+{
+void bindings()
+{
+  planner::bindings();
+  rrt::bindings();
+  sst::bindings();
+  dirt::bindings();
   // pyprx_planning_planners_hyb_aorrt2_stride_py();
 }
+}  // namespace planners
+}  // namespace planning
+}  // namespace pyprx

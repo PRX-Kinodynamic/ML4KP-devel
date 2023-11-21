@@ -1,7 +1,7 @@
 import os
 import math
 import pytest
-import libpyDirtMP as prx
+import PyML4KP as prx
 
 def test_empty_environment():
     obstacle_loader = prx.obstacle_loader("environments/empty.yaml");

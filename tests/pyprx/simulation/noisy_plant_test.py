@@ -1,7 +1,7 @@
 import os
 import math
 import pytest
-import libpyDirtMP as prx
+import PyML4KP as prx
 
 # plant = prx.system_factory.create_system("pendulum", "pendulum-noisy")
 def check(plant):

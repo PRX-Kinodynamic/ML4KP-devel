@@ -2,6 +2,13 @@
 #include <boost/python.hpp>
 #include "prx/visualization/three_js_group.hpp"
 
+namespace pyprx
+{
+namespace visualization
+{
+namespace three_js_group
+{
+
 void (prx::three_js_group_t::*update_vis_infos_0_0)(prx::info_geometry_t, std::vector<prx::trajectory_t>&, std::string,
                                                     prx::space_t*, std::string) = &prx::three_js_group_t::add_vis_infos;
 void (prx::three_js_group_t::*update_vis_infos_1_0)(prx::info_geometry_t, const prx::trajectory_t&, std::string,
@@ -48,7 +55,7 @@ struct three_js_group_wrap : prx::three_js_group_t, wrapper<prx::three_js_group_
   }
 };
 
-void pyprx_visualization_three_js_group_py()
+void bindings()
 {
   enum_<prx::info_geometry_t>("info_geometry")
       .value("LINE", prx::info_geometry_t::LINE)
@@ -75,3 +82,7 @@ void pyprx_visualization_three_js_group_py()
       .def("snapshot_state", &prx::three_js_group_t::snapshot_state)
       .def("output_html", &prx::three_js_group_t::output_html);
 }
+
+}  // namespace three_js_group
+}  // namespace visualization
+}  // namespace pyprx

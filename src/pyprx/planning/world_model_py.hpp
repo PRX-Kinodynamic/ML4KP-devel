@@ -5,21 +5,21 @@
 #include "prx/simulation/system_group.hpp"
 
 using namespace boost::python;
-
-void pyprx_planning_world_model_py()
+namespace pyprx
 {
-  // class_<std::vector<std::shared_ptr<prx::movable_object_t>>>("vector_movable_object")
-  //   		.def(vector_indexing_suite<std::vector<std::shared_ptr<prx::movable_object_t>>>())
-  // 	;
-
+namespace planning
+{
+namespace world_model
+{
+void bindings()
+{
   class_<std::pair<std::shared_ptr<prx::system_group_t>, std::shared_ptr<prx::collision_group_t>>>("context")
       .def_readwrite("system_group",
                      &std::pair<std::shared_ptr<prx::system_group_t>, std::shared_ptr<prx::collision_group_t>>::first)
       .def_readwrite("collision_group",
-                     &std::pair<std::shared_ptr<prx::system_group_t>, std::shared_ptr<prx::collision_group_t>>::second);
-  // void create_context(const std::string& context_name,const std::vector<std::string>& system_names,const
-  // std::vector<std::string>& obstacle_names); std::pair<,std::shared_ptr<collision_group_t>> get_context(const
-  // std::string& context_name);
+                     &std::pair<std::shared_ptr<prx::system_group_t>, std::shared_ptr<prx::collision_group_t>>::second)
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::world_model_t>(
       "world_model", init<std::vector<prx::system_ptr_t>, std::vector<std::shared_ptr<prx::movable_object_t>>>())
@@ -27,5 +27,10 @@ void pyprx_planning_world_model_py()
       .def("get_context", &prx::world_model_t::get_context)
       .def("get_all_context_names", &prx::world_model_t::get_all_context_names)
       .def("step_simulation", &prx::world_model_t::step_simulation)
-      .def("reset_simulation", &prx::world_model_t::reset_simulation);
+      .def("reset_simulation", &prx::world_model_t::reset_simulation)
+      // Comment to force ; to the next one
+      ;
 }
+}  // namespace world_model
+}  // namespace planning
+}  // namespace pyprx
