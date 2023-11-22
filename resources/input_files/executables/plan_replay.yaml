@@ -1,0 +1,6 @@
+simulation_step: 0.01
+
+environment: "environments/empty.yaml"
+plant: !file "plants/mushr.yaml"
+
+plan: "${DIRTMP_PATH}/bin/plan_dbg.txt"
