@@ -56,6 +56,7 @@ space_t::space_t(const std::string& topo, const std::vector<double*>& in_address
     }
   }
   space_name = name;
+  enforce_bounds();
 }
 
 space_t::space_t(const std::string& topology, const std::vector<double*>& addresses)
@@ -237,7 +238,7 @@ void space_t::copy_from_point(const space_point_t point) const
 
 void space_t::copy_point(const space_point_t destination, const space_point_t source) const
 {
-//  PRX_DEPRECATED("Use 'space_t::copy' instead");
+  //  PRX_DEPRECATED("Use 'space_t::copy' instead");
   prx_assert(destination->_parent->space_name == source->_parent->space_name,
              "Points have different parent spaces: " << destination->_parent->space_name << " and "
                                                      << source->_parent->space_name);
@@ -305,21 +306,6 @@ void space_t::copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, co
   }
 }
 
-void space_t::enforce_bounds() const
-{
-  for (unsigned i = 0; i < dimension; i++)
-  {
-    double& p = (*addresses[i]);
-    if (topology[i] == topology_t::ROTATIONAL)
-    {
-      p = norm_angle_pi(p, *lower_bounds[i], *upper_bounds[i]);
-    }
-    else
-    {
-      p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
-    }
-  }
-}
 bool space_t::satisfies_bounds(const space_point_t& point) const
 {
   assert_point_space_name(point);
@@ -329,12 +315,10 @@ bool space_t::satisfies_bounds(const space_point_t& point) const
     double& p = point->_memory[i];
     if (p < *lower_bounds[i])
     {
-      // printf("%d - lower bound: %.3f, val: %.3f\n", i, *lower_bounds[i], p );
       return false;
     }
     if (p > *upper_bounds[i])
     {
-      // printf("%d - upper bound: %.3f, val: %.3f\n", i, *lower_bounds[i], p );
       return false;
     }
   }
@@ -418,30 +402,53 @@ void space_t::print_bounds() const
 void space_t::integrate(const space_point_t& point, const space_t* derivative, double delta_t)
 {
   prx_assert(derivative->get_dimension() == dimension, "");
-  copy_from_point(point);
+  copy_from(point);
   integrate(derivative, delta_t);
 }
 
 void space_t::integrate(const space_t* derivative, double delta_t)
 {
-  for (unsigned i = 0; i < dimension; i++)
+  for (unsigned i = 0; i < dimension;)
   {
     if (topology[i] == topology_t::EUCLIDEAN || topology[i] == topology_t::ROTATIONAL)
     {
       *(addresses[i]) += delta_t * derivative->at(i);
+      i++;
     }
     else if (topology[i] == topology_t::DISCRETE)
     {
       *(addresses[i]) += delta_t * derivative->at(i);
       *(addresses[i]) = round(*(addresses[i]));
+      i++;
     }
     else if (topology[i] == topology_t::IDLE)
     {
       continue;
+      i++;
     }
     else if (topology[i] == topology_t::QUATERNION)
     {
-      prx_warn("Quaternion integration not implemented yet!");
+      const double w{ *(addresses[i]) };
+      const double x{ *(addresses[i + 1]) };
+      const double y{ *(addresses[i + 2]) };
+      const double z{ *(addresses[i + 3]) };
+
+      const double dw{ derivative->at(i) };
+      const double dx{ derivative->at(i + 1) };
+      const double dy{ derivative->at(i + 2) };
+      const double dz{ derivative->at(i + 3) };
+
+      Eigen::Quaterniond quat{ w, x, y, z };
+      const Eigen::Quaterniond dquat{ dw, dx, dy, dz };
+
+      quat.coeffs() += delta_t * dquat.coeffs();
+      quat.normalize();
+
+      *(addresses[i]) = quat.w();
+      *(addresses[i + 1]) = quat.x();
+      *(addresses[i + 2]) = quat.y();
+      *(addresses[i + 3]) = quat.z();
+      i += 4;
     }
   }
   enforce_bounds();
@@ -456,7 +463,7 @@ void space_t::interpolate(const space_point_t& point1, const space_point_t& poin
 
   prx_assert(t >= 0 && t <= 1, "Interpolation requires a value between 0 and 1: given " << t);
 
-  for (unsigned i = 0; i < dimension; i++)
+  for (unsigned i = 0; i < dimension;)
   {
     if (topology[i] == topology_t::ROTATIONAL)
     {
@@ -472,6 +479,7 @@ void space_t::interpolate(const space_point_t& point1, const space_point_t& poin
           result->_memory[i] = point1->_memory[i] + t * (2 * PRX_PI - point1->_memory[i] + point2->_memory[i]);
       }
       result->_memory[i] = norm_angle_pi(result->_memory[i], *lower_bounds[i], *upper_bounds[i]);
+      i++;
     }
     else if (topology[i] == topology_t::DISCRETE)
     {
@@ -479,14 +487,35 @@ void space_t::interpolate(const space_point_t& point1, const space_point_t& poin
         result->_memory[i] = (int)point2->_memory[i];
       else
         result->_memory[i] = (int)point1->_memory[i];
+      i++;
     }
     else if (topology[i] == topology_t::QUATERNION)
     {
-      prx_warn("Quaternion interpolation not implemented yet!");
+      const double w1{ point1->_memory[i] };
+      const double x1{ point1->_memory[i + 1] };
+      const double y1{ point1->_memory[i + 2] };
+      const double z1{ point1->_memory[i + 3] };
+
+      const double w2{ point2->_memory[i] };
+      const double x2{ point2->_memory[i + 1] };
+      const double y2{ point2->_memory[i + 2] };
+      const double z2{ point2->_memory[i + 3] };
+
+      Eigen::Quaterniond quat1{ w1, x1, y1, z1 };
+      const Eigen::Quaterniond quat2{ w2, x2, y2, z2 };
+
+      quat1.slerp(t, quat2);
+
+      result->_memory[i] = quat1.w();
+      result->_memory[i + 1] = quat1.x();
+      result->_memory[i + 2] = quat1.y();
+      result->_memory[i + 3] = quat1.z();
+      i += 4;
     }
     else
     {
       result->_memory[i] = (1 - t) * point1->_memory[i] + t * point2->_memory[i];
+      i++;
     }
   }
 }
