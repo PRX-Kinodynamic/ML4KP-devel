@@ -7,12 +7,12 @@ min_steps: 1
 max_steps: 10
 
 # [Position, Quaternion] -> [x,y,z, w,x,y,z]
-start_state: [0.0, 0.0, 0.028,1,0,0,0]
-goal_state:  [0.2, 0.2, 0.038,1,0,0,0]
+start_state: [0.0, 0.0, 29.0,1,0,0,0]
+goal_state:  [20, 20, 38.0,1,0,0,0]
 
 state_space:
-  lower_bound: [-0.1, -0.1, 0, -1, -1, -1, -1]
-  upper_bound: [ 0.1, 0.1, 0.1, 1, 1, 1, 1]
+  lower_bound: [-1000, -1000, 0, -1, -1, -1, -1]
+  upper_bound: [ 1000,  1000, 100, 1, 1, 1, 1]
 
 
 control_space:
@@ -22,9 +22,9 @@ control_space:
   upper_bound: [*ctrl_max,*ctrl_max,*ctrl_max,*ctrl_max,*ctrl_max,*ctrl_max]
 
 parameter_space:
-  _width: &width 0.015957
-  _depth: &depth 0.009910
-  _length: &length 0.050
+  _width: &width 159.57
+  _depth: &depth 9.910
+  _length: &length 50
   values: [*width, *depth, *length]
 
 vis_body: "body"

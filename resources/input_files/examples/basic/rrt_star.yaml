@@ -1,0 +1,16 @@
+planner: "RRT*"
+
+random_seed: 231192
+simulation_step: 0.1
+
+environment: "environments/simple_obstacle.yaml"
+plant: !file "plants/two_dim_pt.yaml"
+
+visualize: true
+
+checker_type: time
+checker_value: 51
+
+goal_region_radius: 0.5
+
+eta: 1.0

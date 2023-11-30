@@ -70,7 +70,10 @@ int main(int argc, char* argv[])
     const double q1_z{ y->at(3 + 3) };
     const Eigen::Quaterniond q0(q0_w, q0_x, q0_y, q0_z);
     const Eigen::Quaterniond q1(q1_w, q1_x, q1_y, q1_z);
-    dist += q0.angularDistance(q1);
+    // dist += q0.angularDistance(q1);
+    const Eigen::Matrix3d R0{ q0.toRotationMatrix() };
+    const Eigen::Matrix3d R1{ q1.toRotationMatrix() };
+    dist += std::acos(((R1.transpose() * R0).trace() - 1) / 2.0);
     return dist;
   };
 

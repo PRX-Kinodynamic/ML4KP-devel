@@ -44,8 +44,8 @@ private:
   std::vector<std::shared_ptr<movable_object_t>> obstacles;
 };
 
-inline std::pair<std::vector<std::string>, std::vector<std::shared_ptr<movable_object_t>>>
-load_obstacles(const std::string obstacles_file)
+using PairNameObstacles = std::pair<std::vector<std::string>, std::vector<std::shared_ptr<movable_object_t>>>;
+inline PairNameObstacles load_obstacles(const std::string obstacles_file)
 {
   return obstacle_loader_t::load_obstacles_from_file(obstacles_file);
 }

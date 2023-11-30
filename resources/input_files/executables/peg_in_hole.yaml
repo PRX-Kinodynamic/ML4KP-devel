@@ -1,14 +1,15 @@
-simulation_step: 0.01
+simulation_step: 0.1
 random_seed: 231192
 
 environment: "environments/peg_in_hole_0.yaml"
 visualize: true
 
 planner: 
-  name: "AORRT"
-  goal_region_radius: 0.01
+  name: "RRT*"
+  goal_region_radius: 1
   checker_type: "time"
   checker_value: 1000
+  eta: 1
 
 plant: !file "plants/first_order_free_body.yaml"
 

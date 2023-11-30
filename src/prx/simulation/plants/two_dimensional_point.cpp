@@ -82,4 +82,9 @@ void two_dimensional_point_t::compute_derivative()
   dx = v * cos(theta);
   dy = v * sin(theta);
 }
+
+void two_dimensional_point_t::steer(const space_point_t x, const space_point_t y, const double ti)
+{
+  state_space->interpolate(x, y, ti);
+}
 }  // namespace prx

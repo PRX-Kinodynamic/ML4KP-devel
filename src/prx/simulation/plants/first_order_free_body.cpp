@@ -10,9 +10,9 @@ first_order_free_body_t::first_order_free_body_t(const std::string& path)
   , _quat(Quaternion::Identity())
   , _xdot(Velocity::Zero())
   , _omega(Velocity::Zero())
-  , _width(0.015957)
-  , _depth(0.009910)
-  , _length(0.050)
+  , _width(15.957)
+  , _depth(9.910)
+  , _length(50.0)
 {
   state_memory = {
     &_x[0],     &_x[1],     &_x[2],                 // no-lint
@@ -56,6 +56,20 @@ first_order_free_body_t::~first_order_free_body_t()
 void first_order_free_body_t::propagate(const double simulation_step)
 {
   integrator->integrate(simulation_step);
+}
+
+void first_order_free_body_t::steer(const space_point_t x, const space_point_t y, double ti)
+{
+  // const double total_steps{ eta / prx::simulation_step };
+  // std::vector<double> steps{ prx::linspace(0.0, 1.0, total_steps) };
+  // for (auto ti : steps)
+  // {
+  state_space->interpolate(x, y, ti);
+  // traj.copy_onto_back(z);
+  //   ti += prx::simulation_step;
+  //   if (eta < distance_function(x, z))
+  //     break;
+  // }
 }
 
 void first_order_free_body_t::update_configuration()

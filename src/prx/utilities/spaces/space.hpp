@@ -334,7 +334,97 @@ public:
   void integrate(const space_point_t& point, const space_t* derivative, double delta_t);
   void integrate(const space_t* derivative, double delta_t);
 
-  void interpolate(const space_point_t& point1, const space_point_t& point2, double t, space_point_t& result) const;
+  template <typename Point0, typename Point1, typename PointOut,
+            std::enable_if_t<!prx::utilities::is_any_ptr<Point0>{}, bool> = true,
+            std::enable_if_t<!prx::utilities::is_any_ptr<Point1>{}, bool> = true,
+            std::enable_if_t<!prx::utilities::is_any_ptr<PointOut>{}, bool> = true>
+  void interpolate(const Point0& point0, const Point1& point1, const double t, PointOut& result) const
+  {
+    is_space_point_type(point0);
+    is_space_point_type(point1);
+    is_space_point_type(result);
+    prx_assert(0.0 <= t && t <= 1.0 + prx::constants::epsilon,
+               "Interpolation requires a value between 0 and 1: given `" << t << "`");
+
+    for (std::size_t i = 0; i < dimension;)
+    {
+      const double& x0_i{ point0[i] };
+      const double& x1_i{ point1[i] };
+      double& xres{ result[i] };
+      if (topology[i] == topology_t::ROTATIONAL)
+      {
+        if (std::fabs(x0_i - x1_i) < PRX_PI)
+        {
+          xres = (1.0 - t) * x0_i + t * x1_i;
+        }
+        else
+        {
+          if (x0_i < x1_i)
+            xres = x1_i + (1.0 - t) * (x0_i - x1_i + 2.0 * PRX_PI);
+          else
+            xres = x0_i + t * (2.0 * PRX_PI - x0_i + x1_i);
+        }
+        xres = norm_angle_pi(xres, *lower_bounds[i], *upper_bounds[i]);
+        i++;
+      }
+      else if (topology[i] == topology_t::DISCRETE)
+      {
+        if (t == 1.0)
+          xres = x1_i;
+        else
+          xres = x0_i;
+        i++;
+      }
+      else if (topology[i] == topology_t::QUATERNION)
+      {
+        const double w1{ point0[i] };
+        const double x1{ point0[i + 1] };
+        const double y1{ point0[i + 2] };
+        const double z1{ point0[i + 3] };
+
+        const double w2{ point1[i] };
+        const double x2{ point1[i + 1] };
+        const double y2{ point1[i + 2] };
+        const double z2{ point1[i + 3] };
+
+        Eigen::Quaterniond quat1{ w1, x1, y1, z1 };
+        const Eigen::Quaterniond quat2{ w2, x2, y2, z2 };
+
+        const Eigen::Quaterniond q_res{ quat1.slerp(t, quat2) };
+
+        result[i] = q_res.w();
+        result[i + 1] = q_res.x();
+        result[i + 2] = q_res.y();
+        result[i + 3] = q_res.z();
+        i += 4;
+      }
+      else
+      {
+        xres = (1.0 - t) * x0_i + t * x1_i;
+        i++;
+      }
+    }
+  }
+
+  template <typename Point0, typename Point1, typename PointOut,
+            std::enable_if_t<prx::utilities::is_any_ptr<Point0>{}, bool> = true,
+            std::enable_if_t<prx::utilities::is_any_ptr<Point1>{}, bool> = true,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointOut>{}, bool> = true>
+  inline void interpolate(const Point0 point0, const Point1 point1, const double t, PointOut result) const
+  {
+    interpolate(*point0, *point1, t, *result);
+  }
+  // Interpolate towards point_in from the state in memory and keeping it in memory. t \in [0,1]
+  template <typename PointIn, std::enable_if_t<!prx::utilities::is_any_ptr<PointIn>{}, bool> = true>
+  void interpolate(const PointIn& x, const PointIn& y, double t)
+  {
+    interpolate(x, y, t, *this);
+  }
+  template <typename PointIn, std::enable_if_t<prx::utilities::is_any_ptr<PointIn>{}, bool> = true>
+  void interpolate(const PointIn x, const PointIn y, double t)
+  {
+    interpolate(*x, *y, t, *this);
+  }
 
   std::string print_point(const space_point_t& point, const std::size_t prec = 25) const;
 
@@ -496,20 +586,21 @@ protected:
     prx_assert(dim == dimension, "Dimension mismatch (" << space_name << "): " << dim << " vs " << dimension);
   }
 
-  template <typename Point,
-            std::enable_if_t<!(std::is_pointer<Point>{} || prx::utilities::is_shared_ptr<Point>{}), bool> = true>
-  inline void is_space_point_type(const Point point) const
+  // template <typename Point, std::enable_if_t<!std::is_any_ptr<Point>{}, bool> = true>
+  template <typename Point, std::enable_if_t<!std::is_same_v<Point, space_point_t>, bool> = true>
+  inline void is_space_point_type(const Point& point) const
   {
+    assert_point_dimension(point.size());
   }
-  template <typename Point,
-            std::enable_if_t<(std::is_pointer<Point>{} || prx::utilities::is_shared_ptr<Point>{}), bool> = true>
+
+  template <typename Point, std::enable_if_t<std::is_same_v<Point, space_point_t>, bool> = true>
   inline void is_space_point_type(const Point point) const
   {
-    if (std::static_pointer_cast<space_snapshot_t>(point) != nullptr)
-    {
-      const space_point_t aux{ std::static_pointer_cast<space_snapshot_t>(point) };
-      assert_point_space_name(aux);
-    }
+    // if (std::static_pointer_cast<space_snapshot_t>(point) != nullptr)
+    // {
+    // const space_point_t aux{ std::static_pointer_cast<space_snapshot_t>(point) };
+    assert_point_space_name(point);
+    // }
   }
 };
 

@@ -30,6 +30,14 @@ public:
 
   void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, trajectory_t& result);
 
+  void steer(space_point_t, const space_point_t, const space_point_t, const double,
+             distance_function_t distance_function);
+
+  void steer(trajectory_t&, const space_point_t, const space_point_t, const double,
+             distance_function_t distance_function);
+
+  void steer_once(const space_point_t, const space_point_t, const double);
+
   void compute_stopping_maneuver(space_point_t start_state, std::vector<double>&, std::vector<double>&);
 
   inline space_t* get_state_space()

@@ -268,6 +268,8 @@ public:
     return max_count;
   }
 
+  // void rewire(node_index_t root, node_index_t new_parent);
+
   void transplant(node_index_t root, node_index_t new_parent);
 
   void mark_vertex_for_removal(node_index_t v);

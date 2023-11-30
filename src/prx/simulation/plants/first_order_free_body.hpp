@@ -20,6 +20,8 @@ public:
 
   virtual void update_configuration() override;
 
+  virtual void steer(const space_point_t, const space_point_t, const double) override;
+
 protected:
   virtual void compute_derivative() override final;
 

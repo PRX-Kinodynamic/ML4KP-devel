@@ -71,7 +71,7 @@ void rrt_t::_resolve_query(condition_check_t* condition)
   double new_cost;
   double new_duration;
 
-  prx_warn_cond(rrt_spec->blossom_number == 1 == 1, "RRT only uses a blossom number of 1");
+  prx_warn_cond(rrt_spec->blossom_number == 1, "RRT only uses a blossom number of 1");
   // run for a certain amount of time
   do
   {
