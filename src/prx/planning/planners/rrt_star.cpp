@@ -74,6 +74,7 @@ void rrt_star_t::_resolve_query(condition_check_t* condition)
   double new_duration;
 
   const std::size_t dim{ _state_space->get_dimension() };
+  std::size_t nodes_added{ 0 };
   const int k_RRT{ static_cast<int>(std::pow(2, dim) * std::exp(1.0 + 1.0 / dim) + 1) };
   // run for a certain amount of time
   // plan_t dummy_plan(_control_space);
@@ -89,24 +90,24 @@ void rrt_star_t::_resolve_query(condition_check_t* condition)
     trajectory_t traj(_state_space);
     _steer_function(traj, x_nearest->point, _x_rand, _eta);
     // PRX_DEBUG_VAR_1(_x_rand)
-    // PRX_DEBUG_VAR_1(traj);
     // collision check
     if (_valid_check(traj))
     {
+      nodes_added++;
       // V <- V \cup \{ x_new \}
       const node_index_t x_new_idx{ _tree.add_vertex<rrt_star_node_t, rrt_star_edge_t>() };
       std::shared_ptr<rrt_star_node_t> x_new{ _tree.get_vertex_as<rrt_star_node_t>(x_new_idx) };
       x_new->point = _state_space->clone_point(traj.back());
 
       // X_near <- kNearest(G=(V,E), x_new, k_RRT & log(i))
-      const int k_nearest{ static_cast<int>(k_RRT * std::log10(_iteration_count + 1)) };
+      const int k_nearest{ static_cast<int>(k_RRT * std::log10(nodes_added)) };
       std::vector<proximity_node_t*> X_near{ _metric->multi_query(x_new->point, k_nearest) };
       // PRX_DEBUG_VAR_3(_iteration_count, k_nearest, X_near.size());
 
       // x_min <- x_nearest
       // c_min <- Cost(x_nearest) + c(Line(x_nearest, x_new))
       rrt_star_node_t* x_min{ x_nearest };
-      const double edge_cost{ _distance_function(x_nearest->point, x_new->point) };
+      double edge_cost{ _distance_function(x_nearest->point, x_new->point) };
       double c_min{ x_nearest->cost_to_come + edge_cost };
 
       // Connect along the minimum-cost path
@@ -120,9 +121,10 @@ void rrt_star_t::_resolve_query(condition_check_t* condition)
         trajectory_t traj_near_to_new(_state_space);
         _steer_function(traj_near_to_new, x_near->point, x_new->point, cost_x_new_via_x_near);
 
-        if (_valid_check(traj_near_to_new) and cost_x_new_via_x_near < c_min)
+        if (cost_x_new_via_x_near < c_min and _valid_check(traj_near_to_new))
         {
           x_min = x_near;
+          edge_cost = cost_edge_near_new;
           c_min = cost_x_new_via_x_near;
           traj = traj_near_to_new;
         }
@@ -132,13 +134,13 @@ void rrt_star_t::_resolve_query(condition_check_t* condition)
       std::shared_ptr<rrt_star_edge_t> x_new_edge{ _tree.get_edge_as<rrt_star_edge_t>(x_new_edge_idx) };
       x_new_edge->traj = std::make_shared<trajectory_t>(traj);
       x_new_edge->edge_cost = edge_cost;
-      x_new->cost_to_come = x_nearest->cost_to_come + x_new_edge->edge_cost;
+      x_new->cost_to_come = c_min;
       _metric->add_node(x_new.get());
 
       // Rewire the tree
       for (auto x_near_abstract : X_near)
       {
-        const rrt_star_node_t* x_near{ static_cast<rrt_star_node_t*>(x_near_abstract) };
+        rrt_star_node_t* x_near{ static_cast<rrt_star_node_t*>(x_near_abstract) };
         const double cost_x_new{ x_new->cost_to_come };
         const double cost_x_near{ x_near->cost_to_come };
         const double cost_edge_near_new{ _distance_function(x_near->point, x_new->point) };
@@ -159,7 +161,8 @@ void rrt_star_t::_resolve_query(condition_check_t* condition)
           _tree.transplant(x_near_idx, x_new_idx);
           std::shared_ptr<rrt_star_edge_t> parent_edge{ _tree.get_edge_as<rrt_star_edge_t>(x_near->get_parent_edge()) };
           parent_edge->traj = std::make_shared<trajectory_t>(traj_new_to_near);
-          x_new_edge->edge_cost = cost_edge_near_new;
+          parent_edge->edge_cost = cost_edge_near_new;
+          x_near->cost_to_come = cost_x_near_via_x_new;
         }
       }
 

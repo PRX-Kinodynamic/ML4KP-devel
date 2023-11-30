@@ -8,8 +8,8 @@ plant: !file "plants/two_dim_pt.yaml"
 
 visualize: true
 
-checker_type: time
-checker_value: 51
+checker_type: iterations
+checker_value: 2500
 
 goal_region_radius: 0.5
 

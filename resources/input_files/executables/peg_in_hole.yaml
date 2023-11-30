@@ -9,7 +9,7 @@ planner:
   goal_region_radius: 1
   checker_type: "time"
   checker_value: 1000
-  eta: 1
+  eta: 2
 
 plant: !file "plants/first_order_free_body.yaml"
 
