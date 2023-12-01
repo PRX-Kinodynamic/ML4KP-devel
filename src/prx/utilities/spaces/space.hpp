@@ -254,22 +254,42 @@ public:
   void enforce_bounds(Point& point) const
   {
     assert_point_dimension(point.size());
-    for (std::size_t i = 0; i < dimension; i++)
+    for (std::size_t i = 0; i < dimension;)
     {
-      double& p = point[i];
-      // double& p{ point->_memory[i] };
       if (topology[i] == topology_t::ROTATIONAL)
       {
+        double& p = point[i];
         p = norm_angle_pi(p, *lower_bounds[i], *upper_bounds[i]);
+        i++;
+      }
+      else if (topology[i] == topology_t::QUATERNION)
+      {
+        const double w{ point[i] };
+        const double x{ point[i + 1] };
+        const double y{ point[i + 2] };
+        const double z{ point[i + 3] };
+        Eigen::Quaterniond quat{ w, x, y, z };
+        quat.normalize();
+        point[i] = quat.w();
+        point[i + 1] = quat.x();
+        point[i + 2] = quat.y();
+        point[i + 3] = quat.z();
+        i += 4;
       }
       else
       {
+        double& p = point[i];
         p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
+        i++;
       }
     }
   }
 
-  void enforce_bounds() const;
+  inline void enforce_bounds() const
+  {
+    enforce_bounds(*this);
+  }
+
   bool satisfies_bounds(const space_point_t& point) const;
   virtual void sample(const space_point_t& point) const;
 

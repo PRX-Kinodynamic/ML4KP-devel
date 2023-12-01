@@ -17,6 +17,26 @@ struct space3d_t
   std::vector<double*> address;
   prx::space_t space;
 };
+struct space_quat_t
+{
+  space_quat_t()
+    : _quat(Eigen::Quaterniond::Identity())
+    , _deriv_quat(Eigen::Quaterniond::Identity())
+    , _address({ &_quat.w(), &_quat.x(), &_quat.y(), &_quat.z() })
+    , _derivative_address({ &_deriv_quat.w(), &_deriv_quat.x(), &_deriv_quat.y(), &_deriv_quat.z() })
+    , _space("QQQQ", _address, "space_quat_test")
+    , _derivative_space("QQQQ", _derivative_address, "space_deriv_quat_test")
+
+  {
+  }
+  Eigen::Quaterniond _quat;
+  Eigen::Quaterniond _deriv_quat;
+  std::vector<double*> _address;
+  std::vector<double*> _derivative_address;
+
+  prx::space_t _space;
+  prx::space_t _derivative_space;
+};
 }  // namespace mock
 
 BOOST_AUTO_TEST_CASE(test_space_is_built_correctly)
@@ -209,27 +229,168 @@ BOOST_AUTO_TEST_CASE(comparing_speed_of_copy_point_vs_copy)
   prx::space_point_t pt_from = space.make_point();
   prx::space_point_t pt_to = space.make_point();
 
-  const std::size_t total_copies{100'000};
+  const std::size_t total_copies{ 100'000 };
 
   auto start_copy_point = std::chrono::steady_clock::now();
-  for(std::size_t i = 0; i < total_copies; ++i)
+  for (std::size_t i = 0; i < total_copies; ++i)
   {
     space.sample(pt_from);
     space.copy_point(pt_to, pt_from);
   }
   auto end_copy_point = std::chrono::steady_clock::now();
-  std::chrono::duration<double> elapsed_copy_point{end_copy_point - start_copy_point};
+  std::chrono::duration<double> elapsed_copy_point{ end_copy_point - start_copy_point };
 
   auto start_copy = std::chrono::steady_clock::now();
-  for(std::size_t i = 0; i < total_copies; ++i)
+  for (std::size_t i = 0; i < total_copies; ++i)
   {
     space.sample(pt_from);
     space.copy(pt_to, pt_from);
   }
   auto end_copy = std::chrono::steady_clock::now();
-  std::chrono::duration<double> elapsed_copy{end_copy - start_copy};
-  
+  std::chrono::duration<double> elapsed_copy{ end_copy - start_copy };
+
   std::cout << "Results:\n";
   std::cout << "Copy_point: " << elapsed_copy_point.count() << "s\n";
   std::cout << "Copy: " << elapsed_copy.count() << "s\n";
+}
+
+BOOST_AUTO_TEST_CASE(topology_quaternion_enforce_bounds)
+{
+  mock::space_quat_t test;
+  prx::space_t& space{ test._space };
+  prx::space_point_t pt{ space.make_point() };
+
+  space[0] = 2;
+  space[1] = 2;
+  space[2] = 2;
+  space[3] = 2;
+  space.enforce_bounds();
+
+  const double norm{ std::sqrt(std::pow(space[0], 2) + std::pow(space[1], 2) + std::pow(space[2], 2) +
+                               std::pow(space[3], 2)) };
+  BOOST_REQUIRE_CLOSE(norm, 1, 1e-5);
+
+  pt->at(0) = 10;
+  pt->at(1) = 100;
+  pt->at(2) = 1;
+  pt->at(3) = 500;
+
+  space.enforce_bounds(pt);
+  BOOST_REQUIRE_CLOSE(Vec(pt).norm(), 1, 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(integration_of_topology_quaternion_rotate_on_x)
+{
+  const double dt{ 0.01 };
+  mock::space_quat_t test;
+  prx::space_t& space{ test._space };
+  prx::space_t& dt_space{ test._derivative_space };
+  prx::space_point_t pt{ space.make_point() };
+
+  Eigen::Quaterniond aux_quat{ Eigen::Quaterniond::Identity() };
+
+  space[0] = 1;
+  space[1] = 0;
+  space[2] = 0;
+  space[3] = 0;
+
+  // Rotating on x
+  Eigen::Quaterniond quat_omega_0{ 0, 1, 0, 0 };  // [0, \omega]
+
+  for (int i = 0; i < 100; ++i)
+  {
+    aux_quat.coeffs() = 0.5 * quat_omega_0.coeffs();
+    test._deriv_quat = aux_quat * test._quat;
+    test._deriv_quat.normalize();
+    space.integrate(&dt_space, dt);
+  }
+  space.copy_to(pt);
+  BOOST_REQUIRE_CLOSE(Vec(pt).norm(), 1, 1e-5);
+  BOOST_REQUIRE(pt->at(0) > 0);
+  BOOST_REQUIRE(pt->at(1) > 0);
+  BOOST_REQUIRE_CLOSE(pt->at(2), 0, 1e-5);
+  BOOST_REQUIRE_CLOSE(pt->at(3), 0, 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(integration_of_topology_quaternion_rotate_on_y)
+{
+  const double dt{ 0.01 };
+  mock::space_quat_t test;
+  prx::space_t& space{ test._space };
+  prx::space_t& dt_space{ test._derivative_space };
+  prx::space_point_t pt{ space.make_point() };
+
+  Eigen::Quaterniond aux_quat{ Eigen::Quaterniond::Identity() };
+
+  space[0] = 1;
+  space[1] = 0;
+  space[2] = 0;
+  space[3] = 0;
+
+  // Rotating on y
+  Eigen::Quaterniond quat_omega_0{ 0, 0, 1, 0 };  // [0, \omega]
+
+  for (int i = 0; i < 100; ++i)
+  {
+    aux_quat.coeffs() = 0.5 * quat_omega_0.coeffs();
+    test._deriv_quat = aux_quat * test._quat;
+    test._deriv_quat.normalize();
+    space.integrate(&dt_space, dt);
+  }
+  space.copy_to(pt);
+  BOOST_REQUIRE_CLOSE(Vec(pt).norm(), 1, 1e-5);
+  BOOST_REQUIRE(pt->at(0) > 0);
+  BOOST_REQUIRE_CLOSE(pt->at(1), 0, 1e-5);
+  BOOST_REQUIRE(pt->at(2) > 0);
+  BOOST_REQUIRE_CLOSE(pt->at(3), 0, 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(integration_of_topology_quaternion_rotate_on_z)
+{
+  const double dt{ 0.01 };
+  mock::space_quat_t test;
+  prx::space_t& space{ test._space };
+  prx::space_t& dt_space{ test._derivative_space };
+  prx::space_point_t pt{ space.make_point() };
+
+  Eigen::Quaterniond aux_quat{ Eigen::Quaterniond::Identity() };
+
+  space[0] = 1;
+  space[1] = 0;
+  space[2] = 0;
+  space[3] = 0;
+
+  // Rotating on z
+  Eigen::Quaterniond quat_omega_0{ 0, 0, 0, 1 };  // [0, \omega]
+
+  for (int i = 0; i < 100; ++i)
+  {
+    aux_quat.coeffs() = 0.5 * quat_omega_0.coeffs();
+    test._deriv_quat = aux_quat * test._quat;
+    test._deriv_quat.normalize();
+    space.integrate(&dt_space, dt);
+  }
+  space.copy_to(pt);
+  BOOST_REQUIRE_CLOSE(Vec(pt).norm(), 1, 1e-5);
+  BOOST_REQUIRE(pt->at(0) > 0);
+  BOOST_REQUIRE_CLOSE(pt->at(1), 0, 1e-5);
+  BOOST_REQUIRE_CLOSE(pt->at(2), 0, 1e-5);
+  BOOST_REQUIRE(pt->at(3) > 0);
+}
+
+BOOST_AUTO_TEST_CASE(interpolate_of_topology_quaternion)
+{
+  mock::space_quat_t test;
+  prx::space_t& space{ test._space };
+  prx::space_point_t pt0{ space.make_point() };
+  prx::space_point_t pt1{ space.make_point() };
+  prx::space_point_t result0{ space.make_point() };
+  prx::space_point_t result1{ space.make_point() };
+
+  const double t0{ 0 };
+  const double t1{ 1 };
+  space.interpolate(pt0, pt1, t0, result0);
+  space.interpolate(pt0, pt1, t1, result1);
+  BOOST_CHECK(space.equal_points(pt0, result0));
+  BOOST_CHECK(space.equal_points(pt1, result1));
 }
