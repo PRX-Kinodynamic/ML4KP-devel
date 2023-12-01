@@ -180,6 +180,12 @@ public:
   void extend_last_control(double time);
 
   /**
+   * @brief Reduce the duration of the last control in the plan by a specified time.
+   * @param time Time to reduce the duration of the last control by (in seconds).
+   */
+  void reduce_last_control(double time);
+
+  /**
    * @brief Removes the first control from the plan.
    */
   void pop_front();
