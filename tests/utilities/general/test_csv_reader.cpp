@@ -17,14 +17,16 @@ block1 line2 7 8 9 more_data
 
 BOOST_AUTO_TEST_CASE(csv_reader_opens_correctly)
 {
-  csv_reader_t reader(test_file, ' ');
+  prx::constants::separating_value = ' ';
+  csv_reader_t reader(test_file);
   BOOST_CHECK_MESSAGE(reader.is_open(), "File was not opened");
   BOOST_CHECK_MESSAGE(reader.has_next_line(), "File has no new line");
 }
 
 BOOST_AUTO_TEST_CASE(csv_reader_reads_all_lines)
 {
-  csv_reader_t reader(test_file, ' ');
+  prx::constants::separating_value = ' ';
+  csv_reader_t reader(test_file);
   std::size_t total_lines{ 0 };
   while (reader.has_next_line())
   {
@@ -36,7 +38,8 @@ BOOST_AUTO_TEST_CASE(csv_reader_reads_all_lines)
 
 BOOST_AUTO_TEST_CASE(csv_reader_reads_all_blocks)
 {
-  csv_reader_t reader(test_file, ' ');
+  prx::constants::separating_value = ' ';
+  csv_reader_t reader(test_file);
   std::size_t total_blocks{ 0 };
   while (reader.has_next_line())
   {
@@ -48,8 +51,9 @@ BOOST_AUTO_TEST_CASE(csv_reader_reads_all_blocks)
 
 BOOST_AUTO_TEST_CASE(csv_reader_reads_blocks_without_empty_line)
 {
+  prx::constants::separating_value = ' ';
   using Block = csv_reader_t::Block<std::string>;
-  csv_reader_t reader(test_file, ' ');
+  csv_reader_t reader(test_file);
   while (reader.has_next_line())
   {
     Block block{ reader.next_block() };
@@ -62,7 +66,8 @@ BOOST_AUTO_TEST_CASE(csv_reader_reads_blocks_without_empty_line)
 
 BOOST_AUTO_TEST_CASE(csv_reader_reads_lines_with_value)
 {
-  csv_reader_t reader(test_file, ' ');
+  prx::constants::separating_value = ' ';
+  csv_reader_t reader(test_file);
   std::size_t total_lines{ 0 };
   while (reader.has_next_line())
   {
@@ -75,7 +80,9 @@ BOOST_AUTO_TEST_CASE(csv_reader_reads_lines_with_value)
 BOOST_AUTO_TEST_CASE(csv_reader_reads_lines_with_custom_function)
 {
   using Line = csv_reader_t::Line<std::string>;
-  csv_reader_t reader(test_file, ' ');
+
+  prx::constants::separating_value = ' ';
+  csv_reader_t reader(test_file);
   std::size_t total_lines{ 0 };
   while (reader.has_next_line())
   {
@@ -88,7 +95,8 @@ BOOST_AUTO_TEST_CASE(csv_reader_reads_lines_with_custom_function)
 
 BOOST_AUTO_TEST_CASE(csv_reader_iterator_iterates)
 {
-  csv_reader_t reader(test_file, ' ');
+  prx::constants::separating_value = ' ';
+  csv_reader_t reader(test_file);
   std::size_t total_lines{ 0 };
   const std::size_t expected_total_lines{ 7 };
   for (auto line : reader)
@@ -101,7 +109,8 @@ BOOST_AUTO_TEST_CASE(csv_reader_iterator_iterates)
 }
 BOOST_AUTO_TEST_CASE(read_column_test)
 {
-  csv_reader_t reader(test_file, ' ');
+  prx::constants::separating_value = ' ';
+  csv_reader_t reader(test_file);
   const std::size_t column_to_read{ 2 };
   const std::vector<int> expected_column{ { 1, 4, 7, 1, 4, 7 } };
 
@@ -117,7 +126,9 @@ BOOST_AUTO_TEST_CASE(read_column_test)
 BOOST_AUTO_TEST_CASE(read_columns_test)
 {
   using Columns = std::vector<std::vector<int>>;
-  csv_reader_t reader(test_file, ' ');
+
+  prx::constants::separating_value = ' ';
+  csv_reader_t reader(test_file);
   const std::vector<std::size_t> columns_to_read = { 2, 3, 4 };
   const Columns expected_columns = { { 1, 4, 7, 1, 4, 7 },  // no-lint
                                      { 2, 5, 8, 2, 5, 8 },  // no-lint

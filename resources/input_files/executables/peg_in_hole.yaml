@@ -4,12 +4,18 @@ random_seed: 231192
 environment: "environments/peg_in_hole_0.yaml"
 visualize: true
 
+grow_tree: false
+query_tree: true
+tree_to_files: false
+
 planner: 
   name: "RRT*"
   goal_region_radius: 1
   checker_type: "time"
-  checker_value: 1000
-  eta: 2
+  checker_value: 500
+  eta_min: 1
+  eta_max: 10
+
 
 plant: !file "plants/first_order_free_body.yaml"
 

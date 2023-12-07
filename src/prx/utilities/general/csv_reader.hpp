@@ -2,12 +2,13 @@
 #include <fstream>
 
 #include "prx/utilities/defs.hpp"
-#include "prx/utilities/general/type_convertions.hpp"
+#include "prx/utilities/general/type_conversions.hpp"
 
 namespace prx
 {
 namespace utilities
 {
+
 class csv_reader_t
 {
 public:
@@ -82,8 +83,7 @@ public:
   }
 
   csv_reader_t() = delete;
-  csv_reader_t(const std::string filename, const char separator = prx::separating_value)
-    : _filename(filename), _sep(separator), file(filename.c_str())
+  csv_reader_t(const std::string filename) : _filename(filename), file(filename.c_str())
   {
   }
 
@@ -105,7 +105,7 @@ public:
   {
     std::string line;
     std::getline(file, line);
-    return prx::split<T>(line, _sep);
+    return prx::split<T>(line);
   }
 
   // template <typename T>
@@ -187,7 +187,6 @@ public:
   }
 
 private:
-  const char _sep;
   const std::string _filename;
   std::ifstream file;
 };

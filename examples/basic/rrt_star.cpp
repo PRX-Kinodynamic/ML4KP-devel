@@ -50,7 +50,9 @@ int main(int argc, char* argv[])
 
   rrt_star_spec.min_control_steps = min_steps;
   rrt_star_spec.max_control_steps = max_steps;
-  rrt_star_spec.eta = params["eta"].as<double>();
+
+  rrt_star_spec.eta_min = params["eta_min"].as<double>();
+  rrt_star_spec.eta_max = params["eta_max"].as<double>();
 
   rrt_star_query_t rrt_star_query(ss, cs);
   rrt_star_query.start_state = ss->make_point();
@@ -73,20 +75,32 @@ int main(int argc, char* argv[])
   // }
 
   rrt_star_query.get_visualization = params["visualize"].as<bool>();
+  const std::string file_prefix{ "rrt_star" };
+  const std::string out_dir{ prx::out_path };
 
   rrt_star.link_and_setup_spec(&rrt_star_spec);
   rrt_star.preprocess();
   rrt_star.link_and_setup_query(&rrt_star_query);
 
-  condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<double>());  //'
+  if (params["grow_tree"].as<bool>())
+  {
+    prx::condition_check_t checker(params["/checker_type"].as<>(), params["/checker_value"].as<int>());
 
-  rrt_star.resolve_query(&checker);
+    rrt_star.resolve_query(&checker);
+  }
+  if (params["query_tree"].as<bool>())
+  {
+    rrt_star.from_files(file_prefix, out_dir);
+    rrt_star.connect_goal();
+  }
   rrt_star.fulfill_query();
 
-  params.print();
+  if (params["tree_to_files"].as<bool>())
+  {
+    rrt_star.to_files(file_prefix, out_dir);
+    rrt_star_query.solution_traj.to_file(out_dir + "/" + file_prefix + "_sln_traj.txt");
+  }
 
-  const std::string file_prefix{ "rrt_star" };
-  rrt_star.to_files(file_prefix, prx::out_path);
   // aorrt_query.solution_plan.to_file(out_dir + "/" + file_prefix + "_sln_plan.txt");
   rrt_star_query.solution_traj.to_file(prx::out_path + "/" + file_prefix + "_sln_traj.txt");
 

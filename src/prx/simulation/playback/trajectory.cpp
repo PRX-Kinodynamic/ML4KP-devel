@@ -40,6 +40,12 @@ void trajectory_t::resize(unsigned num_size)
   std::advance(end_iterator, num_states);
   std::advance(const_end_iterator, num_states);
 }
+
+void trajectory_t::pop_back()
+{
+  resize(size() - 1);
+}
+
 void trajectory_t::copy(const trajectory_t& t)
 {
   (*this) = t;
@@ -121,23 +127,6 @@ void trajectory_t::clear()
   end_iterator = states.begin();
   const_end_iterator = states.begin();
   num_states = 0;
-}
-
-void trajectory_t::copy_onto_back(space_point_t state)
-{
-  if ((num_states + 1) >= max_num_states)
-  {
-    increase_buffer();
-
-    end_iterator = states.begin();
-    const_end_iterator = states.begin();
-    std::advance(end_iterator, num_states);
-    std::advance(const_end_iterator, num_states);
-  }
-  state_space->copy_point(*end_iterator, state);
-  ++end_iterator;
-  ++const_end_iterator;
-  ++num_states;
 }
 
 void trajectory_t::copy_onto_back(const space_t* space)

@@ -74,7 +74,7 @@ void two_dimensional_point_t::update_configuration()
   auto body = configurations["body"];
   body->setIdentity();
   body->linear() = (quaternion_t(cos(theta / 2), 0, 0, sin(theta / 2)).toRotationMatrix());
-  body->translation() = (vector_t(x, y, 0));
+  body->translation() = (vector_t(x, y, 0.25));
 }
 
 void two_dimensional_point_t::compute_derivative()

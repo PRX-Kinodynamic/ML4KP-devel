@@ -50,10 +50,10 @@ int main(int argc, char* argv[])
     const double q1_z{ y->at(3 + 3) };
     const Eigen::Quaterniond q0(q0_w, q0_x, q0_y, q0_z);
     const Eigen::Quaterniond q1(q1_w, q1_x, q1_y, q1_z);
-    // dist += q0.angularDistance(q1);
-    const Eigen::Matrix3d R0{ q0.toRotationMatrix() };
-    const Eigen::Matrix3d R1{ q1.toRotationMatrix() };
-    dist += std::acos(((R1.transpose() * R0).trace() - 1) / 2.0);
+    dist += q0.angularDistance(q1);
+    // const Eigen::Matrix3d R0{ q0.toRotationMatrix() };
+    // const Eigen::Matrix3d R1{ q1.toRotationMatrix() };
+    // dist += std::acos(((R1.transpose() * R0).trace() - 1) / 2.0);
     return dist;
   };
 
@@ -64,7 +64,8 @@ int main(int argc, char* argv[])
   rrt_star_query.start_state = context.first->get_state_space()->make_point();
   rrt_star_query.goal_state = context.first->get_state_space()->make_point();
 
-  rrt_star_spec.eta = params["/planner/eta"].as<double>();
+  rrt_star_spec.eta_min = params["/planner/eta_min"].as<double>();
+  rrt_star_spec.eta_max = params["/planner/eta_max"].as<double>();
 
   const std::vector<double> ss_lower_bounds{ params["/plant/state_space/lower_bound"].as<std::vector<double>>() };
   const std::vector<double> ss_upper_bounds{ params["/plant/state_space/upper_bound"].as<std::vector<double>>() };
@@ -90,24 +91,34 @@ int main(int argc, char* argv[])
     const double dist_to_goal{ rrt_star_spec.distance_function(pt, rrt_star_query.goal_state) };
     return dist_to_goal < rrt_star_query.goal_region_radius;
   };
+  const std::string out_dir{ params["/out/dir"].as<>() };
+  const std::string file_prefix{ params["/out/file_prefix"].as<>() };
 
   rrt_star_query.get_visualization = params["visualize"].as<bool>();
 
   rrt_star.link_and_setup_spec(&rrt_star_spec);
   rrt_star.preprocess();
   rrt_star.link_and_setup_query(&rrt_star_query);
+  if (params["grow_tree"].as<bool>())
+  {
+    prx::condition_check_t checker(params["/planner/checker_type"].as<>(), params["/planner/checker_value"].as<int>());
 
-  prx::condition_check_t checker(params["/planner/checker_type"].as<>(), params["/planner/checker_value"].as<int>());
-
-  rrt_star.resolve_query(&checker);
+    rrt_star.resolve_query(&checker);
+  }
+  if (params["query_tree"].as<bool>())
+  {
+    rrt_star.from_files(file_prefix, out_dir);
+    rrt_star.connect_goal();
+  }
   rrt_star.fulfill_query();
 
   // params.print();
-  const std::string out_dir{ params["/out/dir"].as<>() };
-  const std::string file_prefix{ params["/out/file_prefix"].as<>() };
 
-  rrt_star.to_files(file_prefix, out_dir);
-  rrt_star_query.solution_traj.to_file(out_dir + "/" + file_prefix + "_sln_traj.txt");
+  if (params["tree_to_files"].as<bool>())
+  {
+    rrt_star.to_files(file_prefix, out_dir);
+    rrt_star_query.solution_traj.to_file(out_dir + "/" + file_prefix + "_sln_traj.txt");
+  }
 
   // aorrt_query.solution_traj.to_file();
 

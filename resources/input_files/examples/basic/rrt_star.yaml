@@ -9,8 +9,13 @@ plant: !file "plants/two_dim_pt.yaml"
 visualize: true
 
 checker_type: iterations
-checker_value: 2500
+checker_value: 1000
 
 goal_region_radius: 0.5
 
-eta: 1.0
+eta_min: 1
+eta_max: 10
+
+grow_tree: false
+query_tree: true
+tree_to_files: false
