@@ -213,4 +213,48 @@ static std::vector<T> split(const std::string str)
   return result;
 }
 
+// Split block by columns defined by Columns
+// A Block of with columns {C0,C1,C2} and given columns={{0,1}, {2}}
+// will return a block {C0,C1} and the input block will change to {C2}
+template <typename Block, typename ColumnsQuery>
+Block split_block(Block& block_in, ColumnsQuery columns)
+{
+  Block block_out;
+  const auto columns_out{ columns[0] };
+  const auto columns_in{ columns[1] };
+
+  std::vector<bool> columns_flags(columns_in.size() + columns_out.size());
+  for (auto idx : columns_out)
+  {
+    columns_flags[idx] = true;
+  }
+  for (auto idx : columns_in)
+  {
+    columns_flags[idx] = false;
+  }
+
+  for (std::size_t i = 0; i < block_in.size(); ++i)
+  {
+    auto line_in{ block_in[i] };
+    decltype(line_in) line_out;
+    decltype(line_in) line_in_new;
+
+    for (std::size_t ci = 0; ci < line_in.size(); ++ci)
+    {
+      const auto val = line_in[ci];
+      if (columns_flags[ci])
+      {
+        line_out.emplace_back(val);
+      }
+      else
+      {
+        line_in_new.emplace_back(val);
+      }
+    }
+    block_in[i] = line_in_new;
+    block_out.emplace_back(line_out);
+  }
+  return block_out;
+}
+
 }  // namespace prx
