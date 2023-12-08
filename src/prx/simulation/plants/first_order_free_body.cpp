@@ -42,7 +42,7 @@ first_order_free_body_t::first_order_free_body_t(const std::string& path)
   geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
   geometries["body"]->initialize_geometry({ _width, _depth, _length });
   geometries["body"]->generate_collision_geometry();
-  geometries["body"]->set_visualization_color("0x00ff00");
+  geometries["body"]->set_visualization_color("0xbb00ff00");
   configurations["body"] = std::make_shared<transform_t>();
   configurations["body"]->setIdentity();
 
