@@ -127,6 +127,8 @@ int main(int argc, char* argv[])
 
   std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 
+  vis_group->set_floor_plane(std::vector<double>({ 0, 0, -3 }), std::vector<double>({ 0.707, 0, 0, 0.707 }),
+                             std::vector<double>({ 500, 500 }), "0xbbbbbb");
   vis_group->add_vis_infos(prx::info_geometry_t::LINE, rrt_star_query.tree_visualization, body_name, ss);
   vis_group->add_detailed_vis_infos(prx::info_geometry_t::FULL_LINE, rrt_star_query.solution_traj, body_name, ss);
   vis_group->add_vis_infos(prx::info_geometry_t::SPHERE, { Vec(rrt_star_query.goal_state).head(3) }, "0xffff00",

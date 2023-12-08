@@ -9,43 +9,43 @@ environment:
         collision_geometry:
           type: box
           dims: [ 4, 25, 25]
-          material: 0x0015ff
+          material: 0xaaff0000
         config:
-          position: [10.5, 0, 15.5]
+          position: [10.5, 0, 12.5]
           orientation: [0,0,0,1]
       -
         name: box_B
         collision_geometry:
           type: box
           dims: [ 17.0, 7.0, 25.0]
-          material: 0x0015ff
+          material: 0xaaff0000
         config:
-          position: [0, -9.0, 15.5]
+          position: [0, -9.0, 12.5]
           orientation: [0,0,0,1]
       -
         name: box_C
         collision_geometry:
           type: box
           dims: [ 4, 25, 25]
-          material: 0x0015ff
+          material: 0xaaff0000
         config:
-          position: [-10.5, 0, 15.5]
+          position: [-10.5, 0, 12.5]
           orientation: [0,0,0,1]
       -
         name: box_D
         collision_geometry:
           type: box
           dims: [ 17, 7, 25]
-          material: 0x0015ff
+          material: 0xaaff0000
         config:
-          position: [0, 9, 15.5]
+          position: [0, 9, 12.5]
           orientation: [0,0,0,1]
       -
         name: base
         collision_geometry:
           type: box
           dims: [ 40, 40, 3]
-          material: 0x0015ff
+          material: 0xffff0000
         config:
-          position: [0, 0, 1.5]
+          position: [0, 0, -1.5]
           orientation: [0,0,0,1]

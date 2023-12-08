@@ -7,12 +7,12 @@ min_steps: 1
 max_steps: 10
 
 # [Position, Quaternion] -> [x,y,z, w,x,y,z]
-start_state: [0.0, 0.0, 29.0,1,0,0,0]
-goal_state:  [00, 0, 60.0,1,0,0,0]
+start_state: [0.0, 0.0, 26.0,1,0,0,0]
+goal_state:  [10, 0, 60.0,1,0,0,0]
 
 state_space:
-  lower_bound: [-100, -100, 0, -1, -1, -1, -1]
-  upper_bound: [ 100,  100, 100, 1, 1, 1, 1]
+  lower_bound: [-10.5, -10.5, 0, -1, -1, -1, -1]
+  upper_bound: [ 10.5,  10.5, 100, 1, 1, 1, 1]
 
 
 control_space:

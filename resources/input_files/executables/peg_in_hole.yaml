@@ -12,7 +12,7 @@ planner:
   name: "RRT*"
   goal_region_radius: 1
   checker_type: "time"
-  checker_value: 500
+  checker_value: 100
   eta_min: 1
   eta_max: 10
 
