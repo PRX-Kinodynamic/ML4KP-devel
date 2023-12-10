@@ -347,8 +347,8 @@ void three_js_group_t::output_html(std::string filename)
         js_string += "colors.push(" + std::to_string(color_vals.x()) + "," + std::to_string(color_vals.y()) + "," +
                      std::to_string(color_vals.z()) + ");";
       }
-      js_string += "geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
-      js_string += "geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
+      js_string += "geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+      js_string += "geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
       js_string += "geometry.computeBoundingSphere();";
       js_string += "mesh = new THREE.Line( geometry, material );";
       js_string += "scene.add( mesh );\n";
@@ -369,8 +369,8 @@ void three_js_group_t::output_html(std::string filename)
         js_string += "colors.push(" + std::to_string(color_vals.x()) + "," + std::to_string(color_vals.y()) + "," +
                      std::to_string(color_vals.z()) + ");";
       }
-      js_string += "geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
-      js_string += "geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
+      js_string += "geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+      js_string += "geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
       js_string += "geometry.computeBoundingSphere();";
       js_string += "mesh = new THREE.Line( geometry, material );";
       js_string += "scene.add( mesh );\n";
@@ -411,7 +411,7 @@ void three_js_group_t::output_html(std::string filename)
       //                std::to_string(color_vals.z()) + ");";
       // }
       // js_string += "geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );";
-      // js_string += "geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
+      // js_string += "geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
       // js_string += "geometry.computeBoundingSphere();";
       // js_string += "var circle = new THREE.Mesh( geometry, material );";
       // js_string += "var geometry = new THREE.CircleBufferGeometry( 1, 32 );";
@@ -427,7 +427,7 @@ void three_js_group_t::output_html(std::string filename)
     {
       // js_string += "var positions = [];";
       js_string += "var geometry = new THREE.SphereGeometry( " + std::to_string(element.fourth) + ", 32, 16 );";
-      // js_string += "geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+      // js_string += "geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
       js_string += "geometry.translate( " + std::to_string(element.second[0].x()) + ", " +
                    std::to_string(element.second[0].y()) + ", " + std::to_string(element.second[0].z()) + " );";
       js_string += "var material = new THREE.MeshBasicMaterial( { color: " + element.third + " } ); ";
@@ -539,8 +539,8 @@ void three_js_group_t::output_html(std::string filename)
         js_string += "colors.push(" + black + "," + black + "," + black + ");";
         // js_string+="colors.push("+std::to_string(color_vals.x())+","+std::to_string(color_vals.y())+","+std::to_string(color_vals.z())+");";
       }
-      js_string += "geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
-      js_string += "geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
+      js_string += "geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+      js_string += "geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
       js_string += "geometry.computeBoundingSphere();";
       js_string += "mesh = new THREE.Line( geometry, material );";
       js_string += "scene.add( mesh );\n";
@@ -626,7 +626,7 @@ void three_js_group_t::output_html(std::string filename)
                    std::to_string(z + 0.01) + " );";
 
       // }
-      js_string += "geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+      js_string += "geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
       js_string += "geometry.computeBoundingSphere();";
       js_string += "mesh = new THREE.Line( geometry, material );";
       js_string += "scene.add( mesh );\n";
@@ -641,7 +641,7 @@ void three_js_group_t::output_html(std::string filename)
       js_string += "positions.push( " + std::to_string(x) + ", " + std::to_string(y + 1) + ", " +
                    std::to_string(z + 0.01) + " );";
 
-      js_string += "geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+      js_string += "geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
       js_string += "geometry.computeBoundingSphere();";
       js_string += "mesh = new THREE.Line( geometry, material );";
       js_string += "scene.add( mesh );\n";
@@ -677,8 +677,8 @@ void three_js_group_t::output_html(std::string filename)
     // "+std::to_string(element.second[i].z())+" );";
     // 				js_string+="colors.push("+std::to_string(color_vals.x())+","+std::to_string(color_vals.y())+","+std::to_string(color_vals.z())+");";
     // 			}
-    // 			js_string+="geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
-    // 			js_string+="geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
+    // 			js_string+="geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+    // 			js_string+="geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
     // 			js_string+="geometry.computeBoundingSphere();";
     // 			js_string+="mesh = new THREE.Line( geometry, material );";
     // 			js_string+="scene.add( mesh );\n";
