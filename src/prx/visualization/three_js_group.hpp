@@ -15,7 +15,8 @@ enum class info_geometry_t
   LINE = 0,
   QUAD = 1,
   FULL_LINE = 2,
-  CIRCLE = 3
+  CIRCLE = 3,
+  SPHERE = 3
 };
 
 class three_js_group_t
@@ -148,12 +149,15 @@ protected:
         "<body>"
           "<button id=\"shot\">Screenshot</button>"
           "<button id=\"bt_play\">Play</button>"
+          "<button id=\"bt_down_img_seq\">Download Seq</button>"
           "<div class=\"slidecontainer\">"
             "<input type=\"range\" min=\"0\" max=\"1000\" value=\"500\" class=\"slider\" id=\"time_slider\">"
           "</div>"
           "<script src=\"" + js_path + "three.js\"></script>"
+          "<script src=\"" + js_path + "FileSaver.js\"></script>"
           "<script src=\"" + js_path + "map_controls.js\"></script>"
           "<script src=\"" + js_path + "prx.js\"></script>"
+          "<script src=\"" + js_path + "jszip.min.js\"></script>"
           "<script>"
       };
   // clang-format on
