@@ -352,9 +352,9 @@ public:
         break;
       }
 
-      const node_index_t parent_idx{ prx::utilities::convert_to<std::size_t>(line[0]) };
-      const edge_index_t edge_idx{ prx::utilities::convert_to<std::size_t>(line[1]) };
-      const node_index_t node_idx{ prx::utilities::convert_to<std::size_t>(line[2]) };
+      const node_index_t parent_idx{ static_cast<node_index_t>(prx::utilities::convert_to<std::size_t>(line[0])) };
+      const edge_index_t edge_idx{ static_cast<edge_index_t>(prx::utilities::convert_to<std::size_t>(line[1])) };
+      const node_index_t node_idx{ static_cast<node_index_t>(prx::utilities::convert_to<std::size_t>(line[2])) };
       const Line node_state(line.begin() + 3, line.end());
 
       const std::size_t current_size{ v_index_map.size() };
