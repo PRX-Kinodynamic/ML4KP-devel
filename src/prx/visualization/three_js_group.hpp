@@ -3,6 +3,7 @@
 #include "prx/simulation/plant.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/utilities/geometry/geometry.hpp"
+#include "prx/utilities/general/type_conversions.hpp"
 
 #include <vector>
 
@@ -66,7 +67,53 @@ public:
 
   void add_tree_log(std::string log_name, space_t* state_space);
 
+  template <typename Position, typename Quaternion, typename Dimension>
+  void set_floor_plane(Position position, Quaternion quat, Dimension dimension, std::string color)
+  {
+    using namespace prx::utilities;
+    const std::string x{ convert_to<std::string>(position[0]) };
+    const std::string y{ convert_to<std::string>(position[1]) };
+    const std::string z{ convert_to<std::string>(position[2]) };
+    const std::string str_pos{ x + ", " + y + ", " + z };
+
+    const std::string qx{ convert_to<std::string>(quat[0]) };
+    const std::string qy{ convert_to<std::string>(quat[1]) };
+    const std::string qz{ convert_to<std::string>(quat[2]) };
+    const std::string qw{ convert_to<std::string>(quat[3]) };
+    const std::string str_quat{ qx + ", " + qy + ", " + qz + ", " + qw };
+
+    const std::string dim_x{ convert_to<std::string>(dimension[0]) };
+    const std::string dim_y{ convert_to<std::string>(dimension[1]) };
+    const std::string dim{ dim_x + ", " + dim_y };
+
+    // clang-format off
+    _floor = "var geometry = new THREE.PlaneBufferGeometry("+ dim +");"
+            "var material = new THREE.MeshPhongMaterial({ color : " + color + "});"
+            "var background = new THREE.Mesh(geometry, material);"
+            "background.receiveShadow = true;"
+            "background.position.set(" + str_pos + ");"
+            "background.quaternion = new THREE.Quaternion(" + str_quat + ");"
+            "scene.add(background);";
+    // clang-format on
+  }
+
 protected:
+  std::string get_opacity_from_color(const std::string color)
+  {
+    using namespace prx::utilities;
+    // Check if olor is 0xRRGGBB
+    if (color.size() != 10)
+      return "1";
+
+    // Color is 0xAARRGGBB
+    using namespace prx::utilities;
+    const std::string alpha_str{ color.substr(2, 2) };
+    const double alpha{ convert_to<double>(color[2] + color[3]) };
+    constexpr double max_opacity{ 256.0 };
+    const std::string opacity{ std::to_string(alpha / max_opacity) };
+    return opacity;
+  }
+
   struct vis_info_t
   {
     vector_t position;
@@ -87,28 +134,32 @@ protected:
     double fourth;
   };
 
-  // TODO: Change DIRTMP to whatever name we end up using
-  const std::string html_header_1 = "<!DOCTYPE html><html><head><link rel=\"stylesheet\" href=\"" + js_path +
-                                    "style.css\"><meta charset=utf-8><title>DIRTMP Visualization</title>";
-  const std::string html_header_2 =
-      "<style>body { margin: 0; }canvas { width: 100%; height: 100%; display: block; }</style>";
-  const std::string html_header_3 =
-      "</head><body><button id=\"shot\">Screenshot</button><button id=\"bt_play\">Play</button><div "
-      "class=\"slidecontainer\">";
-  const std::string html_header_4 =
-      "<input type=\"range\" min=\"0\" max=\"1000\" value=\"500\" class=\"slider\" id=\"time_slider\">";
-  const std::string html_header_5 =
-      "</div><script src=\"" + js_path + "three.js\"></script><script src=\"" + js_path + "map_controls.js\">";
-  const std::string html_header_6 = "</script><script src=\"" + js_path + "prx.js\"></script><script>";
-  const std::string html_header =
-      html_header_1 + html_header_2 + html_header_3 + html_header_4 + html_header_5 + html_header_6;
-  // const std::string html_header = "<!DOCTYPE html><html><head><meta charset=utf-8><title>DIRTMP
-  // Visualization</title><style>body { margin: 0; }canvas { width: 100%; height: 100%; display: block;
-  // }</style></head><body><button id=\"shot\">Screenshot</button><div class=\"slidecontainer\"><input type=\"range\"
-  // min=\"1\" max=\"100\" value=\"50\" class=\"slider\" id=\"myRange\"></div><script
-  // src=\""+js_path+"three.js\"></script><script src=\""+js_path+"map_controls.js\"></script><script
-  // src=\""+js_path+"prx.js\"></script><script>";
+  // clang-format off
+  const std::string html_header  // no-lint
+      {                          // no-lint
+        "<!DOCTYPE html>"
+        "<html>"
+        "<head>"// no-lint
+          "<link rel=\"stylesheet\" href=\"" + js_path + "style.css\">" 
+          "<meta charset=utf-8>"
+          "<title>ML4KP Visualization</title>"
+          "<style> body { margin: 0; } canvas { width: 100%; height: 100%; display: block; }</style>"
+        "</head>"
+        "<body>"
+          "<button id=\"shot\">Screenshot</button>"
+          "<button id=\"bt_play\">Play</button>"
+          "<div class=\"slidecontainer\">"
+            "<input type=\"range\" min=\"0\" max=\"1000\" value=\"500\" class=\"slider\" id=\"time_slider\">"
+          "</div>"
+          "<script src=\"" + js_path + "three.js\"></script>"
+          "<script src=\"" + js_path + "map_controls.js\"></script>"
+          "<script src=\"" + js_path + "prx.js\"></script>"
+          "<script>"
+      };
+  // clang-format on
   const std::string html_footer = "animate();</script></body></html>";
+
+  std::string _floor;
   // const std::string html_footer = "</script></body></html>";
 
   void update_plants();
