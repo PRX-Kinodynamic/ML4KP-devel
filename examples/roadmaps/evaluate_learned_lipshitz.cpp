@@ -41,14 +41,13 @@ int main(int argc, char* argv[])
              norm_angle_pi(point->at(2) - dirt_query.goal_state->at(2));
     return std::sqrt(diff2) < dirt_query.goal_region_radius;
   };
-
-
+  
 
 
     // Create and open a text file
   std::ofstream MyFile("filename.txt");
 
-  const unsigned num_trials = int(1e2);
+  const unsigned num_trials = int(1e4);
   unsigned num_successes = 0;
   space_point_t start_state_0 = context.first->get_state_space()->make_point();
   space_point_t goal_state_0 = context.first->get_state_space()->make_point();
@@ -69,9 +68,9 @@ int main(int argc, char* argv[])
   if (dirt_query.solution_traj.size() > 0)
   {
     plant->get_state_space()->copy_point(final_state_0, dirt_query.solution_traj.back());
-    MyFile <<"("<<context.first->get_state_space()->print_point(start_state_0,2) << "),(";
-    MyFile <<context.first->get_state_space()->print_point(final_state_0,2) <<"),(";
-    MyFile <<context.first->get_state_space()->print_point(goal_state_0,2) <<")"<<std::endl;
+    // MyFile <<context.first->get_state_space()->print_point(start_state_0,2) << ",";
+    // MyFile << context.first->get_state_space()->print_point(final_state_0,2) << ",";
+    // MyFile << context.first->get_state_space()->print_point(goal_state_0,2) << std::endl;
     std::cout<<"seed image: "<<context.first->get_state_space()->print_point(final_state_0,2)<<std::endl;
     double lipshitz = 0;
     for (int i = 0; i < num_trials; i++)
@@ -80,27 +79,38 @@ int main(int argc, char* argv[])
       while(! default_goal_check(dirt_query.start_state, start_state_0, dirt_query.goal_region_radius)){
         dirt_spec.sample_state(dirt_query.start_state);
       }
-        // Write to the file
 
 
-
-      double pt_err = space_t::euclidean_2d(dirt_query.start_state, start_state_0, 0, start_state_0->size());
+      
 
       controller.fulfill_query(dirt_spec, dirt_query);
 
       if (dirt_query.solution_traj.size() == 0){
         std::cout<<"empty trajectory:";
         std::cout<<"query start: "<<context.first->get_state_space()->print_point(dirt_query.start_state,2)<<std::endl;
-        MyFile <<"("<<context.first->get_state_space()->print_point(dirt_query.start_state,2) << ")(NULL)" <<std::endl;
+        MyFile <<context.first->get_state_space()->print_point(dirt_query.start_state,2)<< ",";
+        MyFile <<context.first->get_state_space()->print_point(dirt_query.start_state,2) << ",99,"<<lipshitz <<std::endl;
 
       }else{
-        double img_err = space_t::euclidean_2d(dirt_query.solution_traj.back(), final_state_0, 0, final_state_0->size());
+        
+        double pt_err = (start_state_0->at(0) - dirt_query.start_state->at(0)) * (start_state_0->at(0) - dirt_query.start_state->at(0)) +
+                       (start_state_0->at(1) - dirt_query.start_state->at(1)) * (start_state_0->at(1) - dirt_query.start_state->at(1));
+        pt_err += norm_angle_pi(start_state_0->at(2) - dirt_query.start_state->at(2)) *
+                 norm_angle_pi(start_state_0->at(2) - dirt_query.start_state->at(2));
+        pt_err = std::sqrt(pt_err);
+
+        double img_err = (final_state_0->at(0) - dirt_query.solution_traj.back()->at(0)) * (final_state_0->at(0) - dirt_query.solution_traj.back()->at(0)) +
+                         (final_state_0->at(1) - dirt_query.solution_traj.back()->at(1)) * (final_state_0->at(1) - dirt_query.solution_traj.back()->at(1));
+        img_err += norm_angle_pi(final_state_0->at(2) - dirt_query.solution_traj.back()->at(2)) *
+                 norm_angle_pi(final_state_0->at(2) - dirt_query.solution_traj.back()->at(2));
+        img_err = std::sqrt(img_err); 
+
         double lip_sample = img_err/pt_err;
         if(lip_sample > lipshitz) lipshitz = lip_sample;
 
-        MyFile <<"("<<context.first->get_state_space()->print_point(dirt_query.start_state,2) << "),(";
-        MyFile <<context.first->get_state_space()->print_point(dirt_query.solution_traj.back(),2) <<"),";
-        MyFile << lip_sample <<", "<< lipshitz <<std::endl;
+        MyFile <<context.first->get_state_space()->print_point(dirt_query.start_state,2) << ",";
+        MyFile <<context.first->get_state_space()->print_point(dirt_query.solution_traj.back(),2) <<",";
+        MyFile << img_err<<"," <<lip_sample <<", "<< lipshitz <<std::endl;
       }
       
       output_progress_bar(1.0 * i / num_trials);

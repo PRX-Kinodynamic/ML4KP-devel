@@ -8,6 +8,6 @@ goal_uses_quat: false
 delta_input: false
 
 control_duration: 0.5
-max_duration: 100.0
+max_duration: 30.0
 
 debug_controller: false
