@@ -16,7 +16,16 @@ namespace prx
 #define PRX_INFINITY 1e10
 extern int precision;
 extern char separating_value;
+namespace constants
+{
+const double pi{ PRX_PI };
+const double epsilon{ PRX_EPSILON };
+constexpr double infinity{ std::numeric_limits<double>::infinity() };
 
+// extern int precision;
+// extern char separating_value;
+
+}  // namespace constants
 static inline std::string lib_path_safe(std::string env_var)
 {
   char* path = std::getenv(env_var.c_str());

@@ -63,4 +63,21 @@ void init_from_container(EigenMatrix& matrix, const Container& container)
   }
 }
 
+// void quaternion_to_euler_012(const Eigen::Quaterniond& q, Eigen::Vector3d& out_vec)
+// {
+//   // roll (x-axis rotation)
+//   const double sinr_cosp{ 2 * (q.w() * q.x() + q.y() * q.z()) };
+//   const double cosr_cosp{ 1 - 2 * (q.x() * q.x() + q.y() * q.y()) };
+//   out_vec[0] = std::atan2(sinr_cosp, cosr_cosp);
+
+//   // pitch (y()-ax()is rotation)
+//   const double sinp{ std::sqrt(1 + 2 * (q.w() * q.y() - q.x() * q.z())) };
+//   const double cosp{ std::sqrt(1 - 2 * (q.w() * q.y() - q.x() * q.z())) };
+//   out_vec[1] = 2 * std::atan2(sinp, cosp) - M_PI / 2.0;
+
+//   // yaw() (z-ax()is rotation)
+//   const double siny_cosp{ 2 * (q.w() * q.z() + q.x() * q.y()) };
+//   const double cosy_cosp{ 1 - 2 * (q.y() * q.y() + q.z() * q.z()) };
+//   out_vec[2] = std::atan2(siny_cosp, cosy_cosp);
+// }
 }  // namespace prx
