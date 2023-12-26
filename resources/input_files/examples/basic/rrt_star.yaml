@@ -18,4 +18,4 @@ eta_max: 10
 
 grow_tree: true
 query_tree: false
-tree_to_files: false
+tree_to_files: true
