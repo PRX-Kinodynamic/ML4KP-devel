@@ -17,8 +17,6 @@ else()
     add_definitions(-DTORCH_NOT_BUILT)
 endif()
 
-
-
 foreach(LIBRARY @ML4KP_LIBRARIES@)
 	include("@PACKAGE_CMAKE_INSTALL_LIBDIR@/cmake/@CMAKE_PROJECT_NAME@/${LIBRARY}Targets.cmake")
 endforeach()
@@ -29,5 +27,10 @@ set_and_check(@CMAKE_PROJECT_NAME@_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDI
 set_and_check(@CMAKE_PROJECT_NAME@_LIBRARY_DIR "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
 
 check_required_components(@CMAKE_PROJECT_NAME@)
+
+
+if(@BUILD_FOR_FACTOR_GRAPHS@)
+    find_package(GTSAM REQUIRED)
+endif()
 
 find_package(YAMLCPP NAMES Yaml-cpp YamlCpp)
