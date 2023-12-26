@@ -6,6 +6,8 @@
 
 #include <memory>
 
+// [1] Karaman, Sertac, and Emilio Frazzoli. "Sampling-based algorithms for optimal motion planning." The international
+//     journal of robotics research 30, no. 7 (2011): 846-894.
 namespace prx
 {
 
@@ -70,6 +72,24 @@ public:
     PRX_NOT_IMPLEMENTED
     return false;
   };
+
+  // Steering function[1]:
+  // Given two points x,y ∈ X:
+  //      Steer:  (x,y) -> z
+  // returns a point z ∈ X such that z is “closer” to y than x is.
+  // This version performs the copies from/to the given points
+  void steer(space_point_t z, const space_point_t x, const space_point_t y, const double ti)
+  {
+    this->steer(x, y, ti);
+    state_space->copy_to(z);
+  }
+
+  // Same as steer(x,y)->z. The resulting z will be in memory.
+  // This function should be overwritten by any plant that has a steering function available
+  virtual void steer(const space_point_t x, const space_point_t y, const double ti)
+  {
+    PRX_NOT_IMPLEMENTED
+  }
 
   inline std::string get_pathname()
   {

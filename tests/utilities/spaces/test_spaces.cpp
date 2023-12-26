@@ -378,19 +378,69 @@ BOOST_AUTO_TEST_CASE(integration_of_topology_quaternion_rotate_on_z)
   BOOST_REQUIRE(pt->at(3) > 0);
 }
 
+BOOST_AUTO_TEST_CASE(interpolate_euclidean_and_rotational_topology)
+{
+  mock::space3d_t test;
+  prx::space_t& space{ test.space };
+  prx::space_point_t pt0{ space.make_point() };
+  prx::space_point_t pt1{ space.make_point() };
+  prx::space_point_t pt_half{ space.make_point() };
+
+  prx::space_point_t result0{ space.make_point() };
+  prx::space_point_t result1{ space.make_point() };
+
+  prx::space_point_t expected_half{ space.make_point() };
+
+  space.copy(pt0, { 0.0, 0.0, 0.0 });
+  space.copy(pt1, { 1.0, 2.0, 3.14 });
+
+  space.copy(result0, { 0.0, 0.0, 0.0 });
+  space.copy(result1, { 1.0, 2.0, 3.14 });
+
+  space.copy(expected_half, { 0.5, 1.0, 1.57 });
+
+  const double t0{ 0 };
+  const double t1{ 1 };
+  const double t_half{ 0.5 };
+
+  space.interpolate(pt0, pt1, t0, result0);
+  space.interpolate(pt0, pt1, t1, result1);
+  space.interpolate(pt0, pt1, t_half, pt_half);
+
+  BOOST_CHECK(space.equal_points(pt0, result0));
+  BOOST_CHECK(space.equal_points(pt1, result1));
+  BOOST_CHECK(space.equal_points(pt_half, expected_half));
+}
+
 BOOST_AUTO_TEST_CASE(interpolate_of_topology_quaternion)
 {
   mock::space_quat_t test;
   prx::space_t& space{ test._space };
   prx::space_point_t pt0{ space.make_point() };
   prx::space_point_t pt1{ space.make_point() };
+  prx::space_point_t pt_half{ space.make_point() };
+
   prx::space_point_t result0{ space.make_point() };
   prx::space_point_t result1{ space.make_point() };
 
+  prx::space_point_t expected_half{ space.make_point() };
+
+  space.copy(pt0, { 1.0, 0.0, 0.0, 0.0 });
+  space.copy(pt1, { 0.0, 1.0, 0.0, 0.0 });
+
+  space.copy(result0, { 1.0, 0.0, 0.0, 0.0 });
+  space.copy(result1, { 0.0, 1.0, 0.0, 0.0 });
+  space.copy(expected_half, { 0.7071068, 0.7071068, 0.0, 0.0 });
+
   const double t0{ 0 };
   const double t1{ 1 };
+  const double t_half{ 0.5 };
+
   space.interpolate(pt0, pt1, t0, result0);
   space.interpolate(pt0, pt1, t1, result1);
+  space.interpolate(pt0, pt1, t_half, pt_half);
+
   BOOST_CHECK(space.equal_points(pt0, result0));
   BOOST_CHECK(space.equal_points(pt1, result1));
+  BOOST_CHECK_MESSAGE(space.equal_points(pt_half, expected_half), EXPECTED_GOT(expected_half, pt_half));
 }

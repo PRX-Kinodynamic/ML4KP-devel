@@ -72,6 +72,41 @@ public:
     return children;
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const tree_node_t* obj)
+  {
+    os << *obj;
+    return os;
+  }
+  friend std::ostream& operator<<(std::ostream& os, const std::shared_ptr<tree_node_t> obj)
+  {
+    os << *obj;
+    return os;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const tree_node_t& obj)
+  {
+    os << "[TreeNode] parent" << prx::constants::separating_value;
+    os << obj.parent << prx::constants::separating_value;
+    os << "edge" << prx::constants::separating_value;
+    os << obj.parent_edge << prx::constants::separating_value;
+    os << "index" << prx::constants::separating_value;
+    os << obj.index << prx::constants::separating_value;
+    os << "State:" << prx::constants::separating_value;
+    if (obj.point == nullptr)
+    {
+      os << "nullptr";
+    }
+    else
+    {
+      os << obj.point << prx::constants::separating_value;
+    }
+    os << "Children:";
+    for (auto child : obj.children)
+    {
+      os << child << prx::constants::separating_value;
+    }
+    return os;
+  }
 protected:
   node_index_t parent;
   edge_index_t parent_edge;
@@ -127,6 +162,26 @@ public:
   node_index_t get_target() const
   {
     return target;
+  }
+  friend std::ostream& operator<<(std::ostream& os, const tree_edge_t* obj)
+  {
+    os << *obj;
+    return os;
+  }
+  friend std::ostream& operator<<(std::ostream& os, const std::shared_ptr<tree_edge_t> obj)
+  {
+    os << *obj;
+    return os;
+  }
+  friend std::ostream& operator<<(std::ostream& os, const tree_edge_t& obj)
+  {
+    os << "[TreeEdge] source" << prx::constants::separating_value;
+    os << obj.source << prx::constants::separating_value;
+    os << "index" << prx::constants::separating_value;
+    os << obj.index << prx::constants::separating_value;
+    os << "target" << prx::constants::separating_value;
+    os << obj.target << prx::constants::separating_value;
+    return os;
   }
 
 protected:
