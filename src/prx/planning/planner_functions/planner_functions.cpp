@@ -214,4 +214,10 @@ custom_check_t create_default_goal_check(const space_t* space, const space_point
   return f;
 }
 
+void default_steer_function(space_point_t x_new, const space_point_t x_nearest, const space_point_t x_rand,
+                            std::shared_ptr<system_group_t> sg)
+{
+  // sg->steer();
+}
+
 }  // namespace prx
