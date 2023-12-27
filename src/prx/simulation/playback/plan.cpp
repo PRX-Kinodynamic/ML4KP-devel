@@ -190,6 +190,20 @@ void plan_t::extend_last_control(double time)
   this->back().duration += time;
 }
 
+void plan_t::reduce_last_control(double time)
+{
+  prx_assert(num_steps > 0, "Can't reduce the last control if a plan has no controls");
+  if (this->back().duration < time)
+  {
+    this->pop_back();
+    num_steps--;
+  }
+  else
+  {
+    this->back().duration -= time;
+  }
+}
+
 void plan_t::pop_front()
 {
   if (num_steps == 0)

@@ -213,4 +213,24 @@ static std::vector<T> split(const std::string str)
   return result;
 }
 
+inline Eigen::Vector3d quaternion_to_euler(const quaternion_t& q)
+{
+  // roll (x-axis rotation)
+  const double sinr_cosp{ 2 * (q.w() * q.x() + q.y() * q.z()) };
+  const double cosr_cosp{ 1 - 2 * (q.x() * q.x() + q.y() * q.y()) };
+  const double x{ std::atan2(sinr_cosp, cosr_cosp) };
+
+  // pitch (y()-ax()is rotation)
+  const double sinp{ std::sqrt(1 + 2 * (q.w() * q.y() - q.x() * q.z())) };
+  const double cosp{ std::sqrt(1 - 2 * (q.w() * q.y() - q.x() * q.z())) };
+  const double y{ 2 * std::atan2(sinp, cosp) - M_PI / 2.0 };
+
+  // yaw() (z-ax()is rotation)
+  const double siny_cosp{ 2 * (q.w() * q.z() + q.x() * q.y()) };
+  const double cosy_cosp{ 1 - 2 * (q.y() * q.y() + q.z() * q.z()) };
+  const double z{ std::atan2(siny_cosp, cosy_cosp) };
+
+  return { x, y, z };
+}
+
 }  // namespace prx
