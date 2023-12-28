@@ -8,7 +8,7 @@ void runge_kutta4_t::integrate(const double simulation_step)
 {
   _state_space->copy_to(_yn);
 
-  _h = simulation_step <= 0.0 ? _h : simulation_step;
+  _h = simulation_step;
   const double h_d2{ _h / 2.0 };
   const Eigen::VectorXd hv{ _h * Eigen::VectorXd::Ones(_dim) };
   const Eigen::VectorXd hvd2{ h_d2 * Eigen::VectorXd::Ones(_dim) };

@@ -14,8 +14,7 @@ euler_t::~euler_t()
 
 void euler_t::integrate(const double simulation_step)
 {
-  _h = simulation_step <= 0.0 ? _h : simulation_step;
   _compute_derivative();
-  _state_space->integrate(_derivative_space, _h);
+  _state_space->integrate(_derivative_space, simulation_step);
 }
 }  // namespace prx

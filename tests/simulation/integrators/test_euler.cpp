@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(euler_1d_system_test)
   {
     state_space->copy_to(xt);
     result.emplace_back(xt->as<Eigen::Vector2d>());
-    euler.integrate();
+    euler.integrate(dt);
   }
   state_space->copy_to(xt);
   result.emplace_back(xt->as<Eigen::Vector2d>());

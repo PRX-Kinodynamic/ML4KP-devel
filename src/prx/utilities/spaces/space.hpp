@@ -538,16 +538,6 @@ protected:
     owned_values = false;
   }
 
-  // inline double& operator[](const std::size_t index)
-  // {
-  //   return *(addresses[index]);
-  // }
-
-  // inline double operator[](const std::size_t index) const
-  // {
-  //   return *(addresses[index]);
-  // }
-
   std::size_t dimension;
   std::vector<double*> addresses;
   std::vector<double*> lower_bounds;
