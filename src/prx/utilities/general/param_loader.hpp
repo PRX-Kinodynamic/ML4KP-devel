@@ -64,6 +64,8 @@ public:
     return !params[key].IsNull();
   }
 
+  void replace_env_var(YAML::Node& node);
+
   template <typename T = std::string>
   T as()
   {

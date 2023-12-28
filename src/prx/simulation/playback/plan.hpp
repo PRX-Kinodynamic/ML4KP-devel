@@ -1,9 +1,10 @@
 #pragma once
 
+#include <deque>
+#include <fstream>
+
 #include "prx/utilities/spaces/space.hpp"
 #include "prx/utilities/defs.hpp"
-
-#include <deque>
 
 namespace prx
 {
@@ -49,7 +50,7 @@ public:
    * A plan {(u_1,t_1),(u_2,t_2),...,(u_M,t_M)} has <i> M </i> steps.
    * @return Number of steps in the plan.
    */
-  inline unsigned size() const
+  inline std::size_t size() const
   {
     return num_steps;
   }
@@ -71,21 +72,16 @@ public:
     return t;
   }
 
-  inline const plan_step_t& operator[](unsigned index) const
+  inline plan_step_t& operator[](const std::size_t& index)
   {
     prx_assert(index < num_steps, "Trying to access plan outside of bounds.");
     return steps[index];
   }
 
-  inline const plan_step_t& at(unsigned index) const
+  inline const plan_step_t operator[](const std::size_t& index) const
   {
     prx_assert(index < num_steps, "Trying to access plan outside of bounds.");
     return steps[index];
-  }
-
-  inline space_point_t operator[](double t) const
-  {
-    return at(t);
   }
 
   inline space_point_t at(double t) const
@@ -145,7 +141,23 @@ public:
 
   void copy_to(const double start_time, const double duration, plan_t& t);
 
-  void copy_onto_back(space_point_t control, double time);
+  template <typename Control>
+  void copy_onto_back(const Control& control, const double duration)
+  {
+    if ((num_steps + 1) >= max_num_steps)
+    {
+      increase_buffer();
+      end_iterator = steps.begin();
+      const_end_iterator = steps.begin();
+      std::advance(end_iterator, num_steps);
+      std::advance(const_end_iterator, num_steps);
+    }
+    control_space->copy((*end_iterator).control, control);
+    (*end_iterator).duration = duration;
+    ++end_iterator;
+    ++const_end_iterator;
+    ++num_steps;
+  }
 
   void copy_onto_front(space_point_t control, double time);
 
@@ -168,6 +180,12 @@ public:
   void extend_last_control(double time);
 
   /**
+   * @brief Reduce the duration of the last control in the plan by a specified time.
+   * @param time Time to reduce the duration of the last control by (in seconds).
+   */
+  void reduce_last_control(double time);
+
+  /**
    * @brief Removes the first control from the plan.
    */
   void pop_front();
@@ -182,6 +200,22 @@ public:
    * @return A string object that outputs the plan.
    */
   std::string print(unsigned precision = 3) const;
+
+  void to_file(const std::string, const std::ios_base::openmode _mode = std::ofstream::trunc) const;
+  void from_file(const std::string file_name);
+
+  friend std::ostream& operator<<(std::ostream& os, const plan_t* obj)
+  {
+    os << *obj;
+    return os;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const plan_t& obj)
+  {
+    os << obj.print();
+
+    return os;
+  }
 
 private:
   void increase_buffer();

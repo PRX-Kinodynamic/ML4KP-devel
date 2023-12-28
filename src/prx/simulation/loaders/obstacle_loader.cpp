@@ -42,20 +42,23 @@ obstacle_loader_t::load_obstacles_from_file(const std::string obstacles_file)
     if (geom_type == "box")
     {
       auto dims = geom_params["dims"].as<std::vector<double>>();
-      obstacle_list.push_back(create_obstacle(new box_t(name, dims[0], dims[1], dims[2], obstacle_pose)));
+      auto color = geom_params["material"].as<std::string>();
+      obstacle_list.push_back(create_obstacle(new box_t(name, dims[0], dims[1], dims[2], obstacle_pose, color)));
       obstacle_names.push_back(name);
     }
     else if (geom_type == "cylinder")
     {
       double radius = geom_params["radius"].as<double>();
       double height = geom_params["height"].as<double>();
+      auto color = geom_params["material"].as<std::string>();
       obstacle_list.push_back(create_obstacle(new cylinder_t(name, radius, height, obstacle_pose)));
       obstacle_names.push_back(name);
     }
     else if (geom_type == "sphere")
     {
       double radius = geom_params["radius"].as<double>();
-      obstacle_list.push_back(create_obstacle(new sphere_t(name, radius, obstacle_pose)));
+      auto color = geom_params["material"].as<std::string>();
+      obstacle_list.push_back(create_obstacle(new sphere_t(name, radius, obstacle_pose, color)));
       obstacle_names.push_back(name);
     }
     else
