@@ -17,21 +17,15 @@ typedef std::function<void()> compute_derivative_t;
 class integrator_t
 {
 public:
-  integrator_t(space_t* _state_space, space_t* _derivative_space, std::function<void()> deriv_f)
+  integrator_t(space_t* state_space, space_t* derivative_space, std::function<void()> deriv_f, const double h = 0.01)
+    : _h(h)
+    , _state_space(state_space)
+    , _derivative_space(derivative_space)
+    , _compute_derivative(deriv_f)
+    , _dim(state_space->size())
   {
-    h = 0.01;
-    state_space = _state_space;
-    derivative_space = _derivative_space;
-    compute_derivative = deriv_f;
   }
-  integrator_t(space_t* _state_space, space_t* _derivative_space, std::function<void()> deriv_f,
-               const double initial_simulation_step)
-  {
-    h = initial_simulation_step;
-    state_space = _state_space;
-    derivative_space = _derivative_space;
-    compute_derivative = deriv_f;
-  }
+
   ~integrator_t(){};
 
   virtual void integrate(const double simulation_step = 0.0) = 0;
@@ -44,11 +38,11 @@ public:
   };
 
 protected:
-  space_point_t start_integration_state;
-  double h;
-  compute_derivative_t compute_derivative;
-  space_t* state_space;
-  space_t* derivative_space;
+  double _h;
+  compute_derivative_t _compute_derivative;
+  space_t* _state_space;
+  space_t* _derivative_space;
+  const std::size_t _dim;
 
 private:
 };

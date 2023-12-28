@@ -4,18 +4,21 @@
 
 namespace prx
 {
-
+// For RK methods check https://en.wikipedia.org/wiki/Runge–Kutta_methods or any numerical algorithm book
+// This implements RK4: $$ Y_{n+1} = Y_n + h * (k1 + 2 * k2 + 2 * k3 + k4) / 6 $$
+// Where:
+//  $$ k0 = f(Xn, Yn ) $$
+//  $$ ki = f(Xn + c_i * h, Yn + ai * h * k_{i-1} ) $$
 class runge_kutta4_t : public integrator_t
 {
 public:
-  runge_kutta4_t(space_t* state_space, space_t* derivative_space, std::function<void()> deriv_f)
-    : integrator_t(state_space, derivative_space, deriv_f)
-  {
-  }
-
-  runge_kutta4_t(space_t* state_space, space_t* derivative_space, std::function<void()> deriv_f,
-                 const double initial_simulation_step)
-    : integrator_t(state_space, derivative_space, deriv_f, initial_simulation_step)
+  runge_kutta4_t(space_t* state_space, space_t* derivative_space, std::function<void()> deriv_f, const double h = 0.01)
+    : integrator_t(state_space, derivative_space, deriv_f, h)
+    , _yn(Eigen::VectorXd::Zero(_dim))
+    , _k1(Eigen::VectorXd::Zero(_dim))
+    , _k2(Eigen::VectorXd::Zero(_dim))
+    , _k3(Eigen::VectorXd::Zero(_dim))
+    , _k4(Eigen::VectorXd::Zero(_dim))
   {
   }
 
@@ -24,10 +27,12 @@ public:
   void integrate(const double simulation_step = 0.0) override;
 
 protected:
-  space_point_t yn;
-  space_point_t k1;
-  space_point_t k2;
-  space_point_t k3;
+  Eigen::VectorXd _k1;
+  Eigen::VectorXd _k2;
+  Eigen::VectorXd _k3;
+  Eigen::VectorXd _k4;
+
+  Eigen::VectorXd _yn;
 
 private:
 };

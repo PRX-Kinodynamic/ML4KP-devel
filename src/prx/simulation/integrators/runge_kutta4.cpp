@@ -1,53 +1,45 @@
 #include "prx/simulation/integrators/runge_kutta4.hpp"
-
+#include "prx/utilities/defs.hpp"
 namespace prx
 {
+
+// Implements the integration step for the given simulation step.
 void runge_kutta4_t::integrate(const double simulation_step)
 {
-  h = simulation_step == 0.0 ? h : simulation_step;
-  if (!start_integration_state)
-  {
-    start_integration_state = state_space->make_point();
-    k1 = derivative_space->make_point();
-    k2 = derivative_space->make_point();
-    k3 = derivative_space->make_point();
-    yn = state_space->make_point();
-  }
-  state_space->copy_to_point(start_integration_state);
+  _state_space->copy_to(_yn);
 
-  compute_derivative();
-  // Compute k1 = h * f(X0, Y0)
-  derivative_space->copy_to_point(k1);
-  // Compute d1 = Yn + k1 / 2
-  state_space->integrate(start_integration_state, derivative_space, h * 0.5);
+  _h = simulation_step;
+  const double h_d2{ _h / 2.0 };
+  const Eigen::VectorXd hv{ _h * Eigen::VectorXd::Ones(_dim) };
+  const Eigen::VectorXd hvd2{ h_d2 * Eigen::VectorXd::Ones(_dim) };
+  const Eigen::VectorXd yn_hv{ _yn + hv };
+  const Eigen::VectorXd yn_hvd2{ _yn + hvd2 };
 
-  compute_derivative();
-  // Compute k2 = h * f(X0, Y0 + k1 / 2) = h * f(Xn + h / 2, d1)
-  derivative_space->copy_to_point(k2);
-  // Compute d2 = Yn + k2 / 2 = Yn + h * 0.5 * f(Xn + h / 2, d1)
-  state_space->integrate(start_integration_state, derivative_space, h * 0.5);
+  // Compute k1 = f(xn, yn)
+  _compute_derivative();
+  _derivative_space->copy_to(_k1);
 
-  compute_derivative();
-  // Compute k3 = f(X0 + C3h, Y0 + k2 / 2) = h * f(Xn, h/2, d2)
-  derivative_space->copy_to_point(k3);
-  // Compute d3 = Yn + k3 = Yn + h * f(Xn + h / 2, d2)
-  state_space->integrate(start_integration_state, derivative_space, h);
+  // Compute k2 = f(xn + h/2, yn + (h/2) * k1)
+  // ss <- yn + 0.5 * h * k1;
+  _state_space->integrate(yn_hvd2, _derivative_space, h_d2);
+  _compute_derivative();
+  _derivative_space->copy_to(_k2);
 
-  // Compute k4 = h * f(Xn + h, Yn + k3) = h * f(Xn + h, d3)
-  state_space->copy_from_point(start_integration_state);
-  compute_derivative();
-  // Compute d4 = Yn + k4 / 6 = Yn + (h / 6) * f(Xn + h, d3)
-  state_space->integrate(derivative_space, h / 6.0);
+  // Compute k3 = f(xn + h/2, yn + (h/2) * k2)
+  // ss <- yn + 0.5 * h * k2;
+  _state_space->integrate(yn_hvd2, _derivative_space, h_d2);
+  _compute_derivative();
+  _derivative_space->copy_to(_k3);
 
-  // Y_{n+1} = Yn + k1 / 6 + k2 / 3 + k3 / 3 + k4 / 6 = d4 + k1 / 6 + k2 / 3 + k3 / 3
-  state_space->copy_to_point(yn);
-  k1->multiply(h / 6.0);
-  k2->multiply(h / 3.0);
-  k3->multiply(h / 3.0);
-  yn->add(k1);
-  yn->add(k2);
-  yn->add(k3);
+  // Compute k4 = f(xn + h, yn + h * k3)
+  // ss <- yn + h * k4;
+  _state_space->integrate(yn_hv, _derivative_space, _h);
+  _compute_derivative();
+  _derivative_space->copy_to(_k4);
 
-  state_space->copy_from_point(yn);
+  // ss <- yn + h * k14
+  const Eigen::VectorXd k14{ (_k1 + 2.0 * _k2 + 2.0 * _k3 + _k4) / 6.0 };
+  _derivative_space->copy_from(k14);
+  _state_space->integrate(_yn, _derivative_space, _h);
 }
 }  // namespace prx
