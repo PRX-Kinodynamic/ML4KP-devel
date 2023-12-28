@@ -150,9 +150,6 @@ protected:
   rrt_specification_t* rrt_spec;
   rrt_query_t* rrt_query;
 
-  // virtual void _link_and_setup_spec_shared(std::shared_ptr<planner_specification_t> spec) override;
-  // virtual bool _link_and_setup_query_shared(std::shared_ptr<planner_query_t> query) override;
-
   std::string planner_name;
 
   node_index_t start_vertex;

@@ -67,13 +67,8 @@ class rrt_star_specification_t : public planner_specification_t
 {
 public:
   rrt_star_specification_t(std::shared_ptr<system_group_t> sg, std::shared_ptr<collision_group_t> cg)
-    : system_group(sg)
-    , state_space(sg->get_state_space())
-    , control_space(sg->get_control_space())
-    , eta_min(1)
-    , eta_max(10)
+    : system_group(sg), state_space(sg->get_state_space()), eta_min(1), eta_max(10)
   {
-    // cost_function = [](const trajectory_t& t, const plan_t& plan) { return default_cost_function(t, plan); };
     distance_function = [](const space_point_t& s1, const space_point_t& s2) { return space_t::euclidean_2d(s1, s2); };
     sample_state = [this](space_point_t& s) { default_sample_state(s, state_space); };
     valid_state = [this, cg](space_point_t& s) { return default_valid_state(s, state_space, cg); };
@@ -82,7 +77,6 @@ public:
                          const double max_distance) {
       system_group->steer(traj, x_nearest, x_rand, max_distance, distance_function);
     };
-    blossom_number = 1;
   }
   virtual ~rrt_star_specification_t()
   {
@@ -98,15 +92,10 @@ public:
   std::shared_ptr<system_group_t> system_group;
 
   space_t* state_space;
-  space_t* control_space;
 
   // double eta;
   double eta_min;
   double eta_max;
-
-  int min_control_steps;
-  int max_control_steps;
-  int blossom_number;
 };
 
 class rrt_star_query_t : public planner_query_t
@@ -192,7 +181,6 @@ protected:
   graph_nearest_neighbors_t* _metric;
 
   space_t* _state_space;
-  space_t* _control_space;
 
   space_point_t _x_rand;
   space_point_t _x_new;
