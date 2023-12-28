@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(DirtMP)
+project(ML4KP)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -13,6 +13,12 @@ set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
+
+set(${PROJECT_NAME}_VERSION 1.0)
+set(${PROJECT_NAME}_HEADERS "" CACHE STRING "Headers to be exported")
+set(${PROJECT_NAME}_LIBRARIES "" CACHE STRING "Libraries to be exported")
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+
 
 if( NOT CMAKE_BUILD_TYPE )
 	set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build types" FORCE)
@@ -31,16 +37,15 @@ add_definitions(${BUILD_FLAGS})
 
 find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
-link_libraries(
-	${Boost_FILESYSTEM_LIBRARY}
-	${Boost_SYSTEM_LIBRARY}
-	)
 
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})
+
+find_package(Threads REQUIRED)
+# link_libraries(Threads::Threads)
 
 if(BUILD_FOR_TORCH)
 	if(DEFINED ENV{Torch_DIR})
@@ -54,17 +59,19 @@ else()
     add_definitions(-DTORCH_NOT_BUILT)
 endif()
 
+
+
 include_directories(src/prx/external)
 include_directories(src/prx/visualization)
+include_directories(src/prx/simulation)
 include_directories(src/prx/planning)
 include_directories(src/prx/utilities)
-include_directories(src/prx/simulation)
 
 # TODO: Make a shared libraries.
-add_subdirectory(src/prx/planning)
 add_subdirectory(src/prx/external)
 add_subdirectory(src/prx/utilities)
 add_subdirectory(src/prx/simulation)
+add_subdirectory(src/prx/planning)
 add_subdirectory(src/prx/visualization)
 
 if(BUILD_FOR_MUJOCO)
@@ -83,6 +90,7 @@ endif()
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 
 add_subdirectory(examples)
+add_subdirectory(executables)
 
 if(BUILD_TESTS)
 	enable_testing()
@@ -90,3 +98,73 @@ if(BUILD_TESTS)
 endif(BUILD_TESTS)
 
 
+# Install the library
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+# Create a single library, mostly for installing
+add_library(${PROJECT_NAME} INTERFACE )
+foreach(LIBRARY IN ITEMS ${${PROJECT_NAME}_LIBRARIES} )
+	add_dependencies(${PROJECT_NAME} ${LIBRARY})
+	target_link_libraries(${PROJECT_NAME} INTERFACE ${LIBRARY})
+endforeach()
+
+set(CMAKE_INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/")
+message(STATUS "Installing ${PROJECT_NAME} in: ${CMAKE_INSTALL_PREFIX}")
+
+foreach(HEADER IN ITEMS ${${PROJECT_NAME}_HEADERS})
+	get_filename_component(H_DIR ${HEADER} DIRECTORY )
+	install(FILES src/${HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${H_DIR})
+endforeach()
+
+# install(TARGETS ${${PROJECT_NAME}_LIBRARIES} EXPORT ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+foreach(LIBRARY IN ITEMS ${${PROJECT_NAME}_LIBRARIES})
+	install(TARGETS ${LIBRARY}
+        EXPORT ${LIBRARY}Targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+	)
+	install(EXPORT ${LIBRARY}Targets
+        	FILE ${LIBRARY}Targets.cmake
+	        NAMESPACE ${PROJECT_NAME}::
+	        DESTINATION ${CMAKE_INSTALL_DESTINATION}
+	)
+	# export(EXPORT ${LIBRARY}
+    #     FILE ${CMAKE_INSTALL_DESTINATION}/${LIBRARY}Config.cmake
+    #     NAMESPACE ${PROJECT_NAME}::)
+
+endforeach()
+install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}Targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+install(EXPORT ${PROJECT_NAME}Targets
+        FILE ${PROJECT_NAME}Targets.cmake
+        NAMESPACE ${PROJECT_NAME}::
+        EXPORT_LINK_INTERFACE_LIBRARIES
+        DESTINATION ${CMAKE_INSTALL_DESTINATION}
+)
+
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/ML4KPConfigVersion.cmake"
+  VERSION ${${PROJECT_NAME}_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+configure_package_config_file(cmake/ML4KPConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/cmake/ML4KPConfig.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_DESTINATION}
+  PATH_VARS
+  	CMAKE_INSTALL_INCLUDEDIR
+  	CMAKE_INSTALL_LIBDIR 
+  	${PROJECT_NAME}_LIBRARIES
+  	BUILD_FOR_TORCH)
+
+install(FILES 
+			"${CMAKE_CURRENT_BINARY_DIR}/cmake/ML4KPConfig.cmake"
+  			"${CMAKE_CURRENT_BINARY_DIR}/ML4KPConfigVersion.cmake"
+        DESTINATION ${CMAKE_INSTALL_DESTINATION} )

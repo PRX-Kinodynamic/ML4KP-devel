@@ -1,10 +1,10 @@
 #pragma once
 
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/condition_check.hpp"
+
 #include "prx/simulation/system.hpp"
-// #include "prx/simulation/simulator.hpp"
 #include "prx/simulation/controller.hpp"
-#include "prx/planning/condition_check.hpp"
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/simulation/collision_checking/collision_checker.hpp"
@@ -41,6 +41,11 @@ public:
     return control_space;
   }
 
+  inline space_t* get_parameter_space()
+  {
+    return _parameter_space;
+  }
+
   void propagate_once(space_point_t control = nullptr);
 
   std::vector<system_ptr_t>::iterator begin()
@@ -57,6 +62,8 @@ protected:
   std::vector<system_ptr_t> group;
   space_t* state_space;
   space_t* control_space;
+  space_t* _parameter_space;
+
   simulator_t* sim;
 
   friend system_group_manager_t;

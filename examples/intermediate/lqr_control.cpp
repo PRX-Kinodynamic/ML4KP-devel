@@ -1,10 +1,11 @@
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/condition_check.hpp"
+#include "prx/utilities/general/param_loader.hpp"
+
 #include "prx/planning/world_model.hpp"
 #include "prx/simulation/plants/plants.hpp"
-#include "prx/planning/condition_check.hpp"
 #include "prx/simulation/controllers/lqr.hpp"
 #include "prx/visualization/three_js_group.hpp"
-#include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 
 using namespace prx;
