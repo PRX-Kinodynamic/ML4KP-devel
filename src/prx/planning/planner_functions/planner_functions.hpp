@@ -95,5 +95,4 @@ default_expand_set(space_point_t& start_state, std::set<std::pair<space_point_t,
 
 custom_check_t create_default_goal_check(const space_t*, const space_point_t, const double);
 
-void default_steer_function(space_point_t, const space_point_t, const space_point_t, std::shared_ptr<system_group_t>);
 }  // namespace prx

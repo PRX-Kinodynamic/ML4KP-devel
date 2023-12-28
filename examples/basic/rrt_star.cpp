@@ -39,18 +39,6 @@ int main(int argc, char* argv[])
   rrt_star_t rrt_star("RRT*");
   rrt_star_specification_t rrt_star_spec(context.first, context.second);
 
-  // Two ways of accessing lengthy parameter paths
-  int min_steps{ params["plant"]["min_steps"].as<int>() };
-  int max_steps{ params["/plant/max_steps"].as<int>() };
-
-  // rrt_spec.sample_plan = [&](plan_t& plan, space_point_t pose)
-  // {
-  // Add custom sample plan here
-  // };
-
-  rrt_star_spec.min_control_steps = min_steps;
-  rrt_star_spec.max_control_steps = max_steps;
-
   rrt_star_spec.eta_min = params["eta_min"].as<double>();
   rrt_star_spec.eta_max = params["eta_max"].as<double>();
 
@@ -64,15 +52,6 @@ int main(int argc, char* argv[])
 
   ss->copy(rrt_star_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
   ss->copy(rrt_star_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
-
-  // rrt_query.goal_region_radius = params["goal_region_radius"].as<double>();
-
-  // Alternatively, change the goal_check function
-  // rrt_query.goal_check = [&](space_point_t pt)
-  // {
-  //    // Default is:
-  // return space_t::euclidean_2d(pt, rrt_query.goal_state) < goal_region_radius;
-  // }
 
   rrt_star_query.get_visualization = params["visualize"].as<bool>();
   const std::string file_prefix{ "rrt_star" };

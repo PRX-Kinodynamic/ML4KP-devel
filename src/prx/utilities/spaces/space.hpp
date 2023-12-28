@@ -334,22 +334,22 @@ public:
   void integrate(const space_point_t& point, const space_t* derivative, double delta_t);
   void integrate(const space_t* derivative, double delta_t);
 
-  template <typename Point0, typename Point1, typename PointOut,
-            std::enable_if_t<!prx::utilities::is_any_ptr<Point0>{}, bool> = true,
-            std::enable_if_t<!prx::utilities::is_any_ptr<Point1>{}, bool> = true,
+  template <typename PointSrc, typename PointTarget, typename PointOut,
+            std::enable_if_t<!prx::utilities::is_any_ptr<PointSrc>{}, bool> = true,
+            std::enable_if_t<!prx::utilities::is_any_ptr<PointTarget>{}, bool> = true,
             std::enable_if_t<!prx::utilities::is_any_ptr<PointOut>{}, bool> = true>
-  void interpolate(const Point0& point0, const Point1& point1, const double t, PointOut& result) const
+  void interpolate(const PointSrc& point_src, const PointTarget& point_target, const double t, PointOut& result) const
   {
-    is_space_point_type(point0);
-    is_space_point_type(point1);
+    is_space_point_type(point_src);
+    is_space_point_type(point_target);
     is_space_point_type(result);
     prx_assert(0.0 <= t && t <= 1.0 + prx::constants::epsilon,
                "Interpolation requires a value between 0 and 1: given `" << t << "`");
 
     for (std::size_t i = 0; i < dimension;)
     {
-      const double& x0_i{ point0[i] };
-      const double& x1_i{ point1[i] };
+      const double& x0_i{ point_src[i] };
+      const double& x1_i{ point_target[i] };
       double& xres{ result[i] };
       if (topology[i] == topology_t::ROTATIONAL)
       {
@@ -377,15 +377,15 @@ public:
       }
       else if (topology[i] == topology_t::QUATERNION)
       {
-        const double w1{ point0[i] };
-        const double x1{ point0[i + 1] };
-        const double y1{ point0[i + 2] };
-        const double z1{ point0[i + 3] };
+        const double w1{ point_src[i] };
+        const double x1{ point_src[i + 1] };
+        const double y1{ point_src[i + 2] };
+        const double z1{ point_src[i + 3] };
 
-        const double w2{ point1[i] };
-        const double x2{ point1[i + 1] };
-        const double y2{ point1[i + 2] };
-        const double z2{ point1[i + 3] };
+        const double w2{ point_target[i] };
+        const double x2{ point_target[i + 1] };
+        const double y2{ point_target[i + 2] };
+        const double z2{ point_target[i + 3] };
 
         Eigen::Quaterniond quat1{ w1, x1, y1, z1 };
         const Eigen::Quaterniond quat2{ w2, x2, y2, z2 };
@@ -406,13 +406,14 @@ public:
     }
   }
 
-  template <typename Point0, typename Point1, typename PointOut,
-            std::enable_if_t<prx::utilities::is_any_ptr<Point0>{}, bool> = true,
-            std::enable_if_t<prx::utilities::is_any_ptr<Point1>{}, bool> = true,
+  template <typename PointSrc, typename PointTarget, typename PointOut,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointSrc>{}, bool> = true,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointTarget>{}, bool> = true,
             std::enable_if_t<prx::utilities::is_any_ptr<PointOut>{}, bool> = true>
-  inline void interpolate(const Point0 point0, const Point1 point1, const double t, PointOut result) const
+  inline void interpolate(const PointSrc point_src, const PointTarget point_target, const double t,
+                          PointOut result) const
   {
-    interpolate(*point0, *point1, t, *result);
+    interpolate(*point_src, *point_target, t, *result);
   }
   // Interpolate towards point_in from the state in memory and keeping it in memory. t \in [0,1]
   template <typename PointIn, std::enable_if_t<!prx::utilities::is_any_ptr<PointIn>{}, bool> = true>
