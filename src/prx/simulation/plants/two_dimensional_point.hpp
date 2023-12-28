@@ -18,7 +18,9 @@ public:
 
   virtual void set_state_space_bounds(const std::vector<double>& lower,
                                       const std::vector<double>& upper) override final;
-  // void set_bounds();
+
+  virtual void steer(const space_point_t, const space_point_t, const double) override;
+
 protected:
   virtual void compute_derivative() override final;
 

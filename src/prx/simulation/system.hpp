@@ -71,6 +71,26 @@ public:
     return false;
   };
 
+  // Steering function[1]:
+  // Given two points $$ from,to ∈ X $$:
+  //      $$ Steer:  (from,to) -> result $$
+  // returns a point $$result ∈ X $$ such that $$result$$ is “closer” to $$to$$ than $$from$$ is.
+  // This version performs the copies from/to the given points
+  // [1] Karaman, Sertac, and Emilio Frazzoli. "Sampling-based algorithms for optimal motion planning." The
+  // international journal of robotics research 30, no. 7 (2011): 846-894.
+  void steer(space_point_t result, const space_point_t from, const space_point_t to, const double ti)
+  {
+    this->steer(from, to, ti);
+    state_space->copy_to(result);
+  }
+
+  // Same as steer(x,y)->z. The resulting z will be in memory.
+  // This function should be overwritten by any plant that has a steering function available
+  virtual void steer(const space_point_t from, const space_point_t to, const double ti)
+  {
+    PRX_NOT_IMPLEMENTED
+  }
+
   inline std::string get_pathname()
   {
     return pathname;

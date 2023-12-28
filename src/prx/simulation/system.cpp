@@ -24,6 +24,7 @@ system_t::system_t(const std::string& path)
 {
   state_space = nullptr;
   input_control_space = nullptr;
+  parameter_space = nullptr;
   pathname = path;
   system_type = plant_type::ANALYTICAL;
   owned_values = true;

@@ -147,7 +147,7 @@ space_point_t space_t::clone_point(const space_point_t& point) const
   assert_point_space_name(point);
 
   space_point_t new_point{ this->make_point() };
-  this->copy_point(new_point, point);
+  this->copy(new_point, point);
   return new_point;
 }
 
@@ -452,72 +452,6 @@ void space_t::integrate(const space_t* derivative, double delta_t)
     }
   }
   enforce_bounds();
-}
-
-void space_t::interpolate(const space_point_t& point1, const space_point_t& point2, double t,
-                          space_point_t& result) const
-{
-  assert_point_space_name(point1);
-  assert_point_space_name(point2);
-  assert_point_space_name(result);
-
-  prx_assert(t >= 0 && t <= 1, "Interpolation requires a value between 0 and 1: given " << t);
-
-  for (unsigned i = 0; i < dimension;)
-  {
-    if (topology[i] == topology_t::ROTATIONAL)
-    {
-      if (std::fabs(point1->_memory[i] - point2->_memory[i]) < PRX_PI)
-      {
-        result->_memory[i] = (1 - t) * point1->_memory[i] + t * point2->_memory[i];
-      }
-      else
-      {
-        if (point1->_memory[i] < point2->_memory[i])
-          result->_memory[i] = point2->_memory[i] + (1 - t) * (point1->_memory[i] - point2->_memory[i] + 2 * PRX_PI);
-        else
-          result->_memory[i] = point1->_memory[i] + t * (2 * PRX_PI - point1->_memory[i] + point2->_memory[i]);
-      }
-      result->_memory[i] = norm_angle_pi(result->_memory[i], *lower_bounds[i], *upper_bounds[i]);
-      i++;
-    }
-    else if (topology[i] == topology_t::DISCRETE)
-    {
-      if (t == 1)
-        result->_memory[i] = (int)point2->_memory[i];
-      else
-        result->_memory[i] = (int)point1->_memory[i];
-      i++;
-    }
-    else if (topology[i] == topology_t::QUATERNION)
-    {
-      const double w1{ point1->_memory[i] };
-      const double x1{ point1->_memory[i + 1] };
-      const double y1{ point1->_memory[i + 2] };
-      const double z1{ point1->_memory[i + 3] };
-
-      const double w2{ point2->_memory[i] };
-      const double x2{ point2->_memory[i + 1] };
-      const double y2{ point2->_memory[i + 2] };
-      const double z2{ point2->_memory[i + 3] };
-
-      Eigen::Quaterniond quat1{ w1, x1, y1, z1 };
-      const Eigen::Quaterniond quat2{ w2, x2, y2, z2 };
-
-      quat1.slerp(t, quat2);
-
-      result->_memory[i] = quat1.w();
-      result->_memory[i + 1] = quat1.x();
-      result->_memory[i + 2] = quat1.y();
-      result->_memory[i + 3] = quat1.z();
-      i += 4;
-    }
-    else
-    {
-      result->_memory[i] = (1 - t) * point1->_memory[i] + t * point2->_memory[i];
-      i++;
-    }
-  }
 }
 
 std::string space_t::print_point(const space_point_t& point, const std::size_t prec) const
