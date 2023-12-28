@@ -389,8 +389,12 @@ BOOST_AUTO_TEST_CASE(test_to_from_file)
     BOOST_REQUIRE_MESSAGE(n_out->get_index() == n_in->get_index(), EXPECTED_GOT(n_out->get_index(), n_in->get_index()));
     BOOST_REQUIRE_MESSAGE(n_out->get_parent() == n_in->get_parent(),
                           EXPECTED_GOT(n_out->get_parent(), n_in->get_parent()));
-    BOOST_REQUIRE_MESSAGE(n_out->get_parent_edge() == n_in->get_parent_edge(),
-                          EXPECTED_GOT(n_out->get_parent_edge(), n_in->get_parent_edge()));
+    // Edge check only makes sense if we are not checking the root.
+    if (n_out->get_index() != n_out->get_parent())  // At this point, n_out == n_in for index and parent.
+    {
+      BOOST_REQUIRE_MESSAGE(n_out->get_parent_edge() == n_in->get_parent_edge(),
+                            EXPECTED_GOT(n_out->get_parent_edge(), n_in->get_parent_edge()));
+    }
     BOOST_REQUIRE_MESSAGE(n_out->get_children().size() == n_in->get_children().size(),
                           EXPECTED_GOT(n_out->get_children().size(), n_in->get_children().size()));
     BOOST_REQUIRE(space.equal_points(n_out->point, n_in->point));
