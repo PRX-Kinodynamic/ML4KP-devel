@@ -309,7 +309,7 @@ public:
     return *addresses[index];
   }
 
-  inline double operator[](const std::size_t index) const
+  inline double& operator[](const std::size_t index) const
   {
     return *addresses[index];
   }
@@ -341,20 +341,20 @@ public:
   template <typename PointIn, typename PointOut,
             std::enable_if_t<not prx::utilities::is_any_ptr<PointIn>::value, bool> = true,
             std::enable_if_t<not prx::utilities::is_any_ptr<PointOut>::value, bool> = true>
-  void integrate(const PointIn& xt0, const space_t* derivative, double dt, PointOut& xt1)
+  void integrate(const PointIn& x_in, const space_t* derivative, double dt, PointOut& x_out)
   {
-    assert_point_dimension(xt0.size());
-    assert_point_dimension(xt1.size());
+    assert_point_dimension(x_in.size());
+    assert_point_dimension(x_out.size());
     for (unsigned i = 0; i < dimension; i++)
     {
       if (topology[i] == topology_t::EUCLIDEAN || topology[i] == topology_t::ROTATIONAL)
       {
-        xt1[i] = xt0[i] + derivative->at(i) * dt;
+        x_out[i] = x_in[i] + derivative->at(i) * dt;
       }
       else if (topology[i] == topology_t::DISCRETE)
       {
-        xt1[i] = xt0[i] + derivative->at(i) * dt;
-        xt1[i] = std::roundl(xt1[i]);
+        x_out[i] = x_in[i] + derivative->at(i) * dt;
+        x_out[i] = std::roundl(x_out[i]);
       }
       else if (topology[i] == topology_t::IDLE)
       {
@@ -362,7 +362,27 @@ public:
       }
       else if (topology[i] == topology_t::QUATERNION)
       {
-        prx_warn("Quaternion integration not implemented yet!");
+        const double w{ x_in[i] };
+        const double x{ x_in[i + 1] };
+        const double y{ x_in[i + 2] };
+        const double z{ x_in[i + 3] };
+
+        const double dw{ derivative->at(i) };
+        const double dx{ derivative->at(i + 1) };
+        const double dy{ derivative->at(i + 2) };
+        const double dz{ derivative->at(i + 3) };
+
+        Eigen::Quaterniond quat{ w, x, y, z };
+        const Eigen::Quaterniond dquat{ dw, dx, dy, dz };
+
+        quat.coeffs() += dt * dquat.coeffs();
+        quat.normalize();
+
+        x_out[i] = quat.w();
+        x_out[i + 1] = quat.x();
+        x_out[i + 2] = quat.y();
+        x_out[i + 3] = quat.z();
+        i += 4;
       }
     }
     enforce_bounds();
