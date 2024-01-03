@@ -22,8 +22,18 @@ public:
   typedef std::vector<space_point_t>::const_iterator const_iterator;
 
   trajectory_t(const space_t* space);
-  ~trajectory_t();
   trajectory_t(const trajectory_t& traj);
+
+  template <typename Container>
+  trajectory_t(const space_t* space, const Container container) : trajectory_t(space)
+  {
+    for (auto state : container)
+    {
+      copy_onto_back(state);
+    }
+  }
+
+  ~trajectory_t();
 
   inline unsigned size() const
   {
@@ -86,6 +96,8 @@ public:
 
   void resize(unsigned num_size);
 
+  void pop_back();
+
   void copy(const trajectory_t& t);
   trajectory_t& operator=(const trajectory_t& t);
   trajectory_t& operator+=(const trajectory_t& t);
@@ -93,8 +105,26 @@ public:
   bool operator!=(const trajectory_t& t);
 
   void clear();
-  void copy_onto_back(space_point_t state);
+  // void copy_onto_back(space_point_t state);
   void copy_onto_back(const space_t* space);
+
+  template <typename State>
+  void copy_onto_back(const State state)
+  {
+    if ((num_states + 1) >= max_num_states)
+    {
+      increase_buffer();
+
+      end_iterator = states.begin();
+      const_end_iterator = states.begin();
+      std::advance(end_iterator, num_states);
+      std::advance(const_end_iterator, num_states);
+    }
+    state_space->copy(*end_iterator, state);
+    ++end_iterator;
+    ++const_end_iterator;
+    ++num_states;
+  }
 
   std::string print(unsigned precision = 3) const;
 

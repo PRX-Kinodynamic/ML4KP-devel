@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
   }
   if (params["query_tree"].as<bool>())
   {
-    // rrt_star.from_files(file_prefix, out_dir);
+    rrt_star.from_files(file_prefix, out_dir);
     rrt_star.connect_goal();
   }
   rrt_star.fulfill_query();

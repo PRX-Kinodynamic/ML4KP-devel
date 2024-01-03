@@ -129,6 +129,8 @@ public:
 
   virtual std::vector<std::string> get_statistics_header() override;
   virtual std::vector<double> get_statistics() override;
+  virtual void to_files(const std::string file_prefix, const std::string directory = prx::out_path);
+  virtual void from_files(const std::string file_prefix, const std::string directory);
 
   void connect_goal()
   {

@@ -300,4 +300,126 @@ void rrt_star_t::print_statistics()
   std::cout << " nodes:" << _metric->get_nr_nodes() << std::endl;
 }
 
+void rrt_star_t::from_files(const std::string file_prefix, const std::string directory)
+{
+  using prx::constants::separating_value;
+  using prx::utilities::csv_reader_t;
+
+  using Line = std::vector<double>;
+  using Block = std::vector<Line>;
+  using Columns = std::vector<std::size_t>;
+  using ColumnsQuery = std::vector<Columns>;
+
+  const std::string filename_trajs{ directory + "/" + file_prefix + "_trajectories.txt" };
+  const std::string filename_tree{ directory + "/" + file_prefix + "_tree.txt" };
+
+  _tree.from_file<rrt_star_node_t, rrt_star_edge_t>(filename_tree, _state_space);
+
+  std::unordered_map<std::size_t, std::shared_ptr<prx::trajectory_t>> map_edges_traj;
+  csv_reader_t reader_trajs(filename_trajs);
+
+  const Columns c0{ 0 };
+  Columns c1{};
+  for (int i = 0; i < _state_space->size(); ++i)
+  {
+    c1.emplace_back(i + 1);
+  }
+  const ColumnsQuery column_query{ c0, c1 };
+  reader_trajs.next_line();  // Remove first line (header)
+  while (reader_trajs.has_next_line())
+  {
+    Block block_traj{ reader_trajs.next_block<double>() };
+    if (block_traj.size() == 0)
+    {
+      continue;
+    }
+    const std::size_t edge_id{ static_cast<size_t>(block_traj[0][0]) };
+    split_block(block_traj, column_query);
+    map_edges_traj.insert({ edge_id, std::make_shared<trajectory_t>(_state_space, block_traj) });
+  }
+
+  auto vertices_iters = _tree.vertices();
+  for (auto iter = vertices_iters.first; iter != vertices_iters.second; ++iter)
+  {
+    const node_index_t node_idx{ (*iter)->get_index() };
+    const node_index_t parent_idx{ (*iter)->get_parent() };
+    if (parent_idx == node_idx)
+    {
+      _start_vertex = node_idx;
+      const std::shared_ptr<rrt_star_node_t> node{ _tree.get_vertex_as<rrt_star_node_t>(_start_vertex) };
+      node->cost_to_come = 0;
+      _state_space->copy(_rrt_star_query->start_state, node->point);
+
+      break;
+    }
+  }
+
+  std::queue<node_index_t> queue{ { _start_vertex } };
+
+  while (not queue.empty())
+  {
+    const node_index_t node_idx{ queue.front() };
+    const std::shared_ptr<rrt_star_node_t> node{ _tree.get_vertex_as<rrt_star_node_t>(node_idx) };
+    if (_start_vertex != node_idx)
+    {
+      _metric->add_node(node.get());
+    }
+
+    // queue children
+    for (auto child_idx : node->get_children())
+    {
+      const std::shared_ptr<rrt_star_node_t> child_node{ _tree.get_vertex_as<rrt_star_node_t>(child_idx) };
+      const edge_index_t edge_idx{ child_node->get_parent_edge() };
+      const std::shared_ptr<rrt_star_edge_t> edge{ _tree.get_edge_as<rrt_star_edge_t>(edge_idx) };
+
+      const double edge_cost{ _distance_function(node->point, child_node->point) };
+
+      edge->traj = map_edges_traj[edge_idx];
+      edge->edge_cost = edge_cost;
+      child_node->cost_to_come = node->cost_to_come + edge_cost;
+
+      queue.emplace(child_idx);
+    }
+    queue.pop();
+  }
+}
+
+void rrt_star_t::to_files(const std::string file_prefix, const std::string directory)
+{
+  using prx::constants::separating_value;
+
+  const std::string filename_trajs{ directory + "/" + file_prefix + "_trajectories.txt" };
+  const std::string filename_tree{ directory + "/" + file_prefix + "_tree.txt" };
+
+  std::cout << "Saving trajectories as: \n\t" << filename_trajs << "\n";
+  std::ofstream ofs_trajs{ filename_trajs.c_str(), std::ofstream::trunc };
+  _tree.to_file(filename_tree);
+
+  std::queue<node_index_t> queue{ { _start_vertex } };
+
+  ofs_trajs << "#" << separating_value;
+  ofs_trajs << "edge_idx" << separating_value;
+  ofs_trajs << "state\n";
+
+  auto pair_edges = _tree.edges();
+  for (auto iter = pair_edges.first; iter != pair_edges.second; ++iter)
+  {
+    const edge_index_t edge_idx{ (*iter)->get_index() };
+    const std::shared_ptr<rrt_star_edge_t> edge{ _tree.get_edge_as<rrt_star_edge_t>(edge_idx) };
+    const node_index_t child_idx{ edge->get_target() };
+    const node_index_t parent_idx{ edge->get_source() };
+
+    const std::shared_ptr<rrt_star_node_t> child{ _tree.get_vertex_as<rrt_star_node_t>(child_idx) };
+    const std::shared_ptr<rrt_star_node_t> parent{ _tree.get_vertex_as<rrt_star_node_t>(parent_idx) };
+
+    for (auto state : *(edge->traj))
+    {
+      ofs_trajs << edge_idx << separating_value;
+      ofs_trajs << state << "\n";
+    }
+    ofs_trajs << "\n";
+  }
+
+  ofs_trajs.close();
+}
 }  // namespace prx
