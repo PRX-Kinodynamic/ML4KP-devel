@@ -74,6 +74,7 @@ using namespace boost::python;
   class_<CLASS>(NAME).def(vector_indexing_suite<CLASS>()).def("__str__", &iter_to_str<CLASS>);
 
 #define PRX_ITERABLE_WRAPPER_NONSTR(CLASS, NAME) class_<CLASS>(NAME).def(vector_indexing_suite<CLASS>());
+#define PRX_ITERABLE_WRAPPER_NONSTR_(CLASS) class_<CLASS>(#CLASS).def(vector_indexing_suite<CLASS>());
 
 #define SINGLE_ARG(...) __VA_ARGS__
 

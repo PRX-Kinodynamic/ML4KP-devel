@@ -84,16 +84,16 @@ double graph_nearest_neighbors_t::node_distance(proximity_node_t* s1, proximity_
   return distance_function(static_cast<abstract_node_t*>(s1)->point, static_cast<abstract_node_t*>(s2)->point);
 }
 
-graph_nearest_neighbors_t::graph_nearest_neighbors_t(distance_function_t d)
+graph_nearest_neighbors_t::graph_nearest_neighbors_t()
+  : added_node_id(0)
+  , nodes((proximity_node_t**)malloc(INIT_NODE_SIZE * sizeof(proximity_node_t*)))
+  , nr_nodes(0)
+  , cap_nodes(INIT_NODE_SIZE)
+  , second_nodes((proximity_node_t**)malloc(MAX_KK * sizeof(proximity_node_t*)))
+  , second_distances((double*)malloc(MAX_KK * sizeof(double)))
+  , query_node(new abstract_node_t())
 {
-  distance_function = d;
-  added_node_id = 0;
-  nodes = (proximity_node_t**)malloc(INIT_NODE_SIZE * sizeof(proximity_node_t*));
-  nr_nodes = 0;
-  cap_nodes = INIT_NODE_SIZE;
-  second_nodes = (proximity_node_t**)malloc(MAX_KK * sizeof(proximity_node_t*));
-  second_distances = (double*)malloc(MAX_KK * sizeof(double));
-  query_node = new abstract_node_t();
+  // distance_function = d;
 }
 
 graph_nearest_neighbors_t::~graph_nearest_neighbors_t()

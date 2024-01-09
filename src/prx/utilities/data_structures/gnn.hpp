@@ -117,13 +117,18 @@ protected:
  */
 class graph_nearest_neighbors_t
 {
+  graph_nearest_neighbors_t();
+
 public:
   double node_distance(proximity_node_t* s1, proximity_node_t* s2);
   /**
    * @brief Constructor
    * @param state The first node to add to the structure.
    */
-  graph_nearest_neighbors_t(distance_function_t);
+  graph_nearest_neighbors_t(distance_function_t distance_function_) : graph_nearest_neighbors_t()
+  {
+    distance_function = distance_function_;
+  }
   ~graph_nearest_neighbors_t();
 
   /**

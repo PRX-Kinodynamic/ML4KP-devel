@@ -74,6 +74,8 @@ void gnn_bindings(InitPtr init_ptr)
       .def("radius_and_closest_query", &GNN::radius_and_closest_query)
       // Comment to force ; to the next one
       ;
+
+  PRX_ITERABLE_WRAPPER_NONSTR_(std::vector<Node*>);
 }
 
 void bindings()
