@@ -52,6 +52,17 @@ BOOST_AUTO_TEST_CASE(test_space_is_built_correctly)
   BOOST_CHECK(test.space.at(2) == 3);
 }
 
+BOOST_AUTO_TEST_CASE(test_space_make_point)
+{
+  mock::space3d_t test;
+  prx::space_t& space{ test.space };
+
+  prx::space_point_t pt{ space.make_point({ 1, 2, 3 }) };
+  BOOST_CHECK(pt->at(0) == 1);
+  BOOST_CHECK(pt->at(1) == 2);
+  BOOST_CHECK(pt->at(2) == 3);
+}
+
 BOOST_AUTO_TEST_CASE(test_space_copy_and_clone_point)
 {
   mock::space3d_t test;

@@ -5,8 +5,6 @@
 
 #include "prx/utilities/spaces/space.hpp"
 
-using namespace boost::python;
-
 namespace pyprx
 {
 namespace utilities
@@ -265,6 +263,16 @@ void py_copy_2(const prx::space_t* space, boost::python::list& py_list_to, const
   vector_to_pyobject(py_list_to, vec_aux_to);
 }
 
+prx::space_point_t py_make_point_0(const prx::space_t* space)
+{
+  return space->make_point();
+}
+prx::space_point_t py_make_point_1(const prx::space_t* space, boost::python::list& py_list)
+{
+  std::vector<double> aux_vec(len(py_list));
+  pyobject_to_vector(aux_vec, py_list);
+  return space->make_point(aux_vec);
+}
 void bindings()
 {
   class_<prx::space_point_t>("space_point", init<>())
@@ -309,7 +317,8 @@ void bindings()
                                         default_call_policies(), (args("spaces"))))
       .def("__init__", make_constructor(&space_constructor_py, default_call_policies()))
       .def("set_bounds", &prx::space_t::set_bounds)
-      .def("make_point", &prx::space_t::make_point)
+      .def("make_point", py_make_point_0)
+      .def("make_point", py_make_point_1)
       .def("clone_point", &prx::space_t::clone_point)
       .def("enforce_bounds", enforce_bounds0)
       .def("enforce_bounds", enforce_bounds1)
@@ -351,7 +360,7 @@ void bindings()
       .def("get_bounds", &prx::space_t::get_bounds)
       .def("integrate", integrate_0)
       .def("integrate", integrate_1)
-      .def("interpolate", &prx::space_t::interpolate)
+      .def("interpolate", &prx::space_t::interpolate<prx::space_point_t, prx::space_point_t, prx::space_point_t>)
       .def("l1_norm", (double (*)(const prx::space_point_t& p1, const prx::space_point_t& p2))1,
            space_t_l1_norm_overloads())
       .staticmethod("l1_norm")

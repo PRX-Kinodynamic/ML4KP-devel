@@ -48,6 +48,21 @@ public:
   void set_bounds(const std::vector<double>& lower, const std::vector<double>& upper);
 
   space_point_t make_point() const;
+
+  template <typename InitialPoint>
+  space_point_t make_point(const InitialPoint values) const
+  {
+    space_point_t new_pt{ make_point() };
+    copy(new_pt, values);
+    return new_pt;
+  }
+
+  inline space_point_t make_point(const std::initializer_list<double> from) const
+  {
+    const std::vector<double> vec = from;
+    return make_point(vec);
+  }
+
   space_point_t clone_point(const space_point_t& point) const;
 
   /**
