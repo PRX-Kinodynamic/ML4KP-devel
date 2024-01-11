@@ -41,8 +41,10 @@ class reachable_roadmap_t
         bool collect_reachability;
         std::string reachability_file_path;
         space_point_t pt;
+        space_point_t pt2;
         std::vector<double> pt_vec;
         double cost;
+        int precision;
 
         std::vector<node_index_t> a_indices;
         std::vector<node_index_t> d_indices;
@@ -62,6 +64,23 @@ class reachable_roadmap_t
     void set_collect_reachability(bool collect_reachability, std::string path) { this->collect_reachability = collect_reachability; this->reachability_file_path = path;}
 
     space_point_t get_point(node_index_t index) { return vertices[index]->point; }
+
+    space_point_t sample_around(space_point_t center, rrt_query_t& query, rrt_specification_t& spec){
+        std::vector<double> mutand = std::vector<double>(spec.state_space->get_dimension());
+        double radius = query.goal_region_radius;
+
+        do
+        {
+            spec.sample_state(pt);
+            spec.state_space->copy_vector_from_point(mutand, pt);
+            for (double i : mutand){
+                i = i + radius*(2.*(rand()/(RAND_MAX + 1.))-1.);
+            }
+            spec.state_space->copy_point_from_vector(pt2, mutand)
+
+        } while (!spec.valid_state(pt) && spec.distance_function(pt,pt2)<radius);
+
+    }
     
     std::pair<std::vector<std::pair<node_index_t, node_index_t>>::iterator,std::vector<std::pair<node_index_t, node_index_t>>::iterator> get_all_edges()
     {
@@ -93,6 +112,7 @@ class reachable_roadmap_t
                 
                 double a_cost;
                 double d_cost;
+                space_point_t sample;
                 
                 if(!arriveable){
                     query.clear_outputs();
@@ -102,12 +122,25 @@ class reachable_roadmap_t
 
                     if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 1)
                     {
+                        double a_cost = (query.solution_traj.size()-1)*simulation_step;
+                        for(int i = 0; i<precision; i++){
+                            sample = sample_around(vertices[v] -> point, query, spec);
+
+                            query.clear_outputs();
+                            spec.state_space -> copy_point(query.start_state, sample);
+                            spec.state_space -> copy_point(query.goal_state, pt);
+                            controller.fulfill_query(query, spec);
+
+                            //check if failed
+                        }
+
                         arriveable = true;
                         a_indices.push_back(v);
-                        a_costs[v] = (query.solution_traj.size()-1)*simulation_step;
+                        a_costs[v] = a_cost;
                     }
                 }
                 if(!departable){
+                    
                     query.clear_outputs();
                     spec.state_space -> copy_point(query.start_state, pt);
                     spec.state_space -> copy_point(query.goal_state, vertices[v] -> point);
@@ -115,9 +148,23 @@ class reachable_roadmap_t
 
                     if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 1)
                     {
+
+                        double d_cost = (query.solution_traj.size()-1)*simulation_step;
+
+                        for(int i = 0; i<precision; i++){
+                            sample = sample_around(vertices[v] -> point, query, spec);
+
+                            query.clear_outputs();
+                            spec.state_space -> copy_point(query.start_state, sample);
+                            spec.state_space -> copy_point(query.goal_state, pt);
+                            controller.fulfill_query(query, spec);
+
+                            //check if failed
+                        }
+
                         departable = true;
                         d_indices.push_back(v);
-                        d_costs[v] = (query.solution_traj.size()-1)*simulation_step;
+                        d_costs[v] = d_cost;
                     }
                 }
                 if(arriveable && departable)
