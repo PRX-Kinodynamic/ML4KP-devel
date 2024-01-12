@@ -22,7 +22,7 @@ mushr_t::mushr_t(const std::string& path)
 
   control_memory = { &_u[0], &_u[1] };
   input_control_space = new space_t("EE", control_memory, "Torque");
-  input_control_space->set_bounds({ -10, -prx::constants::pi / 2.0 }, { 10, prx::constants::pi / 2.0 });
+  input_control_space->set_bounds({ -prx::constants::pi / 2.0, -10 }, { prx::constants::pi / 2.0, 10 });
 
   derivative_memory = { &_linear_v[0], &_linear_v[1], &_omega, &_vel_delta };
   derivative_space = new space_t("EEEE", derivative_memory, "pendulum_deriv");
@@ -61,12 +61,11 @@ void mushr_t::compute_derivative()
   _T.linear() = Eigen::Matrix3d{ Eigen::AngleAxisd(_theta, Eigen::Vector3d::UnitZ()) };
   _T.translation() = _position;
 
-  const double desired_velocity{ _u[0] };
-  _vel_delta = desired_velocity - _current_vel;
+  _vel_delta = desired_velocity() - _current_vel;
   _vel_delta = std::max(std::min(_vel_delta, _vel_delta_max), -_vel_delta_max);
   // smoothed_rpm = self.last_rpm + clipped_delta;
 
-  const double gamma{ _u[0] * std::tan(_u[1]) / 0.23 };
+  const double gamma{ desired_velocity() * std::tan(desired_steering()) / 0.23 };
   _body_twist.head(3) = Eigen::Vector3d(0.0, 0.0, gamma);
   _body_twist.tail(3) = Eigen::Vector3d(_current_vel, 0.0, 0.0);
 
