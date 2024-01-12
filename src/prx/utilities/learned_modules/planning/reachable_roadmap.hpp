@@ -123,6 +123,7 @@ class reachable_roadmap_t
                     if (spec.valid_check(query.solution_traj) && query.solution_traj.size() > 1)
                     {
                         double a_cost = (query.solution_traj.size()-1)*simulation_step;
+                        bool verified = true;
                         for(int i = 0; i<precision; i++){
                             sample = sample_around(vertices[v] -> point, query, spec);
 
@@ -131,12 +132,17 @@ class reachable_roadmap_t
                             spec.state_space -> copy_point(query.goal_state, pt);
                             controller.fulfill_query(query, spec);
 
-                            //check if failed
+                            if (!spec.valid_check(query.solution_traj) || query.solution_traj.size() <= 1){
+                                verified = false;
+                                break;
+                            }
                         }
-
-                        arriveable = true;
-                        a_indices.push_back(v);
-                        a_costs[v] = a_cost;
+                        if(verified){
+                            arriveable = true;
+                            a_indices.push_back(v);
+                            a_costs[v] = a_cost;
+                        }
+                        
                     }
                 }
                 if(!departable){
@@ -150,7 +156,7 @@ class reachable_roadmap_t
                     {
 
                         double d_cost = (query.solution_traj.size()-1)*simulation_step;
-
+                        bool verified = true;
                         for(int i = 0; i<precision; i++){
                             sample = sample_around(vertices[v] -> point, query, spec);
 
@@ -159,12 +165,17 @@ class reachable_roadmap_t
                             spec.state_space -> copy_point(query.goal_state, pt);
                             controller.fulfill_query(query, spec);
 
-                            //check if failed
+                            if (!spec.valid_check(query.solution_traj) || query.solution_traj.size() <= 1){
+                                verified = false;
+                                break;
+                            }
                         }
-
-                        departable = true;
-                        d_indices.push_back(v);
-                        d_costs[v] = d_cost;
+                        if(verified){
+                            departable = true;
+                            d_indices.push_back(v);
+                            d_costs[v] = d_cost;
+                        }
+                        
                     }
                 }
                 if(arriveable && departable)
