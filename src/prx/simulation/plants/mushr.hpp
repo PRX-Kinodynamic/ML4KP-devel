@@ -24,6 +24,16 @@ public:
 protected:
   virtual void compute_derivative() override final;
 
+  inline double desired_velocity() const
+  {
+    return _u[1];
+  }
+
+  inline double desired_steering() const
+  {
+    return _u[0];
+  }
+
   inline Eigen::Matrix3d hat(const Eigen::Vector3d vec)
   {
     Eigen::Matrix3d mat{};
