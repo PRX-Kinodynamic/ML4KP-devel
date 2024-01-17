@@ -114,6 +114,23 @@ bool collision_group_t::in_collision()
   return false;
 }
 
+bool collision_group_t::in_collision_with_tolerance(const double tolerance)
+{
+  update_plants();
+
+  for (auto&& cc_pair : collision_cache)
+  {
+    auto info1 = cc_pair.first.lock();
+    auto info2 = cc_pair.second.lock();
+    PQP_ToleranceResult collision_result;
+    PQP_Tolerance(&collision_result, info1->rot, info1->pos, info1->model.lock().get(), info2->rot, info2->pos,
+                  info2->model.lock().get(), tolerance);
+    if (collision_result.CloserThanTolerance())
+      return true;
+  }
+  return false;
+}
+
 collision_group_t::pqp_distance_t collision_group_t::get_distances()
 {
   pqp_distance_t result;

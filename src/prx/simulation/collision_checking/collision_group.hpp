@@ -78,6 +78,8 @@ public:
    * */
   pqp_distance_t get_distances();
 
+  virtual bool in_collision_with_tolerance(const double tolerance = 0.0);
+
 protected:
   /** @brief A structure that stores geometry information for PQP queries.*/
   struct pqp_info_t
