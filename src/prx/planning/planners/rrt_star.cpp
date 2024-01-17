@@ -26,13 +26,12 @@ void rrt_star_t::_link_and_setup_spec(planner_specification_t* spec)
   _x_new = _state_space->make_point();
   _x_rand = _state_space->make_point();
   _control_space = _rrt_star_spec->control_space;
-  _eta_min = _rrt_star_spec->eta_min;
-  _eta_max = _rrt_star_spec->eta_max;
 
   _metric = new graph_nearest_neighbors_t(_distance_function);
   // we now have spaces and necessary functions
-  prx_assert(_eta_min > 0.0, "[" << _planner_name << "]: `eta_min` must be greater than 0 ");
-  prx_assert(_eta_max > _eta_min, "[" << _planner_name << "]: `eta_max` must be greater than `eta_min` ");
+  prx_assert(_rrt_star_spec->eta_min > 0.0, "[" << _planner_name << "]: `eta_min` must be greater than 0 ");
+  prx_assert(_rrt_star_spec->eta_max > _rrt_star_spec->eta_min,
+             "[" << _planner_name << "]: `eta_max` must be greater than `eta_min` ");
 }
 
 bool rrt_star_t::_preprocess()
@@ -81,7 +80,7 @@ void rrt_star_t::_resolve_query(condition_check_t* condition)
   {
     // samples
     _sample_state(_x_rand);
-    _eta = uniform_random(_eta_min, _eta_max);
+    _eta = uniform_random(_rrt_star_spec->eta_min, _rrt_star_spec->eta_max);
 
     // Find nearest
     rrt_star_node_t* x_nearest{ static_cast<rrt_star_node_t*>(_metric->single_query(_x_rand)) };

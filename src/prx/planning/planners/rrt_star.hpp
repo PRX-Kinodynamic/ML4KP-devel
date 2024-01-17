@@ -146,16 +146,16 @@ public:
 
   void connect_goal()
   {
-    const double eta_min_copy{ _eta_min };
+    const double eta_min_copy{ _rrt_star_spec->eta_min };
     sample_state_t sample_state_copy{ _sample_state };
 
-    _eta_min = _eta_max;
+    _rrt_star_spec->eta_min = _rrt_star_spec->eta_max;
     _sample_state = [&](space_point_t& s) { _state_space->copy(s, _goal_state); };
 
     condition_check_t check_one_iteration("iterations", 1);
     resolve_query(&check_one_iteration);
 
-    _eta_min = eta_min_copy;
+    _rrt_star_spec->eta_min = eta_min_copy;
     _sample_state = sample_state_copy;
   }
 
@@ -199,8 +199,6 @@ protected:
   space_point_t _x_new;
   space_point_t _goal_state;
   double _eta;
-  double _eta_min;
-  double _eta_max;
 
   std::size_t _iteration_count;
   timer_t _timer;
