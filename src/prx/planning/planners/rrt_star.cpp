@@ -18,7 +18,6 @@ void rrt_star_t::_link_and_setup_spec(planner_specification_t* spec)
   prx_assert(_rrt_star_spec != nullptr, "RRT received an incorrect specification.");
   _distance_function = _rrt_star_spec->distance_function;
   _cost_function = _rrt_star_spec->cost_function;
-  _sample_state = _rrt_star_spec->sample_state;
   _valid_check = _rrt_star_spec->valid_check;
   _steer_function = _rrt_star_spec->steer_function;
 
@@ -79,7 +78,7 @@ void rrt_star_t::_resolve_query(condition_check_t* condition)
   do
   {
     // samples
-    _sample_state(_x_rand);
+    _rrt_star_spec->sample_state(_x_rand);
     _eta = uniform_random(_rrt_star_spec->eta_min, _rrt_star_spec->eta_max);
 
     // Find nearest

@@ -147,16 +147,16 @@ public:
   void connect_goal()
   {
     const double eta_min_copy{ _rrt_star_spec->eta_min };
-    sample_state_t sample_state_copy{ _sample_state };
+    sample_state_t sample_state_copy{ _rrt_star_spec->sample_state };
 
     _rrt_star_spec->eta_min = _rrt_star_spec->eta_max;
-    _sample_state = [&](space_point_t& s) { _state_space->copy(s, _goal_state); };
+    _rrt_star_spec->sample_state = [&](space_point_t& s) { _state_space->copy(s, _goal_state); };
 
     condition_check_t check_one_iteration("iterations", 1);
     resolve_query(&check_one_iteration);
 
     _rrt_star_spec->eta_min = eta_min_copy;
-    _sample_state = sample_state_copy;
+    _rrt_star_spec->sample_state = sample_state_copy;
   }
 
 protected:
@@ -185,7 +185,6 @@ protected:
 
   distance_function_t _distance_function;
   cost_function_t _cost_function;
-  sample_state_t _sample_state;
   valid_trajectory_t _valid_check;
   steer_function_t _steer_function;
 
