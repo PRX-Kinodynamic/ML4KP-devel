@@ -1,4 +1,4 @@
-if(BUILD_FOR_FACTOR_GRAPHS)
+if(BUILD_FOR_GTSAM)
 	find_package(GTSAM REQUIRED) # Uses installed package
 	# find_package(GTSAMCMakeTools)
 
@@ -22,4 +22,4 @@ if(BUILD_FOR_FACTOR_GRAPHS)
 	# target_link_libraries(${PROJECT_NAME}_factor_graphs PUBLIC tbb tbbmalloc)
 	set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};FactorGraphs" PARENT_SCOPE)
 
-endif(BUILD_FOR_FACTOR_GRAPHS)
+endif(BUILD_FOR_GTSAM)

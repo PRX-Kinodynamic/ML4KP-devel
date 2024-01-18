@@ -13,7 +13,7 @@ set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
-set(BUILD_FOR_FACTOR_GRAPHS OFF CACHE BOOL "Set ON/TRUE for building GTSAM factor graphs")
+set(BUILD_FOR_GTSAM OFF CACHE BOOL "Set ON/TRUE for building GTSAM factor graphs")
 
 set(${PROJECT_NAME}_VERSION 1.0)
 set(${PROJECT_NAME}_HEADERS "" CACHE STRING "Headers to be exported")
