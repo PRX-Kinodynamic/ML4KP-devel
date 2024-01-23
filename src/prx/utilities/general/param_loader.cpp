@@ -146,13 +146,13 @@ void param_loader::add_opts(std::vector<std::string> argv)
     }
     else if (std::regex_match(opt, opt_regex_mult))
     {
-      std::cout << "multi opt: " << opt << std::endl;
+      // std::cout << "multi opt: " << opt << std::endl;
 
       (*this)[opt.substr(2, opt.find("=") - 2)] = YAML::Load(opt.substr(opt.find("=") + 1));
     }
     else if (std::regex_match(opt, opt_regex_bool))
     {
-      std::cout << "bool opt: " << opt << std::endl;
+      // std::cout << "bool opt: " << opt << std::endl;
       auto pos_eq = opt.find("=");
       if (pos_eq != std::string::npos)
       {
@@ -160,6 +160,10 @@ void param_loader::add_opts(std::vector<std::string> argv)
         pos_eq = pos_eq - 2;
       }
       (*this)[opt.substr(2, pos_eq)] = YAML::Load("true");
+    }
+    else if (i == 0)
+    {
+      continue;
     }
     else
     {
