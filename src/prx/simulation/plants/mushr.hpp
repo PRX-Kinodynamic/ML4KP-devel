@@ -29,9 +29,9 @@ protected:
     return _u[1];
   }
 
-  inline double desired_steering() const
+  inline double steering() const
   {
-    return _u[0];
+    return _u[0] + _steering_offset;
   }
 
   inline Eigen::Matrix3d hat(const Eigen::Vector3d vec)
@@ -79,9 +79,14 @@ protected:
   Twist _body_twist;
   Twist _spatial_twist;
 
+  Eigen::Matrix<double, 3, 2> _g;
+  Eigen::Vector3d _qdot;
+  double _length;
+
   double _current_vel;
   double _vel_delta;
   double _vel_delta_max;
+  double _steering_offset;
 };
 }  // namespace prx
 
