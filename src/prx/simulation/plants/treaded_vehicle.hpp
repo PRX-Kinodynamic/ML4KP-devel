@@ -44,26 +44,26 @@ namespace prx
 }
 PRX_REGISTER_SYSTEM(treaded_vehicle_t, treaded_vehicle)
 
-auto tv_vel_fn = [](prx::system_ptr_t sys_ptr)
-{
-    auto s = std::dynamic_pointer_cast<prx::treaded_vehicle_t>(sys_ptr);
+// auto tv_vel_fn = [](prx::system_ptr_t sys_ptr)
+// {
+//     auto s = std::dynamic_pointer_cast<prx::treaded_vehicle_t>(sys_ptr);
 
-	prx::space_point_t bk_state = s -> state_space -> make_point();
-    prx::space_point_t bk_deriv = s -> derivative_space -> make_point();
+// 	prx::space_point_t bk_state = s -> state_space -> make_point();
+//     prx::space_point_t bk_deriv = s -> derivative_space -> make_point();
 
-	s -> state_space -> copy_to_point(bk_state);
-    s -> derivative_space -> copy_to_point(bk_deriv);
+// 	s -> state_space -> copy_to_point(bk_state);
+//     s -> derivative_space -> copy_to_point(bk_deriv);
 
-	s -> state_space -> at(0) = s -> state_space -> at(1) = s -> state_space -> at(2) = 0;
-	s -> state_space -> at(3) = s -> state_space -> get_bounds()[3].second;
-	s -> state_space -> at(4) = s -> state_space -> get_bounds()[4].second;
+// 	s -> state_space -> at(0) = s -> state_space -> at(1) = s -> state_space -> at(2) = 0;
+// 	s -> state_space -> at(3) = s -> state_space -> get_bounds()[3].second;
+// 	s -> state_space -> at(4) = s -> state_space -> get_bounds()[4].second;
             
-    s -> compute_derivative();
-    double vel = sqrt(std::pow(s -> state_space -> at(3), 2) + std::pow(s -> state_space -> at(4), 2));
+//     s -> compute_derivative();
+//     double vel = sqrt(std::pow(s -> state_space -> at(3), 2) + std::pow(s -> state_space -> at(4), 2));
 
-    // Copy back the original values
-	s -> state_space -> copy_from_point(bk_state);
-	s -> derivative_space -> copy_from_point(bk_deriv);
-	return vel;
-};
-PRX_REGISTER_VELOCITY_FN(treaded_vehicle, tv_vel_fn)
+//     // Copy back the original values
+// 	s -> state_space -> copy_from_point(bk_state);
+// 	s -> derivative_space -> copy_from_point(bk_deriv);
+// 	return vel;
+// };
+//PRX_REGISTER_VELOCITY_FN(treaded_vehicle, tv_vel_fn)

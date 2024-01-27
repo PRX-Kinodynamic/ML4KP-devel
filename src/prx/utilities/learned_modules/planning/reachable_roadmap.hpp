@@ -52,7 +52,7 @@ class reachable_roadmap_t
         std::unordered_map<node_index_t, double> d_costs;
 
     public:
-        reachable_roadmap_t() : max_failures(100), num_failures(0), vertex_counter(0), component_counter(0), collect_reachability(false) {}
+        reachable_roadmap_t() : max_failures(10), num_failures(0), vertex_counter(0), component_counter(0), collect_reachability(false) {}
         ~reachable_roadmap_t() {
             for(auto c : components) delete c.second;
             for(auto c : Fw) delete c.second;
@@ -76,9 +76,11 @@ class reachable_roadmap_t
             for (double i : mutand){
                 i = i + radius*(2.*(rand()/(RAND_MAX + 1.))-1.);
             }
-            spec.state_space->copy_point_from_vector(pt2, mutand)
+            spec.state_space->copy_point_from_vector(pt2, mutand);
 
-        } while (!spec.valid_state(pt) && spec.distance_function(pt,pt2)<radius);
+        } while (!spec.valid_state(pt2) && spec.distance_function(pt,pt2)<radius);
+
+        return pt2;
 
     }
     

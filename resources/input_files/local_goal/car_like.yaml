@@ -4,7 +4,7 @@ simulation_step: 0.1
 
 # "environments/bar.yaml"
 # "environments/indoor.yaml"
-environment: "environments/warehouse.yaml"
+environment: "environments/bar.yaml"
 
 plant: !file "plants/car_like_wh.yaml"
 
@@ -15,19 +15,19 @@ random_local_goal: false
 planner_name: "roadmap"
 goal_radius: 0.5
 
-num_trajectories: 100
+num_trajectories: 10
 sample_around: true
 verify_edge: true
 validate: true
-num_failures: 100
+num_failures: 10
 collect_reachability: true
 stretch_factor: 3.0
 termination_classifier: !file "networks/svm_classifier.yaml"
 
-start_state: [  1.0000, 1.0000 , 0.0000, 0.0000, 0.0000]
-goal_state:  [ 29.0000, 17.0000, 0.0000, 0.0000, 0.0000]
+start_state: [  -9.0000, -9.0000 , 0.0000, 0.0000, 0.0000]
+goal_state:  [ 9.0000, 9.0000, 0.0000, 0.0000, 0.0000]
 
 debug: false
 
-output_dir: "ablation/wh_drrm100-c/"
+output_dir: "ablation/stat_ver_1/"
 roadmap_dir: "ablation/roadmap_medium_3.0/"
