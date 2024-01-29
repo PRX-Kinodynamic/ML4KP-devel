@@ -112,14 +112,19 @@ public:
 private:
   void run_thread()
   {
+  const auto start{std::chrono::steady_clock::now()};
+  
     while (_keep_logging)
     {
+   const auto now{std::chrono::steady_clock::now()};
+const std::chrono::duration<double> elapsed_seconds{now - start};	      
+   _log_stream << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed_seconds).count() << _sep;
       for (int i = 0; i < values_to_log.size(); ++i)
       {
         _log_stream << strs_to_log[i] << _sep;
-        _log_stream << values_to_log[i]->log();
-        _log_stream << std::endl;  // Maybe use '\n'
+        _log_stream << values_to_log[i]->log() << _sep;
       }
+        _log_stream << std::endl;  // Maybe use '\n'
       std::this_thread::sleep_for(_duration);
     }
   }
