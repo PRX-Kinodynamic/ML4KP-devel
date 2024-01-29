@@ -91,6 +91,18 @@ int main(int argc, char* argv[])
     const double dist_to_goal{ rrt_star_spec.distance_function(pt, rrt_star_query.goal_state) };
     return dist_to_goal < rrt_star_query.goal_region_radius;
   };
+  
+  std::normal_distribution r_dist{5.0, 1.5};
+  std::normal_distribution z_dist{75.0, 10.0};
+  rrt_star_spec.sample_state = [&](prx::space_point_t& s) {
+  	ss->sample(s);
+  	const double th{prx::uniform_random(-prx::constants::pi, prx::constants::pi)};
+  	const double r{r_dist(prx::global_generator)};
+	s->at(0) = r * std::cos(th);
+	s->at(1) = r * std::sin(th);
+  	s->at(2) =z_dist(prx::global_generator);
+ };
+  
   const std::string out_dir{ params["/out/dir"].as<>() };
   const std::string file_prefix{ params["/out/file_prefix"].as<>() };
 
