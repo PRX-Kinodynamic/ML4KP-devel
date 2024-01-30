@@ -1,4 +1,3 @@
-
 #include "prx/simulation/plants/mushr.hpp"
 
 namespace prx
@@ -16,6 +15,7 @@ mushr_t::mushr_t(const std::string& path)
   , _omega(0.0)
   , _vel_delta_max(1.0)
   , _steering_offset(0.0)
+  , _steering_gain(1.0)
   , _length(0.23)
 {
   state_memory = { &_position[0], &_position[1], &_theta, &_current_vel };
@@ -29,8 +29,8 @@ mushr_t::mushr_t(const std::string& path)
   derivative_memory = { &_qdot[1], &_qdot[2], &_qdot[0], &_vel_delta };
   derivative_space = new space_t("EEEE", derivative_memory, "mushr_deriv");
 
-  parameter_memory = { &_vel_delta_max, &_steering_offset };
-  parameter_space = new space_t("EE", parameter_memory, "mushr_params");
+  parameter_memory = { &_vel_delta_max, &_steering_offset, &_steering_gain };
+  parameter_space = new space_t("EEE", parameter_memory, "mushr_params");
 
   geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::CONE);
   geometries["body"]->initialize_geometry({ 0.5, 1 });

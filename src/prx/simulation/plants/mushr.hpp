@@ -31,7 +31,7 @@ protected:
 
   inline double steering() const
   {
-    return _u[0] + _steering_offset;
+    return _u[0] * _steering_gain + _steering_offset;
   }
 
   inline Eigen::Matrix3d hat(const Eigen::Vector3d vec)
@@ -87,6 +87,8 @@ protected:
   double _vel_delta;
   double _vel_delta_max;
   double _steering_offset;
+  double _steering_gain;
+  // double _steering_offset, _steering_gain;
 };
 }  // namespace prx
 
