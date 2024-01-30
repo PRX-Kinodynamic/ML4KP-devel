@@ -15,7 +15,7 @@ planner:
   checker_value: 60
   eta_min: 1
   eta_max: 10
-
+  desired_nodes: 1000
 
 plant: !file "plants/first_order_free_body.yaml"
 

@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
   
   const std::string out_dir{ params["/out/dir"].as<>() };
   const std::string file_prefix{ params["/out/file_prefix"].as<>() };
-
+  const double desired_nodes{params["/planner/desired_nodes"].as<double>()};
   rrt_star_query.get_visualization = params["visualize"].as<bool>();
 
   rrt_star.link_and_setup_spec(&rrt_star_spec);
@@ -113,8 +113,14 @@ int main(int argc, char* argv[])
   rrt_star.link_and_setup_query(&rrt_star_query);
   if (params["grow_tree"].as<bool>())
   {
-    prx::condition_check_t checker(params["/planner/checker_type"].as<>(), params["/planner/checker_value"].as<int>());
 
+    //prx::condition_check_t checker(params["/planner/checker_type"].as<>(), params["/planner/checker_value"].as<int>());
+	std::function<bool()> nodes_condition = [&]()
+	{
+	    const double current_nodes{rrt_star.get_statistics()[2]};
+	    return current_nodes >= desired_nodes;
+	};
+  	  prx::condition_check_t checker(nodes_condition);
     rrt_star.resolve_query(&checker);
   }
   if (params["query_tree"].as<bool>())
