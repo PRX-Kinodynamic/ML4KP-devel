@@ -29,8 +29,9 @@ set_and_check(@CMAKE_PROJECT_NAME@_LIBRARY_DIR "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
 check_required_components(@CMAKE_PROJECT_NAME@)
 
 
-if(@BUILD_FOR_FACTOR_GRAPHS@)
-    find_package(GTSAM REQUIRED)
-endif()
-
 find_package(YAMLCPP NAMES Yaml-cpp YamlCpp)
+
+# ToDo: GTSAM overrides a bunch of cmake variables (i.e. CMAKE_CURRENT_LIST_DIR), so it has to be at the end. At least for now.
+if(@BUILD_FOR_GTSAM@)
+    find_package(GTSAM REQUIRED) # Uses installed package
+endif()

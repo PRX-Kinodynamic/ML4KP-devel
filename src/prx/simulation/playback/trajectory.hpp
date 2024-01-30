@@ -1,9 +1,10 @@
 #pragma once
 
+#include <deque>
+#include <fstream>
+
 #include "prx/utilities/spaces/space.hpp"
 #include "prx/utilities/defs.hpp"
-
-#include <deque>
 
 namespace prx
 {
@@ -125,6 +126,9 @@ public:
     ++const_end_iterator;
     ++num_states;
   }
+
+  void to_file(const std::string, const std::ios_base::openmode _mode = std::ofstream::trunc) const;
+  void from_file(const std::string file_name);
 
   std::string print(unsigned precision = 3) const;
 
