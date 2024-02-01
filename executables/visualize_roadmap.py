@@ -69,10 +69,8 @@ elif(env_file_type == "yaml"):
         rect = Rectangle((box_center[0]-box_dims[0]/2.0,box_center[1]-box_dims[1]/2.0),box_dims[0],box_dims[1],
         linewidth=1,edgecolor='r',facecolor='r')
         plt.gca().add_patch(rect)
-#plt.xlim(-11,11)
-#plt.ylim(-11,11)
-plt.xlim(0,30)
-plt.ylim(0,18)
+plt.xlim(-11,11)
+plt.ylim(-11,11)
 
 roadmap_dir = os.environ["DIRTMP_PATH"] + "out/"+ args.directory
 

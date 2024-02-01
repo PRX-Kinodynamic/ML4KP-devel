@@ -194,6 +194,8 @@ int main(int argc, char* argv[])
         }
         std::cout << std::endl;
 
+        
+
         auto iter = path.begin()+1;
 
         double path_len = 0.0;

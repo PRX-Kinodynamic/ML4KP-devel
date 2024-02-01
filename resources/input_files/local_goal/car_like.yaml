@@ -1,4 +1,4 @@
-random_seed: 210896
+random_seed: 210895
 # random_seed: 101193
 simulation_step: 0.1
 
@@ -29,5 +29,5 @@ goal_state:  [ 9.0000, 9.0000, 0.0000, 0.0000, 0.0000]
 
 debug: false
 
-output_dir: "ablation/stat_ver_1/"
-roadmap_dir: "ablation/roadmap_medium_3.0/"
+output_dir: "stat_ver_3/"
+roadmap_dir: "stat_ver_3/"

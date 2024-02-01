@@ -778,6 +778,30 @@ class reachable_roadmap_t
         return path;
     }
     
+    double execute_path(std::vector<node_index_t> path,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller){
+
+        space_point_t cur_state = get_point(path.front());
+        space_point_t next_goal;
+        double path_len = 0.0;
+
+        for (auto it = begin(path)+1; it != end(path); ++it) {
+            next_goal = get_point(*it);
+        
+            query.clear_outputs();
+            spec.state_space -> copy_point(query.start_state, cur_state);
+            spec.state_space -> copy_point(query.goal_state, next_goal);
+            controller.fulfill_query(query, spec);
+
+            if (!spec.valid_check(query.solution_traj) || query.solution_traj.size() <= 1){
+                return -1.;
+            }
+            path_len += (query.solution_traj.size()-1)*simulation_step;
+            cur_state = query.solution_traj.back();
+        }
+        
+        return path_len;
+    }
+
     double get_edge_len(node_index_t s, node_index_t t)
     {
         if (edges.find(s) == edges.end()){
