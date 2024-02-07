@@ -159,9 +159,9 @@ protected:
   using X0 = Eigen::Vector<double, Dim_X0>;
   using X1 = Eigen::Vector<double, Dim_X1>;
   using X2 = Eigen::Vector<double, Dim_X2>;
-  using partial_X0 = std::function<Eigen::Vector<double, Dim_X0>(const X0&)>;
-  using partial_X1 = std::function<Eigen::Vector<double, Dim_X0>(const X1&)>;
-  using partial_X2 = std::function<Eigen::Vector<double, Dim_X0>(const X2&)>;
+  using partial_X0 = std::function<X0>(const X0&) > ;
+  using partial_X1 = std::function<X0>(const X1&) > ;
+  using partial_X2 = std::function<X0>(const X2&) > ;
   using Base = gtsam::NoiseModelFactor3<X0, X1, X2>;
   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
 

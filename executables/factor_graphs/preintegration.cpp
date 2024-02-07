@@ -19,7 +19,7 @@
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/visualization/three_js_group.hpp"
 
-#include "prx/factor_graphs/factors/se3.hpp"
+#include "prx/factor_graphs/factors/SE3.hpp"
 #include "prx/factor_graphs/factors/screw_axis.hpp"
 #include "prx/factor_graphs/factors/preintegration.hpp"
 // #include "prx/factor_graphs/defs.hpp"
@@ -38,15 +38,19 @@ int main(int argc, char* argv[])
   prx::fg::preintegration_t<SE3_t, screw_axis_t> preint{ dt };
 
   SE3_t x{ SE3_t::Base::Identity() };
-  screw_axis_t xdot{ screw_axis_t::Base::Zero() };
-  xdot.from_twist(Eigen::Vector3d::Zero(), Eigen::Vector3d(0.1, 0, 0));
+  screw_axis_t xdot{ screw_axis_t::from_twist(Eigen::Vector3d(0.0, 0.0, 1.0), Eigen::Vector3d(1.0, 0.1, 0)) };
 
-  std::cout << xdot.v().transpose() << "\n";
+  std::cout << "v:" << xdot.v().transpose() << "\n";
+  std::cout << "w:" << xdot.omega().transpose() << "\n";
   std::cout << x.translation().transpose() << "\n";
+  Eigen::AngleAxisd angle_axis{};
   for (double ti = 0.0; ti < 10; ti += dt)
   {
     x = preint.propagate(x, xdot);
-    std::cout << x.translation().transpose() << "\n";
+    const double theta{ prx::quaternion_to_euler(Eigen::Quaterniond(x.rotation()))[2] };
+
+    std::cout << x.translation().transpose() << " ";
+    std::cout << theta << "\n";
   }
 
   return 0;

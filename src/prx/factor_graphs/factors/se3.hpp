@@ -3,6 +3,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Core>
 
+#include "prx/factor_graphs/factors/SO3.hpp"
 namespace prx
 {
 namespace fg
