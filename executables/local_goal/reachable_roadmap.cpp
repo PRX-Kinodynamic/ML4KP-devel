@@ -273,8 +273,6 @@ int main(int argc, char* argv[])
         std::cout<< "------RESULTS------"<<std::endl;
         std::cout<< "roadmap coverage: "<< (1.0 - num_fail_plan/100.0) << std::endl;
         std::cout<< "single transition planner safety: "<< (1.0-num_fail_traj/tot_num_traj) << std::endl;
-        std::cout<< "fail traj: "<< num_fail_traj << std::endl;
-        std::cout<< "total traj: "<< tot_num_traj << std::endl;
         
     }
     catch(const prx_assert_t& e) 
