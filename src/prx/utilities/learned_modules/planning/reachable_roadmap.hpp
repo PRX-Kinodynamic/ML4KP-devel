@@ -72,14 +72,13 @@ class reachable_roadmap_t
 
         do
         {
-            spec.sample_state(pt);
-            spec.state_space->copy_vector_from_point(mutand, pt);
+            spec.state_space->copy_vector_from_point(mutand, center);
             for (double i : mutand){
                 i = i + radius*(2.*(rand()/(RAND_MAX + 1.))-1.);
             }
             spec.state_space->copy_point_from_vector(pt2, mutand);
 
-        } while (!spec.valid_state(pt2) || spec.distance_function(pt,pt2)>radius);
+        } while (!spec.valid_state(pt2) || spec.distance_function(center,pt2)>radius);
 
         return pt2;
 
