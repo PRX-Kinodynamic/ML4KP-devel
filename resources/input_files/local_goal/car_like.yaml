@@ -20,6 +20,7 @@ sample_around: true
 verify_edge: true
 validate: true
 num_failures: 10
+precision: 10
 collect_reachability: true
 stretch_factor: 3.0
 termination_classifier: !file "networks/svm_classifier.yaml"

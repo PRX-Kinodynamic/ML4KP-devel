@@ -61,6 +61,7 @@ class reachable_roadmap_t
         }
     
     void set_max_failures(int max_failures) { this->max_failures = max_failures; }
+    void set_precision(int precision) { this->precision = precision; }
     void set_collect_reachability(bool collect_reachability, std::string path) { this->collect_reachability = collect_reachability; this->reachability_file_path = path;}
 
     space_point_t get_point(node_index_t index) { return vertices[index]->point; }
@@ -127,6 +128,7 @@ class reachable_roadmap_t
                         double a_cost = (query.solution_traj.size()-1)*simulation_step;
                         bool verified = true;
                         for(int i = 0; i<precision; i++){
+                            std::cout<<"-";
                             sample = sample_around(vertices[v] -> point, query, spec);
 
                             query.clear_outputs();
@@ -139,6 +141,7 @@ class reachable_roadmap_t
                                 break;
                             }
                         }
+                        std::cout<<"+"<<std::endl;
                         if(verified){
                             arriveable = true;
                             a_indices.push_back(v);

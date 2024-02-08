@@ -135,6 +135,8 @@ int main(int argc, char* argv[])
         
         reachable_roadmap_t rrr;
         rrr.set_max_failures(params["num_failures"].as<int>());
+        rrr.set_precision(params["precision"].as<int>());
+
         rrr.set_collect_reachability(params["collect_reachability"].as<bool>(),  out_path + "visibility_data.txt");
 
         timer.reset();
