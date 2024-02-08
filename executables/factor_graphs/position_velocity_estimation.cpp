@@ -22,9 +22,9 @@
 #include "prx/factor_graphs/factors/SE3.hpp"
 #include "prx/factor_graphs/factors/screw_axis.hpp"
 #include "prx/factor_graphs/factors/preintegration.hpp"
-// #include "prx/factor_graphs/defs.hpp"
-#include "prx/factor_graphs/utilities/symbols_factory.hpp"
 #include "prx/factor_graphs/factors/position_velocity_factor.hpp"
+#include "prx/factor_graphs/factors/smooth_factor.hpp"
+#include "prx/factor_graphs/utilities/symbols_factory.hpp"
 #include "prx/factor_graphs/utilities/default_parameters.hpp"
 #include "prx/factor_graphs/utilities/common_functions.hpp"
 
@@ -52,33 +52,42 @@ int main(int argc, char* argv[])
   Eigen::Vector3d pos_i(Eigen::Vector3d::Zero());
   bool first{ true };
   std::size_t i{ 0 }, j{ 1 };
+  double ti{ 0.0 };
+  const double lambda{ params["lambda"].as<double>() };
   auto noise_model = gtsam::noiseModel::Isotropic::Sigma(3, 1e-1);
+  auto smoothing_nm = gtsam::noiseModel::Isotropic::Sigma(3, 1e0);
+  auto prior_noise = gtsam::noiseModel::Isotropic::Sigma(3, 1e-20);
   while (reader.has_next_line())
   {
     auto line = reader.next_line();
     if (line.size() == 0)
       continue;
     // PRX_DEBUG_VAR_1(line[0]);
-    const double ti{ convert_to<double>(line[t_idx]) };
+    const double tj{ convert_to<double>(line[t_idx]) };
     // PRX_DEBUG_VAR_1(t_i);
     const double xi{ convert_to<double>(line[x_idx]) };
     const double yi{ convert_to<double>(line[x_idx + 1]) };
     const double zi{ convert_to<double>(line[x_idx + 2]) };
+    if (tj == ti)
+      continue;
     const Eigen::Vector3d pos_j(xi, yi, zi);
     values.insert(k_x(j), pos_j);
+    graph.addPrior(k_x(j), pos_j, prior_noise);
     if (not first)
     {
-      const Eigen::Vector3d vi{ (pos_j - pos_i) / ti };  // initial estimation
-      // values.insert(k_x(i), pos_i);
+      const Eigen::Vector3d vi{ (pos_j - pos_i) / (tj - ti) };  // initial estimation
       values.insert(k_v(i), vi);
-      graph.emplace_shared<prx::fg::position_velocity_factor_t>(k_x(i), k_x(j), k_v(i), ti, noise_model);
+      graph.emplace_shared<prx::fg::position_velocity_factor_t>(k_x(i), k_x(j), k_v(i), ti, tj, noise_model);
+      graph.emplace_shared<prx::fg::smooth_factor_t<3>>(k_v(i), k_v(j), lambda, smoothing_nm);
     }
 
+    ti = tj;
     pos_i = pos_j;
     first = false;
     i++;
     j++;
   }
+  graph.erase(graph.end() - 1);
 
   gtsam::LevenbergMarquardtParams lm_params{ prx::fg::default_levenberg_marquardt_parameters() };
   lm_params.verbosityLMTranslator(gtsam::LevenbergMarquardtParams::SILENT);
@@ -92,9 +101,21 @@ int main(int argc, char* argv[])
   gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
   gtsam::Values results = prx::fg::optimize_and_log(optimizer, lm_params);
 
-  prx::fg::values_to_file<Eigen::Vector3d>(results, "x_\\{\\d+\\}", params["out/positions_file"].as<>(), "\\D|\\{|\\}");
-  prx::fg::values_to_file<Eigen::Vector3d>(results, "v_\\{\\d+\\}", params["out/velocities_file"].as<>(),
-                                           "\\D|\\{|\\}");
+  // prx::fg::values_to_file<Eigen::Vector3d>(results, "x_\\{\\d+\\}", params["out/positions_file"].as<>(),
+  // "\\D|\\{|\\}"); prx::fg::values_to_file<Eigen::Vector3d>(results, "v_\\{\\d+\\}",
+  // params["out/velocities_file"].as<>(),
+  //                                          "\\D|\\{|\\}");
 
+  std::ofstream ofs(params["out/file"].as<>(), std::ofstream::trunc);
+
+  for (auto factor : graph)
+  {
+    auto pv_factor = boost::dynamic_pointer_cast<prx::fg::position_velocity_factor_t>(factor);
+    if (pv_factor)
+    {
+      pv_factor->eval_to_stream(results, ofs);
+    }
+  }
+  ofs.close();
   return 0;
 }

@@ -22,9 +22,9 @@ public:
   using Jacobian = Eigen::MatrixXd;
   using Error = gtsam::Vector;
 
-  position_velocity_factor_t(const gtsam::Key& xi, const gtsam::Key& xj, const gtsam::Key& vi, const double dt,
-                             const gtsam::noiseModel::Base::shared_ptr& cost_model)
-    : Base(cost_model, xi, xj, vi), _dt(dt)
+  position_velocity_factor_t(const gtsam::Key& xi, const gtsam::Key& xj, const gtsam::Key& vi, const double ti,
+                             const double tj, const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(cost_model, xi, xj, vi), _dt(tj - ti), _ti(ti), _tj(tj)
   {
   }
 
@@ -50,8 +50,21 @@ public:
     return xjp - xj;
   }
 
+  void eval_to_stream(gtsam::Values& values, std::ostream& os)
+  {
+    const Position xi{ values.at<Position>(key<1>()) };
+    const Position xj{ values.at<Position>(key<2>()) };
+    const Velocity vi{ values.at<Velocity>(key<3>()) };
+
+    // const double
+    os << _ti << " " << _tj << " ";  // 1,  2
+    os << xi.transpose() << " ";     // 3,  4,  5
+    os << xj.transpose() << " ";     // 6,  7,  8
+    os << vi.transpose() << "\n";    // 9, 10, 11
+  }
+
 private:
-  const double _dt;
+  const double _dt, _ti, _tj;
 };
 
 }  // namespace fg
