@@ -172,45 +172,109 @@ int main(int argc, char* argv[])
             fs::create_directory(out_path);
         }
 
-        ss -> copy_point_from_vector(dirt_query.start_state,s);
-        auto s_nn = rrr.add_start(dirt_query.start_state, dirt_spec, dirt_query, controller);
-        ss -> copy_point_from_vector(dirt_query.goal_state,g);
-        auto g_nn = rrr.add_goal(dirt_query.goal_state, dirt_spec, dirt_query, controller);
-        ss -> copy_point_from_vector(dirt_query.start_state,s);
-        ss -> copy_point_from_vector(dirt_query.goal_state,g);
-
         rrr.print_components();
-        std::cout << ss -> print_point(dirt_query.start_state) << std::endl;
-        std::cout << ss -> print_point(dirt_query.goal_state) << std::endl;
 
-        prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
-        
-        auto path = rrr.get_shortest_path(s_nn,g_nn);
-        
-        std::cout << "Path: " << std::endl;
-        for (auto v: path)
-        {
-            std::cout << v << " ";
+
+        double num_fail_plan = 0;
+        double num_fail_traj = 0;
+        double tot_num_traj = 0;
+
+        for(int i = 0; i<100; i++){
+            
+            std::cout<<"Start trial: "<<i<<std::endl; 
+
+            std::vector<double> pt_vec;
+            space_point_t pt;
+            pt = dirt_spec.state_space -> make_point();
+            ///sample start and goal
+            do
+            {
+                dirt_spec.sample_state(pt);    ///for some reason, this isnt working.
+            } while (!dirt_spec.valid_state(pt));
+
+            pt_vec.clear();
+            dirt_spec.state_space -> copy_vector_from_point(pt_vec,pt);
+
+            
+            ss -> copy_point_from_vector(dirt_query.start_state,pt_vec);
+            auto s_nn = rrr.add_start(dirt_query.start_state, dirt_spec, dirt_query, controller);
+
+
+            do
+            {
+                dirt_spec.sample_state(pt);
+            } while (!dirt_spec.valid_state(pt));
+
+            pt_vec.clear();
+            dirt_spec.state_space -> copy_vector_from_point(pt_vec,pt);
+
+            ss -> copy_point_from_vector(dirt_query.goal_state,pt_vec);
+            auto g_nn = rrr.add_goal(dirt_query.goal_state, dirt_spec, dirt_query, controller);
+            
+            std::cout << ss -> print_point(dirt_query.start_state) << std::endl;
+            std::cout << ss -> print_point(dirt_query.goal_state) << std::endl;
+
+            //prx_assert(s_nn != -1 && g_nn != -1, "Could not find a start or goal node!");
+            if(s_nn == -1 || g_nn == -1){
+                std::cout<< "query not covered" <<std::endl;
+                num_fail_plan++;
+                if(s_nn != -1){
+                    rrr.remove_vertex(s_nn);
+                }
+                if(g_nn != -1){
+                    rrr.remove_vertex(g_nn);
+                }
+            }else{
+                auto path = rrr.get_shortest_path(s_nn,g_nn);
+
+                int path_edge_ct = path.size();
+
+                auto iter = path.begin()+1;
+                double path_len = 0.0;
+                for(iter; iter < path.end(); iter++)
+                {
+                    path_len += rrr.get_edge_len(*(iter-1),*iter);
+                }
+
+                std::cout << "Path: " << std::endl;
+                for (auto v: path){
+                
+                    std::cout << v << " ";
+                }
+                std::cout << std::endl;
+
+                double realized_path_len = rrr.execute_path(path, dirt_query, dirt_spec, controller);
+                
+                
+                
+
+                if(realized_path_len < 0){
+                    std::cout<<"Path of "<< path_edge_ct << " edges failed in execution at step "<<-realized_path_len <<std::endl;
+                    num_fail_traj++;
+                    tot_num_traj -= (realized_path_len+1);
+                }else{
+                    tot_num_traj += (path.size()-1) ;
+
+                    std::string path_fname = out_path + "path.txt";
+                    fout.open(path_fname);
+                    fout << rrr.print_path(s_nn,g_nn,dirt_spec);
+                    fout.close();
+                    std::cout << "Path len (with gaps): "<< path_len << std::endl;
+                }
+            
+                rrr.remove_vertex(s_nn);
+                rrr.remove_vertex(g_nn);
+                
+            }
+            std::cout << std::endl;
+            
         }
-        std::cout << std::endl;
 
-        
-
-        auto iter = path.begin()+1;
-
-        double path_len = 0.0;
-        for(iter; iter < path.end(); iter++)
-        {
-            path_len += rrr.get_edge_len(*(iter-1),*iter);
-        }
-
-        std::string path_fname = out_path + "path.txt";
-        fout.open(path_fname);
-        fout << rrr.print_path(s_nn,g_nn,dirt_spec);
-        fout.close();
-
-
-        std::cout << "Path len (with gaps): "<< path_len << std::endl;
+        std::cout<< "------RESULTS------"<<std::endl;
+        std::cout<< "roadmap coverage: "<< (1.0 - num_fail_plan/100.0) << std::endl;
+        std::cout<< "single transition planner safety: "<< (1.0-num_fail_traj/tot_num_traj) << std::endl;
+        std::cout<< "fail traj: "<< num_fail_traj << std::endl;
+        std::cout<< "total traj: "<< tot_num_traj << std::endl;
         
     }
     catch(const prx_assert_t& e) 

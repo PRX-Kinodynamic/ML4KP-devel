@@ -281,6 +281,7 @@ class reachable_roadmap_t
         int num_ft = 0;
 
         pt = spec.state_space -> make_point();
+        pt2 = spec.state_space -> make_point();
         do
         {
             do
@@ -306,17 +307,13 @@ class reachable_roadmap_t
                 component_map.insert(std::make_pair(vertex_counter,component_counter));
                 Fw.insert(std::make_pair(component_counter, forward_set));
                 Bw.insert(std::make_pair(component_counter, backward_set));
-
-                //todo: add all a_indices and d_indices as edges
-                //num_g++;
-                //std::cout<<"Guards: "<<num_g<<"; connections: "<< num_c <<"; failures total: "<< num_ft <<std::endl;
                 
                 vertex_counter++;
 
                 if(collect_reachability) record_visibility(num_failures, spec, query, controller);
                 
                 component_counter++;
-                num_failures = 0;
+                num_failures = 0;   
             }
             else // sample connected to multiple guards, becomes connection, merges guards
             {
@@ -351,8 +348,6 @@ class reachable_roadmap_t
                 }
                 if(add_node)
                 {
-                    //num_c++;
-                    //std::cout<<"Guards: "<<num_g<<"; connections: "<< num_c <<"; failures total"<< num_ft <<std::endl;
 
 
                     auto vertex = new ground_truth_vertex_t();
@@ -778,25 +773,35 @@ class reachable_roadmap_t
         return path;
     }
     
+
+    //attempts to execute path with given controller
+    //should the path fail, returns a negative value equal to the number of subgoals reached (including start)
+    //should the path succeed, return total cost of the path.
     double execute_path(std::vector<node_index_t> path,rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller){
 
         space_point_t cur_state = get_point(path.front());
         space_point_t next_goal;
         double path_len = 0.0;
+        double goals_reached = -1.0;
 
-        for (auto it = begin(path)+1; it != end(path); ++it) {
-            next_goal = get_point(*it);
-        
+        for (int i = 1; i<path.size(); i++) {
+            next_goal = get_point(path[i]);
+            
+            //std::cout<< "Current point: "<<spec.state_space -> print_point(cur_state)<<std::endl;
+            //std::cout<< "next subgoal: "<<spec.state_space -> print_point(next_goal)<<std::endl;
+
+
             query.clear_outputs();
             spec.state_space -> copy_point(query.start_state, cur_state);
             spec.state_space -> copy_point(query.goal_state, next_goal);
             controller.fulfill_query(query, spec);
-
+            
             if (!spec.valid_check(query.solution_traj) || query.solution_traj.size() <= 1){
-                return -1.;
+                return goals_reached;
             }
             path_len += (query.solution_traj.size()-1)*simulation_step;
             cur_state = query.solution_traj.back();
+            goals_reached--;
         }
         
         return path_len;
