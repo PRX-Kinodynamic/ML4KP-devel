@@ -79,7 +79,7 @@ class reachable_roadmap_t
             }
             spec.state_space->copy_point_from_vector(pt2, mutand);
 
-        } while (!spec.valid_state(pt2) && spec.distance_function(pt,pt2)<radius);
+        } while (!spec.valid_state(pt2) || spec.distance_function(pt,pt2)>radius);
 
         return pt2;
 
@@ -128,7 +128,7 @@ class reachable_roadmap_t
                         double a_cost = (query.solution_traj.size()-1)*simulation_step;
                         bool verified = true;
                         for(int i = 0; i<precision; i++){
-                            std::cout<<"-";
+                            
                             sample = sample_around(vertices[v] -> point, query, spec);
 
                             query.clear_outputs();
@@ -141,7 +141,6 @@ class reachable_roadmap_t
                                 break;
                             }
                         }
-                        std::cout<<"+"<<std::endl;
                         if(verified){
                             arriveable = true;
                             a_indices.push_back(v);
