@@ -145,7 +145,23 @@ public:
 
   void copy_to(const double start_time, const double duration, plan_t& t);
 
-  void copy_onto_back(space_point_t control, double time);
+  template <typename Control>
+  void copy_onto_back(const Control& control, const double duration)
+  {
+    if ((num_steps + 1) >= max_num_steps)
+    {
+      increase_buffer();
+      end_iterator = steps.begin();
+      const_end_iterator = steps.begin();
+      std::advance(end_iterator, num_steps);
+      std::advance(const_end_iterator, num_steps);
+    }
+    control_space->copy((*end_iterator).control, control);
+    (*end_iterator).duration = duration;
+    ++end_iterator;
+    ++const_end_iterator;
+    ++num_steps;
+  }
 
   void copy_onto_front(space_point_t control, double time);
 
@@ -182,6 +198,9 @@ public:
    * @return A string object that outputs the plan.
    */
   std::string print(unsigned precision = 3) const;
+
+  void to_file(const std::string, const std::ios_base::openmode _mode = std::ofstream::trunc) const;
+  void from_file(const std::string file_name);
 
 private:
   void increase_buffer();

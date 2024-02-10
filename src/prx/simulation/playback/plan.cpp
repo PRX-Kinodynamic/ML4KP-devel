@@ -134,23 +134,6 @@ void plan_t::copy_to(const double start_time, const double duration, plan_t& t)
   // std::cout<<duration<<" Copy to: "<<t.duration()<<std::endl;
 }
 
-void plan_t::copy_onto_back(space_point_t control, double time)
-{
-  if ((num_steps + 1) >= max_num_steps)
-  {
-    increase_buffer();
-    end_iterator = steps.begin();
-    const_end_iterator = steps.begin();
-    std::advance(end_iterator, num_steps);
-    std::advance(const_end_iterator, num_steps);
-  }
-  control_space->copy_point((*end_iterator).control, control);
-  (*end_iterator).duration = time;
-  ++end_iterator;
-  ++const_end_iterator;
-  ++num_steps;
-}
-
 void plan_t::copy_onto_front(space_point_t control, double time)
 {
   if ((num_steps + 1) >= max_num_steps)
@@ -264,4 +247,35 @@ void plan_t::increase_buffer()
     const_end_iterator = steps.begin();
   }
 }
+
+void plan_t::to_file(const std::string file_name, const std::ios_base::openmode _mode) const
+{
+  std::ofstream ofs_map;
+  ofs_map.open(file_name.c_str(), _mode);
+
+  ofs_map << this->print();
+  ofs_map.close();
+}
+
+void plan_t::from_file(const std::string file_name)
+{
+  const char sep{ prx::constants::separating_value };
+  std::ifstream ifs(file_name);
+  std::string line;
+
+  space_point_t aux{ control_space->make_point() };
+  double time{ 0 };
+  while (std::getline(ifs, line))
+  {
+    if (line.size() == 0)
+      break;
+    std::istringstream ss(line);
+    std::string token;
+    std::vector<double> ctrl{ prx::split<double>(line) };
+    const double time{ ctrl.back() };
+    ctrl.pop_back();
+    copy_onto_back(ctrl, time);
+  }
+}
+
 }  // namespace prx

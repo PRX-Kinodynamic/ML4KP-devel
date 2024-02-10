@@ -85,9 +85,10 @@ YAML::Node param_loader::expand_file(YAML::Node& node)
   {
     for (auto p : node)
     {
-      auto expanded = expand_file(p.second);
+      YAML::Node expanded = expand_file(p.second);
       if (!expanded.IsNull())
       {
+        replace_env_var(expanded);
         node[p.first.as<std::string>()] = std::move(expanded);
       }
     }
@@ -281,22 +282,33 @@ void param_loader::print(const YAML::Node& pl, std::string prepath)
       prx_throw("Problem printing param_loader! Is there a new type?\n");
   }
 }
-// 	template<class T>
-// std::vector<T> str_to_vec(std::string str, char sep = ',')
-// {
-//     std::vector<T> v;
-//     int pre = 0;
-//     int pos = str.find(sep);
+void param_loader::replace_env_var(YAML::Node& node)
+{
+  const std::regex env_var_regex("\\$\\{(.)+\\}");
+  if (!node.IsSequence() && !node.IsMap())
+  {
+    const std::string node_str{ node.as<std::string>() };
 
-//     T value;
-//     while(pre != std::string::npos)
-//     {
-//         std::stringstream convert(str.substr(pre, pos - pre));
-//         convert >> value;
-//         v.push_back(value);
-//         pre = pos + (pos == std::string::npos ? 0 : 1);
-//         pos = str.find(sep, pre);
-//     }
-//     return v;
-// }
+    std::smatch regex_match;
+    if (std::regex_search(node_str, regex_match, env_var_regex))
+    {
+      for (std::size_t i = 0; i < regex_match.size() - 1; i++)
+      {
+        const std::string match{ regex_match[i] };
+        const std::string env_var_name{ match.substr(2, match.size() - 3) };
+        char* value = std::getenv(env_var_name.c_str());
+        prx_assert(value != NULL, "Env variable " << env_var_name << " not found!");
+        const std::string replaced = std::regex_replace(node_str, env_var_regex, std::string(value));
+        node = replaced;
+      }
+    }
+  }
+  else if (node.IsSequence())
+  {
+    for (auto n : node)
+    {
+      replace_env_var(n);
+    }
+  }
+}
 }  // namespace prx

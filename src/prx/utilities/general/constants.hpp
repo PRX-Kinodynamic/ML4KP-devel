@@ -191,4 +191,25 @@ int sgn(T a)
 {
   return (a > 0) - (a < 0);
 }
+
+template <typename T>
+static std::vector<T> split(const std::string str)
+{
+  using prx::constants::separating_value;
+
+  std::vector<T> result;
+  std::istringstream ss(str);
+  std::string token;
+  while (std::getline(ss, token, separating_value))
+  {
+    if (token.size() > 0)
+    {
+      std::istringstream ti(token);
+      T x;
+      if ((ti >> x))
+        result.push_back(x);
+    }
+  }
+  return result;
+}
 }  // namespace prx
