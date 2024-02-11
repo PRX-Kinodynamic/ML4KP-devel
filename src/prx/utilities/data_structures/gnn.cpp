@@ -196,6 +196,14 @@ std::vector<proximity_node_t*> graph_nearest_neighbors_t::radius_and_closest_que
   return ret;
 }
 
+std::vector<proximity_node_t*> graph_nearest_neighbors_t::radius_query(const space_point_t& point,double rad)
+{
+  query_node->point = point;
+  int new_k = find_delta_close( query_node, second_nodes, second_distances, rad );
+  std::vector<proximity_node_t*> ret(second_nodes,second_nodes+new_k);
+  return ret;
+}
+
 proximity_node_t* graph_nearest_neighbors_t::find_closest(proximity_node_t* state, double* the_distance)
 {
   long unsigned min_index = -1;
