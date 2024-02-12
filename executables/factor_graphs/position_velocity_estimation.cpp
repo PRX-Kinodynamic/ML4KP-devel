@@ -40,8 +40,9 @@ auto k_v = [](const std::size_t& ti) { return SF::create_hashed_symbol("v_{", ti
 
 int main(int argc, char* argv[])
 {
-  prx::param_loader params("executables/factor_graphs/position_velocity_estimation.yaml");
+  prx::param_loader params("executables/factor_graphs/position_velocity_estimation.yaml", argc, argv);
 
+  params.print();
   prx::utilities::csv_reader_t reader(params["input/file"].as<>(), ' ');
   const std::size_t t_idx{ params["input/t_idx"].as<std::size_t>() };
   const std::size_t x_idx{ params["input/x_idx"].as<std::size_t>() };
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
   const double lambda{ params["lambda"].as<double>() };
   auto noise_model = gtsam::noiseModel::Isotropic::Sigma(3, 1e-1);
   auto smoothing_nm = gtsam::noiseModel::Isotropic::Sigma(3, 1e0);
-  auto prior_noise = gtsam::noiseModel::Isotropic::Sigma(3, 1e-20);
+  auto prior_noise = gtsam::noiseModel::Isotropic::Sigma(3, 1e0);
   while (reader.has_next_line())
   {
     auto line = reader.next_line();
@@ -72,7 +73,7 @@ int main(int argc, char* argv[])
       continue;
     const Eigen::Vector3d pos_j(xi, yi, zi);
     values.insert(k_x(j), pos_j);
-    graph.addPrior(k_x(j), pos_j, prior_noise);
+    // graph.addPrior(k_x(j), pos_j, prior_noise);
     if (not first)
     {
       const Eigen::Vector3d vi{ (pos_j - pos_i) / (tj - ti) };  // initial estimation
@@ -106,7 +107,8 @@ int main(int argc, char* argv[])
   // params["out/velocities_file"].as<>(),
   //                                          "\\D|\\{|\\}");
 
-  std::ofstream ofs(params["out/file"].as<>(), std::ofstream::trunc);
+  const std::string out_filename{ params["out/file"].as<>() };
+  std::ofstream ofs(out_filename, std::ofstream::trunc);
 
   for (auto factor : graph)
   {
@@ -117,5 +119,6 @@ int main(int argc, char* argv[])
     }
   }
   ofs.close();
+  PRX_DEBUG_VAR_1(out_filename);
   return 0;
 }

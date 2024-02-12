@@ -1,11 +1,12 @@
 input:
   # file: "${DIRTMP_PATH}/out/mj_bouncing_ball_no_noise.txt"
-  file: "${DIRTMP_PATH}/out/mj_bouncing_ball_noise_0p1.txt"
+  # file: "${DIRTMP_PATH}/out/mj_bouncing_ball_noise_0p1.txt"
+  file: "../data/tensegrity/processed_data/R2S2Rccw_1/positions.txt"
   t_idx: 0
-  x_idx: 4
+  x_idx: 7
 
-lambda: 0.00
+lambda: 0.0001
 
 out:
-  file: "${DIRTMP_PATH}/out/mj_bouncing_ball_no_noise_est_positions.txt"
-  velocities_file: "${DIRTMP_PATH}/out/mj_bouncing_ball_no_noise_est_velocities.txt"
+  file: "../data/tensegrity/processed_data/R2S2Rccw_1/estimation.txt"
+  # velocities_file: "${DIRTMP_PATH}/out/mj_bouncing_ball_no_noise_est_velocities.txt"
