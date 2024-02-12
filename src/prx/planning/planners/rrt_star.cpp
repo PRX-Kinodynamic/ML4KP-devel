@@ -245,8 +245,9 @@ void rrt_star_t::_fulfill_query()
     auto iter_bounds = _tree.edges();
     for (auto iter = iter_bounds.first; iter != iter_bounds.second; iter++)
     {
-      const edge_index_t edge_idx{ (*iter)->get_index() };
-      const std::shared_ptr<rrt_star_edge_t> edge{ _tree.get_edge_as<rrt_star_edge_t>(edge_idx) };
+
+      	    const edge_index_t edge_idx{ (*iter)->get_index() };
+	    const std::shared_ptr<rrt_star_edge_t> edge{ _tree.get_edge_as<rrt_star_edge_t>(edge_idx) };
       const std::shared_ptr<trajectory_t> traj{ edge->traj };
       _rrt_star_query->tree_visualization.push_back(*traj);
     }
@@ -321,6 +322,8 @@ void rrt_star_t::from_files(const std::string file_prefix, const std::string dir
   const std::string filename_trajs{ directory + "/" + file_prefix + "_trajectories.txt" };
   const std::string filename_tree{ directory + "/" + file_prefix + "_tree.txt" };
 
+  PRX_DEBUG_VAR_1(filename_trajs);
+  PRX_DEBUG_VAR_1(filename_tree);
   _tree.from_file<rrt_star_node_t, rrt_star_edge_t>(filename_tree, _state_space);
 
   std::unordered_map<std::size_t, std::shared_ptr<prx::trajectory_t>> map_edges_traj;
