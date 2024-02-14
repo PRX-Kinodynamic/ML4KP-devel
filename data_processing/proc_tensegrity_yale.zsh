@@ -4,6 +4,7 @@ data_file="${DIRTMP_PATH}/data/tensegrity/processed_data/"
 executable="${DIRTMP_PATH}/bin/executables/factor_graphs/position_velocity_estimation"
 json_to_txt="${DIRTMP_PATH}/data_processing/tensegrity_positions_to_txt.py"
 python_cmd=$(which python3)
+gnuplot_cmd="${GARY_TOOLS}/plotting/tensegrity/smoothing_yale.gp"
 # time pos rod_01_end_pt1 rod_01_end_pt2 
 # rod_23_end_pt1 rod_23_end_pt2 
 # rod_45_end_pt1 rod_45_end_pt2 
@@ -26,6 +27,7 @@ for dir in $(ls ${data_file}); do
 		echo ${executable} "${input_file} ${out_file} ${idxs}"
 		eval "${executable} ${input_file} ${out_file} ${idxs}"
 	done
+	eval "gnuplot -c ${gnuplot_cmd} ${dir}"
 	# break
 	# echo $dir
 done
