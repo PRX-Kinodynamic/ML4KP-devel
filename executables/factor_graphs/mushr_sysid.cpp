@@ -19,56 +19,31 @@
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/visualization/three_js_group.hpp"
 
+#include <gtsam/inference/Key.h>
+#include <gtsam/linear/NoiseModel.h>
 // #include "prx/factor_graphs/defs.hpp"
+#include "prx/factor_graphs/utilities/default_parameters.hpp"
+#include "prx/factor_graphs/factors/SE3.hpp"
+#include "prx/factor_graphs/factors/screw_axis.hpp"
+#include "prx/factor_graphs/factors/preintegration.hpp"
+#include "prx/factor_graphs/factors/position_velocity_factor.hpp"
+#include "prx/factor_graphs/factors/smooth_factor.hpp"
+#include "prx/factor_graphs/factors/mushr_factors.hpp"
 #include "prx/factor_graphs/utilities/symbols_factory.hpp"
+#include "prx/factor_graphs/utilities/common_functions.hpp"
 // #include "prx/factor_graphs/utilities/utilities_functions.hpp"
 // #include "prx/factor_graphs/factors/factors.hpp"
 
-#include <gtsam/inference/Key.h>
-#include <gtsam/nonlinear/Marginals.h>
-#include <gtsam/linear/JacobianFactor.h>
+// #include <gtsam/nonlinear/Marginals.h>
+// #include <gtsam/linear/JacobianFactor.h>
 
-// using Q = typename prx::fg::ackermann::Q;
-// using Qdot = typename prx::fg::ackermann::Qdot;
-// using Qdotdot = typename prx::fg::ackermann::Qdotdot;
-// using U = typename prx::fg::ackermann::U;
-// using Force = typename prx::fg::ackermann::Force;
-// using ModelParams = typename prx::fg::ackermann::ModelParams;
-// using EnvironmentParams = typename prx::fg::ackermann::EnvironmentParams;
-// using Z_Q = typename prx::fg::ackermann::Qz;
+using prx::utilities::convert_to;
+using SF = prx::fg::symbol_factory_t;
 
-// using Position = Eigen::Vector<double, 2>;
-// using Path = std::vector<Position>;
-// using Graph = gtsam::NonlinearFactorGraph;
-// using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
-// using Values = gtsam::Values;
-// using Symbol = prx::prx_symbol_t;
-
-// using SymFactory = prx::symbol_factory_t;
-// using FactorPathTraj = prx::fg::euclidean_distance_factor_t<2, 2, 5>;
-
-void find_start_state(const std::string filename, prx::space_point_t state)
-{
-  using prx::utilities::convert_to;
-  prx::utilities::csv_reader_t reader(filename);
-  while (reader.has_next_line())
-  {
-    auto line = reader.next_line();
-    if (line.size() > 0 and line[1] == "robot_0")
-    {
-      state->at(0) = convert_to<double>(line[2]);
-      state->at(1) = convert_to<double>(line[3]);
-      const double qw{ convert_to<double>(line[5]) };
-      const double qx{ convert_to<double>(line[6]) };
-      const double qy{ convert_to<double>(line[7]) };
-      const double qz{ convert_to<double>(line[8]) };
-      const Eigen::Quaterniond quat{ qw, qx, qy, qz };
-      state->at(2) = prx::quaternion_to_euler(quat)[2];
-      state->at(3) = 0.0;
-      break;
-    }
-  }
-}
+auto k_X = [](const std::size_t& ti) { return SF::create_hashed_symbol("x_{", ti, "}"); };
+auto k_U = [](const std::size_t& ti) { return SF::create_hashed_symbol("u_{", ti, "}"); };
+auto k_Z = [](const std::size_t& ti) { return SF::create_hashed_symbol("z_{", ti, "}"); };
+auto k_P = [](const std::size_t& ti) { return SF::create_hashed_symbol("theta_{", ti, "}"); };
 
 int main(int argc, char* argv[])
 {
@@ -91,22 +66,100 @@ int main(int argc, char* argv[])
   prx::space_t* ps{ sys_group->get_parameter_space() };
 
   ps->copy_from(params["/plant/parameter_space/values"].as<std::vector<double>>());
-  prx::plan_t plan(cs);
-  prx::trajectory_t traj(ss);
-  plan.from_file(params["plan_file"].as<>());
 
-  prx::space_point_t x0{ ss->make_point() };
-  find_start_state(params["tf_data"].as<>(), x0);
-  PRX_DEBUG_VAR_1(plan);
-  sys_group->propagate(x0, plan, traj);
-  traj.to_file(prx::out_path + "mushr_sysid_traj.txt");
-  prx::three_js_group_t* vis_group = new prx::three_js_group_t({ plant }, {});
+  const std::string filename{ params["tf_data"].as<>() };
+  prx::utilities::csv_reader_t reader(filename, ' ');
 
-  std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+  gtsam::NonlinearFactorGraph graph;
+  gtsam::Values values;
+  auto mushr_prop_nm = gtsam::noiseModel::Isotropic::Sigma(4, 1e-1);
+  auto z_prior_nm = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector4d(1e0, 1e0, 1e0, 1e0));
+  auto u_prior_nm = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector2d(1e-1, 1e-1));
 
-  vis_group->add_detailed_vis_infos(prx::info_geometry_t::FULL_LINE, traj, body_name, ss);
-  vis_group->add_animation(traj, ss, x0);
-  vis_group->output_html("mushr_sysid.html");
+  std::size_t idx{ 0 };
+  bool first{ true };
+  double t_curr{ 0.0 };
+  double t_prev{ 0.0 };
+  Eigen::Vector4d state_prev{ Eigen::Vector4d::Zero() };
 
-  delete vis_group;
+  const Eigen::Vector2d ctrl(-0.75, 0.5);
+  const Eigen::Vector2d ctrl0(0, 0);
+  const double ctrl_duration{ 20 };
+  const double start_time{ 1708018322.353523000 };
+  values.insert(k_P(0), Eigen::Vector<double, 6>(0.08, -0.08, 0.75, 0.0, -1.0, 1.0));
+
+  while (reader.has_next_line())
+  {
+    auto line = reader.next_line();
+    if (line.size() > 0)
+    {
+      t_curr = convert_to<double>(line[2]);
+      const double x{ convert_to<double>(line[3]) };
+      const double y{ convert_to<double>(line[4]) };
+      const double qw{ convert_to<double>(line[6]) };
+      const double qx{ convert_to<double>(line[7]) };
+      const double qy{ convert_to<double>(line[8]) };
+      const double qz{ convert_to<double>(line[9]) };
+      const double theta{ prx::yaw(Eigen::Quaterniond(qw, qx, qy, qz)) };
+
+      if (first)
+      {
+        state_prev = Eigen::Vector4d(x, y, theta, 0);
+        values.insert(k_X(idx), state_prev);
+        graph.addPrior(k_X(idx), state_prev, z_prior_nm);
+      }
+      else
+      {
+        const double dt{ t_curr - t_prev };
+        graph.emplace_shared<prx::fg::mushr_factor_t>(k_X(idx - 1), k_X(idx), k_U(idx - 1), k_P(0), dt, mushr_prop_nm);
+        const double vel{ std::sqrt(std::pow(x - state_prev[0], 2) + std::pow(y - state_prev[1], 2)) };
+        state_prev = Eigen::Vector4d(x, y, theta, vel);
+        values.insert(k_X(idx), state_prev);
+        graph.addPrior(k_X(idx), state_prev, z_prior_nm);
+
+        if (start_time < t_curr || t_curr < start_time + ctrl_duration)
+        {
+          values.insert(k_U(idx - 1), ctrl0);
+          graph.addPrior(k_U(idx - 1), ctrl0, u_prior_nm);
+        }
+        else
+        {
+          values.insert(k_U(idx - 1), ctrl);
+          graph.addPrior(k_U(idx - 1), ctrl, u_prior_nm);
+        }
+      }
+      first = false;
+      t_prev = t_curr;
+      idx++;
+    }
+  }
+
+  gtsam::LevenbergMarquardtParams lm_params{ prx::fg::default_levenberg_marquardt_parameters() };
+  lm_params.verbosityLMTranslator(gtsam::LevenbergMarquardtParams::SILENT);
+  lm_params.setMaxIterations(50);
+  // lm_params.setMaxIterations(10000);
+  lm_params.setRelativeErrorTol(1e-8);
+  lm_params.setAbsoluteErrorTol(1e-8);
+  lm_params.setlambdaUpperBound(1e64);
+  lm_params.print("lm_params");
+
+  SF::symbols_to_file();
+
+  gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
+  gtsam::Values results = prx::fg::optimize_and_log(optimizer, lm_params);
+
+  const std::string out_filename{ params["out/file"].as<>() };
+  std::ofstream ofs(out_filename, std::ofstream::trunc);
+
+  for (auto factor : graph)
+  {
+    auto pv_factor = boost::dynamic_pointer_cast<prx::fg::mushr_factor_t>(factor);
+    if (pv_factor)
+    {
+      pv_factor->eval_to_stream(results, ofs);
+    }
+  }
+  ofs.close();
+  PRX_DEBUG_VAR_1(out_filename);
+  return 0;
 }

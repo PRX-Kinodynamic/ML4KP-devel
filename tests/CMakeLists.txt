@@ -8,6 +8,7 @@ file(GLOB_RECURSE TESTS_FILES
 	${PROJECT_SOURCE_DIR}/tests/simulation/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/utilities/*.cpp
+	${PROJECT_SOURCE_DIR}/tests/factor_graphs/*.cpp
 	)
 if (BUILD_FOR_MUJOCO)
 	file(GLOB_RECURSE MJ_TEST_FILES

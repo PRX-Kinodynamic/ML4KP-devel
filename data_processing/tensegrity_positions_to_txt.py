@@ -25,9 +25,14 @@ def process_file(json_filename, txt_name):
   #   file_out.write(name + " ")
   # file_out.write("\n")
 
+  values=[""]*len(names)
   for row in json_data:
-    for name in names:
-      file_out.write(get_str_from_value(row, name) + " ");
+    for ni in range(len(names)):
+      name = names[ni]
+      values[ni] = get_str_from_value(row, name)
+      # file_out.write(get_str_from_value(row, name) + " ");
+    for v in values:
+      file_out.write(v + " ");
     file_out.write("\n")
 
   file_out.close()

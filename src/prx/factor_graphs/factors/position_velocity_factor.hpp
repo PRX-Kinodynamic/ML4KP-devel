@@ -23,8 +23,9 @@ public:
   using Error = gtsam::Vector;
 
   position_velocity_factor_t(const gtsam::Key& xi, const gtsam::Key& xj, const gtsam::Key& vi, const double ti,
-                             const double tj, const gtsam::noiseModel::Base::shared_ptr& cost_model)
-    : Base(cost_model, xi, xj, vi), _dt(tj - ti), _ti(ti), _tj(tj)
+                             const double tj, const gtsam::noiseModel::Base::shared_ptr& cost_model,
+                             const std::string name = "")
+    : Base(cost_model, xi, xj, vi), _dt(tj - ti), _ti(ti), _tj(tj), _name(name)
   {
   }
 
@@ -52,19 +53,26 @@ public:
 
   void eval_to_stream(gtsam::Values& values, std::ostream& os)
   {
-    const Position xi{ values.at<Position>(key<1>()) };
-    const Position xj{ values.at<Position>(key<2>()) };
-    const Velocity vi{ values.at<Velocity>(key<3>()) };
+    if (values.exists(key<1>()) and values.exists(key<2>()) and values.exists(key<3>()))
+    {
+      const Position xi{ values.at<Position>(key<1>()) };
+      const Position xj{ values.at<Position>(key<2>()) };
+      const Velocity vi{ values.at<Velocity>(key<3>()) };
 
-    // const double
-    os << _ti << " " << _tj << " ";  // 1,  2
-    os << xi.transpose() << " ";     // 3,  4,  5
-    os << xj.transpose() << " ";     // 6,  7,  8
-    os << vi.transpose() << "\n";    // 9, 10, 11
+      const std::string ti{ prx::utilities::convert_to<std::string>(_ti) };
+      const std::string tj{ prx::utilities::convert_to<std::string>(_tj) };
+      // const double
+      os << ti << " " << tj << " ";  // 1,  2
+      os << xi.transpose() << " ";   // 3,  4,  5
+      os << xj.transpose() << " ";   // 6,  7,  8
+      os << vi.transpose() << " ";   // 9, 10, 11
+      os << _name << "\n";           // 12
+    }
   }
 
 private:
   const double _dt, _ti, _tj;
+  const std::string _name;
 };
 
 }  // namespace fg

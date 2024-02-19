@@ -54,11 +54,10 @@ public:
   // x_j <- x_0 exp()
   const X propagate(const X& x_i, const Xdot& xdot_i) const
   {
-    const Xdot xdot_dt{ xdot_i * _dTij };
-    const X x_j{ x_i * Xdot::exp(xdot_dt) };
-    // PRX_DEBUG_VAR_1(xdot_i);
-    // PRX_DEBUG_VAR_1(Xdot::exp(xdot_i, _dTij));
-    // PRX_DEBUG_VAR_1(x_j);
+    // const Xdot xdot_dt{ xdot_i * _dTij };
+    // const X x_j{ x_i * Xdot::template exp<X>(xdot_dt) };
+    const X x_j{};
+
     return x_j;
   }
 
