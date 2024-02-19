@@ -1,0 +1,147 @@
+environment:
+  geometries:
+  - collision_geometry:
+      dims: [8, 2, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [6.5, 3, 0.1]
+    name: obs_0
+  - collision_geometry:
+      dims: [8, 2, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [6.5, 7, 0.1]
+    name: obs_1
+  - collision_geometry:
+      dims: [8, 2, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [6.5, 11, 0.1]
+    name: obs_2
+  - collision_geometry:
+      dims: [8, 2, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [6.5, 15, 0.1]
+    name: obs_3
+  - collision_geometry:
+      dims: [6, 1.5, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [25, 3, 0.1]
+    name: obs_4
+  - collision_geometry:
+      dims: [6, 1.5, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [25, 7, 0.1]
+    name: obs_5
+  - collision_geometry:
+      dims: [6, 1.5, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [25, 11, 0.1]
+    name: obs_6
+  - collision_geometry:
+      dims: [6, 1.5, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [25, 15, 0.1]
+    name: obs_7
+  - collision_geometry:
+      dims: [2, 8, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [18, 14, 0.1]
+    name: obs_8
+  - collision_geometry:
+      dims: [2, 8, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.0, 1.0]
+      position: [18, 4, 0.1]
+    name: obs_9
+  - collision_geometry:
+      dims: [2, 2, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.25881904510252074, 0.9659258262890683]
+      position: [14, 15, 0.1]
+    name: obs_10
+  - collision_geometry:
+      dims: [2, 2, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, -0.25881904510252074, 0.9659258262890683]
+      position: [13.5, 10.5, 0.1]
+    name: obs_11
+  - collision_geometry:
+      dims: [2, 2, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, 0.25881904510252074, 0.9659258262890683]
+      position: [14, 6, 0.1]
+    name: obs_12
+  - collision_geometry:
+      dims: [2, 2, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0.0, 0.0, -0.25881904510252074, 0.9659258262890683]
+      position: [13.5, 2.5, 0.1]
+    name: obs_13
+  - collision_geometry:
+      dims: [31, 0.5, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [15, 18.25, 0.1]
+    name: upper
+  - collision_geometry:
+      dims: [31, 0.5, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [15, -0.25, 0.1]
+    name: lower
+  - collision_geometry:
+      dims: [0.5, 19, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [-0.25, 9, 0.1]
+    name: left
+  - collision_geometry:
+      dims: [0.5, 19, 0.2]
+      material: red
+      type: box
+    config:
+      orientation: [0, 0, 0, 1]
+      position: [30.25, 9, 0.1]
+    name: right
+  type: obstacle

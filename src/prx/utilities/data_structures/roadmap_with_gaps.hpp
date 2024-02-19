@@ -134,6 +134,32 @@ public:
   {
   }
 
+  void load_roadmap_from_file(std::string vertices_fname, std::string edges_fname)
+  {
+    std::vector<std::vector<double>> vertices_from_file = prx::utilities::read_vectors_from_file(vertices_fname);
+    for (auto& v : vertices_from_file)
+    {
+      auto p = spec->state_space->make_point();
+      auto pv = std::vector<double>(v.begin() + 1, v.end());
+      spec->state_space->copy_point_from_vector(p, pv);
+      add_vertex(v[0], p);
+    }
+
+    std::vector<std::vector<double>> edges = prx::utilities::read_vectors_from_file(edges_fname);
+    for (auto& e : edges)
+    {
+      add_edge(e[0], e[1], e[2]);
+    }
+
+    std::cout << "Loaded the roadmap with " << vertices.size() << " vertices and " << all_edges.size() << " edges"
+              << std::endl;
+  }
+
+  std::shared_ptr<roadmap_with_gaps_node_t> get_vertex(node_index_t index)
+  {
+    return vertices[index];
+  }
+
   space_point_t get_vertex_point(node_index_t index)
   {
     return vertices[index]->point;
@@ -233,11 +259,40 @@ public:
     }
   }
 
-  // std::pair<std::unordered_map<node_index_t, std::shared_ptr<roadmap_with_gaps_node_t>>::iterator,
-  //           std::unordered_map<node_index_t, std::shared_ptr<roadmap_with_gaps_node_t>>::iterator> get_vertices()
-  // {
-  //   return std::make_pair(vertices.begin(), vertices.end());
-  // }
+  std::vector<std::pair<node_index_t, std::shared_ptr<roadmap_with_gaps_node_t>>> get_vertices()
+  {
+    std::vector<std::pair<node_index_t, std::shared_ptr<roadmap_with_gaps_node_t>>> v;
+    for (auto it = vertices.begin(); it != vertices.end(); it++)
+    {
+      v.push_back(std::make_pair(it->first, it->second));
+    }
+    return v;
+  }
+
+  std::vector<std::pair<node_index_t, node_index_t>> get_edges()
+  {
+    std::vector<std::pair<node_index_t, node_index_t>> e;
+    for (auto it = edges.begin(); it != edges.end(); it++)
+    {
+      for (auto e_it = it->second.begin(); e_it != it->second.end(); e_it++)
+      {
+        e.push_back(std::make_pair(it->first, (*e_it)->get_target_index()));
+      }
+    }
+    return e;
+  }
+
+  double get_edge_cost(node_index_t s, node_index_t t)
+  {
+    for (auto e : edges[s])
+    {
+      if (e->get_target_index() == t)
+      {
+        return e->get_cost();
+      }
+    }
+    return std::numeric_limits<double>::infinity();
+  }
 
   void get_a_indices()
   {
@@ -331,8 +386,6 @@ public:
         add_edge(d, v->get_index(), current_cost);
       }
 
-      vertex_counter++;
-
       if (unconsidered.size() % 10 == 0)
       {
         std::cout << unconsidered.size() << " landmarks remaining.\n";
@@ -341,5 +394,110 @@ public:
       }
 
     } while (unconsidered.size() > 0);
+  }
+
+  int get_shortcut_successor(space_point_t s, int vertex_id)
+  {
+    auto v = vertices[vertex_id];
+    int best_idx = -1;
+
+    do 
+    {
+      spec->state_space->copy_point(query->goal_state, v->point);
+      spec->state_space->copy_point(query->start_state, s);
+
+      controller->fulfill_query(*spec.get(), *query.get());
+
+      if (spec->valid_check(query->solution_traj) && query->solution_traj.size() > 0)
+      {
+        best_idx = v->get_successor_index();
+      }
+      else
+      {
+        break;
+      }
+      if (v -> get_successor_index() == -1)
+      {
+        break;
+      }
+      v = vertices[v->get_successor_index()];
+    } while (true);
+
+    return best_idx;
+  }
+
+  node_index_t add_start(space_point_t s)
+  {
+    point = spec->state_space->clone_point(s);
+    get_a_indices();
+
+    auto v = add_vertex(vertex_counter, point);
+
+    for (auto a : a_indices)
+    {
+      add_edge(v->get_index(), a, a_costs[a]);
+    }
+
+    return v->get_index();
+  }
+
+  node_index_t add_goal(space_point_t g)
+  {
+    point = spec->state_space->clone_point(g);
+    get_d_indices();
+
+    auto v = add_vertex(vertex_counter, point);
+
+    for (auto d : d_indices)
+    {
+      add_edge(d, v->get_index(), d_costs[d]);
+    }
+
+    return v->get_index();
+  }
+
+  void compute_wavefront(node_index_t goal, bool verbose = false)
+  {
+    // Compute the wavefront from the goal
+    std::priority_queue<std::pair<double, node_index_t>, std::vector<std::pair<double, node_index_t>>,
+                        std::greater<std::pair<double, node_index_t>>>
+        pq;
+    std::map<node_index_t, int> parent;
+
+    for (auto v : vertices)
+    {
+      vertex_costs[v.first] = std::numeric_limits<double>::infinity();
+      parent[v.first] = -1;
+    }
+
+    vertex_costs[goal] = 0;
+    parent[goal] = goal;
+    pq.push(std::make_pair(0, goal));
+
+    while (!pq.empty())
+    {
+      auto u = pq.top();
+      pq.pop();
+      for (auto e : in_edges[u.second])
+      {
+        node_index_t v = e->get_target_index();
+        double new_cost = vertex_costs[u.second] + e->get_cost();
+        if (new_cost < vertex_costs[v])
+        {
+          vertex_costs[v] = new_cost;
+          parent[v] = u.second;
+          pq.push(std::make_pair(new_cost, v));
+        }
+      }
+    }
+
+    for (auto v : vertices)
+    {
+      auto vertex = v.second;
+      vertex->set_cost_to_go(vertex_costs[v.first]);
+      vertex->set_successor_index(parent[v.first]);
+      if (verbose) std::cout << "Vertex " << v.first << " has cost " << vertex_costs[v.first] << " and successor " << parent[v.first]
+                << std::endl;
+    }
   }
 };
