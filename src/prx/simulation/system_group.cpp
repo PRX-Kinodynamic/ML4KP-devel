@@ -149,7 +149,7 @@ void system_group_t::propagate_once(space_point_t control)
 {
   if (control != nullptr)
   {
-    control_space->copy_from_point(control);
+    control_space->copy_from(control);
   }
   for (auto s : group)
   {

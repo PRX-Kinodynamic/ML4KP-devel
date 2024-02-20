@@ -154,6 +154,8 @@ public:
 
   std::vector<proximity_node_t*> multi_query(const space_point_t& point, int k);
 
+  std::vector<proximity_node_t*> radius_query(const space_point_t& point, double rad);
+
   std::vector<proximity_node_t*> radius_and_closest_query(const space_point_t& point, double rad);
 
 protected:
