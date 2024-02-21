@@ -1,4 +1,5 @@
 #include "prx/planning/planners/rrt_star.hpp"
+#include "prx/utilities/general/timed_logger.hpp"
 
 namespace prx
 {
@@ -75,7 +76,14 @@ void rrt_star_t::_resolve_query(condition_check_t* condition)
   std::shared_ptr<rrt_star_node_t> x_new{ nullptr };
 
   std::size_t nodes_added{ _tree.num_vertices() };
-  do
+using namespace std::literals::chrono_literals;
+std::ofstream ss(prx::out_path + "rrt_star.log", std::ofstream::trunc);
+   prx::utilities::timed_logger_t timed_logger(1000ms, ss);
+  
+   timed_logger.add("iterations", &_iteration_count);
+   timed_logger.add("nodes", &nodes_added);
+   timed_logger.run();
+   do
   {
     // samples
     _rrt_star_spec->sample_state(_x_rand);
@@ -113,6 +121,7 @@ void rrt_star_t::_resolve_query(condition_check_t* condition)
     }
     _iteration_count++;
   } while (!condition->check());
+   timed_logger.stop();
 }
 
 void rrt_star_t::add_to_tree(NodePtr& x_new, space_point_t state)
@@ -144,14 +153,17 @@ double rrt_star_t::connect_along_minimum_cost(rrt_star_node_t*& x_min, NodePtr& 
     const double cost_x_new_via_x_near{ cost_x_near + cost_edge_near_new };
 
     trajectory_t traj_near_to_new(_state_space);
-    _steer_function(traj_near_to_new, x_near->point, x_new->point, cost_x_new_via_x_near);
 
-    if (cost_x_new_via_x_near < c_min and _valid_check(traj_near_to_new))
+    if (cost_x_new_via_x_near < c_min )
+    {
+	_steer_function(traj_near_to_new, x_near->point, x_new->point, cost_x_new_via_x_near);
+	if ( _valid_check(traj_near_to_new))
     {
       x_min = x_near;
       edge_cost = cost_edge_near_new;
       c_min = cost_x_new_via_x_near;
       traj = traj_near_to_new;
+    }
     }
   }
   x_new->cost_to_come = c_min;
@@ -181,9 +193,11 @@ void rrt_star_t::rewire_tree(const CloseNodes& X_near, NodePtr& x_new)
     const double cost_x_near_via_x_new{ cost_x_new + cost_edge_near_new };
 
     trajectory_t traj_new_to_near(_state_space);
-    _steer_function(traj_new_to_near, x_new->point, x_near->point, cost_x_near_via_x_new);
 
-    if (cost_x_near_via_x_new < cost_x_near and _valid_check(traj_new_to_near))
+    if (cost_x_near_via_x_new < cost_x_near )
+    {
+    	_steer_function(traj_new_to_near, x_new->point, x_near->point, cost_x_near_via_x_new);
+	if (_valid_check(traj_new_to_near))
     {
       const node_index_t x_near_idx{ x_near->get_index() };
       _tree.transplant(x_near_idx, x_new_idx);
@@ -193,6 +207,7 @@ void rrt_star_t::rewire_tree(const CloseNodes& X_near, NodePtr& x_new)
       parent_edge->traj = std::make_shared<trajectory_t>(traj_new_to_near);
       parent_edge->edge_cost = cost_edge_near_new;
       x_near->cost_to_come = cost_x_near_via_x_new;
+    	}
     }
   }
 }
@@ -230,8 +245,9 @@ void rrt_star_t::_fulfill_query()
     auto iter_bounds = _tree.edges();
     for (auto iter = iter_bounds.first; iter != iter_bounds.second; iter++)
     {
-      const edge_index_t edge_idx{ (*iter)->get_index() };
-      const std::shared_ptr<rrt_star_edge_t> edge{ _tree.get_edge_as<rrt_star_edge_t>(edge_idx) };
+
+      	    const edge_index_t edge_idx{ (*iter)->get_index() };
+	    const std::shared_ptr<rrt_star_edge_t> edge{ _tree.get_edge_as<rrt_star_edge_t>(edge_idx) };
       const std::shared_ptr<trajectory_t> traj{ edge->traj };
       _rrt_star_query->tree_visualization.push_back(*traj);
     }
@@ -306,6 +322,8 @@ void rrt_star_t::from_files(const std::string file_prefix, const std::string dir
   const std::string filename_trajs{ directory + "/" + file_prefix + "_trajectories.txt" };
   const std::string filename_tree{ directory + "/" + file_prefix + "_tree.txt" };
 
+  PRX_DEBUG_VAR_1(filename_trajs);
+  PRX_DEBUG_VAR_1(filename_tree);
   _tree.from_file<rrt_star_node_t, rrt_star_edge_t>(filename_tree, _state_space);
 
   std::unordered_map<std::size_t, std::shared_ptr<prx::trajectory_t>> map_edges_traj;

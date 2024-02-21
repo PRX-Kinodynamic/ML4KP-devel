@@ -91,9 +91,21 @@ int main(int argc, char* argv[])
     const double dist_to_goal{ rrt_star_spec.distance_function(pt, rrt_star_query.goal_state) };
     return dist_to_goal < rrt_star_query.goal_region_radius;
   };
+  
+  std::normal_distribution r_dist{5.0, 1.5};
+  std::normal_distribution z_dist{75.0, 10.0};
+  rrt_star_spec.sample_state = [&](prx::space_point_t& s) {
+  	ss->sample(s);
+  	const double th{prx::uniform_random(-prx::constants::pi, prx::constants::pi)};
+  	const double r{r_dist(prx::global_generator)};
+	s->at(0) = r * std::cos(th);
+	s->at(1) = r * std::sin(th);
+  	s->at(2) =z_dist(prx::global_generator);
+ };
+  
   const std::string out_dir{ params["/out/dir"].as<>() };
   const std::string file_prefix{ params["/out/file_prefix"].as<>() };
-
+  const double desired_nodes{params["/planner/desired_nodes"].as<double>()};
   rrt_star_query.get_visualization = params["visualize"].as<bool>();
 
   rrt_star.link_and_setup_spec(&rrt_star_spec);
@@ -101,8 +113,14 @@ int main(int argc, char* argv[])
   rrt_star.link_and_setup_query(&rrt_star_query);
   if (params["grow_tree"].as<bool>())
   {
-    prx::condition_check_t checker(params["/planner/checker_type"].as<>(), params["/planner/checker_value"].as<int>());
 
+    //prx::condition_check_t checker(params["/planner/checker_type"].as<>(), params["/planner/checker_value"].as<int>());
+	std::function<bool()> nodes_condition = [&]()
+	{
+	    const double current_nodes{rrt_star.get_statistics()[2]};
+	    return current_nodes >= desired_nodes;
+	};
+  	  prx::condition_check_t checker(nodes_condition);
     rrt_star.resolve_query(&checker);
   }
   if (params["query_tree"].as<bool>())
