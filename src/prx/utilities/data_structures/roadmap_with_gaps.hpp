@@ -141,13 +141,14 @@ public:
     {
       auto p = spec->state_space->make_point();
       auto pv = std::vector<double>(v.begin() + 1, v.end());
-      spec->state_space->copy_point_from_vector(p, pv);
+      spec->state_space->copy(p, pv);
       add_vertex(v[0], p);
     }
 
     std::vector<std::vector<double>> edges = prx::utilities::read_vectors_from_file(edges_fname);
     for (auto& e : edges)
     {
+      // if (e[2] < 10)
       add_edge(e[0], e[1], e[2]);
     }
 
@@ -401,7 +402,7 @@ public:
     auto v = vertices[vertex_id];
     int best_idx = -1;
 
-    do 
+    do
     {
       spec->state_space->copy_point(query->goal_state, v->point);
       spec->state_space->copy_point(query->start_state, s);
@@ -416,7 +417,7 @@ public:
       {
         break;
       }
-      if (v -> get_successor_index() == -1)
+      if (v->get_successor_index() == -1)
       {
         break;
       }
@@ -496,8 +497,9 @@ public:
       auto vertex = v.second;
       vertex->set_cost_to_go(vertex_costs[v.first]);
       vertex->set_successor_index(parent[v.first]);
-      if (verbose) std::cout << "Vertex " << v.first << " has cost " << vertex_costs[v.first] << " and successor " << parent[v.first]
-                << std::endl;
+      if (verbose)
+        std::cout << "Vertex " << v.first << " has cost " << vertex_costs[v.first] << " and successor "
+                  << parent[v.first] << std::endl;
     }
   }
 };
