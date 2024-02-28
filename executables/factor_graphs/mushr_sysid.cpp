@@ -78,22 +78,24 @@ int main(int argc, char* argv[])
 
   std::size_t idx{ 0 };
   bool first{ true };
-  double t_curr{ 0.0 };
+  // double t_curr{ 0.0 };
   double t_prev{ 0.0 };
   Eigen::Vector4d state_prev{ Eigen::Vector4d::Zero() };
 
-  const Eigen::Vector2d ctrl(-0.75, 0.5);
-  const Eigen::Vector2d ctrl0(0, 0);
-  const double ctrl_duration{ 20 };
-  const double start_time{ 1708018322.353523000 };
+  // const Eigen::Vector2d ctrl(-0.75, 0.5);
+  // const Eigen::Vector2d ctrl0(0, 0);
+  // const double ctrl_duration{ 20 };
+  // const double start_time{ 1708018322.353523000 };
   values.insert(k_P(0), Eigen::Vector<double, 6>(0.08, -0.08, 0.75, 0.0, -1.0, 1.0));
 
+  using ObservedState = std::pair<double, Eigen::Vector4d>;
+  std::vector<ObservedState> observed_traj{};
   while (reader.has_next_line())
   {
     auto line = reader.next_line();
     if (line.size() > 0)
     {
-      t_curr = convert_to<double>(line[2]);
+      const double t_curr{ convert_to<double>(line[2]) };
       const double x{ convert_to<double>(line[3]) };
       const double y{ convert_to<double>(line[4]) };
       const double qw{ convert_to<double>(line[6]) };
@@ -101,38 +103,80 @@ int main(int argc, char* argv[])
       const double qy{ convert_to<double>(line[8]) };
       const double qz{ convert_to<double>(line[9]) };
       const double theta{ prx::yaw(Eigen::Quaterniond(qw, qx, qy, qz)) };
-
-      if (first)
-      {
-        state_prev = Eigen::Vector4d(x, y, theta, 0);
-        values.insert(k_X(idx), state_prev);
-        graph.addPrior(k_X(idx), state_prev, z_prior_nm);
-      }
-      else
-      {
-        const double dt{ t_curr - t_prev };
-        graph.emplace_shared<prx::fg::mushr_factor_t>(k_X(idx - 1), k_X(idx), k_U(idx - 1), k_P(0), dt, mushr_prop_nm);
-        const double vel{ std::sqrt(std::pow(x - state_prev[0], 2) + std::pow(y - state_prev[1], 2)) };
-        state_prev = Eigen::Vector4d(x, y, theta, vel);
-        values.insert(k_X(idx), state_prev);
-        graph.addPrior(k_X(idx), state_prev, z_prior_nm);
-
-        if (start_time < t_curr || t_curr < start_time + ctrl_duration)
-        {
-          values.insert(k_U(idx - 1), ctrl0);
-          graph.addPrior(k_U(idx - 1), ctrl0, u_prior_nm);
-        }
-        else
-        {
-          values.insert(k_U(idx - 1), ctrl);
-          graph.addPrior(k_U(idx - 1), ctrl, u_prior_nm);
-        }
-      }
-      first = false;
-      t_prev = t_curr;
-      idx++;
+      observed_traj.emplace_back(std::make_pair(t_curr, Eigen::Vector4d(x, y, theta, 0.0)));
     }
   }
+  const std::string ctrl_filename{ params["ctrl_file"].as<>() };
+  prx::utilities::csv_reader_t reader_ctrl(ctrl_filename, ' ');
+  using ObservedCtrl = std::pair<double, Eigen::Vector2d>;
+  std::vector<ObservedCtrl> observed_ctrl{};
+  while (reader_ctrl.has_next_line())
+  {
+    auto line = reader_ctrl.next_line();
+    if (line.size() > 0)
+    {
+      const double t_curr{ convert_to<double>(line[0]) };
+      const double u0{ convert_to<double>(line[1]) };
+      const double u1{ convert_to<double>(line[2]) };
+      observed_ctrl.emplace_back(std::make_pair(t_curr, Eigen::Vector2d(u0, u1)));
+    }
+  }
+
+  std::size_t plan_idx{ 0 };
+  Eigen::Vector2d zero_ctrl{ Eigen::Vector2d::Zero() };
+  graph.addPrior(k_U(plan_idx), zero_ctrl, u_prior_nm);
+  values.insert(k_U(plan_idx), zero_ctrl);
+  for (int i = 0; i < observed_traj.size() - 1; ++i)
+  {
+    const double dt{ observed_traj[i + 1].first - observed_traj[i].first };
+    graph.emplace_shared<prx::fg::mushr_factor_t>(k_X(i), k_X(i + 1), k_U(plan_idx), k_P(0), dt, mushr_prop_nm);
+    Eigen::Vector4d state{ observed_traj[i].second };
+    const double vel{ (observed_traj[i + 1].second.head(2) - state.head(2)).norm() };
+    state[3] = vel;
+    values.insert(k_X(i), state);
+
+    if (observed_ctrl[plan_idx].first > observed_traj[i].first)
+    {
+      plan_idx++;
+      graph.addPrior(k_U(plan_idx), observed_ctrl[plan_idx].second, u_prior_nm);
+      values.insert(k_U(plan_idx), observed_ctrl[plan_idx].second);
+    }
+  }
+  std::size_t last_idx{ observed_traj.size() - 1 };
+  Eigen::Vector4d state{ observed_traj[last_idx].second };
+  values.insert(k_X(last_idx), state);
+
+  //     if (first)
+  //     {
+  //       state_prev = Eigen::Vector4d(x, y, theta, 0);
+  //       values.insert(k_X(idx), state_prev);
+  //       graph.addPrior(k_X(idx), state_prev, z_prior_nm);
+  //     }
+  //     else
+  //     {
+  //       const double dt{ t_curr - t_prev };
+  //       graph.emplace_shared<prx::fg::mushr_factor_t>(k_X(idx - 1), k_X(idx), k_U(idx - 1), k_P(0), dt,
+  //       mushr_prop_nm); const double vel{ std::sqrt(std::pow(x - state_prev[0], 2) + std::pow(y - state_prev[1],
+  //       2))
+  //       }; state_prev = Eigen::Vector4d(x, y, theta, vel); values.insert(k_X(idx), state_prev);
+  //       graph.addPrior(k_X(idx), state_prev, z_prior_nm);
+
+  //       if (start_time < t_curr || t_curr < start_time + ctrl_duration)
+  //       {
+  //         values.insert(k_U(idx - 1), ctrl0);
+  //         graph.addPrior(k_U(idx - 1), ctrl0, u_prior_nm);
+  //       }
+  //       else
+  //       {
+  //         values.insert(k_U(idx - 1), ctrl);
+  //         graph.addPrior(k_U(idx - 1), ctrl, u_prior_nm);
+  //       }
+  //     }
+  //     first = false;
+  //     t_prev = t_curr;
+  //     idx++;
+  //   }
+  // }
 
   gtsam::LevenbergMarquardtParams lm_params{ prx::fg::default_levenberg_marquardt_parameters() };
   lm_params.verbosityLMTranslator(gtsam::LevenbergMarquardtParams::SILENT);
