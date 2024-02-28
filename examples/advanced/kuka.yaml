@@ -1,0 +1,11 @@
+random_seed: 210896
+
+xml_path: "kuka_iiwa_14/scene.xml"
+
+planner_name: "rrt"
+
+goal_config: [0,0.785398,0,-1.5708,0,0,0]
+goal_region_radius: 0.5
+
+checker_type: "iterations"
+checker_value: 1000
