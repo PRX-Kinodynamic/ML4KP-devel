@@ -16,7 +16,7 @@ mushr_t::mushr_t(const std::string& path)
   , _vel_delta_max(1.0)
   , _steering_offset(0.0)
   , _steering_gain(1.0)
-  , _length(0.23)
+  , _length(0.2965)
 {
   state_memory = { &_position[0], &_position[1], &_theta, &_current_vel };
   state_space = new space_t("EERE", state_memory, "mushr_state");
@@ -32,8 +32,10 @@ mushr_t::mushr_t(const std::string& path)
   parameter_memory = { &_vel_delta_max, &_steering_offset, &_steering_gain };
   parameter_space = new space_t("EEE", parameter_memory, "mushr_params");
 
-  geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::CONE);
-  geometries["body"]->initialize_geometry({ 0.5, 1 });
+  // geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::CONE);
+  // geometries["body"]->initialize_geometry({ 0.5, 1 });
+  geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
+  geometries["body"]->initialize_geometry({ _length, .25, .25});
   geometries["body"]->generate_collision_geometry();
   geometries["body"]->set_visualization_color("0x00ff00");
   configurations["body"] = std::make_shared<transform_t>();
