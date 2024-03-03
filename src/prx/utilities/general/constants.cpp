@@ -4,7 +4,7 @@ namespace prx
 {
 namespace constants
 {
-int precision{ 5 };
+int precision{ 16 };
 char separating_value{ ' ' };
 }  // namespace constants
 }  // namespace prx

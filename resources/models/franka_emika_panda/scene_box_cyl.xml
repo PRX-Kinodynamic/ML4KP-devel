@@ -1,0 +1,42 @@
+<mujoco model="panda scene">
+
+  <include file="k_panda_1.xml"/>
+
+  <statistic center="0.3 0 0.4" extent="1"/>
+
+  <default>
+    <default class="scene">
+      <geom contype="10" conaffinity="10"></geom>
+    </default>
+  </default>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
+      markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <geom name="floor" class="scene" size="0 0 0.05" type="plane" material="groundplane"/>
+    <body name="box_body" pos="0.5 0 .02"> <!-- this is how you add an object to the scene -->
+    	<freejoint name="box_joint"/>
+    	<geom name="box_geom" contype="15" conaffinity="15" size=".02 .02 .02" type="box" rgba=".5 .1 .5 1" mass="0.05" friction="2" solimp="0.95 0.99 0.001" solref="0.005 1"/>
+    </body>
+    <body name="cyl_body" pos="0.0925 0.25 0.04">
+    	<freejoint name="cyl_joint"/>
+    	<geom name="cyl_geom" contype="15" conaffinity="15" size=".02 .05 .02" type="cylinder" rgba="1 .3125 .5 1" mass="0.05" friction="2" solimp="0.95 0.99 0.001" solref="0.005 1"/>
+    </body>
+    <body name="test" pos="0.0925 0.25 0.04">
+    	<geom name="test" contype="0" conaffinity="0" size=".1 .1 .1" type="sphere" rgba="1 .3125 .5 0" mass="0.05" friction="2" solimp="0.95 0.99 0.001" solref="0.005 1"/>
+    </body>
+  </worldbody>
+
+</mujoco>
