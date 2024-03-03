@@ -1,0 +1,17 @@
+random_seed: 210896
+simulation_step: 0.01
+
+plant: !file "plants/mushr.yaml"
+controller: "controllers/mushr_analytical.yaml"
+
+environment: "environments/obstacle_0.yaml"
+# environment: "environments/friction_obstacles.yaml"
+# environment: "environments/lab_obstacle_0.yaml"
+env_xlims: [-3.0, 3.0]
+env_ylims: [-3.0, 3.0]
+env_xres: 7
+env_yres: 7
+
+goal_region_radius: 0.5
+
+roadmap_dir: "obstacle_0_roadmap/"
