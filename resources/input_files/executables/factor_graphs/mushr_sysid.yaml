@@ -1,0 +1,15 @@
+simulation_step: 0.1
+plant: !file "plants/mushr.yaml"
+
+observations: "${DIRTMP_PATH}/out/mushr/fg_fwd_prop.txt"
+plan: "${DIRTMP_PATH}/out/mushr/plan.txt"
+ctrl_file: "${ML4KP_ROS}/data/s_traj_ctrl.txt"
+# /Users/Gary/pracsys/catkin_ws/data/s_traj_ctrl.txt
+# plan_file: "${DIRTMP_PATH}/data/mushr/plan.txt"
+# plan_file: /Users/Gary/pracsys/catkin_ws/data/s_traj_plan.txt
+# plan_file: "${ML4KP_ROS}/data/b_240116_134844_plan.txt"
+# /Users/Gary/pracsys/catkin_ws/data/s_traj_poses.txt
+tf_data: "${ML4KP_ROS}/data/s_traj_poses.txt"
+
+out:
+  file: "${DIRTMP_PATH}/out/fg_mushr_sysid.txt"

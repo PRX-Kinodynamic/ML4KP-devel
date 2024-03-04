@@ -90,6 +90,12 @@ static inline double norm_angle_pi(double angle, double min_angle = -PRX_PI, dou
   return angle;
 }
 
+// Angle diff, there may be a *faster* way of computing this.
+static inline double angle_diff(const double& a, const double& b)
+{
+  return std::atan2(std::sin(a - b), std::cos(a - b));
+}
+
 static inline vector_t heatmap_value(double val)
 {
   const std::vector<double> r_vals = { 165, 215, 244, 253, 254, 224, 171, 116, 69, 49 };

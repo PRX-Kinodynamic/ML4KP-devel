@@ -110,7 +110,13 @@ public:
   void copy_onto_back(const space_t* space);
 
   template <typename State>
-  void copy_onto_back(const State state)
+  inline void copy_onto_back(const State state)
+  {
+    push_back(state);
+  }
+
+  template <typename State>
+  void push_back(const State state)
   {
     if ((num_states + 1) >= max_num_states)
     {
