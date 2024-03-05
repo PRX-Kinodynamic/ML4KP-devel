@@ -20,7 +20,7 @@ sample_around: true
 verify_edge: true
 validate: true
 num_failures: 10
-precision: 10
+precision: 1000
 collect_reachability: true
 stretch_factor: 3.0
 termination_classifier: !file "networks/svm_classifier.yaml"
@@ -30,5 +30,5 @@ goal_state:  [ 9.0000, 9.0000, 0.0000, 0.0000, 0.0000]
 
 debug: false
 
-output_dir: "stat_ver_3/"
-roadmap_dir: "stat_ver_3/"
+output_dir: "stat_ver_4/"
+roadmap_dir: "stat_ver_4/"

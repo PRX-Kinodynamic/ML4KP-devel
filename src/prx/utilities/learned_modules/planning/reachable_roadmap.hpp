@@ -73,13 +73,12 @@ class reachable_roadmap_t
         do
         {
             spec.state_space->copy_vector_from_point(mutand, center);
-            for (double i : mutand){
-                i = i + radius*(2.*(rand()/(RAND_MAX + 1.))-1.);
+            for (auto i = begin (mutand); i != end (mutand); ++i){
+                *i = *i + radius*(2.*(rand()/(RAND_MAX + 1.))-1.);
             }
             spec.state_space->copy_point_from_vector(pt2, mutand);
 
         } while (!spec.valid_state(pt2) || spec.distance_function(center,pt2)>radius);
-
         return pt2;
 
     }
@@ -536,6 +535,7 @@ class reachable_roadmap_t
 
     void remove_edge(node_index_t s, node_index_t t)
     {
+        //std::cout << "Removing edge " << s<<", "<<t << std::endl;
         for (auto e = edges[s].begin(); e != edges[s].end();)
         {
             if ((*e)->end == t)
@@ -552,7 +552,7 @@ class reachable_roadmap_t
 
     void remove_vertex(node_index_t v)
     {
-        std::cout << "Removing vertex " << v << std::endl;
+        //std::cout << "Removing vertex " << v << std::endl;
         for (auto e : edges[v])
         {
             remove_edge(e->end, v);
