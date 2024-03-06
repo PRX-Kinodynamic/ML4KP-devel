@@ -33,6 +33,11 @@ public:
   Geometries get_geometries();
   Configurations get_configurations();
 
+  std::shared_ptr<transform_t> transform_ptr(const std::string& name)
+  {
+    return configurations[name];
+  }
+
   inline std::string get_object_name()
   {
     return object_name;
