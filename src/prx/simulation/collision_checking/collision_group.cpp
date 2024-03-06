@@ -118,15 +118,10 @@ bool collision_group_t::in_collision()
   {
     auto info1 = cc_pair.first.lock();
     auto info2 = cc_pair.second.lock();
-    prx_assert(info1 != nullptr, "Info1 is null!");
-    prx_assert(info2 != nullptr, "Info2 is null!");
     PQP_CollideResult collision_result;
     PQP_Collide(&collision_result,                                  // no-lint
                 info1->rot, info1->pos, info1->model.lock().get(),  // no-lint
                 info2->rot, info2->pos, info2->model.lock().get(), PQP_FIRST_CONTACT);
-    PRX_DEBUG_VAR_3(info1->pos[0], info1->pos[1], info1->pos[2]);
-    PRX_DEBUG_VAR_3(info2->pos[0], info2->pos[1], info2->pos[2]);
-    PRX_DEBUG_VAR_1(collision_result.Colliding());
     if (collision_result.Colliding())
       return true;
   }

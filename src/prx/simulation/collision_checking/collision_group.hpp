@@ -75,6 +75,10 @@ public:
     }
   }
 
+  // void update_obstacle_pose(const prx::transform_t& pose)
+  // {
+  // }
+
   /**
    * @brief Check if there is a collision in the scene.
    * */
