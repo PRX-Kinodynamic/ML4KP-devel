@@ -21,6 +21,8 @@ std::shared_ptr<movable_object_t> create_obstacle(T* new_obstacle)
 class movable_object_t
 {
 public:
+  using Geometries = std::vector<std::pair<std::string, std::weak_ptr<geometry_t>>>;
+  using Configurations = std::vector<std::pair<std::string, std::weak_ptr<transform_t>>>;
   movable_object_t(const std::string& o_name) : object_name(o_name)
   {
   }
@@ -28,8 +30,8 @@ public:
   {
   }
 
-  std::vector<std::pair<std::string, std::weak_ptr<geometry_t>>> get_geometries();
-  std::vector<std::pair<std::string, std::weak_ptr<transform_t>>> get_configurations();
+  Geometries get_geometries();
+  Configurations get_configurations();
 
   inline std::string get_object_name()
   {

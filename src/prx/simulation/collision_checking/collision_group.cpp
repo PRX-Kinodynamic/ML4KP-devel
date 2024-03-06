@@ -46,13 +46,6 @@ collision_group_t::collision_group_t(const std::vector<system_ptr_t>& in_plants,
     auto plant = std::dynamic_pointer_cast<plant_t>(sys);
     if (plant)
     {
-      // #ifndef BULLET_NOT_BUILT
-      // auto plant_bullet = std::dynamic_pointer_cast<bullet_t>(sys);
-      // if(plant_bullet){
-      //   bullet_plants.push_back(plant_bullet);
-      // }
-      // #endif
-
       std::vector<std::shared_ptr<pqp_info_t>> local_infos;
       plants.push_back(sys);
       auto collision_list = plant->get_collision_list();
@@ -69,6 +62,7 @@ collision_group_t::collision_group_t(const std::vector<system_ptr_t>& in_plants,
         info->model = g_ptr->get_collision_geometry();
         info->transform = config;
         local_infos.push_back(info);
+        plant_infos.push_back(info);
       }
 
       for (auto prev_info : infos)
@@ -79,6 +73,7 @@ collision_group_t::collision_group_t(const std::vector<system_ptr_t>& in_plants,
         }
       }
 
+      // Add collisions that are plant-specific
       for (auto collision_pair : collision_list)
       {
         collision_cache.push_back(
@@ -97,6 +92,24 @@ collision_group_t::~collision_group_t()
 {
 }
 
+void collision_group_t::add_obstacle_to_infos(const std::shared_ptr<movable_object_t> object)
+{
+  const movable_object_t::Geometries geoms{ object->get_geometries() };
+  const movable_object_t::Configurations configs{ object->get_configurations() };
+  for (int i = 0; i < geoms.size(); i++)
+  {
+    prx_assert(geoms[i].first == configs[i].first,
+               "Geometry and configuration lists don't match in " << object->get_object_name());
+    auto g = geoms[i].second;
+    auto config = configs[i].second;
+    auto g_ptr = g.lock();
+    // info = std::make_shared<pqp_info_t>();
+    infos.push_back(std::make_shared<pqp_info_t>());
+    infos.back()->model = g_ptr->get_collision_geometry();
+    infos.back()->transform = config;
+  }
+}
+
 bool collision_group_t::in_collision()
 {
   update_plants();
@@ -105,9 +118,15 @@ bool collision_group_t::in_collision()
   {
     auto info1 = cc_pair.first.lock();
     auto info2 = cc_pair.second.lock();
+    prx_assert(info1 != nullptr, "Info1 is null!");
+    prx_assert(info2 != nullptr, "Info2 is null!");
     PQP_CollideResult collision_result;
-    PQP_Collide(&collision_result, info1->rot, info1->pos, info1->model.lock().get(), info2->rot, info2->pos,
-                info2->model.lock().get(), PQP_FIRST_CONTACT);
+    PQP_Collide(&collision_result,                                  // no-lint
+                info1->rot, info1->pos, info1->model.lock().get(),  // no-lint
+                info2->rot, info2->pos, info2->model.lock().get(), PQP_FIRST_CONTACT);
+    PRX_DEBUG_VAR_3(info1->pos[0], info1->pos[1], info1->pos[2]);
+    PRX_DEBUG_VAR_3(info2->pos[0], info2->pos[1], info2->pos[2]);
+    PRX_DEBUG_VAR_1(collision_result.Colliding());
     if (collision_result.Colliding())
       return true;
   }
