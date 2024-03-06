@@ -121,7 +121,14 @@ BOOST_AUTO_TEST_CASE(world_model_adding_obstacles_dynamically)
   // BOOST_CHECK(not collision_group->in_collision());  // No obstacles => no collisions
 
   // Check that this still works if adding box at the beginning
-  world_model.emplace_obstacle<prx::box_t>(context_name, "obstacle_0", obstacle_dim, obstacle_dim, obstacle_dim, pose);
+  world_model.emplace_obstacle<prx::box_t>(context_name, box_name, obstacle_dim, obstacle_dim, obstacle_dim, pose);
 
   BOOST_CHECK(collision_group->in_collision());  // The new obstacle is now in collision
+
+  std::shared_ptr<prx::movable_object_t> box_movable{ world_model.obstacle(box_name) };
+  BOOST_CHECK(box_movable != nullptr);  // The new obstacle is now in collision
+  std::shared_ptr<prx::transform_t> box_tf{ box_movable->transform_ptr("body") };
+  BOOST_CHECK(box_tf != nullptr);                          // The new obstacle is now in collision
+  box_tf->translation() = Eigen::Vector3d(100, 100, 100);  // Move it out so there is no collision
+  BOOST_CHECK(not collision_group->in_collision());
 }

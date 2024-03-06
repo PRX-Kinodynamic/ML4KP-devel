@@ -99,6 +99,21 @@ public:
     prx_throw("World model doesn't implement reset");
   }
 
+  std::vector<std::shared_ptr<movable_object_t>> get_obstacles()
+  {
+    std::vector<std::shared_ptr<movable_object_t>> obstacles_out;
+    for (auto pair : obstacles)
+    {
+      obstacles_out.push_back(pair.second);
+    }
+    return obstacles_out;
+  }
+
+  std::shared_ptr<movable_object_t> obstacle(const std::string& name)
+  {
+    return obstacles[name];
+  }
+
 private:
   std::unordered_map<std::string, std::shared_ptr<movable_object_t>> obstacles;
 
