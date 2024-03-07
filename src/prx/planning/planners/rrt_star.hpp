@@ -143,6 +143,7 @@ public:
   virtual std::vector<double> get_statistics() override;
   virtual void to_files(const std::string file_prefix, const std::string directory = prx::out_path);
   virtual void from_files(const std::string file_prefix, const std::string directory);
+  void costs_to_files(const std::string file_prefix, const std::string directory = prx::out_path);
 
   void connect_goal()
   {

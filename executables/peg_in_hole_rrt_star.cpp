@@ -135,6 +135,7 @@ int main(int argc, char* argv[])
   if (params["tree_to_files"].as<bool>())
   {
     rrt_star.to_files(file_prefix, out_dir);
+    rrt_star.costs_to_files(file_prefix, out_dir);
     rrt_star_query.solution_traj.to_file(out_dir + "/" + file_prefix + "_sln_traj.txt");
   }
 

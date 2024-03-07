@@ -395,6 +395,28 @@ void rrt_star_t::from_files(const std::string file_prefix, const std::string dir
   }
 }
 
+void rrt_star_t::costs_to_files(const std::string file_prefix, const std::string directory)
+{
+  using prx::constants::separating_value;
+
+  const std::string filename_costs{ directory + "/" + file_prefix + "_costs.txt" };
+
+  std::cout << "Saving costs as: \n\t" << filename_costs << "\n";
+  std::ofstream ofs_costs{ filename_costs.c_str(), std::ofstream::trunc };
+  ofs_costs << "node_idx" << separating_value << "node_cost\n";
+
+  auto pair_vertices = _tree.vertices();
+  for (auto iter = pair_vertices.first; iter != pair_vertices.second; ++iter)
+  {
+    const double node_cost { static_cast<rrt_star_node_t*>(iter->get())->cost_to_come };
+    const node_index_t node_idx { (*iter)->get_index() };
+
+    ofs_costs << node_idx << separating_value << node_cost << "\n";
+  }
+
+  ofs_costs.close();
+}
+
 void rrt_star_t::to_files(const std::string file_prefix, const std::string directory)
 {
   using prx::constants::separating_value;
