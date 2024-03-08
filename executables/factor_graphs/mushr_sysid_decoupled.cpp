@@ -33,18 +33,23 @@
 #include "prx/factor_graphs/utilities/common_functions.hpp"
 using SF = prx::fg::symbol_factory_t;
 
+using prx::fg::mushr_ub_u_xdot_param_t;
+using prx::fg::mushr_ub_u_xdot_t;
+using prx::fg::mushr_x_observation_t;
+using prx::utilities::convert_to;
+using namespace prx::fg::mushrTypes;
+
 void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values, const std::string& filename,
                       const prx::trajectory_t& traj, const prx::plan_t& plan)
 {
-  using prx::fg::mushr_ub_u_xdot_t;
-  using prx::fg::mushr_x_observation_t;
-  using prx::utilities::convert_to;
-  using namespace prx::fg::mushrTypes;
-
   prx::fg::mushrConfig config;
+  config.cm_x_xdot = gtsam::noiseModel::Isotropic::Sigma(3, 1e-0);
+  config.cm_x_xdot_ub = gtsam::noiseModel::Isotropic::Sigma(3, 1e-0);
+  config.cm_ub_u = gtsam::noiseModel::Isotropic::Sigma(2, 1e-0);
+  config.cm_x_z = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e0, 1e0, 1));
   config.length = 0.2965;
 
-  ParamsDeltaVel params_dv{ ParamsDeltaVel(0.1) };
+  ParamsDeltaVel params_dv{ ParamsDeltaVel(0.01) };
   values.insert(k_Ps("dv"), params_dv);
   const double duration{ plan.duration() };
   prx::utilities::csv_reader_t reader(filename, ' ');
@@ -76,41 +81,68 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
   double t_accum{ 0.0 };
   double dt{ 0.0 };
   Eigen::Vector3d zt{};
+  Eigen::Vector3d zt1{};
   std::size_t ti{ 0 };
   prx::space_point_t x_aux{};
   Eigen::Vector3d xt{};
+  Eigen::Vector3d xt_next{};
   Eigen::Vector3d xdt{};
   Eigen::Vector2d ut{};
   Eigen::Vector2d ubar{};
   bool first{ true };
-  for (auto tuple : prx::zip_iters(ts, xs))
+  auto nm_u_prior = gtsam::noiseModel::Isotropic::Sigma(2, 1.0);
+
+  xt = Vec(traj.at(t_accum)).head(3);
+  xdt = Vec(traj.at(t_accum)).tail(3);
+  zt1 = xs[0];
+  values.insert(k_X(0), xt);
+  values.insert(k_Xd(0), xdt);
+  graph.emplace_shared<mushr_x_observation_t>(k_X(0), zt1, config.cm_x_z);
+
+  for (int i = 0; i < ts.size() - 1; ++i)
   {
-    std::tie(t_now, zt) = prx::unzip(tuple);
-    dt = t_now - t_prev;
+    t_now = ts[i];
+    zt = xs[i];
+    zt1 = xs[i + 1];
+    dt = ts[i + 1] - ts[i];
 
-    if (!first)  // skip the first
+    for (int j = 0; j < 3; ++j)
     {
-      add_mushr_factor_graph_step(ti, dt, graph, config);
+      add_mushr_factor_graph_step(ti + j, dt / 3.0, graph, config);
+    }
 
-      const double t01{ t_accum / duration };  // current t \in [0,1]
-      x_aux = traj.at(t01);
-      xt = Vec(x_aux).head(3);
-      xdt = Vec(x_aux).tail(3);
-      ut = Vec(plan.at(t_accum));
-      ubar = mushr_ub_u_xdot_t::predict(ut, xdt, params_dv, config.length);
-      values.insert(k_X(ti), xt);
-      values.insert(k_Xd(ti), xdt);
+    const double t01{ t_accum / duration };              // current t \in [0,1]
+    const double t01_next{ (t_accum + dt) / duration };  // current t \in [0,1]
+    x_aux = traj.at(t01);
+    // xt = Vec(x_aux).head(3);
+    ut = Vec(plan.at(t_accum));
+    ubar = mushr_ub_u_xdot_param_t::predict(ut, xdt, params_dv, config.length);
+    xt = Vec(traj.at(t01_next)).head(3);
+    xdt = Vec(traj.at(t01_next)).tail(3);
+    // ubar = mushr_ub_u_xdot_t::predict(ut, xdt, config.length);
+
+    graph.emplace_shared<mushr_x_observation_t>(k_X(ti + 3), zt1, config.cm_x_z);
+
+    for (int j = 0; j < 3; ++j)
+    {
+      PRX_DEBUG_VAR_2(ti, k_Xd(ti + 1));
+      values.insert(k_X(ti + 1), xt);
+      values.insert(k_Xd(ti + 1), xdt);
       values.insert(k_U(ti), ut);
       values.insert(k_Ub(ti), ubar);
+      graph.addPrior(k_U(ti), ut, nm_u_prior);
       ti++;
     }
-    graph.emplace_shared<mushr_x_observation_t>(k_X(ti), zt, config.cm_x_z);
+    SF::symbols_to_file();
+    // graph.print("Graph", prx::fg::symbol_factory_t::formatter);
+    // PRX_DEBUG_VAR_1(graph.linearize(values)->jacobian().first);
+    // PRX_DEBUG_VAR_1(graph.linearize(values)->augmentedHessian());
+    // graph.orderingCOLAMD().print("Ordering: ", prx::fg::symbol_factory_t::formatter);
+
     t_accum += dt;
-    t_prev = t_now;
-    first = false;
   }
-  const Eigen::Vector3d last_x{ Vec(traj.at(1.0)).head(3) };
-  values.insert(k_X(ti), last_x);
+  // const Eigen::Vector3d last_x{ Vec(traj.at(1.0)).head(3) };
+  // values.insert(k_X(ti), last_x);
 }
 
 int main(int argc, char* argv[])
@@ -133,7 +165,7 @@ int main(int argc, char* argv[])
   prx::space_t* cs{ sys_group->get_control_space() };
   prx::space_t* ps{ sys_group->get_parameter_space() };
 
-  ps->copy_from({ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05 });
+  ps->copy_from({ 0.5 });
   gtsam::NonlinearFactorGraph graph;
   gtsam::Values values;
 
@@ -144,7 +176,9 @@ int main(int argc, char* argv[])
   plan.from_file(params["plan"].as<std::string>());
   Vec(start_state) = Eigen::Vector<double, 6>::Zero();
   sys_group->propagate(start_state, plan, traj);
+  traj.to_file(prx::out_path + "mushr/orig_traj.txt");
 
+  PRX_DEBUG_VAR_1(plan);
   add_observations(graph, values, params["observations"].as<>(), traj, plan);
 
   gtsam::LevenbergMarquardtParams lm_params{ prx::fg::default_levenberg_marquardt_parameters() };
@@ -158,9 +192,12 @@ int main(int argc, char* argv[])
 
   SF::symbols_to_file();
 
+  // graph.printErrors(values, "Errors: ", prx::fg::symbol_factory_t::formatter,
+  //                   [](const gtsam::Factor*, double error, std::size_t) { return error > 0.001; });
+
   gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
   gtsam::Values results = prx::fg::optimize_and_log(optimizer, lm_params);
-
+  // gtsam::Values results = values;
   const std::string out_filename{ params["out/file"].as<>() };
   std::ofstream ofs(out_filename, std::ofstream::trunc);
 
@@ -170,7 +207,7 @@ int main(int argc, char* argv[])
     auto factor1 = boost::dynamic_pointer_cast<prx::fg::mushr_x_xdot_ub_t>(factor);
     auto factor2 = boost::dynamic_pointer_cast<prx::fg::mushr_ub_u_xdot_t>(factor);
     auto factor3 = boost::dynamic_pointer_cast<prx::fg::mushr_x_observation_t>(factor);
-    if (factor0)
+    if (factor0)  // mushr_ub_u_xdot_t
     {
       ofs << "mushr_x_xdot_t ";
       factor0->eval_to_stream(results, ofs);
@@ -191,6 +228,14 @@ int main(int argc, char* argv[])
     //   factor3->eval_to_stream(results, ofs);
     // }
   }
+
+  const prx::fg::mushrTypes::ParamsDeltaVel params_out{ results.at<prx::fg::mushrTypes::ParamsDeltaVel>(k_Ps("dv")) };
+  PRX_DEBUG_VAR_1(params_out);
+  ps->copy_from(params_out);
+  prx::trajectory_t res_traj{ ss };
+  sys_group->propagate(start_state, plan, res_traj);
+  res_traj.to_file(prx::out_path + "mushr/res_traj.txt");
+
   ofs.close();
   PRX_DEBUG_VAR_1(out_filename);
   return 0;
