@@ -2,7 +2,6 @@
 
 namespace prx
 {
-
 mushr_t::mushr_t(const std::string& path)
   : plant_t(path)
   , _T(Transform::Identity())
