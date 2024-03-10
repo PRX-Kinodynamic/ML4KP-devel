@@ -8,37 +8,19 @@ environment:
         name: obstacle_0
         collision_geometry:
           type: box
-          dims: [ .4, .3, .2]
+          dims: [ 1., 1., .2]
           material: 0x0015ff
         config:
-          position: [1, 1, .1]
+          position: [0.5, 1.5, .1]
           orientation: [0,0,0,1]
       -
         name: obstacle_1
         collision_geometry:
           type: box
-          dims: [ .4, .3, .2]
+          dims: [ 1., 1., .2]
           material: 0x0015ff
         config:
-          position: [0.5, 2.5, .1]
-          orientation: [0,0,0,1]
-      -
-        name: obstacle_2
-        collision_geometry:
-          type: box
-          dims: [ .4, .3, .2]
-          material: 0x0015ff
-        config:
-          position: [1.5, 2.5, .1]
-          orientation: [0,0,0,1]
-      -
-        name: obstacle_3
-        collision_geometry:
-          type: box
-          dims: [ .4, .3, .2]
-          material: 0x0015ff
-        config:
-          position: [1, 4, .1]
+          position: [1.5, 3.5, .1]
           orientation: [0,0,0,1]
       - 
         name: wall_down

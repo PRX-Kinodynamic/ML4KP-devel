@@ -1,0 +1,10 @@
+random_seed: 210896
+simulation_step: 0.01
+
+plant: !file "plants/mushr.yaml"
+controller: "controllers/mushr_analytical.yaml"
+
+environment: "environments/obstacle_0.yaml"
+# environment: "environments/obstacle_1.yaml"
+
+goal_region_radius: 0.25
