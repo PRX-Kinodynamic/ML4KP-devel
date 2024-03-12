@@ -121,7 +121,7 @@ void plan_t::copy_to(const double start_time, const double duration, plan_t& t)
   t.copy_onto_back(step->control, step->duration - s);
   d -= (step->duration - s);
   step++;
-  while (step != steps.end())
+  while (step != const_end_iterator)
   {
     if (d < step->duration)
     {

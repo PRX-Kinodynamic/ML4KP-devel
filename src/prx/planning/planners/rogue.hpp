@@ -78,8 +78,7 @@ private:
   node_index_t previous_child;
 
   void add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, rogue_node_t* closest_node,
-                        std::vector<rogue_node_t*> dir_updates, double new_node_dir_radius,
-                        condition_check_t* condition);
+                        std::vector<rogue_node_t*> dir_updates, double new_node_dir_radius);
 
   rogue_node_t* get_vertex(node_index_t v) const
   {

@@ -189,7 +189,7 @@ void rogue_t::_resolve_query(condition_check_t* condition)
 
     if (eg.first != nullptr)
     {
-      add_edge_to_tree(eg, closest_node, dir_updates, new_node_dir_radius, condition);
+      add_edge_to_tree(eg, closest_node, dir_updates, new_node_dir_radius);
       delete eg.first;
       delete eg.second;
     }
@@ -199,8 +199,7 @@ void rogue_t::_resolve_query(condition_check_t* condition)
 }
 
 void rogue_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, rogue_node_t* closest_node,
-                               std::vector<rogue_node_t*> dir_updates, double new_node_dir_radius,
-                               condition_check_t* condition)
+                               std::vector<rogue_node_t*> dir_updates, double new_node_dir_radius)
 {
   auto node_index = tree.add_vertex<rogue_node_t, rrt_edge_t>();
   auto new_tree_node = tree.get_vertex_as<rogue_node_t>(node_index);
