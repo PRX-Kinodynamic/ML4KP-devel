@@ -348,7 +348,7 @@ void dirt_t::_resolve_query(condition_check_t* condition)
 
     iteration_count++;
   } while (!condition->check());
-  // if (goal_vertex == start_vertex) goal_vertex = best_vertex;
+  if (goal_vertex == start_vertex) goal_vertex = best_vertex;
   print_statistics();
 }
 
