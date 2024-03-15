@@ -26,7 +26,7 @@ extern char separating_value;
 namespace color
 {
 
-constexpr std::string_view normal{ "\033[0m" };
+constexpr std::string_view normal = "\033[0m";
 constexpr std::string_view red{ "\033[31m" };
 constexpr std::string_view green{ "\033[32m" };
 constexpr std::string_view yellow{ "\033[33m" };
