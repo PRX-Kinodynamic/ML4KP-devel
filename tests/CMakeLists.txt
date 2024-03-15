@@ -8,12 +8,20 @@ file(GLOB_RECURSE TESTS_FILES
 	${PROJECT_SOURCE_DIR}/tests/simulation/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/utilities/*.cpp
+	${PROJECT_SOURCE_DIR}/tests/factor_graphs/*.cpp
 	)
 if (BUILD_FOR_MUJOCO)
 	file(GLOB_RECURSE MJ_TEST_FILES
 		${PROJECT_SOURCE_DIR}/tests/mujoco/*.cpp
 		)
 	list(APPEND TESTS_FILES ${MJ_TEST_FILES})
+endif()
+
+if(BUILD_FOR_FACTOR_GRAPHS)
+	file(GLOB_RECURSE FG_TEST_FILES
+		${PROJECT_SOURCE_DIR}/tests/factor_graphs/*.cpp
+		)
+	list(APPEND TESTS_FILES ${FG_TEST_FILES})
 endif()
 
 foreach(f ${TESTS_FILES})
@@ -31,6 +39,9 @@ foreach(f ${TESTS_FILES})
 	target_link_libraries(${fname} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 	if (BUILD_FOR_MUJOCO) 
 		target_link_libraries(${fname} ${PROJECT_NAME}_mjsim ) 
+	endif()
+	if(BUILD_FOR_FACTOR_GRAPHS)
+		target_link_libraries(${fname} FactorGraphs) 
 	endif()
 	add_test(NAME "${fname}" COMMAND "${fname}" )
 	# add_test(NAME ${fname}_test COMMAND ${fname} WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
