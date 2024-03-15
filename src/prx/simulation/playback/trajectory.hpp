@@ -7,6 +7,7 @@
 
 namespace prx
 {
+extern double simulation_step;
 /**
  * @brief <b>A class that defines a trajectory.</b>
  *
@@ -85,13 +86,28 @@ public:
     prx_assert(index < num_states, "Trying to access state outside of trajectory size.");
     return states[index];
   }
-  space_point_t at(double index) const
+  // Return the state at t. If normalized_input is true, then t \in [0,1]. Otherwise, t \in [0, duration]
+  space_point_t at(const double t, const bool normalized_input = true) const
   {
-    return interpolate(index);
+    double t01{ t };
+    if (not normalized_input)
+    {
+      t01 = t / duration();  // current t \in [0,1]
+    }
+    prx_assert(t01 <= 1.0, "Requested trajectory state at [" << t << "] out of range.");
+    return interpolate(t01);
   }
+
+  std::size_t index_at_time(const double ti) const;
+
   unsigned get_num_states() const
   {
     return num_states;
+  }
+
+  double duration() const
+  {
+    return (size() - 1) * simulation_step;
   }
 
   void resize(unsigned num_size);
