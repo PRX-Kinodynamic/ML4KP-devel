@@ -35,6 +35,7 @@ using SF = prx::fg::symbol_factory_t;
 
 using prx::fg::mushr_ub_u_xdot_param_t;
 using prx::fg::mushr_ub_u_xdot_t;
+using prx::fg::mushr_x_async_observation_t;
 using prx::fg::mushr_x_observation_t;
 using prx::utilities::convert_to;
 using namespace prx::fg::mushrTypes;
@@ -43,21 +44,21 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
                       const prx::trajectory_t& traj, const prx::plan_t& plan)
 {
   prx::fg::mushrConfig config;
-  config.cm_x_xdot = gtsam::noiseModel::Isotropic::Sigma(3, 1e-0);
+  config.cm_x_xdot = gtsam::noiseModel::Isotropic::Sigma(3, 1e-1);
   config.cm_x_xdot_ub = gtsam::noiseModel::Isotropic::Sigma(3, 1e-0);
   config.cm_ub_u = gtsam::noiseModel::Isotropic::Sigma(2, 1e-0);
-  config.cm_x_z = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e0, 1e0, 1));
+  config.cm_x_z = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e1, 1e1, 1));
   config.length = 0.2965;
 
-  ParamsDeltaVel params_dv{ ParamsDeltaVel(0.01) };
+  ParamsUbarU params_dv{ ParamsUbarU(0.443682, -6.12957e-07, 1.0) };
   values.insert(k_Ps("dv"), params_dv);
   const double duration{ plan.duration() };
   prx::utilities::csv_reader_t reader(filename, ' ');
 
   std::vector<double> ts{};
-  std::vector<Eigen::Vector3d> xs{};
+  std::vector<Eigen::Vector3d> observations{};
 
-  PRX_DEBUG_VAR_1(duration);
+  PRX_DEBUG_VAR_2(duration, traj.duration());
   while (reader.has_next_line())
   {
     auto line = reader.next_line();
@@ -73,74 +74,114 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
       const double theta{ prx::yaw(Eigen::Quaterniond(qw, qx, qy, qz)) };
 
       ts.emplace_back(t);
-      xs.emplace_back(x, y, theta);
+      observations.emplace_back(x, y, theta);
     }
   }
   double t_prev{ 0.0 };
   double t_now{ 0.0 };
   double t_accum{ 0.0 };
   double dt{ 0.0 };
-  Eigen::Vector3d zt{};
-  Eigen::Vector3d zt1{};
-  std::size_t ti{ 0 };
   prx::space_point_t x_aux{};
   Eigen::Vector3d xt{};
   Eigen::Vector3d xt_next{};
   Eigen::Vector3d xdt{};
+  Eigen::Vector3d xdt_next{};
   Eigen::Vector2d ut{};
   Eigen::Vector2d ubar{};
   bool first{ true };
   auto nm_u_prior = gtsam::noiseModel::Isotropic::Sigma(2, 1.0);
 
+  // Add the first step
   xt = Vec(traj.at(t_accum)).head(3);
   xdt = Vec(traj.at(t_accum)).tail(3);
-  zt1 = xs[0];
-  values.insert(k_X(0), xt);
-  values.insert(k_Xd(0), xdt);
-  graph.emplace_shared<mushr_x_observation_t>(k_X(0), zt1, config.cm_x_z);
-
-  for (int i = 0; i < ts.size() - 1; ++i)
+  // zt1 = xs[0];
+  // values.insert(k_X(0), xt);
+  // values.insert(k_Xd(0), xdt);
+  // graph.emplace_shared<mushr_x_observation_t>(k_X(0), zt1, config.cm_x_z);
+  double ti{ 0.0 };
+  std::size_t idx{ 0 };
+  // for (; ti < duration; ti += prx::simulation_step)
+  for (; idx < traj.size() - 1; ++idx)
   {
-    t_now = ts[i];
-    zt = xs[i];
-    zt1 = xs[i + 1];
-    dt = ts[i + 1] - ts[i];
+    add_mushr_factor_graph_step(idx, prx::simulation_step, graph, config);
 
-    for (int j = 0; j < 3; ++j)
-    {
-      add_mushr_factor_graph_step(ti + j, dt / 3.0, graph, config);
-    }
+    //   const double t01{ t_accum / duration };              // current t \in [0,1]
+    //   const double t01_next{ (t_accum + dt) / duration };  // current t \in [0,1]
+    //   x_aux = traj.at(t01);
+    //   // xt = Vec(x_aux).head(3);
+    //   ut = Vec(plan.at(t_accum));
+    //   ubar = mushr_ub_u_xdot_param_t::predict(ut, xdt, params_dv, config.length);
+    //   xt = Vec(traj.at(t01_next)).head(3);
+    //   xdt = Vec(traj.at(t01_next)).tail(3);
+    //   // ubar = mushr_ub_u_xdot_t::predict(ut, xdt, config.length);
 
-    const double t01{ t_accum / duration };              // current t \in [0,1]
-    const double t01_next{ (t_accum + dt) / duration };  // current t \in [0,1]
-    x_aux = traj.at(t01);
-    // xt = Vec(x_aux).head(3);
-    ut = Vec(plan.at(t_accum));
+    //   graph.emplace_shared<mushr_x_observation_t>(k_X(ti + 3), zt1, config.cm_x_z);
+
+    //   for (int j = 0; j < 3; ++j)
+    //   {
+    // x_aux = traj.at(ti, false);
+    xt = Vec(traj[static_cast<unsigned>(idx)]).head(3);
+    xdt = Vec(traj[static_cast<unsigned>(idx)]).tail(3);
+    ut = Vec(plan.at(ti));
+    // x_aux = traj.at(ti + prx::simulation_step, false);
+    // xdt_next = Vec(x_aux).tail(3);
+
     ubar = mushr_ub_u_xdot_param_t::predict(ut, xdt, params_dv, config.length);
-    xt = Vec(traj.at(t01_next)).head(3);
-    xdt = Vec(traj.at(t01_next)).tail(3);
-    // ubar = mushr_ub_u_xdot_t::predict(ut, xdt, config.length);
+    values.insert(k_X(idx), xt);
+    values.insert(k_Xd(idx), xdt);
+    values.insert(k_U(idx), ut);
+    values.insert(k_Ub(idx), ubar);
+    graph.addPrior(k_U(idx), ut, nm_u_prior);
 
-    graph.emplace_shared<mushr_x_observation_t>(k_X(ti + 3), zt1, config.cm_x_z);
-
-    for (int j = 0; j < 3; ++j)
-    {
-      PRX_DEBUG_VAR_2(ti, k_Xd(ti + 1));
-      values.insert(k_X(ti + 1), xt);
-      values.insert(k_Xd(ti + 1), xdt);
-      values.insert(k_U(ti), ut);
-      values.insert(k_Ub(ti), ubar);
-      graph.addPrior(k_U(ti), ut, nm_u_prior);
-      ti++;
-    }
-    SF::symbols_to_file();
+    ti += prx::simulation_step;
+    // PRX_DEBUG_VAR_3(idx, xt.transpose(), xdt.transpose());
+    // PRX_DEBUG_VAR_3(idx, ubar.transpose(), ut.transpose());
+    // PRX_DEBUG_VAR_2(idx, xdt_next.transpose());
+    // PRX_DEBUG_VAR_3(idx, ti, duration);
+    //     ti++;
+    //   }
+    // SF::symbols_to_file();
     // graph.print("Graph", prx::fg::symbol_factory_t::formatter);
     // PRX_DEBUG_VAR_1(graph.linearize(values)->jacobian().first);
     // PRX_DEBUG_VAR_1(graph.linearize(values)->augmentedHessian());
     // graph.orderingCOLAMD().print("Ordering: ", prx::fg::symbol_factory_t::formatter);
-
-    t_accum += dt;
+    // idx++;
+    // t_accum += dt;
   }
+  // x_aux = traj.at(ti, false);
+  xt = Vec(traj[static_cast<unsigned>(idx)]).head(3);
+  xdt = Vec(traj[static_cast<unsigned>(idx)]).tail(3);
+  values.insert(k_X(idx), xt);
+  values.insert(k_Xd(idx), xdt);
+  // PRX_DEBUG_VAR_3(idx, xt.transpose(), xdt.transpose());
+  SF::symbols_to_file();
+
+  ti = 0;
+  // for (ti = 0; ti < count;)
+  idx = 0;
+  // for (int i = 0; i < ts.size() - 1; ++i)
+
+  Eigen::Vector3d zt{};
+  for (auto tuple : prx::zip_iters(ts, observations))
+  {
+    std::tie(ti, zt) = prx::unzip(tuple);
+
+    idx = traj.index_at_time(ti);
+    // const double dt{ std::max(ti - prx::simulation_step * idx, 0.0) };
+    const double t0{ prx::simulation_step * idx };
+    const double t1{ prx::simulation_step * (idx + 1) };
+    // const double dt{ ti - };
+    // dt = ts[i + 1] - ts[i];
+    // PRX_DEBUG_VAR_3(ti, t0, t1);
+    // PRX_DEBUG_VAR_3(idx, dt, zt.transpose());
+    // graph.emplace_shared<mushr_x_observation_t>(k_X(idx), zt, config.cm_x_z);
+    graph.emplace_shared<mushr_x_async_observation_t>(k_X(idx), k_X(idx + 1), zt, t0, t1, ti, config.cm_x_z);
+    // mushr_x_async_observation_t(const gtsam::Key xi, const gtsam::Key xj, const X z, double t_xi, double t_xj,
+    //                             double t_zi, const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    // idx += 3;
+    // ti += dt;
+  }
+
   // const Eigen::Vector3d last_x{ Vec(traj.at(1.0)).head(3) };
   // values.insert(k_X(ti), last_x);
 }
@@ -165,7 +206,7 @@ int main(int argc, char* argv[])
   prx::space_t* cs{ sys_group->get_control_space() };
   prx::space_t* ps{ sys_group->get_parameter_space() };
 
-  ps->copy_from({ 0.5 });
+  ps->copy_from({ 0.5, 0.0 });
   gtsam::NonlinearFactorGraph graph;
   gtsam::Values values;
 
@@ -192,8 +233,8 @@ int main(int argc, char* argv[])
 
   SF::symbols_to_file();
 
-  // graph.printErrors(values, "Errors: ", prx::fg::symbol_factory_t::formatter,
-  //                   [](const gtsam::Factor*, double error, std::size_t) { return error > 0.001; });
+  graph.printErrors(values, "Errors: ", prx::fg::symbol_factory_t::formatter,
+                    [](const gtsam::Factor*, double error, std::size_t) { return error > 0.001; });
 
   gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
   gtsam::Values results = prx::fg::optimize_and_log(optimizer, lm_params);
@@ -206,7 +247,7 @@ int main(int argc, char* argv[])
     auto factor0 = boost::dynamic_pointer_cast<prx::fg::mushr_x_xdot_t>(factor);
     auto factor1 = boost::dynamic_pointer_cast<prx::fg::mushr_x_xdot_ub_t>(factor);
     auto factor2 = boost::dynamic_pointer_cast<prx::fg::mushr_ub_u_xdot_t>(factor);
-    auto factor3 = boost::dynamic_pointer_cast<prx::fg::mushr_x_observation_t>(factor);
+    auto factor3 = boost::dynamic_pointer_cast<prx::fg::mushr_x_async_observation_t>(factor);
     if (factor0)  // mushr_ub_u_xdot_t
     {
       ofs << "mushr_x_xdot_t ";
@@ -224,13 +265,13 @@ int main(int argc, char* argv[])
     // }
     // if (factor3)
     // {
-    //   ofs << "mushr_x_observation_t ";
+    //   ofs << "mushr_x_async_observation_t ";
     //   factor3->eval_to_stream(results, ofs);
     // }
   }
 
-  const prx::fg::mushrTypes::ParamsDeltaVel params_out{ results.at<prx::fg::mushrTypes::ParamsDeltaVel>(k_Ps("dv")) };
-  PRX_DEBUG_VAR_1(params_out);
+  const prx::fg::mushrTypes::ParamsUbarU params_out{ results.at<prx::fg::mushrTypes::ParamsUbarU>(k_Ps("dv")) };
+  PRX_DEBUG_VAR_1(params_out.transpose());
   ps->copy_from(params_out);
   prx::trajectory_t res_traj{ ss };
   sys_group->propagate(start_state, plan, res_traj);

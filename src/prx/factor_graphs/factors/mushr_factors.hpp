@@ -45,7 +45,7 @@ protected:
   mushrTypes::Control _ctrl;
   mushrTypes::Parameters _params;
   mushrTypes::Control _ubar;
-  mushrTypes::ParamsDeltaVel _params_dv;
+  mushrTypes::ParamsUbarU _params_ubar_u;
   double _length;
 };  // namespace mushr
 
@@ -136,7 +136,10 @@ public:
 
   virtual X compute_error(const X& xi, const Xdot& xdot, const X& xj) const override
   {
-    return predict(xi, xdot, _dt) - xj;
+    const X prediction{ predict(xi, xdot, _dt) };
+    X error{ prediction - xj };
+    error[2] = angle_diff(prediction[2], xj[2]);
+    return error;
   }
 
   void eval_to_stream(gtsam::Values& values, std::ostream& os)
@@ -145,11 +148,11 @@ public:
     const Xdot xdot{ values.at<Xdot>(key<2>()) };
     const X xj{ values.at<X>(key<3>()) };
 
-    os << xi.transpose() << " ";                           // 1, 2, 3
-    os << xdot.transpose() << " ";                         // 4, 5, 6
-    os << xj.transpose() << " ";                           // 7, 8, 9
-    os << _dt << " ";                                      // 10
-    os << compute_error(xi, xdot, xj).transpose() << " ";  // 4, 5, 6
+    os << prx::fg::symbol_factory_t::formatter(key<1>()) << " " << xi.transpose() << " ";    // 1, 2, 3
+    os << prx::fg::symbol_factory_t::formatter(key<2>()) << " " << xdot.transpose() << " ";  // 4, 5, 6
+    os << prx::fg::symbol_factory_t::formatter(key<3>()) << " " << xj.transpose() << " ";    // 7, 8, 9
+    os << _dt << " ";                                                                        // 10
+    os << compute_error(xi, xdot, xj).transpose() << " ";                                    // 4, 5, 6
     os << "\n";
   }
 
@@ -172,17 +175,17 @@ public:
   {
   }
 
-  static Xdot predict(const X& x, const Ubar& u)
+  static Xdot predict(const X& x, const Ubar& ubar)
   {
     const double cTh{ std::cos(x[2]) };  // cos(theta)
     const double sTh{ std::sin(x[2]) };  // sin(theta)
-    const double& vt{ u[0] };
-    const double& wt{ u[1] };
+    const double& vt{ ubar[0] };
+    const double& wt{ ubar[1] };
     return Xdot{
       cTh * vt,  // no-indent
       sTh * vt,  // no-indent
       wt         // no-indent
-    };           // no-indent
+    };
   }
 
   virtual Xdot compute_error(const X& xi, const Xdot& xdot, const Ubar& ub) const override
@@ -196,19 +199,19 @@ public:
     const Xdot xdot{ values.at<Xdot>(key<2>()) };
     const Ubar ubar{ values.at<Ubar>(key<3>()) };
 
-    os << xi.transpose() << " ";                             // 1, 2, 3
-    os << xdot.transpose() << " ";                           // 4, 5, 6
-    os << ubar.transpose() << " ";                           // 7, 8
-    os << compute_error(xi, xdot, ubar).transpose() << " ";  // 4, 5, 6
+    os << prx::fg::symbol_factory_t::formatter(key<1>()) << " " << xi.transpose() << " ";    // 1, 2, 3
+    os << prx::fg::symbol_factory_t::formatter(key<2>()) << " " << xdot.transpose() << " ";  // 4, 5, 6
+    os << prx::fg::symbol_factory_t::formatter(key<3>()) << " " << ubar.transpose() << " ";  // 7, 8
+    os << "Error: " << compute_error(xi, xdot, ubar).transpose() << " ";                     // 9, 10, 11
     os << "\n";
   }
 
 private:
 };
 
-class mushr_ub_u_xdot_t : public noise_model_4factor_t<2, 2, 3, 1>
+class mushr_ub_u_xdot_t : public noise_model_3factor_t<2, 2, 3>
 {
-  using Base = noise_model_4factor_t<2, 2, 3, 1>;
+  using Base = noise_model_3factor_t<2, 2, 3>;
 
 public:
   using Ubar = Base::X0;
@@ -216,8 +219,60 @@ public:
   using Xdot = Base::X2;
   using Params = Base::X3;
 
-  mushr_ub_u_xdot_t(gtsam::Key ubar, gtsam::Key u, gtsam::Key xdot, gtsam::Key param, double length,
+  mushr_ub_u_xdot_t(gtsam::Key ubar, gtsam::Key u, gtsam::Key xdot, double length,
                     const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(ubar, u, xdot, cost_model), _length(length)
+  {
+  }
+
+  static Ubar predict(const U& u, const Xdot& xdot, const double& length)
+  {
+    // const double slope_pos{ mushrTypes::positive_slope(params) };
+
+    const double vt{ xdot.head(2).norm() };  // \sqrt(\dot{x} + \dot{y})
+    // const double dv{ mushrTypes::desired_velocity(u) - vt };
+    // const double dv_cap{ vt + std::max(std::min(dv, 0.1), -0.1) };
+    // const double dv_cap{ vt + dv * slope_pos };
+    const double dv_cap{ mushrTypes::desired_velocity(u) };
+    const double w{ vt * (std::tan(mushrTypes::steering(u)) / length) };
+    return Ubar(dv_cap, w);
+  }
+
+  virtual Ubar compute_error(const Ubar& ub, const U& u, const Xdot& xdot) const override
+  {
+    return predict(u, xdot, _length) - ub;
+  }
+
+  void eval_to_stream(gtsam::Values& values, std::ostream& os)
+  {
+    const Ubar ubar{ values.at<Ubar>(key<1>()) };
+    const U u{ values.at<U>(key<2>()) };
+    const Xdot xdot{ values.at<Xdot>(key<3>()) };
+
+    os << ubar.transpose() << " ";                          // 1, 2, 3
+    os << u.transpose() << " ";                             // 4, 5, 6
+    os << xdot.transpose() << " ";                          // 7, 8
+    os << compute_error(ubar, u, xdot).transpose() << " ";  // 4, 5, 6
+    os << "\n";
+  }
+
+private:
+  mutable Eigen::Matrix<double, 3, 2> _g;
+  const double _length;
+};
+
+class mushr_ub_u_xdot_param_t : public noise_model_4factor_t<2, 2, 3, 3>
+{
+  using Base = noise_model_4factor_t<2, 2, 3, 3>;
+
+public:
+  using Ubar = Base::X0;
+  using U = Base::X1;
+  using Xdot = Base::X2;
+  using Params = Base::X3;
+
+  mushr_ub_u_xdot_param_t(gtsam::Key ubar, gtsam::Key u, gtsam::Key xdot, gtsam::Key param, double length,
+                          const gtsam::noiseModel::Base::shared_ptr& cost_model)
     : Base(ubar, u, xdot, param, cost_model), _length(length)
   {
   }
@@ -225,17 +280,23 @@ public:
   static Ubar predict(const U& u, const Xdot& xdot, const Params& params, const double& length)
   {
     const double slope_pos{ mushrTypes::positive_slope(params) };
+    const double steering_offset{ mushrTypes::steering_offset(params) };
+    const double velocity_gain{ mushrTypes::velocity_gain(params) };
 
+    // PRX_DEBUG_VAR_1(steering_offset);
     const double vt{ xdot.head(2).norm() };  // \sqrt(\dot{x} + \dot{y})
     const double dv{ mushrTypes::desired_velocity(u) - vt };
     // const double dv_cap{ vt + std::max(std::min(dv, 0.1), -0.1) };
     const double dv_cap{ vt + dv * slope_pos };
-    const double w{ vt * (std::tan(mushrTypes::steering(u)) / length) };
-    return Ubar(dv_cap, w);
+    // const double dv_cap{ mushrTypes::desired_velocity(u) * slope_pos };
+    const double w{ vt * (std::tan(mushrTypes::steering(u) + steering_offset) / length) };
+    // PRX_DEBUG_VAR_3(vt, dv, dv_cap);
+    return Ubar(dv_cap, w * velocity_gain);
   }
 
   virtual Ubar compute_error(const Ubar& ub, const U& u, const Xdot& xdot, const Params& params) const override
   {
+    // PRX_DEBUG_VAR_3(ub.transpose(), u.transpose(), xdot.transpose());
     return predict(u, xdot, params, _length) - ub;
   }
 
@@ -293,13 +354,86 @@ protected:
   const X _z;
 };
 
+class mushr_x_async_observation_t : public noise_model_2factor_t<3, 3>
+{
+  using Base = noise_model_2factor_t<3, 3>;
+
+public:
+  using X = Base::X0;
+
+  mushr_x_async_observation_t(const gtsam::Key xi, const gtsam::Key xj, const X z, double z_ti,
+                              const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : Base(xi, xj, cost_model), _z(z), _ti(z_ti)
+  {
+    prx_assert(0 <= _ti and _ti <= 1, "Time of observation [" << _ti << "] outside of the interval");
+  }
+  mushr_x_async_observation_t(const gtsam::Key xi, const gtsam::Key xj, const X z, double t_xi, double t_xj,
+                              double t_zi, const gtsam::noiseModel::Base::shared_ptr& cost_model)
+    : mushr_x_async_observation_t(xi, xj, z, (t_zi - t_xi) / (t_xj - t_xi), cost_model)
+  {
+  }
+
+  static X predict(const X& xi, const X& xj, const double ti)
+  {
+    const X xij{ (1.0 - ti) * xi + ti * xj };
+    const double theta_i{ xi[2] };
+    const double theta_j{ xj[2] };
+    double theta{ 0.0 };
+    // PRX_DEBUG_VAR_1("-: -: -: -: -: -: -: -: -: -: -: -: -");
+    // PRX_DEBUG_VAR_3(xi.transpose(), xj.transpose(), xij.transpose());
+    if (std::fabs(theta_i - theta_j) < prx::constants::pi)
+    {
+      theta = xij[2];
+    }
+    else
+    {
+      if (theta_i < theta_j)
+        theta = theta_j + (1.0 - ti) * (theta_i - theta_j + 2.0 * prx::constants::pi);
+      else
+        theta = theta_i + ti * (2.0 * prx::constants::pi - theta_i + theta_j);
+    }
+    // theta = norm_angle_pi(theta);
+    // PRX_DEBUG_VAR_1(theta);
+    return X(xij[0], xij[1], theta);
+  }
+
+  virtual X compute_error(const X& xi, const X& xj) const override
+  {
+    const X prediction{ mushr_x_async_observation_t::predict(xi, xj, _ti) };
+    const X xp{ prediction - _z };
+    const double theta{ angle_diff(prediction[2], _z[2]) };
+
+    return X(xp[0], xp[1], theta);
+  }
+
+  void eval_to_stream(gtsam::Values& values, std::ostream& os)
+  {
+    const X xi{ values.at<X>(key<1>()) };
+    const X xj{ values.at<X>(key<2>()) };
+
+    os << prx::fg::symbol_factory_t::formatter(key<1>()) << " " << xi.transpose() << " ";  // 1, 2, 3
+    os << prx::fg::symbol_factory_t::formatter(key<2>()) << " " << xj.transpose() << " ";  // 4, 5, 6
+    os << "z " << _z.transpose() << " ";                                                   // 7, 8, 9
+    os << "t " << _ti << " ";                                                              // 10
+    os << "Error " << compute_error(xi, xj).transpose() << " ";                            // 11, 12, 13
+    os << "\n";
+  }
+
+protected:
+  const X _z;
+  const double _ti;
+};
+
 inline void add_mushr_factor_graph_step(const std::size_t t, const double dt, gtsam::NonlinearFactorGraph& graph,
-                                        const mushrConfig& config)
+                                        const mushrConfig& config, const std::size_t traj_idx = 0)
 {
   using namespace mushrTypes;
-  graph.emplace_shared<mushr_x_xdot_t>(k_X(t), k_Xd(t), k_X(t + 1), dt, config.cm_x_xdot);
-  graph.emplace_shared<mushr_x_xdot_ub_t>(k_X(t), k_Xd(t), k_Ub(t), config.cm_x_xdot_ub);
-  graph.emplace_shared<mushr_ub_u_xdot_t>(k_Ub(t), k_U(t), k_Xd(t), k_Ps("dv"), config.length, config.cm_ub_u);
+  graph.emplace_shared<mushr_x_xdot_t>(k_X(t, traj_idx), k_Xd(t, traj_idx), k_X(t + 1, traj_idx), dt, config.cm_x_xdot);
+  graph.emplace_shared<mushr_x_xdot_ub_t>(k_X(t, traj_idx), k_Xd(t + 1, traj_idx), k_Ub(t, traj_idx),
+                                          config.cm_x_xdot_ub);
+  // graph.emplace_shared<mushr_ub_u_xdot_t>(k_Ub(t), k_U(t), k_Xd(t), config.length, config.cm_ub_u);
+  graph.emplace_shared<mushr_ub_u_xdot_param_t>(k_Ub(t, traj_idx), k_U(t, traj_idx), k_Xd(t, traj_idx), k_Ps("dv"),
+                                                config.length, config.cm_ub_u);
 }
 
 // void fwd_propagate(const mushr::State& X0, const mushr::StateDot& Xdot0, const prx::plan_t& plan,

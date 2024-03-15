@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
   prx::space_t* cs{ sys_group->get_control_space() };
   prx::space_t* ps{ sys_group->get_parameter_space() };
 
+  ps->copy_from({ 0.5, 0.0 });
   prx::plan_t plan{ cs };
   prx::trajectory_t traj{ ss };
   prx::space_point_t start_state{ ss->make_point() };
@@ -65,23 +66,36 @@ int main(int argc, char* argv[])
   plan.to_file(prx::out_path + "mushr/plan.txt");
   sys_group->propagate(start_state, plan, traj);
 
-  // traj.to_file(prx::out_path + "mushr/fg_fwd_prop.txt");
+  traj.to_file(prx::out_path + "mushr/gt_traj.txt");
   const std::string out_filename{ prx::out_path + "mushr/fg_fwd_prop.txt" };
   std::ofstream ofs(out_filename, std::ofstream::trunc);
 
   double t{ 0 };
-  for (unsigned i = 0; i < traj.size(); i += 3)
+  int step{ 3 };
+  // const double z_freq{ 1.0 / 30.0 };
+  const double xy_mean{ 0.0 };
+  const double xy_stddev{ 0.01 };
+  // const double xy_stddev{ 0.0 };
+  const double z_freq{ 0.03 };
+  const double z_stddev{ 0.005 };
+  const double duration{ traj.duration() - prx::simulation_step };
+  for (double ti = 0; ti < duration;)
   {
-    const Eigen::Vector2d pos{ Vec(traj[i]).head(2) };
-    const double theta{ traj[i]->at(2) };
+    // const double t01{ ti / duration };  // current t \in [0,1]
+    const prx::space_point_t p_ti{ traj.at(ti, false) };
+    const Eigen::Vector2d pos{ Vec(p_ti).head(2) };
+    const double theta{ p_ti->at(2) };
     const Eigen::Quaterniond q{ Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitX()) *
                                 Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitY()) *
                                 Eigen::AngleAxisd(theta, Eigen::Vector3d::UnitZ()) };
-    ofs << "r w ";
-    ofs << t << " " << pos[0] << " " << pos[1] << " 0 ";
+    const double x{ pos[0] + prx::gaussian_random(xy_mean, xy_stddev) };
+    const double y{ pos[1] + prx::gaussian_random(xy_mean, xy_stddev) };
+    ofs << "r w " << std::setprecision(8);
+    ofs << ti << " " << x << " " << y << " 0 ";
     ofs << q.w() << " " << q.x() << " " << q.y() << " " << q.z() << " ";
     ofs << "\n";
-    t += prx::simulation_step * 3;
+    ti += prx::gaussian_random(z_freq, z_stddev);
+    // ti += z_freq;
   }
 
   prx::three_js_group_t* vis_group = new prx::three_js_group_t({ plant }, {});

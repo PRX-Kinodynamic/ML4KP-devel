@@ -10,10 +10,10 @@ namespace mushrTypes
 // using KeyFunctionStr = std::function<gtsam::Key(const std::string&)>;
 using SF = symbol_factory_t;
 // clang-format off
-inline gtsam::Key k_X(const std::size_t& ti) { return SF::create_hashed_symbol("x_{", ti, "}"); };
-inline gtsam::Key k_U(const std::size_t& ti) { return SF::create_hashed_symbol("u_{", ti, "}"); };
-inline gtsam::Key k_Xd(const std::size_t& ti) { return SF::create_hashed_symbol("xd_{", ti, "}"); };
-inline gtsam::Key k_Ub(const std::size_t& ti) { return SF::create_hashed_symbol("Ub_{", ti, "}"); };
+inline gtsam::Key k_X(const std::size_t& ti, const std::size_t traj=0) { return SF::create_hashed_symbol("x^{",traj,"}_{", ti, "}"); };
+inline gtsam::Key k_U(const std::size_t& ti, const std::size_t traj=0) { return SF::create_hashed_symbol("u^{",traj,"}_{", ti, "}"); };
+inline gtsam::Key k_Xd(const std::size_t& ti, const std::size_t traj=0) { return SF::create_hashed_symbol("xd^{",traj,"}_{", ti, "}"); };
+inline gtsam::Key k_Ub(const std::size_t& ti, const std::size_t traj=0) { return SF::create_hashed_symbol("Ub^{",traj,"}_{", ti, "}"); };
 inline gtsam::Key k_ZX(const std::size_t& ti) { return SF::create_hashed_symbol("Z^x_{", ti, "}"); };
 inline gtsam::Key k_Ps(const std::string& s) { return SF::create_hashed_symbol("P_{", s, "}"); };
 // clang-format on
@@ -22,13 +22,20 @@ using State = Eigen::Vector<double, 3>;
 using StateDot = Eigen::Vector<double, 3>;
 using Control = Eigen::Vector<double, 2>;
 using Parameters = Eigen::Vector<double, 6>;
-using ParamsDeltaVel = Eigen::Vector<double, 1>;
+using ParamsUbarU = Eigen::Vector<double, 3>;
 
-static inline double positive_slope(const ParamsDeltaVel& param)
+static inline double positive_slope(const ParamsUbarU& param)
 {
   return param[0];
 }
-
+static inline double steering_offset(const ParamsUbarU& params)
+{
+  return params[1];
+}
+static inline double velocity_gain(const ParamsUbarU& params)
+{
+  return params[2];
+}
 static inline double bound(const double value, const double min_bound, const double max_bound)
 {
   return std::max(std::min(value, max_bound), min_bound);
@@ -70,6 +77,7 @@ static inline double steering_gain(const Parameters& params)
 {
   return params[2];
 }
+
 static inline double steering_offset(const Parameters& params)
 {
   return params[3];
