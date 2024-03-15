@@ -211,6 +211,7 @@ void trajectory_t::to_file(const std::string file_name, const std::ios_base::ope
   {
     ofs_map << states[i] << "\n";
   }
+  ofs_map << "\n";
 
   ofs_map.close();
 }
@@ -231,4 +232,13 @@ void trajectory_t::from_file(const std::string file_name)
   }
 }
 
+std::size_t trajectory_t::index_at_time(const double ti) const
+{
+  // const double t_normalized{ ti / duration() };  // current t \in [0,1]
+  // const std::size_t idx{ static_cast<std::size_t>(std::floor(t_normalized * (size() - 1))) };
+  const double idx{ 0.00001 + ti / simulation_step };
+  // PRX_DEBUG_VAR_3(ti, ti / simulation_step, idx);
+  // prx_assert(0 <= t_normalized and t_normalized <= 1, "Queried time [" << ti << "] out of bounds");
+  return static_cast<std::size_t>(idx);
+}
 }  // namespace prx
