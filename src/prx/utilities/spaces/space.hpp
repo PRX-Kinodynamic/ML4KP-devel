@@ -48,6 +48,14 @@ public:
   void set_bounds(const std::vector<double>& lower, const std::vector<double>& upper);
 
   space_point_t make_point() const;
+
+  template <typename State>
+  space_point_t make_point(const State state) const
+  {
+    space_point_t pt{ make_point() };
+    copy(pt, state);
+    return pt;
+  }
   space_point_t clone_point(const space_point_t& point) const;
 
   /**
