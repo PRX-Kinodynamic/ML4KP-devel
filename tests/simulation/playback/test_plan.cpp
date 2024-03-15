@@ -43,6 +43,52 @@ BOOST_AUTO_TEST_CASE(plan_resize_test)
   BOOST_REQUIRE_MESSAGE(5 == cont, EXPECTED_GOT(5, cont));
 }
 
+BOOST_AUTO_TEST_CASE(plan_duration_test)
+{
+  mock::plan_space_test_t test;
+  prx::space_t& space(test.space);
+  prx::plan_t plan(&space);
+
+  plan.copy_onto_back(Eigen::Vector2d(0, 0), 1);
+  plan.copy_onto_back(Eigen::Vector2d(1, 1), 1);
+  plan.copy_onto_back(Eigen::Vector2d(2, 2), 1);
+
+  const int expected_duration{ 3 };
+  BOOST_REQUIRE_MESSAGE(plan.duration() == expected_duration, EXPECTED_GOT(expected_duration, plan.duration()));
+}
+
+BOOST_AUTO_TEST_CASE(plan_at_test)
+{
+  mock::plan_space_test_t test;
+  prx::space_t& space(test.space);
+  prx::plan_t plan(&space);
+
+  plan.copy_onto_back(Eigen::Vector2d(0, 0), 1);
+  plan.copy_onto_back(Eigen::Vector2d(1, 1), 1);
+  plan.copy_onto_back(Eigen::Vector2d(2, 2), 1);
+
+  const Eigen::Vector2d expected_t0p0{ 0, 0 };
+  const Eigen::Vector2d expected_t0p5{ 0, 0 };
+  const Eigen::Vector2d expected_t1p0{ 1, 1 };
+  const Eigen::Vector2d expected_t1p5{ 1, 1 };
+  const Eigen::Vector2d expected_t2p0{ 2, 2 };
+  const Eigen::Vector2d expected_t2p5{ 2, 2 };
+
+  const Eigen::Vector2d point_at_t0p0{ Vec(plan.at(0.0)) };
+  const Eigen::Vector2d point_at_t0p5{ Vec(plan.at(0.5)) };
+  const Eigen::Vector2d point_at_t1p0{ Vec(plan.at(1.0)) };
+  const Eigen::Vector2d point_at_t1p5{ Vec(plan.at(1.5)) };
+  const Eigen::Vector2d point_at_t2p0{ Vec(plan.at(2.0)) };
+  const Eigen::Vector2d point_at_t2p5{ Vec(plan.at(2.5)) };
+
+  BOOST_REQUIRE_MESSAGE(expected_t0p0.isApprox(point_at_t0p0), EXPECTED_GOT(expected_t0p0, point_at_t0p0));
+  BOOST_REQUIRE_MESSAGE(expected_t0p5.isApprox(point_at_t0p5), EXPECTED_GOT(expected_t0p5, point_at_t0p5));
+  BOOST_REQUIRE_MESSAGE(expected_t1p0.isApprox(point_at_t1p0), EXPECTED_GOT(expected_t1p0, point_at_t1p0));
+  BOOST_REQUIRE_MESSAGE(expected_t1p5.isApprox(point_at_t1p5), EXPECTED_GOT(expected_t1p5, point_at_t1p5));
+  BOOST_REQUIRE_MESSAGE(expected_t2p0.isApprox(point_at_t2p0), EXPECTED_GOT(expected_t2p0, point_at_t2p0));
+  BOOST_REQUIRE_MESSAGE(expected_t2p5.isApprox(point_at_t2p5), EXPECTED_GOT(expected_t2p5, point_at_t2p5));
+}
+
 BOOST_AUTO_TEST_CASE(plan_to_and_from_file_test)
 {
   mock::plan_space_test_t test;
