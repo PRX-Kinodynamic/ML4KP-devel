@@ -13,7 +13,8 @@ namespace random
 {
 static std::uniform_real_distribution<double> uniform_zero_one(0.0,
                                                                std::nextafter(1.0, std::numeric_limits<double>::max()));
-}
+static std::normal_distribution<double> gaussian_zero_one(0.0, 1.0);
+}  // namespace random
 // This might not be the best way to have a generator
 extern std::mt19937_64 global_generator;
 
@@ -43,7 +44,7 @@ double uniform_random();
  * @author Zakary Littlefield
  * @return A double precision random number.
  */
-double gaussian_random();
+double gaussian_random(const double mean = 0.0, const double stddev = 1.0);
 
 /**
  * Returns a random number from the uniform distribution within the
