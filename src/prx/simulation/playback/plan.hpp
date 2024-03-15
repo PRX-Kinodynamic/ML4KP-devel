@@ -84,14 +84,15 @@ public:
     return steps[index];
   }
 
-  inline space_point_t at(double t) const
+  inline space_point_t at(const double t) const
   {
+    double t_accum{ t };
     for (auto&& step : steps)
     {
-      if (t < step.duration)
+      if (t_accum < step.duration)
         return step.control;
       else
-        t -= step.duration;
+        t_accum -= step.duration;
     }
     prx_throw("Indexed into plan with time outside the plan's full duration.");
   }
@@ -159,7 +160,23 @@ public:
     ++num_steps;
   }
 
-  void copy_onto_front(space_point_t control, double time);
+  template <typename Control>
+  void copy_onto_front(const Control& control, double time)
+  {
+    if ((num_steps + 1) >= max_num_steps)
+      increase_buffer();
+
+    plan_step_t new_step = steps.back();
+    steps.pop_back();
+    steps.push_front(new_step);
+    control_space->copy((*steps.begin()).control, control);
+    (*steps.begin()).duration = time;
+    ++num_steps;
+    end_iterator = steps.begin();
+    const_end_iterator = steps.begin();
+    std::advance(end_iterator, num_steps);
+    std::advance(const_end_iterator, num_steps);
+  }
 
   /**
    * @brief Add one step to the front of the plan.
