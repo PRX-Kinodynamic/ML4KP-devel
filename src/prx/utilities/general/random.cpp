@@ -63,28 +63,9 @@ int roll_weighted_die(std::vector<double> const& weights)
   return event_index;
 }
 
-double gaussian_random()
+double gaussian_random(const double mean, const double stddev)
 {
-  static int flag = 0;
-  static double t = 0.0;
-  double v1, v2, r;
-  if (flag == 0)
-  {
-    do
-    {
-      v1 = 2.0 * uniform_random() - 1.0;
-      v2 = 2.0 * uniform_random() - 1.0;
-      r = v1 * v1 + v2 * v2;
-    } while (r == 0.0 || r > 1.0);
-    r = sqrt((-2.0 * log(r)) / r);
-    t = v2 * r;
-    flag = 1;
-    return (v1 * r);
-  }
-  else
-  {
-    flag = 0;
-    return t;
-  }
+  const double x{ ::prx::random::gaussian_zero_one(global_generator) };
+  return x * stddev + mean;
 }
 }  // namespace prx
