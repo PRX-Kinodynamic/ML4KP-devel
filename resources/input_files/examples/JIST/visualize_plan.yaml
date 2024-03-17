@@ -2,14 +2,15 @@ random_seed: 210896
 
 xml_path: "franka_emika_panda/scene_box_cyl.xml"
 
-planner_name: "rrt"
 
 start_config: [0,0,0,0,0,0,0]
 goal_config: [0, .494, 0, -2.37, 0, 2.9, -2.29]
-goal_region_radius: 2
 
-checker_type: "iterations"
-checker_value: 1000
+cam_distance: 0
+cam_elevation: 0
+cam_azimuth: 180
 
-plan_path: "/home/kchen/robotics/ML4KP-devel/out/franka_rrt_output.txt"
-video_name: "/home/kchen/robotics/ML4KP-devel/out/franka_rrt_viz.txt"
+
+plan_filename: "/home/kchen/robotics/ML4KP-devel/out/franka_dirt_output_10000.txt"
+video_name: "/home/kchen/robotics/ML4KP-devel/out/franka_dirt_viz.mp4"
+record_video: True

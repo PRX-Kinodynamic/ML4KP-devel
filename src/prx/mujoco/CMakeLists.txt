@@ -25,6 +25,7 @@ if(APPLE)
     target_include_directories(${PROJECT_NAME}_mjsim PUBLIC ${GLFW_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME}_mjsim PUBLIC ${MJ_LIBS})
     target_link_libraries(${PROJECT_NAME}_mjsim PUBLIC glfw)
+    target_link_libraries(${PROJECT_NAME}_mjsim PUBLIC ${OpenCV_LIBS} )
     set(CMAKE_MACOSX_RPATH 0)
     set_target_properties(${PROJECT_NAME}_mjsim PROPERTIES FRAMEWORK true)
 else()
@@ -35,6 +36,7 @@ else()
     target_link_libraries(${PROJECT_NAME}_mjsim INTERFACE
         ${MJ_LIB_DIR}/libmujoco.so
         glfw
+        ${OpenCV_LIBS} 
     )
     set_target_properties(${PROJECT_NAME}_mjsim PROPERTIES FRAMEWORK true)
 endif()

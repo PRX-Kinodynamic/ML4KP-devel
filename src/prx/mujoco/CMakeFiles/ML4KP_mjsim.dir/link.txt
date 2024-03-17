@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../../../lib/libML4KP_mjsim.a CMakeFiles/ML4KP_mjsim.dir/mj_plant.cpp.o CMakeFiles/ML4KP_mjsim.dir/mj_simulator.cpp.o CMakeFiles/ML4KP_mjsim.dir/mj_utils.cpp.o
+/usr/bin/ranlib ../../../lib/libML4KP_mjsim.a

@@ -1,0 +1,15 @@
+random_seed: 210896
+
+xml_path: "franka_emika_panda/scene_box_cyl.xml"
+
+visualize: false
+
+planner_name: "rrt"
+
+goal_config: [0, .494, 0, -2.37, 0, 2.9, -2.29]
+goal_region_radius: 1
+
+checker_type: "iterations"
+checker_value: 10000
+
+output_path: "/home/kchen/robotics/ML4KP-devel/out/franka_rrt_output.txt"

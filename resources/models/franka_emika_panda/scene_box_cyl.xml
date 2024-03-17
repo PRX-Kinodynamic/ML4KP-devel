@@ -37,6 +37,11 @@
     <body name="test" pos="0.0925 0.25 0.04">
     	<geom name="test" contype="0" conaffinity="0" size=".1 .1 .1" type="sphere" rgba="1 .3125 .5 0" mass="0.05" friction="2" solimp="0.95 0.99 0.001" solref="0.005 1"/>
     </body>
+    
+    <body name="body_cam" pos="3 0 .75" xyaxes="0 1 0 0 0 1" mocap="true">
+      <camera name="cam" fovy="90"/>
+      <geom name="geom_cam" size="0.04 0.04 0.01" type="box" rgba="0 0 0 0" contype="0" conaffinity="0"/>
+    </body>
   </worldbody>
 
 </mujoco>

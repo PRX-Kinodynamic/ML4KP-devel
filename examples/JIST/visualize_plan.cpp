@@ -3,7 +3,9 @@
 #include "prx/planning/planners/rrt.hpp"
 
 #include <fstream>
+#include <boost/filesystem.hpp>
 
+using namespace boost::filesystem;
 using namespace prx;
 
 int main(int argc, char* argv[])
@@ -11,7 +13,7 @@ int main(int argc, char* argv[])
   param_loader params;
   if (argc < 2)
   {
-    params = param_loader("examples/JIST/franka.yaml");
+    params = param_loader("examples/JIST/visualize_plan.yaml");
   }
   else
   {
@@ -27,7 +29,6 @@ int main(int argc, char* argv[])
   sim->set_cam_distance(params["cam_distance"].as<double>());
   sim->set_cam_elevation(params["cam_elevation"].as<double>());
   sim->set_cam_azimuth(params["cam_azimuth"].as<double>());
-  
 
   auto context = sim->get_context("mujoco");
   auto sg = sim->get_context("mujoco");
@@ -68,12 +69,46 @@ int main(int argc, char* argv[])
   start -> at(5) = quat.y();
   start -> at(6) = quat.z();
   */
- 
+
+  std::cout << "start" << start << std::endl;
+
   plan_t plan(cs);
   trajectory_t traj(ss);
   plan.from_file(params["plan_filename"].as<>());
-  // auto plan_from_file = plan.from_file(params["plan_filename"].as<>(), ",");
+
+ // for (auto c : plan){
+  //  cs -> copy(plan.back().control, c.control);
+ // }
+std::cout << "plan: " << plan << std::endl;
+  // std::cout << plan.print() << std::endl;
+
+  sim->set_video_name(params["video_name"].as<>());
+
+  std::cout << "video_name set" << std::endl;
+
+  sim->set_record_video(params["record_video"].as<bool>());
+
+  std::cout << "record_video set" << std::endl;
+
+  context.first->propagate(start, plan, traj);
+
+  std::cout << "plan propagated" << std::endl;
+
+  sim->close_video();
+
+  std::cout << "End of program!" << std::endl;
+
   /*
+  for (auto asdf : plan)
+  {
+    std::cout << asdf.print() << std::endl;
+  }
+  */
+  /*
+  auto plan_from_file = prx::utilities::read_vectors_from_file(params["plan_filename"].as<>(), ",");
+
+  auto plan_from_file = plan.from_file(params["plan_filename"].as<>(), ",");
+
   for (auto line : plan)
   {
     plan.append_onto_back(line.back());

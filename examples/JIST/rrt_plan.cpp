@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
   param_loader params;
   if (argc < 2)
   {
-    params = param_loader("examples/JIST/franka.yaml");
+    params = param_loader("examples/JIST/franka_rrt.yaml");
   }
   else
   {
@@ -41,12 +41,14 @@ int main(int argc, char* argv[])
     return space_t::euclidean_2d(a, b, 0, 7);
   };
 
-  rrt_spec.min_control_steps = 0.5 * (1.0 / simulation_step);
-  rrt_spec.max_control_steps = 2.0 * (1.0 / simulation_step);
+  float min_control_scaling = 0.5;
+  float max_control_scaling = 1.0;
+  rrt_spec.min_control_steps = min_control_scaling * (1.0 / simulation_step);
+  rrt_spec.max_control_steps = max_control_scaling * (1.0 / simulation_step);
 
   // rrt query ?
   rrt_query_t rrt_query(context.first->get_state_space(), context.first->get_control_space());
-  rrt_query.get_visualization = true;
+  rrt_query.get_visualization = true; //params["visualize"].as<bool>();
 
   rrt_query.goal_state = context.first->get_state_space()->make_point();
   rrt_query.start_state = context.first->get_state_space()->make_point();

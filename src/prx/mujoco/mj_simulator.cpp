@@ -18,6 +18,7 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path) : simulato
   simulation_step = m->opt.timestep;
   std::cout << "Using simulation step: " << simulation_step << std::endl;
 
+  // K TAG change this!
   if (MUJOCO_VIS)
   {
     if (!glfwInit())
@@ -55,10 +56,8 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path) : simulato
   
     mjv_defaultFreeCamera(m, &cam);
     cam.type = mjtCamera::mjCAMERA_TRACKING;
-    if (model_path.find("quadrotor") == std::string::npos)
-      cam.trackbodyid = mj_name2id(m, mjOBJ_BODY, "buddy");
-    else
-      cam.trackbodyid = mj_name2id(m, mjOBJ_BODY, "x2");
+    // change this
+    cam.trackbodyid = mj_name2id(m, mjOBJ_BODY, "body_cam");
     cam.distance = 5.0;
     cam.elevation = -60;
     std::cout << cam.azimuth << " " << cam.elevation << " " << cam.distance << std::endl;
@@ -179,10 +178,13 @@ void mujoco_simulator_t::set_video_name(const std::string& video_name)
 
 void mujoco_simulator_t::add_frame()
 {
+  // std::cout << "adding frame for mujoco sim" << std::endl;
   // std::unique_ptr<unsigned char[]> rgb(new unsigned char[3 * width * height]);
   if (!_output_video.isOpened())
   {
+    // std::cout << "before mjr_maxViewport" << std::endl;
     const auto rect = mjr_maxViewport(&con);
+    // std::cout << "after mjr_maxViewport" << std::endl;
     const cv::Size vid_size(rect.width, rect.height);
     const int fourcc{ cv::VideoWriter::fourcc('m', 'p', '4', 'v') };
     _output_video.open(_video_name, fourcc, _fps, vid_size, true);
