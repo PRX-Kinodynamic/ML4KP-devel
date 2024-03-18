@@ -24,9 +24,11 @@ struct mjActuatorInfo
   mjtNum range[2];
 };
 
-std::vector<int> get_qpos_indices(mjModel* m, const std::vector<std::string>& joint_names);
+std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::vector<std::string>& joint_names);
 
-void forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
+std::vector<int> get_body_indices(mjModel* m, const std::string& body_name);
+
+std::vector<double> forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
 const std::string& query_link_name, const std::vector<double>& q);
 
 void get_mj_joint_info(mjModel* m, std::vector<mjJointInfo*>& joint_info);

@@ -36,12 +36,15 @@ int main(int argc, char* argv[])
     sim->step_simulation();
   }
 
-  std::cout << "link1 id: " << mj_name2id(sim->m, mjOBJ_BODY, "link1") << std::endl;
-
   // mj_kinematics(sim->m, sim->d);
   std::vector<std::string> joint_names = params["joint_names"].as<std::vector<std::string>>();
-  auto qpos_inds = get_qpos_indices(sim->m, joint_names);
+  auto qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
+  auto pose = forward_kinematics(sim->m, sim->d, qpos_inds, params["end_effector"].as<std::string>(), params["test_config"].as<std::vector<double>>());
   
+  for (auto val : pose){
+    std::cout << val << "\t";
+  }
+  std::cout << std::endl;
   // std::vector<std::string> joint_names = params["joint_names"].as<std::string>()
   
   std::cout << "End of program!" << std::endl;
