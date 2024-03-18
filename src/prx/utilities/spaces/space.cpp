@@ -409,7 +409,7 @@ std::string space_t::print_point(const space_point_t& point, const std::size_t p
     // out << std::fixed << std::setprecision(prec) << '<';
     out << std::fixed << std::setprecision(prec);
     for (unsigned i = 0; i < dimension - 1; ++i)
-      out << point->_memory[i] << ',';
+      out << point->_memory[i] << ", ";
     out << point->_memory[dimension - 1];
   }
 

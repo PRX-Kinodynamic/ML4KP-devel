@@ -348,7 +348,6 @@ void dirt_t::_resolve_query(condition_check_t* condition)
 
     iteration_count++;
   } while (!condition->check());
-  if (goal_vertex == start_vertex) goal_vertex = best_vertex;
   print_statistics();
 }
 
@@ -412,11 +411,11 @@ void dirt_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_node_t*
     child_extension = true;
     previous_child = node_index;
   }
-  if (new_tree_node->cost_to_go < best_cost_to_go)
-  {
-    best_cost_to_go = new_tree_node->cost_to_go;
-    best_vertex = node_index;
-  }
+  // if (new_tree_node->cost_to_go < best_cost_to_go)
+  // {
+  //   best_cost_to_go = new_tree_node->cost_to_go;
+  //   best_vertex = node_index;
+  // }
   metric->add_node(new_tree_node.get());
   new_tree_node->bridge = false;
   update_goal(node_index);

@@ -9,10 +9,10 @@ state_space:
   upper_bound: [10, 10, 3.14159, .6]
 
 control_space:
-  lower_bound: [-1, -1.0]
-  upper_bound: [ 1, 1.0]
+  lower_bound: [-1, -0.5]
+  upper_bound: [ 1, 0.5]
 
 parameter_space:
-  values: [.09, 0.0, 0.52]
+  values: [0.65861, 0.00753, 0.24991]
 
 vis_body: "body"

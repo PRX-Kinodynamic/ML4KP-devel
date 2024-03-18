@@ -9,7 +9,7 @@ tests/old/
 docs/html/
 docs/latex/
 src/prx/external/libtorch/
-resources/networks/
+resources/roadmaps/
 resources/input_files/mazes/*.yaml
 *.html
 *.out

@@ -245,6 +245,7 @@ void rogue_t::_resolve_query(condition_check_t* condition)
 
     iteration_count++;
   } while (!condition->check());
+  print_statistics();
 }
 
 void rogue_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, rogue_node_t* closest_node,
