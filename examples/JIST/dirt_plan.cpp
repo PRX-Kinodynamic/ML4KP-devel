@@ -65,7 +65,8 @@ int main(int argc, char* argv[])
   for (int i = 0; i < goal_vec.size(); i++)
   {
       // rrt_query.goal_state->at(i) = goal_vec[i];
-    dirt_query.goal_state->at(i) = dirt_query.start_state->at(i) + 0.1;
+    // dirt_query.goal_state->at(i) = dirt_query.start_state->at(i) + 0.1;
+    dirt_query.goal_state->at(i) = goal_vec[i];
   }
 
   // check whether sampled state is in goal region
@@ -85,18 +86,28 @@ int main(int argc, char* argv[])
     dirt_query.solution_plan.to_file(params["output_path"].as<std::string>());
   }
 
+  /*
   trajectory_t sol_traj = dirt_query.solution_traj;
 
   unsigned ind(3);
   std::cout << sol_traj.at(ind) << std::endl;
-  
+  */
+
+  /*
   auto ub = ss->get_upper_bounds();
   auto lb = ss->get_lower_bounds();
   for(int i = 0; i < ss->get_dimension(); i++){
     std::cout << "index: " << i << ", lower: " << lb[i] << ", upper: " << ub[i] << "\n";
   }
+  
   std::cout << ss->get_space_name() << std::endl;
-  std::cout << cs->get_space_name() << std::endl;
+  std::cout << "state space topology: " << ss->get_topology() << std::endl;
+
+  space_point_t point = ss->make_point();
+  ss->sample(point);
+  std::cout << point << std::endl;
+  */
+  // std::cout << cs->get_space_name() << std::endl;
 
   // std::cout << dirt.tree.vertices() << std::endl;
   // std::cout << sol_traj.size() << std::endl;

@@ -10,7 +10,7 @@ goal_config: [0, .494, 0, -2.37, 0, 2.9, -2.29]
 goal_region_radius: 2
 
 checker_type: "iterations"
-checker_value: 500
+checker_value: 1000
 
-output_plan: false
+output_plan: true
 output_path: "/home/kchen/robotics/ML4KP-devel/out/franka_dirt_output.txt"

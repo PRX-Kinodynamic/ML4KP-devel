@@ -3,8 +3,10 @@ file(GLOB_RECURSE EXAMPLES_JIST_FILES
 
 set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/JIST )
 
-message(STATUS "OpenCV_LIBS: ${OpenCV_LIBS}")
+# message(STATUS "OpenCV_LIBS: ${OpenCV_LIBS}")
+
 foreach(f ${EXAMPLES_JIST_FILES})
+    message("File: ${f}")
     GET_FILENAME_COMPONENT(F_EXEC ${f} NAME_WE )
     add_executable(${F_EXEC} ${f})
     target_link_libraries(${F_EXEC} ${PROJECT_NAME})

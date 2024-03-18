@@ -39,6 +39,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/Utilities.dir/geometry/movable_object.cpp.o.d"
   "CMakeFiles/Utilities.dir/heuristics/medial_axis.cpp.o"
   "CMakeFiles/Utilities.dir/heuristics/medial_axis.cpp.o.d"
+  "CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.o"
+  "CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.o.d"
   "CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.o"
   "CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.o.d"
   "CMakeFiles/Utilities.dir/spaces/space.cpp.o"

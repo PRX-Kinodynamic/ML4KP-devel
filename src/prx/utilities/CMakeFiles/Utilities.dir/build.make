@@ -335,10 +335,24 @@ src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/medial_axis.cpp.s: cmake_f
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Utilities.dir/heuristics/medial_axis.cpp.s"
 	cd /home/kchen/robotics/ML4KP-devel/src/prx/utilities && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/kchen/robotics/ML4KP-devel/src/prx/utilities/heuristics/medial_axis.cpp -o CMakeFiles/Utilities.dir/heuristics/medial_axis.cpp.s
 
+src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.o: src/prx/utilities/CMakeFiles/Utilities.dir/flags.make
+src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.o: src/prx/utilities/heuristics/roadmap.cpp
+src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.o: src/prx/utilities/CMakeFiles/Utilities.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/kchen/robotics/ML4KP-devel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.o"
+	cd /home/kchen/robotics/ML4KP-devel/src/prx/utilities && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.o -MF CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.o.d -o CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.o -c /home/kchen/robotics/ML4KP-devel/src/prx/utilities/heuristics/roadmap.cpp
+
+src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.i"
+	cd /home/kchen/robotics/ML4KP-devel/src/prx/utilities && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/kchen/robotics/ML4KP-devel/src/prx/utilities/heuristics/roadmap.cpp > CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.i
+
+src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.s"
+	cd /home/kchen/robotics/ML4KP-devel/src/prx/utilities && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/kchen/robotics/ML4KP-devel/src/prx/utilities/heuristics/roadmap.cpp -o CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.s
+
 src/prx/utilities/CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.o: src/prx/utilities/CMakeFiles/Utilities.dir/flags.make
 src/prx/utilities/CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.o: src/prx/utilities/math/continuous_algebraic_riccati_equation.cpp
 src/prx/utilities/CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.o: src/prx/utilities/CMakeFiles/Utilities.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/kchen/robotics/ML4KP-devel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building CXX object src/prx/utilities/CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/kchen/robotics/ML4KP-devel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object src/prx/utilities/CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.o"
 	cd /home/kchen/robotics/ML4KP-devel/src/prx/utilities && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/prx/utilities/CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.o -MF CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.o.d -o CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.o -c /home/kchen/robotics/ML4KP-devel/src/prx/utilities/math/continuous_algebraic_riccati_equation.cpp
 
 src/prx/utilities/CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.i: cmake_force
@@ -352,7 +366,7 @@ src/prx/utilities/CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equ
 src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space.cpp.o: src/prx/utilities/CMakeFiles/Utilities.dir/flags.make
 src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space.cpp.o: src/prx/utilities/spaces/space.cpp
 src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space.cpp.o: src/prx/utilities/CMakeFiles/Utilities.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/kchen/robotics/ML4KP-devel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building CXX object src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/kchen/robotics/ML4KP-devel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space.cpp.o"
 	cd /home/kchen/robotics/ML4KP-devel/src/prx/utilities && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space.cpp.o -MF CMakeFiles/Utilities.dir/spaces/space.cpp.o.d -o CMakeFiles/Utilities.dir/spaces/space.cpp.o -c /home/kchen/robotics/ML4KP-devel/src/prx/utilities/spaces/space.cpp
 
 src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space.cpp.i: cmake_force
@@ -366,7 +380,7 @@ src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space.cpp.s: cmake_force
 src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space_snapshot.cpp.o: src/prx/utilities/CMakeFiles/Utilities.dir/flags.make
 src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space_snapshot.cpp.o: src/prx/utilities/spaces/space_snapshot.cpp
 src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space_snapshot.cpp.o: src/prx/utilities/CMakeFiles/Utilities.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/kchen/robotics/ML4KP-devel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building CXX object src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space_snapshot.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/kchen/robotics/ML4KP-devel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building CXX object src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space_snapshot.cpp.o"
 	cd /home/kchen/robotics/ML4KP-devel/src/prx/utilities && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space_snapshot.cpp.o -MF CMakeFiles/Utilities.dir/spaces/space_snapshot.cpp.o.d -o CMakeFiles/Utilities.dir/spaces/space_snapshot.cpp.o -c /home/kchen/robotics/ML4KP-devel/src/prx/utilities/spaces/space_snapshot.cpp
 
 src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space_snapshot.cpp.i: cmake_force
@@ -398,6 +412,7 @@ Utilities_OBJECTS = \
 "CMakeFiles/Utilities.dir/geometry/geometry.cpp.o" \
 "CMakeFiles/Utilities.dir/geometry/movable_object.cpp.o" \
 "CMakeFiles/Utilities.dir/heuristics/medial_axis.cpp.o" \
+"CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.o" \
 "CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.o" \
 "CMakeFiles/Utilities.dir/spaces/space.cpp.o" \
 "CMakeFiles/Utilities.dir/spaces/space_snapshot.cpp.o"
@@ -424,12 +439,13 @@ lib/libUtilities.a: src/prx/utilities/CMakeFiles/Utilities.dir/geometry/basic_ge
 lib/libUtilities.a: src/prx/utilities/CMakeFiles/Utilities.dir/geometry/geometry.cpp.o
 lib/libUtilities.a: src/prx/utilities/CMakeFiles/Utilities.dir/geometry/movable_object.cpp.o
 lib/libUtilities.a: src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/medial_axis.cpp.o
+lib/libUtilities.a: src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.o
 lib/libUtilities.a: src/prx/utilities/CMakeFiles/Utilities.dir/math/continuous_algebraic_riccati_equation.cpp.o
 lib/libUtilities.a: src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space.cpp.o
 lib/libUtilities.a: src/prx/utilities/CMakeFiles/Utilities.dir/spaces/space_snapshot.cpp.o
 lib/libUtilities.a: src/prx/utilities/CMakeFiles/Utilities.dir/build.make
 lib/libUtilities.a: src/prx/utilities/CMakeFiles/Utilities.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/kchen/robotics/ML4KP-devel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Linking CXX static library ../../../lib/libUtilities.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/kchen/robotics/ML4KP-devel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Linking CXX static library ../../../lib/libUtilities.a"
 	cd /home/kchen/robotics/ML4KP-devel/src/prx/utilities && $(CMAKE_COMMAND) -P CMakeFiles/Utilities.dir/cmake_clean_target.cmake
 	cd /home/kchen/robotics/ML4KP-devel/src/prx/utilities && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/Utilities.dir/link.txt --verbose=$(VERBOSE)
 

@@ -186,6 +186,20 @@ dirt_plan/fast:
 .PHONY : dirt_plan/fast
 
 # Convenience name for target.
+examples/JIST/CMakeFiles/roadmap_heuristic_test.dir/rule:
+	cd /home/kchen/robotics/ML4KP-devel && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/JIST/CMakeFiles/roadmap_heuristic_test.dir/rule
+.PHONY : examples/JIST/CMakeFiles/roadmap_heuristic_test.dir/rule
+
+# Convenience name for target.
+roadmap_heuristic_test: examples/JIST/CMakeFiles/roadmap_heuristic_test.dir/rule
+.PHONY : roadmap_heuristic_test
+
+# fast build rule for target.
+roadmap_heuristic_test/fast:
+	cd /home/kchen/robotics/ML4KP-devel && $(MAKE) $(MAKESILENT) -f examples/JIST/CMakeFiles/roadmap_heuristic_test.dir/build.make examples/JIST/CMakeFiles/roadmap_heuristic_test.dir/build
+.PHONY : roadmap_heuristic_test/fast
+
+# Convenience name for target.
 examples/JIST/CMakeFiles/rrt_plan.dir/rule:
 	cd /home/kchen/robotics/ML4KP-devel && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 examples/JIST/CMakeFiles/rrt_plan.dir/rule
 .PHONY : examples/JIST/CMakeFiles/rrt_plan.dir/rule
@@ -236,6 +250,30 @@ dirt_plan.s: dirt_plan.cpp.s
 dirt_plan.cpp.s:
 	cd /home/kchen/robotics/ML4KP-devel && $(MAKE) $(MAKESILENT) -f examples/JIST/CMakeFiles/dirt_plan.dir/build.make examples/JIST/CMakeFiles/dirt_plan.dir/dirt_plan.cpp.s
 .PHONY : dirt_plan.cpp.s
+
+roadmap_heuristic_test.o: roadmap_heuristic_test.cpp.o
+.PHONY : roadmap_heuristic_test.o
+
+# target to build an object file
+roadmap_heuristic_test.cpp.o:
+	cd /home/kchen/robotics/ML4KP-devel && $(MAKE) $(MAKESILENT) -f examples/JIST/CMakeFiles/roadmap_heuristic_test.dir/build.make examples/JIST/CMakeFiles/roadmap_heuristic_test.dir/roadmap_heuristic_test.cpp.o
+.PHONY : roadmap_heuristic_test.cpp.o
+
+roadmap_heuristic_test.i: roadmap_heuristic_test.cpp.i
+.PHONY : roadmap_heuristic_test.i
+
+# target to preprocess a source file
+roadmap_heuristic_test.cpp.i:
+	cd /home/kchen/robotics/ML4KP-devel && $(MAKE) $(MAKESILENT) -f examples/JIST/CMakeFiles/roadmap_heuristic_test.dir/build.make examples/JIST/CMakeFiles/roadmap_heuristic_test.dir/roadmap_heuristic_test.cpp.i
+.PHONY : roadmap_heuristic_test.cpp.i
+
+roadmap_heuristic_test.s: roadmap_heuristic_test.cpp.s
+.PHONY : roadmap_heuristic_test.s
+
+# target to generate assembly for a file
+roadmap_heuristic_test.cpp.s:
+	cd /home/kchen/robotics/ML4KP-devel && $(MAKE) $(MAKESILENT) -f examples/JIST/CMakeFiles/roadmap_heuristic_test.dir/build.make examples/JIST/CMakeFiles/roadmap_heuristic_test.dir/roadmap_heuristic_test.cpp.s
+.PHONY : roadmap_heuristic_test.cpp.s
 
 rrt_plan.o: rrt_plan.cpp.o
 .PHONY : rrt_plan.o
@@ -299,11 +337,15 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... dirt_plan"
+	@echo "... roadmap_heuristic_test"
 	@echo "... rrt_plan"
 	@echo "... visualize_plan"
 	@echo "... dirt_plan.o"
 	@echo "... dirt_plan.i"
 	@echo "... dirt_plan.s"
+	@echo "... roadmap_heuristic_test.o"
+	@echo "... roadmap_heuristic_test.i"
+	@echo "... roadmap_heuristic_test.s"
 	@echo "... rrt_plan.o"
 	@echo "... rrt_plan.i"
 	@echo "... rrt_plan.s"

@@ -641,6 +641,30 @@ heuristics/medial_axis.cpp.s:
 	cd /home/kchen/robotics/ML4KP-devel && $(MAKE) $(MAKESILENT) -f src/prx/utilities/CMakeFiles/Utilities.dir/build.make src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/medial_axis.cpp.s
 .PHONY : heuristics/medial_axis.cpp.s
 
+heuristics/roadmap.o: heuristics/roadmap.cpp.o
+.PHONY : heuristics/roadmap.o
+
+# target to build an object file
+heuristics/roadmap.cpp.o:
+	cd /home/kchen/robotics/ML4KP-devel && $(MAKE) $(MAKESILENT) -f src/prx/utilities/CMakeFiles/Utilities.dir/build.make src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.o
+.PHONY : heuristics/roadmap.cpp.o
+
+heuristics/roadmap.i: heuristics/roadmap.cpp.i
+.PHONY : heuristics/roadmap.i
+
+# target to preprocess a source file
+heuristics/roadmap.cpp.i:
+	cd /home/kchen/robotics/ML4KP-devel && $(MAKE) $(MAKESILENT) -f src/prx/utilities/CMakeFiles/Utilities.dir/build.make src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.i
+.PHONY : heuristics/roadmap.cpp.i
+
+heuristics/roadmap.s: heuristics/roadmap.cpp.s
+.PHONY : heuristics/roadmap.s
+
+# target to generate assembly for a file
+heuristics/roadmap.cpp.s:
+	cd /home/kchen/robotics/ML4KP-devel && $(MAKE) $(MAKESILENT) -f src/prx/utilities/CMakeFiles/Utilities.dir/build.make src/prx/utilities/CMakeFiles/Utilities.dir/heuristics/roadmap.cpp.s
+.PHONY : heuristics/roadmap.cpp.s
+
 math/continuous_algebraic_riccati_equation.o: math/continuous_algebraic_riccati_equation.cpp.o
 .PHONY : math/continuous_algebraic_riccati_equation.o
 
@@ -784,6 +808,9 @@ help:
 	@echo "... heuristics/medial_axis.o"
 	@echo "... heuristics/medial_axis.i"
 	@echo "... heuristics/medial_axis.s"
+	@echo "... heuristics/roadmap.o"
+	@echo "... heuristics/roadmap.i"
+	@echo "... heuristics/roadmap.s"
 	@echo "... math/continuous_algebraic_riccati_equation.o"
 	@echo "... math/continuous_algebraic_riccati_equation.i"
 	@echo "... math/continuous_algebraic_riccati_equation.s"
