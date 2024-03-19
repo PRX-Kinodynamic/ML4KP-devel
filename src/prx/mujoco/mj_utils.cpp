@@ -81,6 +81,20 @@ const std::string& query_link_name, const std::vector<double>& q)
   return body_pose;
 }
 
+std::vector<double> forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
+const std::string& query_link_name, const space_point_t& q)
+{
+  prx_assert(qpos_inds.size() == q->get_dim(), "Incorrect configuration length provided.")
+  
+  std::vector<double> q_vec(q->get_dim());
+
+  for (int i  = 0; i < q_vec.size(); i++){
+    q_vec[i] = q->at(i);
+  }
+
+  return forward_kinematics(m, d, qpos_inds, query_link_name, q_vec);
+}
+
 void get_mj_joint_info(mjModel* m, std::vector<mjJointInfo*>& joint_info)
 {
   for (int i = 0; i < m->njnt; i++)

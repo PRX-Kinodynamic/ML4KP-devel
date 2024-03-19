@@ -3,6 +3,7 @@
 #include "prx/mujoco/mj_simulator.hpp"
 #include "prx/planning/planners/dirt.hpp"
 #include "prx/mujoco/mj_utils.hpp"
+#include "prx/utilities/heuristics/roadmap.hpp"
 
 #include <boost/filesystem.hpp>
 using namespace boost::filesystem;
@@ -39,13 +40,42 @@ int main(int argc, char* argv[])
   // mj_kinematics(sim->m, sim->d);
   std::vector<std::string> joint_names = params["joint_names"].as<std::vector<std::string>>();
   auto qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
-  auto pose = forward_kinematics(sim->m, sim->d, qpos_inds, params["end_effector"].as<std::string>(), params["test_config"].as<std::vector<double>>());
+  std::string hand = params["end_effector"].as<std::string>();
+  auto pose = forward_kinematics(sim->m, sim->d, qpos_inds, hand, params["test_config"].as<std::vector<double>>());
   
   for (auto val : pose){
     std::cout << val << "\t";
   }
   std::cout << std::endl;
-  // std::vector<std::string> joint_names = params["joint_names"].as<std::string>()
+
+  space_point_t point = ss->make_point();
+  ss->sample(point);
+  std::cout << point << std::endl;
+  
+  std::vector<std::string> ee_names = params["end_effector_bodies"].as<std::vector<std::string>>();
+
+  std::cout << point->get_dim() << std::endl;
+  distance_function_t distance_function = [&](const space_point_t& a, const space_point_t& b) {
+    double dist = 0;
+    for (auto end_effector_body : ee_names){
+      auto pose_a = forward_kinematics(sim->m, sim->d, qpos_inds, end_effector_body, a);
+      auto pose_b = forward_kinematics(sim->m, sim->d, qpos_inds, end_effector_body, b);
+
+      double euclidean = 0;
+      for (int i = 0; i < 3; i++){
+        euclidean += std::pow(pose_a[i] - pose_b[i], 2.0);
+      }
+      euclidean = std::sqrt(euclidean);
+
+      dist += euclidean;
+    }
+
+    return dist;
+  };
+
+  roadmap_t heuristic{};
+
+  std::cout << heuristic.
   
   std::cout << "End of program!" << std::endl;
 }

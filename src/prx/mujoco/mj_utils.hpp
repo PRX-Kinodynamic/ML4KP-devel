@@ -4,6 +4,8 @@
 #include "prx/utilities/defs.hpp"
 
 #include "mujoco/mujoco.h"
+#include "prx/planning/planners/planner.hpp"
+#include "prx/planning/planner_functions/planner_functions.hpp"
 
 namespace prx
 {
@@ -30,6 +32,9 @@ std::vector<int> get_body_indices(mjModel* m, const std::string& body_name);
 
 std::vector<double> forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
 const std::string& query_link_name, const std::vector<double>& q);
+
+std::vector<double> forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
+const std::string& query_link_name, const space_point_t& q);
 
 void get_mj_joint_info(mjModel* m, std::vector<mjJointInfo*>& joint_info);
 std::ostream& operator<<(std::ostream& os, const mjJointInfo& info);
