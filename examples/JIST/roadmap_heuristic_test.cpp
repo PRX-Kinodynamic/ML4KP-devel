@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 
   // roadmap_t heuristic{};
 
-  std::cout << heuristic.
+  // std::cout << heuristic.
   
   std::cout << "End of program!" << std::endl;
 }

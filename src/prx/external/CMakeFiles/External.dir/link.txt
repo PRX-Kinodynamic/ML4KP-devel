@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../../lib/libExternal.a CMakeFiles/External.dir/PQP/BV.cpp.o CMakeFiles/External.dir/PQP/Build.cpp.o CMakeFiles/External.dir/PQP/PQP.cpp.o CMakeFiles/External.dir/PQP/TriDist.cpp.o
-/usr/bin/ranlib ../../../lib/libExternal.a

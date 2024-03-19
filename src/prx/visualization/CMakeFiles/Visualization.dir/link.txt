@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../../lib/libVisualization.a CMakeFiles/Visualization.dir/three_js_group.cpp.o
-/usr/bin/ranlib ../../../lib/libVisualization.a
