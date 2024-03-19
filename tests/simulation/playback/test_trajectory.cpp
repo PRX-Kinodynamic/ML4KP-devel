@@ -72,11 +72,17 @@ BOOST_AUTO_TEST_CASE(trajectory_at_unormalized_test)
   }
   traj.push_back(Eigen::Vector2d(ti, ti));
 
-  const prx::space_point_t expected_0p0{ space.make_point(Eigen::Vector2d::Zero()) };
-  const prx::space_point_t expected_0p5{ space.make_point(Eigen::Vector2d(0.5, 0.5)) };
-  const prx::space_point_t expected_1p0{ space.make_point(Eigen::Vector2d(1.0, 1.0)) };
-  const prx::space_point_t expected_1p5{ space.make_point(Eigen::Vector2d(1.5, 1.5)) };
-  const prx::space_point_t expected_2p0{ space.make_point(Eigen::Vector2d(2.0, 2.0)) };
+  prx::space_point_t expected_0p0{ space.make_point() };
+  prx::space_point_t expected_0p5{ space.make_point() };
+  prx::space_point_t expected_1p0{ space.make_point() };
+  prx::space_point_t expected_1p5{ space.make_point() };
+  prx::space_point_t expected_2p0{ space.make_point() };
+
+  space.copy(expected_0p0, Eigen::Vector2d::Zero());
+  space.copy(expected_0p5, Eigen::Vector2d(0.5, 0.5));
+  space.copy(expected_1p0, Eigen::Vector2d(1.0, 1.0));
+  space.copy(expected_1p5, Eigen::Vector2d(1.5, 1.5));
+  space.copy(expected_2p0, Eigen::Vector2d(2.0, 2.0));
 
   const prx::space_point_t result_0p0{ traj.at(0.0, false) };
   const prx::space_point_t result_0p5{ traj.at(0.5, false) };

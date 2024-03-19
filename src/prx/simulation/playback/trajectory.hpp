@@ -4,6 +4,7 @@
 #include "prx/utilities/defs.hpp"
 
 #include <deque>
+#include <fstream>
 
 namespace prx
 {
@@ -125,7 +126,13 @@ public:
   void copy_onto_back(const space_t* space);
 
   template <typename State>
-  void copy_onto_back(const State state)
+  inline void copy_onto_back(const State state)
+  {
+    push_back(state);
+  }
+
+  template <typename State>
+  void push_back(const State state)
   {
     if ((num_states + 1) >= max_num_states)
     {
@@ -141,6 +148,10 @@ public:
     ++const_end_iterator;
     ++num_states;
   }
+  
+  void to_file(const std::string, const std::ios_base::openmode _mode = std::ofstream::trunc) const;
+
+  void from_file(const std::string file_name);
 
   std::string print(unsigned precision = 3) const;
 
