@@ -41,6 +41,28 @@ int main(int argc, char* argv[])
   dirt_spec.distance_function = [](const space_point_t& a, const space_point_t& b){
     return space_t::euclidean_2d(a, b, 0, 7);
   };
+
+  std::vector<std::string> joint_names = params["joint_names"].as<std::vector<std::string>>();
+  auto qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
+  std::vector<std::string> ee_names = params["end_effector"].as<std::vector<std::string>>();
+
+  dirt_spec.distance_function = [&](const space_point_t& a, const space_point_t& b) {
+    double dist = 0;
+    for (auto end_effector_body : ee_names){
+      auto pose_a = forward_kinematics(sim->m, sim->d, qpos_inds, end_effector_body, a);
+      auto pose_b = forward_kinematics(sim->m, sim->d, qpos_inds, end_effector_body, b);
+
+      double euclidean = 0;
+      for (int i = 0; i < 3; i++){
+        euclidean += std::pow(pose_a[i] - pose_b[i], 2.0);
+      }
+      euclidean = std::sqrt(euclidean);
+
+      dist += euclidean;
+    }
+
+    return dist;
+  };
   // specify distance function
 
 
@@ -85,35 +107,6 @@ int main(int argc, char* argv[])
   if(params["output_plan"].as<bool>()){
     dirt_query.solution_plan.to_file(params["output_path"].as<std::string>());
   }
-
-  /*
-  trajectory_t sol_traj = dirt_query.solution_traj;
-
-  unsigned ind(3);
-  std::cout << sol_traj.at(ind) << std::endl;
-  */
-
-  /*
-  auto ub = ss->get_upper_bounds();
-  auto lb = ss->get_lower_bounds();
-  for(int i = 0; i < ss->get_dimension(); i++){
-    std::cout << "index: " << i << ", lower: " << lb[i] << ", upper: " << ub[i] << "\n";
-  }
-  
-  std::cout << ss->get_space_name() << std::endl;
-  std::cout << "state space topology: " << ss->get_topology() << std::endl;
-
-  space_point_t point = ss->make_point();
-  ss->sample(point);
-  std::cout << point << std::endl;
-  */
-  // std::cout << cs->get_space_name() << std::endl;
-
-  // std::cout << dirt.tree.vertices() << std::endl;
-  // std::cout << sol_traj.size() << std::endl;
-
-  // std::cout << sol_traj.print() << std::endl;
-  // sim->set_goal(rrt_query.goal_state);
 
   std::cout << "End of program!" << std::endl;
 }

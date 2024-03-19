@@ -1,10 +1,11 @@
 random_seed: 210896
 
-xml_path: "franka_emika_panda/scene_box_cyl.xml"
+scene_xml_path: "franka_emika_panda/scene_box_cyl.xml"
+heuristic_xml_path: "franka_emika_panda/scene_panda_hand.xml"
 
 visualize: false
 
-planner_name: "dirt"
+planner_name: "roadmap"
 
 goal_config: [0, .494, 0, -2.37, 0, 2.9, -2.29]
 goal_region_radius: 2
@@ -16,5 +17,7 @@ output_plan: false
 output_path: "/home/kchen/robotics/ML4KP-devel/out/franka_dirt_output.txt"
 
 forward_name: "hand"
+end_effector: ["hand", "left_finger", "right_finger"]
+
 joint_names: ["base_yaw", "base_pitch", "base_roll", "joint_1_pitch", "joint_1_roll", "joint_2_pitch", "joint_2_roll"]
 link_names: ["link0", "link1", "link2", "link3", "link4", "link5", "link6", "link7", "hand"]

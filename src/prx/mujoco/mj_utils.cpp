@@ -45,7 +45,7 @@ const std::string& query_link_name, const std::vector<double>& q)
   double curr_qpos_vals[qpos_inds.size()] = {};
   for(int i = 0; i < qpos_inds.size(); i++){
     curr_qpos_vals[i] = d->qpos[qpos_inds[i]];
-    std::cout << curr_qpos_vals[i] << std::endl;
+    // std::cout << curr_qpos_vals[i] << std::endl;
   }
 
   // Set joint qpos values to those specified by q
@@ -84,12 +84,12 @@ const std::string& query_link_name, const std::vector<double>& q)
 std::vector<double> forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
 const std::string& query_link_name, const space_point_t& q)
 {
-  prx_assert(qpos_inds.size() == q->get_dim(), "Incorrect configuration length provided.")
+  // prx_assert(qpos_inds.size() == q->get_dim(), "Incorrect configuration length provided.")=
   
-  std::vector<double> q_vec(q->get_dim());
+  std::vector<double> q_vec(qpos_inds.size());
 
   for (int i  = 0; i < q_vec.size(); i++){
-    q_vec[i] = q->at(i);
+    q_vec[i] = q->at(qpos_inds[i]);
   }
 
   return forward_kinematics(m, d, qpos_inds, query_link_name, q_vec);

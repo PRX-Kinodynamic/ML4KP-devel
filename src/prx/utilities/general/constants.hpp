@@ -71,7 +71,7 @@ const std::string mj_models_path = lib_path + "resources/models/";
 const std::string input_path = lib_path + "resources/input_files/";
 const std::string js_path = lib_path + "resources/js/";
 const std::string out_path = lib_path + "out/";
-const bool MUJOCO_VIS = true;
+const bool MUJOCO_VIS = false;
 
 enum plant_type
 {
