@@ -19,9 +19,9 @@
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/visualization/three_js_group.hpp"
 
-#include "prx/factor_graphs/factors/se3.hpp"
-#include "prx/factor_graphs/factors/screw_axis.hpp"
-#include "prx/factor_graphs/factors/preintegration.hpp"
+#include "prx/factor_graphs/lie_groups/se3.hpp"
+#include "prx/factor_graphs/lie_groups/screw_axis.hpp"
+#include "prx/factor_graphs/lie_groups/lie_integrator.hpp"
 // #include "prx/factor_graphs/defs.hpp"
 #include "prx/factor_graphs/utilities/symbols_factory.hpp"
 
@@ -32,21 +32,22 @@
 int main(int argc, char* argv[])
 {
   using prx::fg::screw_axis_t;
-  using prx::fg::SE3_t;
-
+  using prx::fg::se3_t;
+  using Integrator = prx::fg::lie_integrator_t;
   const double dt{ 0.1 };
-  prx::fg::preintegration_t<SE3_t, screw_axis_t> preint{ dt };
 
-  SE3_t x{ SE3_t::Base::Identity() };
-  screw_axis_t xdot{ screw_axis_t::Base::Zero() };
-  xdot.from_twist(Eigen::Vector3d::Zero(), Eigen::Vector3d(0.1, 0, 0));
+  se3_t x{};
+  screw_axis_t xdot{ screw_axis_t::from_twist(Eigen::Vector3d(0.0, 0.0, .10), Eigen::Vector3d(1.0, 0.10, 0)) };
 
-  std::cout << xdot.v().transpose() << "\n";
-  std::cout << x.translation().transpose() << "\n";
+  std::cout << "v:" << xdot.v().transpose() << "\n";
+  std::cout << "w:" << xdot.omega().transpose() << "\n";
+  std::cout << "se3: " << x << "\n";
+  Eigen::AngleAxisd angle_axis{};
   for (double ti = 0.0; ti < 10; ti += dt)
   {
-    x = preint.propagate(x, xdot);
-    std::cout << x.translation().transpose() << "\n";
+    x = Integrator::propagate<se3_t, screw_axis_t>(x, xdot, dt);
+
+    std::cout << x << "\n";
   }
 
   return 0;

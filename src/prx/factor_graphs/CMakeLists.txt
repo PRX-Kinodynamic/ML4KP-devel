@@ -1,4 +1,6 @@
 if(BUILD_FOR_GTSAM)
+	add_definitions(-DGTSAM_USE_QUATERNIONS)
+	
 	find_package(GTSAM REQUIRED) # Uses installed package
 	# find_package(GTSAMCMakeTools)
 
@@ -11,6 +13,8 @@ if(BUILD_FOR_GTSAM)
 	add_library(FactorGraphs INTERFACE)
 	set_target_properties(FactorGraphs PROPERTIES LINKER_LANGUAGE CXX)
 
+	message(STATUS "GTSAM_DIR: ${GTSAM_DIR}")
+	message(STATUS "GTSAM_CONFIG: ${GTSAM_CONFIG}")
 	target_include_directories(FactorGraphs INTERFACE
 														"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
                             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}:${GTSAM_INCLUDE_DIR}>"
