@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     return dist;
   };
 
-  roadmap_t heuristic{};
+  // roadmap_t heuristic{};
 
   std::cout << heuristic.
   
