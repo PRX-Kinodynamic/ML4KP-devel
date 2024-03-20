@@ -11,11 +11,9 @@ void random_walk_t::compute_controls()
 {
   if (fmod(counter, 50.0) < .5)
   {
-    get_control_space()->sample((*set_points)[0]);
+    get_control_space()->sample(current_control);
   }
-  // auto bounds = input_control_space->get_bounds();
-  get_control_space()->copy_from_point((*set_points)[0]);
-  // controller_t::compute_control();
+  get_control_space()->copy_from_point(current_control);
 }
 
 void random_walk_t::propagate(const double simulation_step)
