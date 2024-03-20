@@ -67,9 +67,9 @@ public:
     plant->get_state_space()->copy_point(goal, _goal);
   }
 
-  virtual bool goal_reached(const space_point_t& current_state)
+  virtual bool goal_reached(const space_point_t& current_state, distance_function_t df, const double tolerance = 0.1)
   {
-    return space_t::euclidean_2d(current_state, goal) < 0.1;
+    return df(current_state, goal) < tolerance;
   }
 
   std::shared_ptr<controller_t> get_ptr()
