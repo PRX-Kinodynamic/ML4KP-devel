@@ -9,44 +9,6 @@
 namespace prx
 {
 class controller_t;
-
-// TODO: Change name?
-// Desired states/points
-// Objective
-// Goal
-// local_goal
-class set_points_t
-{
-public:
-  set_points_t(const space_t* _space)
-  {
-    space = _space;
-  }
-
-  inline space_point_t operator[](unsigned index) const
-  {
-    prx_assert(index < set_points.size(),
-               "Set point out of bounds. Size: " << set_points.size() << " requested: " << index);
-    return set_points[index];
-  }
-
-  inline space_point_t& operator[](unsigned index)
-  {
-    prx_warn_cond(index <= set_points.size(), "Adding " << (index - set_points.size()) << " set_points");
-    for (int i = set_points.size(); i <= index; ++i)
-    {
-      set_points.push_back(space->make_point());
-    }
-    return set_points[index];
-  }
-
-private:
-  set_points_t(){};
-  std::vector<space_point_t> set_points;
-  const space_t* space;
-  friend controller_t;
-};
-
 typedef std::shared_ptr<controller_t> controller_ptr_t;
 
 class controller_t : public std::enable_shared_from_this<controller_t>
@@ -55,11 +17,9 @@ public:
   controller_t(const controller_t& other) = default;
 
   controller_t(system_ptr_t _plant, std::string _name = "base_controller")
-  // : set_points(_plant -> get_state_space())
   {
     plant = _plant;
     name = _name;
-    // set_points = std::make_shared<set_points_t>(plant -> get_state_space());
   }
   virtual ~controller_t();
 
@@ -107,6 +67,11 @@ public:
     plant->get_state_space()->copy_point(goal, _goal);
   }
 
+  virtual bool goal_reached(const space_point_t& current_state)
+  {
+    return space_t::euclidean_2d(current_state, goal) < 0.1;
+  }
+
   std::shared_ptr<controller_t> get_ptr()
   {
     return shared_from_this();
@@ -119,12 +84,10 @@ protected:
     name = other->name;
     goal = other->goal;
     plan = other->plan;
-    set_points = other->set_points;
   };
   system_ptr_t plant;
   std::string name;
 
-  std::shared_ptr<set_points_t> set_points;
   space_point_t goal;
   std::shared_ptr<plan_t> plan;  // Control sequence
 };
