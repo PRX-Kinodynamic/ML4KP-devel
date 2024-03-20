@@ -10,7 +10,7 @@ private:
   system_ptr_t plant;
 
 protected:
-  double wheelbase, frequency, kp, ka, kb, time_window, time_ahead, duration, goal_radius;
+  double wheelbase, frequency, kp, ka, kb, time_window, time_ahead, goal_radius;
   unsigned _nearest_index, _window, _lookahead;
   int _reverse;
 
@@ -31,25 +31,21 @@ public:
     _lookahead = time_ahead / simulation_step;
   }
 
-  inline double get_control_duration() const
-  {
-    return duration;
-  }
-
   using controller_t::compute_controls;
   void compute_controls() override
   {
     space_point_t current = get_state_space()->make_point();
     get_state_space()->copy_to(current);
-    std::vector<double> control = get_control(current);
+    std::vector<double> control;
+    get_control(current,control);
     get_control_space()->copy_from_vector(control);
     get_control_space()->enforce_bounds();
   }
 
-  virtual bool goal_reached(const space_point_t& current) override
+  using controller_t::goal_reached;
+  virtual bool goal_reached(const space_point_t& current_state) override
   {
-    return (std::sqrt(std::pow(current->at(0) - goal->at(0), 2) + std::pow(current->at(1) - goal->at(1), 2)) <
-            goal_radius);
+    return goal_reached(current_state, df, goal_radius);
   }
 
   inline double angle_diff(const double a, const double b)
@@ -57,13 +53,16 @@ public:
     return std::atan2(std::sin(a - b), std::cos(a - b));
   }
 
-  std::vector<double> get_control(const space_point_t& current_state)
+  template <typename ControlPoint>
+  void get_control(const space_point_t& current_state, ControlPoint& control)
   {
+    control.resize(2);
     if (goal_reached(current_state))
     {
       _points = nullptr;
       _reverse = 0;
-      return { 0., 0. };
+      control[0] = 0.;
+      control[1] = 0.;
     }
     if (_points != nullptr)
     {
@@ -98,9 +97,14 @@ public:
       const double v = kp * p;
       const double omega = (ka * a + kb * beta);
 
-      return { omega, _reverse * v };
+      control[0] = omega;
+      control[1] = _reverse * v;
     }
-    return { 0., 0. };
+    else
+    {
+      control[0] = 0.;
+      control[1] = 0.;
+    }
   }
 };
 }  // namespace prx
