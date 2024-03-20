@@ -56,10 +56,9 @@ bool dirt_t::_link_and_setup_query(planner_query_t* query)
     metric->add_node(start_node.get());
     previous_child = start_vertex;
     child_extension = true;
-    best_cost_to_go = start_node->cost_to_go;
-    best_vertex = start_vertex;
   }
 
+  /*
   if (query->solution_plan.size() > 0)
   {
     prx_warn("[DIRT] Seeding the tree with the provided solution plan of duration: " << query->solution_plan.duration());
@@ -108,6 +107,7 @@ bool dirt_t::_link_and_setup_query(planner_query_t* query)
 
     prx_warn("[DIRT] Seeding complete.");
   }
+  */
 
   timer.reset();
   iteration_count = 0;
@@ -411,11 +411,6 @@ void dirt_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_node_t*
     child_extension = true;
     previous_child = node_index;
   }
-  // if (new_tree_node->cost_to_go < best_cost_to_go)
-  // {
-  //   best_cost_to_go = new_tree_node->cost_to_go;
-  //   best_vertex = node_index;
-  // }
   metric->add_node(new_tree_node.get());
   new_tree_node->bridge = false;
   update_goal(node_index);
