@@ -109,7 +109,6 @@ bool dirt_t::_link_and_setup_query(planner_query_t* query)
   }
   */
 
-  }
   timer.reset();
   iteration_count = 0;
   current_solution = 0;
