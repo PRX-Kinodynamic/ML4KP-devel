@@ -10,7 +10,7 @@ private:
   system_ptr_t plant;
 
 protected:
-  double wheelbase, k_path, k_throttle, goal_radius, duration;
+  double wheelbase, k_path, k_throttle, goal_radius;
 
   int discretization;
   std::vector<unsigned> indices;
@@ -26,11 +26,6 @@ public:
     goal_radius = params["goal_radius"].as<double>();
     duration = 1.0 / params["frequency"].as<double>();
     discretization = std::floor(1.0 / (0.01 * params["frequency"].as<double>()));
-  }
-
-  inline double get_control_duration() const
-  {
-    return duration;
   }
 
   virtual void set_points(std::shared_ptr<trajectory_t> _traj) override
@@ -52,26 +47,29 @@ public:
   {
     space_point_t current = get_state_space()->make_point();
     get_state_space()->copy_to(current);
-    std::vector<double> control = get_control(current);
+    std::vector<double> control;
+    get_control(current,control);
     get_control_space()->copy_from_vector(control);
     get_control_space()->enforce_bounds();
   }
 
+  using controller_t::goal_reached;
   virtual bool goal_reached(const space_point_t& current_state) override
   {
-    // Check if the goal has been reached
-    return (std::sqrt(std::pow(current_state->at(0) - goal->at(0), 2) +
-                      std::pow(current_state->at(1) - goal->at(1), 2)) < goal_radius);
+    return goal_reached(current_state, df, goal_radius);
   }
-
-  std::vector<double> get_control(const space_point_t& current_state)
+  
+  template <typename ControlPoint>
+  void get_control(const space_point_t& current_state, ControlPoint& control)
   {
+    control.resize(2);
     // Check if the goal has been reached
     if (goal_reached(current_state))
     {
       _points = nullptr;
       indices.clear();
-      return { 0.0, 0.0 };
+      control[0] = 0.0;
+      control[1] = 0.0;
     }
     if (_points != nullptr)
     {
@@ -119,9 +117,14 @@ public:
       double steering = theta_e + theta_d;
       double throttle = k_throttle * _points->at(indices[nearest_index])->as<Eigen::VectorXd>()[3];
 
-      return { steering, throttle };
+      control[0] = steering;
+      control[1] = throttle;
     }
-    return { 0.0, 0.0 };
+    else
+    {
+      control[0] = 0.0;
+      control[1] = 0.0;
+    }
   }
 };
 }  // namespace prx

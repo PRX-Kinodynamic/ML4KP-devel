@@ -57,58 +57,6 @@ bool dirt_t::_link_and_setup_query(planner_query_t* query)
     previous_child = start_vertex;
     child_extension = true;
   }
-
-  /*
-  if (query->solution_plan.size() > 0)
-  {
-    prx_warn("[DIRT] Seeding the tree with the provided solution plan of duration: " << query->solution_plan.duration());
-    std::pair<plan_t*, trajectory_t*> eg = std::make_pair(nullptr, nullptr);
-    node_index_t current_node_idx = start_vertex;
-    dirt_node_t* current_node = get_vertex(current_node_idx);
-
-    for (unsigned i = 0; i < query->solution_plan.size(); i++)
-    {
-      // Get the first solution plan
-      trajectory_t edge_traj(state_space);
-      plan_t edge_plan(control_space);
-      edge_plan.append_onto_back(query->solution_plan[i].duration);
-      control_space->copy(edge_plan.back().control, query->solution_plan[i].control);
-      propagate(current_node->point, edge_plan, edge_traj);
-
-      // Check if the edge is valid
-      bool valid = valid_check(edge_traj);
-      if (!valid)
-      {
-        prx_warn("[DIRT] Aborting seeding.");
-        break;
-      }
-
-      // Add the edge to the tree
-      eg = std::make_pair(new plan_t(edge_plan), new trajectory_t(edge_traj));
-      double new_node_dir_radius = distance_function(edge_traj.back(), current_node->point);
-      double edge_cost = cost_function(edge_traj, edge_plan);
-      double end_heuristic = h(edge_traj.back(), dirt_query->goal_state);
-
-      auto prox_nodes = metric->radius_and_closest_query(edge_traj.back(), std::max(new_node_dir_radius, max_radius));
-      std::vector<dirt_node_t*> dir_updates;
-      std::transform(prox_nodes.begin(), prox_nodes.end(), std::back_inserter(dir_updates),
-                     [](proximity_node_t* prox_node) { return static_cast<dirt_node_t*>(prox_node); });
-      std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_node_t* node) {
-        if (current_node->cost_to_come + edge_cost + end_heuristic > node->cost_to_come + node->cost_to_go)
-        {
-          new_node_dir_radius = std::min(new_node_dir_radius, distance_function(edge_traj.back(), node->point));
-        }
-      });
-
-      add_edge_to_tree(eg, current_node, dir_updates, new_node_dir_radius);
-      current_node_idx = tree.get_vertex_as<dirt_node_t>(current_node_idx)->get_children().front();
-      current_node = get_vertex(current_node_idx);
-    }
-
-    prx_warn("[DIRT] Seeding complete.");
-  }
-  */
-
   timer.reset();
   iteration_count = 0;
   current_solution = 0;
