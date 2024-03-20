@@ -54,6 +54,8 @@ namespace prx
             auto start_node = roadmap.get_vertex_as<roadmap_node_t>(start_vertex);
             start_node->point = state_space->clone_point(roadmap_query->start_state);
             start_node->cost_to_come=0;
+
+            metric->add_node(start_node.get());
         }
         timer.reset();
         iteration_count = 0;
@@ -76,15 +78,42 @@ namespace prx
             node_index_t new_node_index = roadmap.add_vertex<roadmap_node_t, roadmap_edge_t>(); 
             auto new_node = roadmap.get_vertex_as<roadmap_node_t>(new_node_index);
             new_node->point = config_space->clone_point(sampled_config);
-            new_node->config = state_space->clone_point(sampled_state);
+            new_node->state = state_space->clone_point(sampled_state);
 
-            state_space;
+            metric->add_node(new_node.get());
 
             iteration_count++;
         }
         while (!condition->check());
 
-        neighbor_radius = std::ceil(std::log2(roadmap.num_vertices()));
+        // the closest neighbor is the same node
+        k = std::ceil(std::log2(roadmap.num_vertices())) + 1;
+
+        auto iters = roadmap.vertices();
+        for (auto iter = iters.first; iter != iters.second; iter++)
+        {
+            node_index_t curr_index = iter->get()->get_index();
+            
+            auto neighborhood = metric->multi_query(iter->get()->point, k);
+
+            for (auto neighbor : neighborhood){
+                // NOTE: this assumes that each node has the same index 
+                //       in the graph_nearest_neighbors as in the roadmap
+                node_index_t neighbor_index = neighbor->get_prox_index();
+                if (curr_index != neighbor_index)
+                {
+                    // call interpolate function here to check # of collisions
+                    short collisions = 0; 
+                    edge_index_t edge_index = roadmap.add_edge(curr_index, neighbor_index);
+                    auto new_edge = roadmap.get_edge_as<roadmap_edge_t>(edge_index);
+                    new_edge->edge_cost = // query metric;
+                    new_edge->collisions = // collisions;
+                }
+            }
+        }
+        
+        // pair.first++;
+        // std::cout << pair.first->get() <<std::endl;
     }
 
     void roadmap_t::_fulfill_query()

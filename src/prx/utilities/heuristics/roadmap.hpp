@@ -19,7 +19,7 @@ namespace prx
     {
     }
         double cost_to_come;
-        space_point_t config;
+        space_point_t state;
     };
 
     class roadmap_edge_t : public undirected_edge_t
@@ -28,14 +28,14 @@ namespace prx
         roadmap_edge_t()
         {
             edge_cost = 0;
-            num_collisions = 0;
+            collisions = 0;
         }
         virtual ~roadmap_edge_t()
         {
         }
 
-    double edge_cost;
-    unsigned short num_collisions;
+        double edge_cost;
+        unsigned short collisions;
     };
 
     class roadmap_specification_t : public planner_specification_t
@@ -141,14 +141,13 @@ namespace prx
 
             undirected_graph_t roadmap;
             graph_nearest_neighbors_t* metric;
+            int k;
 
             space_t* state_space;
             space_t* config_space; // configuration space of the heuristic roadmap
 
             space_point_t sampled_state;
             space_point_t sampled_config;
-
-            int neighbor_radius;
 
             long unsigned iteration_count;
             timer_t timer;
