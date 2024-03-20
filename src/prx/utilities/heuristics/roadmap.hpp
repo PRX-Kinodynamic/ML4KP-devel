@@ -1,10 +1,10 @@
 #pragma once
 
-#include "prx/utilities/defs.hpp"
-#include "prx/utilities/data_structures/gnn.hpp"
-#include "prx/utilities/data_structures/undirected_graph.hpp"
 #include "prx/planning/planners/planner.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"
+#include "prx/utilities/data_structures/gnn.hpp"
+#include "prx/utilities/data_structures/undirected_graph.hpp"
+#include "prx/utilities/defs.hpp"
 
 namespace prx
 {   
@@ -45,9 +45,22 @@ namespace prx
             {
                 _sg = sg;
                 state_space = sg->get_state_space();
+                config_space = state_space; // TODO: does this actually create a copy?
 
                 distance_function = [](const space_point_t& s1, const space_point_t& s2) { return space_t::euclidean_2d(s1, s2); };
                 sample_state = [this](space_point_t& s) { default_sample_state(s, state_space); };
+
+                // Kevin: roadmap class was created with simple path planning in mind, 
+                //        so the default implementation may not work out of the box
+                propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj) {
+                    default_propagate(start_state, plan, out_traj, sg);
+                };
+
+                state_to_config = [](const space_point_t& state, space_point_t& config){
+                    for(int i = 0; i < state->get_dim(); i++){
+                        config->at(i) = state->at(i);
+                    }
+                };
 
                 valid_state = [this, cg](space_point_t& s) { return default_valid_state(s, state_space, cg); };
             }
@@ -57,12 +70,16 @@ namespace prx
 
             std::shared_ptr<system_group_t> _sg;
 
+            std::function<void(const space_point_t&, space_point_t&)> state_to_config; 
+
             distance_function_t distance_function;
+            propagate_t propagate; // interpolation??
+
             valid_state_t valid_state;
             sample_state_t sample_state;
 
             space_t* state_space;
-
+            space_t* config_space;
     };
 
     class roadmap_query_t : public planner_query_t
@@ -88,7 +105,10 @@ namespace prx
     {
         public:
             roadmap_t(const std::string& new_name);
-            virtual ~roadmap_t();
+
+            virtual ~roadmap_t(){
+                _reset();
+            }
 
             virtual void _link_and_setup_spec(planner_specification_t* spec) override;
             virtual bool _preprocess() override;
@@ -101,6 +121,8 @@ namespace prx
             roadmap_query_t* roadmap_query;
 
         protected:
+            // This can be a forward kinematics function
+            std::function<void(const space_point_t&, space_point_t&)> state_to_config; 
             void msmo_astar();
             void interpolate(space_point_t&, space_point_t&, std::vector<space_point_t>&);
 
@@ -110,6 +132,8 @@ namespace prx
             node_index_t goal_vertex;
 
             distance_function_t distance_function;
+            propagate_t propagate; // interpolation??
+
             valid_state_t valid_state;
             sample_state_t sample_state;
             // interpolate_t interpolate; 
@@ -119,8 +143,9 @@ namespace prx
             graph_nearest_neighbors_t* metric;
 
             space_t* state_space;
+            space_t* config_space; // configuration space of the heuristic roadmap
 
-            space_point_t sample_point;
+            space_point_t sampled_state;
 
             int neighbor_radius;
 

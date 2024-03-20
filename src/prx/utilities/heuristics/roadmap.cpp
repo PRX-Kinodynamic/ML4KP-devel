@@ -8,9 +8,12 @@ namespace prx
         planner_name = new_name;
     }
 
-    roadmap_t::~roadmap_t(){
+    /*
+    roadmap_t::~roadmap_t()
+    {
         _reset();
     }
+    */
 
     void roadmap_t::_link_and_setup_spec(planner_specification_t* spec)
     {
@@ -18,9 +21,15 @@ namespace prx
         prx_assert(roadmap_spec != nullptr, "Roadmap received an incorrect specification.");
         distance_function = roadmap_spec->distance_function;
         sample_state = roadmap_spec->sample_state;
+        propagate = roadmap_spec->propagate;
 
         state_space = roadmap_spec->state_space;
-        sample_point = state_space->make_point();
+        config_space = roadmap_spec->config_space;
+
+        state_to_config = roadmap_spec->state_to_config;
+
+        sampled_state = state_space->make_point();
+
         metric = new graph_nearest_neighbors_t(distance_function);
     }
 
@@ -50,15 +59,42 @@ namespace prx
         current_solution = 0;
         current_solution_iters = 0;
         current_solution_time = 0;
+
+        return true;
     }
 
     void roadmap_t::_resolve_query(condition_check_t* condition)
     {
         do
         {
-            sample_state(sample_point);
+            sample_state(sampled_state);
             
+            space_point_t sampled_config = config_space->make_point();
+            state_to_config(sampled_state, sampled_config);
+            iteration_count++;
+
+            node_index_t new_node_index = roadmap.add_vertex<roadmap_node_t, roadmap_edge_t>(); 
+            auto new_node = roadmap.get_vertex_as<roadmap_node_t>(new_node_index);
+            new_node->point = config_space->clone_point(sampled_config);
+
         }
         while (!condition->check());
+    }
+
+    void roadmap_t::_fulfill_query()
+    {
+
+    }
+
+    void roadmap_t::_reset()
+    {
+        // clear the stuff
+        roadmap.purge();
+        if (metric != nullptr)
+        {
+            delete metric;
+            metric = nullptr;
+        }
+        config_space = nullptr;
     }
 }

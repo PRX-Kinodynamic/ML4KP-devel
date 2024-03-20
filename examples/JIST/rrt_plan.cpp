@@ -61,8 +61,8 @@ int main(int argc, char* argv[])
   std::vector<double> goal_vec = params["goal_config"].as<std::vector<double>>();
   for (int i = 0; i < goal_vec.size(); i++)
   {
-      // rrt_query.goal_state->at(i) = goal_vec[i];
-    rrt_query.goal_state->at(i) = rrt_query.start_state->at(i) + 0.1;
+    // rrt_query.goal_state->at(i) = goal_vec[i];
+    rrt_query.goal_state->at(i) = goal_vec[i]; // rrt_query.start_state->at(i) + 0.1;
   }
 
   // check whether sampled state is in goal region

@@ -39,7 +39,8 @@ std::vector<int> get_body_indices(mjModel* m, const std::string& body_name)
 std::vector<double> forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
 const std::string& query_link_name, const std::vector<double>& q)
 {
-  prx_assert(qpos_inds.size() == q.size(), "Incorrect configuration length provided.")
+  prx_assert(qpos_inds.size() == q.size(), "Incorrect configuration length provided: " + 
+  std::to_string(qpos_inds.size()) + ", " + std::to_string(q.size()) + "\n");
   
   // Save current joint qpos values
   double curr_qpos_vals[qpos_inds.size()] = {};
