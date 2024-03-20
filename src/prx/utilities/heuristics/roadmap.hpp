@@ -19,7 +19,7 @@ namespace prx
     {
     }
         double cost_to_come;
-
+        space_point_t config;
     };
 
     class roadmap_edge_t : public undirected_edge_t
@@ -51,13 +51,13 @@ namespace prx
                 sample_state = [this](space_point_t& s) { default_sample_state(s, state_space); };
 
                 // Kevin: roadmap class was created with simple path planning in mind, 
-                //        so the default implementation may not work out of the box
+                //        so the default implementation may not work
                 propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj) {
                     default_propagate(start_state, plan, out_traj, sg);
                 };
 
                 state_to_config = [](const space_point_t& state, space_point_t& config){
-                    for(int i = 0; i < state->get_dim(); i++){
+                    for(int i = 0; i < config->get_dim(); i++){
                         config->at(i) = state->at(i);
                     }
                 };
@@ -146,6 +146,7 @@ namespace prx
             space_t* config_space; // configuration space of the heuristic roadmap
 
             space_point_t sampled_state;
+            space_point_t sampled_config;
 
             int neighbor_radius;
 

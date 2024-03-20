@@ -29,6 +29,7 @@ namespace prx
         state_to_config = roadmap_spec->state_to_config;
 
         sampled_state = state_space->make_point();
+        sampled_config = config_space->make_point();
 
         metric = new graph_nearest_neighbors_t(distance_function);
     }
@@ -69,16 +70,21 @@ namespace prx
         {
             sample_state(sampled_state);
             
-            space_point_t sampled_config = config_space->make_point();
+            //space_point_t sampled_config = config_space->make_point();
             state_to_config(sampled_state, sampled_config);
-            iteration_count++;
 
             node_index_t new_node_index = roadmap.add_vertex<roadmap_node_t, roadmap_edge_t>(); 
             auto new_node = roadmap.get_vertex_as<roadmap_node_t>(new_node_index);
             new_node->point = config_space->clone_point(sampled_config);
+            new_node->config = state_space->clone_point(sampled_state);
 
+            state_space;
+
+            iteration_count++;
         }
         while (!condition->check());
+
+        neighbor_radius = std::ceil(std::log2(roadmap.num_vertices()));
     }
 
     void roadmap_t::_fulfill_query()
@@ -90,11 +96,16 @@ namespace prx
     {
         // clear the stuff
         roadmap.purge();
+
         if (metric != nullptr)
         {
             delete metric;
             metric = nullptr;
         }
-        config_space = nullptr;
+
+        if (config_space != nullptr){
+            delete config_space;
+            config_space = nullptr;
+        }
     }
 }
