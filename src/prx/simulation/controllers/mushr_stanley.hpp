@@ -26,6 +26,8 @@ public:
     goal_radius = params["goal_radius"].as<double>();
     duration = 1.0 / params["frequency"].as<double>();
     discretization = std::floor(1.0 / (0.01 * params["frequency"].as<double>()));
+
+    reset();
   }
 
   virtual void set_points(std::shared_ptr<trajectory_t> _traj) override
@@ -42,32 +44,25 @@ public:
     }
   }
 
-  using controller_t::compute_controls;
-  void compute_controls() override
-  {
-    space_point_t current = get_state_space()->make_point();
-    get_state_space()->copy_to(current);
-    std::vector<double> control;
-    get_control(current,control);
-    get_control_space()->copy_from_vector(control);
-    get_control_space()->enforce_bounds();
-  }
-
   using controller_t::goal_reached;
   virtual bool goal_reached(const space_point_t& current_state) override
   {
     return goal_reached(current_state, df, goal_radius);
   }
+
+  virtual void reset() override
+  {
+    _points = nullptr;
+    indices.clear();
+  }
   
-  template <typename ControlPoint>
-  void get_control(const space_point_t& current_state, ControlPoint& control)
+  virtual void get_control(const space_point_t& current_state, Eigen::VectorXd& control) override
   {
     control.resize(2);
     // Check if the goal has been reached
     if (goal_reached(current_state))
     {
-      _points = nullptr;
-      indices.clear();
+      reset();
       control[0] = 0.0;
       control[1] = 0.0;
     }
