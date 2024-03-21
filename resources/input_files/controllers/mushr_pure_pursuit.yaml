@@ -3,7 +3,7 @@ wheelbase: 0.2965
 k_p: 0.5
 k_a: 1.5
 k_b: -0.25
-time_window: 0.5
-time_ahead: 2.0
-goal_radius: 0.1
+window: 50
+lookahead: 200
+goal_radius: 0.25
 frequency: 30
