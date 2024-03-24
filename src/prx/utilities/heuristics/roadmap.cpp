@@ -21,7 +21,8 @@ namespace prx
         prx_assert(roadmap_spec != nullptr, "Roadmap received an incorrect specification.");
         distance_function = roadmap_spec->distance_function;
         sample_state = roadmap_spec->sample_state;
-        propagate = roadmap_spec->propagate;
+        interpolate = roadmap_spec->interpolate;
+        // propagate = roadmap_spec->propagate;
 
         state_space = roadmap_spec->state_space;
         config_space = roadmap_spec->config_space;
@@ -93,6 +94,7 @@ namespace prx
         for (auto iter = iters.first; iter != iters.second; iter++)
         {
             node_index_t curr_index = iter->get()->get_index();
+            auto curr_node = roadmap.get_vertex_as<roadmap_node_t>(curr_index);
             
             auto neighborhood = metric->multi_query(iter->get()->point, k);
 
@@ -100,14 +102,18 @@ namespace prx
                 // NOTE: this assumes that each node has the same index 
                 //       in the graph_nearest_neighbors as in the roadmap
                 node_index_t neighbor_index = neighbor->get_prox_index();
+                auto neighbor_node = roadmap.get_vertex_as<roadmap_node_t>(neighbor_index);
+
                 if (curr_index != neighbor_index)
                 {
                     // call interpolate function here to check # of collisions
                     short collisions = 0; 
-                    edge_index_t edge_index = roadmap.add_edge(curr_index, neighbor_index);
+                    auto weight = distance_function(curr_node->point, neighbor_node->point);// metric->node_distance(curr_node.get(), neighbor_node.get());
+                    edge_index_t edge_index = roadmap.add_edge(curr_index, neighbor_index, weight);
                     auto new_edge = roadmap.get_edge_as<roadmap_edge_t>(edge_index);
-                    new_edge->edge_cost = // query metric;
-                    new_edge->collisions = // collisions;
+                                 // roadmap.get_edge_as<roadmap_edge_t>(edge_index);
+
+                    // new_edge->collisions = // collisions;
                 }
             }
         }

@@ -144,6 +144,12 @@ void default_propagate(space_point_t& start_state, plan_t& plan, trajectory_t& o
   sg->propagate(start_state, plan, out_traj);
 }
 
+void default_interpolate(space_t* space, space_point_t& start, space_point_t& goal, trajectory_t& out_traj,
+                    int nsteps)
+{
+  
+}
+
 void default_expand(space_point_t& start_state, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn,
                     std::shared_ptr<system_group_t> sg, sample_plan_t sp, propagate_t prop)
 {

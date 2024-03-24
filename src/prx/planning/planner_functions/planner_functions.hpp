@@ -15,6 +15,7 @@ typedef std::function<bool(trajectory_t&)> valid_trajectory_t;
 typedef std::function<bool(space_point_t, plan_t*, trajectory_t*)> valid_stop_t;
 typedef std::function<bool(space_point_t&)> valid_state_t;
 typedef std::function<void(space_point_t&, plan_t&, trajectory_t&)> propagate_t;
+typedef std::function<void(space_point_t&, space_point_t&, trajectory_t&, int)> interpolate_t;
 typedef std::function<void(space_point_t&, std::vector<plan_t*>&, std::vector<trajectory_t*>&, int bn,
                            bool blossom_expand)>
     expand_t;
@@ -71,6 +72,9 @@ bool default_valid_stop(space_point_t start_state, plan_t* stopping_plan, trajec
 bool default_valid_state(space_point_t&, space_t*, std::shared_ptr<collision_group_t>);
 
 void default_propagate(space_point_t&, plan_t&, trajectory_t&, std::shared_ptr<system_group_t>);
+
+void default_interpolate(space_t* space, space_point_t& start, space_point_t& goal, trajectory_t& out_traj,
+                    int nsteps);
 
 void default_expand(space_point_t&, std::vector<plan_t*>&, std::vector<trajectory_t*>&, int bn,
                     std::shared_ptr<system_group_t>, sample_plan_t sp, propagate_t prop);

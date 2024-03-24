@@ -27,14 +27,19 @@ namespace prx
     public:
         roadmap_edge_t()
         {
-            edge_cost = 0;
+            // weight = 0;
             collisions = 0;
         }
         virtual ~roadmap_edge_t()
         {
         }
 
-        double edge_cost;
+        /*
+        void set_weight(double weight){
+            this->weight = weight;
+        }*/
+
+        // double weight;
         unsigned short collisions;
     };
 
@@ -51,9 +56,15 @@ namespace prx
                 sample_state = [this](space_point_t& s) { default_sample_state(s, state_space); };
 
                 // Kevin: roadmap class was created with simple path planning in mind, 
-                //        so the default implementation may not work
+                //        so the default implementation will not work
+                /*
                 propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj) {
                     default_propagate(start_state, plan, out_traj, sg);
+                };*/
+
+                interpolate = [config_space=this->config_space](space_point_t& start_config, space_point_t& goal_config, trajectory_t& out_traj, int nsteps)
+                {
+                    default_interpolate(config_space, start_config, goal_config, out_traj, nsteps);
                 };
 
                 state_to_config = [](const space_point_t& state, space_point_t& config){
@@ -73,7 +84,8 @@ namespace prx
             std::function<void(const space_point_t&, space_point_t&)> state_to_config; 
 
             distance_function_t distance_function;
-            propagate_t propagate; // interpolation??
+            interpolate_t interpolate;
+            // propagate_t propagate = 0; // interpolation??
 
             valid_state_t valid_state;
             sample_state_t sample_state;
@@ -124,7 +136,6 @@ namespace prx
             // This can be a forward kinematics function
             std::function<void(const space_point_t&, space_point_t&)> state_to_config; 
             void msmo_astar();
-            void interpolate(space_point_t&, space_point_t&, std::vector<space_point_t>&);
 
             std::string planner_name;
 
@@ -132,7 +143,8 @@ namespace prx
             node_index_t goal_vertex;
 
             distance_function_t distance_function;
-            propagate_t propagate; // interpolation??
+            interpolate_t interpolate;
+            // propagate_t propagate; // interpolation??
 
             valid_state_t valid_state;
             sample_state_t sample_state;
