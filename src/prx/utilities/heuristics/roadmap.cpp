@@ -19,6 +19,7 @@ namespace prx
     {
         roadmap_spec = dynamic_cast<roadmap_specification_t*>(spec);
         prx_assert(roadmap_spec != nullptr, "Roadmap received an incorrect specification.");
+        
         distance_function = roadmap_spec->distance_function;
         sample_state = roadmap_spec->sample_state;
         interpolate = roadmap_spec->interpolate;
@@ -53,7 +54,11 @@ namespace prx
             start_vertex = roadmap.add_vertex<roadmap_node_t, roadmap_edge_t>();
             goal_vertex = start_vertex;
             auto start_node = roadmap.get_vertex_as<roadmap_node_t>(start_vertex);
-            start_node->point = state_space->clone_point(roadmap_query->start_state);
+            auto start_config = config_space->make_point();
+            state_to_config(roadmap_query->start_state, start_config);
+            // start_node->point = state_space->clone_point(roadmap_query->start_state);
+            start_node->point = config_space->clone_point(start_config);
+            start_node->state = state_space->clone_point(roadmap_query->start_state);
             start_node->cost_to_come=0;
 
             metric->add_node(start_node.get());
@@ -112,6 +117,11 @@ namespace prx
                     edge_index_t edge_index = roadmap.add_edge(curr_index, neighbor_index, weight);
                     auto new_edge = roadmap.get_edge_as<roadmap_edge_t>(edge_index);
                                  // roadmap.get_edge_as<roadmap_edge_t>(edge_index);
+
+                    trajectory_t edge_traj{config_space};
+
+                    int nsteps = 5; // specify max delta x (displacement) for each step
+                    interpolate(config_space, curr_node->point, neighbor_node->point, edge_traj, nsteps);
 
                     // new_edge->collisions = // collisions;
                 }

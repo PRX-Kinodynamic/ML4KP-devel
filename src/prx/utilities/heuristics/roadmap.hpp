@@ -62,9 +62,10 @@ namespace prx
                     default_propagate(start_state, plan, out_traj, sg);
                 };*/
 
-                interpolate = [config_space=this->config_space](space_point_t& start_config, space_point_t& goal_config, trajectory_t& out_traj, int nsteps)
+                // interpolate = [space=this->config_space](space_point_t& start_config, space_point_t& goal_config, trajectory_t& out_traj, int nsteps)
+                interpolate = [](space_t* space, space_point_t& start_config, space_point_t& goal_config, trajectory_t& out_traj, int nsteps)
                 {
-                    default_interpolate(config_space, start_config, goal_config, out_traj, nsteps);
+                    default_interpolate(space, start_config, goal_config, out_traj, nsteps);
                 };
 
                 state_to_config = [](const space_point_t& state, space_point_t& config){

@@ -101,11 +101,23 @@ int main(int argc, char* argv[])
 
   condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());  //'
 
+  std::cout << "starting query" << std::endl;
+
   roadmap.link_and_setup_spec(&roadmap_spec);
+  std::cout << "link_and_setup_spec" << std::endl;
+
   roadmap.preprocess();
+  std::cout << "preprocess" << std::endl;
+
   roadmap.link_and_setup_query(&roadmap_query);
+  std::cout << "link_and_setup_query" << std::endl;
+
   roadmap.resolve_query(&checker);
+  std::cout << "resolve_query" << std::endl;
+
   roadmap.fulfill_query();
+  std::cout << "fulfill_query" << std::endl;
+  
   // roadmap_t heuristic{};
 
   // std::cout << heuristic.

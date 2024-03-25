@@ -15,7 +15,7 @@ typedef std::function<bool(trajectory_t&)> valid_trajectory_t;
 typedef std::function<bool(space_point_t, plan_t*, trajectory_t*)> valid_stop_t;
 typedef std::function<bool(space_point_t&)> valid_state_t;
 typedef std::function<void(space_point_t&, plan_t&, trajectory_t&)> propagate_t;
-typedef std::function<void(space_point_t&, space_point_t&, trajectory_t&, int)> interpolate_t;
+typedef std::function<void(space_t*, space_point_t&, space_point_t&, trajectory_t&, int)> interpolate_t;
 typedef std::function<void(space_point_t&, std::vector<plan_t*>&, std::vector<trajectory_t*>&, int bn,
                            bool blossom_expand)>
     expand_t;

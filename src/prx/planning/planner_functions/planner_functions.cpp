@@ -147,7 +147,20 @@ void default_propagate(space_point_t& start_state, plan_t& plan, trajectory_t& o
 void default_interpolate(space_t* space, space_point_t& start, space_point_t& goal, trajectory_t& out_traj,
                     int nsteps)
 {
-  
+  prx_assert(nsteps > 1, "Need more than 1 step to interpolate!");
+
+  std::vector<float> t_vals;
+  std::vector<std::vector<double>> t;
+  for(int step = 0; step < nsteps; step++)
+  {
+    float t_val = step/(nsteps-1.0);
+    t_vals.push_back(t_val);
+
+    auto new_point = space->make_point();
+    space->interpolate(start, goal, t_val, new_point);
+
+    out_traj.copy_onto_back(new_point);
+  }
 }
 
 void default_expand(space_point_t& start_state, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn,
