@@ -18,13 +18,14 @@ namespace prx
     void roadmap_t::_link_and_setup_spec(planner_specification_t* spec)
     {
         roadmap_spec = dynamic_cast<roadmap_specification_t*>(spec);
+
         prx_assert(roadmap_spec != nullptr, "Roadmap received an incorrect specification.");
-        
+
         distance_function = roadmap_spec->distance_function;
         sample_state = roadmap_spec->sample_state;
         interpolate = roadmap_spec->interpolate;
         // propagate = roadmap_spec->propagate;
-
+        
         state_space = roadmap_spec->state_space;
         config_space = roadmap_spec->config_space;
 
@@ -148,9 +149,11 @@ namespace prx
             metric = nullptr;
         }
 
+        /*
         if (config_space != nullptr){
             delete config_space;
             config_space = nullptr;
         }
+        */
     }
 }
