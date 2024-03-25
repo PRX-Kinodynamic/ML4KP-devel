@@ -75,6 +75,7 @@ namespace prx
                 };
 
                 valid_state = [this, cg](space_point_t& s) { return default_valid_state(s, state_space, cg); };
+                valid_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
             }
             virtual ~roadmap_specification_t()
             {
@@ -89,6 +90,8 @@ namespace prx
             // propagate_t propagate = 0; // interpolation??
 
             valid_state_t valid_state;
+            valid_trajectory_t valid_check;
+
             sample_state_t sample_state;
 
             space_t* state_space;
@@ -148,9 +151,9 @@ namespace prx
             // propagate_t propagate; // interpolation??
 
             valid_state_t valid_state;
+            valid_trajectory_t valid_check;
+
             sample_state_t sample_state;
-            // interpolate_t interpolate; 
-            // std::function<void(space_point_t&, space_point_t&, std::vector<space_point_t>&)>
 
             undirected_graph_t roadmap;
             graph_nearest_neighbors_t* metric;

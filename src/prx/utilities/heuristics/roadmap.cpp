@@ -31,6 +31,9 @@ namespace prx
 
         state_to_config = roadmap_spec->state_to_config;
 
+        valid_state = roadmap_spec->valid_state;
+        valid_check = roadmap_spec->valid_check;
+
         sampled_state = state_space->make_point();
         sampled_config = config_space->make_point();
 
