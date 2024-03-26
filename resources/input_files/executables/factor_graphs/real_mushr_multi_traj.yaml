@@ -1,0 +1,162 @@
+simulation_step: 0.1
+plant: !file "plants/mushr.yaml"
+
+#/Users/Gary/pracsys/catkin_ws/data/tf/straight_1s_ctrl_240313_175254.txt
+observations:
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175244.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175458.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175245.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175459.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175246.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175500.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175247.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175501.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175248.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175502.txt"
+  # - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175249.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175503.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175250.txt" 
+  # - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175620.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175251.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175621.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175252.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175622.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175253.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175623.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175254.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175624.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175255.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_poses_240313_175625.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_poses_240313_175913.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_poses_240313_175914.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_poses_240313_175915.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_poses_240313_175916.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_poses_240313_175917.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_poses_240313_175918.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_poses_240313_175919.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_poses_240313_175920.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_poses_240313_175921.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_poses_240313_175922.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180232.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180233.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180234.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180235.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180236.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180237.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180238.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180239.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180240.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180241.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180242.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180243.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180244.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180245.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180246.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180247.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180248.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180249.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180250.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180251.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_poses_240313_180252.txt"
+  # - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175923.txt"
+  # - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175924.txt"
+  # - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175925.txt"
+  # - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175926.txt"
+  # - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175927.txt"
+  # - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175928.txt"
+  # - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175929.txt"
+  # - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175930.txt"
+  # - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175931.txt"
+  # - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175932.txt"
+  # - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175933.txt"
+# /Users/Gary/pracsys/catkin_ws/data/tf/left_ctrl_240313_152310.txt
+plan:
+  # - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175254.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175244.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175458.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175245.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175459.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175246.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175500.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175247.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175501.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175248.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175502.txt"
+  # - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175249.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175503.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175250.txt" 
+  # - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175620.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175251.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175621.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175252.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175622.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175253.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175623.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175254.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175624.txt"
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175255.txt" 
+  - "${ML4KP_ROS}/data/tf/straight_1s_ctrl_240313_175625.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175913.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175914.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175915.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175916.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175917.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175918.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175919.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175920.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175921.txt"
+  - "${ML4KP_ROS}/data/tf/right_1s_ctrl_240313_175922.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180232.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180233.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180234.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180235.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180236.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180237.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180238.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180239.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180240.txt"
+  - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180241.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180242.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180243.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180244.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180245.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180246.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180247.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180248.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180249.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180250.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180251.txt"
+  # - "${ML4KP_ROS}/data/tf/left_1s_ctrl_240313_180252.txt"
+# data/tf/straight_1s_ctrl_240313_175256.txt 
+# data/tf/straight_1s_ctrl_240313_175626.txt
+# data/tf/straight_1s_ctrl_240313_175257.txt 
+# data/tf/straight_1s_ctrl_240313_175627.txt
+# data/tf/straight_1s_ctrl_240313_175258.txt 
+# data/tf/straight_1s_ctrl_240313_175628.txt
+# data/tf/straight_1s_ctrl_240313_175259.txt 
+# data/tf/straight_1s_ctrl_240313_175629.txt
+# data/tf/straight_1s_ctrl_240313_175300.txt 
+# data/tf/straight_1s_ctrl_240313_175630.txt
+# data/tf/straight_1s_ctrl_240313_175301.txt 
+# data/tf/straight_1s_ctrl_240313_175631.txt
+# data/tf/straight_1s_ctrl_240313_175456.txt 
+# data/tf/straight_1s_ctrl_240313_175632.txt
+# data/tf/straight_1s_ctrl_240313_175457.txt
+
+# params: [0.0200703, -0.017926]
+# params: [0.0143982, -0.0183924]
+# params: [0.0200703, 0.01225, 0.60]
+# params: [0.44061, -0.01228,  0.5]
+# params: [0.97803, -0.09960, 0.99706]
+# params: [0.63313, -0.26998,  0.07202]
+# params: [0.64453, -0.01646, 0.21969]
+# params: [0.64453, -0.01646, 0.21969]
+# params: [0.65819, 0.00746, 0.24947]
+# params: [0.67380, 0.01329, 0.25297]
+# params: [0.00665, -0.10069, 0.39628]
+
+params: [0.75857, 0.00270, 0.02691]
+# params: [0.65861, 0.00753, 0.24991]
+# 0.29905 -0.07212  0.40392 <- ok params
+out:
+  file: "${DIRTMP_PATH}/out/real_mushr_sysid.txt"
