@@ -19,6 +19,22 @@ std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::vect
   return qpos_inds;
 }
 
+int get_qpos_indices(mjModel* m, const mjtObj& obj, const std::string& joint_name)
+{
+  int qpos_ind{-1};
+
+  int temp_id = mj_name2id(m, obj, joint_name.c_str()); // NOTE: mjOBJ_JOINT is hard-coded!
+    // qpos_inds.push_back(m->jnt_qposadr[temp_id]);
+  if (temp_id == -1)
+  {
+    std::cout << obj << ", " << joint_name << std::endl;
+    prx_throw("Invalid obj, joint_name pair given")
+  }
+  qpos_ind = m->jnt_qposadr[temp_id];
+  
+  return qpos_ind;
+}
+
 std::vector<int> get_body_indices(mjModel* m, const std::string& body_name)
 {
   int query_link_id = mj_name2id(m, mjOBJ_BODY, body_name.c_str());

@@ -28,6 +28,8 @@ struct mjActuatorInfo
 
 std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::vector<std::string>& joint_names);
 
+int get_qpos_indices(mjModel* m, const mjtObj& obj, const std::string& joint_name);
+
 std::vector<int> get_body_indices(mjModel* m, const std::string& body_name);
 
 std::vector<double> forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 

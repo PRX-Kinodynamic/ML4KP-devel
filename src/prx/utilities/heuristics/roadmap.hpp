@@ -33,6 +33,9 @@ namespace prx
         virtual ~roadmap_edge_t()
         {
         }
+        
+        void initialize(){
+        }
 
         /*
         void set_weight(double weight){
@@ -55,8 +58,6 @@ namespace prx
                 distance_function = [](const space_point_t& s1, const space_point_t& s2) { return space_t::euclidean_2d(s1, s2); };
                 sample_state = [this](space_point_t& s) { default_sample_state(s, state_space); };
 
-                // Kevin: roadmap class was created with simple path planning in mind, 
-                //        so the default implementation will not work
                 /*
                 propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj) {
                     default_propagate(start_state, plan, out_traj, sg);
@@ -74,7 +75,7 @@ namespace prx
                     }
                 };
 
-                valid_state = [this, cg](space_point_t& s) { return default_valid_state(s, state_space, cg); };
+                valid_state = [this, cg](space_point_t& s) { return default_valid_state(s, config_space, cg); };
                 valid_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
             }
             virtual ~roadmap_specification_t()

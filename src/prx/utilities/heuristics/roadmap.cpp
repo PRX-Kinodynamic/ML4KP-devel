@@ -95,7 +95,7 @@ namespace prx
             iteration_count++;
         }
         while (!condition->check());
-
+        
         // the closest neighbor is the same node
         k = std::ceil(std::log2(roadmap.num_vertices())) + 1;
 
@@ -116,18 +116,26 @@ namespace prx
                 if (curr_index != neighbor_index)
                 {
                     // call interpolate function here to check # of collisions
-                    short collisions = 0; 
-                    auto weight = distance_function(curr_node->point, neighbor_node->point);// metric->node_distance(curr_node.get(), neighbor_node.get());
-                    edge_index_t edge_index = roadmap.add_edge(curr_index, neighbor_index, weight);
+                    auto weight = distance_function(curr_node->point, neighbor_node->point);
+                               // metric->node_distance(curr_node.get(), neighbor_node.get());
+                    edge_index_t edge_index = roadmap.add_edge<roadmap_edge_t>(curr_index, neighbor_index, weight);
                     auto new_edge = roadmap.get_edge_as<roadmap_edge_t>(edge_index);
-                                 // roadmap.get_edge_as<roadmap_edge_t>(edge_index);
 
                     trajectory_t edge_traj{config_space};
-
+                    
                     int nsteps = 5; // specify max delta x (displacement) for each step
                     interpolate(config_space, curr_node->point, neighbor_node->point, edge_traj, nsteps);
+                    
+                    unsigned short collisions = 0; 
+                    for (auto config : edge_traj)
+                    {
+                        if (!valid_state(config)){
+                            collisions += 1;
+                        }
+                    }
 
-                    // new_edge->collisions = // collisions;
+                    new_edge->collisions = collisions;
+
                 }
             }
         }

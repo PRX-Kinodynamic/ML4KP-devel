@@ -8,7 +8,7 @@ visualize: false
 planner_name: "roadmap"
 
 goal_config: [0, .494, 0, -2.37, 0, 2.9, -2.29]
-goal_region_radius: 2
+goal_region_radius: .5
 
 checker_type: "iterations"
 checker_value: 500
