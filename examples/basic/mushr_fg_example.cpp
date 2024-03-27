@@ -6,7 +6,7 @@
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/visualization/three_js_group.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
-#include "prx/simulation/plants/mushrFG.hpp"
+#include "prx/simulation/plants/mushr.hpp"
 using namespace prx;
 
 int main(int argc, char* argv[])
