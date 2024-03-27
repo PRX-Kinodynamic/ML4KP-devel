@@ -39,7 +39,7 @@ add_definitions(${BUILD_FLAGS})
 find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-find_package(Eigen3 REQUIRED)
+find_package(Eigen3 CONFIG REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 include_directories("${PROJECT_SOURCE_DIR}/src")

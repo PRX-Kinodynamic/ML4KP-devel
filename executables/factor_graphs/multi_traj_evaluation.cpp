@@ -109,13 +109,13 @@ void increase_plan_to_match_trajectory(const ObservedTrajectory& traj, const dou
   const double traj_t0{ traj.front().first };
   const double traj_duration{ traj.back().first - traj_t0 };
   const double plan_duration{ plan.duration() };
-  prx_assert(plan_duration < traj_duration, "plan duration is not less than traj duration!");
+  // prx_assert(plan_duration < traj_duration, "plan duration is not less than traj duration!");
 
-  const double init_diff{ plan_t0 - traj_t0 };
+  // const double init_diff{ plan_t0 - traj_t0 };
   // const double end_diff{ traj_duration - (init_diff + plan_duration) + 2 * prx::simulation_step };
   // const double end_diff{ 2 * prx::simulation_step };
 
-  plan.copy_onto_front(Eigen::Vector2d::Zero(), init_diff);
+  // plan.copy_onto_front(Eigen::Vector2d::Zero(), init_diff);
   // plan.copy_onto_back(Eigen::Vector2d::Zero(), end_diff);
   PRX_DEBUG_VAR_3(traj_duration, plan_duration, plan.duration());
 
@@ -124,8 +124,8 @@ void increase_plan_to_match_trajectory(const ObservedTrajectory& traj, const dou
   std::ofstream ofs(prx::out_path + "mushr/eval_input_observations.txt", mode);
   for (auto z : traj)
   {
-    if (z.first - traj_t0 < new_duration)
-      ofs << z.second.transpose() << "\n";
+    // if (z.first - traj_t0 < new_duration)
+    ofs << z.second.transpose() << "\n";
   }
   ofs << "\n";
   ofs.close();
@@ -175,8 +175,20 @@ int main(int argc, char* argv[])
   ps->copy(init_params, params["params"].as<std::vector<double>>());
   ps->copy_from(init_params);
 
-  const std::vector<std::string> observations_in{ params["observations"].as<std::vector<std::string>>() };
-  const std::vector<std::string> plans_in{ params["plan"].as<std::vector<std::string>>() };
+  const std::string data_dir{ params["data_dir"].as<>() };
+  std::vector<std::string> observations_in{ params["observations"].as<std::vector<std::string>>() };
+  std::vector<std::string> plans_in{ params["plan"].as<std::vector<std::string>>() };
+
+  auto transform_f = [&data_dir](const std::string& s) { return data_dir + s; };
+  std::transform(observations_in.begin(), observations_in.end(),
+                 observations_in.begin(),  // write to the same location
+                 transform_f);
+  std::transform(plans_in.begin(), plans_in.end(),
+                 plans_in.begin(),  // write to the same location
+                 transform_f);
+  prx_assert(observations_in.size() == plans_in.size(), "observations and plans must be the same size");
+  PRX_DEBUG_VAR_1(plans_in.size());
+  // const std::size_t observations_to_use{ _observations.size() / 2 };
 
   std::vector<prx::space_point_t> start_states{};  // plans_in.size(), sys_group->get_state_space()->make_point());
   std::vector<prx::plan_t> plans(plans_in.size(), cs);

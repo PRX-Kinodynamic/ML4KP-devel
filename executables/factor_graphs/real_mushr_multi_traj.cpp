@@ -91,33 +91,45 @@ double read_ros_plan(const std::string& filename, prx::plan_t& plan)
   double ti{ 0.0 };
   Eigen::Vector2d ut{};
   double tprev{ ts[0] };
+  bool first{ true };
   for (auto tuple : prx::zip_iters(ts, observations))
   {
-    std::tie(ti, ut) = prx::unzip(tuple);
-    const double duration{ ti - tprev };
-    plan.copy_onto_back(ut, duration);
-    tprev = ti;
+    if (not first)
+    {
+      std::tie(ti, ut) = prx::unzip(tuple);
+      const double duration{ ti - tprev };
+      plan.copy_onto_back(ut, duration);
+      tprev = ti;
+    }
+    first = false;
   }
   return ts[0];
 }
 
 // Duration of observed trajectory is higher than plan (perception runs before plan publisher / controller and after...)
 // Append zeros before and after assuming the robot was not moving before/after.
-void increase_plan_to_match_trajectory(const ObservedTrajectory& traj, const double plan_t0, prx::plan_t& plan,
+void increase_plan_to_match_trajectory(ObservedTrajectory& traj, const double plan_t0, prx::plan_t& plan,
                                        const std::size_t idx)
 {
   const double traj_t0{ traj.front().first };
   const double traj_duration{ traj.back().first - traj_t0 };
-  const double plan_duration{ plan.duration() };
-  prx_assert(plan_duration < traj_duration, "plan duration is not less than traj duration!");
+  // const double plan_duration{ plan.duration() };
+  // prx_assert(plan_duration < traj_duration, "plan duration is not less than traj duration!");
+  while (plan.duration() >= traj_duration)
+  {
+    plan.pop_back();
+  }
 
-  const double init_diff{ plan_t0 - traj_t0 };
-  // const double end_diff{ traj_duration - (init_diff + plan_duration) + 2 * prx::simulation_step };
-  // const double end_diff{ 2 * prx::simulation_step };
+  while (traj[1].first < plan_t0)
+  {
+    traj.erase(traj.begin());
+  }
 
-  plan.copy_onto_front(Eigen::Vector2d::Zero(), init_diff);
-  // plan.copy_onto_back(Eigen::Vector2d::Zero(), end_diff);
-  PRX_DEBUG_VAR_3(traj_duration, plan_duration, plan.duration());
+  // Add controls at the end to ensure the predicted traj is long enough
+  // const double end_diff{ traj_duration - plan_duration };
+  // plan.copy_onto_front(plan[0].control, init_diff);
+  // plan.copy_onto_back(plan.back().control, end_diff);
+  // PRX_DEBUG_VAR_3(traj_duration, plan_duration, plan.duration());
 
   const double new_duration{ plan.duration() };
   std::ios_base::openmode mode{ idx == 0 ? std::ofstream::trunc : std::ofstream::app };
@@ -136,11 +148,11 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
                       prx::fg::mushrTypes::ParamsUbarU& params_dv, std::size_t idx_offset)
 {
   prx::fg::mushrConfig config;
-  config.cm_x_xdot = gtsam::noiseModel::Isotropic::Sigma(3, 1e-2);
-  config.cm_x_xdot_ub = gtsam::noiseModel::Isotropic::Sigma(3, 1e-2);
-  config.cm_ub_u = gtsam::noiseModel::Isotropic::Sigma(2, 1e-2);
+  config.cm_x_xdot = gtsam::noiseModel::Isotropic::Sigma(3, 5e-3);
+  config.cm_x_xdot_ub = gtsam::noiseModel::Isotropic::Sigma(3, 5e-1);
+  config.cm_ub_u = gtsam::noiseModel::Isotropic::Sigma(2, 5e-1);
   // config.cm_x_z = gtsam::noiseModel::Isotropic::Sigma(3, 1e-2);
-  config.cm_x_z = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e-2, 1e-2, 1e-1));
+  config.cm_x_z = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e-1, 1e-0, 1e-0));
   config.length = 0.2965;
 
   // ParamsUbarU params_dv{ ParamsUbarU(0.1, 0.0) };
@@ -169,7 +181,9 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
 
   const double tobs_0{ observations[0].first };
   // const double tobs_T{ tobs_0 + duration };
-  const std::size_t max_idx{ traj.index_at_time(duration) };
+  PRX_DEBUG_VAR_2(plan.duration(), traj.duration());
+  const std::size_t traj_size{ traj.size() - 1 };
+  const std::size_t max_idx{ std::min(traj_size, traj.index_at_time(duration)) };
   // PRX_DEBUG_VAR_3(tobs_0, tobs_T, max_idx);
   for (; idx < max_idx; ++idx)
   {
@@ -188,7 +202,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
     graph.addPrior(k_U(idx, idx_offset), ut, nm_u_prior);
 
     ti += prx::simulation_step;
-    PRX_DEBUG_VAR_1(idx);
+    PRX_DEBUG_VAR_3(idx, max_idx, traj.size());
   }
   // x_aux = traj.at(ti, false);
   PRX_DEBUG_VAR_1(idx);
@@ -207,16 +221,17 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
     auto [ti, zt] = tuple;
 
     const double tobs{ ti - tobs_0 };
+    PRX_DEBUG_VAR_3(tobs, ti, tobs_0);
     if (tobs < duration)
     {
       idx = traj.index_at_time(tobs);
       PRX_DEBUG_VAR_3(ti, tobs, duration);
       const double t0{ prx::simulation_step * idx };
       const double t1{ prx::simulation_step * (idx + 1) };
-      if (t1 < duration)
+      if (idx < max_idx)
       {
         PRX_DEBUG_VAR_3(idx, t0, t1);
-        // PRX_DEBUG_VAR_2(std::to_string(tobs), idx);
+        PRX_DEBUG_VAR_2(std::to_string(tobs), idx);
         // PRX_DEBUG_VAR_2(t0, t1);
         const double t01{ std::max((tobs - t0) / (t1 - t0), 0.0) };
 
@@ -237,16 +252,21 @@ void create_traj_graph(prx::param_loader& params, prx::trajectory_t& traj, prx::
 
   read_observations(observations_file, observations);
   const double plan_t0{ read_ros_plan(plans_file, plan) };
+  PRX_DEBUG_VAR_1(plan);
   increase_plan_to_match_trajectory(observations, plan_t0, plan, idx);
+  PRX_DEBUG_VAR_1(plan.duration());
 
   Vec(start_state) = Eigen::Vector<double, 6>::Zero();
   Vec(start_state).head(3) = observations[0].second;
 
+  PRX_DEBUG_VAR_1(plan);
   sys_group->propagate(start_state, plan, traj);
   std::ios_base::openmode mode{ idx == 0 ? std::ofstream::trunc : std::ofstream::app };
   traj.to_file(prx::out_path + "mushr/multi_orig_traj.txt", mode);
 
   PRX_DEBUG_VAR_1(start_state);
+  PRX_DEBUG_VAR_2(plan.size(), traj.size());
+  PRX_DEBUG_VAR_2(plan.duration(), traj.duration());
   add_observations(graph, values, traj, plan, observations, init_params, idx);
 }
 
@@ -277,9 +297,33 @@ int main(int argc, char* argv[])
   gtsam::NonlinearFactorGraph graph;
   gtsam::Values values;
 
-  const std::vector<std::string> observations_in{ params["observations"].as<std::vector<std::string>>() };
-  const std::vector<std::string> plans_in{ params["plan"].as<std::vector<std::string>>() };
+  const std::string data_dir{ params["data_dir"].as<>() };
+  std::vector<std::string> _observations{ params["observations"].as<std::vector<std::string>>() };
+  std::vector<std::string> _plans{ params["plan"].as<std::vector<std::string>>() };
+  std::vector<std::string> observations_in{};
+  std::vector<std::string> plans_in{};
 
+  auto transform_f = [&data_dir](const std::string& s) { return data_dir + s; };
+  std::transform(_observations.begin(), _observations.end(),
+                 _observations.begin(),  // write to the same location
+                 transform_f);
+  std::transform(_plans.begin(), _plans.end(),
+                 _plans.begin(),  // write to the same location
+                 transform_f);
+  prx_assert(_observations.size() == _plans.size(), "observations and plans must be the same size");
+  PRX_DEBUG_VAR_1(_plans[0]);
+  const std::size_t observations_to_use{ _observations.size() / 2 };
+  for (int i = 0; i < _observations.size(); ++i)
+  {
+    const double random_val{ prx::uniform_random(0.0, 1.0) };
+    if (random_val > 0.5)
+    {
+      observations_in.push_back(_observations[i]);
+      plans_in.push_back(_plans[i]);
+    }
+  }
+
+  PRX_DEBUG_VAR_1(plans_in.size());
   std::vector<prx::space_point_t> start_states{};  // plans_in.size(), sys_group->get_state_space()->make_point());
   std::vector<prx::plan_t> plans(plans_in.size(), cs);
   prx::trajectory_t traj{ ss };
