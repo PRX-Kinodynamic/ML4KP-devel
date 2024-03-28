@@ -3,7 +3,6 @@
 #include <numeric>
 
 #include "prx/simulation/plant.hpp"
-#include "prx/utilities/math/first_order_derivative.hpp"
 
 namespace prx
 {
@@ -142,7 +141,7 @@ protected:
   mushrTypes::Parameters _params;
   mushrTypes::Control _ubar;
   mushrTypes::ParamsUbarU _params_ubar_u;
-  double _length;
+  double _wheelbase;
 };  // namespace mushr
 
 // X_j = X_i + \dpt{x}_i * dt
@@ -211,25 +210,25 @@ public:
   using Ubar = Eigen::Vector<double, 2>;
   using U = Eigen::Vector<double, 2>;
 
-  mushr_ub_u_xdot_t(double length) : _length(length)
+  mushr_ub_u_xdot_t(double wheelbase) : _wheelbase(wheelbase)
   {
   }
 
-  static Ubar predict(const U& u, const Xdot& xdot, const double& length)
+  static Ubar predict(const U& u, const Xdot& xdot, const double& wheelbase)
   {
     const double vt{ xdot.head(2).norm() };  // \sqrt(\dot{x} + \dot{y})
     const double dv_cap{ mushrTypes::desired_velocity(u) };
-    const double w{ vt * (std::tan(mushrTypes::steering(u)) / length) };
+    const double w{ vt * (std::tan(mushrTypes::steering(u)) / wheelbase) };
     return Ubar(dv_cap, w);
   }
 
   virtual Ubar compute_error(const Ubar& ub, const U& u, const Xdot& xdot) const
   {
-    return predict(u, xdot, _length) - ub;
+    return predict(u, xdot, _wheelbase) - ub;
   }
 
 private:
-  const double _length;
+  const double _wheelbase;
 };
 
 class mushr_ub_u_xdot_param_t
@@ -240,7 +239,7 @@ public:
   using Ubar = Eigen::Vector<double, 2>;
   using U = Eigen::Vector<double, 2>;
 
-  mushr_ub_u_xdot_param_t(double length) : _length(length)
+  mushr_ub_u_xdot_param_t(double length) : _wheelbase(length)
   {
   }
 
@@ -262,11 +261,11 @@ public:
 
   virtual Ubar compute_error(const Ubar& ub, const U& u, const Xdot& xdot, const Params& params) const
   {
-    return predict(u, xdot, params, _length) - ub;
+    return predict(u, xdot, params, _wheelbase) - ub;
   }
 
 private:
-  const double _length;
+  const double _wheelbase;
 };
 
 }  // namespace prx
