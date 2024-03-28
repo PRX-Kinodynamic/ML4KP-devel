@@ -14,8 +14,8 @@ int main(int argc, char* argv[])
   simulation_step = 0.01;
   init_random(112392);
 
-  const std::string plant_name{ "mushrFG" };
-  const std::string plant_path{ "mushrFG" };
+  const std::string plant_name{ "mushr" };
+  const std::string plant_path{ "mushr" };
   auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
   prx_assert(plant != nullptr, "Plant is nullptr!");
 
@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 
   auto start_state = ss->make_point();
 
-  ss->copy(start_state, Eigen::Vector<double, 6>::Zero());
+  ss->copy(start_state, Eigen::Vector<double, 3>::Zero());
 
   plan_t plan(cs);
   trajectory_t traj(ss);
