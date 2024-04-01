@@ -3,6 +3,7 @@
 #include <boost/test/unit_test.hpp>
 #include "prx/utilities/defs.hpp"
 #include "prx/factor_graphs/lie_groups/lie_integrator.hpp"
+
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/geometry/SOn.h>
