@@ -10,6 +10,7 @@ namespace mock
 using Rdot = Eigen::Vector<double, 1>;
 struct SO2
 {
+  using Scalar = double;
   static constexpr Eigen::Index RowsAtCompileTime = 2;
   SO2(double theta) : _R(Eigen::Matrix2d::Zero())
   {
@@ -54,14 +55,14 @@ BOOST_AUTO_TEST_CASE(propagete_without_derivatives_test)
 {
   using Integrator = prx::fg::lie_integrator_t<mock::SO2, mock::Rdot>;
   const double dt{ 0.1 };
-  const Integrator integrator{};
+  // const Integrator integrator{};
   const double angle0{ 0 };
   const double angle_dot0{ 1 };
   const mock::SO2 x0{ angle0 };
   // const mock::SO2 xdot0{ mock::SO2(angle_dot0) };
   const mock::Rdot xdot0(angle_dot0);
 
-  const mock::SO2 x1{ integrator(x0, xdot0, dt) };
+  const mock::SO2 x1{ Integrator::predict(x0, xdot0, dt) };
 
   const double angle_1{ angle0 + angle_dot0 * dt };
   const mock::SO2 x1_p{ angle_1 };
@@ -96,4 +97,12 @@ BOOST_AUTO_TEST_CASE(propagete_without_derivatives_multiple_steps_test)
   const Eigen::Matrix2d expected{ x3_p._R };
   const Eigen::Matrix2d result{ x3._R };
   BOOST_REQUIRE_MESSAGE(expected.isApprox(result), EXPECTED_GOT(expected, result));
+}
+
+BOOST_AUTO_TEST_CASE(propagete_with_derivatives_test)
+{
+  // NonlinearFactorGraph graph;
+  // Values initial_values;
+
+  // Values values = GaussNewtonOptimizer(graph, initial_values).optimize();
 }
