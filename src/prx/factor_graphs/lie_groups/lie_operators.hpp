@@ -27,6 +27,24 @@ inline Eigen::Matrix3d hat(const Eigen::Vector3d& vec)
   return res;
 }
 
+// Equation 58 of https://arxiv.org/pdf/1812.01537.pdf
+// Y = f(x) ;             Dy/Dx
+// Z = g(Y) = g(f(x)) ;   Dz/Dx
+// Dz/Dx = Dz/Dy * Dy/Dx
+template <typename DZDX, typename DZDY, typename DYDX>
+inline void chain_rule(DZDX& dzdx, const DZDY& dzdy, const DYDX& dydx)
+{
+  dzdx = dzdy * dydx;
+}
+
+// template <typename UV, typename DerivU, typename DerivV, typename DUDX, typename DVDX>
+// inline void leibniz_rule(UV& uv, const U& u, const V& v, const DUDX& dudx, const DVDX& dvdx)
+// {
+//   dudx = deriv_u(x);
+//   dvdx = deriv_v(x);
+//   uv = leibniz_rule(uv, u, v, dudx, dvdx);
+// }
+
 }  // namespace lie_operators
 }  // namespace fg
 }  // namespace prx

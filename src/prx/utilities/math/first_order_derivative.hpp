@@ -55,6 +55,8 @@ class first_order_derivative_t
   using output_matrix_t = Eigen::Matrix<Scalar, NOutputs, NInputs>;
   using epsilon_matrix_t = Eigen::Matrix<Scalar, NInputs, NInputs>;
 
+  using FirstOrderDerivative = first_order_derivative_t<Function, InputState, Evaluations, MinDifference>;
+
 public:
   first_order_derivative_t(const double h, const Eigen::Index n_inputs, const Eigen::Index n_outputs)
     : _h(h)
@@ -101,8 +103,10 @@ private:
   template <N_i n_i, int i, std::enable_if_t<(n_i != 0), bool> = true>
   inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative) const
   {
-    derivative.col(col_i) += n_i * _model(input + i * _epsilon_matrix.col(col_i));
+    const InputState epsilon_column{ _epsilon_matrix.col(col_i) };
+    derivative.col(col_i) = derivative.col(col_i) + n_i * _model(input + i * epsilon_column);
   }
+
   template <N_i n_i, int i, std::enable_if_t<(n_i == 0), bool> = true>
   inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative) const
   {
@@ -162,11 +166,13 @@ private:
   const Eigen::Index _n_inputs;
   const Eigen::Index _n_outputs;
 
+public:
   const output_matrix_t _zero_matrix;
   const epsilon_matrix_t _epsilon_matrix;
 };
 template <class Function, typename InputState, S Evaluations, I_min MinDifference>
 constexpr approximation_row_t
     first_order_derivative_t<Function, InputState, Evaluations, MinDifference>::approximation_row;
+
 }  // namespace math
 }  // namespace prx
