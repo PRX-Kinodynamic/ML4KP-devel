@@ -141,6 +141,9 @@ protected:
   mushrTypes::Parameters _params;
   mushrTypes::Control _ubar;
   mushrTypes::ParamsUbarU _params_ubar_u;
+
+  double _idle;
+
   double _wheelbase;
 };  // namespace mushr
 
@@ -251,11 +254,8 @@ public:
 
     const double vt{ xdot.head(2).norm() };  // \sqrt(\dot{x} + \dot{y})
     const double dv{ mushrTypes::desired_velocity(u) - vt };
-    // const double dv_cap{ vt + std::max(std::min(dv, 0.1), -0.1) };
     const double dv_cap{ vt + dv * slope_pos };
-    // const double dv_cap{ mushrTypes::desired_velocity(u) * slope_pos };
     const double w{ vt * (std::tan(mushrTypes::steering(u) + steering_offset) / length) };
-    // PRX_DEBUG_VAR_3(vt, dv, dv_cap);
     return Ubar(dv_cap, w * velocity_gain);
   }
 

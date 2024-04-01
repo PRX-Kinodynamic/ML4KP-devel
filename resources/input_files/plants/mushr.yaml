@@ -1,12 +1,12 @@
 name: "mushr"
 path: "mushr"
 
-start_state: [0.0, 0.0, 0.0]
-goal_state:  [0.0, 0.0, 0.0]
+start_state: [0.0, 0.0, 0.0, 0.0,0.0]
+goal_state:  [0.0, 0.0, 0.0, 0.0,0.0]
 
 state_space:
-  lower_bound: [-100, -100, -3.14159]
-  upper_bound: [100, 100, 3.14159]
+  lower_bound: [-100, -100, -3.14159,-100, -100]
+  upper_bound: [100, 100, 3.14159,100, 100]
 
 control_space:
   lower_bound: [-10, -1.57]
