@@ -8,7 +8,6 @@ file(GLOB_RECURSE TESTS_FILES
 	${PROJECT_SOURCE_DIR}/tests/simulation/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/utilities/*.cpp
-	${PROJECT_SOURCE_DIR}/tests/factor_graphs/*.cpp
 	)
 if (BUILD_FOR_MUJOCO)
 	file(GLOB_RECURSE MJ_TEST_FILES
@@ -17,7 +16,7 @@ if (BUILD_FOR_MUJOCO)
 	list(APPEND TESTS_FILES ${MJ_TEST_FILES})
 endif()
 
-if(BUILD_FOR_FACTOR_GRAPHS)
+if(BUILD_FOR_GTSAM)
 	file(GLOB_RECURSE FG_TEST_FILES
 		${PROJECT_SOURCE_DIR}/tests/factor_graphs/*.cpp
 		)
