@@ -5,6 +5,7 @@
 #include <gtsam/base/OptionalJacobian.h>
 #include "prx/factor_graphs/lie_groups/lie_operators.hpp"
 #include "prx/factor_graphs/factors/noise_model_factors.hpp"
+#include "prx/utilities/math/first_order_derivative.hpp"
 
 namespace prx
 {
