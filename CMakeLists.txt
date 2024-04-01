@@ -5,7 +5,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+set(CMAKE_CXX_STANDARD 17)
 
 cmake_policy(SET CMP0079 NEW)
 
@@ -13,6 +13,7 @@ set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
+set(BUILD_FOR_GTSAM OFF CACHE BOOL "Set ON/TRUE for building GTSAM factor graphs")
 
 set(${PROJECT_NAME}_VERSION 1.0)
 set(${PROJECT_NAME}_HEADERS "" CACHE STRING "Headers to be exported")
@@ -38,7 +39,7 @@ add_definitions(${BUILD_FLAGS})
 find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-find_package(Eigen3 REQUIRED)
+find_package(Eigen3 CONFIG REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
@@ -73,6 +74,7 @@ add_subdirectory(src/prx/utilities)
 add_subdirectory(src/prx/simulation)
 add_subdirectory(src/prx/planning)
 add_subdirectory(src/prx/visualization)
+add_subdirectory(src/prx/factor_graphs)
 
 if(BUILD_FOR_MUJOCO)
 	message("MuJoCo found at $ENV{MJ_PATH}")
@@ -111,6 +113,7 @@ endforeach()
 
 set(CMAKE_INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/")
 message(STATUS "Installing ${PROJECT_NAME} in: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "CMAKE_INSTALL_LIBDIR: ${CMAKE_INSTALL_LIBDIR}")
 
 foreach(HEADER IN ITEMS ${${PROJECT_NAME}_HEADERS})
 	get_filename_component(H_DIR ${HEADER} DIRECTORY )
@@ -162,7 +165,8 @@ configure_package_config_file(cmake/ML4KPConfig.cmake.in
   	CMAKE_INSTALL_INCLUDEDIR
   	CMAKE_INSTALL_LIBDIR 
   	${PROJECT_NAME}_LIBRARIES
-  	BUILD_FOR_TORCH)
+  	BUILD_FOR_TORCH
+  	BUILD_FOR_GTSAM)
 
 install(FILES 
 			"${CMAKE_CURRENT_BINARY_DIR}/cmake/ML4KPConfig.cmake"

@@ -202,4 +202,40 @@ void trajectory_t::increase_buffer()
     const_end_iterator = states.begin();
   }
 }
+
+void trajectory_t::to_file(const std::string file_name, const std::ios_base::openmode _mode) const
+{
+  std::ofstream ofs_map;
+  ofs_map.open(file_name.c_str(), _mode);
+
+  for (unsigned i = 0; i < num_states; ++i)
+  {
+    ofs_map << states[i] << "\n";
+  }
+  ofs_map << "\n";
+
+  ofs_map.close();
+}
+
+void trajectory_t::from_file(const std::string file_name)
+{
+  std::ifstream ifs(file_name);
+  std::string line;
+
+  space_point_t aux = state_space->make_point();
+
+  while (std::getline(ifs, line))
+  {
+    if (line.size() == 0)
+      break;
+    // state_space->copy_from(aux, prx::split<double>(line));
+    copy_onto_back(prx::split<double>(line));
+  }
+}
+
+std::size_t trajectory_t::index_at_time(const double ti) const
+{
+  const double idx{ 0.00001 + ti / simulation_step };
+  return static_cast<std::size_t>(idx);
+}
 }  // namespace prx
