@@ -1,4 +1,4 @@
-#define BOOST_AUTO_TEST_MAIN symbols_factory_test
+#define BOOST_AUTO_TEST_MAIN se3_test
 #include <string>
 #include <boost/test/unit_test.hpp>
 #include "prx/utilities/defs.hpp"

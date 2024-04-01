@@ -21,7 +21,8 @@ class se3_t
 public:
   static constexpr Eigen::Index Dim = 6;
   static constexpr Eigen::Index dimension = 6;
-
+  static constexpr Eigen::Index RowsAtCompileTime = 6;
+  using Scalar = double;
   using Quaternion = Eigen::Quaterniond;
   using Position = Eigen::Vector<double, 3>;
 
