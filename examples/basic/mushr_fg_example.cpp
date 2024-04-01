@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 
   auto start_state = ss->make_point();
 
-  ss->copy(start_state, Eigen::Vector<double, 3>::Zero());
+  ss->copy(start_state, Eigen::Vector<double, 5>(0, 0, 1.57, 0, 0));
 
   plan_t plan(cs);
   trajectory_t traj(ss);
