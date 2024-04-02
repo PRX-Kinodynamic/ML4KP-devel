@@ -16,7 +16,7 @@ namespace fg
 // aka a Pose.
 // A pair translation/position, rotation where the rotation is a quaternion: (p,q).
 // Mostly using the functionallity of gtsam::Pose3 but we need access to the raw values of p and q for prx::space_t
-class se3_t
+class se3_t : public gtsam::LieGroup<se3_t, 6>
 {
 public:
   static constexpr Eigen::Index Dim = 6;
@@ -25,6 +25,8 @@ public:
   using Scalar = double;
   using Quaternion = Eigen::Quaterniond;
   using Position = Eigen::Vector<double, 3>;
+
+  using gtsam::LieGroup<se3_t, 6>::inverse;  // version with derivative
 
   se3_t() : se3_t(Quaternion::Identity(), Position::Zero())
   {
@@ -106,16 +108,34 @@ public:
   }
 
   template <typename ScrewAxis>
-  static se3_t expmap(const ScrewAxis& s, gtsam::OptionalJacobian<6, 6> H = boost::none)
+  static se3_t Expmap(const ScrewAxis& s, gtsam::OptionalJacobian<6, 6> H = boost::none)
   {
     const Eigen::Vector<double, 6> s_vec{ s };
     return se3_t(gtsam::Pose3::Expmap(s_vec, H));
   }
 
   template <typename ScrewAxis>
-  static ScrewAxis logmap(const se3_t& s, gtsam::OptionalJacobian<6, 6> H = boost::none)
+  static ScrewAxis Logmap(const se3_t& s, gtsam::OptionalJacobian<6, 6> H = boost::none)
   {
     return ScrewAxis(gtsam::Pose3::Logmap(s.to_pose(), H));
+  }
+
+  Eigen::Matrix<double, 6, 6> AdjointMap() const
+  {
+    const Eigen::Matrix3d R{ _quaternion };
+    const Eigen::Matrix3d A{ gtsam::skewSymmetric(_position) * R };
+    Eigen::Matrix<double, 6, 6> adj;
+    adj.block<3, 3>(0, 0) = R;
+    adj.block<3, 3>(0, 3) = A;
+    adj.block<3, 3>(3, 0) = Eigen::Matrix3d::Zero();
+    adj.block<3, 3>(3, 3) = R;  //, Z_3x3, A, R;  // Gives [R 0; A R]
+    return adj;
+  }
+
+  se3_t inverse() const
+  {
+    const Quaternion Rt{ _quaternion.inverse() };
+    return se3_t(Rt, Rt * (-_position));
   }
 
   friend std::ostream& operator<<(std::ostream& os, const se3_t& screw)
@@ -170,7 +190,7 @@ public:
   }
 
 private:
-  // Convinient maps to the two components of the screw axis
+  // Convenient maps to the two components of the screw axis
   Quaternion _quaternion;
   Position _position;
 };
@@ -182,8 +202,10 @@ namespace gtsam
 
 template <>
 struct traits<prx::fg::se3_t> : public gtsam::Testable<prx::fg::se3_t>,
-                                public gtsam::internal::VectorSpaceImpl<prx::fg::se3_t, 6>
+                                // public gtsam::internal::VectorSpaceImpl<prx::fg::se3_t, 6>,
+                                public internal::LieGroupTraits<prx::fg::se3_t>
 {
+  static constexpr Eigen::Index dimension = 6;
   static int GetDimension(const prx::fg::se3_t&)
   {
     return 6;

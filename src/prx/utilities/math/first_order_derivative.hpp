@@ -74,14 +74,15 @@ public:
   {
   }
 
-  first_order_derivative_t(Function& model, const double h, const Eigen::Index n_inputs, const Eigen::Index n_outputs)
+  first_order_derivative_t(const Function& model, const double h, const Eigen::Index n_inputs,
+                           const Eigen::Index n_outputs)
     : first_order_derivative_t(h, n_inputs, n_outputs)
   {
     _model = model;
   }
 
   template <Eigen::Index InputDim = NInputs, std::enable_if_t<(InputDim != Eigen::Dynamic), bool> = true>
-  first_order_derivative_t(Function& model, const double h = 0.01)
+  first_order_derivative_t(const Function& model, const double h = 0.01)
     : first_order_derivative_t(model, h, NInputs, NOutputs)
   {
   }
@@ -103,8 +104,8 @@ private:
   template <N_i n_i, int i, std::enable_if_t<(n_i != 0), bool> = true>
   inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative) const
   {
-    const InputState epsilon_column{ _epsilon_matrix.col(col_i) };
-    derivative.col(col_i) = derivative.col(col_i) + n_i * _model(input + i * epsilon_column);
+    const auto epsilon_column{ i * _epsilon_matrix.col(col_i) };
+    derivative.col(col_i) = derivative.col(col_i) + n_i * _model(input + epsilon_column);
   }
 
   template <N_i n_i, int i, std::enable_if_t<(n_i == 0), bool> = true>

@@ -35,7 +35,6 @@ int main(int argc, char* argv[])
   using prx::fg::se3_t;
   using Integrator = prx::fg::lie_integrator_t<se3_t, screw_axis_t>;
 
-  const Integrator integrator{};
   const double dt{ 0.1 };
 
   se3_t x{};
@@ -47,7 +46,7 @@ int main(int argc, char* argv[])
   Eigen::AngleAxisd angle_axis{};
   for (double ti = 0.0; ti < 10; ti += dt)
   {
-    x = integrator(x, xdot, dt);
+    x = Integrator::integrate(x, xdot, dt);
 
     std::cout << x << "\n";
   }
