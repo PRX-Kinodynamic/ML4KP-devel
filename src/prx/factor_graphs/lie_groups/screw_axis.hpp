@@ -12,7 +12,7 @@ namespace prx
 namespace fg
 {
 // A Screw axis S = [\omega, v], where a Twist V = S \dot{\Theta}
-class screw_axis_t
+class screw_axis_t : public gtsam::LieGroup<screw_axis_t, 6>
 {
 public:
   static constexpr Eigen::Index Dim = 6;
@@ -195,6 +195,7 @@ template <>
 struct traits<prx::fg::screw_axis_t> : public gtsam::Testable<prx::fg::screw_axis_t>,
                                        public gtsam::internal::VectorSpaceImpl<prx::fg::screw_axis_t, 6>
 {
+  static constexpr Eigen::Index dimension = 6;
   static int GetDimension(const prx::fg::screw_axis_t&)
   {
     return 6;
