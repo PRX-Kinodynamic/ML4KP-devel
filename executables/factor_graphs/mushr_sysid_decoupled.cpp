@@ -50,7 +50,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
   config.cm_x_z = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e1, 1e1, 1));
   config.length = 0.2965;
 
-  ParamsUbarU params_dv{ ParamsUbarU(0.443682, -6.12957e-07, 1.0) };
+  ParamsUbarU params_dv{ ParamsUbarU(0.443682, -6.12957e-07, 1.0, 1.0) };
   values.insert(k_Ps("dv"), params_dv);
   const double duration{ plan.duration() };
   prx::utilities::csv_reader_t reader(filename, ' ');
@@ -87,7 +87,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
   Eigen::Vector3d xdt{};
   Eigen::Vector3d xdt_next{};
   Eigen::Vector2d ut{};
-  Eigen::Vector2d ubar{};
+  prx::fg::mushrTypes::Ubar ubar{};
   bool first{ true };
   auto nm_u_prior = gtsam::noiseModel::Isotropic::Sigma(2, 1.0);
 

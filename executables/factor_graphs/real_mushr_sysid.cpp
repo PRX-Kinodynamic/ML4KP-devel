@@ -140,7 +140,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
   Eigen::Vector3d xdt{};
   Eigen::Vector3d xdt_next{};
   Eigen::Vector2d ut{};
-  Eigen::Vector2d ubar{};
+  prx::fg::mushrTypes::Ubar ubar{};
   bool first{ true };
   auto nm_u_prior = gtsam::noiseModel::Isotropic::Sigma(2, 1e-1);
 

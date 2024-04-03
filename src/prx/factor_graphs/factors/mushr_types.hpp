@@ -18,11 +18,13 @@ inline gtsam::Key k_ZX(const std::size_t& ti) { return SF::create_hashed_symbol(
 inline gtsam::Key k_Ps(const std::string& s) { return SF::create_hashed_symbol("P_{", s, "}"); };
 // clang-format on
 
+const Eigen::Index UbarDim = 3;
 using State = Eigen::Vector<double, 3>;
 using StateDot = Eigen::Vector<double, 3>;
 using Control = Eigen::Vector<double, 2>;
+using Ubar = Eigen::Vector<double, UbarDim>;
 using Parameters = Eigen::Vector<double, 6>;
-using ParamsUbarU = Eigen::Vector<double, 3>;
+using ParamsUbarU = Eigen::Vector<double, 4>;
 
 static inline double positive_slope(const ParamsUbarU& param)
 {
@@ -35,6 +37,10 @@ static inline double steering_offset(const ParamsUbarU& params)
 static inline double velocity_gain(const ParamsUbarU& params)
 {
   return params[2];
+}
+static inline double desired_velocity_gain(const ParamsUbarU& params)
+{
+  return params[3];
 }
 static inline double bound(const double value, const double min_bound, const double max_bound)
 {
@@ -78,10 +84,6 @@ static inline double steering_gain(const Parameters& params)
   return params[2];
 }
 
-static inline double steering_offset(const Parameters& params)
-{
-  return params[3];
-}
 static inline double velocity_min(const Parameters& params)
 {
   return params[4];
@@ -96,7 +98,7 @@ static inline double steering(const Control& u)
 }
 static inline double steering(const Control& u, const Parameters& params)
 {
-  const double us{ u[0] * steering_gain(params) + steering_offset(params) };
+  const double us{ u[0] * steering_gain(params) };
   // return bound(us, -1.0, 1.0);
   return us;
 }

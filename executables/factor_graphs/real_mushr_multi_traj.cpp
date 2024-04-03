@@ -31,6 +31,7 @@
 #include "prx/factor_graphs/factors/mushr_factors.hpp"
 #include "prx/factor_graphs/utilities/symbols_factory.hpp"
 #include "prx/factor_graphs/utilities/common_functions.hpp"
+#include "prx/factor_graphs/factors/positive_vector_factor.hpp"
 using SF = prx::fg::symbol_factory_t;
 
 using prx::fg::mushr_ub_u_xdot_param_t;
@@ -148,11 +149,11 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
                       prx::fg::mushrTypes::ParamsUbarU& params_dv, std::size_t idx_offset)
 {
   prx::fg::mushrConfig config;
-  config.cm_x_xdot = gtsam::noiseModel::Isotropic::Sigma(3, 5e-3);
-  config.cm_x_xdot_ub = gtsam::noiseModel::Isotropic::Sigma(3, 5e-1);
-  config.cm_ub_u = gtsam::noiseModel::Isotropic::Sigma(2, 5e-1);
+  config.cm_x_xdot = gtsam::noiseModel::Isotropic::Sigma(3, 5e-6);
+  config.cm_x_xdot_ub = gtsam::noiseModel::Isotropic::Sigma(3, 5e-2);
+  config.cm_ub_u = gtsam::noiseModel::Isotropic::Sigma(prx::fg::mushrTypes::UbarDim, 5e-2);
   // config.cm_x_z = gtsam::noiseModel::Isotropic::Sigma(3, 1e-2);
-  config.cm_x_z = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e-1, 1e-0, 1e-0));
+  config.cm_x_z = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e0, 1e0, 1e0));
   config.length = 0.2965;
 
   // ParamsUbarU params_dv{ ParamsUbarU(0.1, 0.0) };
@@ -168,7 +169,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
   Eigen::Vector3d xdt{};
   Eigen::Vector3d xdt_next{};
   Eigen::Vector2d ut{};
-  Eigen::Vector2d ubar{};
+  prx::fg::mushrTypes::Ubar ubar{};
   bool first{ true };
   auto nm_u_prior = gtsam::noiseModel::Isotropic::Sigma(2, 1e-4);
 
@@ -185,6 +186,9 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
   const std::size_t traj_size{ traj.size() - 1 };
   const std::size_t max_idx{ std::min(traj_size, traj.index_at_time(duration)) };
   // PRX_DEBUG_VAR_3(tobs_0, tobs_T, max_idx);
+  xt = Vec(traj[static_cast<unsigned>(idx)]).head(3);
+  graph.addPrior(k_X(idx, idx_offset), xt, config.cm_x_xdot);
+
   for (; idx < max_idx; ++idx)
   {
     // config.cm_x_xdot = gtsam::noiseModel::Isotropic::Sigma(3, std::exp(ti));
@@ -204,6 +208,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
     ti += prx::simulation_step;
     PRX_DEBUG_VAR_3(idx, max_idx, traj.size());
   }
+  // xt = Vec(traj[static_cast<unsigned>(idx)]).head(3);
   // x_aux = traj.at(ti, false);
   PRX_DEBUG_VAR_1(idx);
   xt = Vec(traj[static_cast<unsigned>(idx)]).head(3);
@@ -240,6 +245,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
       }
     }
   }
+  // graph.addPrior(k_X(max_idx - 1, idx_offset), zt, config.cm_x_xdot);
 }
 
 void create_traj_graph(prx::param_loader& params, prx::trajectory_t& traj, prx::plan_t& plan,
@@ -256,8 +262,10 @@ void create_traj_graph(prx::param_loader& params, prx::trajectory_t& traj, prx::
   increase_plan_to_match_trajectory(observations, plan_t0, plan, idx);
   PRX_DEBUG_VAR_1(plan.duration());
 
+  const double dt0{ observations[1].first - observations[0].first };
   Vec(start_state) = Eigen::Vector<double, 6>::Zero();
   Vec(start_state).head(3) = observations[0].second;
+  Vec(start_state).tail(3) = (observations[1].second - observations[0].second) / dt0;
 
   PRX_DEBUG_VAR_1(plan);
   sys_group->propagate(start_state, plan, traj);
@@ -336,13 +344,18 @@ int main(int argc, char* argv[])
                       start_states[i]);
     PRX_DEBUG_VAR_1(start_states[i]);
   }
+  using PositiveVecFactor = prx::fg::partial_positive_vector_factor_t<ParamsUbarU::RowsAtCompileTime>;
+  auto pvm = gtsam::noiseModel::Isotropic::Sigma(ParamsUbarU::RowsAtCompileTime, 1e-5);
+  graph.emplace_shared<PositiveVecFactor>(PositiveVecFactor::Vector(1, 0, 1, 1), k_Ps("dv"), pvm);
   values.insert(k_Ps("dv"), init_params);
 
   // plan.from_file(params["plan"].as<std::string>());
 
   gtsam::LevenbergMarquardtParams lm_params{ prx::fg::default_levenberg_marquardt_parameters() };
+
   lm_params.verbosityLMTranslator(gtsam::LevenbergMarquardtParams::SILENT);
-  lm_params.setMaxIterations(100);
+  lm_params.setMaxIterations(params["LevenbergMarquardt/max_iters"].as<int>());
+  // lm_params.setMaxIterations(1);
   // lm_params.setMaxIterations(10000);
   lm_params.setRelativeErrorTol(1e-8);
   lm_params.setAbsoluteErrorTol(1e-8);
@@ -389,12 +402,16 @@ int main(int argc, char* argv[])
   }
 
   const prx::fg::mushrTypes::ParamsUbarU params_out{ results.at<prx::fg::mushrTypes::ParamsUbarU>(k_Ps("dv")) };
+
   PRX_DEBUG_VAR_1(params_out.transpose());
+  printf("[%.4f, %.4f, %.4f, %.4f]\n", params_out[0], params_out[1], params_out[2], params_out[3]);
+  // PRX_DEBUG_VAR_1(plans_in.size());
   ps->copy_from(params_out);
 
   prx::trajectory_t res_traj{ ss };
   for (int i = 0; i < plans_in.size(); ++i)
   {
+    // PRX_DEBUG_VAR_1(plans[i]);
     res_traj.clear();
     std::ios_base::openmode mode{ i == 0 ? std::ofstream::trunc : std::ofstream::app };
 

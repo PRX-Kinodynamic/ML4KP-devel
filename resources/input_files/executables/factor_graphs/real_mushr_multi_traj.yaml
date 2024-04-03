@@ -1,117 +1,22 @@
 simulation_step: 0.1
 plant: !file "plants/mushr.yaml"
 
-data_dir: "${ML4KP_ROS}/data/tf/mj/"
+data_dir: "${ML4KP_ROS}/data/tf/mj/trajs_5sec/"
 #/Users/Gary/pracsys/catkin_ws/data/tf/straight_1s_ctrl_240313_175254.txt
 observations:
-  - "fwd_poses_240326_142802.txt"
-  - "fwd_poses_240326_142803.txt"
-  - "fwd_poses_240326_142804.txt"
-  - "fwd_poses_240326_142805.txt"
-  - "fwd_poses_240326_142806.txt"
-  - "fwd_poses_240326_142807.txt"
-  - "fwd_poses_240326_142808.txt"
-  - "fwd_poses_240326_142809.txt"
-  - "fwd_poses_240326_142810.txt"
-  - "fwd_poses_240326_142811.txt"
-  - "left_poses_240326_143439.txt"
-  - "left_poses_240326_143440.txt"
-  - "left_poses_240326_143441.txt"
-  - "left_poses_240326_143442.txt"
-  - "left_poses_240326_143443.txt"
-  - "left_poses_240326_143444.txt"
-  - "left_poses_240326_143445.txt"
-  - "left_poses_240326_143446.txt"
-  - "left_poses_240326_143447.txt"
-  - "left_poses_240326_143448.txt"
-  - "left_poses_240326_143449.txt"
-  - "left_poses_240326_143450.txt"
-  - "left_poses_240326_143451.txt"
-  - "left_poses_240326_143452.txt"
-  - "left_poses_240326_143453.txt"
-  - "left_poses_240326_143454.txt"
-  - "left_poses_240326_143455.txt"
-  - "left_poses_240326_143456.txt"
-  - "left_poses_240326_143457.txt"
-  - "left_poses_240326_143458.txt"
-  - "left_poses_240326_143459.txt"
-  - "right_poses_240326_144351.txt"
-  - "right_poses_240326_144352.txt"
-  - "right_poses_240326_144353.txt"
-  - "right_poses_240326_144354.txt"
-  - "right_poses_240326_144355.txt"
-  - "right_poses_240326_144356.txt"
-  - "right_poses_240326_144357.txt"
-  - "right_poses_240326_144358.txt"
-  - "right_poses_240326_144359.txt"
-  - "right_poses_240326_144400.txt"
-  - "right_poses_240326_144401.txt"
-  - "right_poses_240326_144402.txt"
-  - "right_poses_240326_144403.txt"
-  - "right_poses_240326_144404.txt"
-  - "right_poses_240326_144405.txt"
-  - "right_poses_240326_144406.txt"
-  - "right_poses_240326_144407.txt"
-  - "right_poses_240326_144408.txt"
-  - "right_poses_240326_144409.txt"
-  - "right_poses_240326_144410.txt"
-  - "right_poses_240326_144411.txt"
-# /Users/Gary/pracsys/catkin_ws/data/tf/left_ctrl_240313_152310.txt
+  - "fwd_poses_240403_131929.txt"
+  - "fwd_poses_240403_131929.txt"
+  - "right_poses_240403_132545.txt"
+  - "right_poses_240403_132550.txt"
+  - "left_poses_240403_134249.txt"
+  - "left_poses_240403_134254.txt"
 plan:
-  - "fwd_ctrl_240326_142802.txt"
-  - "fwd_ctrl_240326_142803.txt"
-  - "fwd_ctrl_240326_142804.txt"
-  - "fwd_ctrl_240326_142805.txt"
-  - "fwd_ctrl_240326_142806.txt"
-  - "fwd_ctrl_240326_142807.txt"
-  - "fwd_ctrl_240326_142808.txt"
-  - "fwd_ctrl_240326_142809.txt"
-  - "fwd_ctrl_240326_142810.txt"
-  - "fwd_ctrl_240326_142811.txt"
-  - "left_ctrl_240326_143439.txt"
-  - "left_ctrl_240326_143440.txt"
-  - "left_ctrl_240326_143441.txt"
-  - "left_ctrl_240326_143442.txt"
-  - "left_ctrl_240326_143443.txt"
-  - "left_ctrl_240326_143444.txt"
-  - "left_ctrl_240326_143445.txt"
-  - "left_ctrl_240326_143446.txt"
-  - "left_ctrl_240326_143447.txt"
-  - "left_ctrl_240326_143448.txt"
-  - "left_ctrl_240326_143449.txt"
-  - "left_ctrl_240326_143450.txt"
-  - "left_ctrl_240326_143451.txt"
-  - "left_ctrl_240326_143452.txt"
-  - "left_ctrl_240326_143453.txt"
-  - "left_ctrl_240326_143454.txt"
-  - "left_ctrl_240326_143455.txt"
-  - "left_ctrl_240326_143456.txt"
-  - "left_ctrl_240326_143457.txt"
-  - "left_ctrl_240326_143458.txt"
-  - "left_ctrl_240326_143459.txt"
-  - "right_ctrl_240326_144351.txt"
-  - "right_ctrl_240326_144352.txt"
-  - "right_ctrl_240326_144353.txt"
-  - "right_ctrl_240326_144354.txt"
-  - "right_ctrl_240326_144355.txt"
-  - "right_ctrl_240326_144356.txt"
-  - "right_ctrl_240326_144357.txt"
-  - "right_ctrl_240326_144358.txt"
-  - "right_ctrl_240326_144359.txt"
-  - "right_ctrl_240326_144400.txt"
-  - "right_ctrl_240326_144401.txt"
-  - "right_ctrl_240326_144402.txt"
-  - "right_ctrl_240326_144403.txt"
-  - "right_ctrl_240326_144404.txt"
-  - "right_ctrl_240326_144405.txt"
-  - "right_ctrl_240326_144406.txt"
-  - "right_ctrl_240326_144407.txt"
-  - "right_ctrl_240326_144408.txt"
-  - "right_ctrl_240326_144409.txt"
-  - "right_ctrl_240326_144410.txt"
-  - "right_ctrl_240326_144411.txt"
-
-
+  - "fwd_ctrl_240403_131929.txt"
+  - "fwd_ctrl_240403_131929.txt"
+  - "right_ctrl_240403_132545.txt"
+  - "right_ctrl_240403_132550.txt"
+  - "left_ctrl_240403_134249.txt"
+  - "left_ctrl_240403_134254.txt"
 # params: [0.0200703, -0.017926]
 # params: [0.0143982, -0.0183924]
 # params: [0.0200703, 0.01225, 0.60]
@@ -125,10 +30,19 @@ plan:
 # params: [0.00665, -0.10069, 0.39628]
 
 # params: [0.75857, 0.00270, 0.02691]
-params: [.1, 0.0, 1.0]
-# params:  0.97553, -0.00031, -0.00031]
-# params: [0.65861, 0.00753, 0.24991]
-# 0.29905 -0.07212  0.40392 <- ok params
+positive_slope_: &positive_slope 0.075
+steering_offset_: &steering_offset .259
+velocity_gain_: &velocity_gain 1.0
+desired_velocity_gain_: &desired_velocity_gain 0.625
+
+params: [*positive_slope, *steering_offset,  *velocity_gain, *desired_velocity_gain]
+# params: [0.0758, 0.3895, 0.9988, 0.5908]
+# params: [0.0103, 0.5, 1.0037, 0.6256]
+# params: [0.4537, 0.9255, 0.3321, 3.0569]
+# params: [0.4537, 0.9255, 0.3321, 3.0569]
+
+LevenbergMarquardt:
+  max_iters: 0
 out:
   file: "${DIRTMP_PATH}/out/mj_mushr_sysid.txt"
   # file: "${DIRTMP_PATH}/out/real_mushr_sysid.txt"

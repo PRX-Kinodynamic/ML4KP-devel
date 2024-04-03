@@ -44,7 +44,7 @@ protected:
   mushrTypes::StateDot _state_dot;
   mushrTypes::Control _ctrl;
   mushrTypes::Parameters _params;
-  mushrTypes::Control _ubar;
+  mushrTypes::Ubar _ubar;
   mushrTypes::ParamsUbarU _params_ubar_u;
   double _length;
 };  // namespace mushr
@@ -160,9 +160,9 @@ private:
   const double _dt;
 };
 
-class mushr_x_xdot_ub_t : public noise_model_3factor_t<3, 3, 2>
+class mushr_x_xdot_ub_t : public noise_model_3factor_t<3, 3, mushrTypes::UbarDim>
 {
-  using Base = noise_model_3factor_t<3, 3, 2>;
+  using Base = noise_model_3factor_t<3, 3, mushrTypes::UbarDim>;
 
 public:
   using X = Base::X0;
@@ -177,8 +177,9 @@ public:
 
   static Xdot predict(const X& x, const Ubar& ubar)
   {
-    const double cTh{ std::cos(x[2]) };  // cos(theta)
-    const double sTh{ std::sin(x[2]) };  // sin(theta)
+    const double beta{ ubar[2] };
+    const double cTh{ std::cos(x[2] + beta) };  // cos(theta)
+    const double sTh{ std::sin(x[2] + beta) };  // sin(theta)
     const double& vt{ ubar[0] };
     const double& wt{ ubar[1] };
     return Xdot{
@@ -261,9 +262,10 @@ private:
   const double _length;
 };
 
-class mushr_ub_u_xdot_param_t : public noise_model_4factor_t<2, 2, 3, 3>
+class mushr_ub_u_xdot_param_t
+  : public noise_model_4factor_t<mushrTypes::UbarDim, 2, 3, mushrTypes::ParamsUbarU::RowsAtCompileTime>
 {
-  using Base = noise_model_4factor_t<2, 2, 3, 3>;
+  using Base = noise_model_4factor_t<mushrTypes::UbarDim, 2, 3, mushrTypes::ParamsUbarU::RowsAtCompileTime>;
 
 public:
   using Ubar = Base::X0;
@@ -281,17 +283,22 @@ public:
   {
     const double slope_pos{ mushrTypes::positive_slope(params) };
     const double steering_offset{ mushrTypes::steering_offset(params) };
+    const double desired_vel_gain{ mushrTypes::desired_velocity_gain(params) };
+    const double vel_desired{ mushrTypes::desired_velocity(u) };
     const double velocity_gain{ mushrTypes::velocity_gain(params) };
 
     // PRX_DEBUG_VAR_1(steering_offset);
     const double vt{ xdot.head(2).norm() };  // \sqrt(\dot{x} + \dot{y})
-    const double dv{ mushrTypes::desired_velocity(u) - vt };
+    const double dv{ vel_desired * desired_vel_gain - vt };
     // const double dv_cap{ vt + std::max(std::min(dv, 0.1), -0.1) };
     const double dv_cap{ vt + dv * slope_pos };
-    // const double dv_cap{ mushrTypes::desired_velocity(u) * slope_pos };
-    const double w{ vt * (std::tan(mushrTypes::steering(u) + steering_offset) / length) };
+    // PRX_DEBUG_VAR_3(vel_desired, velocity_gain, vt);
+    // PRX_DEBUG_VAR_3(vt, dv, slope_pos);
+    // PRX_DEBUG_VAR_1(dv_cap);
+    const double beta{ steering_offset * std::atan(0.5 * std::tan(mushrTypes::steering(u))) };
+    const double w{ 2.0 * vt * std::sin(beta) / (length) };
     // PRX_DEBUG_VAR_3(vt, dv, dv_cap);
-    return Ubar(dv_cap, w * velocity_gain);
+    return Ubar(dv_cap, w, beta);
   }
 
   virtual Ubar compute_error(const Ubar& ub, const U& u, const Xdot& xdot, const Params& params) const override
