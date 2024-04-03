@@ -17,6 +17,7 @@ namespace mushrTypes
 using State = Eigen::Vector<double, 3>;
 using StateDot = Eigen::Vector<double, 3>;
 using Control = Eigen::Vector<double, 2>;
+using Ubar = Eigen::Vector<double, 3>;
 using Parameters = Eigen::Vector<double, 6>;
 using ParamsUbarU = Eigen::Vector<double, 3>;
 
@@ -139,7 +140,7 @@ protected:
   mushrTypes::StateDot _state_dot;
   mushrTypes::Control _ctrl;
   mushrTypes::Parameters _params;
-  mushrTypes::Control _ubar;
+  mushrTypes::Ubar _ubar;
   mushrTypes::ParamsUbarU _params_ubar_u;
 
   double _idle;
@@ -182,12 +183,13 @@ class mushr_x_xdot_ub_t
 public:
   using X = Eigen::Vector<double, 3>;
   using Xdot = Eigen::Vector<double, 3>;
-  using Ubar = Eigen::Vector<double, 2>;
+  using Ubar = Eigen::Vector<double, 3>;
 
   static Xdot predict(const X& x, const Ubar& ubar)
   {
-    const double cTh{ std::cos(x[2]) };  // cos(theta)
-    const double sTh{ std::sin(x[2]) };  // sin(theta)
+    const double beta{ ubar[2] };
+    const double cTh{ std::cos(x[2] + beta) };  // cos(theta)
+    const double sTh{ std::sin(x[2] + beta) };  // sin(theta)
     const double& vt{ ubar[0] };
     const double& wt{ ubar[1] };
     return Xdot{
@@ -239,7 +241,7 @@ class mushr_ub_u_xdot_param_t
 public:
   using Xdot = Eigen::Vector<double, 3>;
   using Params = Eigen::Vector<double, 3>;
-  using Ubar = Eigen::Vector<double, 2>;
+  using Ubar = mushrTypes::Ubar;
   using U = Eigen::Vector<double, 2>;
 
   mushr_ub_u_xdot_param_t(double length) : _wheelbase(length)
@@ -251,12 +253,16 @@ public:
     const double slope_pos{ mushrTypes::positive_slope(params) };
     const double steering_offset{ mushrTypes::steering_offset(params) };
     const double velocity_gain{ mushrTypes::velocity_gain(params) };
+    // const double desired_vel_gain{ mushrTypes::desired_velocity_gain(params) };
+    const double vel_desired{ mushrTypes::desired_velocity(u) };
 
     const double vt{ xdot.head(2).norm() };  // \sqrt(\dot{x} + \dot{y})
-    const double dv{ mushrTypes::desired_velocity(u) - vt };
+    const double dv{ vel_desired * velocity_gain - vt };
     const double dv_cap{ vt + dv * slope_pos };
-    const double w{ vt * (std::tan(mushrTypes::steering(u) + steering_offset) / length) };
-    return Ubar(dv_cap, w * velocity_gain);
+
+    const double beta{ steering_offset * std::atan(0.5 * std::tan(mushrTypes::steering(u))) };
+    const double w{ 2.0 * vt * std::sin(beta) / (length) };
+    return Ubar(dv_cap, w, beta);
   }
 
   virtual Ubar compute_error(const Ubar& ub, const U& u, const Xdot& xdot, const Params& params) const

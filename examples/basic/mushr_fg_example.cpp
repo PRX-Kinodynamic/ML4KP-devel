@@ -40,19 +40,19 @@ int main(int argc, char* argv[])
   const std::string filename{ prx::out_path + "controls.out" };
   prx::utilities::csv_reader_t reader(filename, prx::constants::separating_value);
 
-  while (reader.has_next_line())
-  {
-    const prx::utilities::csv_reader_t::Line<double> line{ reader.next_line<double>() };
-    if (line.size() > 0)
-    {
-      plan.copy_onto_back(line, prx::simulation_step);
-    }
-  }
+  // while (reader.has_next_line())
+  // {
+  //   const prx::utilities::csv_reader_t::Line<double> line{ reader.next_line<double>() };
+  //   if (line.size() > 0)
+  //   {
+  //     plan.copy_onto_back(line, prx::simulation_step);
+  //   }
+  // }
   // plan.from_file();
   // plan.copy_onto_back(Eigen::Vector2d(0, 0.5), 5);
   // plan.copy_onto_back(Eigen::Vector2d(0.75, 0.5), 5);
-  // plan.copy_onto_back(Eigen::Vector2d(-0.75, 0.5), 5);
-  // plan.copy_onto_back(Eigen::Vector2d(0.0, 0.0), 1);
+  plan.copy_onto_back(Eigen::Vector2d(-1.0, 1.0), 5);
+  plan.copy_onto_back(Eigen::Vector2d(0.0, 0.0), 1);
 
   system_group->propagate(start_state, plan, traj);
 
