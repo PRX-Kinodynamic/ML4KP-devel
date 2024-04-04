@@ -167,4 +167,10 @@ namespace prx
         }
         */
     }
+
+    /*
+    void roadmap_t::msmo_Astar(node_index_t goal){
+
+    }*/
+
 }

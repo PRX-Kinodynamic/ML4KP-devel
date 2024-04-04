@@ -3,49 +3,107 @@
 namespace prx
 {
 
-std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::vector<std::string>& joint_names)
+std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::string& name)
 {
-  std::vector<int> qpos_inds(joint_names.size());
+  prx_assert(obj == mjOBJ_BODY || obj == mjOBJ_JOINT, "Invalud mjObj type. Only mjOBJ_BODY, mjOBJ_JOINT are currently accepted");
+  std::vector<int> qpos_inds{};
+  
+  if (obj == mjOBJ_BODY){
+    qpos_inds = get_body_qpos_indices(m, name);
+  }
+  else if (obj == mjOBJ_JOINT){
+    qpos_inds = get_joint_qpos_indices(m, name);
+  }
 
-  for (int i = 0; i < joint_names.size(); i++){
-    int temp_id = mj_name2id(m, obj, joint_names[i].c_str()); // NOTE: mjOBJ_JOINT is hard-coded!
-    // qpos_inds.push_back(m->jnt_qposadr[temp_id]);
-    if (temp_id == -1)
-    {
-      prx_throw("Invalid obj, joint_name pair given.")
-    }
-    qpos_inds[i] = m->jnt_qposadr[temp_id];
+  return qpos_inds;
+}
+
+std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::vector<std::string>& names)
+{
+  prx_assert(obj == mjOBJ_BODY || obj == mjOBJ_JOINT, "Invalud mjObj type. Only mjOBJ_BODY, mjOBJ_JOINT are currently accepted");
+  std::vector<int> qpos_inds{};
+  
+  std::vector<int> temp_inds{};
+  for(auto name : names){
+    temp_inds = get_qpos_indices(m, obj, name);
+    qpos_inds.insert(qpos_inds.end(), temp_inds.begin(), temp_inds.end());
   }
   return qpos_inds;
 }
 
-int get_qpos_indices(mjModel* m, const mjtObj& obj, const std::string& joint_name)
-{
-  int qpos_ind{-1};
+std::vector<int> get_joint_qpos_indices(mjModel* m, const int jnt_id){
+  int qpos_start{-1};
+  int qpos_end{-1};
 
-  int temp_id = mj_name2id(m, obj, joint_name.c_str()); // NOTE: mjOBJ_JOINT is hard-coded!
-    // qpos_inds.push_back(m->jnt_qposadr[temp_id]);
-  if (temp_id == -1)
-  {
-    std::cout << obj << ", " << joint_name << std::endl;
-    prx_throw("Invalid obj, joint_name pair given")
+  qpos_start = m->jnt_qposadr[jnt_id];
+  if (jnt_id + 1< m->njnt){
+    qpos_end = m->jnt_qposadr[jnt_id + 1];
   }
-  qpos_ind = m->jnt_qposadr[temp_id];
+  else{
+    qpos_end = m->nq;
+  }
+
+  std::vector<int> qpos_inds{};
+  for (int i = qpos_start; i < qpos_end; i++){
+    qpos_inds.push_back(i);
+  }
+  return qpos_inds;
+}
+
+std::vector<int> get_joint_qpos_indices(mjModel* m, const std::string& name){
+int jnt_id = mj_name2id(m, mjOBJ_JOINT, name.c_str()); // NOTE: mjOBJ_JOINT is hard-coded!
+  if (jnt_id == -1)
+  {
+    prx_throw("Invalid joint name given: " << name)
+  }
+
+  return get_joint_qpos_indices(m, jnt_id);
+}
+
+std::vector<int> get_body_qpos_indices(mjModel* m, const std::string& name){
+  int qpos_start{-1};
+  int qpos_end{-1};
+
+  int body_id = mj_name2id(m, mjOBJ_BODY, name.c_str()); // NOTE: mjOBJ_JOINT is hard-coded!
+  if (body_id == -1)
+  {
+    prx_throw("Invalid body name given: " << name)
+  }
+
+  auto body_njnt = m->body_jntnum[body_id];
+  if (body_njnt < 1)
+  {
+    prx_throw("Body " << name << " has no joints.");
+  }
+  else if(body_njnt > 1){
+    prx_warn("Body " << name << " has multiple joints. Returning indices concatenated");
+  }
   
-  return qpos_ind;
+  std::vector<int> body_joint_ids{};
+  for(int i = 0; i < body_njnt; i++){
+    body_joint_ids.push_back(m->body_jntadr[body_id + i]);
+  }
+  
+  std::vector<int> qpos_inds{};
+  for(auto body_jnt_id : body_joint_ids){
+    auto new_inds = get_joint_qpos_indices(m, body_jnt_id);
+    qpos_inds.insert(qpos_inds.end(), new_inds.begin(), new_inds.end());
+  }
+  
+  return qpos_inds;
 }
 
 std::vector<int> get_body_indices(mjModel* m, const std::string& body_name)
 {
-  int query_link_id = mj_name2id(m, mjOBJ_BODY, body_name.c_str());
+  int body_id = mj_name2id(m, mjOBJ_BODY, body_name.c_str());
 
-  if (query_link_id == -1)
+  if (body_id == -1)
   {
     prx_throw("Invalid body_name given.")
   }
 
-  std::vector<int> xpos_inds{3*query_link_id, 3*query_link_id+1, 3*query_link_id+2};
-  std::vector<int> xquat_inds{4*query_link_id, 4*query_link_id+1, 4*query_link_id+2, 4*query_link_id+3};
+  std::vector<int> xpos_inds{3*body_id, 3*body_id+1, 3*body_id+2};
+  std::vector<int> xquat_inds{4*body_id, 4*body_id+1, 4*body_id+2, 4*body_id+3};
 
   xpos_inds.insert( xpos_inds.end(), xquat_inds.begin(), xquat_inds.end() );
   

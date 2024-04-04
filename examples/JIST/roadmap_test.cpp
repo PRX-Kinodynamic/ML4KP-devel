@@ -32,24 +32,32 @@ int main(int argc, char* argv[])
   auto ss = context.first->get_state_space();
   auto cs = context.first->get_control_space();
 
+  std::shared_ptr<prx::mujoco_simulator_t> ee_sim =
+      std::make_shared<prx::mujoco_simulator_t>(params["heuristic_xml_path"].as<std::string>());
+  ee_sim->init_simulator();
+
+  auto ee_context = ee_sim->get_context("mujoco");
+  auto ee_ss = ee_context.first->get_state_space();
+  auto ee_cs = ee_context.first->get_control_space();
 
   for (int i = 0; i < 100; i++)
   {
     sim->step_simulation();
+    ee_sim->step_simulation();
   }
 
   // mj_kinematics(sim->m, sim->d);
   std::vector<std::string> joint_names = params["joint_names"].as<std::vector<std::string>>();
-  auto qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
-  std::string hand = params["forward_name"].as<std::string>();
+  auto arm_qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
 
+  std::string hand = params["forward_name"].as<std::string>();
   std::vector<std::string> ee_names = params["end_effector"].as<std::vector<std::string>>();
 
   distance_function_t distance_function = [&](const space_point_t& a, const space_point_t& b) {
     double dist = 0;
     for (auto end_effector_body : ee_names){
-      auto pose_a = forward_kinematics(sim->m, sim->d, qpos_inds, end_effector_body, a);
-      auto pose_b = forward_kinematics(sim->m, sim->d, qpos_inds, end_effector_body, b);
+      auto pose_a = forward_kinematics(sim->m, sim->d, arm_qpos_inds, end_effector_body, a);
+      auto pose_b = forward_kinematics(sim->m, sim->d, arm_qpos_inds, end_effector_body, b);
 
       double euclidean = 0;
       for (int i = 0; i < 3; i++){
@@ -74,7 +82,7 @@ int main(int argc, char* argv[])
     for (int i = 0; i < state_vec.size(); i++){
       state_vec[i] = state->at(i);
     }
-    auto pose = forward_kinematics(sim->m, sim->d, qpos_inds, hand, state_vec);
+    auto pose = forward_kinematics(sim->m, sim->d, arm_qpos_inds, hand, state_vec);
     prx_assert(config->get_dim() == pose.size(), "Incorrect dimensions for config");
     for (int i = 0; i < pose.size(); i++){
       config->at(i) = pose[i];

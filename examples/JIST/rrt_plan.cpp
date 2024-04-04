@@ -72,7 +72,9 @@ int main(int argc, char* argv[])
   
   condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());  //'
 
+  std::cout << "starting!" << std::endl;
   rrt.link_and_setup_spec(&rrt_spec);
+  std::cout << "link_and_setup_query finished" << std::endl;
   rrt.preprocess();
   rrt.link_and_setup_query(&rrt_query);
   rrt.resolve_query(&checker);
