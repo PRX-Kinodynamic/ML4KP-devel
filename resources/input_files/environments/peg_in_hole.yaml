@@ -1,0 +1,24 @@
+simulation_step: 0.1
+random_seed: 231192
+
+environment: "environments/peg_in_hole_0.yaml"
+visualize: true
+
+grow_tree: false
+query_tree: true
+tree_to_files: false
+
+planner: 
+  name: "RRT*"
+  goal_region_radius: 1
+  checker_type: "time"
+  checker_value: 60
+  eta_min: 1
+  eta_max: 10
+
+
+plant: !file "plants/first_order_free_body.yaml"
+
+out:
+  dir: "${DIRTMP_PATH}/out/peg_in_hole/"
+  file_prefix: "pih_0001"
