@@ -61,7 +61,7 @@ public:
 
   inline bool exists(const std::string& key) const
   {
-    return !params[key].IsNull();
+    return params[key] ? true : false;
   }
 
   void replace_env_var(YAML::Node& node);
