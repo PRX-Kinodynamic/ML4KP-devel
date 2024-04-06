@@ -74,10 +74,13 @@ int main(int argc, char* argv[])
 
   std::cout << "starting!" << std::endl;
   rrt.link_and_setup_spec(&rrt_spec);
-  std::cout << "link_and_setup_query finished" << std::endl;
+  std::cout << "link_and_setup_spec finished" << std::endl;
   rrt.preprocess();
+  std::cout << "preprocess finished" << std::endl;
   rrt.link_and_setup_query(&rrt_query);
+  std::cout << "link_and_setup_query finished" << std::endl;
   rrt.resolve_query(&checker);
+  std::cout << "resolve_query finished" << std::endl;
   rrt.fulfill_query();
   
   std::cout << "asdfasdf" << rrt_query.solution_plan.print(16) << std::endl;

@@ -5,7 +5,7 @@ namespace prx
 
 std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::string& name)
 {
-  prx_assert(obj == mjOBJ_BODY || obj == mjOBJ_JOINT, "Invalud mjObj type. Only mjOBJ_BODY, mjOBJ_JOINT are currently accepted");
+  prx_assert(obj == mjOBJ_BODY || obj == mjOBJ_JOINT, "Invalud mjtObj type. Only mjOBJ_BODY, mjOBJ_JOINT are currently accepted");
   std::vector<int> qpos_inds{};
   
   if (obj == mjOBJ_BODY){
@@ -20,7 +20,7 @@ std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::stri
 
 std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::vector<std::string>& names)
 {
-  prx_assert(obj == mjOBJ_BODY || obj == mjOBJ_JOINT, "Invalud mjObj type. Only mjOBJ_BODY, mjOBJ_JOINT are currently accepted");
+  prx_assert(obj == mjOBJ_BODY || obj == mjOBJ_JOINT, "Invalud mjtObj type. Only mjOBJ_BODY, mjOBJ_JOINT are currently accepted");
   std::vector<int> qpos_inds{};
   
   std::vector<int> temp_inds{};
@@ -76,7 +76,7 @@ std::vector<int> get_body_qpos_indices(mjModel* m, const std::string& name){
     prx_throw("Body " << name << " has no joints.");
   }
   else if(body_njnt > 1){
-    prx_warn("Body " << name << " has multiple joints. Returning indices concatenated");
+    prx_warn("Body " << name << " has multiple joints. Returning indices, concatenated");
   }
   
   std::vector<int> body_joint_ids{};

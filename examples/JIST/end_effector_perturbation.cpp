@@ -24,9 +24,11 @@ int main(int argc, char* argv[])
     }
     init_random(params["random_seed"].as<int>());
 
+    std::vector<std::pair<std::string, std::string>> ignored_pairs = params["ignored_pairs"].as<std::vector<std::pair<std::string, std::string>>>();
+
     std::shared_ptr<prx::mujoco_simulator_t> sim =
         std::make_shared<prx::mujoco_simulator_t>(params["scene_xml_path"].as<std::string>());
-    sim->init_simulator();
+    sim->init_simulator(ignored_pairs.size(), &ignored_pairs);
 
     auto context = sim->get_context("mujoco");
     auto ss = context.first->get_state_space();
@@ -79,6 +81,16 @@ int main(int argc, char* argv[])
 
     for (auto a : pose){
         std::cout << "hand " << a << std::endl;
+    }
+
+    std::cout << "----------------" << std::endl;
+
+    for(int i = 0; i < ee_sim->m->nbody; i++){
+        std::cout << mj_id2name(ee_sim->m, mjOBJ_BODY, i) << std::endl;
+    }
+
+    for (auto pair : ignored_pairs){
+        std::cout << pair.first << ", " << pair.second << std::endl;
     }
 
     std::cout << "End of program!" << std::endl;

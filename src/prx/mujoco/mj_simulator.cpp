@@ -108,7 +108,7 @@ void mujoco_simulator_t::set_record_video(const bool record_video)
   _record_video = record_video;
 };
 
-void mujoco_simulator_t::init_simulator()
+void mujoco_simulator_t::init_simulator(int n_ignored_pairs, std::vector<std::pair<std::string, std::string>>* ignored_pairs)
 {
   system_groups->link_simulator(this);
   std::string context_name = "mujoco";
@@ -125,6 +125,11 @@ void mujoco_simulator_t::init_simulator()
 
   collision_groups.reset(new mujoco_collision_checker_t(sim_ptr));
   collision_groups->add_collision_group(context_name, context_systems, {});
+
+  auto cg = std::dynamic_pointer_cast<mujoco_collision_group_t>(collision_groups->get_collision_group(context_name));
+  prx_assert(cg != nullptr, "collision_group_t could not be cast to mujoco_collision_group_t");
+  cg->n_ignored_pairs = n_ignored_pairs;
+  cg->ignored_pairs = ignored_pairs;
 }
 
 void mujoco_simulator_t::step_simulation()
@@ -251,6 +256,22 @@ bool mujoco_collision_group_t::in_collision()
       {
         return true;
       }
+
+      else if(n_ignored_pairs > 0){
+        bool is_ignored_pair = false;
+        for (int i = 0; i < n_ignored_pairs; i++){
+          if (collision_body1 == (*ignored_pairs)[i].first && collision_body2 == (*ignored_pairs)[i].second || 
+              collision_body1 == (*ignored_pairs)[i].second && collision_body2 == (*ignored_pairs)[i].first){
+            is_ignored_pair = true;
+            break;
+          }
+        }
+        if (!is_ignored_pair){
+          // std::cout << collision_body1 << ", " << collision_body2 << std::endl;
+          return true;
+        }
+      }
+
     }
   }
   return false;
