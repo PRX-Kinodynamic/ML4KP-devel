@@ -283,7 +283,7 @@ public:
   }
 
   template <class edge_type>
-  ug_edge_ptr get_edge_as(edge_index_t e) const
+  std::shared_ptr<edge_type> get_edge_as(edge_index_t e) const
   {
     return std::dynamic_pointer_cast<edge_type>(e_index_map[e]);
   }
