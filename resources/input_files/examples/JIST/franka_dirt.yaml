@@ -10,10 +10,12 @@ goal_config: [0, .494, 0, -2.37, 0, 2.9, -2.29]
 goal_region_radius: .5
 
 checker_type: "iterations"
-checker_value: 1000
+checker_value: 100000
 
 output_plan: true
 output_path: "/home/kchen/robotics/ML4KP-devel/out/franka_dirt_output.txt"
 
 joint_names: ["base_yaw", "base_pitch", "base_roll", "joint_1_pitch", "joint_1_roll", "joint_2_pitch", "joint_2_roll"]
 end_effector: ["hand", "left_finger", "right_finger"]
+
+ignored_pairs: [['world', 'cyl_body'], ['world', 'box_body'], ['left_finger', 'right_finger'], ['world', 'link0']]
