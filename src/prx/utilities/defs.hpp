@@ -14,6 +14,7 @@
   std::cout << prx::constants::color::red << __PRETTY_FUNCTION__ << " NOT IMPLEMENTED. Is an override needed?"         \
             << prx::constants::color::normal << std::endl;
 
+#define PRX_DEBUG_CONTAINER(container) PRX_DEBUG_ITERABLE(#container, container)
 #define PRX_DEBUG_ITERABLE(msg, v)                                                                                     \
   std::cout << "[DBG " << msg << "] ";                                                                                 \
   for (auto e : v)                                                                                                     \
