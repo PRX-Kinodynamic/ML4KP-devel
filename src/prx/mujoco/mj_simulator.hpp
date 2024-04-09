@@ -61,13 +61,16 @@ public:
 
   virtual ~mujoco_simulator_t();
 
-  void init_simulator(const int n_ignored_pairs=0, std::vector<std::pair<std::string, std::string>>* ignored_pairs=nullptr);
+  void init_simulator();
 
   virtual void step_simulation() override;
 
   virtual void reset_simulation() override;
 
   void add_frame();
+
+  void add_pair(const std::vector<std::pair<std::string, std::string>>& pairs);
+  void add_pair(std::pair<std::string, std::string> pair);
 
   inline void set_goal(const std::vector<double> goal)
   {
@@ -140,15 +143,18 @@ public:
   }
   virtual ~mujoco_collision_group_t(){};
 
+  void add_pair(std::pair<std::string, std::string> pair);
+  void add_pair(std::string body1, std::string body2);
+
   bool in_collision() override;
 
-  int n_ignored_pairs;
-  std::vector<std::pair<std::string, std::string>>* ignored_pairs;
 
 protected:
   std::shared_ptr<mujoco_simulator_t> sim;
+  std::vector<std::pair<int, int>> ignored_pairs;
+
   std::string collision_body1, collision_body2;
-  std::pair<std::string, std::string> collision_pair;
+  int collision_body_id1, collision_body_id2;
 };
 
 class mujoco_collision_checker_t : public collision_checker_t

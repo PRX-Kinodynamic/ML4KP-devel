@@ -8,10 +8,10 @@ visualize: false
 planner_name: "roadmap"
 
 goal_config: [0, .494, 0, -2.37, 0, 2.9, -2.29]
-goal_region_radius: .5
+goal_region_radius: .005
 
 checker_type: "iterations"
-checker_value: 500
+checker_value: 2000
 
 output_plan: false
 output_path: "/home/kchen/robotics/ML4KP-devel/out/franka_dirt_output.txt"

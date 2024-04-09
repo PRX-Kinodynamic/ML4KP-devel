@@ -28,7 +28,9 @@ int main(int argc, char* argv[])
 
     std::shared_ptr<prx::mujoco_simulator_t> sim =
         std::make_shared<prx::mujoco_simulator_t>(params["scene_xml_path"].as<std::string>());
-    sim->init_simulator(ignored_pairs.size(), &ignored_pairs);
+    sim->init_simulator();
+
+    sim->add_pair(ignored_pairs);
 
     auto context = sim->get_context("mujoco");
     auto ss = context.first->get_state_space();
