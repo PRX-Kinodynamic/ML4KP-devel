@@ -37,6 +37,11 @@ int main(int argc, char* argv[])
 
     std::shared_ptr<prx::mujoco_simulator_t> ee_sim =
         std::make_shared<prx::mujoco_simulator_t>(params["heuristic_xml_path"].as<std::string>());
+    ee_sim->init_simulator();
+
+    auto ee_context = ee_sim->get_context("mujoco");
+    auto ee_ss = ee_context.first->get_state_space();
+    auto ee_cs = ee_context.first->get_control_space();
 
     for (int i = 0; i < 1000; i++)
     {

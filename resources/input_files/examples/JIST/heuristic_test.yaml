@@ -13,10 +13,6 @@ goal_region_radius: .005
 checker_type: "iterations"
 checker_value: 2000
 
-cam_distance: 0
-cam_elevation: 0
-cam_azimuth: 180
-
 output_plan: false
 output_path: "/home/kchen/robotics/ML4KP-devel/out/franka_dirt_output.txt"
 video_name: "/home/kchen/robotics/ML4KP-devel/out/heuristic_viz.mp4"

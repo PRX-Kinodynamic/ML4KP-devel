@@ -3,7 +3,7 @@
 
 namespace prx
 {
-mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path) : simulator_t(plant_type::MUJOCO)    
+mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path, const bool vis) : simulator_t(plant_type::MUJOCO)    
     , button_left(false)
     , button_right(false)
     , button_middle(false)
@@ -20,14 +20,16 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path) : simulato
   d = mj_makeData(m);
 
   button_left = button_right = button_middle = false;
-  lastx = lasty = 0;
+  lastx = lasty = 0; 
+
+  _vis = MUJOCO_VIS && vis;
 
   // Get the simulation step from the model
   simulation_step = m->opt.timestep;
   std::cout << "Using simulation step: " << simulation_step << std::endl;
 
   // K TAG change this!
-  if (MUJOCO_VIS)
+  if (_vis)
   {
     if (!glfwInit())
       prx_throw("Error in initializing GLFW.");
@@ -106,7 +108,7 @@ mujoco_simulator_t::~mujoco_simulator_t()
 {
   mjv_freeScene(&scn);
   mjr_freeContext(&con);
-  if (MUJOCO_VIS)
+  if (_vis)
     glfwTerminate();
 
   mj_deleteData(d);
@@ -115,7 +117,7 @@ mujoco_simulator_t::~mujoco_simulator_t()
 
 void mujoco_simulator_t::set_record_video(const bool record_video)
 {
-  _record_video = record_video;
+  _record_video = _vis && record_video;
 };
 
 void mujoco_simulator_t::init_simulator()
@@ -150,7 +152,57 @@ void mujoco_simulator_t::step_simulation()
   }
   mj_step(m, d);
 
-  if (MUJOCO_VIS)
+  if (_vis)
+  {
+    glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
+    mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
+
+    // Refer here: https://github.com/deepmind/mujoco/issues/132
+    // and here: https://roboti.us/forum/index.php?threads/rendering-geoms.3460/#post-3963
+    if (goal_pos.size() != 0)
+    {
+      mjvGeom* goal_geom = scn.geoms + scn.ngeom++;
+      mjv_initGeom(goal_geom, mjGEOM_SPHERE, NULL, NULL, NULL, NULL);
+      goal_geom->rgba[0] = 0.0;
+      goal_geom->rgba[1] = 1.0;
+      goal_geom->rgba[2] = 0.0;
+      goal_geom->rgba[3] = 0.25;
+      goal_geom->size[0] = goal_radius;
+      goal_geom->size[1] = goal_radius;
+      goal_geom->size[2] = goal_radius;
+      goal_geom->pos[0] = goal_pos[0];
+      goal_geom->pos[1] = goal_pos[1];
+      goal_geom->pos[2] = goal_pos[2];
+
+      // TODO: Add a quat2euler to visualize the orientation
+    }
+
+    mjr_render(viewport, &scn, &con);
+    glfwSwapBuffers(window);
+    glfwPollEvents();
+  }
+}
+
+void mujoco_simulator_t::step_simulation(const int step_type)
+{
+  if (_record_video)
+  {
+    add_frame();
+  }
+  // Set the warmstart acceleration to be zero (for determinism)
+  for (int i = 0; i < m->nv; i++)
+  {
+    d->qacc_warmstart[i] = 0;
+  }
+
+  if(step_type == 0){
+    mj_step(m, d);
+  }
+  else if(step_type == 1){
+    mj_step1(m, d);
+  }
+
+  if (_vis)
   {
     glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
     mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);

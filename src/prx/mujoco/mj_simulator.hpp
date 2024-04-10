@@ -21,6 +21,7 @@ class mujoco_plant_t;
 class mujoco_simulator_t : public simulator_t
 {
 private:
+  bool _vis;
   bool _record_video;
   double _recorded_secs;
   const double _fps{ 30 };
@@ -44,15 +45,26 @@ protected:
   void scroll(GLFWwindow* window, double xoffset, double yoffset);
 
 public:
-  mujoco_simulator_t();
-
-  mujoco_simulator_t(const std::string& model_path);
+  mujoco_simulator_t()
+    : simulator_t(plant_type::MUJOCO)
+    , button_left(false)
+    , button_right(false)
+    , button_middle(false)
+    , lastx(0)
+    , lasty(0)
+    , _recorded_secs(0.0)
+    , _record_video(false)
+    , _video_name(prx::out_path + "mj_recording.mp4")
+  {
+  }
+  mujoco_simulator_t(const std::string& model_path, const bool _vis=true);
 
   virtual ~mujoco_simulator_t();
 
   void init_simulator();
 
   virtual void step_simulation() override;
+  void step_simulation(const int step_type);
 
   virtual void reset_simulation() override;
 

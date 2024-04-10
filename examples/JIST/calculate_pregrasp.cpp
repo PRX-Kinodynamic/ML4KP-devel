@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     std::vector<std::pair<std::string, std::string>> ignored_pairs = params["ignored_pairs"].as<std::vector<std::pair<std::string, std::string>>>();
 
     std::shared_ptr<prx::mujoco_simulator_t> sim =
-        std::make_shared<prx::mujoco_simulator_t>(params["scene_xml_path"].as<std::string>());
+        std::make_shared<prx::mujoco_simulator_t>(params["scene_xml_path"].as<std::string>(), false);
     sim->init_simulator();
 
     sim->add_pair(ignored_pairs);
@@ -104,14 +104,34 @@ int main(int argc, char* argv[])
 
     std::cout << grasp_matrix * approach_matrix << std::endl;
 
+    vector_t approach_pos = (grasp_matrix * approach_matrix).block<3, 1>(0, 3);
+
     sim->set_record_video(true);
     sim->set_video_name(params["video_name"].as<std::string>());
-    for(int i = 0; i < 1000; i++){
-        sim->step_simulation();
-        ee_sim->step_simulation();
-        std::cout << "step " << i << std::endl;
+
+    auto hand_inds = get_body_qpos_indices(ee_sim->m, hand);
+    std::vector<double> pregrasp{grasp_cart_quat};
+
+    for(int i = 0; i < approach_pos.size(); i++){
+        pregrasp[i] = approach_pos[i];
     }
-    // quaternion_t grasp_ori(ori_begin, ori_end);
-    
-    // std::cout << grasp_ori << std::endl;
+
+    /*
+    for(int i = 0; i < 10000; i++){
+        for(int i = 0; i < pregrasp.size(); i++){
+            ee_sim->d->qpos[hand_inds[i]] = pregrasp[i];
+        }
+        sim->step_simulation();
+        ee_sim->step_simulation(1);
+    }
+    */
+
+    for(auto ee : ee_names){
+        auto x = forward_kinematics(ee_sim->m, ee_sim->d, hand_inds, ee, pregrasp);
+        for(auto a : x){
+            std::cout << a << ", ";
+        }
+        std::cout << std::endl;
+    }
+
 }
