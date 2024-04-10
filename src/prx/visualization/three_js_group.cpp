@@ -312,7 +312,7 @@ void three_js_group_t::output_html(std::string filename)
   {
     std::string js_string;
     vis_geometry_init(element, js_string);
-    js_string += "var material = new THREE.MeshPhongMaterial( { color: " + element->color +
+    js_string += "var material = new THREE.MeshPhongMaterial( { color: " + get_color(element->color) +
                  ", flatShading: true, transparent: true} );";
     js_string += "material.opacity = " + get_opacity_from_color(element->color) + "; ";
     js_string += "var mesh = new THREE.Mesh( geometry, material );";

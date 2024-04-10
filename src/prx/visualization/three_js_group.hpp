@@ -99,6 +99,12 @@ public:
   }
 
 protected:
+  std::string get_color(const std::string color)
+  {
+    // Color is 0xRRGGBB or 0xAARRGGBB
+    return color.size() == 8 ? color : ("0x" + color.substr(4));
+  }
+
   std::string get_opacity_from_color(const std::string color)
   {
     using namespace prx::utilities;
@@ -107,10 +113,8 @@ protected:
       return "1";
 
     // Color is 0xAARRGGBB
-    using namespace prx::utilities;
-    const std::string alpha_str{ color.substr(2, 2) };
     const double alpha{ convert_to<double>(color[2] + color[3]) };
-    constexpr double max_opacity{ 256.0 };
+    constexpr double max_opacity{ 255.0 };
     const std::string opacity{ std::to_string(alpha / max_opacity) };
     return opacity;
   }

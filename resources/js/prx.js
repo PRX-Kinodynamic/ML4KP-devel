@@ -437,13 +437,3 @@ function downloadImgSeq()
     saveAs(content, 'ML4KPImgSeq.zip');
   });
 }
-
-function onStartedDownload(id)
-{
-  console.log(`Started downloading: ${id}`);
-}
-
-function onFailed(error)
-{
-  console.log(`Download failed: ${error}`);
-}
