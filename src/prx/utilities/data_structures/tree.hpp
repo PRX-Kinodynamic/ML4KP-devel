@@ -232,14 +232,14 @@ public:
     }
     else
     {
-      v_iter = vertex_list.begin();
-      e_iter = edge_list.begin();
-      const_v_iter = vertex_list.begin();
-      const_e_iter = edge_list.begin();
-      std::advance(v_iter, old_size);
-      std::advance(const_v_iter, old_size);
-      std::advance(e_iter, old_size - 1);
-      std::advance(const_e_iter, old_size - 1);
+      // v_iter = vertex_list.begin();
+      // const_v_iter = vertex_list.begin();
+      // e_iter = edge_list.begin();
+      // const_e_iter = edge_list.begin();
+      // std::advance(v_iter, old_size);
+      // std::advance(const_v_iter, old_size);
+      // std::advance(e_iter, old_size - 1);
+      // std::advance(const_e_iter, old_size - 1);
     }
   }
 
@@ -271,8 +271,7 @@ public:
   template <class edge_type>
   std::shared_ptr<edge_type> get_edge_as(edge_index_t e) const
   {
- //   PRX_DEBUG_VAR_1(e);
-	  return std::dynamic_pointer_cast<edge_type>(e_index_map[e]);
+    return std::dynamic_pointer_cast<edge_type>(e_index_map[e]);
   }
 
   std::pair<const_vertex_iterator, const_vertex_iterator> vertices() const
@@ -355,7 +354,10 @@ public:
 
       const node_index_t parent_idx{ static_cast<node_index_t>(prx::utilities::convert_to<std::size_t>(line[0])) };
       const int edge_idx_int{ prx::utilities::convert_to<int>(line[1]) };
-      edge_index_t edge_idx{ edge_idx_int < 0 ? parent_idx : static_cast<edge_index_t>(edge_idx_int)  };//static_cast<edge_index_t>(prx::utilities::convert_to<std::size_t>(line[1])) };
+      edge_index_t edge_idx{
+        edge_idx_int < 0 ? parent_idx : static_cast<edge_index_t>(edge_idx_int)
+      };  // static_cast<edge_index_t>(prx::utilities::convert_to<std::size_t>(line[1]))
+          // };
       const node_index_t node_idx{ static_cast<node_index_t>(prx::utilities::convert_to<std::size_t>(line[2])) };
       const Line node_state(line.begin() + 3, line.end());
 
@@ -383,13 +385,12 @@ public:
       }
       else
       {
-      	//PRX_DEBUG_VAR_2(edge_idx_int, edge_id_counter);
-	      // add_edge(parent_idx, node_idx);
+        // PRX_DEBUG_VAR_2(edge_idx_int, edge_id_counter);
+        //  add_edge(parent_idx, node_idx);
         v_index_map[parent_idx]->children.push_back(node_idx);
         v_index_map[node_idx]->parent = parent_idx;
 
         // Edge has been added as dummy
-
         while (edge_id_counter <= edge_idx)
         {
           auto edge = *e_iter;
