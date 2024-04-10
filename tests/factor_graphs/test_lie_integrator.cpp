@@ -50,15 +50,24 @@ struct SO2 : public gtsam::SO<2>
     return so2;
   }
 
-  static gtsam::SO<2>::TangentVector logmap(const SO2& so2)
+  static gtsam::SO<2>::TangentVector Logmap(const SO2& so2)
   {
-    return Logmap(so2);
+    const Eigen::Matrix<double, 2, 2> mat{ so2.matrix() };
+    const double r21{ mat(1, 0) };
+    const double r11{ mat(0, 0) };
+    return gtsam::SO<2>::TangentVector(std::atan2(r21, r11));
   }
 
   SO2 compose(const SO2& g, ChartJacobian H1, ChartJacobian H2 = boost::none) const
   {
     SO2 res{ this->gtsam::SO<2>::compose(g, H1, H2) };
     return res;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const SO2& so2)
+  {
+    os << so2.matrix();
+    return os;
   }
 };
 
@@ -120,26 +129,107 @@ BOOST_AUTO_TEST_CASE(propagete_without_derivatives_multiple_steps_test)
   BOOST_REQUIRE_MESSAGE(expected.isApprox(result), EXPECTED_GOT(expected, result));
 }
 
-BOOST_AUTO_TEST_CASE(propagete_with_derivatives_test)
+BOOST_AUTO_TEST_CASE(optimizer_find_x1_test)
 {
   using IntegrationFactor = prx::fg::lie_integration_factor_t<mock::SO2, mock::Rdot>;
 
   gtsam::NonlinearFactorGraph graph;
   gtsam::Values initial_values;
+  const double dt{ 0.1 };
+  const double w{ 1 };
 
   mock::SO2 x0(0);
   mock::SO2 x1(0);
-  mock::Rdot xdot0(1);
+  mock::Rdot xdot0(w);
 
   const gtsam::Key key_x0{ gtsam::Symbol('x', 0) };
   const gtsam::Key key_x1{ gtsam::Symbol('x', 1) };
   const gtsam::Key key_xdot{ gtsam::Symbol('D', 1) };
-  // graph.emplace_shared<IntegrationFactor>(key_x1, key_x0, key_xdot, nullptr, 0.1);
+  graph.emplace_shared<IntegrationFactor>(key_x1, key_x0, key_xdot, nullptr, dt);
 
-  // initial_values.insert(key_x0, x0);
-  // initial_values.insert(key_x1, x1);
-  // initial_values.insert(key_xdot, xdot0);
-  // // graph.addPrior(key_x0, x0);
-  // // graph.addPrior(key_xdot, xdot0);
-  // gtsam::Values values = gtsam::GaussNewtonOptimizer(graph, initial_values).optimize();
+  initial_values.insert(key_x0, x0);
+  initial_values.insert(key_x1, x1);
+  initial_values.insert(key_xdot, xdot0);
+  graph.addPrior(key_x0, x0);
+  graph.addPrior(key_xdot, xdot0);
+  gtsam::Values values = gtsam::GaussNewtonOptimizer(graph, initial_values).optimize();
+  // values.print();
+
+  const mock::SO2 x1_p{ w * dt };  // 0 + w*dt
+
+  const Eigen::Matrix2d expected{ x1_p.matrix() };
+  const Eigen::Matrix2d result{ values.at<mock::SO2>(key_x1).matrix() };
+  BOOST_REQUIRE_MESSAGE(expected.isApprox(result), EXPECTED_GOT(expected, result));
+}
+
+BOOST_AUTO_TEST_CASE(optimizer_find_x0_test)
+{
+  // Test that the FG is able to find x1 <- x0 + xdot * dt given that x0=x1 with priors on x1 and xdot
+  // This is, we know *perfectly* x1 and xdot but want to find x0
+  using IntegrationFactor = prx::fg::lie_integration_factor_t<mock::SO2, mock::Rdot>;
+
+  gtsam::NonlinearFactorGraph graph;
+  gtsam::Values initial_values;
+  const double dt{ 0.1 };
+  const double w{ 1 };
+
+  mock::SO2 x0(w * dt);
+  mock::SO2 x1(w * dt);
+  mock::Rdot xdot0(w);
+
+  const gtsam::Key key_x0{ gtsam::Symbol('x', 0) };
+  const gtsam::Key key_x1{ gtsam::Symbol('x', 1) };
+  const gtsam::Key key_xdot{ gtsam::Symbol('D', 1) };
+  graph.emplace_shared<IntegrationFactor>(key_x1, key_x0, key_xdot, nullptr, dt);
+
+  initial_values.insert(key_x0, x0);
+  initial_values.insert(key_x1, x1);
+  initial_values.insert(key_xdot, xdot0);
+  graph.addPrior(key_x1, x1);
+  graph.addPrior(key_xdot, xdot0);
+  gtsam::Values values = gtsam::GaussNewtonOptimizer(graph, initial_values).optimize();
+  // values.print();
+
+  const mock::SO2 x0_p{ 0 };  // 0 + w*dt
+
+  const Eigen::Matrix2d expected{ x0_p.matrix() };
+  const Eigen::Matrix2d result{ values.at<mock::SO2>(key_x0).matrix() };
+  BOOST_REQUIRE_MESSAGE(expected.isApprox(result), EXPECTED_GOT(expected, result));
+}
+
+BOOST_AUTO_TEST_CASE(optimizer_find_xdot_test)
+{
+  // Test that the FG is able to find x1 <- x0 + xdot * dt given that x0 and x1 are known *perfectly*
+  // but want to find xdot
+  using IntegrationFactor = prx::fg::lie_integration_factor_t<mock::SO2, mock::Rdot>;
+
+  gtsam::NonlinearFactorGraph graph;
+  gtsam::Values initial_values;
+  const double dt{ 0.1 };
+  const double w{ 1 };
+
+  mock::SO2 x0(0);
+  mock::SO2 x1(w * dt);
+  mock::Rdot xdot0(0.5);
+
+  const gtsam::Key key_x0{ gtsam::Symbol('x', 0) };
+  const gtsam::Key key_x1{ gtsam::Symbol('x', 1) };
+  const gtsam::Key key_xdot{ gtsam::Symbol('D', 1) };
+  graph.emplace_shared<IntegrationFactor>(key_x1, key_x0, key_xdot, nullptr, dt);
+
+  initial_values.insert(key_x0, x0);
+  initial_values.insert(key_x1, x1);
+  initial_values.insert(key_xdot, xdot0);
+  graph.addPrior(key_x0, x0);
+  graph.addPrior(key_x1, x1);
+  gtsam::GaussNewtonParams params{};
+  params.setRelativeErrorTol(1e-10);  // Need to set this lower than default
+  params.setAbsoluteErrorTol(1e-10);
+  gtsam::Values values = gtsam::GaussNewtonOptimizer(graph, initial_values, params).optimize();
+  // values.print();
+
+  const mock::Rdot expected{ w };  // 0 + w*dt
+
+  const mock::Rdot result{ values.at<mock::Rdot>(key_xdot) };
+  BOOST_REQUIRE_MESSAGE(expected.isApprox(result, 1e-3), EXPECTED_GOT(expected, result));
 }
