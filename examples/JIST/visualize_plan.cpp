@@ -30,6 +30,8 @@ int main(int argc, char* argv[])
   sim->set_cam_elevation(params["cam_elevation"].as<double>());
   sim->set_cam_azimuth(params["cam_azimuth"].as<double>());
 
+  sim->set_record_video(true);
+
   auto context = sim->get_context("mujoco");
   auto sg = sim->get_context("mujoco");
   auto ss = context.first->get_state_space();
@@ -44,43 +46,13 @@ int main(int argc, char* argv[])
   std::vector<double> start_vec = params["start_config"].as<std::vector<double>>();
   std::vector<double> goal_vec = params["goal_config"].as<std::vector<double>>();
 
-  /*
-  double roll = 0.0, pitch = 0.0, yaw = 0.0;
-  double z = 0.0;
-  bool use_quadrotor = params["model_file"].as<std::string>().find("quadrotor") != std::string::npos;
-  if (use_quadrotor)
-  {
-    z = start_vec[2];
-  }
-  else
-  {
-    roll = start_vec[5];
-    z = start->at(2);
-  }
-
-  quaternion_t quat = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()) *
-                      Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
-                      Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
-  start -> at(0) = start_vec[0];
-  start -> at(1) = start_vec[1];
-  start -> at(2) = z;
-  start -> at(3) = quat.w();
-  start -> at(4) = quat.x();
-  start -> at(5) = quat.y();
-  start -> at(6) = quat.z();
-  */
-
   std::cout << "start" << start << std::endl;
 
   plan_t plan(cs);
   trajectory_t traj(ss);
   plan.from_file(params["plan_filename"].as<>());
 
- // for (auto c : plan){
-  //  cs -> copy(plan.back().control, c.control);
- // }
-std::cout << "plan: " << plan << std::endl;
-  // std::cout << plan.print() << std::endl;
+  std::cout << "plan: " << plan << std::endl;
 
   sim->set_video_name(params["video_name"].as<>());
 
@@ -97,31 +69,5 @@ std::cout << "plan: " << plan << std::endl;
   sim->close_video();
 
   std::cout << "End of program!" << std::endl;
-
-  /*
-  for (auto asdf : plan)
-  {
-    std::cout << asdf.print() << std::endl;
-  }
-  */
-  /*
-  auto plan_from_file = prx::utilities::read_vectors_from_file(params["plan_filename"].as<>(), ",");
-
-  auto plan_from_file = plan.from_file(params["plan_filename"].as<>(), ",");
-
-  for (auto line : plan)
-  {
-    plan.append_onto_back(line.back());
-    line.pop_back();
-    cs -> copy_point_from_vector(plan.back().control, line);
-  }
-
-  // plan.from_file(params["plan_filename"].as<>());
-  sim->set_video_name(params["video_name"].as<>());
-
-  sim->set_record_video(params["record_video"].as<bool>());
-  context.first->propagate(start, plan, traj);
-
-  sim->close_video();
-  */
+  
 }

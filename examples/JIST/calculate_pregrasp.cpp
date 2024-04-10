@@ -50,7 +50,6 @@ int main(int argc, char* argv[])
         // ee_sim->step_simulation();
     }
 
-    // mj_kinematics(sim->m, sim->d);
     std::vector<std::string> joint_names = params["joint_names"].as<std::vector<std::string>>();
     auto arm_qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
 
@@ -75,25 +74,44 @@ int main(int argc, char* argv[])
         return dist;
     };
 
-    auto end_effector_inds = get_body_qpos_indices(ee_sim->m, "hand");
+    auto qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
 
-    std::vector<double> q{1, 0, 1, 1, 0, 0, 0};
+    std::string end_effector = params["forward_name"].as<std::string>();
 
-    auto pose = forward_kinematics(ee_sim->m, ee_sim->d, end_effector_inds, "left_finger", q);
+    std::vector<double> q = params["goal_config"].as<std::vector<double>>();
+    auto grasp_cart_quat = forward_kinematics(sim->m, sim->d, qpos_inds, end_effector, q);
 
-    for (auto a : pose){
-        std::cout << "hand " << a << std::endl;
+    vector_t grasp_pos{grasp_cart_quat[0], grasp_cart_quat[1], grasp_cart_quat[2]};
+    quaternion_t grasp_ori{grasp_cart_quat[3], grasp_cart_quat[4], grasp_cart_quat[5], grasp_cart_quat[6]};
+
+    Eigen::Matrix4d grasp_matrix;
+    grasp_matrix.setIdentity();
+
+    grasp_matrix.block<3, 3>(0, 0) = grasp_ori.normalized().toRotationMatrix();
+        
+    grasp_matrix.block<3, 1>(0, 3) = grasp_pos;
+
+    vector_t pregrasp_pos{0, 0, -.05};
+
+    Eigen::Matrix4d approach_matrix;
+    approach_matrix.setIdentity();
+
+    approach_matrix.block<3, 1>(0, 3) = pregrasp_pos;
+
+    std::cout << grasp_matrix << std::endl;
+
+    std::cout << approach_matrix << std::endl;
+
+    std::cout << grasp_matrix * approach_matrix << std::endl;
+
+    sim->set_record_video(true);
+    sim->set_video_name(params["video_name"].as<std::string>());
+    for(int i = 0; i < 1000; i++){
+        sim->step_simulation();
+        ee_sim->step_simulation();
+        std::cout << "step " << i << std::endl;
     }
-
-    std::cout << "----------------" << std::endl;
-
-    for(int i = 0; i < ee_sim->m->nbody; i++){
-        std::cout << mj_id2name(ee_sim->m, mjOBJ_BODY, i) << std::endl;
-    }
-
-    for (auto pair : ignored_pairs){
-        std::cout << pair.first << ", " << pair.second << std::endl;
-    }
-
-    std::cout << "End of program!" << std::endl;
+    // quaternion_t grasp_ori(ori_begin, ori_end);
+    
+    // std::cout << grasp_ori << std::endl;
 }

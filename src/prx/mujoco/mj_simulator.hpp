@@ -44,18 +44,7 @@ protected:
   void scroll(GLFWwindow* window, double xoffset, double yoffset);
 
 public:
-  mujoco_simulator_t()
-    : simulator_t(plant_type::MUJOCO)
-    , button_left(false)
-    , button_right(false)
-    , button_middle(false)
-    , lastx(0)
-    , lasty(0)
-    , _recorded_secs(0.0)
-    , _record_video(false)
-    , _video_name(prx::out_path + "mj_recording.mp4")
-  {
-  }
+  mujoco_simulator_t();
 
   mujoco_simulator_t(const std::string& model_path);
 

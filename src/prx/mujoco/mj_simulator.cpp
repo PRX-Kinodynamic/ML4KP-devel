@@ -3,7 +3,15 @@
 
 namespace prx
 {
-mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path) : simulator_t(plant_type::MUJOCO)
+mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path) : simulator_t(plant_type::MUJOCO)    
+    , button_left(false)
+    , button_right(false)
+    , button_middle(false)
+    , lastx(0)
+    , lasty(0)
+    , _recorded_secs(0.0)
+    , _record_video(false)
+    , _video_name(prx::out_path + "mj_recording.mp4")
 {
   std::string full_model_path = mj_models_path + model_path;
   m = mj_loadXML(full_model_path.c_str(), NULL, NULL, 0);
@@ -53,15 +61,17 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path) : simulato
     });
     glfwSetWindowCloseCallback(
         window, [](GLFWwindow* window) { prx_throw("Closing the visualizer will cause the simulation to crash."); });
-  
-    mjv_defaultFreeCamera(m, &cam);
-    cam.type = mjtCamera::mjCAMERA_TRACKING;
-    // change this
-    cam.trackbodyid = mj_name2id(m, mjOBJ_BODY, "body_cam");
-    cam.distance = 5.0;
-    cam.elevation = -60;
-    std::cout << cam.azimuth << " " << cam.elevation << " " << cam.distance << std::endl;
-    std::cout << "Tracking body: " << cam.trackbodyid << std::endl;
+    
+    if(_record_video){
+      mjv_defaultFreeCamera(m, &cam);
+      cam.type = mjtCamera::mjCAMERA_TRACKING;
+      // change this
+      cam.trackbodyid = mj_name2id(m, mjOBJ_BODY, "body_cam");
+      cam.distance = 5.0;
+      cam.elevation = -60;
+      std::cout << cam.azimuth << " " << cam.elevation << " " << cam.distance << std::endl;
+      std::cout << "Tracking body: " << cam.trackbodyid << std::endl;
+    }
   }
 
 
