@@ -21,7 +21,6 @@ template <typename X, typename Xdot>
 class lie_integrator_t  //: public gtsam::NoiseModelFactor3<X, Xdot, X>
 {
   using Model = lie_integrator_t<X, Xdot>;
-  using Derivative = prx::math::first_order_derivative_t<Model, X, 2, 0>;
   static constexpr Eigen::Index DimX{ gtsam::traits<X>::dimension };
   static constexpr Eigen::Index DimXdot{ gtsam::traits<Xdot>::dimension };
 
@@ -53,22 +52,46 @@ class lie_integration_factor_t : public gtsam::NoiseModelFactor3<X, X, Xdot>
   using Base = gtsam::NoiseModelFactor3<X, X, Xdot>;
   using LieIntegrator = lie_integrator_t<X, Xdot>;
   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
+  static constexpr Eigen::Index DimX{ gtsam::traits<X>::dimension };
+
+  using DerivativeX = Eigen::Matrix<double, DimX, DimX>;
 
 public:
   lie_integration_factor_t(const gtsam::Key key_xt1, const gtsam::Key key_xt0, const gtsam::Key key_xdot,
                            const NoiseModel& cost_model, const double h)
-    : Base(cost_model, key_xt1, key_xt0, key_xdot), _h(h)
+    : Base(cost_model, key_xt1, key_xt0, key_xdot), _h(h), _negative_identity(-1 * DerivativeX::Identity())
   {
   }
 
   // virtual X0 predict(const X1& x1, const X2& x2) const = 0;
-  virtual X predict(const X& xi, const Xdot& xdot_i) const
+  virtual X predict(const X& xi, const Xdot& xdot_i, boost::optional<Eigen::MatrixXd&> H0 = boost::none,
+                    boost::optional<Eigen::MatrixXd&> Hdot = boost::none) const
   {
-    return LieIntegrator::integrate(xi, xdot_i, _h);
+    return LieIntegrator::integrate(xi, xdot_i, _h, H0, Hdot);
+  }
+
+  // x1_predicted <- x0 + xdot dt
+  // Error is: x1_predicted - x1_observed
+  virtual Eigen::VectorXd evaluateError(const X& x1, const X& x0, const Xdot& xdot,
+                                        boost::optional<Eigen::MatrixXd&> H1 = boost::none,
+                                        boost::optional<Eigen::MatrixXd&> H0 = boost::none,
+                                        boost::optional<Eigen::MatrixXd&> Hdot = boost::none) const override
+  {
+    const X prediction{ predict(x0, xdot, H0, Hdot) };
+    // X1_p (-) x1 => Eq. 26 from "A micro Lie theory [...]" https://arxiv.org/pdf/1812.01537.pdf
+    const Eigen::VectorXd error{ X::Logmap(x1.between(prediction)) };
+
+    if (H1)
+    {
+      *H1 = _negative_identity;
+    }
+
+    return error;
   }
 
 private:
   const double _h;
+  const DerivativeX _negative_identity;
 };
 
 }  // namespace fg
