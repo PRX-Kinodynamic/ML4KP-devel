@@ -256,7 +256,8 @@ public:
     // const double desired_vel_gain{ mushrTypes::desired_velocity_gain(params) };
     const double vel_desired{ mushrTypes::desired_velocity(u) };
 
-    const double vt{ xdot.head(2).norm() };  // \sqrt(\dot{x} + \dot{y})
+    const double sign{ vel_desired > 0 ? +1.0 : -1.0 };
+    const double vt{ sign * xdot.head(2).norm() };  // \sqrt(\dot{x} + \dot{y})
     const double dv{ vel_desired * velocity_gain - vt };
     const double dv_cap{ vt + dv * slope_pos };
 
