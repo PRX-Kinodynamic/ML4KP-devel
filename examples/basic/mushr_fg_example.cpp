@@ -53,6 +53,8 @@ int main(int argc, char* argv[])
   // plan.copy_onto_back(Eigen::Vector2d(0.75, 0.5), 5);
   plan.copy_onto_back(Eigen::Vector2d(-1.0, 1.0), 5);
   plan.copy_onto_back(Eigen::Vector2d(0.0, 0.0), 1);
+  plan.copy_onto_back(Eigen::Vector2d(-1.0, -1.0), 10);
+  plan.copy_onto_back(Eigen::Vector2d(0.0, 0.0), 1);
 
   system_group->propagate(start_state, plan, traj);
 
