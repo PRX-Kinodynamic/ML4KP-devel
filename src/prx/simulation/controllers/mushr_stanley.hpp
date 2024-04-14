@@ -105,12 +105,16 @@ public:
           std::sin(current_state->at(2) - prx::constants::pi / 2.0);
       double cross = vec_dist_nearest_point.dot(front_axle_vec_rotation);
 
-      double theta_line = _points->at(indices[nearest_index])->as<Eigen::VectorXd>()[2];
+      double current_vel = std::sqrt(std::pow(current_state->at(3), 2) + std::pow(current_state->at(4), 2));
+      auto desired_as_eigen = _points->at(indices[nearest_index])->as<Eigen::VectorXd>();
+      double desired_vel = std::sqrt(std::pow(desired_as_eigen[3], 2) + std::pow(desired_as_eigen[4], 2));
+
+      double theta_line = desired_as_eigen[2];
       double theta_e = prx::norm_angle_pi(theta_line - current_state->at(2));
-      double theta_d = std::atan2(k_path * cross, current_state->at(3));
+      double theta_d = std::atan2(k_path * cross, current_vel);
 
       double steering = theta_e + theta_d;
-      double throttle = k_throttle * _points->at(indices[nearest_index])->as<Eigen::VectorXd>()[3];
+      double throttle = k_throttle * desired_vel;
 
       control[0] = steering;
       control[1] = throttle;

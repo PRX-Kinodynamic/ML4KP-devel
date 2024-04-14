@@ -115,7 +115,6 @@ int main(int argc, char* argv[])
       controller_traj.copy_onto_back(current);
       break;
     }
-
     sim_time += control_duration;
   }
 
