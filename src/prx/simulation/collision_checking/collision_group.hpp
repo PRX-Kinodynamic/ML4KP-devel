@@ -78,6 +78,8 @@ public:
    * */
   pqp_distance_t get_distances();
 
+  pqp_distance_t get_distances(const std::string body1, const std::string body2);
+
 protected:
   /** @brief A structure that stores geometry information for PQP queries.*/
   struct pqp_info_t

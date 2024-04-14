@@ -12,7 +12,7 @@ planner:
   name: "RRT*"
   goal_region_radius: 1
   checker_type: "time"
-  checker_value: 100
+  checker_value: 60 #360 #7200 #10 #7200 #600 #240 #10 #7200
   eta_min: 1
   eta_max: 10
 
@@ -20,5 +20,5 @@ planner:
 plant: !file "plants/first_order_free_body.yaml"
 
 out:
-  dir: "${DIRTMP_PATH}/out/peg_in_hole/"
-  file_prefix: "pih_0001"
+  dir: "/common/users/im316/RRT_Star/rect_16_mm"
+  file_prefix: "pih_rectangular_16mm_RightTight_small_Test"

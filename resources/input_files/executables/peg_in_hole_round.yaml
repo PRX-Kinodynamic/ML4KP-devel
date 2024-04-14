@@ -1,0 +1,24 @@
+simulation_step: 0.1
+random_seed: 231192
+
+environment: "environments/peg_in_hole_round_0.yaml"
+visualize: true
+
+grow_tree: false
+query_tree: true
+tree_to_files: false
+
+planner: 
+  name: "RRT*"
+  goal_region_radius: 1
+  checker_type: "time"
+  checker_value: 7200
+  eta_min: 1
+  eta_max: 10
+
+
+plant: !file "plants/first_order_free_body_round.yaml"
+
+out:
+  dir: "/common/users/im316/RRT_Star/round_16_mm"
+  file_prefix: "pih_round_16mm_Knockin

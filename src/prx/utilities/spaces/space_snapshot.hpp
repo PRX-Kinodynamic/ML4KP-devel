@@ -26,6 +26,7 @@ public:
   typedef std::vector<double>::iterator iterator;
   typedef std::vector<double>::const_iterator const_iterator;
 
+  space_snapshot_t(const space_t* const in_parent, const std::size_t dim);
   /**
    * @brief Destructor.
    *
@@ -194,7 +195,7 @@ protected:
    *
    * @param[in]  in_parent  Parent space
    */
-  space_snapshot_t(const space_t* const in_parent, const std::size_t dim);
+  //space_snapshot_t(const space_t* const in_parent, const std::size_t dim);
 
   const space_t* const _parent;
   std::vector<double> _memory;

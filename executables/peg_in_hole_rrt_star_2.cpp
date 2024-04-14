@@ -61,6 +61,8 @@ int main(int argc, char* argv[])
   rrt_star_spec.max_control_steps = params["/plant/max_steps"].as<int>();
 
   prx::rrt_star_query_t rrt_star_query(ss, cs);
+  rrt_star_query.start_state = context.first->get_state_space()->make_point();
+  rrt_star_query.goal_state = context.first->get_state_space()->make_point();
 
   rrt_star_spec.eta_min = params["/planner/eta_min"].as<double>();
   rrt_star_spec.eta_max = params["/planner/eta_max"].as<double>();
@@ -73,6 +75,14 @@ int main(int argc, char* argv[])
 
   const std::vector<double> ps_values{ params["/plant/parameter_space/values"].as<std::vector<double>>() };
 
+  ss->set_bounds(ss_lower_bounds, ss_upper_bounds);
+  cs->set_bounds(cs_lower_bounds, cs_upper_bounds);
+
+  ps->copy_from(ps_values);
+
+  ss->copy(rrt_star_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
+  ss->copy(rrt_star_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
+
   rrt_star_query.goal_region_radius = params["/planner/goal_region_radius"].as<double>();
 
   // Alternatively, change the goal_check function
@@ -81,26 +91,54 @@ int main(int argc, char* argv[])
     const double dist_to_goal{ rrt_star_spec.distance_function(pt, rrt_star_query.goal_state) };
     return dist_to_goal < rrt_star_query.goal_region_radius;
   };
-
+  
+  std::normal_distribution r_dist{5.0, 1.5};
+  std::normal_distribution z_dist{75.0, 10.0};
+  rrt_star_spec.sample_state = [&](prx::space_point_t& s) {
+  	ss->sample(s);
+  	const double th{prx::uniform_random(-prx::constants::pi, prx::constants::pi)};
+  	const double r{r_dist(prx::global_generator)};
+	s->at(0) = r * std::cos(th);
+	s->at(1) = r * std::sin(th);
+  	s->at(2) =z_dist(prx::global_generator);
+ };
+  
+  const std::string out_dir{ params["/out/dir"].as<>() };
+  const std::string file_prefix{ params["/out/file_prefix"].as<>() };
+  //const double desired_nodes{params["/planner/desired_nodes"].as<double>()};
   rrt_star_query.get_visualization = params["visualize"].as<bool>();
 
   rrt_star.link_and_setup_spec(&rrt_star_spec);
   rrt_star.preprocess();
   rrt_star.link_and_setup_query(&rrt_star_query);
+  /*
+  if (params["grow_tree"].as<bool>())
+  {
 
-  const std::string out_dir{ params["/out/dir"].as<>() };
-  const std::string file_prefix{ params["/out/file_prefix"].as<>() };
-  rrt_star.from_files(file_prefix, out_dir);
-
-  std::vector<double> goal{ params["/plant/goal_state"].as<std::vector<double>>() };
-  rrt_star.connect_goal();
-
+    //prx::condition_check_t checker(params["/planner/checker_type"].as<>(), params["/planner/checker_value"].as<int>());
+	std::function<bool()> nodes_condition = [&]()
+	{
+	    const double current_nodes{rrt_star.get_statistics()[2]};
+	    return current_nodes >= desired_nodes;
+	};
+  	  prx::condition_check_t checker(nodes_condition);
+    rrt_star.resolve_query(&checker);
+  }
+  */
+  if (params["query_tree"].as<bool>())
+  {
+    rrt_star.from_files(file_prefix, out_dir);
+    rrt_star.connect_goal();
+  }
   rrt_star.fulfill_query();
 
   // params.print();
 
-  // rrt_star.to_files(file_prefix, out_dir);
-  // rrt_star_query.solution_traj.to_file(out_dir + "/" + file_prefix + "_sln_traj.txt");
+  if (params["tree_to_files"].as<bool>())
+  {
+    rrt_star.to_files(file_prefix, out_dir);
+    rrt_star_query.solution_traj.to_file(out_dir + "/" + file_prefix + "_sln_traj.txt");
+  }
 
   // aorrt_query.solution_traj.to_file();
 
@@ -109,6 +147,8 @@ int main(int argc, char* argv[])
 
   std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 
+  vis_group->set_floor_plane(std::vector<double>({ 0, 0, -3 }), std::vector<double>({ 0.707, 0, 0, 0.707 }),
+                             std::vector<double>({ 500, 500 }), "0xbbbbbb");
   vis_group->add_vis_infos(prx::info_geometry_t::LINE, rrt_star_query.tree_visualization, body_name, ss);
   vis_group->add_detailed_vis_infos(prx::info_geometry_t::FULL_LINE, rrt_star_query.solution_traj, body_name, ss);
   vis_group->add_vis_infos(prx::info_geometry_t::SPHERE, { Vec(rrt_star_query.goal_state).head(3) }, "0xffff00",

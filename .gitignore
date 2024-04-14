@@ -1,6 +1,7 @@
 bin/
 out/
 build/
+build*/
 include/
 lib/
 docs/html/

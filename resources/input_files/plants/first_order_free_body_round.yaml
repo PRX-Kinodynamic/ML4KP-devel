@@ -1,5 +1,5 @@
-name: "first_order_free_body"
-path: "first_order_free_body"
+name: "first_order_free_body_round"
+path: "first_order_free_body_round"
 
 # Assume empty environment... Doesn't make sense otherwise
 
@@ -13,18 +13,15 @@ goal_state: [0.0,0.0,60.0,1.0,0.0,0.0,0.0]
 state_space:
   #lower_bound: [-11.5,-11.5,0.0,-1.0,-1.0,-1.0,-1.0]
   #upper_bound: [11.5,11.5,100.0,1.0,1.0,1.0,1.0]
-  
-  lower_bound: [-10.5,-10.5,0.0,-1.0,-1.0,-1.0,-1.0]
-  upper_bound: [10.5,10.5,100.0,1.0,1.0,1.0,1.0]
 
   #lower_bound: [-10.5,-10.5,0.0,-0.707,-0.707,-0.707,-0.707]
   #upper_bound: [10.5,10.5,100.0,0.707,0.707,0.707,0.707]
 
-  #lower_bound: [ -25.5, -25.5, 0.0, -1.0, -1.0, -1.0, -1.0 ]
-  #upper_bound: [ 25.5, 25.5, 100.0, 1.0, 1.0, 1.0, 1.0 ]
+  lower_bound: [-20.5,-20.5,0.0,-1.0,-1.0,-1.0,-1.0]
+  upper_bound: [20.5,20.5,100.0,1.0,1.0,1.0,1.0]
 
-  #lower_bound: [-1000.0,-1000.0,0.0,-1.0,-1.0,-1.0,-1.0]
-  #upper_bound: [1000.0,1000.0,100.0,1.0,1.0,1.0,1.0]
+  #lower_bound: [-5.,-5.5,0.0,-0.707,-0.707,-0.707,-0.707]
+  #upper_bound: [15.5,15.5,100.0,0.707,0.707,0.707,0.707]
   
 
 control_space:
@@ -48,7 +45,7 @@ parameter_space:
 
   #_width: &width 3.97
   #_depth: &depth 3.97
-  #_length: &length 20.0
+  #_length: &length 50.0
 
   values: [*width, *depth, *length]
 

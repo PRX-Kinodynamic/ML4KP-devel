@@ -8,44 +8,44 @@ environment:
         name: box_A
         collision_geometry:
           type: box
-          dims: [4.0, 25.0, 25.0]
+          dims: [4.0, 25.0, 24.0]
           material: 0xaaff0000
         config:
-          position: [10.5, 0.0,12.5]
+          position: [11.5, 0, 11.5]
           orientation: [0,0,0,1]
       -
         name: box_B
         collision_geometry:
           type: box
-          dims: [17.0, 7.0, 25.0]
+          dims: [ 17.0, 7.0, 24.0]
           material: 0xaaff0000
         config:
-          position: [0.0,-9.0,12.5]
+          position: [0, -10.0, 11.5]
           orientation: [0,0,0,1]
       -
         name: box_C
         collision_geometry:
           type: box
-          dims: [4.0,25.0,25.0]
+          dims: [4.0, 25.0, 24.0]
           material: 0xaaff0000
         config:
-          position: [-10.5,0.0,12.5]
+          position: [-11.5, 0.0, 11.5]
           orientation: [0,0,0,1]
       -
         name: box_D
         collision_geometry:
           type: box
-          dims: [17.0,7.0,25.0]
+          dims: [17.0, 7.0, 24.0]
           material: 0xaaff0000
         config:
-          position:  [0.0, 9.0, 12.5]
+          position:  [0.0, 10.0, 11.5]
           orientation: [0,0,0,1]
       -
         name: base
         collision_geometry:
           type: box
-          dims: [40.0,40.0,3.0]
+          dims: [40.0, 40.0, 3.0]
           material: 0xffff0000
         config:
-          position: [0.0, 0.0,-1.5]
+          position: [0.0, 0.0, -1.5]
           orientation: [0,0,0,1]

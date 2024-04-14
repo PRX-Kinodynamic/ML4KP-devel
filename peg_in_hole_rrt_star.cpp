@@ -1,4 +1,3 @@
-#include <iostream>
 #include <fstream>
 
 #include "prx/utilities/defs.hpp"
@@ -10,24 +9,8 @@
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 
-using Transform = Eigen::Transform<double, 3, Eigen::Isometry>;
-
-using prx::split;
-using prx::utilities::convert_to;
-
-
 int main(int argc, char* argv[])
 {
-
-  //Transform ml4kpWorld_w{ Transform::Identity() };
-  //Transform pegBottom_w{ Transform::Identity() };
-  //Transform pegCenter_w{ Transform::Identity() };
-  //Transform pegBottom_ml4kp{ Transform::Identity() };
-  //Transform pegCenter_ml4kp{ Transform::Identity() };
-  //Transform pegCenter_pegBottom{ Transform::Identity() };
-
-  //pegCenter_pegBottom.translation() = Eigen::Vector3d(0, 0, 25);
-
   prx::param_loader params("executables/peg_in_hole.yaml", argc, argv);
 
   prx::simulation_step = params["simulation_step"].as<double>();
@@ -95,7 +78,7 @@ int main(int argc, char* argv[])
   ss->set_bounds(ss_lower_bounds, ss_upper_bounds);
   cs->set_bounds(cs_lower_bounds, cs_upper_bounds);
 
-  ps->copy_from(ps_values);
+  ps->copy_from(ps_values)
 
   ss->copy(rrt_star_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
   ss->copy(rrt_star_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
@@ -116,10 +99,10 @@ int main(int argc, char* argv[])
   rrt_star.link_and_setup_spec(&rrt_star_spec);
   rrt_star.preprocess();
   rrt_star.link_and_setup_query(&rrt_star_query);
+  
   if (params["grow_tree"].as<bool>())
   {
     prx::condition_check_t checker(params["/planner/checker_type"].as<>(), params["/planner/checker_value"].as<int>());
-
     rrt_star.resolve_query(&checker);
   }
   if (params["query_tree"].as<bool>())
@@ -127,17 +110,16 @@ int main(int argc, char* argv[])
     rrt_star.from_files(file_prefix, out_dir);
     rrt_star.connect_goal();
   }
+
   rrt_star.fulfill_query();
 
-  params.print();
-  
+  // params.print();
+
   if (params["tree_to_files"].as<bool>())
   {
     rrt_star.to_files(file_prefix, out_dir);
     rrt_star_query.solution_traj.to_file(out_dir + "/" + file_prefix + "_sln_traj.txt");
   }
-
-  rrt_star_query.solution_traj.print();
 
   // aorrt_query.solution_traj.to_file();
 
@@ -146,17 +128,17 @@ int main(int argc, char* argv[])
 
   std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 
-  // Print the start and goal states
-  
-
-  vis_group->set_floor_plane(std::vector<double>({ 0, 0, -3 }), std::vector<double>({ 0.707, 0, 0, 0.707 }), std::vector<double>({ 500, 500 }), "0xbbbbbb");
+  vis_group->set_floor_plane(std::vector<double>({ 0, 0, -3 }), std::vector<double>({ 0.707, 0, 0, 0.707 }),
+                             std::vector<double>({ 500, 500 }), "0xbbbbbb");
   vis_group->add_vis_infos(prx::info_geometry_t::LINE, rrt_star_query.tree_visualization, body_name, ss);
   vis_group->add_detailed_vis_infos(prx::info_geometry_t::FULL_LINE, rrt_star_query.solution_traj, body_name, ss);
-  vis_group->add_vis_infos(prx::info_geometry_t::SPHERE, { Vec(rrt_star_query.goal_state).head(3) }, "0xffff00", rrt_star_query.goal_region_radius);
+  vis_group->add_vis_infos(prx::info_geometry_t::SPHERE, { Vec(rrt_star_query.goal_state).head(3) }, "0xffff00",
+                           rrt_star_query.goal_region_radius);
   vis_group->add_animation(rrt_star_query.solution_traj, ss, rrt_star_query.start_state);
   vis_group->output_html("peg_in_hole_rrt_star.html");
 
   delete vis_group;
 
   std::cout << "End of program" << std::endl;
+
 }

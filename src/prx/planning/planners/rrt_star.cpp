@@ -1,4 +1,7 @@
 #include "prx/planning/planners/rrt_star.hpp"
+#include "prx/utilities/general/timed_logger.hpp"
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 namespace prx
 {
@@ -11,6 +14,7 @@ rrt_star_t::~rrt_star_t()
 {
   _reset();
 }
+
 void rrt_star_t::_link_and_setup_spec(planner_specification_t* spec)
 {
   // reset is always called before this
@@ -18,7 +22,6 @@ void rrt_star_t::_link_and_setup_spec(planner_specification_t* spec)
   prx_assert(_rrt_star_spec != nullptr, "RRT received an incorrect specification.");
   _distance_function = _rrt_star_spec->distance_function;
   _cost_function = _rrt_star_spec->cost_function;
-  _sample_state = _rrt_star_spec->sample_state;
   _valid_check = _rrt_star_spec->valid_check;
   _steer_function = _rrt_star_spec->steer_function;
 
@@ -26,13 +29,12 @@ void rrt_star_t::_link_and_setup_spec(planner_specification_t* spec)
   _x_new = _state_space->make_point();
   _x_rand = _state_space->make_point();
   _control_space = _rrt_star_spec->control_space;
-  _eta_min = _rrt_star_spec->eta_min;
-  _eta_max = _rrt_star_spec->eta_max;
 
   _metric = new graph_nearest_neighbors_t(_distance_function);
   // we now have spaces and necessary functions
-  prx_assert(_eta_min > 0.0, "[" << _planner_name << "]: `eta_min` must be greater than 0 ");
-  prx_assert(_eta_max > _eta_min, "[" << _planner_name << "]: `eta_max` must be greater than `eta_min` ");
+  prx_assert(_rrt_star_spec->eta_min > 0.0, "[" << _planner_name << "]: `eta_min` must be greater than 0 ");
+  prx_assert(_rrt_star_spec->eta_max > _rrt_star_spec->eta_min,
+             "[" << _planner_name << "]: `eta_max` must be greater than `eta_min` ");
 }
 
 bool rrt_star_t::_preprocess()
@@ -46,8 +48,7 @@ bool rrt_star_t::_link_and_setup_query(planner_query_t* query)
   _rrt_star_query = dynamic_cast<rrt_star_query_t*>(query);
   prx_assert(_rrt_star_query != nullptr, "RRT received an incorrect query type.");
   if (_tree.num_vertices() == 0 ||
-      !_state_space->equal_points(_tree.get_vertex_as<rrt_star_node_t>(_start_vertex)->point,
-                                  _rrt_star_query->start_state))
+      !_state_space->equal_points(_tree.get_vertex_as<rrt_star_node_t>(_start_vertex)->point, _rrt_star_query->start_state))
   {
     // clear existing data structure
     _metric->clear();
@@ -59,6 +60,7 @@ bool rrt_star_t::_link_and_setup_query(planner_query_t* query)
     start_node->cost_to_come = 0;
     _metric->add_node(start_node.get());
   }
+
   _goal_region_radius = _rrt_star_query->goal_region_radius;
   _goal_state = _rrt_star_query->goal_state;
   _timer.reset();
@@ -72,16 +74,28 @@ bool rrt_star_t::_link_and_setup_query(planner_query_t* query)
   return true;
 }
 
+
+/* Edgar's Working query*/
+
+
 void rrt_star_t::_resolve_query(condition_check_t* condition)
 {
   std::shared_ptr<rrt_star_node_t> x_new{ nullptr };
 
   std::size_t nodes_added{ _tree.num_vertices() };
+  
+  using namespace std::literals::chrono_literals;
+  std::ofstream ss(prx::out_path + "rrt_star.log", std::ofstream::trunc);
+  prx::utilities::timed_logger_t timed_logger(1000ms, ss);
+
+  timed_logger.add("iterations", &_iteration_count);
+  timed_logger.add("nodes", &nodes_added);
+  timed_logger.run();
   do
   {
     // samples
-    _sample_state(_x_rand);
-    _eta = uniform_random(_eta_min, _eta_max);
+    _rrt_star_spec->sample_state(_x_rand);
+    _eta = uniform_random(_rrt_star_spec->eta_min, _rrt_star_spec->eta_max);
 
     // Find nearest
     rrt_star_node_t* x_nearest{ static_cast<rrt_star_node_t*>(_metric->single_query(_x_rand)) };
@@ -115,7 +129,299 @@ void rrt_star_t::_resolve_query(condition_check_t* condition)
     }
     _iteration_count++;
   } while (!condition->check());
+  timed_logger.stop();
 }
+
+
+ 
+/*APBPRM version of resolve_query*/
+
+/*
+
+void rrt_star_t::_resolve_query(condition_check_t* condition)
+{
+  std::shared_ptr<rrt_star_node_t> x_new{ nullptr };
+
+  std::size_t nodes_added{ _tree.num_vertices() };
+  
+  using namespace std::literals::chrono_literals;
+  std::ofstream ss(prx::out_path + "rrt_star.log", std::ofstream::trunc);
+  prx::utilities::timed_logger_t timed_logger(1000ms, ss);
+
+  timed_logger.add("iterations", &_iteration_count);
+  timed_logger.add("nodes", &nodes_added);
+  timed_logger.run();
+  do
+  {
+    // Samples
+    _rrt_star_spec->sample_state(_x_rand);
+    _eta = uniform_random(_rrt_star_spec->eta_min, _rrt_star_spec->eta_max);
+
+    // Find nearest
+    rrt_star_node_t* x_nearest{ static_cast<rrt_star_node_t*>(_metric->single_query(_x_rand)) };
+
+    // traj <- Steer(x_nearest, x_rand)
+    trajectory_t traj(_state_space);
+    _steer_function(traj, x_nearest->point, _x_rand, _eta);
+
+    // Try up to 100 attempts to find a valid node if initial traj is not valid
+    bool valid_node_found = _valid_check(traj);
+    int attempts = 0;
+    while (!valid_node_found && attempts < 100)
+    {
+      // Initialize an empty plan
+      plan_t control_plan(_control_space);
+
+      // Sample the plan using the empty plan
+      _rrt_star_spec->sample_plan(control_plan, _rrt_star_spec->control_space, 1, 1);
+
+      // Apply the sampled control to the current state
+      _propagate_function(_x_rand, control_plan.back(), _x_temp);
+      _steer_function(traj, x_nearest->point, _x_temp, _eta);
+
+      valid_node_found = _valid_check(traj);
+      attempts++;
+    }
+
+    if (valid_node_found)
+    {
+      nodes_added++;
+      // V <- V \cup \{ x_new \}
+      add_to_tree(x_new, traj.back());
+      // X_near <- kNearest(G=(V,E), x_new, k_RRT & log(i))
+      const CloseNodes X_near{ get_near_nodes(x_new, nodes_added) };
+
+      // x_min <- x_nearest
+      rrt_star_node_t* x_min{ x_nearest };
+
+      // Connect along the minimum-cost path
+      const double edge_cost{ connect_along_minimum_cost(x_min, x_new, X_near, traj) };
+
+      // E <- E \cup { x_min, x_new }
+      add_edge(x_new, x_min, traj, edge_cost);
+
+      // Rewire the tree
+      rewire_tree(X_near, x_new);
+
+      update_goal(x_new->get_index());
+    }
+    _iteration_count++;
+  } while (!condition->check());
+  timed_logger.stop();
+}
+
+*/
+
+
+/* APBPRM with Controls in the direction of the Steering function*/
+
+/*
+
+void rrt_star_t::_resolve_query(condition_check_t* condition)
+{
+  std::shared_ptr<rrt_star_node_t> x_new{ nullptr };
+
+  std::size_t nodes_added{ _tree.num_vertices() };
+  
+  using namespace std::literals::chrono_literals;
+  std::ofstream ss(prx::out_path + "rrt_star.log", std::ofstream::trunc);
+  prx::utilities::timed_logger_t timed_logger(1000ms, ss);
+
+  timed_logger.add("iterations", &_iteration_count);
+  timed_logger.add("nodes", &nodes_added);
+  timed_logger.run();
+  do
+  {
+    // Samples
+    _rrt_star_spec->sample_state(_x_rand);
+    _eta = uniform_random(_rrt_star_spec->eta_min, _rrt_star_spec->eta_max);
+
+    // Find nearest
+    rrt_star_node_t* x_nearest{ static_cast<rrt_star_node_t*>(_metric->single_query(_x_rand)) };
+
+    // traj <- Steer(x_nearest, x_rand)
+    trajectory_t traj(_state_space);
+    _steer_function(traj, x_nearest->point, _x_rand, _eta);
+
+    // Try up to 100 attempts to find a valid node if initial traj is not valid
+    bool valid_node_found = _valid_check(traj);
+    int attempts = 0;
+    while (!valid_node_found && attempts < 100)
+    {
+      // Get the direction from x_nearest to x_rand
+      auto direction = _state_space->subtract(x_nearest->point, _x_rand);
+      _state_space->normalize(direction);
+
+      // Initialize an empty plan
+      plan_t control_plan(_control_space);
+
+      // Apply control in the direction of x_nearest to x_rand
+      _control_space->set_from_vector(control_plan.back(), direction);
+
+      // Propagate the control to obtain the new state
+      _propagate_function(x_nearest->point, control_plan.back(), _x_temp);
+
+      // Steer towards the new state
+      _steer_function(traj, x_nearest->point, _x_temp, _eta);
+
+      valid_node_found = _valid_check(traj);
+      attempts++;
+    }
+
+    if (valid_node_found)
+    {
+      nodes_added++;
+      // V <- V \cup \{ x_new \}
+      add_to_tree(x_new, traj.back());
+      // X_near <- kNearest(G=(V,E), x_new, k_RRT & log(i))
+      const CloseNodes X_near{ get_near_nodes(x_new, nodes_added) };
+
+      // x_min <- x_nearest
+      rrt_star_node_t* x_min{ x_nearest };
+
+      // Connect along the minimum-cost path
+      const double edge_cost{ connect_along_minimum_cost(x_min, x_new, X_near, traj) };
+
+      // E <- E \cup { x_min, x_new }
+      add_edge(x_new, x_min, traj, edge_cost);
+
+      // Rewire the tree
+      rewire_tree(X_near, x_new);
+
+      update_goal(x_new->get_index());
+    }
+    _iteration_count++;
+  } while (!condition->check());
+  timed_logger.stop();
+}
+
+*/
+
+
+/* ABPRM + Noise Insertion in Planner in SE(3) at every step*/
+
+
+/*
+
+void rrt_star_t::_resolve_query(condition_check_t* condition)
+{
+  std::shared_ptr<rrt_star_node_t> x_new{ nullptr };
+
+  std::size_t nodes_added{ _tree.num_vertices() };
+  
+  using namespace std::literals::chrono_literals;
+  std::ofstream ss(prx::out_path + "rrt_star.log", std::ofstream::trunc);
+  prx::utilities::timed_logger_t timed_logger(1000ms, ss);
+
+  timed_logger.add("iterations", &_iteration_count);
+  timed_logger.add("nodes", &nodes_added);
+  timed_logger.run();
+  do
+  {
+    // samples
+    _rrt_star_spec->sample_state(_x_rand);
+    _eta = uniform_random(_rrt_star_spec->eta_min, _rrt_star_spec->eta_max);
+
+    // Find nearest
+    rrt_star_node_t* x_nearest{ static_cast<rrt_star_node_t*>(_metric->single_query(_x_rand)) };
+
+    // traj <- Steer(x_nearest, x_rand)
+    trajectory_t traj(_state_space);
+    _steer_function(traj, x_nearest->point, _x_rand, _eta);
+
+    // Add SE(3) pose noise to every state in the trajectory
+    for (auto& state : traj)
+    {
+      // Sample noise from uniform distributions for each dimension
+      double noise_x = uniform_random(-0.1, 0.1);  // Adjust the range as needed
+      double noise_y = uniform_random(-0.1, 0.1);
+      double noise_z = uniform_random(-0.1, 0.1);
+      double noise_roll = uniform_random(-0.05, 0.05);  // Adjust the range as needed
+      double noise_pitch = uniform_random(-0.05, 0.05);
+      double noise_yaw = uniform_random(-0.05, 0.05);
+
+      // Add the sampled noise to the corresponding dimensions of the state
+      state->at(0) += noise_x;
+      state->at(1) += noise_y;
+      state->at(2) += noise_z;
+      
+      // Convert the Euler angles to a quaternion
+      Eigen::Quaterniond q = Eigen::AngleAxisd(noise_roll, Eigen::Vector3d::UnitX())
+                           * Eigen::AngleAxisd(noise_pitch, Eigen::Vector3d::UnitY())
+                           * Eigen::AngleAxisd(noise_yaw, Eigen::Vector3d::UnitZ());
+
+      // Multiply the noise quaternion with the existing orientation quaternion
+      double qw = state->at(3);
+      double qx = state->at(4);
+      double qy = state->at(5);
+      double qz = state->at(6);
+      Eigen::Quaterniond q_state(qw, qx, qy, qz);
+      Eigen::Quaterniond q_noisy = q * q_state;
+
+      // Update the orientation dimensions of the state with the noisy quaternion
+      state->at(3) = q_noisy.w();
+      state->at(4) = q_noisy.x();
+      state->at(5) = q_noisy.y();
+      state->at(6) = q_noisy.z();
+    }
+
+    // collision check
+    int tries = 0;
+    space_point_t current_state = x_nearest->point;
+    while (!_valid_check(traj) && tries < 100)
+    {
+      // Sample new random controls until a valid trajectory is found or the limit is reached
+      _rrt_star_spec->sample_state(_x_rand);
+      _eta = uniform_random(_rrt_star_spec->eta_min, _rrt_star_spec->eta_max);
+      
+      // Apply the random control to the current state
+      space_point_t next_state = _state_space->alloc_point();
+      _steer_function(traj, current_state, _x_rand, _eta);
+      
+      // Update the current state for the next iteration
+      _state_space->copy_point(next_state, traj.back());
+      _state_space->free_point(current_state);
+      current_state = next_state;
+      
+      tries++;
+    }
+    
+    // If a valid trajectory is found within the limit, add the node to the tree
+    if (_valid_check(traj))
+    {
+      nodes_added++;
+      // V <- V \cup \{ x_new \}
+      add_to_tree(x_new, traj.back());
+      // X_near <- kNearest(G=(V,E), x_new, k_RRT & log(i))
+      const CloseNodes X_near{ get_near_nodes(x_new, nodes_added) };
+
+      // x_min <- x_nearest
+      rrt_star_node_t* x_min{ x_nearest };
+
+      // Connect along the minimum-cost path
+      const double edge_cost{ connect_along_minimum_cost(x_min, x_new, X_near, traj) };
+
+      // E <- E \cup { x_min, x_new }
+      add_edge(x_new, x_min, traj, edge_cost);
+
+      // Rewire the tree
+      rewire_tree(X_near, x_new);
+
+      update_goal(x_new->get_index());
+    }
+    
+    // Free the current state
+    _state_space->free_point(current_state);
+
+    _iteration_count++;
+  } while (!condition->check());
+  timed_logger.stop();
+}
+
+
+*/
+
+
 
 void rrt_star_t::add_to_tree(NodePtr& x_new, space_point_t state)
 {
@@ -124,6 +430,8 @@ void rrt_star_t::add_to_tree(NodePtr& x_new, space_point_t state)
   x_new->point = _state_space->clone_point(state);
 }
 
+
+
 rrt_star_t::CloseNodes rrt_star_t::get_near_nodes(NodePtr& x_new, const std::size_t nodes_added)
 {
   const int k_nearest{ static_cast<int>(k_RRT * std::log10(nodes_added)) };
@@ -131,8 +439,9 @@ rrt_star_t::CloseNodes rrt_star_t::get_near_nodes(NodePtr& x_new, const std::siz
   return X_near;
 }
 
-double rrt_star_t::connect_along_minimum_cost(rrt_star_node_t*& x_min, NodePtr& x_new, const CloseNodes& X_near,
-                                              trajectory_t& traj)
+
+
+double rrt_star_t::connect_along_minimum_cost(rrt_star_node_t*& x_min, NodePtr& x_new, const CloseNodes& X_near, trajectory_t& traj)
 {
   double edge_cost{ _distance_function(x_min->point, x_new->point) };
   double c_min{ x_min->cost_to_come + edge_cost };
@@ -146,14 +455,19 @@ double rrt_star_t::connect_along_minimum_cost(rrt_star_node_t*& x_min, NodePtr& 
     const double cost_x_new_via_x_near{ cost_x_near + cost_edge_near_new };
 
     trajectory_t traj_near_to_new(_state_space);
-    _steer_function(traj_near_to_new, x_near->point, x_new->point, cost_x_new_via_x_near);
+    //_steer_function(traj_near_to_new, x_near->point, x_new->point, cost_x_new_via_x_near);
 
-    if (cost_x_new_via_x_near < c_min and _valid_check(traj_near_to_new))
+    //if (cost_x_new_via_x_near < c_min and _valid_check(traj_near_to_new))
+    if (cost_x_new_via_x_near < c_min )
     {
-      x_min = x_near;
-      edge_cost = cost_edge_near_new;
-      c_min = cost_x_new_via_x_near;
-      traj = traj_near_to_new;
+	_steer_function(traj_near_to_new, x_near->point, x_new->point, cost_x_new_via_x_near);
+	if ( _valid_check(traj_near_to_new))
+    	{
+      		x_min = x_near;
+      		edge_cost = cost_edge_near_new;
+      		c_min = cost_x_new_via_x_near;
+      		traj = traj_near_to_new;
+    	}
     }
   }
   x_new->cost_to_come = c_min;
@@ -183,21 +497,27 @@ void rrt_star_t::rewire_tree(const CloseNodes& X_near, NodePtr& x_new)
     const double cost_x_near_via_x_new{ cost_x_new + cost_edge_near_new };
 
     trajectory_t traj_new_to_near(_state_space);
-    _steer_function(traj_new_to_near, x_new->point, x_near->point, cost_x_near_via_x_new);
+    //_steer_function(traj_new_to_near, x_new->point, x_near->point, cost_x_near_via_x_new);
 
-    if (cost_x_near_via_x_new < cost_x_near and _valid_check(traj_new_to_near))
+    //if (cost_x_near_via_x_new < cost_x_near and _valid_check(traj_new_to_near))
+     if (cost_x_near_via_x_new < cost_x_near )
     {
-      const node_index_t x_near_idx{ x_near->get_index() };
-      _tree.transplant(x_near_idx, x_new_idx);
-      const edge_index_t x_near_edge_idx{ x_near->get_parent_edge() };
-      std::shared_ptr<rrt_star_edge_t> parent_edge{ _tree.get_edge_as<rrt_star_edge_t>(x_near_edge_idx) };
-      // traj_new_to_near.pop_back();
-      parent_edge->traj = std::make_shared<trajectory_t>(traj_new_to_near);
-      parent_edge->edge_cost = cost_edge_near_new;
-      x_near->cost_to_come = cost_x_near_via_x_new;
-    }
+    	_steer_function(traj_new_to_near, x_new->point, x_near->point, cost_x_near_via_x_new);
+	if (_valid_check(traj_new_to_near))
+    	{
+      	   const node_index_t x_near_idx{ x_near->get_index() };
+           _tree.transplant(x_near_idx, x_new_idx);
+      	   const edge_index_t x_near_edge_idx{ x_near->get_parent_edge() };
+           std::shared_ptr<rrt_star_edge_t> parent_edge{ _tree.get_edge_as<rrt_star_edge_t>(x_near_edge_idx) };
+           // traj_new_to_near.pop_back();
+     	   parent_edge->traj = std::make_shared<trajectory_t>(traj_new_to_near);
+      	   parent_edge->edge_cost = cost_edge_near_new;
+      	   x_near->cost_to_come = cost_x_near_via_x_new;
+        }
+     }
   }
 }
+
 
 void rrt_star_t::_fulfill_query()
 {
@@ -297,6 +617,9 @@ void rrt_star_t::print_statistics()
 
 void rrt_star_t::from_files(const std::string file_prefix, const std::string directory)
 {
+  // Print the file_prefix and directory
+  std::cout << "Loading from: \n\t" << directory << "/" << file_prefix << "\n";
+
   using prx::constants::separating_value;
   using prx::utilities::csv_reader_t;
 
@@ -308,7 +631,16 @@ void rrt_star_t::from_files(const std::string file_prefix, const std::string dir
   const std::string filename_trajs{ directory + "/" + file_prefix + "_trajectories.txt" };
   const std::string filename_tree{ directory + "/" + file_prefix + "_tree.txt" };
 
+  // Print the filenames
+  std::cout << "Loading trajectories from: \n\t" << filename_trajs << "\n";
+  std::cout << "Loading tree from: \n\t" << filename_tree << "\n";
+
   _tree.from_file<rrt_star_node_t, rrt_star_edge_t>(filename_tree, _state_space);
+
+  // Print "I read the tree"
+  std::cout << "I just read the tree\n";
+
+  
 
   std::unordered_map<std::size_t, std::shared_ptr<prx::trajectory_t>> map_edges_traj;
   csv_reader_t reader_trajs(filename_trajs);
@@ -349,8 +681,10 @@ void rrt_star_t::from_files(const std::string file_prefix, const std::string dir
     }
   }
 
-  std::queue<node_index_t> queue{ { _start_vertex } };
+  // Print "I just read the trajs"
+  std::cout << "I just read the trajs\n";
 
+  std::queue<node_index_t> queue{ { _start_vertex } };
   while (not queue.empty())
   {
     const node_index_t node_idx{ queue.front() };
@@ -377,7 +711,33 @@ void rrt_star_t::from_files(const std::string file_prefix, const std::string dir
     }
     queue.pop();
   }
+
+  
 }
+
+
+void rrt_star_t::costs_to_files(const std::string file_prefix, const std::string directory)
+{
+  using prx::constants::separating_value;
+
+  const std::string filename_costs{ directory + "/" + file_prefix + "_costs.txt" };
+
+  std::cout << "Saving costs as: \n\t" << filename_costs << "\n";
+  std::ofstream ofs_costs{ filename_costs.c_str(), std::ofstream::trunc };
+  ofs_costs << "node_idx" << separating_value << "node_cost\n";
+
+  auto pair_vertices = _tree.vertices();
+  for (auto iter = pair_vertices.first; iter != pair_vertices.second; ++iter)
+  {
+    const double node_cost { static_cast<rrt_star_node_t*>(iter->get())->cost_to_come };
+    const node_index_t node_idx { (*iter)->get_index() };
+
+    ofs_costs << node_idx << separating_value << node_cost << "\n";
+  }
+
+  ofs_costs.close();
+}
+
 
 void rrt_star_t::to_files(const std::string file_prefix, const std::string directory)
 {

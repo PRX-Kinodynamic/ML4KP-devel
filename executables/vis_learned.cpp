@@ -1,4 +1,3 @@
-#include <iostream>
 #include <fstream>
 
 #include "prx/utilities/defs.hpp"
@@ -9,25 +8,11 @@
 #include "prx/visualization/three_js_group.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
-
-using Transform = Eigen::Transform<double, 3, Eigen::Isometry>;
-
-using prx::split;
-using prx::utilities::convert_to;
+//#include "prx/simulation/trajectory.hpp"
 
 
 int main(int argc, char* argv[])
 {
-
-  //Transform ml4kpWorld_w{ Transform::Identity() };
-  //Transform pegBottom_w{ Transform::Identity() };
-  //Transform pegCenter_w{ Transform::Identity() };
-  //Transform pegBottom_ml4kp{ Transform::Identity() };
-  //Transform pegCenter_ml4kp{ Transform::Identity() };
-  //Transform pegCenter_pegBottom{ Transform::Identity() };
-
-  //pegCenter_pegBottom.translation() = Eigen::Vector3d(0, 0, 25);
-
   prx::param_loader params("executables/peg_in_hole.yaml", argc, argv);
 
   prx::simulation_step = params["simulation_step"].as<double>();
@@ -42,6 +27,8 @@ int main(int argc, char* argv[])
   prx::system_ptr_t plant{ prx::system_factory_t::create_system(plant_name, plant_path) };
   prx_assert(plant != nullptr, "Plant is nullptr!");
 
+
+  
   prx::world_model_t world_model({ plant }, { obstacle_list });
   world_model.create_context("context", { plant_name }, { obstacle_names });
   auto context = world_model.get_context("context");
@@ -78,9 +65,9 @@ int main(int argc, char* argv[])
   rrt_star_spec.max_control_steps = params["/plant/max_steps"].as<int>();
 
   prx::rrt_star_query_t rrt_star_query(ss, cs);
-  rrt_star_query.start_state = context.first->get_state_space()->make_point();
-  rrt_star_query.goal_state = context.first->get_state_space()->make_point();
 
+
+  /*
   rrt_star_spec.eta_min = params["/planner/eta_min"].as<double>();
   rrt_star_spec.eta_max = params["/planner/eta_max"].as<double>();
 
@@ -92,14 +79,6 @@ int main(int argc, char* argv[])
 
   const std::vector<double> ps_values{ params["/plant/parameter_space/values"].as<std::vector<double>>() };
 
-  ss->set_bounds(ss_lower_bounds, ss_upper_bounds);
-  cs->set_bounds(cs_lower_bounds, cs_upper_bounds);
-
-  ps->copy_from(ps_values);
-
-  ss->copy(rrt_star_query.start_state, params["/plant/start_state"].as<std::vector<double>>());
-  ss->copy(rrt_star_query.goal_state, params["/plant/goal_state"].as<std::vector<double>>());
-
   rrt_star_query.goal_region_radius = params["/planner/goal_region_radius"].as<double>();
 
   // Alternatively, change the goal_check function
@@ -108,55 +87,95 @@ int main(int argc, char* argv[])
     const double dist_to_goal{ rrt_star_spec.distance_function(pt, rrt_star_query.goal_state) };
     return dist_to_goal < rrt_star_query.goal_region_radius;
   };
-  const std::string out_dir{ params["/out/dir"].as<>() };
-  const std::string file_prefix{ params["/out/file_prefix"].as<>() };
 
   rrt_star_query.get_visualization = params["visualize"].as<bool>();
 
   rrt_star.link_and_setup_spec(&rrt_star_spec);
   rrt_star.preprocess();
   rrt_star.link_and_setup_query(&rrt_star_query);
-  if (params["grow_tree"].as<bool>())
-  {
-    prx::condition_check_t checker(params["/planner/checker_type"].as<>(), params["/planner/checker_value"].as<int>());
 
-    rrt_star.resolve_query(&checker);
-  }
-  if (params["query_tree"].as<bool>())
-  {
-    rrt_star.from_files(file_prefix, out_dir);
-    rrt_star.connect_goal();
-  }
+  const std::string out_dir{ params["/out/dir"].as<>() };
+  const std::string file_prefix{ params["/out/file_prefix"].as<>() };
+  rrt_star.from_files(file_prefix, out_dir);
+
+  std::vector<double> goal{ params["/plant/goal_state"].as<std::vector<double>>() };
+  rrt_star.connect_goal();
+
   rrt_star.fulfill_query();
 
-  params.print();
-  
-  if (params["tree_to_files"].as<bool>())
-  {
-    rrt_star.to_files(file_prefix, out_dir);
-    rrt_star_query.solution_traj.to_file(out_dir + "/" + file_prefix + "_sln_traj.txt");
-  }
+  // params.print();
 
-  rrt_star_query.solution_traj.print();
+  // rrt_star.to_files(file_prefix, out_dir);
+  // rrt_star_query.solution_traj.to_file(out_dir + "/" + file_prefix + "_sln_traj.txt");
 
   // aorrt_query.solution_traj.to_file();
 
+  
+
+  
+
+  // Read the trajectory from file
+  prx::trajectory_t learned_trajectory(ss);  // Assuming ss is the state space corresponding to the trajectory
+  //learned_trajectory.from_file("/common/home/im316/RL4Insertion_code/CORL/algorithms/learned_RRT_Star_rectangular_16mm_0001_5.txt");
+ 
   // Visualization
   prx::three_js_group_t* vis_group = new prx::three_js_group_t({ plant }, { obstacle_list });
 
   std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
 
-  // Print the start and goal states
-  
-
-  vis_group->set_floor_plane(std::vector<double>({ 0, 0, -3 }), std::vector<double>({ 0.707, 0, 0, 0.707 }), std::vector<double>({ 500, 500 }), "0xbbbbbb");
-  vis_group->add_vis_infos(prx::info_geometry_t::LINE, rrt_star_query.tree_visualization, body_name, ss);
-  vis_group->add_detailed_vis_infos(prx::info_geometry_t::FULL_LINE, rrt_star_query.solution_traj, body_name, ss);
-  vis_group->add_vis_infos(prx::info_geometry_t::SPHERE, { Vec(rrt_star_query.goal_state).head(3) }, "0xffff00", rrt_star_query.goal_region_radius);
+  //vis_group->add_vis_infos(prx::info_geometry_t::LINE, rrt_star_query.tree_visualization, body_name, ss);
+  //vis_group->add_detailed_vis_infos(prx::info_geometry_t::FULL_LINE, rrt_star_query.solution_traj, body_name, ss);
+  // Visualize the loaded trajectory
+  vis_group->add_detailed_vis_infos(prx::info_geometry_t::FULL_LINE, learned_trajectory, body_name, ss);
+  vis_group->add_vis_infos(prx::info_geometry_t::SPHERE, { Vec(rrt_star_query.goal_state).head(3) }, "0xffff00",
+                           rrt_star_query.goal_region_radius);
   vis_group->add_animation(rrt_star_query.solution_traj, ss, rrt_star_query.start_state);
   vis_group->output_html("peg_in_hole_rrt_star.html");
 
   delete vis_group;
 
   std::cout << "End of program" << std::endl;
+
+  */
+
+
+  // Visualization
+  prx::three_js_group_t* vis_group = new prx::three_js_group_t({ plant }, { obstacle_list });
+
+  std::string body_name = params["/plant/name"].as<>() + "/" + params["/plant/vis_body"].as<>();
+  //vis_group->add_vis_infos(prx::info_geometry_t::LINE, rrt_star_query.tree_visualization, body_name, ss);
+  //vis_group->add_detailed_vis_infos(prx::info_geometry_t::FULL_LINE, rrt_star_query.solution_traj, body_name, ss);
+
+  // Read and visualize the trajectory from "learned.txt"
+  prx::trajectory_t learned_trajectory(ss); // Ensure 'ss' is the correct state space
+  //learned_trajectory.from_file("/common/home/im316/RL4Insertion_code/CORL/algorithms/interpolated_poses_quat_ml4kp.txt");
+  learned_trajectory.from_file("/common/home/im316/RL4Insertion_code/CORL/algorithms/learned_RRT_Star_rectangular_16mm_0001_Deep_Quat_Old_0_ml4kp.txt");
+
+  prx::space_point_t current = ss->make_point();
+  for (unsigned i = 0; i < learned_trajectory.size(); i++)
+  {
+    current = learned_trajectory.at(i);
+    auto pqp_dists = default_obstacle_distance_function(current, ss, context.second);
+    double min_dist = PRX_INFINITY;
+    for (auto&& dist : pqp_dists.distances)
+    {
+      if (dist < min_dist)
+      {
+        min_dist = dist;
+      }
+    }
+    std::cout << "In collision? " << rrt_star_spec.valid_state(current) << " ; Dist = " << min_dist << std::endl;
+  }
+  
+  PRX_DEBUG_VAR_1(learned_trajectory);
+  
+  vis_group->add_detailed_vis_infos(prx::info_geometry_t::FULL_LINE, learned_trajectory, body_name, ss);
+  //vis_group->add_vis_infos(prx::info_geometry_t::SPHERE, { Vec(rrt_star_query.goal_state).head(3) }, "0xffff00", rrt_star_query.goal_region_radius);
+  vis_group->add_animation(learned_trajectory,ss, learned_trajectory.front()); 
+  vis_group->output_html("learned_peg_in_hole_rrt_star_Old.html");
+
+  delete vis_group;
+  std::cout << "End of program" << std::endl;
+  return 0;
+
 }

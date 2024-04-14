@@ -65,13 +65,13 @@ void planner_t::resolve_query(condition_check_t* condition)
   _resolve_query(condition);
   planner_state = planner_stage_t::RESOLVE_QUERY;
 }
+
 void planner_t::fulfill_query()
 {
-  if (planner_state != planner_stage_t::RESOLVE_QUERY)
-  {
-    prx_throw("Fulfill query can only be called after resolve_query. Current planner stage is "
-              << get_current_stage_name());
-  }
+  //if (planner_state != planner_stage_t::RESOLVE_QUERY)
+  //{
+  //  prx_throw("Fulfill query can only be called after resolve_query. Current planner stage is "<< get_current_stage_name());
+  //}
   _fulfill_query();
   planner_state = planner_stage_t::FULFILL_QUERY;
 }

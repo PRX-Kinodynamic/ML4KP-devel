@@ -49,6 +49,7 @@ public:
   double cost_to_come;
 };
 
+
 class rrt_star_edge_t : public tree_edge_t
 {
 public:
@@ -112,107 +113,108 @@ public:
 
 class rrt_star_query_t : public planner_query_t
 {
-public:
-  rrt_star_query_t(space_t* state_space, space_t* control_space) : planner_query_t(state_space, control_space)
+  public:
+    rrt_star_query_t(space_t* state_space, space_t* control_space) : planner_query_t(state_space, control_space)
+    {
+      clear_outputs();
+
+      goal_region_radius = 0.5;
+      start_state = state_space->make_point();
+      goal_state = state_space->make_point();
+      goal_check = [&](space_point_t s) { return default_goal_check(s, goal_state, goal_region_radius); };
+    }
+    virtual ~rrt_star_query_t()
+    {
+    }
+    double goal_region_radius;
+  };
+
+  class rrt_star_t : public planner_t
   {
-    clear_outputs();
+  public:
+    
+    using CloseNodes = std::vector<proximity_node_t*>;
+    using NodePtr = std::shared_ptr<rrt_star_node_t>;
 
-    goal_region_radius = 0.5;
-    start_state = state_space->make_point();
-    goal_state = state_space->make_point();
-    goal_check = [&](space_point_t s) { return default_goal_check(s, goal_state, goal_region_radius); };
-  }
-  virtual ~rrt_star_query_t()
-  {
-  }
-  double goal_region_radius;
-};
+    rrt_star_t(const std::string& new_name);
+    virtual ~rrt_star_t();
 
-class rrt_star_t : public planner_t
-{
-public:
-  using CloseNodes = std::vector<proximity_node_t*>;
-  using NodePtr = std::shared_ptr<rrt_star_node_t>;
+    virtual void print_statistics();
 
-  rrt_star_t(const std::string& new_name);
-  virtual ~rrt_star_t();
+    virtual std::vector<std::string> get_statistics_header() override;
+    virtual std::vector<double> get_statistics() override;
+    virtual void to_files(const std::string file_prefix, const std::string directory = prx::out_path);
+    virtual void from_files(const std::string file_prefix, const std::string directory);
+    void costs_to_files(const std::string file_prefix, const std::string directory = prx::out_path);
 
-  virtual void print_statistics();
+    space_t* get_state_space();
 
-  virtual std::vector<std::string> get_statistics_header() override;
-  virtual std::vector<double> get_statistics() override;
-  virtual void to_files(const std::string file_prefix, const std::string directory = prx::out_path);
-  virtual void from_files(const std::string file_prefix, const std::string directory);
+    virtual void update_goal(const node_index_t node_index);
+    void add_to_tree(NodePtr&, space_point_t);
+    CloseNodes get_near_nodes(NodePtr&, const std::size_t);
+    double connect_along_minimum_cost(rrt_star_node_t*&, NodePtr&, const CloseNodes&, trajectory_t&);
+    void add_edge(const NodePtr, rrt_star_node_t*, trajectory_t&, const double);
+    void rewire_tree(const CloseNodes&, NodePtr&);
+    virtual void _link_and_setup_spec(planner_specification_t* spec) override;
+    virtual bool _preprocess() override;
+    virtual bool _link_and_setup_query(planner_query_t* query) override;
+    virtual void _resolve_query(condition_check_t* condition) override;
+    virtual void _fulfill_query() override;
+    virtual void _reset() override;
 
-  void connect_goal()
-  {
-    const double eta_min_copy{ _eta_min };
-    sample_state_t sample_state_copy{ _sample_state };
+    rrt_star_specification_t* _rrt_star_spec;
+    rrt_star_query_t* _rrt_star_query;
 
-    _eta_min = _eta_max;
-    _sample_state = [&](space_point_t& s) { _state_space->copy(s, _goal_state); };
+    std::string _planner_name;
 
-    condition_check_t check_one_iteration("iterations", 1);
-    resolve_query(&check_one_iteration);
+    node_index_t _start_vertex;
+    node_index_t _goal_vertex;
 
-    _eta_min = eta_min_copy;
-    _sample_state = sample_state_copy;
-  }
+    distance_function_t _distance_function;
+    cost_function_t _cost_function;
+    sample_state_t _sample_state;
+    valid_trajectory_t _valid_check;
+    steer_function_t _steer_function;
 
-protected:
-  virtual void update_goal(const node_index_t node_index);
+    tree_t _tree;
+    graph_nearest_neighbors_t* _metric;
 
-  void add_to_tree(NodePtr&, space_point_t);
-  CloseNodes get_near_nodes(NodePtr&, const std::size_t);
-  double connect_along_minimum_cost(rrt_star_node_t*&, NodePtr&, const CloseNodes&, trajectory_t&);
-  void add_edge(const NodePtr, rrt_star_node_t*, trajectory_t&, const double);
-  void rewire_tree(const CloseNodes&, NodePtr&);
+    space_t* _state_space;
+    space_t* _control_space;
 
-  virtual void _link_and_setup_spec(planner_specification_t* spec) override;
-  virtual bool _preprocess() override;
-  virtual bool _link_and_setup_query(planner_query_t* query) override;
-  virtual void _resolve_query(condition_check_t* condition) override;
-  virtual void _fulfill_query() override;
-  virtual void _reset() override;
+    space_point_t _x_rand;
+    space_point_t _x_new;
+    space_point_t _goal_state;
+    double _eta;
+    double _eta_min;
+    double _eta_max;
 
-  rrt_star_specification_t* _rrt_star_spec;
-  rrt_star_query_t* _rrt_star_query;
+    std::size_t _iteration_count;
+    timer_t _timer;
 
-  std::string _planner_name;
+    double _current_solution;
+    double _current_solution_time;
+    std::size_t _current_solution_iters;
 
-  node_index_t _start_vertex;
-  node_index_t _goal_vertex;
+    std::size_t _print_statistics_count;
 
-  distance_function_t _distance_function;
-  cost_function_t _cost_function;
-  sample_state_t _sample_state;
-  valid_trajectory_t _valid_check;
-  steer_function_t _steer_function;
+    simulation::observer_t _observer;
+    double _goal_region_radius;
+    int k_RRT;
 
-  tree_t _tree;
-  graph_nearest_neighbors_t* _metric;
+    void connect_goal()
+    {
+      const double eta_min_copy{ _eta_min };
+      sample_state_t sample_state_copy{ _sample_state };
 
-  space_t* _state_space;
-  space_t* _control_space;
+      _eta_min = _eta_max;
+      _sample_state = [&](space_point_t& s) { _state_space->copy(s, _goal_state); };
 
-  space_point_t _x_rand;
-  space_point_t _x_new;
-  space_point_t _goal_state;
-  double _eta;
-  double _eta_min;
-  double _eta_max;
+      condition_check_t check_one_iteration("iterations", 1);
+      resolve_query(&check_one_iteration);
 
-  std::size_t _iteration_count;
-  timer_t _timer;
-
-  double _current_solution;
-  double _current_solution_time;
-  std::size_t _current_solution_iters;
-
-  std::size_t _print_statistics_count;
-
-  simulation::observer_t _observer;
-  double _goal_region_radius;
-  int k_RRT;
-};
-}  // namespace prx
+      _eta_min = eta_min_copy;
+      _sample_state = sample_state_copy;
+    }
+  }; 
+} // namespace prx;
