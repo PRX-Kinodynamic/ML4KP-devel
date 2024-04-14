@@ -1,8 +1,8 @@
 name: "mushr"
 path: "mushr"
 
-start_state: [0.0, 0.0, 0.0, 0.0]
-goal_state:  [0.0, 0.0, 0.0, 0.0]
+start_state: [0.0, 0.0, 0.0, 0.0,0.0]
+goal_state:  [0.0, 0.0, 0.0, 0.0,0.0]
 
 state_space:
   lower_bound: [-100, -100, -3.14159,-0.75, -0.75]
@@ -13,6 +13,6 @@ control_space:
   upper_bound: [1, 1]
 
 parameter_space:
-  values: [.09, 0.0, 0.52]
-
+  values: [0.075, 0.259, 0.625]
+  
 vis_body: "body"
