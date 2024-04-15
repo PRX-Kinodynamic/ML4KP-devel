@@ -53,7 +53,9 @@ public:
 
   virtual void compute_control() = 0;
 
-  virtual void compute_stopping_maneuver(space_point_t, std::vector<double>&, std::vector<double>&);
+  virtual void compute_stopping_maneuver(space_point_t, double&)
+  {
+  }
   virtual void finalize_system_tree()
   {
     PRX_NOT_IMPLEMENTED

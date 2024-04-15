@@ -15,7 +15,7 @@ treaded_vehicle_t::treaded_vehicle_t(const std::string& path) : plant_t(path)
   al = ar = 0;
   control_memory = { &al, &ar };
   input_control_space = new space_t("EE", control_memory, "TreadedControl");
-  input_control_space->set_bounds({ -.2, -.2 }, { .2, .2 });
+  input_control_space->set_bounds(ctrl_lower_bound, ctrl_upper_bound);
 
   dx = dy = dtheta = 0;
   derivative_memory = { &dx, &dy, &dtheta, &al, &ar };
@@ -36,24 +36,34 @@ treaded_vehicle_t::~treaded_vehicle_t()
 {
 }
 
-void treaded_vehicle_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times,
-                                                  std::vector<double>& ctrls)  //, std::vector<double> * controls)
+void treaded_vehicle_t::compute_stopping_maneuver(space_point_t start_state, double& time)
 {
-  double stop_l = fabs(start_state->at(3) / 0.2);
-  double stop_r = fabs(start_state->at(4) / 0.2);
-  times.push_back(stop_l);
-  times.push_back(stop_r);
-  if (start_state->at(3) < 0)
-    ctrls.push_back(0.2);
-  else
-    ctrls.push_back(-0.2);
-  if (start_state->at(4) < 0)
-    ctrls.push_back(0.2);
-  else
-    ctrls.push_back(-0.2);
-  // std::cout << "time Left: " << stop_l << "\tRight: " << stop_r << std::endl;
-  // std::cout << "control Left: " << (*ctrls)[0] << "\tRight: " << (*ctrls)[1] << std::endl;
-  // std::cout << "Acc Left: " << al << "\tRight: " << ar << std::endl;
+  std::vector<double> desired_acceleration = { -start_state->at(3) / time, -start_state->at(4) / time };
+  double max_time_required = time;
+  double multiplier = 1.0 / simulation_step;
+
+  for (int i = 0; i < input_control_space->get_dimension(); i++)
+  {
+    if (desired_acceleration[i] < ctrl_lower_bound[0])
+    {
+      desired_acceleration[i] = ctrl_lower_bound[0];
+    }
+    else if (desired_acceleration[i] > ctrl_upper_bound[0])
+    {
+      desired_acceleration[i] = ctrl_upper_bound[0];
+    }
+    max_time_required =
+        simulation_step *
+        std::ceil(multiplier * std::max(max_time_required, -start_state->at(3 + i) / desired_acceleration[i]));
+  }
+
+  if (max_time_required > time)
+  {
+    desired_acceleration = { -start_state->at(3) / max_time_required, -start_state->at(4) / max_time_required };
+    time = max_time_required;
+  }
+
+  input_control_space->copy_from_vector(desired_acceleration);
 }
 
 void treaded_vehicle_t::set_cost_map(double** c_map, double d_x, double d_y, int g_h, int g_w, double c_size)
@@ -115,8 +125,8 @@ void treaded_vehicle_t::compute_derivative()
     traversability = 1 - cost_map[x_val][y_val];
   }
   _xicr = (traversability > .5 ? 0 : .6 * (.5 - traversability) * 2);
-  _yicrL = -((traversability)*.3 + (1.0 - traversability) * 2.0);
-  _yicrR = ((traversability)*.3 + (1.0 - traversability) * 2.0);
+  _yicrL = -((traversability) * .3 + (1.0 - traversability) * 2.0);
+  _yicrR = ((traversability) * .3 + (1.0 - traversability) * 2.0);
 
   const double divisor = 1.0 / (_yicrL - _yicrR);
   double _vforward = (vr * _yicrL - vl * _yicrR) * divisor;
