@@ -18,6 +18,27 @@ public:
 
   virtual bool goal_reached(const space_point_t& current_state) = 0;
 
+  template <typename T>
+  void set_goal(const T& _goal)
+  {
+    get_state_space()->copy(goal, _goal);
+  }
+  
+  virtual void reset() = 0;
+
+  virtual void get_control(const space_point_t& current_state, Eigen::VectorXd& control) = 0;
+
+  using controller_t::compute_controls;
+  virtual void compute_controls() override
+  {
+    space_point_t current = get_state_space()->make_point();
+    get_state_space()->copy_to(current);
+    Eigen::VectorXd control;
+    get_control(current,control);
+    get_control_space()->copy_from(control);
+    get_control_space()->enforce_bounds();
+  }
+
   virtual void set_points(std::shared_ptr<Points> points)
   {
     _points = points;

@@ -55,9 +55,7 @@ int main(int argc, char* argv[])
   space_point_t start = ss->make_point();
   space_point_t goal = ss->make_point();
 
-  std::vector<std::vector<double>> candidate_controls = {
-    { -1., 1. }, { 0., 1. }, { 1., 1. }
-  };
+  std::vector<std::vector<double>> candidate_controls = { { -1., 1. }, { 0., 1. }, { 1., 1. } };
 
   for (int i = 0; i < 15; i++)
   {
@@ -117,12 +115,8 @@ int main(int argc, char* argv[])
       controller_traj.copy_onto_back(current);
       break;
     }
-
     sim_time += control_duration;
   }
-
-  PRX_DEBUG_VARS(controller_traj.front())
-  PRX_DEBUG_VARS(controller_traj.back())
 
   std::cout << "Original trajectory duration: " << simulation_step * (traj_to_track.size() - 1) << std::endl;
   std::cout << "Controller trajectory duration: " << simulation_step * (controller_traj.size() - 1) << std::endl;
