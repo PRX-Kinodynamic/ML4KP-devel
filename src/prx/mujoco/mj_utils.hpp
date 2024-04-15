@@ -26,7 +26,8 @@ struct mjActuatorInfo
   mjtNum range[2];
 };
 
-void compute_manipulator_jacobian(mjModel* m, mjData* d, Eigen::Matrix<double, 6, 7>& jac, double* jacp, double* jacr, int body_id, std::vector<int> qpos_inds);
+
+// Indices for accessing qpos, xpos, xquat
 
 std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::string& name);
 std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::vector<std::string>& joint_names);
