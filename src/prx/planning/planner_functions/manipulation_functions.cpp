@@ -26,5 +26,7 @@ namespace prx
         for(int i = 0; i < pregrasp_pos.size(); i++){
             pregrasp[i] = pregrasp_pos[i];
         }
+
+        return pregrasp;
     }
 }

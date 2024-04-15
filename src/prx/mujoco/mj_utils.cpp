@@ -3,6 +3,47 @@
 namespace prx
 {
 
+// Retrieve Jacobian
+
+
+void compute_manipulator_jacobian(mjModel* m, mjData* d, Eigen::Matrix<double, 6, 7>& jac, double* jacp, double* jacr, int body_id, std::vector<int> qpos_inds){
+  prx_assert(jac.rows() == 6, "Incorrect number of rows in Jacobian.");
+  prx_assert(jac.cols() == qpos_inds.size(), "Mismatch between Jacobian columns and inds size: " << jac.cols() << ", " << qpos_inds.size());
+
+  mj_jacBody(m, d, jacp, jacr, body_id);
+
+  int len = 3 * m->nq;
+  int curr_row = 0;
+  int curr_col = 0;
+  int qpos_ind_index = 0;
+  for(int i = 0; i < len; i++)
+    if (i % m->nq == qpos_inds[qpos_ind_index]){
+      jac(curr_row, curr_col) = jacp[i];
+      qpos_ind_index = (qpos_ind_index + 1) % qpos_inds.size();
+      curr_col += 1;
+
+      if (curr_col == jac.cols()){
+        curr_col = 0;
+        curr_row += 1;
+      }
+    }
+
+  for(int i = 0; i < len; i++)
+    if (i % m->nq == qpos_inds[qpos_ind_index]){
+      jac(curr_row, curr_col) = jacr[i];
+      qpos_ind_index = (qpos_ind_index + 1) % qpos_inds.size();
+      curr_col += 1;
+
+      if (curr_col == jac.cols()){
+        curr_col = 0;
+        curr_row += 1;
+      }
+    }
+
+}
+
+// Indices for accessing qpos, xpos, xquat
+
 std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::string& name)
 {
   prx_assert(obj == mjOBJ_BODY || obj == mjOBJ_JOINT, "Invalud mjtObj type. Only mjOBJ_BODY, mjOBJ_JOINT are currently accepted");
