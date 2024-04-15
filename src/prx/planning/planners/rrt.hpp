@@ -70,14 +70,13 @@ public:
     };
     valid_state = [this, cg](space_point_t& s) { return default_valid_state(s, state_space, cg); };
     valid_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
-    valid_stop_check = [this, sg, cg](space_point_t start_state, plan_t* stopping_plan, trajectory_t* stopping_traj) {
-      return default_valid_stop(start_state, stopping_plan, stopping_traj, sg, cg);
-    };
+
     propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj) {
       default_propagate(start_state, plan, out_traj, sg);
     };
     expand = [sg, this](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn,
                         bool blossom_expand) { default_expand(s, plans, trajs, bn, sg, sample_plan, propagate); };
+    stopping_control = [sg, this](space_point_t& s, double& t) { default_stopping_control(s, sg, t); };
 
     blossom_number = 1;
   }
@@ -95,6 +94,7 @@ public:
   valid_state_t valid_state;
   expand_t expand;
   propagate_t propagate;
+  stopping_control_t stopping_control;
 
   space_t* state_space;
   space_t* control_space;

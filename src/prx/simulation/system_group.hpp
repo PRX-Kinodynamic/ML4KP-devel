@@ -38,7 +38,7 @@ public:
 
   void steer_once(const space_point_t, const space_point_t, const double);
 
-  void compute_stopping_maneuver(space_point_t start_state, std::vector<double>&, std::vector<double>&);
+  void compute_stopping_maneuver(space_point_t start_state, double& time);
 
   inline space_t* get_state_space()
   {
