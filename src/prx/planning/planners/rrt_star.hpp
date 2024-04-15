@@ -208,7 +208,7 @@ class rrt_star_query_t : public planner_query_t
       sample_state_t sample_state_copy{ _sample_state };
 
       _eta_min = _eta_max;
-      _sample_state = [&](space_point_t& s) { _state_space->copy(s, _goal_state); };
+     _rrt_star_spec->sample_state = [&](space_point_t& s) { _state_space->copy(s, _goal_state); };
 
       condition_check_t check_one_iteration("iterations", 1);
       resolve_query(&check_one_iteration);
