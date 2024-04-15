@@ -25,13 +25,17 @@ public:
   virtual ~planner_specification_t()
   {
   }
+  virtual void init(const prx::param_loader& params){};
 };
 
 class planner_query_t
 {
 public:
   planner_query_t(space_t* state_space, space_t* control_space)
-    : solution_traj(state_space), solution_plan(control_space)
+    : solution_traj(state_space)
+    , solution_plan(control_space)
+    , start_state(state_space->make_point())
+    , goal_state(state_space->make_point())
   {
   }
   virtual ~planner_query_t()
@@ -44,6 +48,19 @@ public:
     solution_plan.clear();
     solution_cost = 0;
     tree_visualization.clear();
+  }
+
+  virtual void init(const prx::param_loader& params)
+  {
+    if (start_state and params.exists("start_state"))
+    {
+      start_state->init(params["start_state"]);
+    }
+    if (goal_state and params.exists("goal_state"))
+    {
+      goal_state->init(params["goal_state"]);
+    }
+    get_visualization = params.exists("get_visualization") ? params["get_visualization"].as<bool>() : false;
   }
 
   // inputs

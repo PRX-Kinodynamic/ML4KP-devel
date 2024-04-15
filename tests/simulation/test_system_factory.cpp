@@ -13,6 +13,37 @@ const std::vector<std::pair<std::string, std::string>> expected_fn_names{ { "2D_
                                                                           { "treaded_vehicle", "treaded_vehicle" },
                                                                           { "FO_treaded_vehicle",
                                                                             "FO_treaded_vehicle" } };
+
+namespace mock
+{
+struct dummy_t : public prx::plant_t
+{
+  dummy_t(const std::string& path) : plant_t(path){};
+  virtual ~dummy_t(){};
+  virtual void propagate(const double simulation_step) override final{};
+  virtual void update_configuration() override{};
+
+  virtual void compute_derivative() override final{};
+};
+
+}  // namespace mock
+PRX_REGISTER_SYSTEM(mock::dummy_t, mock_dummy)
+
+BOOST_AUTO_TEST_CASE(test_mock_dummy_is_registred)
+{
+  const std::string name{ "mock_dummy" };
+  auto available_systems = prx::system_factory_t::available_systems();
+  BOOST_CHECK(std::find(available_systems.begin(), available_systems.end(), name) != available_systems.end());
+}
+
+BOOST_AUTO_TEST_CASE(test_mock_dummy_create_system_as)
+{
+  const std::string name{ "mock_dummy" };
+  std::shared_ptr<mock::dummy_t> sys_ptr{ prx::system_factory_t::create_system_as<mock::dummy_t>(name, name) };
+  BOOST_CHECK(sys_ptr != nullptr);
+  BOOST_CHECK(sys_ptr->get_pathname() == name);
+}
+
 BOOST_AUTO_TEST_CASE(test_available_systems_as_expected)
 {
   auto available_systems = prx::system_factory_t::available_systems();

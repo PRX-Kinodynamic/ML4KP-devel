@@ -444,3 +444,32 @@ BOOST_AUTO_TEST_CASE(interpolate_of_topology_quaternion)
   BOOST_CHECK(space.equal_points(pt1, result1));
   BOOST_CHECK_MESSAGE(space.equal_points(pt_half, expected_half), EXPECTED_GOT(expected_half, pt_half));
 }
+
+BOOST_AUTO_TEST_CASE(space_init_params)
+{
+  mock::space3d_t test;
+  prx::space_t& space{ test.space };
+  prx::param_loader params{};
+  std::vector<double> lower_bound{ { -5, -5, -5 } };
+  std::vector<double> upper_bound{ { 5, 5, 5 } };
+  std::vector<double> values{ { 0.5, 0.5, 0.5 } };
+  params["lower_bound"].set<std::vector<double>>(lower_bound);
+  params["upper_bound"].set<std::vector<double>>(upper_bound);
+  params["values"].set<std::vector<double>>(values);
+
+  space.init(params);
+
+  BOOST_CHECK(lower_bound[0] == space.get_lower_bound(0));
+  BOOST_CHECK(lower_bound[1] == space.get_lower_bound(1));
+  BOOST_CHECK(lower_bound[2] == space.get_lower_bound(2));
+
+  BOOST_CHECK(upper_bound[0] == space.get_upper_bound(0));
+  BOOST_CHECK(upper_bound[1] == space.get_upper_bound(1));
+  BOOST_CHECK(upper_bound[2] == space.get_upper_bound(2));
+
+  BOOST_REQUIRE_MESSAGE(values[0] == space.at(0), EXPECTED_GOT(values[0], space.at(0)));
+  BOOST_REQUIRE_MESSAGE(values[1] == space.at(1), EXPECTED_GOT(values[1], space.at(1)));
+  BOOST_REQUIRE_MESSAGE(values[2] == space.at(2), EXPECTED_GOT(values[2], space.at(2)));
+  // BOOST_CHECK(space.equal_points(pt1, result1));
+  // BOOST_CHECK_MESSAGE(space.equal_points(pt_half, expected_half), EXPECTED_GOT(expected_half, pt_half));
+}

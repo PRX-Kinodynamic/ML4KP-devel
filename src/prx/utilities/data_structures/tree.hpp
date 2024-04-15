@@ -7,6 +7,7 @@
 #include "prx/utilities/spaces/space.hpp"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <list>
 
 namespace prx
@@ -327,7 +328,7 @@ public:
 
   void transplant(node_index_t root, node_index_t new_parent);
 
-  void mark_vertex_for_removal(node_index_t v);
+  void mark_vertex_for_removal(const node_index_t& v);
 
   void remove_vertices();
 
@@ -403,6 +404,10 @@ public:
     }
   }
 
+  bool is_node_valid(const node_index_t& idx)
+  {
+    return _invalid_nodes.count(idx) == 0;
+  }
   uint64_t vertex_id_counter;
 
 protected:
@@ -420,5 +425,7 @@ protected:
 
   std::vector<std::shared_ptr<tree_node_t>> v_index_map;
   std::vector<std::shared_ptr<tree_edge_t>> e_index_map;
+
+  std::unordered_set<node_index_t> _invalid_nodes;
 };
 }  // namespace prx
