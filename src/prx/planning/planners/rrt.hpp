@@ -84,6 +84,15 @@ public:
   virtual ~rrt_specification_t()
   {
   }
+  virtual void init(const prx::param_loader& params) override
+  {
+    bnb = params.exists("bnb") ? params["bnb"].as<bool>() : false;
+    use_replanning = params.exists("use_replanning") ? params["use_replanning"].as<bool>() : false;
+
+    min_control_steps = params.exists("min_control_steps") ? params["min_control_steps"].as<int>() : min_control_steps;
+    max_control_steps = params.exists("max_control_steps") ? params["max_control_steps"].as<int>() : max_control_steps;
+    blossom_number = params.exists("blossom_number") ? params["blossom_number"].as<int>() : 1;
+  }
   std::shared_ptr<system_group_t> _sg;
 
   cost_function_t cost_function;
@@ -120,6 +129,12 @@ public:
   }
   virtual ~rrt_query_t()
   {
+  }
+
+  virtual void init(const prx::param_loader& params) override
+  {
+    planner_query_t::init(params);
+    goal_region_radius = params.exists("goal_region_radius") ? params["goal_region_radius"].as<double>() : 0.5;
   }
   double goal_region_radius;
 };
@@ -184,5 +199,7 @@ protected:
   int print_statistics_count;
 
   simulation::observer_t observer;
+
+  bool _bnb;
 };
 }  // namespace prx

@@ -113,6 +113,22 @@ public:
     return os;
   }
 
+  virtual void init(const prx::param_loader& params)
+  {
+    if (params.exists("state_space"))
+    {
+      state_space->init(params["state_space"]);
+    }
+    if (params.exists("control_space"))
+    {
+      input_control_space->init(params["control_space"]);
+    }
+    if (params.exists("parameter_space"))
+    {
+      parameter_space->init(params["parameter_space"]);
+    }
+  }
+
 protected:
   space_t* state_space;
   space_t* input_control_space;

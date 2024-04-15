@@ -2,7 +2,7 @@
 
 namespace prx
 {
-rrt_t::rrt_t(const std::string& new_name) : planner_t(new_name)
+rrt_t::rrt_t(const std::string& new_name) : planner_t(new_name), _bnb(false)
 {
   metric = nullptr;
   planner_name = new_name;
@@ -25,6 +25,7 @@ void rrt_t::_link_and_setup_spec(planner_specification_t* spec)
   propagate = rrt_spec->propagate;
   use_replanning = rrt_spec->use_replanning;
   expand = rrt_spec->expand;
+  _bnb = rrt_spec->bnb;
 
   state_space = rrt_spec->state_space;
   sample_point = state_space->make_point();
@@ -112,8 +113,7 @@ void rrt_t::_resolve_query(condition_check_t* condition)
       update_goal(node_index);
     }
     iteration_count++;
-  }
-  while (!condition->check());
+  } while (!condition->check());
 }
 void rrt_t::_fulfill_query()
 {
@@ -229,7 +229,10 @@ void rrt_t::update_goal(node_index_t node_index)
       std::cout << " time:" << current_solution_time;
       std::cout << " iter:" << current_solution_iters;
       std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
-      bnb(start_vertex, current_solution);
+      if (_bnb)
+      {
+        bnb(start_vertex, current_solution);
+      }
       tree.remove_vertices();
     }
   }

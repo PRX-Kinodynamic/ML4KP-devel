@@ -188,6 +188,8 @@ public:
     return space_snapshot._map_vector;
   }
 
+  virtual void init(const prx::param_loader& params);
+
 protected:
   /**
    * @brief      Constructs a new instance.

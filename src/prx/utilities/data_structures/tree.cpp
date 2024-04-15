@@ -83,11 +83,12 @@ void tree_t::remove_vertex(node_index_t v)
   edge_count--;
 }
 
-void tree_t::mark_vertex_for_removal(node_index_t v)
+void tree_t::mark_vertex_for_removal(const node_index_t& v)
 {
   prx_assert(v < v_index_map.size(), "Node index " << v << " out or range.");
   // std::cout << "Marking for removal: " << v << std::endl;
   v_index_map[v]->status = tree_node_status::MARKED_FOR_REMOVAL;
+  _invalid_nodes.insert(v);
   nodes_to_remove++;
 }
 

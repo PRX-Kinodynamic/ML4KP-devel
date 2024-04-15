@@ -61,16 +61,22 @@ public:
     blossom_number = 5;
     use_pruning = true;
   }
+
   virtual ~dirt_specification_t()
   {
   }
 
-  int blossom_number;
+  virtual void init(const prx::param_loader& params) override
+  {
+    rrt_specification_t::init(params);
+    use_pruning = params.exists("use_pruning") ? params["use_pruning"].as<bool>() : true;
+
+    replanning_cycle = params.exists("replanning_cycle") ? params["replanning_cycle"].as<double>() : 1.0;
+  }
 
   bool use_pruning;
 
   double replanning_cycle;
-  int order;
 
   heuristic_function_t h;
   obstacle_distance_function_t obstacle_distance_function;

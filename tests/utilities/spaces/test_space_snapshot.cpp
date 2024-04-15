@@ -148,3 +148,21 @@ BOOST_AUTO_TEST_CASE(test_space_iterators)
     idx += 1;
   }
 }
+
+BOOST_AUTO_TEST_CASE(space_snapshot_init_params)
+{
+  mock::space3d_t test;
+  prx::space_point_t pt{ test.space.make_point() };
+
+  prx::param_loader params{};
+  std::vector<double> values{ { 0.5, 0.5, 0.5 } };
+  params.set<std::vector<double>>(values);
+
+  pt->init(params);
+
+  BOOST_REQUIRE_MESSAGE(values[0] == pt->at(0), EXPECTED_GOT(values[0], pt->at(0)));
+  BOOST_REQUIRE_MESSAGE(values[1] == pt->at(1), EXPECTED_GOT(values[1], pt->at(1)));
+  BOOST_REQUIRE_MESSAGE(values[2] == pt->at(2), EXPECTED_GOT(values[2], pt->at(2)));
+  // BOOST_CHECK(space.equal_points(pt1, result1));
+  // BOOST_CHECK_MESSAGE(space.equal_points(pt_half, expected_half), EXPECTED_GOT(expected_half, pt_half));
+}

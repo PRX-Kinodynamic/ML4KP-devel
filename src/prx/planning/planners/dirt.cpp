@@ -192,8 +192,7 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       closest_node->indices.pop_back();
 
       // bnb
-      if ((goal_vertex != start_vertex &&
-           closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
+      if ((goal_vertex != start_vertex && closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
       {
         delete eg.first;
         delete eg.second;
@@ -297,7 +296,7 @@ void dirt_t::_resolve_query(condition_check_t* condition)
 
     iteration_count++;
   } while (!condition->check());
-  print_statistics();
+  // print_statistics();
 }
 
 void dirt_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_node_t* closest_node,
@@ -383,7 +382,11 @@ void dirt_t::update_goal(node_index_t node_index)
       std::cout << " time:" << current_solution_time;
       std::cout << " iter:" << current_solution_iters;
       std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
-      bnb(start_vertex, current_solution);
+      if (_bnb)
+      {
+        bnb(start_vertex, current_solution);
+        tree.remove_vertices();
+      }
     }
   }
 }
@@ -440,7 +443,10 @@ void dirt_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
     node->indices.clear();
 
     // remove the node
-    tree.remove_vertex(v);
+    // tree.remove_vertex(v);
+    metric->remove_node(node.get());
+    // tree.remove_vertex(v);
+    tree.mark_vertex_for_removal(v);
   }
 }
 }  // namespace prx
