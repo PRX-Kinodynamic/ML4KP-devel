@@ -444,7 +444,7 @@ void dirt_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
 
     // remove the node
     // tree.remove_vertex(v);
-    metric->remove_node(node.get());
+    metric->remove_node(node);
     // tree.remove_vertex(v);
     tree.mark_vertex_for_removal(v);
   }
