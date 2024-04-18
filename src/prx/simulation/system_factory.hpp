@@ -33,11 +33,19 @@ public:
    */
   static system_ptr_t create_system(const std::string& name, const std::string& path = "");
 
-  template <typename PlantType>
-  static std::shared_ptr<PlantType> create_system_as(const std::string& name, const std::string& path)
+  template <typename PlantType, typename... Ts>
+  static std::shared_ptr<PlantType> create_system_as(const std::string& name, const std::string& path, Ts... args)
   {
-    system_ptr_t sys_ptr{ create_system(name, path) };
-    return sys_ptr == nullptr ? nullptr : std::dynamic_pointer_cast<PlantType>(sys_ptr);
+    auto it = system_factory_t::get().system_generators.find(name);
+    if (it != system_factory_t::get().system_generators.end())
+    {
+      return std::make_shared<PlantType>(path, args...);
+    }
+
+    return nullptr;
+    // std::shared_ptr<PlantType> system_ptr{ };
+    // return std::make_shared<PlantType>(path, args...);
+    // return sys_ptr == nullptr ? nullptr : std::dynamic_pointer_cast<PlantType>(sys_ptr);
   };
   /**
    * Register a system to the factory. (Preferably, use macro PRX_REGISTER_SYSTEM instead of this function)
@@ -96,11 +104,12 @@ private:
   {                                                                                                                    \
   namespace factory_registration                                                                                       \
   {                                                                                                                    \
-  static auto FN_##SYSTEM_NAME##_GENERATOR = [](std::string path) {                                                    \
-    system_ptr_t new_ptr;                                                                                              \
-    new_ptr.reset(new SYSTEM_CLASS(path));                                                                             \
-    return new_ptr;                                                                                                    \
-  };                                                                                                                   \
+  static std::function<std::shared_ptr<SYSTEM_CLASS>(std::string path)> FN_##SYSTEM_NAME##_GENERATOR =                 \
+      [](std::string path) {                                                                                           \
+        std::shared_ptr<SYSTEM_CLASS> new_ptr;                                                                         \
+        new_ptr.reset(new SYSTEM_CLASS(path));                                                                         \
+        return new_ptr;                                                                                                \
+      };                                                                                                               \
   const bool VAR_##SYSTEM_NAME##_REGISTRED =                                                                           \
       system_factory_t::get().register_system(#SYSTEM_NAME, FN_##SYSTEM_NAME##_GENERATOR);                             \
   }                                                                                                                    \
