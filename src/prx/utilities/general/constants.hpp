@@ -68,6 +68,7 @@ static inline bool are_approx_equal(std::vector<T> c1, std::vector<S> c2, double
 
 const std::string lib_path = lib_path_safe("DIRTMP_PATH");
 const std::string mj_models_path = lib_path + "resources/models/";
+const std::string obj_models_path = lib_path + "resources/models/obj/";
 const std::string input_path = lib_path + "resources/input_files/";
 const std::string js_path = lib_path + "resources/js/";
 const std::string out_path = lib_path + "out/";
