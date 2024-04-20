@@ -145,6 +145,7 @@ collision_group_t::pqp_distance_t collision_group_t::get_distances()
     std::vector<double> closest_point;
     closest_point.push_back(info1->pos[0] + p1[0]);
     closest_point.push_back(info1->pos[1] + p1[1]);
+    closest_point.push_back(info1->pos[2] + p1[2]);
     result.closest_points.push_back(closest_point);
   }
   return result;
