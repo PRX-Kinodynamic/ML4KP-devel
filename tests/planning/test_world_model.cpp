@@ -133,8 +133,9 @@ BOOST_AUTO_TEST_CASE(world_model_adding_obstacles_dynamically)
   BOOST_CHECK(not collision_group->in_collision());
 }
 
-struct test_plant_t : prx::plant_t
+class test_plant_t : public prx::plant_t
 {
+  public:
   test_plant_t() : prx::plant_t("test_plant")
   {
     x = y = z = 0;
