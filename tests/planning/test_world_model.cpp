@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(world_model_adding_obstacles_dynamically)
 
 class test_plant_t : public prx::plant_t
 {
-  public:
+public:
   test_plant_t() : prx::plant_t("test_plant")
   {
     x = y = z = 0;
@@ -179,10 +179,7 @@ BOOST_AUTO_TEST_CASE(world_model_obstacles_from_obj)
 
   std::vector<prx::system_ptr_t> plants;
   plants.push_back(system_ptr);
-  prx::world_model_t world_model(plants, obstacles);
-  world_model.create_context("test_context", system_names, obstacles_names);
-
-  std::shared_ptr<prx::collision_group_t> collision_group{ world_model.collision_group("test_context") };
+  std::shared_ptr<prx::collision_group_t> collision_group = std::make_shared<prx::collision_group_t>(plants, obstacles);
 
   BOOST_CHECK(collision_group != nullptr);
 
