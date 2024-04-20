@@ -189,7 +189,8 @@ BOOST_AUTO_TEST_CASE(world_model_obstacles_from_obj)
   BOOST_CHECK(not collision_group->in_collision());
   auto pqp_distance = collision_group->get_distances();
   PRX_DEBUG_ITERABLE("Distances:", pqp_distance.distances);
-  PRX_DEBUG_ITERABLE("Closest points: ",pqp_distance.closest_points[0])
+  PRX_DEBUG_ITERABLE("Closest points: ",pqp_distance.closest_points[0].first)
+  PRX_DEBUG_ITERABLE("Closest points: ",pqp_distance.closest_points[0].second)
 
   // Peg is inside the hole
   state_vector = { 0.0, 0.0, 0.025, 0.0, 0.0, 0.0, 1.0 };
