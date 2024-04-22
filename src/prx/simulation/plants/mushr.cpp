@@ -4,7 +4,7 @@ namespace prx
 {
 
 mushrFG_t::mushrFG_t(const std::string& path)
-  : plant_t(path), _wheelbase(0.2965), _params_ubar_u(0.075, 0.259, 0.625), _ubar(mushrTypes::Ubar::type::Zero())
+  : plant_t(path), _wheelbase(0.2965), _params_ubar_u(0.9898, 0.4203, 0.6228), _ubar(mushrTypes::Ubar::type::Zero())
 {
   state_memory = { &_state[0], &_state[1], &_state[2], &_ubar[0], &_ubar[1] };
   state_space = new space_t("EEREE", state_memory, "mushr_state");
