@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
   for (int i = 0; i < observed_traj.size() - 1; ++i)
   {
     const double dt{ observed_traj[i + 1].first - observed_traj[i].first };
-    graph.emplace_shared<prx::fg::mushr_factor_t>(k_X(i), k_X(i + 1), k_U(plan_idx), k_P(0), dt, mushr_prop_nm);
+    // graph.emplace_shared<prx::fg::mushr_factor_t>(k_X(i), k_X(i + 1), k_U(plan_idx), k_P(0), dt, mushr_prop_nm);
     Eigen::Vector4d state{ observed_traj[i].second };
     const double vel{ (observed_traj[i + 1].second.head(2) - state.head(2)).norm() };
     state[3] = vel;
@@ -195,14 +195,14 @@ int main(int argc, char* argv[])
   const std::string out_filename{ params["out/file"].as<>() };
   std::ofstream ofs(out_filename, std::ofstream::trunc);
 
-  for (auto factor : graph)
-  {
-    auto pv_factor = boost::dynamic_pointer_cast<prx::fg::mushr_factor_t>(factor);
-    if (pv_factor)
-    {
-      pv_factor->eval_to_stream(results, ofs);
-    }
-  }
+  // for (auto factor : graph)
+  // {
+  // auto pv_factor = boost::dynamic_pointer_cast<prx::fg::mushr_factor_t>(factor);
+  // if (pv_factor)
+  // {
+  // pv_factor->eval_to_stream(results, ofs);
+  // }
+  // }
   ofs.close();
   PRX_DEBUG_VAR_1(out_filename);
   return 0;

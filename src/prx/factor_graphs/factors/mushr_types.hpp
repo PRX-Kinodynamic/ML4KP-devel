@@ -18,118 +18,50 @@ inline gtsam::Key k_ZX(const std::size_t& ti) { return SF::create_hashed_symbol(
 inline gtsam::Key k_Ps(const std::string& s) { return SF::create_hashed_symbol("P_{", s, "}"); };
 // clang-format on
 
-const Eigen::Index UbarDim = 3;
-using State = Eigen::Vector<double, 3>;
-using StateDot = Eigen::Vector<double, 3>;
-using Control = Eigen::Vector<double, 2>;
-using Ubar = Eigen::Vector<double, UbarDim>;
-using Parameters = Eigen::Vector<double, 6>;
-using ParamsUbarU = Eigen::Vector<double, 4>;
+namespace Parameters
+{
+constexpr double L{ 0.2965 };
 
-static inline double positive_slope(const ParamsUbarU& param)
-{
-  return param[0];
 }
-static inline double steering_offset(const ParamsUbarU& params)
+namespace State
 {
-  return params[1];
-}
-static inline double velocity_gain(const ParamsUbarU& params)
-{
-  return params[2];
-}
-static inline double desired_velocity_gain(const ParamsUbarU& params)
-{
-  return params[3];
-}
-static inline double bound(const double value, const double min_bound, const double max_bound)
-{
-  return std::max(std::min(value, max_bound), min_bound);
-}
-static inline double& vel_delta_max(Parameters& params)
-{
-  return params[0];
-}
-static inline double& vel_delta_min(Parameters& params)
-{
-  return params[1];
-}
-static inline double& steering_gain(Parameters& params)
-{
-  return params[2];
-}
-static inline double& steering_offset(Parameters& params)
-{
-  return params[3];
-}
-static inline double& velocity_min(Parameters& params)
-{
-  return params[4];
-}
-static inline double& velocity_max(Parameters& params)
-{
-  return params[5];
-}
+using type = Eigen::Vector<double, 3>;
+constexpr std::size_t x{ 0 };
+constexpr std::size_t y{ 1 };
+constexpr std::size_t theta{ 2 };
+}  // namespace State
 
-static inline double vel_delta_max(const Parameters& params)
+namespace StateDot
 {
-  return params[0];
-}
-static inline double vel_delta_min(const Parameters& params)
-{
-  return params[1];
-}
-static inline double steering_gain(const Parameters& params)
-{
-  return params[2];
-}
+using type = Eigen::Vector<double, 3>;
+constexpr std::size_t xdot{ 0 };
+constexpr std::size_t ydot{ 1 };
+constexpr std::size_t thetadot{ 2 };
+}  // namespace StateDot
 
-static inline double velocity_min(const Parameters& params)
+namespace Ubar
 {
-  return params[4];
-}
-static inline double velocity_max(const Parameters& params)
+constexpr std::size_t Dim{ 2 };
+constexpr std::size_t ParamsDim{ 3 };
+using type = Eigen::Vector<double, Dim>;
+using params = Eigen::Vector<double, ParamsDim>;
+
+constexpr std::size_t velocity{ 0 };
+constexpr std::size_t beta{ 1 };
+
+constexpr std::size_t accel_slope{ 0 };
+constexpr std::size_t steering_param{ 1 };
+constexpr std::size_t max_vel_param{ 2 };
+
+}  // namespace Ubar
+
+namespace Control
 {
-  return params[5];
-}
-static inline double steering(const Control& u)
-{
-  return u[0];
-}
-static inline double steering(const Control& u, const Parameters& params)
-{
-  const double us{ u[0] * steering_gain(params) };
-  // return bound(us, -1.0, 1.0);
-  return us;
-}
-static inline double desired_velocity(const Control& u)
-{
-  return u[1];
-}
-static inline double desired_velocity(const Control& u, const Parameters& params)
-{
-  return bound(u[1], velocity_min(params), velocity_max(params));
-}
-template <typename State>
-static inline double x(const State& state)
-{
-  return state[0];
-}
-template <typename State>
-static inline double y(const State& state)
-{
-  return state[1];
-}
-template <typename State>
-static inline double theta(const State& state)
-{
-  return state[2];
-}
-template <typename State>
-static inline double current_velocity(const State& state)
-{
-  return state[3];
-}
+using type = Eigen::Vector<double, 2>;
+constexpr std::size_t vel_desired{ 0 };
+constexpr std::size_t steering{ 1 };
+}  // namespace Control
+
 }  // namespace mushrTypes
 }  // namespace fg
 }  // namespace prx

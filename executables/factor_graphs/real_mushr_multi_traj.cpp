@@ -35,7 +35,7 @@
 using SF = prx::fg::symbol_factory_t;
 
 using prx::fg::mushr_ub_u_xdot_param_t;
-using prx::fg::mushr_ub_u_xdot_t;
+// using prx::fg::mushr_ub_u_xdot_t;
 using prx::fg::mushr_x_async_observation_t;
 using prx::fg::mushr_x_observation_t;
 using prx::utilities::convert_to;
@@ -86,27 +86,22 @@ double read_ros_plan(const std::string& filename, prx::plan_t& plan)
       const double u0{ convert_to<double>(line[1]) };
       const double u1{ convert_to<double>(line[2]) };
       ts.emplace_back(t);
-      observations.emplace_back(u0, u1);
+      observations.emplace_back(u1, u0);
+      // observations.emplace_back(u0, u1);
     }
   }
   double ti{ 0.0 };
   Eigen::Vector2d ut{};
   double tprev{ ts[0] };
-  bool first{ true };
   for (auto tuple : prx::zip_iters(ts, observations))
   {
-    if (not first)
-    {
-      std::tie(ti, ut) = prx::unzip(tuple);
-      const double duration{ ti - tprev };
-      plan.copy_onto_back(ut, duration);
-      tprev = ti;
-    }
-    first = false;
+    std::tie(ti, ut) = prx::unzip(tuple);
+    const double duration{ ti - tprev };
+    plan.copy_onto_back(ut, duration);
+    tprev = ti;
   }
   return ts[0];
 }
-
 // Duration of observed trajectory is higher than plan (perception runs before plan publisher / controller and after...)
 // Append zeros before and after assuming the robot was not moving before/after.
 void increase_plan_to_match_trajectory(ObservedTrajectory& traj, const double plan_t0, prx::plan_t& plan,
@@ -135,10 +130,18 @@ void increase_plan_to_match_trajectory(ObservedTrajectory& traj, const double pl
   const double new_duration{ plan.duration() };
   std::ios_base::openmode mode{ idx == 0 ? std::ofstream::trunc : std::ofstream::app };
   std::ofstream ofs(prx::out_path + "mushr/input_observations.txt", mode);
-  for (auto z : traj)
+
+  // for (auto z : traj)
+  for (std::size_t i = 0; i < traj.size() - 1; ++i)
   {
+    auto z = traj[i];
     if (z.first - traj_t0 < new_duration)
-      ofs << z.second.transpose() << "\n";
+    {
+      const double t{ traj[i + 1].first - z.first };
+      const double vel{ (traj[i + 1].second.head(2) - z.second.head(2)).norm() / t };
+      PRX_DEBUG_VAR_2(t, vel);
+      ofs << z.second.transpose() << " " << vel << "\n";
+    }
   }
   ofs << "\n";
   ofs.close();
@@ -146,14 +149,14 @@ void increase_plan_to_match_trajectory(ObservedTrajectory& traj, const double pl
 
 void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values, const prx::trajectory_t& traj,
                       const prx::plan_t& plan, ObservedTrajectory& observations,
-                      prx::fg::mushrTypes::ParamsUbarU& params_dv, std::size_t idx_offset)
+                      prx::fg::mushrTypes::Ubar::params& params_dv, std::size_t idx_offset)
 {
   prx::fg::mushrConfig config;
-  config.cm_x_xdot = gtsam::noiseModel::Isotropic::Sigma(3, 5e-6);
-  config.cm_x_xdot_ub = gtsam::noiseModel::Isotropic::Sigma(3, 5e-2);
-  config.cm_ub_u = gtsam::noiseModel::Isotropic::Sigma(prx::fg::mushrTypes::UbarDim, 5e-2);
-  // config.cm_x_z = gtsam::noiseModel::Isotropic::Sigma(3, 1e-2);
-  config.cm_x_z = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e0, 1e0, 1e0));
+  config.cm_x_xdot = gtsam::noiseModel::Isotropic::Sigma(3, 5e-4);
+  config.cm_x_xdot_ub = gtsam::noiseModel::Isotropic::Sigma(3, 5e-4);
+  config.cm_ub_u = gtsam::noiseModel::Isotropic::Sigma(prx::fg::mushrTypes::Ubar::Dim, 5e-4);
+  config.cm_x_z = gtsam::noiseModel::Isotropic::Sigma(3, 1e-1);
+  // config.cm_x_z = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e-1, 1e-1, 1e0));
   config.length = 0.2965;
 
   // ParamsUbarU params_dv{ ParamsUbarU(0.1, 0.0) };
@@ -169,7 +172,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
   Eigen::Vector3d xdt{};
   Eigen::Vector3d xdt_next{};
   Eigen::Vector2d ut{};
-  prx::fg::mushrTypes::Ubar ubar{};
+  prx::fg::mushrTypes::Ubar::type ubar{};
   bool first{ true };
   auto nm_u_prior = gtsam::noiseModel::Isotropic::Sigma(2, 1e-4);
 
@@ -198,7 +201,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
     xdt = Vec(traj[static_cast<unsigned>(idx)]).tail(3);
     ut = Vec(plan.at(ti));
 
-    ubar = mushr_ub_u_xdot_param_t::predict(ut, xdt, params_dv, config.length);
+    ubar = mushr_ub_u_xdot_param_t::predict(ut, ubar, params_dv);
     values.insert(k_X(idx, idx_offset), xt);
     values.insert(k_Xd(idx, idx_offset), xdt);
     values.insert(k_U(idx, idx_offset), ut);
@@ -206,11 +209,13 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
     graph.addPrior(k_U(idx, idx_offset), ut, nm_u_prior);
 
     ti += prx::simulation_step;
-    PRX_DEBUG_VAR_3(idx, max_idx, traj.size());
+    // PRX_DEBUG_VAR_3(idx, max_idx, traj.size());
   }
+  ubar = mushr_ub_u_xdot_param_t::predict(ut, ubar, params_dv);
+  values.insert(k_Ub(idx, idx_offset), ubar);
   // xt = Vec(traj[static_cast<unsigned>(idx)]).head(3);
   // x_aux = traj.at(ti, false);
-  PRX_DEBUG_VAR_1(idx);
+  // PRX_DEBUG_VAR_1(idx );
   xt = Vec(traj[static_cast<unsigned>(idx)]).head(3);
   xdt = Vec(traj[static_cast<unsigned>(idx)]).tail(3);
   values.insert(k_X(idx, idx_offset), xt);
@@ -221,22 +226,24 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
   idx = 0;
 
   Eigen::Vector3d zt{};
+  graph.addPrior(k_X(0, idx_offset), observations[0].second, config.cm_x_xdot);
+  // PRX_DEBUG_VAR_1(observations[0].second.transpose());
   for (auto tuple : observations)
   {
     auto [ti, zt] = tuple;
 
     const double tobs{ ti - tobs_0 };
-    PRX_DEBUG_VAR_3(tobs, ti, tobs_0);
+    // PRX_DEBUG_VAR_3(tobs, ti, tobs_0);
     if (tobs < duration)
     {
       idx = traj.index_at_time(tobs);
-      PRX_DEBUG_VAR_3(ti, tobs, duration);
+      // PRX_DEBUG_VAR_3(ti, tobs, duration);
       const double t0{ prx::simulation_step * idx };
       const double t1{ prx::simulation_step * (idx + 1) };
       if (idx < max_idx)
       {
-        PRX_DEBUG_VAR_3(idx, t0, t1);
-        PRX_DEBUG_VAR_2(std::to_string(tobs), idx);
+        // PRX_DEBUG_VAR_3(idx, t0, t1);
+        // PRX_DEBUG_VAR_2(std::to_string(tobs), idx);
         // PRX_DEBUG_VAR_2(t0, t1);
         const double t01{ std::max((tobs - t0) / (t1 - t0), 0.0) };
 
@@ -251,23 +258,24 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
 void create_traj_graph(prx::param_loader& params, prx::trajectory_t& traj, prx::plan_t& plan,
                        std::shared_ptr<prx::system_group_t> sys_group, std::size_t idx, std::string observations_file,
                        std::string plans_file, gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
-                       prx::fg::mushrTypes::ParamsUbarU& init_params, prx::space_point_t start_state)
+                       prx::fg::mushrTypes::Ubar::params& init_params, prx::space_point_t start_state)
 {
   traj.clear();
   ObservedTrajectory observations{};
 
   read_observations(observations_file, observations);
   const double plan_t0{ read_ros_plan(plans_file, plan) };
-  PRX_DEBUG_VAR_1(plan);
+  // PRX_DEBUG_VAR_1(plan);
   increase_plan_to_match_trajectory(observations, plan_t0, plan, idx);
   PRX_DEBUG_VAR_1(plan.duration());
 
   const double dt0{ observations[1].first - observations[0].first };
-  Vec(start_state) = Eigen::Vector<double, 6>::Zero();
+  Vec(start_state) = Eigen::Vector<double, 5>::Zero();
   Vec(start_state).head(3) = observations[0].second;
-  Vec(start_state).tail(3) = (observations[1].second - observations[0].second) / dt0;
+  Vec(start_state)[3] = (observations[1].second - observations[0].second).norm() / dt0;
+  // Vec(start_state).tail(3) = (observations[1].second - observations[0].second) / dt0;
 
-  PRX_DEBUG_VAR_1(plan);
+  // PRX_DEBUG_VAR_1(plan);
   sys_group->propagate(start_state, plan, traj);
   std::ios_base::openmode mode{ idx == 0 ? std::ofstream::trunc : std::ofstream::app };
   traj.to_file(prx::out_path + "mushr/multi_orig_traj.txt", mode);
@@ -298,10 +306,12 @@ int main(int argc, char* argv[])
   prx::space_t* cs{ sys_group->get_control_space() };
   prx::space_t* ps{ sys_group->get_parameter_space() };
 
-  prx::fg::mushrTypes::ParamsUbarU init_params{};
+  prx::fg::mushrTypes::Ubar::params init_params{};
 
+  PRX_DEBUG_ITERABLE("in_params:", params["params"].as<std::vector<double>>());
   ps->copy(init_params, params["params"].as<std::vector<double>>());
   ps->copy_from(init_params);
+  PRX_DEBUG_VAR_1(init_params);
   gtsam::NonlinearFactorGraph graph;
   gtsam::Values values;
 
@@ -344,9 +354,9 @@ int main(int argc, char* argv[])
                       start_states[i]);
     PRX_DEBUG_VAR_1(start_states[i]);
   }
-  using PositiveVecFactor = prx::fg::partial_positive_vector_factor_t<ParamsUbarU::RowsAtCompileTime>;
-  auto pvm = gtsam::noiseModel::Isotropic::Sigma(ParamsUbarU::RowsAtCompileTime, 1e-5);
-  graph.emplace_shared<PositiveVecFactor>(PositiveVecFactor::Vector(1, 0, 1, 1), k_Ps("dv"), pvm);
+  using PositiveVecFactor = prx::fg::partial_positive_vector_factor_t<Ubar::ParamsDim>;
+  auto pvm = gtsam::noiseModel::Isotropic::Sigma(Ubar::ParamsDim, 1e-5);
+  graph.emplace_shared<PositiveVecFactor>(PositiveVecFactor::Vector(1, 0, 1), k_Ps("dv"), pvm);
   values.insert(k_Ps("dv"), init_params);
 
   // plan.from_file(params["plan"].as<std::string>());
@@ -355,7 +365,7 @@ int main(int argc, char* argv[])
 
   lm_params.verbosityLMTranslator(gtsam::LevenbergMarquardtParams::SILENT);
   lm_params.setMaxIterations(params["LevenbergMarquardt/max_iters"].as<int>());
-  // lm_params.setMaxIterations(1);
+  // lm_params.setMaxIterations(50);
   // lm_params.setMaxIterations(10000);
   lm_params.setRelativeErrorTol(1e-8);
   lm_params.setAbsoluteErrorTol(1e-8);
@@ -377,7 +387,7 @@ int main(int argc, char* argv[])
   {
     auto factor0 = boost::dynamic_pointer_cast<prx::fg::mushr_x_xdot_t>(factor);
     auto factor1 = boost::dynamic_pointer_cast<prx::fg::mushr_x_xdot_ub_t>(factor);
-    auto factor2 = boost::dynamic_pointer_cast<prx::fg::mushr_ub_u_xdot_t>(factor);
+    // auto factor2 = boost::dynamic_pointer_cast<prx::fg::mushr_ub_u_xdot_t>(factor);
     auto factor3 = boost::dynamic_pointer_cast<prx::fg::mushr_x_async_observation_t>(factor);
     if (factor0)  // mushr_ub_u_xdot_t
     {
@@ -401,10 +411,11 @@ int main(int argc, char* argv[])
     // }
   }
 
-  const prx::fg::mushrTypes::ParamsUbarU params_out{ results.at<prx::fg::mushrTypes::ParamsUbarU>(k_Ps("dv")) };
+  const prx::fg::mushrTypes::Ubar::params params_out{ results.at<prx::fg::mushrTypes::Ubar::params>(k_Ps("dv")) };
 
   PRX_DEBUG_VAR_1(params_out.transpose());
-  printf("[%.4f, %.4f, %.4f, %.4f]\n", params_out[0], params_out[1], params_out[2], params_out[3]);
+  printf("[%.4f, %.4f, %.4f]\n", params_out[0], params_out[1], params_out[2]);
+
   // PRX_DEBUG_VAR_1(plans_in.size());
   ps->copy_from(params_out);
 

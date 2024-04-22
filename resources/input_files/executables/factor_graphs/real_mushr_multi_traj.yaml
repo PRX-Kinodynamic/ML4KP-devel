@@ -30,19 +30,20 @@ plan:
 # params: [0.00665, -0.10069, 0.39628]
 
 # params: [0.75857, 0.00270, 0.02691]
-positive_slope_: &positive_slope 0.075
-steering_offset_: &steering_offset .259
-velocity_gain_: &velocity_gain 1.0
+accel_slope_: &accel_slope 1.0
+steering_offset_: &steering_offset 0.41716
+velocity_gain_: &velocity_gain 0.625
 desired_velocity_gain_: &desired_velocity_gain 0.625
 
-params: [*positive_slope, *steering_offset,  *velocity_gain, *desired_velocity_gain]
+# params: [*accel_slope, *steering_offset,  *velocity_gain]
+params: [0.9898, 0.4203, 0.6228]
 # params: [0.0758, 0.3895, 0.9988, 0.5908]
 # params: [0.0103, 0.5, 1.0037, 0.6256]
 # params: [0.4537, 0.9255, 0.3321, 3.0569]
 # params: [0.4537, 0.9255, 0.3321, 3.0569]
 
 LevenbergMarquardt:
-  max_iters: 0
+  max_iters: 50
 out:
   file: "${DIRTMP_PATH}/out/mj_mushr_sysid.txt"
   # file: "${DIRTMP_PATH}/out/real_mushr_sysid.txt"

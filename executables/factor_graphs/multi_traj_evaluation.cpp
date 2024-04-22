@@ -34,8 +34,6 @@
 using SF = prx::fg::symbol_factory_t;
 
 using prx::fg::mushr_ub_u_xdot_param_t;
-using prx::fg::mushr_ub_u_xdot_t;
-using prx::fg::mushr_x_async_observation_t;
 using prx::fg::mushr_x_observation_t;
 using prx::utilities::convert_to;
 using namespace prx::fg::mushrTypes;
@@ -85,7 +83,8 @@ double read_ros_plan(const std::string& filename, prx::plan_t& plan)
       const double u0{ convert_to<double>(line[1]) };
       const double u1{ convert_to<double>(line[2]) };
       ts.emplace_back(t);
-      observations.emplace_back(u0, u1);
+      observations.emplace_back(u1, u0);
+      // observations.emplace_back(u0, u1);
     }
   }
   double ti{ 0.0 };
@@ -101,58 +100,10 @@ double read_ros_plan(const std::string& filename, prx::plan_t& plan)
   return ts[0];
 }
 
-// Duration of observed trajectory is higher than plan (perception runs before plan publisher / controller and after...)
-// Append zeros before and after assuming the robot was not moving before/after.
-void increase_plan_to_match_trajectory(const ObservedTrajectory& traj, const double plan_t0, prx::plan_t& plan,
-                                       const std::size_t idx)
-{
-  const double traj_t0{ traj.front().first };
-  const double traj_duration{ traj.back().first - traj_t0 };
-  const double plan_duration{ plan.duration() };
-  // prx_assert(plan_duration < traj_duration, "plan duration is not less than traj duration!");
-
-  // const double init_diff{ plan_t0 - traj_t0 };
-  // const double end_diff{ traj_duration - (init_diff + plan_duration) + 2 * prx::simulation_step };
-  // const double end_diff{ 2 * prx::simulation_step };
-
-  // plan.copy_onto_front(Eigen::Vector2d::Zero(), init_diff);
-  // plan.copy_onto_back(Eigen::Vector2d::Zero(), end_diff);
-  PRX_DEBUG_VAR_3(traj_duration, plan_duration, plan.duration());
-
-  const double new_duration{ plan.duration() };
-  std::ios_base::openmode mode{ idx == 0 ? std::ofstream::trunc : std::ofstream::app };
-  std::ofstream ofs(prx::out_path + "mushr/eval_input_observations.txt", mode);
-  for (auto z : traj)
-  {
-    // if (z.first - traj_t0 < new_duration)
-    ofs << z.second.transpose() << "\n";
-  }
-  ofs << "\n";
-  ofs.close();
-}
-
-void create_traj_graph(prx::trajectory_t& traj, prx::plan_t& plan, std::shared_ptr<prx::system_group_t> sys_group,
-                       std::size_t idx, std::string observations_file, std::string plans_file,
-                       prx::space_point_t start_state)
-{
-  traj.clear();
-  ObservedTrajectory observations{};
-
-  read_observations(observations_file, observations);
-  const double plan_t0{ read_ros_plan(plans_file, plan) };
-  increase_plan_to_match_trajectory(observations, plan_t0, plan, idx);
-
-  Vec(start_state) = Eigen::Vector<double, 6>::Zero();
-  Vec(start_state).head(3) = observations[0].second;
-
-  sys_group->propagate(start_state, plan, traj);
-  std::ios_base::openmode mode{ idx == 0 ? std::ofstream::trunc : std::ofstream::app };
-  traj.to_file(prx::out_path + "mushr/result_eval_trajs.txt", mode);
-}
-
 int main(int argc, char* argv[])
 {
-  const std::string params_file{ "executables/factor_graphs/multi_traj_evaluation.yaml" };
+  // /Users/Gary/pracsys/ML4KP-devel/resources/input_files/executables/factor_graphs/real_mushr_multi_traj.yaml
+  const std::string params_file{ "executables/factor_graphs/real_mushr_multi_traj.yaml" };
   prx::param_loader params{ params_file, argc, argv };
   prx::simulation_step = 0.01;
 
@@ -170,8 +121,9 @@ int main(int argc, char* argv[])
   prx::space_t* cs{ sys_group->get_control_space() };
   prx::space_t* ps{ sys_group->get_parameter_space() };
 
-  prx::fg::mushrTypes::ParamsUbarU init_params{};
+  prx::fg::mushrTypes::Ubar::params init_params{};
 
+  PRX_DEBUG_ITERABLE("in_params:", params["params"].as<std::vector<double>>());
   ps->copy(init_params, params["params"].as<std::vector<double>>());
   ps->copy_from(init_params);
 
@@ -190,16 +142,21 @@ int main(int argc, char* argv[])
   PRX_DEBUG_VAR_1(plans_in.size());
   // const std::size_t observations_to_use{ _observations.size() / 2 };
 
-  std::vector<prx::space_point_t> start_states{};  // plans_in.size(), sys_group->get_state_space()->make_point());
-  std::vector<prx::plan_t> plans(plans_in.size(), cs);
-  prx::trajectory_t traj{ ss };
+  prx::space_point_t start_state{ ss->make_point() };  // plans_in.size(), sys_group->get_state_space()->make_point());
   // prx::space_point_t start_state{ ss->make_point() };
-
-  for (int i = 0; i < plans_in.size(); ++i)
+  for (int i = 0; i < observations_in.size(); ++i)
   {
-    start_states.push_back(ss->make_point());
-    create_traj_graph(traj, plans[i], sys_group, i, observations_in[i], plans_in[i], start_states[i]);
-    PRX_DEBUG_VAR_1(start_states[i]);
+    ObservedTrajectory observations{};
+    prx::plan_t plan(cs);
+    prx::trajectory_t traj{ ss };
+    read_observations(observations_in[i], observations);
+    read_ros_plan(plans_in[i], plan);
+
+    Vec(start_state).head(3) = observations[0].second;
+    sys_group->propagate(start_state, plan, traj);
+
+    const std::ios_base::openmode mode{ i == 0 ? std::ofstream::trunc : std::ofstream::app };
+    traj.to_file(prx::out_path + "mushr/multi_traj_evals.txt", mode);
   }
 
   return 0;

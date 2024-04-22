@@ -34,7 +34,7 @@
 using SF = prx::fg::symbol_factory_t;
 
 using prx::fg::mushr_ub_u_xdot_param_t;
-using prx::fg::mushr_ub_u_xdot_t;
+// using prx::fg::mushr_ub_u_xdot_t;
 using prx::fg::mushr_x_async_observation_t;
 using prx::fg::mushr_x_observation_t;
 using prx::utilities::convert_to;
@@ -117,7 +117,7 @@ void increase_plan_to_match_trajectory(const ObservedTrajectory& traj, const dou
 
 void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values, const prx::trajectory_t& traj,
                       const prx::plan_t& plan, ObservedTrajectory& observations,
-                      prx::fg::mushrTypes::ParamsUbarU& params_dv)
+                      prx::fg::mushrTypes::Ubar::params& params_dv)
 {
   prx::fg::mushrConfig config;
   config.cm_x_xdot = gtsam::noiseModel::Isotropic::Sigma(3, 1e-3);
@@ -140,7 +140,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
   Eigen::Vector3d xdt{};
   Eigen::Vector3d xdt_next{};
   Eigen::Vector2d ut{};
-  prx::fg::mushrTypes::Ubar ubar{};
+  prx::fg::mushrTypes::Ubar::type ubar{};
   bool first{ true };
   auto nm_u_prior = gtsam::noiseModel::Isotropic::Sigma(2, 1e-1);
 
@@ -159,7 +159,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
     xdt = Vec(traj[static_cast<unsigned>(idx)]).tail(3);
     ut = Vec(plan.at(ti));
 
-    ubar = mushr_ub_u_xdot_param_t::predict(ut, xdt, params_dv, config.length);
+    ubar = mushr_ub_u_xdot_param_t::predict(ut, ubar, params_dv);
     values.insert(k_X(idx), xt);
     values.insert(k_Xd(idx), xdt);
     values.insert(k_U(idx), ut);
@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
   prx::space_t* cs{ sys_group->get_control_space() };
   prx::space_t* ps{ sys_group->get_parameter_space() };
 
-  prx::fg::mushrTypes::ParamsUbarU init_params{};
+  prx::fg::mushrTypes::Ubar::params init_params{};
 
   ps->copy(init_params, params["params"].as<std::vector<double>>());
   ps->copy_from(init_params);
@@ -266,8 +266,8 @@ int main(int argc, char* argv[])
   {
     auto factor0 = boost::dynamic_pointer_cast<prx::fg::mushr_x_xdot_t>(factor);
     auto factor1 = boost::dynamic_pointer_cast<prx::fg::mushr_x_xdot_ub_t>(factor);
-    auto factor2 = boost::dynamic_pointer_cast<prx::fg::mushr_ub_u_xdot_t>(factor);
-    auto factor3 = boost::dynamic_pointer_cast<prx::fg::mushr_x_async_observation_t>(factor);
+    // auto factor2 = boost::dynamic_pointer_cast<prx::fg::mushr_ub_u_xdot_t>(factor);
+    // auto factor3 = boost::dynamic_pointer_cast<prx::fg::mushr_x_async_observation_t>(factor);
     if (factor0)  // mushr_ub_u_xdot_t
     {
       ofs << "mushr_x_xdot_t ";
@@ -290,7 +290,7 @@ int main(int argc, char* argv[])
     // }
   }
 
-  const prx::fg::mushrTypes::ParamsUbarU params_out{ results.at<prx::fg::mushrTypes::ParamsUbarU>(k_Ps("dv")) };
+  const prx::fg::mushrTypes::Ubar::params params_out{ results.at<prx::fg::mushrTypes::Ubar::params>(k_Ps("dv")) };
   PRX_DEBUG_VAR_1(params_out.transpose());
   ps->copy_from(params_out);
   // ps->copy_from({ 0.0214485, -0.03 });

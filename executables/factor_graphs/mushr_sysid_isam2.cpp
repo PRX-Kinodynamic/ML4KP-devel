@@ -35,7 +35,7 @@
 #include "prx/factor_graphs/utilities/common_functions.hpp"
 using SF = prx::fg::symbol_factory_t;
 
-using prx::fg::mushr_ub_u_xdot_t;
+// using prx::fg::mushr_ub_u_xdot_t;
 using prx::fg::mushr_x_observation_t;
 using prx::utilities::convert_to;
 using namespace prx::fg::mushrTypes;
@@ -110,7 +110,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
     xt_next = Vec(traj.at(t01_next)).head(3);
     // xdt_next = Vec(traj.at(t01_next)).head(3);
     ut = Vec(plan.at(t_accum));
-    ubar = mushr_ub_u_xdot_t::predict(ut, xdt, config.length);
+    // ubar = mushr_ub_u_xdot_t::predict(ut, xdt, config.length);
     graph.emplace_shared<mushr_x_observation_t>(k_X(ti), zt, config.cm_x_z);
 
     // PRX_DEBUG_VAR_1(xt.transpose());
@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
   {
     auto factor0 = boost::dynamic_pointer_cast<prx::fg::mushr_x_xdot_t>(factor);
     auto factor1 = boost::dynamic_pointer_cast<prx::fg::mushr_x_xdot_ub_t>(factor);
-    auto factor2 = boost::dynamic_pointer_cast<prx::fg::mushr_ub_u_xdot_t>(factor);
+    // auto factor2 = boost::dynamic_pointer_cast<prx::fg::mushr_ub_u_xdot_t>(factor);
     auto factor3 = boost::dynamic_pointer_cast<prx::fg::mushr_x_observation_t>(factor);
     // if (factor0)  // mushr_ub_u_xdot_t
     // {

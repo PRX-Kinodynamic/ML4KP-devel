@@ -34,8 +34,8 @@
 using SF = prx::fg::symbol_factory_t;
 
 using prx::fg::mushr_ub_u_xdot_param_t;
-using prx::fg::mushr_ub_u_xdot_t;
-using prx::fg::mushr_x_async_observation_t;
+// using prx::fg::mushr_ub_u_xdot_t;
+// using prx::fg::mushr_x_async_observation_t;
 using prx::fg::mushr_x_observation_t;
 using prx::utilities::convert_to;
 using namespace prx::fg::mushrTypes;
@@ -50,7 +50,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
   config.cm_x_z = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e1, 1e1, 1));
   config.length = 0.2965;
 
-  ParamsUbarU params_dv{ ParamsUbarU(0.443682, -6.12957e-07, 1.0, 1.0) };
+  Ubar::params params_dv{ Ubar::params(0.443682, -6.12957e-07, 1.0) };
   values.insert(k_Ps("dv"), params_dv);
   const double duration{ plan.duration() };
   prx::utilities::csv_reader_t reader(filename, ' ');
@@ -87,7 +87,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
   Eigen::Vector3d xdt{};
   Eigen::Vector3d xdt_next{};
   Eigen::Vector2d ut{};
-  prx::fg::mushrTypes::Ubar ubar{};
+  Ubar::type ubar{};
   bool first{ true };
   auto nm_u_prior = gtsam::noiseModel::Isotropic::Sigma(2, 1.0);
 
@@ -126,7 +126,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
     // x_aux = traj.at(ti + prx::simulation_step, false);
     // xdt_next = Vec(x_aux).tail(3);
 
-    ubar = mushr_ub_u_xdot_param_t::predict(ut, xdt, params_dv, config.length);
+    ubar = mushr_ub_u_xdot_param_t::predict(ut, ubar, params_dv);
     values.insert(k_X(idx), xt);
     values.insert(k_Xd(idx), xdt);
     values.insert(k_U(idx), ut);
@@ -175,7 +175,7 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
     // PRX_DEBUG_VAR_3(ti, t0, t1);
     // PRX_DEBUG_VAR_3(idx, dt, zt.transpose());
     // graph.emplace_shared<mushr_x_observation_t>(k_X(idx), zt, config.cm_x_z);
-    graph.emplace_shared<mushr_x_async_observation_t>(k_X(idx), k_X(idx + 1), zt, t0, t1, ti, config.cm_x_z);
+    // graph.emplace_shared<mushr_x_async_observation_t>(k_X(idx), k_X(idx + 1), zt, t0, t1, ti, config.cm_x_z);
     // mushr_x_async_observation_t(const gtsam::Key xi, const gtsam::Key xj, const X z, double t_xi, double t_xj,
     //                             double t_zi, const gtsam::noiseModel::Base::shared_ptr& cost_model)
     // idx += 3;
@@ -246,8 +246,8 @@ int main(int argc, char* argv[])
   {
     auto factor0 = boost::dynamic_pointer_cast<prx::fg::mushr_x_xdot_t>(factor);
     auto factor1 = boost::dynamic_pointer_cast<prx::fg::mushr_x_xdot_ub_t>(factor);
-    auto factor2 = boost::dynamic_pointer_cast<prx::fg::mushr_ub_u_xdot_t>(factor);
-    auto factor3 = boost::dynamic_pointer_cast<prx::fg::mushr_x_async_observation_t>(factor);
+    // auto factor2 = boost::dynamic_pointer_cast<prx::fg::mushr_ub_u_xdot_t>(factor);
+    // auto factor3 = boost::dynamic_pointer_cast<prx::fg::mushr_x_async_observation_t>(factor);
     if (factor0)  // mushr_ub_u_xdot_t
     {
       ofs << "mushr_x_xdot_t ";
@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
     // }
   }
 
-  const prx::fg::mushrTypes::ParamsUbarU params_out{ results.at<prx::fg::mushrTypes::ParamsUbarU>(k_Ps("dv")) };
+  const prx::fg::mushrTypes::Ubar::params params_out{ results.at<prx::fg::mushrTypes::Ubar::params>(k_Ps("dv")) };
   PRX_DEBUG_VAR_1(params_out.transpose());
   ps->copy_from(params_out);
   prx::trajectory_t res_traj{ ss };
