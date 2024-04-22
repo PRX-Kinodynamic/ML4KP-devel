@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
   auto start_state = ss->make_point();
 
-  ss->copy(start_state, Eigen::Vector<double, 5>(0, 0, 0, 0, 0));
+  ss->copy(start_state, Eigen::Vector<double, 5>(1, 0, 1.57, 0, 0));
   ps->copy_from(params["/plant/params"].as<std::vector<double>>());
 
   plan_t plan(cs);

@@ -41,12 +41,18 @@ constexpr std::size_t thetadot{ 2 };
 
 namespace Ubar
 {
-using type = Eigen::Vector<double, 2>;
-using params = Eigen::Vector<double, 3>;
+constexpr std::size_t Dim{ 2 };
+constexpr std::size_t ParamsDim{ 3 };
+
+using type = Eigen::Vector<double, Dim>;
+using params = Eigen::Vector<double, ParamsDim>;
+
 constexpr std::size_t velocity{ 0 };
 constexpr std::size_t beta{ 1 };
 
 constexpr std::size_t accel_slope{ 0 };
+constexpr std::size_t steering_param{ 1 };
+constexpr std::size_t max_vel_param{ 2 };
 
 }  // namespace Ubar
 
@@ -156,20 +162,20 @@ public:
   static Ubar predict(const U& u, const Ubar& ubar, const Params& params)
   {
     const double& v_current{ ubar[mushrTypes::Ubar::velocity] };
-
     const double& steering{ u[mushrTypes::Control::steering] };
     const double& v_desired{ u[mushrTypes::Control::vel_desired] };
 
     const double& accel_slope{ params[mushrTypes::Ubar::accel_slope] };
+    const double& steering_param{ params[mushrTypes::Ubar::steering_param] };
+    const double& max_vel_param{ params[mushrTypes::Ubar::max_vel_param] };
 
     const double dv{ v_desired - v_current };
     const double v_next{ v_current + dv * accel_slope };
-
-    const double beta{ std::atan(0.5 * std::tan(steering)) };
+    const double beta{ std::atan(0.5 * std::tan(steering * steering_param)) };
 
     Ubar ubar_next{};
     ubar_next[mushrTypes::Ubar::beta] = beta;
-    ubar_next[mushrTypes::Ubar::velocity] = v_next;
+    ubar_next[mushrTypes::Ubar::velocity] = max_vel_param * v_next;
     return ubar_next;
   }
 
