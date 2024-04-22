@@ -26,6 +26,8 @@ public:
     goal_radius = params["goal_radius"].as<double>();
     duration = 1.0 / params["frequency"].as<double>();
     discretization = std::floor(1.0 / (0.01 * params["frequency"].as<double>()));
+
+    reset();
   }
 
   virtual void set_points(std::shared_ptr<trajectory_t> _traj) override
@@ -42,32 +44,25 @@ public:
     }
   }
 
-  using controller_t::compute_controls;
-  void compute_controls() override
-  {
-    space_point_t current = get_state_space()->make_point();
-    get_state_space()->copy_to(current);
-    std::vector<double> control;
-    get_control(current,control);
-    get_control_space()->copy_from_vector(control);
-    get_control_space()->enforce_bounds();
-  }
-
   using controller_t::goal_reached;
   virtual bool goal_reached(const space_point_t& current_state) override
   {
     return goal_reached(current_state, df, goal_radius);
   }
+
+  virtual void reset() override
+  {
+    _points = nullptr;
+    indices.clear();
+  }
   
-  template <typename ControlPoint>
-  void get_control(const space_point_t& current_state, ControlPoint& control)
+  virtual void get_control(const space_point_t& current_state, Eigen::VectorXd& control) override
   {
     control.resize(2);
     // Check if the goal has been reached
     if (goal_reached(current_state))
     {
-      _points = nullptr;
-      indices.clear();
+      reset();
       control[0] = 0.0;
       control[1] = 0.0;
     }
@@ -110,12 +105,16 @@ public:
           std::sin(current_state->at(2) - prx::constants::pi / 2.0);
       double cross = vec_dist_nearest_point.dot(front_axle_vec_rotation);
 
-      double theta_line = _points->at(indices[nearest_index])->as<Eigen::VectorXd>()[2];
+      double current_vel = std::sqrt(std::pow(current_state->at(3), 2) + std::pow(current_state->at(4), 2));
+      auto desired_as_eigen = _points->at(indices[nearest_index])->as<Eigen::VectorXd>();
+      double desired_vel = std::sqrt(std::pow(desired_as_eigen[3], 2) + std::pow(desired_as_eigen[4], 2));
+
+      double theta_line = desired_as_eigen[2];
       double theta_e = prx::norm_angle_pi(theta_line - current_state->at(2));
-      double theta_d = std::atan2(k_path * cross, current_state->at(3));
+      double theta_d = std::atan2(k_path * cross, current_vel);
 
       double steering = theta_e + theta_d;
-      double throttle = k_throttle * _points->at(indices[nearest_index])->as<Eigen::VectorXd>()[3];
+      double throttle = k_throttle * desired_vel;
 
       control[0] = steering;
       control[1] = throttle;

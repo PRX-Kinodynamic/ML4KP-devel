@@ -232,4 +232,9 @@ void trajectory_t::from_file(const std::string file_name)
   }
 }
 
+std::size_t trajectory_t::index_at_time(const double ti) const
+{
+  const double idx{ 0.00001 + ti / simulation_step };
+  return static_cast<std::size_t>(idx);
+}
 }  // namespace prx
