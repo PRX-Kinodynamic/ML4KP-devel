@@ -82,6 +82,7 @@ double read_ros_plan(const std::string& filename, prx::plan_t& plan)
     auto line = reader.next_line();
     if (line.size() > 0)
     {
+      // PRX_DEBUG_VAR_3(line[0], line[1], line[2]);
       const double t{ convert_to<double>(line[0]) };
       const double u0{ convert_to<double>(line[1]) };
       const double u1{ convert_to<double>(line[2]) };
@@ -139,7 +140,7 @@ void increase_plan_to_match_trajectory(ObservedTrajectory& traj, const double pl
     {
       const double t{ traj[i + 1].first - z.first };
       const double vel{ (traj[i + 1].second.head(2) - z.second.head(2)).norm() / t };
-      PRX_DEBUG_VAR_2(t, vel);
+      // PRX_DEBUG_VAR_2(t, vel);
       ofs << z.second.transpose() << " " << vel << "\n";
     }
   }
@@ -153,8 +154,8 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
 {
   prx::fg::mushrConfig config;
   config.cm_x_xdot = gtsam::noiseModel::Isotropic::Sigma(3, 5e-4);
-  config.cm_x_xdot_ub = gtsam::noiseModel::Isotropic::Sigma(3, 5e-4);
-  config.cm_ub_u = gtsam::noiseModel::Isotropic::Sigma(prx::fg::mushrTypes::Ubar::Dim, 5e-4);
+  config.cm_x_xdot_ub = gtsam::noiseModel::Isotropic::Sigma(3, 5e-2);
+  config.cm_ub_u = gtsam::noiseModel::Isotropic::Sigma(prx::fg::mushrTypes::Ubar::Dim, 5e-2);
   config.cm_x_z = gtsam::noiseModel::Isotropic::Sigma(3, 1e-1);
   // config.cm_x_z = gtsam::noiseModel::Diagonal::Sigmas(Eigen::Vector3d(1e-1, 1e-1, 1e0));
   config.length = 0.2965;
@@ -226,14 +227,15 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
   idx = 0;
 
   Eigen::Vector3d zt{};
-  graph.addPrior(k_X(0, idx_offset), observations[0].second, config.cm_x_xdot);
-  // PRX_DEBUG_VAR_1(observations[0].second.transpose());
+
+  graph.addPrior(k_X(0, idx_offset), observations[0].second, gtsam::noiseModel::Isotropic::Sigma(3, 1e-8));
+  PRX_DEBUG_VAR_1(observations[0].second.transpose());
   for (auto tuple : observations)
   {
     auto [ti, zt] = tuple;
 
     const double tobs{ ti - tobs_0 };
-    // PRX_DEBUG_VAR_3(tobs, ti, tobs_0);
+    PRX_DEBUG_VAR_2(tobs, duration);
     if (tobs < duration)
     {
       idx = traj.index_at_time(tobs);
@@ -252,7 +254,9 @@ void add_observations(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
       }
     }
   }
-  // graph.addPrior(k_X(max_idx - 1, idx_offset), zt, config.cm_x_xdot);
+  PRX_DEBUG_VAR_1(observations.back().second);
+  // graph.addPrior(k_X(max_idx, idx_offset), observations[max_idx].second, gtsam::noiseModel::Isotropic::Sigma(3,
+  // 1e-8)); graph.addPrior(k_X(max_idx - 1, idx_offset), zt, config.cm_x_xdot);
 }
 
 void create_traj_graph(prx::param_loader& params, prx::trajectory_t& traj, prx::plan_t& plan,
@@ -275,7 +279,7 @@ void create_traj_graph(prx::param_loader& params, prx::trajectory_t& traj, prx::
   Vec(start_state)[3] = (observations[1].second - observations[0].second).norm() / dt0;
   // Vec(start_state).tail(3) = (observations[1].second - observations[0].second) / dt0;
 
-  // PRX_DEBUG_VAR_1(plan);
+  PRX_DEBUG_VAR_1(plan);
   sys_group->propagate(start_state, plan, traj);
   std::ios_base::openmode mode{ idx == 0 ? std::ofstream::trunc : std::ofstream::app };
   traj.to_file(prx::out_path + "mushr/multi_orig_traj.txt", mode);

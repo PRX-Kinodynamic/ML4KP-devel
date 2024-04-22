@@ -10,6 +10,7 @@ observations:
   - "right_poses_240403_132550.txt"
   - "left_poses_240403_134249.txt"
   - "left_poses_240403_134254.txt"
+  # - "s_traj_poses_240422_122914.txt"
 plan:
   - "fwd_ctrl_240403_131929.txt"
   - "fwd_ctrl_240403_131929.txt"
@@ -17,6 +18,7 @@ plan:
   - "right_ctrl_240403_132550.txt"
   - "left_ctrl_240403_134249.txt"
   - "left_ctrl_240403_134254.txt"
+  # - "s_traj_ctrl_240422_122914.txt"
 # params: [0.0200703, -0.017926]
 # params: [0.0143982, -0.0183924]
 # params: [0.0200703, 0.01225, 0.60]
@@ -37,7 +39,8 @@ desired_velocity_gain_: &desired_velocity_gain 0.625
 
 # params: [*accel_slope, *steering_offset,  *velocity_gain]
 params: [0.9898, 0.4203, 0.6228]
-# params: [0.0758, 0.3895, 0.9988, 0.5908]
+# 
+# params: [0.0014, 0.6791, 1.0003]
 # params: [0.0103, 0.5, 1.0037, 0.6256]
 # params: [0.4537, 0.9255, 0.3321, 3.0569]
 # params: [0.4537, 0.9255, 0.3321, 3.0569]
