@@ -33,23 +33,19 @@ int main(int argc, char* argv[])
 
   auto start_state = ss->make_point();
 
-  ss->copy(start_state, Eigen::Vector<double, 5>(1, 0, 1.57, 0, 0));
+  ss->copy(start_state, Eigen::Vector<double, 4>(1, 0, 1.57, 0));
   ps->copy_from(params["/plant/params"].as<std::vector<double>>());
 
   plan_t plan(cs);
   trajectory_t traj(ss);
 
-  // plan.from_file();
-  // plan.copy_onto_back(Eigen::Vector2d(0, 0.5), 5);
-  // plan.copy_onto_back(Eigen::Vector2d(0.75, 0.5), 5);
-  // plan.copy_onto_back(Eigen::Vector2d(1.0, 0.0), 5);
-  // plan.copy_onto_back(Eigen::Vector2d(-1.0, 1.0), 5);
-  // plan.copy_onto_back(Eigen::Vector2d(0.0, 0.0), 1);
-  // plan.copy_onto_back(Eigen::Vector2d(1.0, -1.0), 10);
-  // plan.copy_onto_back(Eigen::Vector2d(0.0, 0.0), 1);
-
-  prx::constants::separating_value = ' ';
-  plan.from_file(prx::out_path + "mushr_plan.txt");
+  plan.copy_onto_back(Eigen::Vector2d(0, 0.5), 5);
+  plan.copy_onto_back(Eigen::Vector2d(0.75, 0.5), 5);
+  plan.copy_onto_back(Eigen::Vector2d(1.0, 0.0), 5);
+  plan.copy_onto_back(Eigen::Vector2d(-1.0, 1.0), 5);
+  plan.copy_onto_back(Eigen::Vector2d(0.0, 0.0), 1);
+  plan.copy_onto_back(Eigen::Vector2d(1.0, -1.0), 10);
+  plan.copy_onto_back(Eigen::Vector2d(0.0, 0.0), 1);
 
   system_group->propagate(start_state, plan, traj);
 

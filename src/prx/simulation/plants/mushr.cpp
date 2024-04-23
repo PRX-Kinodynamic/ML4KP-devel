@@ -6,16 +6,24 @@ namespace prx
 mushrFG_t::mushrFG_t(const std::string& path)
   : plant_t(path), _wheelbase(0.2965), _params_ubar_u(0.9898, 0.4203, 0.6228), _ubar(mushrTypes::Ubar::type::Zero())
 {
-  state_memory = { &_state[0], &_state[1], &_state[2], &_ubar[0], &_ubar[1] };
-  state_space = new space_t("EEREE", state_memory, "mushr_state");
-  state_space->set_bounds({ -100, -100, -prx::constants::pi, -100, -100 }, { 100, 100, prx::constants::pi, 100, 100 });
+  // state_memory = { &_state[0], &_state[1], &_state[2], &_ubar[0], &_ubar[1] };
+  state_memory = { &_state[0], &_state[1], &_state[2], &_ubar[0] };
+  state_space = new space_t("EERE", state_memory, "mushr_state");
+  state_space->set_bounds(
+      {
+          -100,
+          -100,
+          -prx::constants::pi,
+          -100,
+      },
+      { 100, 100, prx::constants::pi, 100 });
 
   control_memory = { &_ctrl[0], &_ctrl[1] };
   input_control_space = new space_t("EE", control_memory, "mushr_ctrl");
   input_control_space->set_bounds({ -prx::constants::pi / 2.0, -10 }, { prx::constants::pi / 2.0, 10 });
 
-  derivative_memory = { &_state_dot[0], &_state_dot[1], &_state_dot[2], &_idle, &_idle };
-  derivative_space = new space_t("EEEII", derivative_memory, "mushr_deriv");
+  derivative_memory = { &_state_dot[0], &_state_dot[1], &_state_dot[2], &_idle} ;
+  derivative_space = new space_t("EEEI", derivative_memory, "mushr_deriv");
 
   parameter_memory = { &_params_ubar_u[0], &_params_ubar_u[1], &_params_ubar_u[2] };
   parameter_space = new space_t("EEE", parameter_memory, "mushr_params");

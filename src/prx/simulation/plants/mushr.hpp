@@ -59,8 +59,8 @@ constexpr std::size_t max_vel_param{ 2 };
 namespace Control
 {
 using type = Eigen::Vector<double, 2>;
-constexpr std::size_t vel_desired{ 0 };
-constexpr std::size_t steering{ 1 };
+constexpr std::size_t vel_desired{ 1 };
+constexpr std::size_t steering{ 0 };
 }  // namespace Control
 
 }  // namespace mushrTypes
