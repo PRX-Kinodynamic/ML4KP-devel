@@ -4,18 +4,26 @@ namespace prx
 {
 
 mushrFG_t::mushrFG_t(const std::string& path)
-  : plant_t(path), _wheelbase(0.2965), _params_ubar_u(0.075, 0.259, 0.625), _ubar(mushrTypes::Ubar::Zero())
+  : plant_t(path), _wheelbase(0.2965), _params_ubar_u(0.9898, 0.4203, 0.6228), _ubar(mushrTypes::Ubar::type::Zero())
 {
-  state_memory = { &_state[0], &_state[1], &_state[2], &_state_dot[0], &_state_dot[1] };
-  state_space = new space_t("EEREE", state_memory, "mushr_state");
-  state_space->set_bounds({ -100, -100, -prx::constants::pi, -100, -100 }, { 100, 100, prx::constants::pi, 100, 100 });
+  // state_memory = { &_state[0], &_state[1], &_state[2], &_ubar[0], &_ubar[1] };
+  state_memory = { &_state[0], &_state[1], &_state[2], &_ubar[0] };
+  state_space = new space_t("EERE", state_memory, "mushr_state");
+  state_space->set_bounds(
+      {
+          -100,
+          -100,
+          -prx::constants::pi,
+          -100,
+      },
+      { 100, 100, prx::constants::pi, 100 });
 
   control_memory = { &_ctrl[0], &_ctrl[1] };
   input_control_space = new space_t("EE", control_memory, "mushr_ctrl");
   input_control_space->set_bounds({ -prx::constants::pi / 2.0, -10 }, { prx::constants::pi / 2.0, 10 });
 
-  derivative_memory = { &_state_dot[0], &_state_dot[1], &_state_dot[2], &_idle, &_idle };
-  derivative_space = new space_t("EEEII", derivative_memory, "mushr_deriv");
+  derivative_memory = { &_state_dot[0], &_state_dot[1], &_state_dot[2], &_idle} ;
+  derivative_space = new space_t("EEEI", derivative_memory, "mushr_deriv");
 
   parameter_memory = { &_params_ubar_u[0], &_params_ubar_u[1], &_params_ubar_u[2] };
   parameter_space = new space_t("EEE", parameter_memory, "mushr_params");
@@ -34,10 +42,11 @@ mushrFG_t::~mushrFG_t()
 
 void mushrFG_t::propagate(const double simulation_step)
 {
-  const mushrTypes::StateDot xdot{ _state_dot };
-  _ubar = mushr_ub_u_xdot_param_t::predict(_ctrl, _state_dot, _params_ubar_u, _wheelbase);
+  // const mushrTypes::StateDot::type xdot{ _state_dot };
+  _ubar = mushr_ub_u_xdot_param_t::predict(_ctrl, _ubar, _params_ubar_u);
   _state_dot = mushr_x_xdot_ub_t::predict(_state, _ubar);
-  _state = mushr_x_xdot_t::predict(_state, xdot, simulation_step);
+  _state = mushr_x_xdot_t::predict(_state, _state_dot, simulation_step);
+  // PRX_DEBUG_VAR_3(_ubar.transpose(), _state_dot.transpose(), _state.transpose());
 }
 
 void mushrFG_t::update_configuration()
