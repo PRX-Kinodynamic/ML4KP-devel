@@ -1,0 +1,7 @@
+
+plant:
+  accel_slope: &accel_slope .250
+  # params: [*accel_slope, 0.0, 0.0]
+  params: [0.9898, 0.4203, 0.6228]
+out:
+  trajectory_filename: "${DIRTMP_PATH}/out/mushr_traj.txt"
