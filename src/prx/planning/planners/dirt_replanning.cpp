@@ -360,25 +360,28 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
   if (closest_node->checkpoint_time < dirt_replan_query->start_time + planning_cycle_duration &&
       closest_node->checkpoint_time + eg.first->duration() > dirt_replan_query->start_time + planning_cycle_duration)
   {
-    stopping_traj = new trajectory_t(state_space);
-    stopping_plan = new plan_t(control_space);
-    unsigned last_safe_state_index =
-        std::round(multiplier * (dirt_replan_query->start_time + planning_cycle_duration - closest_node->checkpoint_time));
-    last_safe_state = state_space->clone_point(eg.second->at(last_safe_state_index));
-    // Compute the stopping maneuver.
-    dirt_spec->stopping_control(last_safe_state, safety_time);
-    stopping_plan->append_onto_back(safety_time);
-    control_space->copy_to_point(stopping_plan->back().control);
-    control_space->enforce_bounds(stopping_plan->back().control);
-    // Check for the next planning cycle.
-    // stopping_plan->append_onto_back(planning_cycle_duration);
-    propagate(last_safe_state, *stopping_plan, *stopping_traj);
-    bool valid = false;
-    valid = valid_check(*stopping_traj);
-    delete stopping_traj;
-    delete stopping_plan;
-    if (!valid)
-      return;
+    if (dirt_spec->use_contingency)
+    {
+      stopping_traj = new trajectory_t(state_space);
+      stopping_plan = new plan_t(control_space);
+      unsigned last_safe_state_index = std::round(
+          multiplier * (dirt_replan_query->start_time + planning_cycle_duration - closest_node->checkpoint_time));
+      last_safe_state = state_space->clone_point(eg.second->at(last_safe_state_index));
+      // Compute the stopping maneuver.
+      dirt_spec->stopping_control(last_safe_state, safety_time);
+      stopping_plan->append_onto_back(safety_time);
+      control_space->copy_to_point(stopping_plan->back().control);
+      control_space->enforce_bounds(stopping_plan->back().control);
+      // Check for the next planning cycle.
+      // stopping_plan->append_onto_back(planning_cycle_duration);
+      propagate(last_safe_state, *stopping_plan, *stopping_traj);
+      bool valid = false;
+      valid = valid_check(*stopping_traj);
+      delete stopping_traj;
+      delete stopping_plan;
+      if (!valid)
+        return;
+    }
     if (!closest_node->is_safe)
     {
       closest_node->is_safe = true;

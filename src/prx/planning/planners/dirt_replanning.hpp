@@ -60,6 +60,7 @@ public:
     };
     blossom_number = 5;
     use_pruning = true;
+    use_contingency = true;
     planning_cycle_duration = 1.0;
   }
   virtual ~dirt_replan_specification_t()
@@ -69,7 +70,7 @@ public:
   int blossom_number;
   double planning_cycle_duration;
 
-  bool use_pruning;
+  bool use_pruning, use_contingency;
   heuristic_function_t h;
 };
 
