@@ -65,10 +65,10 @@ public:
   }
 
   // virtual X0 predict(const X1& x1, const X2& x2) const = 0;
-  virtual X predict(const X& xi, const Xdot& xdot_i, boost::optional<Eigen::MatrixXd&> H0 = boost::none,
-                    boost::optional<Eigen::MatrixXd&> Hdot = boost::none) const
+  static X predict(const X& xi, const Xdot& xdot_i, const double dt, boost::optional<Eigen::MatrixXd&> H0 = boost::none,
+                   boost::optional<Eigen::MatrixXd&> Hdot = boost::none)
   {
-    return LieIntegrator::integrate(xi, xdot_i, _h, H0, Hdot);
+    return LieIntegrator::integrate(xi, xdot_i, dt, H0, Hdot);
   }
 
   // x1_predicted <- x0 + xdot dt
@@ -78,7 +78,7 @@ public:
                                         boost::optional<Eigen::MatrixXd&> H0 = boost::none,
                                         boost::optional<Eigen::MatrixXd&> Hdot = boost::none) const override
   {
-    const X prediction{ predict(x0, xdot, H0, Hdot) };
+    const X prediction{ predict(x0, xdot, _h, H0, Hdot) };
     // X1_p (-) x1 => Eq. 26 from "A micro Lie theory [...]" https://arxiv.org/pdf/1812.01537.pdf
     const Eigen::VectorXd error{ X::Logmap(x1.between(prediction)) };
 
