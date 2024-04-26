@@ -410,11 +410,10 @@ void geometry_t::initialize_obj_geometry(const std::string& obj_file)
   switch (geom_type)
   {
     case geometry_type_t::OBJ:
-      std::ifstream file(obj_file);
-      prx_assert(file.good(), "OBJ file " << obj_file << " does not exist.");
+      prx_assert(std::filesystem::exists(obj_file), "OBJ file " << obj_file << " does not exist.");
       break;
     default:
-      prx_assert(false, "Initialize obj geometry should not be used for primitive geometries!");
+      prx_throw("Initialize obj geometry should not be used for primitive geometries!");
       break;
   }
   obj_fname = obj_file;
