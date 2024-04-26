@@ -2,7 +2,9 @@
 # include_directories("${PROJECT_SOURCE_DIR}/src/prx/external")
 message("Building python bindings")
 string(COMPARE GREATER_EQUAL ${PY_VERSION} "3" USE_PY3)
-cmake_policy(SET CMP0148 OLD) 
+if(CMAKE_VERSION VERSION_GREATER "3.27") 
+    cmake_policy(SET CMP0148 OLD) 
+endif()
 if (${USE_PY3})
     message("Using Python 3")
 
