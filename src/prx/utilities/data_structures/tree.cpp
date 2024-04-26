@@ -191,17 +191,47 @@ void tree_t::clear()
   const_e_iter = edge_list.begin();
 }
 
-void tree_t::transplant(node_index_t root, node_index_t new_parent)
+void tree_t::transplant(node_index_t node_idx, node_index_t new_parent_idx)
 {
-  auto old_from = v_index_map[root]->parent;
-  auto edge = e_index_map[v_index_map[root]->parent_edge];
+  const node_index_t old_parent{ v_index_map[node_idx]->parent };
+  const edge_index_t parent_edge_idx{ v_index_map[node_idx]->parent_edge };
+  std::shared_ptr<tree_edge_t> parent_edge{ e_index_map[parent_edge_idx] };
+
   // remove root from its parent's child list. root is dangling
-  v_index_map[old_from]->children.remove(root);
+  v_index_map[old_parent]->children.remove(node_idx);
   // update parent index, need to update the parent edge though
-  v_index_map[root]->parent = new_parent;
+  v_index_map[node_idx]->parent = new_parent_idx;
   // update parent's child list. still need to update edge
-  v_index_map[new_parent]->children.insert(v_index_map[new_parent]->children.end(), root);
-  edge->source = new_parent;
+  v_index_map[new_parent_idx]->children.push_back(node_idx);
+  parent_edge->source = new_parent_idx;
+}
+
+void tree_t::to_file(const std::string filename_tree)
+{
+  using prx::constants::separating_value;
+
+  std::cout << "Saving tree as:" << filename_tree << "\n";
+  std::ofstream ofs_tree{ filename_tree.c_str(), std::ofstream::trunc };
+
+  ofs_tree << "#" << separating_value;
+  ofs_tree << "parent_idx" << separating_value;
+  ofs_tree << "edge_idx" << separating_value;
+  ofs_tree << "node_idx" << separating_value;
+  ofs_tree << "node_state\n";
+
+  for (auto iter = vertex_list.begin(); iter != const_v_iter; ++iter)
+  {
+    const std::shared_ptr<tree_node_t> node{ *iter };
+    const node_index_t node_idx{ node->get_index() };
+    const edge_index_t edge_idx{ node->get_parent_edge() };
+    const node_index_t parent_idx{ node->get_parent() };
+
+    ofs_tree << parent_idx << prx::constants::separating_value;
+    ofs_tree << edge_idx << prx::constants::separating_value;
+    ofs_tree << node_idx << prx::constants::separating_value;
+    ofs_tree << node->point << "\n";
+  }
+  ofs_tree.close();
 }
 
 }  // namespace prx

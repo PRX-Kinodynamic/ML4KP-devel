@@ -56,6 +56,7 @@ space_t::space_t(const std::string& topo, const std::vector<double*>& in_address
     }
   }
   space_name = name;
+  enforce_bounds();
 }
 
 space_t::space_t(const std::string& topology, const std::vector<double*>& addresses)
@@ -146,7 +147,7 @@ space_point_t space_t::clone_point(const space_point_t& point) const
   assert_point_space_name(point);
 
   space_point_t new_point{ this->make_point() };
-  this->copy_point(new_point, point);
+  this->copy(new_point, point);
   return new_point;
 }
 
@@ -237,7 +238,7 @@ void space_t::copy_from_point(const space_point_t point) const
 
 void space_t::copy_point(const space_point_t destination, const space_point_t source) const
 {
-//  PRX_DEPRECATED("Use 'space_t::copy' instead");
+  PRX_DEPRECATED("Use 'space_t::copy' instead");
   prx_assert(destination->_parent->space_name == source->_parent->space_name,
              "Points have different parent spaces: " << destination->_parent->space_name << " and "
                                                      << source->_parent->space_name);
@@ -305,21 +306,6 @@ void space_t::copy_vector_from_point(Eigen::Ref<Eigen::VectorXd> destination, co
   }
 }
 
-void space_t::enforce_bounds() const
-{
-  for (unsigned i = 0; i < dimension; i++)
-  {
-    double& p = (*addresses[i]);
-    if (topology[i] == topology_t::ROTATIONAL)
-    {
-      p = norm_angle_pi(p, *lower_bounds[i], *upper_bounds[i]);
-    }
-    else
-    {
-      p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
-    }
-  }
-}
 bool space_t::satisfies_bounds(const space_point_t& point) const
 {
   assert_point_space_name(point);
@@ -329,12 +315,10 @@ bool space_t::satisfies_bounds(const space_point_t& point) const
     double& p = point->_memory[i];
     if (p < *lower_bounds[i])
     {
-      // printf("%d - lower bound: %.3f, val: %.3f\n", i, *lower_bounds[i], p );
       return false;
     }
     if (p > *upper_bounds[i])
     {
-      // printf("%d - upper bound: %.3f, val: %.3f\n", i, *lower_bounds[i], p );
       return false;
     }
   }
@@ -413,82 +397,6 @@ void space_t::print_bounds() const
     std::cout << *upper_bounds[i];
   }
   std::cout << ")" << std::endl;
-}
-
-void space_t::integrate(const space_point_t& point, const space_t* derivative, double delta_t)
-{
-  prx_assert(derivative->get_dimension() == dimension, "");
-  copy_from_point(point);
-  integrate(derivative, delta_t);
-}
-
-void space_t::integrate(const space_t* derivative, double delta_t)
-{
-  for (unsigned i = 0; i < dimension; i++)
-  {
-    if (topology[i] == topology_t::EUCLIDEAN || topology[i] == topology_t::ROTATIONAL)
-    {
-      *(addresses[i]) += delta_t * derivative->at(i);
-    }
-    else if (topology[i] == topology_t::DISCRETE)
-    {
-      *(addresses[i]) += delta_t * derivative->at(i);
-      *(addresses[i]) = round(*(addresses[i]));
-    }
-    else if (topology[i] == topology_t::IDLE)
-    {
-      continue;
-    }
-    else if (topology[i] == topology_t::QUATERNION)
-    {
-      prx_warn("Quaternion integration not implemented yet!");
-    }
-  }
-  enforce_bounds();
-}
-
-void space_t::interpolate(const space_point_t& point1, const space_point_t& point2, double t,
-                          space_point_t& result) const
-{
-  assert_point_space_name(point1);
-  assert_point_space_name(point2);
-  assert_point_space_name(result);
-
-  prx_assert(t >= 0 && t <= 1, "Interpolation requires a value between 0 and 1: given " << t);
-
-  for (unsigned i = 0; i < dimension; i++)
-  {
-    if (topology[i] == topology_t::ROTATIONAL)
-    {
-      if (std::fabs(point1->_memory[i] - point2->_memory[i]) < PRX_PI)
-      {
-        result->_memory[i] = (1 - t) * point1->_memory[i] + t * point2->_memory[i];
-      }
-      else
-      {
-        if (point1->_memory[i] < point2->_memory[i])
-          result->_memory[i] = point2->_memory[i] + (1 - t) * (point1->_memory[i] - point2->_memory[i] + 2 * PRX_PI);
-        else
-          result->_memory[i] = point1->_memory[i] + t * (2 * PRX_PI - point1->_memory[i] + point2->_memory[i]);
-      }
-      result->_memory[i] = norm_angle_pi(result->_memory[i], *lower_bounds[i], *upper_bounds[i]);
-    }
-    else if (topology[i] == topology_t::DISCRETE)
-    {
-      if (t == 1)
-        result->_memory[i] = (int)point2->_memory[i];
-      else
-        result->_memory[i] = (int)point1->_memory[i];
-    }
-    else if (topology[i] == topology_t::QUATERNION)
-    {
-      prx_warn("Quaternion interpolation not implemented yet!");
-    }
-    else
-    {
-      result->_memory[i] = (1 - t) * point1->_memory[i] + t * point2->_memory[i];
-    }
-  }
 }
 
 std::string space_t::print_point(const space_point_t& point, const std::size_t prec) const

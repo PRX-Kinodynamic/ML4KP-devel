@@ -26,7 +26,7 @@ extern char separating_value;
 namespace color
 {
 
-constexpr std::string_view normal{ "\033[0m" };
+constexpr std::string_view normal = "\033[0m";
 constexpr std::string_view red{ "\033[31m" };
 constexpr std::string_view green{ "\033[32m" };
 constexpr std::string_view yellow{ "\033[33m" };
@@ -68,6 +68,7 @@ static inline bool are_approx_equal(std::vector<T> c1, std::vector<S> c2, double
 
 const std::string lib_path = lib_path_safe("DIRTMP_PATH");
 const std::string models_path = lib_path + "resources/models/";
+const std::string obj_models_path = lib_path + "resources/models/obj/";
 const std::string input_path = lib_path + "resources/input_files/";
 const std::string js_path = lib_path + "resources/js/";
 const std::string out_path = lib_path + "out/";
@@ -194,4 +195,89 @@ int sgn(T a)
 {
   return (a > 0) - (a < 0);
 }
+
+template <typename T>
+static std::vector<T> split(const std::string str)
+{
+  using prx::constants::separating_value;
+
+  std::vector<T> result;
+  std::istringstream ss(str);
+  std::string token;
+  while (std::getline(ss, token, separating_value))
+  {
+    if (token.size() > 0)
+    {
+      std::istringstream ti(token);
+      T x;
+      if ((ti >> x))
+        result.push_back(x);
+    }
+  }
+  return result;
+}
+
+inline Eigen::Vector3d quaternion_to_euler(const quaternion_t& q)
+{
+  // roll (x-axis rotation)
+  const double sinr_cosp{ 2 * (q.w() * q.x() + q.y() * q.z()) };
+  const double cosr_cosp{ 1 - 2 * (q.x() * q.x() + q.y() * q.y()) };
+  const double x{ std::atan2(sinr_cosp, cosr_cosp) };
+
+  // pitch (y()-ax()is rotation)
+  const double sinp{ std::sqrt(1 + 2 * (q.w() * q.y() - q.x() * q.z())) };
+  const double cosp{ std::sqrt(1 - 2 * (q.w() * q.y() - q.x() * q.z())) };
+  const double y{ 2 * std::atan2(sinp, cosp) - M_PI / 2.0 };
+
+  // yaw() (z-ax()is rotation)
+  const double siny_cosp{ 2 * (q.w() * q.z() + q.x() * q.y()) };
+  const double cosy_cosp{ 1 - 2 * (q.y() * q.y() + q.z() * q.z()) };
+  const double z{ std::atan2(siny_cosp, cosy_cosp) };
+
+  return { x, y, z };
+}
+// Split block by columns defined by Columns
+// A Block of with columns {C0,C1,C2} and given columns={{0,1}, {2}}
+// will return a block {C0,C1} and the input block will change to {C2}
+template <typename Block, typename ColumnsQuery>
+Block split_block(Block& block_in, ColumnsQuery columns)
+{
+  Block block_out;
+  const auto columns_out{ columns[0] };
+  const auto columns_in{ columns[1] };
+
+  std::vector<bool> columns_flags(columns_in.size() + columns_out.size());
+  for (auto idx : columns_out)
+  {
+    columns_flags[idx] = true;
+  }
+  for (auto idx : columns_in)
+  {
+    columns_flags[idx] = false;
+  }
+
+  for (std::size_t i = 0; i < block_in.size(); ++i)
+  {
+    auto line_in{ block_in[i] };
+    decltype(line_in) line_out;
+    decltype(line_in) line_in_new;
+
+    for (std::size_t ci = 0; ci < line_in.size(); ++ci)
+    {
+      const auto val = line_in[ci];
+      if (columns_flags[ci])
+      {
+        line_out.emplace_back(val);
+      }
+      else
+      {
+        line_in_new.emplace_back(val);
+      }
+    }
+    block_in[i] = line_in_new;
+    block_out.emplace_back(line_out);
+  }
+  return block_out;
+}
+
 }  // namespace prx

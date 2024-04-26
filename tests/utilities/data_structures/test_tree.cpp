@@ -3,6 +3,20 @@
 #include <string>
 #include <boost/test/unit_test.hpp>
 #include "prx/utilities/data_structures/tree.hpp"
+#include "prx/utilities/defs.hpp"
+
+namespace mock
+{
+struct space2d_t
+{
+  space2d_t() : x(0), y(0), address({ &x, &y }), space("EE", address, "space_test")
+  {
+  }
+  double x, y;
+  std::vector<double*> address;
+  prx::space_t space;
+};
+}  // namespace mock
 
 BOOST_AUTO_TEST_CASE(test_empty_tree_is_built_correctly)
 {
@@ -302,4 +316,87 @@ BOOST_AUTO_TEST_CASE(test_tree_remove_full_tree_and_readd)
                       "Wrong number of edges. Expected: " << expected_edges << ", got " << tree.num_edges());
   BOOST_CHECK_MESSAGE(tree.capacity() == readded_expected_capacity,
                       "Wrong capacity. Expected: " << expected_capacity << ", got " << tree.capacity());
+}
+
+BOOST_AUTO_TEST_CASE(test_to_from_file)
+{
+  using Node = prx::tree_node_t;
+  using Edge = prx::tree_edge_t;
+  using NodePtr = std::shared_ptr<Node>;
+  using EdgePtr = std::shared_ptr<Edge>;
+  mock::space2d_t test;
+  prx::space_t& space{ test.space };
+
+  prx::tree_t tree_out{};
+  tree_out.allocate_memory<Node, Edge>(1000);
+
+  //           7
+  //       3   8
+  //    1
+  //       4   9
+  //          10
+  //  0
+  //          11
+  //       5  12
+  //    2
+  //       6  13
+  //          14
+  const unsigned tree_out_num_vertices{ 15 };
+  for (int i = 0; i < tree_out_num_vertices; ++i)
+  {
+    // Create 14 vertices; this are sequencially numbered
+    prx::node_index_t node_index{ tree_out.add_vertex<Node, Edge>() };
+    BOOST_REQUIRE_MESSAGE(node_index == i, EXPECTED_GOT(i, node_index));
+    std::shared_ptr<Node> node{ tree_out.get_vertex_as<Node>(node_index) };
+    node->point = space.make_point();
+    space.copy(node->point, { i, i });
+  }
+  tree_out.add_edge(0, 1);
+  tree_out.add_edge(0, 2);
+
+  tree_out.add_edge(1, 3);
+  tree_out.add_edge(1, 4);
+
+  tree_out.add_edge(2, 5);
+  tree_out.add_edge(2, 6);
+
+  tree_out.add_edge(3, 7);
+  tree_out.add_edge(3, 8);
+
+  tree_out.add_edge(4, 9);
+  tree_out.add_edge(4, 10);
+
+  tree_out.add_edge(5, 11);
+  tree_out.add_edge(5, 12);
+
+  tree_out.add_edge(6, 13);
+  tree_out.add_edge(6, 14);
+
+  const std::string tree_file{ "/tmp/test_to_from_file.out" };
+  tree_out.to_file(tree_file);
+
+  prx::tree_t tree_in{};
+  tree_in.from_file<Node, Edge>(tree_file, &space);
+
+  const unsigned tree_in_num_vertices{ tree_in.num_vertices() };
+  BOOST_REQUIRE_MESSAGE(tree_out_num_vertices == tree_in_num_vertices,
+                        EXPECTED_GOT(tree_out_num_vertices, tree_in_num_vertices));
+
+  for (std::size_t i = 0; i < tree_out_num_vertices; ++i)
+  {
+    const NodePtr n_in{ tree_in.get_vertex_as<Node>(i) };
+    const NodePtr n_out{ tree_out.get_vertex_as<Node>(i) };
+    BOOST_REQUIRE_MESSAGE(n_out->get_index() == n_in->get_index(), EXPECTED_GOT(n_out->get_index(), n_in->get_index()));
+    BOOST_REQUIRE_MESSAGE(n_out->get_parent() == n_in->get_parent(),
+                          EXPECTED_GOT(n_out->get_parent(), n_in->get_parent()));
+    // Edge check only makes sense if we are not checking the root.
+    if (n_out->get_index() != n_out->get_parent())  // At this point, n_out == n_in for index and parent.
+    {
+      BOOST_REQUIRE_MESSAGE(n_out->get_parent_edge() == n_in->get_parent_edge(),
+                            EXPECTED_GOT(n_out->get_parent_edge(), n_in->get_parent_edge()));
+    }
+    BOOST_REQUIRE_MESSAGE(n_out->get_children().size() == n_in->get_children().size(),
+                          EXPECTED_GOT(n_out->get_children().size(), n_in->get_children().size()));
+    BOOST_REQUIRE(space.equal_points(n_out->point, n_in->point));
+  }
 }

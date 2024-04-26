@@ -3,6 +3,7 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/data_structures/abstract_node.hpp"
 #include "prx/utilities/data_structures/abstract_edge.hpp"
+#include "prx/utilities/general/csv_reader.hpp"
 #include "prx/utilities/spaces/space.hpp"
 
 #include <unordered_map>
@@ -72,6 +73,42 @@ public:
     return children;
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const tree_node_t* obj)
+  {
+    os << *obj;
+    return os;
+  }
+  friend std::ostream& operator<<(std::ostream& os, const std::shared_ptr<tree_node_t> obj)
+  {
+    os << *obj;
+    return os;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const tree_node_t& obj)
+  {
+    os << "[TreeNode] parent" << prx::constants::separating_value;
+    os << obj.parent << prx::constants::separating_value;
+    os << "edge" << prx::constants::separating_value;
+    os << obj.parent_edge << prx::constants::separating_value;
+    os << "index" << prx::constants::separating_value;
+    os << obj.index << prx::constants::separating_value;
+    os << "State:" << prx::constants::separating_value;
+    if (obj.point == nullptr)
+    {
+      os << "nullptr";
+    }
+    else
+    {
+      os << obj.point << prx::constants::separating_value;
+    }
+    os << "Children:";
+    for (auto child : obj.children)
+    {
+      os << child << prx::constants::separating_value;
+    }
+    return os;
+  }
+
 protected:
   node_index_t parent;
   edge_index_t parent_edge;
@@ -127,6 +164,26 @@ public:
   node_index_t get_target() const
   {
     return target;
+  }
+  friend std::ostream& operator<<(std::ostream& os, const tree_edge_t* obj)
+  {
+    os << *obj;
+    return os;
+  }
+  friend std::ostream& operator<<(std::ostream& os, const std::shared_ptr<tree_edge_t> obj)
+  {
+    os << *obj;
+    return os;
+  }
+  friend std::ostream& operator<<(std::ostream& os, const tree_edge_t& obj)
+  {
+    os << "[TreeEdge] source" << prx::constants::separating_value;
+    os << obj.source << prx::constants::separating_value;
+    os << "index" << prx::constants::separating_value;
+    os << obj.index << prx::constants::separating_value;
+    os << "target" << prx::constants::separating_value;
+    os << obj.target << prx::constants::separating_value;
+    return os;
   }
 
 protected:
@@ -274,7 +331,79 @@ public:
 
   void remove_vertices();
 
-  unsigned vertex_id_counter;
+  // Write the tree to a file with format:
+  // parent_id edge_id node_id node_state
+  void to_file(const std::string);
+
+  template <class node_type, class edge_type>
+  void from_file(const std::string filename_tree, space_t* space)
+  {
+    using prx::utilities::csv_reader_t;
+    using Line = std::vector<std::string>;
+    csv_reader_t reader_tree(filename_tree);
+    reader_tree.next_line();  // Remove first line (header)
+    while (reader_tree.has_next_line())
+    {
+      Line line{ reader_tree.next_line() };
+      if (line.size() == 0)
+      {
+        break;
+      }
+
+      const node_index_t parent_idx{ static_cast<node_index_t>(prx::utilities::convert_to<std::size_t>(line[0])) };
+      const edge_index_t edge_idx{ static_cast<edge_index_t>(prx::utilities::convert_to<std::size_t>(line[1])) };
+      const node_index_t node_idx{ static_cast<node_index_t>(prx::utilities::convert_to<std::size_t>(line[2])) };
+      const Line node_state(line.begin() + 3, line.end());
+
+      const std::size_t current_size{ v_index_map.size() };
+
+      uint64_t max_idx{ std::max(parent_idx, node_idx) };
+      // uint64_t
+      while (max_idx >= vertex_id_counter)
+      {
+        add_vertex<node_type, edge_type>();
+      }
+      std::shared_ptr<node_type> node{ get_vertex_as<node_type>(node_idx) };
+      std::shared_ptr<node_type> parent_node{ get_vertex_as<node_type>(parent_idx) };
+
+      node->index = node_idx;
+      node->point = space->make_point();
+      space->copy(node->point, node_state);
+
+      v_index_map[node_idx] = node;
+
+      // The root is its own parent
+      if (parent_idx == node_idx)
+      {
+        node->parent = node_idx;
+      }
+      else
+      {
+        // add_edge(parent_idx, node_idx);
+        v_index_map[parent_idx]->children.push_back(node_idx);
+        v_index_map[node_idx]->parent = parent_idx;
+
+        // Edge has been added as dummy
+
+        while (edge_id_counter <= edge_idx)
+        {
+          auto edge = *e_iter;
+
+          edge->index = edge_id_counter;
+          e_index_map[edge_id_counter] = edge;
+          edge_id_counter++;
+          e_iter++;
+          const_e_iter++;
+          edge_count++;
+        }
+        e_index_map[edge_idx]->source = parent_idx;
+        e_index_map[edge_idx]->target = node_idx;
+        v_index_map[node_idx]->parent_edge = e_index_map[edge_idx]->index;
+      }
+    }
+  }
+
+  uint64_t vertex_id_counter;
 
 protected:
   std::list<std::shared_ptr<tree_node_t>> vertex_list;

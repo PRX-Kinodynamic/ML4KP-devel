@@ -1,0 +1,8 @@
+random_seed: 21081996
+simulation_step: 0.01
+
+plant: !file "plants/mushr.yaml"
+# feedback_controller: "controllers/mushr_pure_pursuit.yaml"
+feedback_controller: "controllers/mushr_stanley.yaml"
+
+goal_region_radius: 0.25
