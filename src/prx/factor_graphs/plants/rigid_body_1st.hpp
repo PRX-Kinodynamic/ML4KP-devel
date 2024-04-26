@@ -72,7 +72,7 @@ class kinematic_rigid_body_t : public plant_t
 public:
   rigid_body_1st_t(const std::string& path) : plant_t(path), _pose()
   {
-    state_memory = {, &_pose[4], &_pose[5], &_pose[6], &_pose[0], &_pose[1], &_pose[2], &_pose[3] };
+    state_memory = { &_pose[4], &_pose[5], &_pose[6], &_pose[0], &_pose[1], &_pose[2], &_pose[3] };
     state_space = new space_t("EEEQQQQ", state_memory, "rigid_body_1st_state");
 
     control_memory = { &_screw[0], &_screw[1], &_screw[2], &_screw[3], &_screw[4], &_screw[5] };
@@ -107,4 +107,5 @@ protected:
 };
 }  // namespace fg
 }  // namespace prx
+
 PRX_REGISTER_SYSTEM(rigid_body_1st_t, rigid_body_1st)
