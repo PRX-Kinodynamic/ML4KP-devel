@@ -396,6 +396,9 @@ void geometry_t::initialize_geometry(const std::vector<double>& geom_params)
     case geometry_type_t::CYLINDER:
       prx_assert(geom_params.size() == 2, "Trying to initialize a cylinder with " << geom_params.size() << " numbers.");
       break;
+    case geometry_type_t::OBJ:
+      prx_assert(false, "Initialize geometry should not be used for .obj files!");
+      break;
   };
   params = geom_params;
 }
@@ -409,6 +412,9 @@ void geometry_t::initialize_obj_geometry(const std::string& obj_file)
     case geometry_type_t::OBJ:
       std::ifstream file(obj_file);
       prx_assert(file.good(), "OBJ file " << obj_file << " does not exist.");
+      break;
+    default:
+      prx_assert(false, "Initialize obj geometry should not be used for primitive geometries!");
       break;
   }
   obj_fname = obj_file;
