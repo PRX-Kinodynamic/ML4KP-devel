@@ -2,17 +2,13 @@
 #include "prx/utilities/geometry/basic_geoms/box.hpp"
 #include "prx/utilities/geometry/basic_geoms/cylinder.hpp"
 #include "prx/utilities/geometry/basic_geoms/sphere.hpp"
+#include "prx/utilities/geometry/basic_geoms/obj.hpp"
 
 namespace prx
 {
-// #ifndef BULLET_NOT_BUILT
-//     std::pair<std::vector<std::string>,std::vector<std::shared_ptr<movable_object_t>>> load_obstacles(std::string
-//     obstacles_file, b3RobotSimulatorClientAPI* sim){
-// #else
 std::pair<std::vector<std::string>, std::vector<std::shared_ptr<movable_object_t>>>
 obstacle_loader_t::load_obstacles_from_file(const std::string obstacles_file)
 {
-  // #endif
 
   if (obstacles_file == "")
   {
@@ -59,6 +55,12 @@ obstacle_loader_t::load_obstacles_from_file(const std::string obstacles_file)
       double radius = geom_params["radius"].as<double>();
       auto color = geom_params["material"].as<std::string>();
       obstacle_list.push_back(create_obstacle(new sphere_t(name, radius, obstacle_pose, color)));
+      obstacle_names.push_back(name);
+    }
+    else if (geom_type == "obj")
+    {
+      std::string obj_fname = obj_models_path + geom_params["filename"].as<std::string>();
+      obstacle_list.push_back(create_obstacle(new obj_t(name, obj_fname, obstacle_pose)));
       obstacle_names.push_back(name);
     }
     else

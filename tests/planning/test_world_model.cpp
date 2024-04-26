@@ -132,3 +132,69 @@ BOOST_AUTO_TEST_CASE(world_model_adding_obstacles_dynamically)
   box_tf->translation() = Eigen::Vector3d(100, 100, 100);  // Move it out so there is no collision
   BOOST_CHECK(not collision_group->in_collision());
 }
+
+class test_plant_t : public prx::plant_t
+{
+public:
+  test_plant_t() : prx::plant_t("test_plant")
+  {
+    x = y = z = 0;
+    qx = qy = qz = 0;
+    qw = 1;
+
+    state_memory = { &x, &y, &z, &qx, &qy, &qz, &qw };
+    state_space = new prx::space_t("EEEQQQQ", state_memory, "plant_state");
+    control_memory = { &idle };
+    input_control_space = new prx::space_t("I", control_memory, "plant_control");
+
+    geometries["body"] = std::make_shared<prx::geometry_t>(prx::geometry_type_t::OBJ);
+    geometries["body"]->initialize_obj_geometry(prx::obj_models_path + "test_peg.obj");
+    geometries["body"]->generate_collision_geometry();
+    configurations["body"] = std::make_shared<prx::transform_t>();
+    configurations["body"]->setIdentity();
+  }
+
+  virtual void update_configuration()
+  {
+    configurations["body"]->setIdentity();
+    configurations["body"]->translation() = (prx::vector_t(x, y, z));
+    configurations["body"]->linear() = prx::quaternion_t(qw, qx, qy, qz).toRotationMatrix();
+  };
+  virtual void compute_derivative(){};
+
+  double x, y, z, qx, qy, qz, qw, idle;
+};
+
+BOOST_AUTO_TEST_CASE(world_model_obstacles_from_obj)
+{
+  const std::vector<std::string> system_names{ { "peg" } };
+  std::shared_ptr<test_plant_t> test_plant_ptr = std::make_shared<test_plant_t>();
+  std::shared_ptr<prx::plant_t> plant_ptr = std::static_pointer_cast<prx::plant_t>(test_plant_ptr);
+  std::shared_ptr<prx::system_t> system_ptr = std::static_pointer_cast<prx::system_t>(plant_ptr);
+  BOOST_CHECK(system_ptr != nullptr);
+
+  prx::obstacle_loader_t obstacle_loader = prx::obstacle_loader_t("environments/obstacle_obj.yaml");
+  std::vector<std::string> obstacles_names = obstacle_loader.get_names();
+  std::vector<std::shared_ptr<prx::movable_object_t>> obstacles = obstacle_loader.get_obstacles();
+
+  std::vector<prx::system_ptr_t> plants;
+  plants.push_back(system_ptr);
+  std::shared_ptr<prx::collision_group_t> collision_group = std::make_shared<prx::collision_group_t>(plants, obstacles);
+
+  BOOST_CHECK(collision_group != nullptr);
+
+  // Peg is outside the hole
+  std::vector<double> state_vector = { 0.0, 0.0, 0.07, 0.0, 0.0, 0.0, 1.0 };
+  plant_ptr->get_state_space()->copy_from(state_vector);
+  BOOST_CHECK(not collision_group->in_collision());
+  auto pqp_distance = collision_group->get_distances();
+  PRX_DEBUG_ITERABLE("Distances:", pqp_distance.distances);
+  PRX_DEBUG_ITERABLE("Closest points: ",pqp_distance.closest_points[0].first)
+  PRX_DEBUG_ITERABLE("Closest points: ",pqp_distance.closest_points[0].second)
+
+  // Peg is inside the hole
+  state_vector = { 0.0, 0.0, 0.025, 0.0, 0.0, 0.0, 1.0 };
+  plant_ptr->get_state_space()->copy_from(state_vector);
+  BOOST_CHECK(collision_group->in_collision());
+  PRX_DEBUG_ITERABLE("Distances:", collision_group->get_distances().distances);
+}

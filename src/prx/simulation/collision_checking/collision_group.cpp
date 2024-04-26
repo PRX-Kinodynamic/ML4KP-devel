@@ -142,10 +142,21 @@ collision_group_t::pqp_distance_t collision_group_t::get_distances()
                  info2->model.lock().get(), 0.0, 0.0);
     result.distances.push_back(distance_result.Distance());
     auto p1 = distance_result.P1();
-    std::vector<double> closest_point;
-    closest_point.push_back(info1->pos[0] + p1[0]);
-    closest_point.push_back(info1->pos[1] + p1[1]);
-    result.closest_points.push_back(closest_point);
+    auto p2 = distance_result.P2();
+    
+    Eigen::Vector3d closest_point_p1, closest_point_p2;
+    // closest_point_p1 << p1[0], p1[1], p1[2];
+    // closest_point_p2 << p2[0], p2[1], p2[2];
+    // closest_point_p1 << p1[0] + info1->pos[0], p1[1] + info1->pos[1], p1[2] + info1->pos[2];
+    // closest_point_p2 << p2[0] + info2->pos[0], p2[1] + info2->pos[1], p2[2] + info2->pos[2];
+    closest_point_p1 << info1->pos[0] + p1[0] * info1->rot[0][0] + p1[1] * info1->rot[0][1] + p1[2] * info1->rot[0][2],
+                        info1->pos[1] + p1[0] * info1->rot[1][0] + p1[1] * info1->rot[1][1] + p1[2] * info1->rot[1][2],
+                        info1->pos[2] + p1[0] * info1->rot[2][0] + p1[1] * info1->rot[2][1] + p1[2] * info1->rot[2][2];
+    closest_point_p2 << info2->pos[0] + p2[0] * info2->rot[0][0] + p2[1] * info2->rot[0][1] + p2[2] * info2->rot[0][2],
+                        info2->pos[1] + p2[0] * info2->rot[1][0] + p2[1] * info2->rot[1][1] + p2[2] * info2->rot[1][2],
+                        info2->pos[2] + p2[0] * info2->rot[2][0] + p2[1] * info2->rot[2][1] + p2[2] * info2->rot[2][2];
+
+    result.closest_points.push_back(std::make_pair(closest_point_p1, closest_point_p2));
   }
   return result;
 }

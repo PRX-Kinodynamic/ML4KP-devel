@@ -49,18 +49,7 @@ public:
      * @brief A vector of distances between each collision pair in the collision cache.
      * */
     std::vector<double> distances;
-    /**
-     * @brief A vector of the closest point for each collision pair in the collision cache.
-     *
-     * For every element of the collision pair, the closest point corresponds to the point on the
-     * first element of the collision pair that is closest to the second element of the collision pair.
-     * By convention, when constructing the collision cache, the second element of each pair typically
-     * corresponds to a rigid body on a robot, while the first element corresponds to a rigid body that is
-     * considered to be an obstacle.
-     *
-     * As a result, this is a vector of the closest point on each obstacle for each rigid body present on the robot.
-     * */
-    std::vector<std::vector<double>> closest_points;
+    std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>> closest_points;
   };
 
   void add_new_obstacle(std::shared_ptr<movable_object_t> obstacle)
