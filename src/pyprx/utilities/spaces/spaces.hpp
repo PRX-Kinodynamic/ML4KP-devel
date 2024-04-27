@@ -3,8 +3,19 @@
 #include "pyprx/utilities/spaces/space_py.hpp"
 #include "pyprx/utilities/spaces/noisy_space_py.hpp"
 
-void pyprx_utilities_spaces()
+namespace pyprx
 {
-  pyprx_utilities_spaces_space();
-  pyprx_utilities_spaces_noisy_space();
+namespace utilities
+{
+namespace spaces
+{
+
+void bindings()
+{
+  space::bindings();
+  noisy_space::bindings();
 }
+
+}  // namespace spaces
+}  // namespace utilities
+}  // namespace pyprx

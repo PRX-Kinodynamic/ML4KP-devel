@@ -1,17 +1,27 @@
 #include <iostream>
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
-#include "prx/planning/condition_check.hpp"
-#include "prx/planning/planner_functions/planner_functions.hpp"
+#include "prx/utilities/general/condition_check.hpp"
+// #include "prx/general/planner_functions/planner_functions.hpp"
 
 using namespace boost::python;
 
-void pyprx_planning_condition_check_py()
+namespace pyprx
+{
+namespace utilities
+{
+namespace general
+{
+namespace condition_check
+{
+void bindings()
 {
   class_<prx::custom_check_t>("custom_check")
       .def("__call__", &prx::custom_check_t::operator())
       .def("wrap", &create_function<prx::custom_check_t, bool>)
-      .staticmethod("wrap");
+      .staticmethod("wrap")
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::condition_check_t, prx::condition_check_t*>("condition_check", no_init)  // init<std::string, double>())
       .def("__init__", make_constructor(&init_as_ptr<prx::condition_check_t, std::string, double>,
@@ -27,6 +37,10 @@ void pyprx_planning_condition_check_py()
       .def("add_condition", &prx::condition_check_t::add_condition)
       .def("get_available_types", &prx::condition_check_t::get_available_types)
       .def("print_available_types", &prx::condition_check_t::print_available_types)
-      // .def("condition", &prx::condition_check_t::condition)
+      // Comment to force ; to the next one
       ;
 }
+}  // namespace condition_check
+}  // namespace general
+}  // namespace utilities
+}  // namespace pyprx
