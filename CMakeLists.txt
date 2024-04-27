@@ -36,7 +36,7 @@ elseif(CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
-add_definitions(${BUILD_FLAGS})
+add_definitions("-fPIC ${BUILD_FLAGS}")
 
 find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
