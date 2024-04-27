@@ -15,13 +15,19 @@ prx::space_point_t at_1(prx::trajectory_t traj, int i)
 {
   return traj.at((unsigned)i);
 }
-prx::space_point_t (prx::trajectory_t::*at_2)(double) const = &prx::trajectory_t::at;
+
+prx::space_point_t at_double_2(prx::trajectory_t traj, const double t, const bool normalized_input)
+{
+  return traj.at(t, normalized_input);
+}
+
+prx::space_point_t at_double_1(prx::trajectory_t traj, double t)
+{
+  return traj.at(t);
+}
 
 void (prx::trajectory_t::*copy_onto_back_1)(prx::space_point_t) = &prx::trajectory_t::copy_onto_back;
 void (prx::trajectory_t::*copy_onto_back_2)(const prx::space_t*) = &prx::trajectory_t::copy_onto_back;
-
-// void (prx::trajectory_t::*print_0)(3)  = &prx::trajectory_t::print;
-// void (prx::trajectory_t::*print_1)(unsigned) = &prx::trajectory_t::print;
 
 void to_file(prx::trajectory_t& traj, std::string filename, std::string mode = "w")
 {
@@ -34,8 +40,8 @@ void to_file(prx::trajectory_t& traj, std::string filename, std::string mode = "
   {
     _mode = std::ofstream::app;
   }
-  prx_throw("NOT IMPLEMENTED");
-  // traj.to_file(filename, _mode);
+  // prx_throw("NOT IMPLEMENTED");
+  traj.to_file(filename, _mode);
 }
 BOOST_PYTHON_FUNCTION_OVERLOADS(to_file_overloads, to_file, 2, 3);
 
@@ -50,7 +56,8 @@ void bindings()
                                         (args("traj"))))
       .def("__len__", &prx::trajectory_t::size)
       .def("__getitem__", at_1)
-      .def("interpolate", at_2)
+      .def("interpolate", at_double_1)
+      .def("interpolate", at_double_2)
       .def("__iter__", iterator<prx::trajectory_t>())
       .def("front", &prx::trajectory_t::front)
       .def("back", &prx::trajectory_t::back)
@@ -62,8 +69,8 @@ void bindings()
       // .def<std::string (prx::trajectory_t::*)(unsigned)>("print", &prx::trajectory_t::print)
       .def("copy_onto_back", copy_onto_back_1)
       .def("copy_onto_back", copy_onto_back_2)
-      // .def("to_file", to_file, to_file_overloads())
-      // .def("from_file", &prx::trajectory_t::from_file)
+      .def("to_file", to_file, to_file_overloads())
+      .def("from_file", &prx::trajectory_t::from_file)
 
       // .def("copy_onto_back", copy_onto_back_2)
       .def(self += other<prx::trajectory_t>())
