@@ -16,42 +16,7 @@ undirected_graph_t::~undirected_graph_t()
 {
 }
 
-edge_index_t undirected_graph_t::add_edge(node_index_t first, node_index_t second, double _value)
-{
-  // v_index_map[first]->neighbors.insert(v_index_map[first]->neighbors.begin(), second);
-  // v_index_map[second]->neighbors.insert(v_index_map[second]->neighbors.begin(), first);
-  v_index_map[first]->neighbors.push_front(second);
-  v_index_map[second]->neighbors.push_front(first);
 
-  // if (e_index_map.size() == edge_id_counter - 1)
-  if (edge_id_counter == max_edge_count)
-  {
-    allocate_edges(e_index_map.size() * 2);
-  }
-
-  auto edge = *e_iter;
-  edge->index = edge_id_counter;
-  edge->first = first;
-  edge->second = second;
-  edge->value = _value;
-  // edge->source = from;
-  // edge->target = to;
-  e_index_map[edge_id_counter] = edge;
-  edge_id_counter++;
-  e_iter++;
-  const_e_iter++;
-  edge_count++;
-  // v_index_map[second]->parent_edge = edge->index;
-
-  // v_index_map[first] ->  edges.insert(v_index_map[first] -> edges.begin(),  edge -> index);
-  // v_index_map[second] -> edges.insert(v_index_map[second] -> edges.begin(), edge -> index);
-  v_index_map[first]->edges.push_back(edge->index);
-  v_index_map[second]->edges.push_back(edge->index);
-  // std::cout << "edge: " << edge -> index << " first: " << first << " second: " << second;
-  // std::cout << std::endl;
-
-  return edge->index;
-}
 
 void undirected_graph_t::remove_vertex(node_index_t v)
 {

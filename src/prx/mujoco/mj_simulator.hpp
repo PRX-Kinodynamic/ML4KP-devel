@@ -39,7 +39,7 @@ public:
 
   virtual ~mujoco_simulator_t();
 
-  void init_simulator();
+  void init_simulator(const int n_ignored_pairs=0, std::vector<std::pair<std::string, std::string>>* ignored_pairs=nullptr);
 
   virtual void step_simulation() override;
 
@@ -92,9 +92,13 @@ public:
 
   bool in_collision() override;
 
+  int n_ignored_pairs;
+  std::vector<std::pair<std::string, std::string>>* ignored_pairs;
+
 protected:
   std::shared_ptr<mujoco_simulator_t> sim;
   std::string collision_body1, collision_body2;
+  std::pair<std::string, std::string> collision_pair;
 };
 
 class mujoco_collision_checker_t : public collision_checker_t

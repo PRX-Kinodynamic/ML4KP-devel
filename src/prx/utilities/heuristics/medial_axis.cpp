@@ -252,7 +252,7 @@ void medial_axis_t::set_sknw(const std::string nodes_file, const std::string edg
       if (edge1_index + 1 == edge2_index || edge1_index == edge2_index ||
           has_direct_line_of_sight(node_1->point, node_2->point, los_clearance))
       {
-        auto edge_index = graph.add_edge(n1, n2);
+        auto edge_index = graph.add_edge<undirected_edge_t>(n1, n2);
         auto new_edge = graph.get_edge_as<undirected_edge_t>(edge_index);
         new_edge->set_value(df_ma(node_1->point, node_2->point));
         for (int i = edge1_index; i < edge2_index; ++i)
@@ -344,7 +344,7 @@ void medial_axis_t::add_goal_to_graph()
       continue;
     if (has_direct_line_of_sight(goal, node->point, los_clearance))
     {
-      auto edge_index = graph.add_edge(goal_index, node->get_index());
+      auto edge_index = graph.add_edge<undirected_edge_t>(goal_index, node->get_index());
       auto new_edge = graph.get_edge_as<undirected_edge_t>(edge_index);
       new_edge->set_value(df_ma(goal, node->point));
       create_edges(node->point, goal, node->get_index(), edge_index);
@@ -607,7 +607,7 @@ void medial_axis_t::find_medial_axis()
         auto node = graph.get_vertex_as<undirected_node_t>(n1);
         if (!node->is_neighbor(n2))
         {
-          auto edge_index = graph.add_edge(n1, n2, d.second);
+          auto edge_index = graph.add_edge<undirected_edge_t>(n1, n2, d.second);
         }
       }
     }
