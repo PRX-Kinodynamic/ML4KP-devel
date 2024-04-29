@@ -227,6 +227,15 @@ static auto get_translation(prx::transform_t& Tr)
 {
   return Tr.translation();
 }
+
+static void rotation(prx::transform_t& Tr, Eigen::MatrixXd m)
+{
+  Tr.linear() = (m);
+}
+static Eigen::MatrixXd get_rotation(prx::transform_t& Tr)
+{
+  return Tr.linear();
+}
 typedef const double& (Eigen::MatrixXd::*parop_signature)(ptrdiff_t, ptrdiff_t) const;
 
 std::string transform_to_str(prx::transform_t obj)
@@ -389,6 +398,8 @@ void bindings()
       .def("setIdentity", &prx::transform_t::setIdentity)
       .def("translation", &translation)
       .def("translation", &get_translation)
+      .def("rotation", &rotation)
+      .def("rotation", &get_rotation)
       .def("__str__", &transform_to_str)
       // Comment to force ; to the next one
       ;

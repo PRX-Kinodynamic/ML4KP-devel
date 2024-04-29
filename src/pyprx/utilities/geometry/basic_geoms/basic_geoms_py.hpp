@@ -3,6 +3,7 @@
 #include "pyprx/utilities/geometry/basic_geoms/box_py.hpp"
 #include "pyprx/utilities/geometry/basic_geoms/cylinder_py.hpp"
 #include "pyprx/utilities/geometry/basic_geoms/sphere_py.hpp"
+#include "pyprx/utilities/geometry/basic_geoms/obj_py.hpp"
 
 using namespace boost::python;
 
@@ -19,6 +20,7 @@ void bindings()
   box::bindings();
   cylinder::bindings();
   sphere::bindings();
+  obj::bindings();
 }
 
 }  // namespace basic_geoms

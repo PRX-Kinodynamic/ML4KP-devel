@@ -42,7 +42,6 @@ void bindings()
   vector_wrapper<std::vector<double>>("vector_of_doubles");
   vector_wrapper<std::vector<std::vector<double>>>("vector_of_vector_of_doubles");
   vector_wrapper<std::vector<std::size_t>>("vector_of_unsigned");
-
   set_wrapper<std::unordered_set<std::size_t>>::bindings("unordered_set_of_unsigned");
 
   // PRX_ITERABLE_WRAPPER_NONSTR(std::vector<std::vector<double>>, "vector_of_vector_of_doubles")

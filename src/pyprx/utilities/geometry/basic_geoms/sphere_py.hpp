@@ -14,14 +14,19 @@ namespace basic_geoms
 {
 namespace sphere
 {
+std::shared_ptr<prx::sphere_t> create_sphere(std::string object_name, double rad, const prx::transform_t pose,
+                                             const std::string color)
+{
+  return std::make_shared<prx::sphere_t>(object_name, rad, pose, color);
+}
+
 void bindings()
 {
-  // TODO
-  // class_<prx::box_t, std::shared_ptr<prx::box_t>, bases<prx::movable_object_t>>("box", no_init)
-  // 	.def("create_obstacle", &create_box).staticmethod("create_obstacle");
-  // 	;
+  class_<prx::sphere_t, std::shared_ptr<prx::sphere_t>, bases<prx::movable_object_t>>("sphere", no_init)
+      .def("create", &create_sphere)
+      .staticmethod("create");
 
-  // implicitly_convertible<std::shared_ptr<prx::box_t>, std::shared_ptr<prx::movable_object_t>>();
+  implicitly_convertible<std::shared_ptr<prx::sphere_t>, std::shared_ptr<prx::movable_object_t>>();
 }
 
 }  // namespace sphere
