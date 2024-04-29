@@ -312,7 +312,7 @@ void three_js_group_t::output_html(std::string filename)
   {
     std::string js_string;
     vis_geometry_init(element, js_string);
-    js_string += "var material = new THREE.MeshPhongMaterial( { color: " + element->color +
+    js_string += "var material = new THREE.MeshPhongMaterial( { color: " + get_color(element->color) +
                  ", flatShading: true, transparent: true} );";
     js_string += "material.opacity = " + get_opacity_from_color(element->color) + "; ";
     js_string += "var mesh = new THREE.Mesh( geometry, material );";
@@ -347,8 +347,8 @@ void three_js_group_t::output_html(std::string filename)
         js_string += "colors.push(" + std::to_string(color_vals.x()) + "," + std::to_string(color_vals.y()) + "," +
                      std::to_string(color_vals.z()) + ");";
       }
-      js_string += "geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
-      js_string += "geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
+      js_string += "geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+      js_string += "geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
       js_string += "geometry.computeBoundingSphere();";
       js_string += "mesh = new THREE.Line( geometry, material );";
       js_string += "scene.add( mesh );\n";
@@ -370,8 +370,8 @@ void three_js_group_t::output_html(std::string filename)
         js_string += "colors.push(" + std::to_string(color_vals.x()) + "," + std::to_string(color_vals.y()) + "," +
                      std::to_string(color_vals.z()) + ");";
       }
-      js_string += "geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
-      js_string += "geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
+      js_string += "geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+      js_string += "geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
       js_string += "geometry.computeBoundingSphere();";
       js_string += "mesh = new THREE.Line( geometry, material );";
       js_string += "scene.add( mesh );\n";
@@ -394,34 +394,48 @@ void three_js_group_t::output_html(std::string filename)
     }
     else if (element.first == info_geometry_t::CIRCLE && element.second.size() >= 1)
     {  // TODO: FIX THIS
-       // js_string+="var geometry = new THREE.CircleBufferGeometry( 1, 32 );";
-       // js_string+="var geometry = new THREE.CircleBufferGeometry( 1, 32 );";
-       // js_string+="var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );";
-       // // js_string+="var material = new THREE.MeshBasicMaterial( { color: " + element.third + "} );";
-       // js_string+="var positions = [];";
+       // js_string += "var geometry = new THREE.CircleBufferGeometry( 1, 32 );";
+       // js_string += "var geometry = new THREE.CircleBufferGeometry( 1, 32 );";
+       // js_string += "var material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );";
+       // js_string += "var material = new THREE.MeshBasicMaterial( { color: " + element.third + "} );";
+       // js_string += "var positions = [];";
 
-      // // auto color_vals = string_to_rgb(element.third);
+      // auto color_vals = string_to_rgb(element.third);
 
-      // // for(int i=0;i<element.second.size();i++)
-      // // {
-      // 	js_string+="positions.push( 0,0, 0.1 );";
-      // 	// js_string+="positions.push( "+std::to_string(element.second[0].x())+",
-      // "+std::to_string(element.second[0].y())+", 0.1 );";
-      // 	//
-      // js_string+="colors.push("+std::to_string(color_vals.x())+","+std::to_string(color_vals.y())+","+std::to_string(color_vals.z())+");";
-      // // }
-      // js_string+="geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );";
-      // // js_string+="geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
-      // // js_string+="geometry.computeBoundingSphere();";
-      // js_string+="var circle = new THREE.Mesh( geometry, material );";
-      // js_string+="var geometry = new THREE.CircleBufferGeometry( 1, 32 );";
-      // js_string+="var vertices = new Float32Array( [ 30, 30, 0 ] );";
+      // for (int i = 0; i < element.second.size(); i++)
+      // {
+      //   js_string += "positions.push( 0,0, 0.1 );";
+      //   js_string += "positions.push( " + std::to_string(element.second[0].x()) + "," +
+      //                std::to_string(element.second[0].y()) + ", 0.1 );";
+      //   //
+      //   js_string += "colors.push(" + std::to_string(color_vals.x()) + "," + std::to_string(color_vals.y()) + "," +
+      //                std::to_string(color_vals.z()) + ");";
+      // }
+      // js_string += "geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );";
+      // js_string += "geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
+      // js_string += "geometry.computeBoundingSphere();";
+      // js_string += "var circle = new THREE.Mesh( geometry, material );";
+      // js_string += "var geometry = new THREE.CircleBufferGeometry( 1, 32 );";
+      // js_string += "var vertices = new Float32Array( [ 30, 30, 0 ] );";
 
-      // js_string+="geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );";
-      // js_string+="var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );";
-      // js_string+="var circle = new THREE.Mesh( geometry, material );";
-      // js_string+="scene.add( circle );\n";
+      // js_string += "geometry.setAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );";
+      // js_string += "var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );";
+      // js_string += "var circle = new THREE.Mesh( geometry, material );";
+      // js_string += "scene.add( circle );\n";
       // std::cout << js_string;
+    }
+    else if (element.first == info_geometry_t::SPHERE && element.second.size() >= 1)
+    {
+      // js_string += "var positions = [];";
+      js_string += "var geometry = new THREE.SphereGeometry( " + std::to_string(element.fourth) + ", 32, 16 );";
+      // js_string += "geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+      js_string += "geometry.translate( " + std::to_string(element.second[0].x()) + ", " +
+                   std::to_string(element.second[0].y()) + ", " + std::to_string(element.second[0].z()) + " );";
+      js_string += "var material = new THREE.MeshBasicMaterial( { color: " + element.third + " } ); ";
+      js_string += "material.opacity = 0.5;";
+      js_string += "material.transparent = true;";
+      js_string += "mesh = new THREE.Mesh( geometry, material );";
+      js_string += "scene.add( mesh );\n";
     }
     fout << js_string;
   }
@@ -526,8 +540,8 @@ void three_js_group_t::output_html(std::string filename)
         js_string += "colors.push(" + black + "," + black + "," + black + ");";
         // js_string+="colors.push("+std::to_string(color_vals.x())+","+std::to_string(color_vals.y())+","+std::to_string(color_vals.z())+");";
       }
-      js_string += "geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
-      js_string += "geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
+      js_string += "geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+      js_string += "geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
       js_string += "geometry.computeBoundingSphere();";
       js_string += "mesh = new THREE.Line( geometry, material );";
       js_string += "scene.add( mesh );\n";
@@ -613,7 +627,7 @@ void three_js_group_t::output_html(std::string filename)
                    std::to_string(z + 0.01) + " );";
 
       // }
-      js_string += "geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+      js_string += "geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
       js_string += "geometry.computeBoundingSphere();";
       js_string += "mesh = new THREE.Line( geometry, material );";
       js_string += "scene.add( mesh );\n";
@@ -628,7 +642,7 @@ void three_js_group_t::output_html(std::string filename)
       js_string += "positions.push( " + std::to_string(x) + ", " + std::to_string(y + 1) + ", " +
                    std::to_string(z + 0.01) + " );";
 
-      js_string += "geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+      js_string += "geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
       js_string += "geometry.computeBoundingSphere();";
       js_string += "mesh = new THREE.Line( geometry, material );";
       js_string += "scene.add( mesh );\n";
@@ -664,8 +678,8 @@ void three_js_group_t::output_html(std::string filename)
     // "+std::to_string(element.second[i].z())+" );";
     // 				js_string+="colors.push("+std::to_string(color_vals.x())+","+std::to_string(color_vals.y())+","+std::to_string(color_vals.z())+");";
     // 			}
-    // 			js_string+="geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
-    // 			js_string+="geometry.addAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
+    // 			js_string+="geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );";
+    // 			js_string+="geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colors, 3 ) );";
     // 			js_string+="geometry.computeBoundingSphere();";
     // 			js_string+="mesh = new THREE.Line( geometry, material );";
     // 			js_string+="scene.add( mesh );\n";

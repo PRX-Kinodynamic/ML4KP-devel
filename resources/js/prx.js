@@ -348,6 +348,7 @@ scene.add(light);
 var clock = new THREE.Clock();
 document.getElementById('shot').addEventListener('click', takeScreenshot);
 document.getElementById('bt_play').addEventListener('click', start_stop_animation);
+document.getElementById('bt_down_img_seq').addEventListener('click', downloadImgSeq);
 
 function start_stop_animation()
 {
@@ -410,4 +411,29 @@ function animate()
     }
   }
   renderer.render(scene, camera);
+}
+
+function downloadImgSeq()
+{
+  const fps = 15;
+  const duration = clip.duration;
+  const frames = duration * fps;
+  var zip = new JSZip();
+
+  for (let i = 0; i < frames; i++)
+  {
+    for (j = 0; j < mixers.length; j++)
+    {
+      mixers[j].setTime((i / frames) * clip.duration);
+    }
+    renderer.render(scene, camera);
+
+    const num = i.toString().padStart(6, '0');
+    var imgUrl = renderer.domElement.toDataURL();
+    zip.file(`frame_${num}.png`, imgUrl.split('base64,')[1], { base64: true });  //.replace('image/png',
+  }
+
+  zip.generateAsync({ type: 'blob' }).then(function(content) {
+    saveAs(content, 'ML4KPImgSeq.zip');
+  });
 }
