@@ -14,15 +14,19 @@ namespace basic_geoms
 {
 namespace cylinder
 {
+std::shared_ptr<prx::cylinder_t> create_cylinder(std::string object_name, double radius, double height,
+                                                 const prx::transform_t pose, const std::string color)
+{
+  return std::make_shared<prx::cylinder_t>(object_name, radius, height, pose, color);
+}
 
 void bindings()
 {
-  // TODO
-  // class_<prx::box_t, std::shared_ptr<prx::box_t>, bases<prx::movable_object_t>>("box", no_init)
-  // 	.def("create_obstacle", &create_box).staticmethod("create_obstacle");
-  // 	;
+  class_<prx::cylinder_t, std::shared_ptr<prx::cylinder_t>, bases<prx::movable_object_t>>("cylinder", no_init)
+      .def("create", &create_cylinder)
+      .staticmethod("create");
 
-  // implicitly_convertible<std::shared_ptr<prx::box_t>, std::shared_ptr<prx::movable_object_t>>();
+  implicitly_convertible<std::shared_ptr<prx::cylinder_t>, std::shared_ptr<prx::movable_object_t>>();
 }
 
 }  // namespace cylinder

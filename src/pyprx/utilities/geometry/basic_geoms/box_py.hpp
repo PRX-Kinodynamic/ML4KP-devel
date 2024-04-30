@@ -31,6 +31,7 @@ std::shared_ptr<prx::box_t> create_box(std::string object_name, double dim_x, do
 void bindings()
 {
   class_<prx::box_t, std::shared_ptr<prx::box_t>, bases<prx::movable_object_t>>("box", no_init)
+      .def("create", &create_box)
       .def("create_obstacle", &create_box)
       .staticmethod("create_obstacle");
   // init<std::string, double, double, double, prx::transform_t&>(), return_internal_reference<>())

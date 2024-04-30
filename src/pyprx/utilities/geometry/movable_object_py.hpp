@@ -38,19 +38,31 @@ get_configurations_shared(prx::movable_object_t obj)
   return pairs;
 }
 
+std::string to_str(prx::movable_object_t obj)
+{
+  return obj.get_object_name();
+}
+
 void bindings()
 {
   class_<prx::movable_object_t, std::shared_ptr<prx::movable_object_t>>("movable_object", init<std::string>())
       .def("get_geometries", &get_geometries_shared)
-      .def("get_configurations", &get_configurations_shared);
+      .def("get_configurations", &get_configurations_shared)
+      .def("__str__", &to_str)
+      // Comment to force ; to the next one
+      ;
 
   class_<std::pair<std::string, std::shared_ptr<prx::geometry_t>>>("movable_object_geometry")
       .def_readwrite("name", &std::pair<std::string, std::shared_ptr<prx::geometry_t>>::first)
-      .def_readwrite("geometry", &std::pair<std::string, std::shared_ptr<prx::geometry_t>>::second);
+      .def_readwrite("geometry", &std::pair<std::string, std::shared_ptr<prx::geometry_t>>::second)
+      // Comment to force ; to the next one
+      ;
 
   class_<std::pair<std::string, std::shared_ptr<prx::transform_t>>>("movable_object_transform")
       .def_readwrite("name", &std::pair<std::string, std::shared_ptr<prx::transform_t>>::first)
-      .def_readwrite("transform", &std::pair<std::string, std::shared_ptr<prx::transform_t>>::second);
+      .def_readwrite("transform", &std::pair<std::string, std::shared_ptr<prx::transform_t>>::second)
+      // Comment to force ; to the next one
+      ;
 
   PRX_ITERABLE_WRAPPER(std::vector<std::shared_ptr<prx::movable_object_t>>, "vector_of_movable_object")
   iterable_converter().from_python<std::vector<std::shared_ptr<prx::movable_object_t>>>();

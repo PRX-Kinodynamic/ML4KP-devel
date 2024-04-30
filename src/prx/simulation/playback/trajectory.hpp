@@ -88,6 +88,7 @@ public:
     return states[index];
   }
   // Return the state at t. If normalized_input is true, then t \in [0,1]. Otherwise, t \in [0, duration]
+
   space_point_t at(const double t, const bool normalized_input = true) const
   {
     double t01{ t };

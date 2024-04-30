@@ -16,7 +16,7 @@ namespace playback
 namespace plan
 {
 prx::space_point_t (prx::plan_t::*plan_at_2)(double) const = &prx::plan_t::at;
-void (prx::plan_t::*copy_onto_back_2)(prx::space_point_t, double) = &prx::plan_t::copy_onto_back;
+// void (prx::plan_t::*copy_onto_back_2)(prx::space_point_t, double) = &prx::plan_t::copy_onto_back;
 
 // void (prx::plan_t::*append_onto_back_2)(double, bool) = &prx::plan_t::append_onto_back;
 
@@ -48,8 +48,8 @@ void bindings()
       .def(self += other<prx::plan_t>())
       .def("clear", &prx::plan_t::clear)
       .def("copy_to", &prx::plan_t::copy_to)
-      .def("copy_onto_back", &prx::plan_t::copy_onto_back)
-      .def("copy_onto_front", &prx::plan_t::copy_onto_front)
+      .def("copy_onto_back", &prx::plan_t::copy_onto_back<prx::space_point_t>)
+      .def("copy_onto_front", &prx::plan_t::copy_onto_front<prx::space_point_t>)
       .def("append_onto_front", &prx::plan_t::append_onto_front)
       .def("append_onto_back", &prx::plan_t::append_onto_back)
       .def("extend_last_control", &prx::plan_t::extend_last_control)
