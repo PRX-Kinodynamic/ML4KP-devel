@@ -21,3 +21,4 @@ resources/input_files/mazes/*.yaml
 experiments/
 data/
 install/
+*.pt

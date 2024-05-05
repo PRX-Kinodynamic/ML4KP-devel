@@ -22,7 +22,7 @@ mushrFG_t::mushrFG_t(const std::string& path)
   input_control_space = new space_t("EE", control_memory, "mushr_ctrl");
   input_control_space->set_bounds({ -prx::constants::pi / 2.0, -10 }, { prx::constants::pi / 2.0, 10 });
 
-  derivative_memory = { &_state_dot[0], &_state_dot[1], &_state_dot[2], &_idle} ;
+  derivative_memory = { &_state_dot[0], &_state_dot[1], &_state_dot[2], &_idle };
   derivative_space = new space_t("EEEI", derivative_memory, "mushr_deriv");
 
   parameter_memory = { &_params_ubar_u[0], &_params_ubar_u[1], &_params_ubar_u[2] };
@@ -38,6 +38,31 @@ mushrFG_t::mushrFG_t(const std::string& path)
 
 mushrFG_t::~mushrFG_t()
 {
+}
+
+void mushrFG_t::compute_stopping_maneuver(space_point_t start_state, double& time)
+{
+  // Irrespective of the state, the control is just to brake
+  std::vector<double> braking_control = { 0.0, 0.0 };
+  input_control_space->copy_from(braking_control);
+  double threshold = 1e-4;
+
+  // Calculation for time required
+  // v_next = (v_current + dv * accel_slope) * max_vel_param
+  // = (v_current + (v_desired - v_current) * accel_slope) * max_vel_param
+  // = ((1 - accel_slope) * v_current + accel_slope * v_desired) * max_vel_param
+  // = max_vel_param * (1 - accel_slope) * v_current
+  const double k =
+      (1 - _params_ubar_u[mushrTypes::Ubar::accel_slope]) * _params_ubar_u[mushrTypes::Ubar::max_vel_param];
+  int n = 0;
+  double vel = start_state->at(3);
+  while (std::fabs(vel) > threshold)
+  {
+    vel = k * vel;
+    n++;
+  }
+
+  time = n * simulation_step;
 }
 
 void mushrFG_t::propagate(const double simulation_step)

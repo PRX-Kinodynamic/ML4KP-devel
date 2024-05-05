@@ -72,6 +72,7 @@ public:
   virtual void propagate(const double simulation_step) override final;
   virtual void update_configuration() override;
   virtual void compute_derivative() override final;
+  virtual void compute_stopping_maneuver(space_point_t, double&) override final;
 
 protected:
   mushrTypes::State::type _state;
