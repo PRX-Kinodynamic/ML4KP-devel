@@ -1,4 +1,5 @@
 #include "prx/utilities/geometry/geometry.hpp"
+#include <filesystem>
 
 namespace prx
 {
@@ -290,6 +291,60 @@ PQP_Model* create_capsule_trimesh(double radius, double height)
   return new_pqp_model(info_vals.first, info_vals.second);
 }
 
+std::vector<std::vector<double>> create_obj_vertices(std::ifstream& file)
+{
+  std::vector<std::vector<double>> vertices;
+  std::string line;
+  while (std::getline(file, line))
+  {
+    if (line[0] == 'v')
+    {
+      std::istringstream iss(line.substr(2));
+      double x, y, z;
+      iss >> x >> y >> z;
+      vertices.push_back({ x, y, z });
+    }
+  }
+  return vertices;
+}
+
+std::vector<face_t> create_obj_faces(std::ifstream& file)
+{
+  std::vector<face_t> faces;
+  std::string line;
+  while (std::getline(file, line))
+  {
+    if (line[0] == 'f')
+    {
+      std::istringstream iss(line.substr(2));
+      std::string vertex_str, normal_str;
+      std::vector<int> vertex_indices, normal_indices;
+      while (iss >> vertex_str)
+      {
+        std::istringstream vertex_iss(vertex_str);
+        char slash;
+        int vertex_index, normal_index;
+        vertex_iss >> vertex_index >> slash >> slash >> normal_index;
+        vertex_indices.push_back(vertex_index - 1);
+      }
+
+      faces.push_back(face_t(vertex_indices[0], vertex_indices[1], vertex_indices[2]));
+    }
+  }
+  return faces;
+}
+
+PQP_Model* create_obj_trimesh(const std::string& obj_fname)
+{
+  std::ifstream file(obj_fname);
+  auto vertices = create_obj_vertices(file);
+  file.clear();
+  file.seekg(0, std::ios::beg);
+  auto faces = create_obj_faces(file);
+
+  return new_pqp_model(vertices, faces);
+}
+
 }  // namespace
 
 geometry_t::geometry_t(geometry_type_t new_geom_type) : geom_type(new_geom_type), params_set(false)
@@ -342,8 +397,27 @@ void geometry_t::initialize_geometry(const std::vector<double>& geom_params)
     case geometry_type_t::CYLINDER:
       prx_assert(geom_params.size() == 2, "Trying to initialize a cylinder with " << geom_params.size() << " numbers.");
       break;
+    case geometry_type_t::OBJ:
+      prx_assert(false, "Initialize geometry should not be used for .obj files!");
+      break;
   };
   params = geom_params;
+}
+
+void geometry_t::initialize_obj_geometry(const std::string& obj_file)
+{
+  prx_assert(!params_set, "Trying to call initialize_geometry on the same geometry object twice.");
+  params_set = true;
+  switch (geom_type)
+  {
+    case geometry_type_t::OBJ:
+      prx_assert(std::filesystem::exists(obj_file), "OBJ file " << obj_file << " does not exist.");
+      break;
+    default:
+      prx_throw("Initialize obj geometry should not be used for primitive geometries!");
+      break;
+  }
+  obj_fname = obj_file;
 }
 
 void geometry_t::generate_collision_geometry()
@@ -370,6 +444,9 @@ void geometry_t::generate_collision_geometry()
       break;
     case geometry_type_t::CYLINDER:
       collision_geometry = std::shared_ptr<PQP_Model>(create_cylinder_trimesh(params[0], params[1]));
+      break;
+    case geometry_type_t::OBJ:
+      collision_geometry = std::shared_ptr<PQP_Model>(create_obj_trimesh(obj_fname));
       break;
   };
 }

@@ -1,6 +1,19 @@
 #include "prx/planning/planners/rrt.hpp"
 
 using namespace boost::python;
+namespace pyprx
+{
+namespace planning
+{
+namespace planners
+{
+namespace rrt
+{
+using prx::rrt_edge_t;
+using prx::rrt_node_t;
+using prx::rrt_query_t;
+using prx::rrt_specification_t;
+using prx::rrt_t;
 
 PRX_SETTER(rrt_specification_t, cost_function)
 PRX_GETTER(rrt_specification_t, cost_function)
@@ -60,21 +73,22 @@ PRX_GETTER(rrt_edge_t, edge_cost)
 PRX_FUNC_WRAPPER(rrt_t, rrt_query_t, link_and_setup_query)
 PRX_FUNC_WRAPPER(rrt_t, condition_check_t, resolve_query)
 
-void pyprx_planning_planners_rrt_py()
+void bindings()
 {
   class_<prx::rrt_node_t, bases<prx::tree_node_t>>("rrt_node", init<>())
-      .add_property("cost_to_come", &get_rrt_node_t_cost_to_come<double>, &get_rrt_node_t_cost_to_come<double>);
+      .add_property("cost_to_come", &get_rrt_node_t_cost_to_come<double>, &get_rrt_node_t_cost_to_come<double>)
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::rrt_edge_t, bases<prx::tree_edge_t>>("rrt_edge", init<>())
       .add_property("plan", &get_rrt_edge_t_plan<std::shared_ptr<prx::plan_t>>,
                     &set_rrt_edge_t_plan<std::shared_ptr<prx::plan_t>>)
       .add_property("traj", &get_rrt_edge_t_traj<std::shared_ptr<prx::trajectory_t>>,
                     &set_rrt_edge_t_traj<std::shared_ptr<prx::trajectory_t>>)
-      .add_property("edge_cost", &get_rrt_edge_t_edge_cost<double>, &set_rrt_edge_t_edge_cost<double>);
+      .add_property("edge_cost", &get_rrt_edge_t_edge_cost<double>, &set_rrt_edge_t_edge_cost<double>)
+      // Comment to force ; to the next one
+      ;
 
-  // class_<prx::rrt_specification_t, std::shared_ptr<prx::rrt_specification_t>,
-  // bases<prx::planner_specification_t>>("rrt_specification", init<std::shared_ptr<prx::system_group_t>,
-  // std::shared_ptr<prx::collision_group_t>>())
   class_<prx::rrt_specification_t, std::shared_ptr<prx::rrt_specification_t>, bases<prx::planner_specification_t>>(
       "rrt_specification", no_init)
       .def("__init__", make_constructor(&init_as_ptr<prx::rrt_specification_t, std::shared_ptr<prx::system_group_t>,
@@ -105,20 +119,16 @@ void pyprx_planning_planners_rrt_py()
                     &set_rrt_specification_t_min_control_steps<int>)
       .add_property("max_control_steps", &get_rrt_specification_t_max_control_steps<int>,
                     &set_rrt_specification_t_max_control_steps<int>)
-      // .add_property("", 			    &get_rrt_specification_t_<>, 									&set_rrt_specification_t_<>)
-      // .add_property("", 			    &get_rrt_specification_t_<>, 									&set_rrt_specification_t_<>)
-      // .add_property("", 			    &get_rrt_specification_t_<>, 									&set_rrt_specification_t_<>)
-      // .add_property("", 			    &get_rrt_specification_t_<>, 									&set_rrt_specification_t_<>)
-      // .add_property("", 			    &get_rrt_specification_t_<>, 									&set_rrt_specification_t_<>)
-      // .add_property("", 			    &get_rrt_specification_t_<>, 									&set_rrt_specification_t_<>)
-      // .add_property("", 			    &get_rrt_specification_t_<>, 									&set_rrt_specification_t_<>)
+      // Comment to force ; to the next one
       ;
 
   class_<prx::rrt_query_t, std::shared_ptr<prx::rrt_query_t>, bases<prx::planner_query_t>>("rrt_query", no_init)
       .def("__init__", make_constructor(&init_as_ptr<prx::rrt_query_t, prx::space_t*, prx::space_t*>,
                                         default_call_policies(), (arg("state_space"), arg("control_space"))))
       .add_property("goal_region_radius", &get_rrt_query_t_goal_region_radius<double>,
-                    &set_rrt_query_t_goal_region_radius<double>);
+                    &set_rrt_query_t_goal_region_radius<double>)
+      // Comment to force ; to the next one
+      ;
 
   class_<prx::rrt_t, std::shared_ptr<prx::rrt_t>, bases<prx::planner_t>>("rrt", no_init)
       .def("__init__",
@@ -127,5 +137,11 @@ void pyprx_planning_planners_rrt_py()
       .def("preprocess", &prx::rrt_t::preprocess)
       .def("link_and_setup_query", &rrt_t_link_and_setup_query_wrapper)
       .def("resolve_query", &rrt_t_resolve_query_wrapper)
-      .def("fulfill_query", &prx::rrt_t::fulfill_query);
+      .def("fulfill_query", &prx::rrt_t::fulfill_query)
+      // Comment to force ; to the next one
+      ;
 }
+}  // namespace rrt
+}  // namespace planners
+}  // namespace planning
+}  // namespace pyprx

@@ -4,6 +4,16 @@
 
 using namespace boost::python;
 
+namespace pyprx
+{
+namespace simulation
+{
+namespace plants
+{
+namespace types
+{
+namespace lti
+{
 struct lti_wrap : prx::lti_t, wrapper<prx::lti_t>
 {
 public:
@@ -28,7 +38,7 @@ public:
   }
 };
 
-void pyprx_simulation_plants_types_lti()
+void bindings()
 {
   class_<prx::lti_t, std::shared_ptr<prx::lti_t>, bases<prx::plant_t>, boost::noncopyable>("lti", no_init)
       .def("__init__",
@@ -49,3 +59,8 @@ void pyprx_simulation_plants_types_lti()
       .def("get_C", &prx::lti_t::get_C)
       .def("get_D", &prx::lti_t::get_D);
 }
+}  // namespace lti
+}  // namespace types
+}  // namespace plants
+}  // namespace simulation
+}  // namespace pyprx

@@ -5,9 +5,23 @@
 #include "pyprx/utilities/geometry/basic_geoms/sphere_py.hpp"
 
 using namespace boost::python;
-void pyprx_utilities_geometry_basic_geoms_py()
+
+namespace pyprx
 {
-  pyprx_utilities_geometry_basic_geoms_box_py();
-  pyprx_utilities_geometry_basic_geoms_cylinder_py();
-  pyprx_utilities_geometry_basic_geoms_sphere_py();
+namespace utilities
+{
+namespace geometry
+{
+namespace basic_geoms
+{
+void bindings()
+{
+  box::bindings();
+  cylinder::bindings();
+  sphere::bindings();
 }
+
+}  // namespace basic_geoms
+}  // namespace geometry
+}  // namespace utilities
+}  // namespace pyprx
