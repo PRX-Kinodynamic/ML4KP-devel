@@ -61,12 +61,6 @@ void plant_t::compute_control()
   // No controls for the regular abstract plant
 }
 
-void plant_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times,
-                                        std::vector<double>& ctrls)
-{
-  // the control should have already been set in the vehicle space
-}
-
 void plant_t::set_state_space_bounds(const std::vector<double>& lower, const std::vector<double>& upper)
 {
   state_space->set_bounds(lower, upper);

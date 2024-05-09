@@ -5,16 +5,18 @@
 namespace prx
 {
 
-class dirt_node_t : public rrt_node_t
+class dirt_replan_node_t : public rrt_node_t
 {
 public:
-  dirt_node_t() : rrt_node_t()
+  dirt_replan_node_t() : rrt_node_t()
   {
     bridge = false;
     is_blossom_expand_done = false;
     random_expand = false;
+    is_safe = false;
+    safety_time = 0;
   }
-  virtual ~dirt_node_t()
+  virtual ~dirt_replan_node_t()
   {
     for (auto eg : edge_generators)
     {
@@ -41,56 +43,63 @@ public:
   std::vector<std::pair<plan_t*, trajectory_t*>> edge_generators;
 
   std::vector<int> indices;
+
+  double checkpoint_time, safety_time;
+
+  bool is_safe;
 };
 
-class dirt_specification_t : public rrt_specification_t
+class dirt_replan_specification_t : public rrt_specification_t
 {
 public:
-  dirt_specification_t(std::shared_ptr<system_group_t> sg, std::shared_ptr<collision_group_t> cg)
+  dirt_replan_specification_t(std::shared_ptr<system_group_t> sg, std::shared_ptr<collision_group_t> cg)
     : rrt_specification_t(sg, cg)
   {
     h = [this](const space_point_t& s, const space_point_t& s2) {
       return default_heuristic_function(s, s2, distance_function);
     };
-    obstacle_distance_function = [cg, this](const space_point_t& s) {
-      return default_obstacle_distance_function(s, state_space, cg);
-    };
     blossom_number = 5;
     use_pruning = true;
+    use_contingency = true;
+    planning_cycle_duration = 1.0;
   }
-  virtual ~dirt_specification_t()
+  virtual ~dirt_replan_specification_t()
   {
   }
 
   int blossom_number;
+  double planning_cycle_duration;
 
-  bool use_pruning;
-
-  double replanning_cycle;
-  int order;
-
+  bool use_pruning, use_contingency;
   heuristic_function_t h;
-  obstacle_distance_function_t obstacle_distance_function;
 };
 
-class dirt_query_t : public rrt_query_t
+class dirt_replan_query_t : public rrt_query_t
 {
 public:
-  dirt_query_t(space_t* state_space, space_t* control_space) : rrt_query_t(state_space, control_space)
+  dirt_replan_query_t(space_t* state_space, space_t* control_space) : rrt_query_t(state_space, control_space)
+  {
+    start_time = 0.0;
+  }
+  virtual ~dirt_replan_query_t()
   {
   }
-  virtual ~dirt_query_t()
-  {
-  }
+
+  double start_time;
 };
 
-class dirt_t : public rrt_t
+class dirt_replan_t : public rrt_t
 {
 public:
-  dirt_t(const std::string& new_name);
-  virtual ~dirt_t();
+  dirt_replan_t(const std::string& new_name);
+  virtual ~dirt_replan_t();
 
   std::vector<long unsigned> random_edges_counter, blossom_edges_counter;
+
+  node_index_t get_best_node_index()
+  {
+    return best_node;
+  }
 
 protected:
   virtual void update_goal(node_index_t node_index) override;
@@ -99,32 +108,39 @@ protected:
   virtual bool _preprocess() override;
   virtual bool _link_and_setup_query(planner_query_t* query) override;
   virtual void _resolve_query(condition_check_t* condition) override;
+  virtual void _fulfill_query() override;
   virtual void _reset() override;
 
   virtual std::vector<double> get_statistics() override;
 
-  dirt_specification_t* dirt_spec;
-  dirt_query_t* dirt_query;
+  dirt_replan_specification_t* dirt_spec;
+  dirt_replan_query_t* dirt_replan_query;
+
+  trajectory_t* stopping_traj;
+  plan_t* stopping_plan;
+  space_point_t last_safe_state;
 
   virtual void bnb(node_index_t v, double cost_bound, bool delete_flag = false) override;
 
 private:
-  int replanning_iteration;
-  double ri_step;  // Time during a replanning cycle
-
   heuristic_function_t h;
   expand_t expand;
+
+  double planning_cycle_duration;
+  double multiplier;
+  node_index_t best_node;
+  double best_cost;
 
   double max_radius;
   bool child_extension;
   node_index_t previous_child;
 
-  void add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_node_t* closest_node,
-                        std::vector<dirt_node_t*> dir_updates, double new_node_dir_radius);
+  void add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_replan_node_t* closest_node,
+                        std::vector<dirt_replan_node_t*> dir_updates, double new_node_dir_radius);
 
-  dirt_node_t* get_vertex(node_index_t v) const
+  dirt_replan_node_t* get_vertex(node_index_t v) const
   {
-    return tree.get_vertex_as<dirt_node_t>(v).get();
+    return tree.get_vertex_as<dirt_replan_node_t>(v).get();
   }
 
   bool is_leaf(node_index_t v)
