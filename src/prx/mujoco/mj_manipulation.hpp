@@ -11,14 +11,16 @@
 
 namespace prx{
 
+typedef Eigen::Matrix<double, 6, 7> jacobian_t;
+
 void jacobian_steering(mjModel* m, mjData* d, trajectory_t& traj, Eigen::Vector<double, 7> goal_pose, int body_id, std::vector<int> qpos_inds);
 
-void compute_manipulator_jacobian(mjModel* m, mjData* d, Eigen::Matrix<double, 6, 7>& jac, double* jacp, double* jacr, int body_id, std::vector<int> qpos_inds);
+void compute_jacobian(mjModel* m, mjData* d, jacobian_t& jac, double* jacp, double* jacr, int body_id, std::vector<int> qpos_inds);
 
-std::vector<double> forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
-const std::string& query_link_name, const std::vector<double>& q);
+Eigen::VectorXd  forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
+const std::string& query_link_name, const Eigen::VectorXd & q);
 
-std::vector<double> forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
+Eigen::VectorXd  forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
 const std::string& query_link_name, const space_point_t& q);
 
 }

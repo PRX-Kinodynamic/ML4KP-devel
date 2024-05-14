@@ -2,7 +2,10 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/mujoco/mj_simulator.hpp"
 #include "prx/planning/planners/dirt.hpp"
+
 #include "prx/mujoco/mj_utils.hpp"
+#include "prx/mujoco/mj_manipulation.hpp"
+
 #include "prx/utilities/heuristics/roadmap.hpp"
 
 #include <boost/filesystem.hpp>
@@ -41,7 +44,9 @@ int main(int argc, char* argv[])
   std::vector<std::string> joint_names = params["joint_names"].as<std::vector<std::string>>();
   auto qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
   std::string hand = params["forward_name"].as<std::string>();
-  auto pose = forward_kinematics(sim->m, sim->d, qpos_inds, hand, params["test_config"].as<std::vector<double>>());
+
+  Eigen::Vector<double, 7> q_test(params["test_config"].as<std::vector<double>>().data());
+  auto pose = forward_kinematics(sim->m, sim->d, qpos_inds, hand, q_test);
   
   for (auto val : pose){
     std::cout << val << "\t";

@@ -1,6 +1,7 @@
 // #ifndef TORCH_NOT_BUILT
 #include "prx/utilities/defs.hpp"
 #include "prx/mujoco/mj_simulator.hpp"
+#include "prx/mujoco/mj_manipulation.hpp"
 #include "prx/planning/planners/dirt.hpp"
 
 #include <boost/filesystem.hpp>

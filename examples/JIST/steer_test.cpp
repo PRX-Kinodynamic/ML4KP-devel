@@ -1,8 +1,10 @@
 // #ifndef TORCH_NOT_BUILT
 #include "prx/utilities/defs.hpp"
+
 #include "prx/mujoco/mj_utils.hpp"
 #include "prx/mujoco/mj_manipulation.hpp"
 #include "prx/mujoco/mj_simulator.hpp"
+
 #include "prx/planning/planners/rrt_star.hpp"
 
 #include <boost/filesystem.hpp>
@@ -46,7 +48,7 @@ int main(int argc, char* argv[])
     std::cout << "SIZE: " << start_state_vec.size() << std::endl;
 
     Eigen::Vector<double, 7> q_init = start_state_vec(arm_qpos_inds);
-    Eigen::Vector<double, 7> q_goal = params["goal_config"].as<vector_t>();
+    // Eigen::Vector<double, 7> q_goal = params["goal_config"].as<vector_t>();
 
     int body = mj_name2id(sim->m, mjOBJ_BODY, "hand");
 
@@ -84,7 +86,7 @@ int main(int argc, char* argv[])
     Eigen::Matrix<double, 6, 7> jac{};
     double temp_jacp[3 * sim->m->nv]{};
     double temp_jacr[3 * sim->m->nv]{};    
-    compute_manipulator_jacobian(sim->m, sim->d, jac, temp_jacp, temp_jacr, body, arm_qpos_inds);
+    compute_jacobian(sim->m, sim->d, jac, temp_jacp, temp_jacr, body, arm_qpos_inds);
 
     
     std::cout << jac << std::endl;

@@ -2,7 +2,10 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/mujoco/mj_simulator.hpp"
 #include "prx/planning/planners/dirt.hpp"
+
 #include "prx/mujoco/mj_utils.hpp"
+#include "prx/mujoco/mj_manipulation.hpp"
+
 #include "prx/utilities/heuristics/pose_utils.hpp"
 #include "prx/utilities/heuristics/roadmap.hpp"
 
@@ -77,8 +80,8 @@ int main(int argc, char* argv[])
     auto qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
 
     std::string end_effector = params["forward_name"].as<std::string>();
-
-    std::vector<double> q = params["goal_config"].as<std::vector<double>>();
+    
+    Eigen::Vector<double, 7> q(params["goal_config"].as<std::vector<double>>().data());
     auto grasp_cart_quat = forward_kinematics(sim->m, sim->d, qpos_inds, end_effector, q);
 
     vector_t grasp_pos{grasp_cart_quat[0], grasp_cart_quat[1], grasp_cart_quat[2]};
@@ -110,7 +113,7 @@ int main(int argc, char* argv[])
     sim->set_video_name(params["video_name"].as<std::string>());
 
     auto hand_inds = get_body_qpos_indices(ee_sim->m, hand);
-    std::vector<double> pregrasp{grasp_cart_quat};
+    Eigen::VectorXd pregrasp{grasp_cart_quat};
 
     for(int i = 0; i < approach_pos.size(); i++){
         pregrasp[i] = approach_pos[i];

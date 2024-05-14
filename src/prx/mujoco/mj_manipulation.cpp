@@ -2,15 +2,47 @@
 
 namespace prx
 {
+    void jacobian_steering(mjModel* m, mjData* d, trajectory_t& traj, Eigen::Vector<double, 7> goal_pose, Eigen::Vector<double, 7> q_init, 
+    int body_id, std::vector<int> qpos_inds){
+        prx_assert(goal_pose.size() == q_init.size(), "Size mismatch between goal_pose and q_init")
 
-    void jacobian_steering(mjModel* m, mjData* d, trajectory_t& traj, Eigen::Vector<double, 7> goal_pose, 
-                                int body_id, std::vector<int> qpos_inds){
-        auto curr_pose = forward_kinematics()
+        std::string query_link_name = mj_id2name(m, mjOBJ_BODY, body_id);                  
+        Eigen::Vector<double, 7> curr_pose = forward_kinematics(m, d, qpos_inds, query_link_name, q_init);
+
+        vector_t dx = goal_pose({0, 1, 2}) - curr_pose({0, 1, 2});
+
+        double curr_quat_conj[4]{};
+        double curr_quat[4] {curr_pose[3],curr_pose[4],curr_pose[5],curr_pose[6]};
+        mju_negQuat(curr_quat_conj, curr_quat);
+
+        double goal_quat[4] = {goal_pose[3],goal_pose[4],goal_pose[5],goal_pose[6]};
+
+        double error_quat[4]{};
+        mju_mulQuat(error_quat, goal_quat, curr_quat_conj);
+
+        double dtheta[3]{};
+        mju_quat2Vel(dtheta, error_quat, 1.0);
+
+        Eigen::Vector<double, 6> twist{};// = dx + vector_t{dtheta};
+        twist({0, 1, 2}) = dx;
+        twist({3, 4, 5}) = vector_t{dtheta};
+
+        jacobian_t jac{};
+        double jacp[m->nq * 3]{};
+        double jacr[m->nq * 3]{};
+
+        compute_jacobian(m, d, jac, jacp, jacr, body_id, qpos_inds);
+
+        
+        //compute_jacobian(m, d, )
+        
     }
+
+    
 
     // Compute Jacobian
 
-    void compute_manipulator_jacobian(mjModel* m, mjData* d, Eigen::Matrix<double, 6, 7>& jac, 
+    void compute_jacobian(mjModel* m, mjData* d, Eigen::Matrix<double, 6, 7>& jac, 
                                         double* jacp, double* jacr, int body_id, std::vector<int> qpos_inds){
         prx_assert(jac.rows() == 6, "Incorrect number of rows in Jacobian.");
         prx_assert(jac.cols() == qpos_inds.size(), "Mismatch between Jacobian columns and inds size: " << jac.cols() << ", " << qpos_inds.size());
@@ -48,64 +80,64 @@ namespace prx
     }
 
 
-    std::vector<double> forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
-    const std::string& query_link_name, const std::vector<double>& q)
+    Eigen::VectorXd forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
+    const std::string& query_link_name, const Eigen::VectorXd& q)
     {
-    prx_assert(qpos_inds.size() == q.size(), "Incorrect configuration length provided: " + 
-    std::to_string(qpos_inds.size()) + ", " + std::to_string(q.size()) + "\n");
-    
-    // Save current joint qpos values
-    double curr_qpos_vals[qpos_inds.size()] = {};
-    for(int i = 0; i < qpos_inds.size(); i++){
-        curr_qpos_vals[i] = d->qpos[qpos_inds[i]];
-        // std::cout << curr_qpos_vals[i] << std::endl;
-    }
-
-    // Set joint qpos values to those specified by q
-    for(int i = 0; i < qpos_inds.size(); i++){
-        d->qpos[qpos_inds[i]] = q[i];
-    }
-
-    // Call MuJoCo's forward kinematics function 
-    // This will output the desired pos, quat values in xpos, xquat
-    mj_kinematics(m, d);
-
-    auto body_inds = get_body_indices(m, query_link_name);
-
-    // Retrieve tip link position
-    std::vector<double> body_pose(body_inds.size());
-    for(int i = 0; i < body_inds.size(); i++){
-        if (i <= 2){
-        body_pose[i] = d->xpos[body_inds[i]];
+        prx_assert(qpos_inds.size() == q.size(), "Incorrect configuration length provided: " + 
+        std::to_string(qpos_inds.size()) + ", " + std::to_string(q.size()) + "\n");
+        
+        // Save current joint qpos values
+        double curr_qpos_vals[qpos_inds.size()] = {};
+        for(int i = 0; i < qpos_inds.size(); i++){
+            curr_qpos_vals[i] = d->qpos[qpos_inds[i]];
+            // std::cout << curr_qpos_vals[i] << std::endl;
         }
-        else{
-        body_pose[i] = d->xquat[body_inds[i]];
+
+        // Set joint qpos values to those specified by q
+        for(int i = 0; i < qpos_inds.size(); i++){
+            d->qpos[qpos_inds[i]] = q[i];
         }
+
+        // Call MuJoCo's forward kinematics function 
+        // This will output the desired pos, quat values in xpos, xquat
+        mj_kinematics(m, d);
+
+        auto body_inds = get_body_indices(m, query_link_name);
+
+        // Retrieve tip link position
+        Eigen::VectorXd body_pose(body_inds.size());
+        for(int i = 0; i < body_inds.size(); i++){
+            if (i <= 2){
+            body_pose[i] = d->xpos[body_inds[i]];
+            }
+            else{
+            body_pose[i] = d->xquat[body_inds[i]];
+            }
+        }
+
+        // Reset joint qpos values to the initial values
+        for(int i = 0; i < qpos_inds.size(); i++){
+            d->qpos[qpos_inds[i]] = curr_qpos_vals[i];
+        }
+
+        // Call mj_kinematics to reset variables
+        mj_kinematics(m, d); // is this necessary?
+
+        return body_pose;
     }
 
-    // Reset joint qpos values to the initial values
-    for(int i = 0; i < qpos_inds.size(); i++){
-        d->qpos[qpos_inds[i]] = curr_qpos_vals[i];
-    }
-
-    // Call mj_kinematics to reset variables
-    mj_kinematics(m, d); // is this necessary?
-
-    return body_pose;
-    }
-
-    std::vector<double> forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
+    Eigen::VectorXd forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
     const std::string& query_link_name, const space_point_t& q)
     {
-    // prx_assert(qpos_inds.size() == q->get_dim(), "Incorrect configuration length provided.")=
-    
-    std::vector<double> q_vec(qpos_inds.size());
+        // prx_assert(qpos_inds.size() == q->get_dim(), "Incorrect configuration length provided.")=
+        
+        Eigen::VectorXd q_vec(qpos_inds.size());
 
-    for (int i  = 0; i < q_vec.size(); i++){
-        q_vec[i] = q->at(qpos_inds[i]);
-    }
+        for (int i  = 0; i < q_vec.size(); i++){
+            q_vec[i] = q->at(qpos_inds[i]);
+        }
 
-    return forward_kinematics(m, d, qpos_inds, query_link_name, q_vec);
+        return forward_kinematics(m, d, qpos_inds, query_link_name, q_vec);
     }
 
 

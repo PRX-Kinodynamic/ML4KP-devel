@@ -3,6 +3,7 @@
 #include "prx/mujoco/mj_simulator.hpp"
 #include "prx/planning/planners/dirt.hpp"
 #include "prx/mujoco/mj_utils.hpp"
+#include "prx/mujoco/mj_manipulation.hpp"
 #include "prx/utilities/heuristics/pose_utils.hpp"
 #include "prx/utilities/heuristics/roadmap.hpp"
 
@@ -78,7 +79,7 @@ int main(int argc, char* argv[])
 
   roadmap_spec.state_to_config = [&](const space_point_t& state, space_point_t& config){
     // note: this part assumes that the joint angles in the state are at the beginning
-    std::vector<double> state_vec(config->get_dim()); 
+    Eigen::VectorXd state_vec(config->get_dim()); 
     for (int i = 0; i < state_vec.size(); i++){
       state_vec[i] = state->at(i);
     }
