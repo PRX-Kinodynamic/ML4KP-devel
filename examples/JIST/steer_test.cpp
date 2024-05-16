@@ -44,52 +44,29 @@ int main(int argc, char* argv[])
     ss->copy_to(start_state);
 
     auto start_state_vec = Vec(start_state);
-    std::cout << "ARM CONFIG: " << start_state_vec(arm_qpos_inds) << typeid(start_state_vec(arm_qpos_inds)).name() << std::endl;
-    std::cout << "SIZE: " << start_state_vec.size() << std::endl;
+    // std::cout << "ARM CONFIG: " << start_state_vec(arm_qpos_inds) << typeid(start_state_vec(arm_qpos_inds)).name() << std::endl;
+    // std::cout << "SIZE: " << start_state_vec.size() << std::endl;
+
+    std::string hand = params["forward_name"].as<std::string>();
 
     Eigen::Vector<double, 7> q_init = start_state_vec(arm_qpos_inds);
-    // Eigen::Vector<double, 7> q_goal = params["goal_config"].as<vector_t>();
+    Eigen::Vector<double, 7> q_goal(params["goal_config"].as<std::vector<double>>().data());
 
+    auto x_goal = forward_kinematics(sim->m, sim->d, arm_qpos_inds, hand, q_goal);
     int body = mj_name2id(sim->m, mjOBJ_BODY, "hand");
 
     double jacp[3 * sim->m->nv] = {0};
     double jacr[3 * sim->m->nv] = {0};
-
-    /*
-    std::cout << 3 * sim->m->nv << std::endl;
-    // double jacr[28] = {0};
-    mj_jacBody(sim->m, sim->d, jacp, jacr, body);
-
-    for (int i = 0; i < 3; i++){
-      for(int j = 0; j < sim->m->nv; j++){
-        std::cout << i * 7 + j << ": " << jacp[i * 7 + j] << "\n";
-      }
-      std::cout << std::endl;
-    }
-
-    for (int i = 0; i < 3; i++){
-      for(int j = 0; j < sim->m->nv; j++){
-        std::cout << i * 7 + j << ": " << jacr[i * 7 + j] << "\n";
-      }
-      std::cout << std::endl;
-    }
-
-    for(int i = 0; i < sim->m->nv; i++){
-      int bodyid = sim->m->dof_bodyid[i];
-      if(bodyid != -1){
-        std::cout << "DOF " << i << ": " << mj_id2name(sim->m, mjOBJ_BODY, bodyid) << std::endl;
-      }
-    }
-
-    */
 
     Eigen::Matrix<double, 6, 7> jac{};
     double temp_jacp[3 * sim->m->nv]{};
     double temp_jacr[3 * sim->m->nv]{};    
     compute_jacobian(sim->m, sim->d, jac, temp_jacp, temp_jacr, body, arm_qpos_inds);
 
+    trajectory_t traj{ss};
+    jacobian_steering(sim->m, sim->d, traj, x_goal, body, arm_qpos_inds);
     
-    std::cout << jac << std::endl;
+    // std::cout << jac << std::endl;
 
     std::cout << "End of program!" << std::endl;
 }

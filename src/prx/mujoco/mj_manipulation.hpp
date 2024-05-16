@@ -12,15 +12,17 @@
 namespace prx{
 
 typedef Eigen::Matrix<double, 6, 7> jacobian_t;
+typedef Eigen::Vector<double, 7> pose_t;
+typedef Eigen::VectorXd config_t;
 
-void jacobian_steering(mjModel* m, mjData* d, trajectory_t& traj, Eigen::Vector<double, 7> goal_pose, int body_id, std::vector<int> qpos_inds);
+void jacobian_steering(mjModel* m, mjData* d, trajectory_t& traj, pose_t goal_pose, int body_id, std::vector<int>& qpos_inds, const config_t& q_init=Eigen::VectorXd());
 
-void compute_jacobian(mjModel* m, mjData* d, jacobian_t& jac, double* jacp, double* jacr, int body_id, std::vector<int> qpos_inds);
+void compute_jacobian(mjModel* m, mjData* d, jacobian_t& jac, double* jacp, double* jacr, int body_id, std::vector<int>& qpos_inds);
 
-Eigen::VectorXd  forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
+Eigen::VectorXd forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
 const std::string& query_link_name, const Eigen::VectorXd & q);
 
-Eigen::VectorXd  forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
+Eigen::VectorXd forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
 const std::string& query_link_name, const space_point_t& q);
 
 }

@@ -2,40 +2,78 @@
 
 namespace prx
 {
-    void jacobian_steering(mjModel* m, mjData* d, trajectory_t& traj, Eigen::Vector<double, 7> goal_pose, Eigen::Vector<double, 7> q_init, 
-    int body_id, std::vector<int> qpos_inds){
-        prx_assert(goal_pose.size() == q_init.size(), "Size mismatch between goal_pose and q_init")
+    const double damping = 1e-4;
+    const double max_jnt_vel = PRX_PI / 4;
+    const float integration_dt = 0.1;
 
-        std::string query_link_name = mj_id2name(m, mjOBJ_BODY, body_id);                  
-        Eigen::Vector<double, 7> curr_pose = forward_kinematics(m, d, qpos_inds, query_link_name, q_init);
+    void jacobian_steering(mjModel* m, mjData* d, trajectory_t& traj, pose_t goal_pose, int body_id, std::vector<int>& qpos_inds, const config_t& q_init){
 
-        vector_t dx = goal_pose({0, 1, 2}) - curr_pose({0, 1, 2});
+        int nq = qpos_inds.size();
 
+        std::cout << "JACOBIAN STEERING" << std::endl;
+
+        std::string query_link_name = mj_id2name(m, mjOBJ_BODY, body_id);
+
+        double goal_quat[4]{goal_pose(3, 6)};
+
+        double curr_quat[4]{};
         double curr_quat_conj[4]{};
-        double curr_quat[4] {curr_pose[3],curr_pose[4],curr_pose[5],curr_pose[6]};
-        mju_negQuat(curr_quat_conj, curr_quat);
-
-        double goal_quat[4] = {goal_pose[3],goal_pose[4],goal_pose[5],goal_pose[6]};
 
         double error_quat[4]{};
-        mju_mulQuat(error_quat, goal_quat, curr_quat_conj);
-
+        vector_t dx{};
         double dtheta[3]{};
-        mju_quat2Vel(dtheta, error_quat, 1.0);
 
-        Eigen::Vector<double, 6> twist{};// = dx + vector_t{dtheta};
-        twist({0, 1, 2}) = dx;
-        twist({3, 4, 5}) = vector_t{dtheta};
-
+        Eigen::Vector<double, 6> twist{};
         jacobian_t jac{};
         double jacp[m->nq * 3]{};
         double jacr[m->nq * 3]{};
 
+        config_t q_curr(nq);
+        if (q_init.size() > 0){
+            q_curr = q_init;
+        }
+        else{
+            // HARD-CODED
+            prx_warn("No initial configuration provided. Using current simulation state.");
+            std::copy(d->qpos, d->qpos+nq, q_curr.data());
+        }
+        
+        // ITERATION STARTS HERE
+        Eigen::Vector<double, 7> curr_pose = forward_kinematics(m, d, qpos_inds, query_link_name, q_curr);
+
+        dx = goal_pose({0, 1, 2}) - curr_pose({0, 1, 2});
+
+        curr_quat[0] = curr_pose(3, 6);
+        mju_negQuat(curr_quat_conj, curr_quat);
+
+        mju_mulQuat(error_quat, goal_quat, curr_quat_conj);
+
+        mju_quat2Vel(dtheta, error_quat, 1.0);
+
+        twist({0, 1, 2}) = dx;
+        twist({3, 4, 5}) = vector_t{dtheta};
+
         compute_jacobian(m, d, jac, jacp, jacr, body_id, qpos_inds);
 
-        
-        //compute_jacobian(m, d, )
-        
+        auto damp = damping * Eigen::MatrixXd::Identity(qpos_inds.size(), qpos_inds.size());
+
+        std::cout << "J# dx" << std::endl;
+
+        auto jac_pinv_damped = (jac.transpose() * jac + damp).inverse() * jac.transpose();
+        std::cout << (jac_pinv_damped * twist).transpose() << std::endl;
+
+        Eigen::VectorXd dq = jac_pinv_damped * twist;
+
+        double dq_max = dq.cwiseAbs().maxCoeff();
+        if (dq_max > max_jnt_vel){
+            dq *= max_jnt_vel / dq_max;
+        }
+        // dq += (Eigen::MatrixXd::Identity(qpos_inds.size(), qpos_inds.size()) - jac_pinv_damped * jac) * 0;
+
+        // double 
+        std::cout << *m->jnt_range << m->jnt_range[1] << std::endl;
+        std::cout << dq.maxCoeff() << std::endl;
+        // d->qpos->copy()
     }
 
     
@@ -43,7 +81,7 @@ namespace prx
     // Compute Jacobian
 
     void compute_jacobian(mjModel* m, mjData* d, Eigen::Matrix<double, 6, 7>& jac, 
-                                        double* jacp, double* jacr, int body_id, std::vector<int> qpos_inds){
+                                        double* jacp, double* jacr, int body_id, std::vector<int>& qpos_inds){
         prx_assert(jac.rows() == 6, "Incorrect number of rows in Jacobian.");
         prx_assert(jac.cols() == qpos_inds.size(), "Mismatch between Jacobian columns and inds size: " << jac.cols() << ", " << qpos_inds.size());
 
@@ -78,7 +116,6 @@ namespace prx
             }
 
     }
-
 
     Eigen::VectorXd forward_kinematics(mjModel* m, mjData* d, const std::vector<int>& qpos_inds, 
     const std::string& query_link_name, const Eigen::VectorXd& q)
