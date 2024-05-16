@@ -38,7 +38,8 @@ int main(int argc, char* argv[])
     }
 
     std::vector<std::string> joint_names = params["joint_names"].as<std::vector<std::string>>();
-    auto arm_qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
+    auto arm_qpos_inds = get_indices(sim->m, mjOBJ_JOINT, joint_names);
+    auto arm_ctrl_inds = get_indices(sim->m, mjOBJ_ACTUATOR, joint_names);
 
     auto start_state = ss->make_point();
     ss->copy_to(start_state);
@@ -52,7 +53,9 @@ int main(int argc, char* argv[])
     Eigen::Vector<double, 7> q_init = start_state_vec(arm_qpos_inds);
     Eigen::Vector<double, 7> q_goal(params["goal_config"].as<std::vector<double>>().data());
 
-    auto x_goal = forward_kinematics(sim->m, sim->d, arm_qpos_inds, hand, q_goal);
+    Eigen::Vector<double, 7> q_test(params["test_config"].as<std::vector<double>>().data());
+
+    auto x_goal = forward_kinematics(sim->m, sim->d, arm_qpos_inds, hand, q_test);
     int body = mj_name2id(sim->m, mjOBJ_BODY, "hand");
 
     double jacp[3 * sim->m->nv] = {0};

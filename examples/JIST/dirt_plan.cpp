@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
   };
 
   std::vector<std::string> joint_names = params["joint_names"].as<std::vector<std::string>>();
-  auto qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
+  auto qpos_inds = get_indices(sim->m, mjOBJ_JOINT, joint_names);
   std::vector<std::string> ee_names = params["end_effector"].as<std::vector<std::string>>();
 
   dirt_spec.distance_function = [&](const space_point_t& a, const space_point_t& b) {

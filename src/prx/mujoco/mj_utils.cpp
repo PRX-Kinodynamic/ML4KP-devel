@@ -5,32 +5,40 @@ namespace prx
 
 // Indices for accessing qpos, xpos, xquat
 
-std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::string& name)
+std::vector<int> get_indices(mjModel* m, const mjtObj& obj, const std::string& name)
 {
-  prx_assert(obj == mjOBJ_BODY || obj == mjOBJ_JOINT, "Invalud mjtObj type. Only mjOBJ_BODY, mjOBJ_JOINT are currently accepted");
-  std::vector<int> qpos_inds{};
+  prx_assert(obj == mjOBJ_BODY || obj == mjOBJ_JOINT || obj == mjOBJ_ACTUATOR, 
+  "Invalud mjtObj type. Only mjOBJ_BODY, mjOBJ_JOINT are currently accepted");  
+  std::vector<int> inds{};
   
   if (obj == mjOBJ_BODY){
-    qpos_inds = get_body_qpos_indices(m, name);
+    inds = get_body_qpos_indices(m, name);
   }
   else if (obj == mjOBJ_JOINT){
-    qpos_inds = get_joint_qpos_indices(m, name);
+    inds = get_joint_qpos_indices(m, name);
+  }
+  else if (obj == mjOBJ_ACTUATOR){
+    inds = {mj_name2id(m, obj, name.c_str())};
   }
 
-  return qpos_inds;
+  return inds;
 }
 
-std::vector<int> get_qpos_indices(mjModel* m, const mjtObj& obj, const std::vector<std::string>& names)
+std::vector<int> get_indices(mjModel* m, const mjtObj& obj, const std::vector<std::string>& names)
 {
-  prx_assert(obj == mjOBJ_BODY || obj == mjOBJ_JOINT, "Invalud mjtObj type. Only mjOBJ_BODY, mjOBJ_JOINT are currently accepted");
-  std::vector<int> qpos_inds{};
+  // mjOBJ_ACTUATOR needs to be verified
+
+  prx_assert(obj == mjOBJ_BODY || obj == mjOBJ_JOINT || obj == mjOBJ_ACTUATOR, 
+  "Invalud mjtObj type. Only mjOBJ_BODY, mjOBJ_JOINT are currently accepted");
+
+  std::vector<int> inds{};
   
   std::vector<int> temp_inds{};
   for(auto name : names){
-    temp_inds = get_qpos_indices(m, obj, name);
-    qpos_inds.insert(qpos_inds.end(), temp_inds.begin(), temp_inds.end());
+    temp_inds = get_indices(m, obj, name);
+    inds.insert(inds.end(), temp_inds.begin(), temp_inds.end());
   }
-  return qpos_inds;
+  return inds;
 }
 
 std::vector<int> get_joint_qpos_indices(mjModel* m, const int jnt_id){

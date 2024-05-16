@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 
   // mj_kinematics(sim->m, sim->d);
   std::vector<std::string> joint_names = params["joint_names"].as<std::vector<std::string>>();
-  auto qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
+  auto qpos_inds = get_indices(sim->m, mjOBJ_JOINT, joint_names);
   std::string hand = params["end_effector"].as<std::string>();
   // auto test = ;
   Eigen::Vector<double, 7> q_test(params["test_config"].as<std::vector<double>>().data());

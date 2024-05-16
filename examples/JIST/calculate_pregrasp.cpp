@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     }
 
     std::vector<std::string> joint_names = params["joint_names"].as<std::vector<std::string>>();
-    auto arm_qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
+    auto arm_qpos_inds = get_indices(sim->m, mjOBJ_JOINT, joint_names);
 
     std::string hand = params["forward_name"].as<std::string>();
     std::vector<std::string> ee_names = params["end_effector"].as<std::vector<std::string>>();
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
         return dist;
     };
 
-    auto qpos_inds = get_qpos_indices(sim->m, mjOBJ_JOINT, joint_names);
+    auto qpos_inds = get_indices(sim->m, mjOBJ_JOINT, joint_names);
 
     std::string end_effector = params["forward_name"].as<std::string>();
     

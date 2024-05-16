@@ -6,6 +6,10 @@ namespace prx
     const double max_jnt_vel = PRX_PI / 4;
     const float integration_dt = 0.1;
 
+    // Currently hard coded
+    const std::vector<int> jnt_ids{0, 1, 2, 3, 4, 5, 6};
+    const std::vector<int> ctrl_inds{0, 1, 2, 3, 4, 5, 6};
+
     void jacobian_steering(mjModel* m, mjData* d, trajectory_t& traj, pose_t goal_pose, int body_id, std::vector<int>& qpos_inds, const config_t& q_init){
 
         int nq = qpos_inds.size();
@@ -31,6 +35,7 @@ namespace prx
         config_t q_curr(nq);
         if (q_init.size() > 0){
             q_curr = q_init;
+            // TODO: set sim configuration to provided initial configuration
         }
         else{
             // HARD-CODED
@@ -38,42 +43,74 @@ namespace prx
             std::copy(d->qpos, d->qpos+nq, q_curr.data());
         }
         
-        // ITERATION STARTS HERE
-        Eigen::Vector<double, 7> curr_pose = forward_kinematics(m, d, qpos_inds, query_link_name, q_curr);
 
-        dx = goal_pose({0, 1, 2}) - curr_pose({0, 1, 2});
+        for(int i = 0; i < 100000; i++){
+            // ITERATION STARTS HERE
+            Eigen::Vector<double, 7> curr_pose = forward_kinematics(m, d, qpos_inds, query_link_name, q_curr);
 
-        curr_quat[0] = curr_pose(3, 6);
-        mju_negQuat(curr_quat_conj, curr_quat);
+            dx = goal_pose({0, 1, 2}) - curr_pose({0, 1, 2});
 
-        mju_mulQuat(error_quat, goal_quat, curr_quat_conj);
+            curr_quat[0] = curr_pose(3, 6);
+            mju_negQuat(curr_quat_conj, curr_quat);
 
-        mju_quat2Vel(dtheta, error_quat, 1.0);
+            mju_mulQuat(error_quat, goal_quat, curr_quat_conj);
 
-        twist({0, 1, 2}) = dx;
-        twist({3, 4, 5}) = vector_t{dtheta};
+            mju_quat2Vel(dtheta, error_quat, 1.0);
 
-        compute_jacobian(m, d, jac, jacp, jacr, body_id, qpos_inds);
+            twist({0, 1, 2}) = dx;
+            twist({3, 4, 5}) = vector_t{dtheta};
 
-        auto damp = damping * Eigen::MatrixXd::Identity(qpos_inds.size(), qpos_inds.size());
+            compute_jacobian(m, d, jac, jacp, jacr, body_id, qpos_inds);
 
-        std::cout << "J# dx" << std::endl;
+            auto damp = damping * Eigen::MatrixXd::Identity(qpos_inds.size(), qpos_inds.size());
 
-        auto jac_pinv_damped = (jac.transpose() * jac + damp).inverse() * jac.transpose();
-        std::cout << (jac_pinv_damped * twist).transpose() << std::endl;
+            // std::cout << "J# dx" << std::endl;
 
-        Eigen::VectorXd dq = jac_pinv_damped * twist;
+            auto jac_pinv_damped = (jac.transpose() * jac + damp).inverse() * jac.transpose();
+            // std::cout << (jac_pinv_damped * twist).transpose() << std::endl;
 
-        double dq_max = dq.cwiseAbs().maxCoeff();
-        if (dq_max > max_jnt_vel){
-            dq *= max_jnt_vel / dq_max;
+            Eigen::VectorXd dq = jac_pinv_damped * twist;
+
+            double dq_max = dq.cwiseAbs().maxCoeff();
+            if (dq_max > max_jnt_vel){
+                dq *= max_jnt_vel / dq_max;
+            }
+
+            double qpos[m->nq]{};
+            std::copy(d->qpos, d->qpos+m->nq, qpos);
+
+            /*
+            for(int i = 0; i < m->nq; i++){
+                std::cout << i << " " << *(qpos+i) << " ";
+                std::cout << d->qpos[i] << std::endl;
+            }
+            std::cout << std::endl;*/
+
+            mj_integratePos(m, qpos, dq.data(), integration_dt);
+
+            for (int i = 0; i < nq; i++){
+                qpos[qpos_inds[i]] = std::max(m->jnt_range[2*jnt_ids[i]], 
+                std::min(m->jnt_range[2*jnt_ids[i]+1], qpos[qpos_inds[i]]));
+
+                d->ctrl[ctrl_inds[i]] = qpos[qpos_inds[i]];
+            }
+            mj_step(m, d);
+
+            std::copy(d->qpos, d->qpos+nq, q_curr.data());
+
+            std::cout << "q: " << q_curr.transpose() << std::endl;
         }
-        // dq += (Eigen::MatrixXd::Identity(qpos_inds.size(), qpos_inds.size()) - jac_pinv_damped * jac) * 0;
-
-        // double 
-        std::cout << *m->jnt_range << m->jnt_range[1] << std::endl;
-        std::cout << dq.maxCoeff() << std::endl;
+        /*
+        for(int i = 0; i < m->nq; i++){
+            std::cout << i << " " << *(qpos+i) << " ";
+            std::cout << d->qpos[i] << std::endl;
+        }
+        std::cout << std::endl;
+        std::cout << "n_actuators: " << m->nu << std::endl;*/
+        // std::cout << *m->jnt_range << m->jnt_range[1] << std::endl;
+        // std::cout << dq.maxCoeff() << std::endl;
         // d->qpos->copy()
+
     }
 
     
