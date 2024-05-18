@@ -47,6 +47,7 @@ int main(int argc, char* argv[])
     {
         sim->step_simulation();
         ee_sim->step_simulation();
+        ee_sim->d->qpos[10] += .01;
     }
 
 }

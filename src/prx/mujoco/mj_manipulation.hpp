@@ -4,6 +4,7 @@
 #include "prx/utilities/defs.hpp"
 
 #include "prx/mujoco/mj_utils.hpp"
+#include "prx/mujoco/mj_simulator.hpp"
 
 #include "mujoco/mujoco.h"
 #include "prx/planning/planners/planner.hpp"
@@ -15,7 +16,7 @@ typedef Eigen::Matrix<double, 6, 7> jacobian_t;
 typedef Eigen::Vector<double, 7> pose_t;
 typedef Eigen::VectorXd config_t;
 
-void jacobian_steering(mjModel* m, mjData* d, trajectory_t& traj, pose_t goal_pose, int body_id, std::vector<int>& qpos_inds, const config_t& q_init=Eigen::VectorXd());
+void jacobian_steering(std::shared_ptr<prx::mujoco_simulator_t> sim, trajectory_t& traj, pose_t goal_pose, int body_id, std::vector<int>& qpos_inds, const config_t& q_init=Eigen::VectorXd());
 
 void compute_jacobian(mjModel* m, mjData* d, jacobian_t& jac, double* jacp, double* jacr, int body_id, std::vector<int>& qpos_inds);
 

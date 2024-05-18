@@ -103,6 +103,7 @@ std::vector<int> get_body_qpos_indices(mjModel* m, const std::string& name){
   return qpos_inds;
 }
 
+// Get xpos indices
 std::vector<int> get_body_indices(mjModel* m, const std::string& body_name)
 {
   int body_id = mj_name2id(m, mjOBJ_BODY, body_name.c_str());

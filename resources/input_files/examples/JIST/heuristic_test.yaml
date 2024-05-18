@@ -8,6 +8,7 @@ visualize: false
 planner_name: "roadmap"
 
 test_config: [0, 0, 0, 0, 0, 0, 0]
+steer_config: [0, .494, 0, -2.37, 0, 2.9, -2.29]
 goal_config: [0, .494, 0, -2.37, 0, 2.9, -2.29]
 goal_region_radius: .005
 
