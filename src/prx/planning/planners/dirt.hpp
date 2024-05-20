@@ -27,7 +27,23 @@ public:
     is_blossom_expand_done = false;
     random_expand = false;
   }
+  virtual void copy(const dirt_node_t& other)
+  {
+    this->rrt_node_t::copy(other);
+    cost_to_go = other.cost_to_go;
+    bridge = other.bridge;
+    dir_radius = other.dir_radius;
+    blossom_number = other.blossom_number;
+    is_blossom_expand_done = other.is_blossom_expand_done;
+    random_expand = other.random_expand;
+    checkpoint_time = other.checkpoint_time;
+    is_safety_node = other.is_safety_node;
 
+    indices.clear();
+    edge_generators.clear();
+    std::copy(other.indices.begin(), other.indices.end(), indices.begin());
+    std::copy(other.edge_generators.begin(), other.edge_generators.end(), edge_generators.begin());
+  }
   double cost_to_go;
 
   bool bridge;
@@ -96,10 +112,22 @@ public:
 class dirt_t : public rrt_t
 {
 public:
+  using Node = dirt_node_t;
+  using Edge = rrt_edge_t;
+
   dirt_t(const std::string& new_name);
   virtual ~dirt_t();
 
   std::vector<long unsigned> random_edges_counter, blossom_edges_counter;
+
+  virtual std::shared_ptr<prx::tree_t> tree_of_solutions() override
+  {
+    // const double radius{ dirt_query->goal_region_radius };
+    const space_point_t goal_state{ dirt_query->goal_state };
+    const int total_solutions{ dirt_query->total_solutions };
+    const std::vector<prx::proximity_node_t*> goal_nodes{ metric->multi_query(goal_state, total_solutions) };
+    return _tree_of_solutions<Node, Edge>(goal_nodes);
+  }
 
 protected:
   virtual void update_goal(node_index_t node_index) override;
@@ -133,7 +161,7 @@ private:
 
   dirt_node_t* get_vertex(node_index_t v) const
   {
-    return tree.get_vertex_as<dirt_node_t>(v).get();
+    return _tree.get_vertex_as<dirt_node_t>(v).get();
   }
 
   bool is_leaf(node_index_t v)
@@ -150,7 +178,7 @@ private:
       metric->remove_node(get_vertex(v));
       get_vertex(v)->bridge = true;
     }
-    tree.remove_vertex(v);
+    _tree.remove_vertex(v);
   }
 
   bool is_best_goal(node_index_t v) const

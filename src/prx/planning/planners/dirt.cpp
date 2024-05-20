@@ -25,7 +25,7 @@ void dirt_t::_link_and_setup_spec(planner_specification_t* spec)
 }
 bool dirt_t::_preprocess()
 {
-  tree.allocate_memory<dirt_node_t, rrt_edge_t>(1000);
+  _tree.allocate_memory<dirt_node_t, rrt_edge_t>(1000);
   return true;
 }
 bool dirt_t::_link_and_setup_query(planner_query_t* query)
@@ -34,16 +34,16 @@ bool dirt_t::_link_and_setup_query(planner_query_t* query)
   prx_assert(rrt_query != nullptr, "DIRT received an incorrect query type.");
   dirt_query = dynamic_cast<dirt_query_t*>(query);
   prx_assert(dirt_query != nullptr, "DIRT received an incorrect query type.");
-  if (tree.num_vertices() == 0 ||
-      !state_space->equal_points(tree.get_vertex_as<rrt_node_t>(start_vertex)->point, rrt_query->start_state))
+  if (_tree.num_vertices() == 0 ||
+      !state_space->equal_points(_tree.get_vertex_as<rrt_node_t>(start_vertex)->point, rrt_query->start_state))
   {
     // clear existing data structure
     metric->clear();
-    tree.clear();
+    _tree.clear();
 
-    start_vertex = tree.add_vertex<dirt_node_t, rrt_edge_t>();
+    start_vertex = _tree.add_vertex<dirt_node_t, rrt_edge_t>();
     goal_vertex = start_vertex;
-    auto start_node = tree.get_vertex_as<dirt_node_t>(start_vertex);
+    auto start_node = _tree.get_vertex_as<dirt_node_t>(start_vertex);
     // std::cout<<rrt_query->start_state<<std::endl;
     start_node->point = state_space->clone_point(rrt_query->start_state);
     start_node->cost_to_come = 0;
@@ -302,13 +302,13 @@ void dirt_t::_resolve_query(condition_check_t* condition)
 void dirt_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_node_t* closest_node,
                               std::vector<dirt_node_t*> dir_updates, double new_node_dir_radius)
 {
-  auto node_index = tree.add_vertex<dirt_node_t, rrt_edge_t>();
-  auto new_tree_node = tree.get_vertex_as<dirt_node_t>(node_index);
+  auto node_index = _tree.add_vertex<dirt_node_t, rrt_edge_t>();
+  auto new_tree_node = _tree.get_vertex_as<dirt_node_t>(node_index);
   new_tree_node->point = state_space->clone_point(eg.second->back());
   new_tree_node->bridge = true;
   new_tree_node->is_safety_node = false;
-  edge_index_t edge_index = tree.add_edge(closest_node->get_index(), node_index);
-  auto new_edge = tree.get_edge_as<rrt_edge_t>(edge_index);
+  edge_index_t edge_index = _tree.add_edge(closest_node->get_index(), node_index);
+  auto new_edge = _tree.get_edge_as<rrt_edge_t>(edge_index);
   new_edge->plan = std::make_shared<plan_t>(*eg.first);
   new_edge->traj = std::make_shared<trajectory_t>(*eg.second);
   new_edge->edge_cost = cost_function(*eg.second, *eg.first);
@@ -366,12 +366,12 @@ void dirt_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_node_t*
 
 void dirt_t::update_goal(node_index_t node_index)
 {
-  auto new_tree_node = tree.get_vertex_as<dirt_node_t>(node_index);
+  auto new_tree_node = _tree.get_vertex_as<dirt_node_t>(node_index);
   // if(distance_function(dirt_query->goal_state,new_tree_node->point)<dirt_query->goal_region_radius)
   if (dirt_query->goal_check(new_tree_node->point))
   {
     if (goal_vertex == start_vertex ||
-        tree.get_vertex_as<dirt_node_t>(goal_vertex)->cost_to_come > new_tree_node->cost_to_come)
+        _tree.get_vertex_as<dirt_node_t>(goal_vertex)->cost_to_come > new_tree_node->cost_to_come)
     {
       current_solution = new_tree_node->cost_to_come;
       current_solution_time = timer.measure();
@@ -385,7 +385,7 @@ void dirt_t::update_goal(node_index_t node_index)
       if (_bnb)
       {
         bnb(start_vertex, current_solution);
-        tree.remove_vertices();
+        _tree.remove_vertices();
       }
     }
   }
@@ -407,7 +407,7 @@ std::vector<double> dirt_t::get_statistics()
 void dirt_t::_reset()
 {
   // clear the stuff
-  tree.purge();
+  _tree.purge();
   if (metric != nullptr)
   {
     delete metric;
@@ -444,9 +444,9 @@ void dirt_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
 
     // remove the node
     // tree.remove_vertex(v);
+    _tree.remove_vertex(v);
     metric->remove_node(node);
-    // tree.remove_vertex(v);
-    tree.mark_vertex_for_removal(v);
+    // _tree.mark_vertex_for_removal(v);
   }
 }
 }  // namespace prx

@@ -288,6 +288,10 @@ public:
   {
     return v_index_map[v];
   }
+  unsigned size() const
+  {
+    return vertex_count;
+  }
   unsigned num_vertices() const
   {
     return vertex_count;

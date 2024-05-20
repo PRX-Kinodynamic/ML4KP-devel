@@ -26,7 +26,7 @@ void randomized_astar_t::_link_and_setup_spec(planner_specification_t* spec)
 }
 bool randomized_astar_t::_preprocess()
 {
-  tree.allocate_memory<rastar_node_t, rrt_edge_t>(1000);
+  _tree.allocate_memory<rastar_node_t, rrt_edge_t>(1000);
   return true;
 }
 bool randomized_astar_t::_link_and_setup_query(planner_query_t* query)
@@ -35,17 +35,17 @@ bool randomized_astar_t::_link_and_setup_query(planner_query_t* query)
   prx_assert(rrt_query != nullptr, "Randomized A* received an incorrect query type.");
   rastar_query = dynamic_cast<rastar_query_t*>(query);
   prx_assert(rastar_query != nullptr, "Randomized A* received an incorrect query type.");
-  if (tree.num_vertices() == 0 ||
-      !state_space->equal_points(tree.get_vertex_as<rrt_node_t>(start_vertex)->point, rrt_query->start_state))
+  if (_tree.num_vertices() == 0 ||
+      !state_space->equal_points(_tree.get_vertex_as<rrt_node_t>(start_vertex)->point, rrt_query->start_state))
   {
     // clear existing data structure
     metric->clear();
-    tree.clear();
+    _tree.clear();
     open_set.clear();
 
-    start_vertex = tree.add_vertex<rastar_node_t, rrt_edge_t>();
+    start_vertex = _tree.add_vertex<rastar_node_t, rrt_edge_t>();
     goal_vertex = start_vertex;
-    auto start_node = tree.get_vertex_as<rastar_node_t>(start_vertex);
+    auto start_node = _tree.get_vertex_as<rastar_node_t>(start_vertex);
     start_node->point = state_space->clone_point(rrt_query->start_state);
     start_node->cost_to_come = 0;
     start_node->cost_to_go = h(start_node->point, rastar_query->goal_state);
@@ -137,11 +137,11 @@ void randomized_astar_t::_resolve_query(condition_check_t* condition)
         }
 
         // add the node
-        auto node_index = tree.add_vertex<rastar_node_t, rrt_edge_t>();
-        auto new_tree_node = tree.get_vertex_as<rastar_node_t>(node_index);
+        auto node_index = _tree.add_vertex<rastar_node_t, rrt_edge_t>();
+        auto new_tree_node = _tree.get_vertex_as<rastar_node_t>(node_index);
         new_tree_node->point = state_space->clone_point(eg.second->back());
-        edge_index_t edge_index = tree.add_edge(closest_node->get_index(), node_index);
-        auto new_edge = tree.get_edge_as<rrt_edge_t>(edge_index);
+        edge_index_t edge_index = _tree.add_edge(closest_node->get_index(), node_index);
+        auto new_edge = _tree.get_edge_as<rrt_edge_t>(edge_index);
         new_edge->plan = std::make_shared<plan_t>(*eg.first);
         new_edge->traj = std::make_shared<trajectory_t>(*eg.second);
         delete eg.first;
@@ -176,7 +176,7 @@ std::vector<double> randomized_astar_t::get_statistics()
 void randomized_astar_t::_reset()
 {
   // clear the stuff
-  tree.purge();
+  _tree.purge();
   if (metric != nullptr)
   {
     delete metric;
@@ -206,11 +206,11 @@ void randomized_astar_t::bnb(node_index_t v, double cost_bound, bool delete_flag
     // remove the node that was previously there
     metric->remove_node(node);
     // remove the node
-    tree.remove_vertex(v);
+    _tree.remove_vertex(v);
   }
   if (v == start_vertex)
   {
-    auto iters = tree.vertices();
+    auto iters = _tree.vertices();
     for (auto iter = iters.first; iter != iters.second; iter++)
     {
       if (static_cast<rastar_node_t*>(iter->get())->astar_node != nullptr)

@@ -1,41 +1,34 @@
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/utilities/general/string_manip.hpp"
-#include "prx/utilities/general/constants.hpp"
 
 namespace prx
 {
+
+param_loader::param_loader(const std::string filename, const std::string path)
+{
+  set_input_path(path);
+  add_file(filename);
+}
 
 param_loader::param_loader()
 {
   set_input_path(input_path);
 }
-param_loader::param_loader(std::string file_name)
-{
-  set_input_path(input_path);
-  add_file(file_name);
-}
 
-param_loader::param_loader(int argc, char* argv[]) : param_loader(std::vector<std::string>(argv, argv + argc))
-{
-}
+param_loader::param_loader(const std::string filename) : param_loader(filename, prx::input_path){};
 
-param_loader::param_loader(std::vector<std::string> argv)
+param_loader::param_loader(int argc, char* argv[]) : param_loader(std::vector<std::string>(argv, argv + argc)){};
+
+param_loader::param_loader(std::vector<std::string> argv) : param_loader()
 {
-  set_input_path(input_path);
-  // add_opts(argc, argv);
   add_opts(argv);
 }
 
-param_loader::param_loader(std::string file_name, int argc, char* argv[])
-  : param_loader(file_name, std::vector<std::string>(argv, argv + argc))
-{
-}
+param_loader::param_loader(std::string filename, int argc, char* argv[])
+  : param_loader(filename, std::vector<std::string>(argv, argv + argc)){};
 
-param_loader::param_loader(std::string file_name, std::vector<std::string> argv)
+param_loader::param_loader(std::string filename, std::vector<std::string> argv) : param_loader(filename)
 {
-  set_input_path(input_path);
-  add_file(file_name);
-  // add_opts(argc, argv);
   add_opts(argv);
 }
 
@@ -240,12 +233,12 @@ param_loader param_loader::operator[](const std::string& key)
   // }
 }
 
-void param_loader::print()
+void param_loader::print() const
 {
   print(params);
 }
 
-void param_loader::print(const YAML::Node& pl, std::string prepath)
+void param_loader::print(const YAML::Node& pl, std::string prepath) const
 {
   bool nf = false;
   switch (pl.Type())

@@ -23,6 +23,7 @@ proximity_node_t::~proximity_node_t()
   free(neighbors);
 }
 
+// const
 long unsigned proximity_node_t::get_prox_index()
 {
   return prox_index;
@@ -33,6 +34,7 @@ void proximity_node_t::set_index(long unsigned indx)
   prox_index = indx;
 }
 
+// const
 long unsigned* proximity_node_t::get_neighbors(long unsigned* nr_neigh)
 {
   *nr_neigh = nr_neighbors;
@@ -486,7 +488,8 @@ proximity_node_t* graph_nearest_neighbors_t::basic_closest_search(proximity_node
       min_index = index_;
     }
   }
-
+  // PRX_DEBUG_VAR_1(nr_nodes);
+  prx_assert(min_index != -1, "Error: GNN couldn't find a close neighbor");
   int old_min_index = min_index;
   do
   {

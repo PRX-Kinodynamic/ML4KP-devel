@@ -24,7 +24,7 @@ void sst_t::_link_and_setup_spec(planner_specification_t* spec)
 }
 bool sst_t::_preprocess()
 {
-  tree.allocate_memory<sst_node_t, rrt_edge_t>(1000);
+  _tree.allocate_memory<sst_node_t, rrt_edge_t>(1000);
   witness_tree.allocate_memory<witness_node_t, rrt_edge_t>(1000);
   return true;
 }
@@ -34,18 +34,18 @@ bool sst_t::_link_and_setup_query(planner_query_t* query)
   prx_assert(rrt_query != nullptr, "SST received an incorrect query type.");
   sst_query = dynamic_cast<sst_query_t*>(query);
   prx_assert(sst_query != nullptr, "SST received an incorrect query type.");
-  if (tree.num_vertices() == 0 ||
-      !state_space->equal_points(tree.get_vertex_as<rrt_node_t>(start_vertex)->point, rrt_query->start_state))
+  if (_tree.num_vertices() == 0 ||
+      !state_space->equal_points(_tree.get_vertex_as<rrt_node_t>(start_vertex)->point, rrt_query->start_state))
   {
     // clear existing data structure
     metric->clear();
-    tree.clear();
+    _tree.clear();
     witnesses->clear();
     witness_tree.clear();
 
-    start_vertex = tree.add_vertex<sst_node_t, rrt_edge_t>();
+    start_vertex = _tree.add_vertex<sst_node_t, rrt_edge_t>();
     goal_vertex = start_vertex;
-    auto start_node = tree.get_vertex_as<sst_node_t>(start_vertex);
+    auto start_node = _tree.get_vertex_as<sst_node_t>(start_vertex);
     start_node->point = state_space->clone_point(rrt_query->start_state);
     start_node->cost_to_come = 0;
     metric->add_node(start_node.get());
@@ -99,11 +99,11 @@ void sst_t::_resolve_query(condition_check_t* condition)
           valid_check(traj))
       {
         // add node
-        auto node_index = tree.add_vertex<sst_node_t, rrt_edge_t>();
-        auto new_tree_node = tree.get_vertex_as<sst_node_t>(node_index);
+        auto node_index = _tree.add_vertex<sst_node_t, rrt_edge_t>();
+        auto new_tree_node = _tree.get_vertex_as<sst_node_t>(node_index);
         new_tree_node->point = state_space->clone_point(traj.back());
-        edge_index_t edge_index = tree.add_edge(closest_node->get_index(), node_index);
-        auto new_edge = tree.get_edge_as<rrt_edge_t>(edge_index);
+        edge_index_t edge_index = _tree.add_edge(closest_node->get_index(), node_index);
+        auto new_edge = _tree.get_edge_as<rrt_edge_t>(edge_index);
         new_edge->plan = std::make_shared<plan_t>(plan);
         new_edge->traj = std::make_shared<trajectory_t>(traj);
         new_edge->edge_cost = edge_cost;
@@ -140,7 +140,7 @@ void sst_t::_resolve_query(condition_check_t* condition)
 void sst_t::_reset()
 {
   // clear the stuff
-  tree.purge();
+  _tree.purge();
   witness_tree.purge();
   if (metric != nullptr)
   {
@@ -195,7 +195,7 @@ void sst_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
     get_witness(witness)->set = false;
 
     // remove the node
-    tree.remove_vertex(v);
+    _tree.remove_vertex(v);
   }
 }
 

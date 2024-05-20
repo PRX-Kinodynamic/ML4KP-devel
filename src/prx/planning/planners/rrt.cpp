@@ -36,7 +36,7 @@ void rrt_t::_link_and_setup_spec(planner_specification_t* spec)
 
 bool rrt_t::_preprocess()
 {
-  tree.allocate_memory<rrt_node_t, rrt_edge_t>(1000);
+  _tree.allocate_memory<rrt_node_t, rrt_edge_t>(1000);
   return true;
 }
 
@@ -44,15 +44,15 @@ bool rrt_t::_link_and_setup_query(planner_query_t* query)
 {
   rrt_query = dynamic_cast<rrt_query_t*>(query);
   prx_assert(rrt_query != nullptr, "RRT received an incorrect query type.");
-  if (tree.num_vertices() == 0 ||
-      !state_space->equal_points(tree.get_vertex_as<rrt_node_t>(start_vertex)->point, rrt_query->start_state))
+  if (_tree.num_vertices() == 0 ||
+      !state_space->equal_points(_tree.get_vertex_as<rrt_node_t>(start_vertex)->point, rrt_query->start_state))
   {
     // clear existing data structure
     metric->clear();
-    tree.clear();
-    start_vertex = tree.add_vertex<rrt_node_t, rrt_edge_t>();
+    _tree.clear();
+    start_vertex = _tree.add_vertex<rrt_node_t, rrt_edge_t>();
     goal_vertex = start_vertex;
-    auto start_node = tree.get_vertex_as<rrt_node_t>(start_vertex);
+    auto start_node = _tree.get_vertex_as<rrt_node_t>(start_vertex);
     start_node->point = state_space->clone_point(rrt_query->start_state);
     start_node->cost_to_come = 0;
     metric->add_node(start_node.get());
@@ -94,16 +94,16 @@ void rrt_t::_resolve_query(condition_check_t* condition)
     if ((goal_vertex == start_vertex || closest_node->cost_to_come + edge_cost < current_solution) && valid_check(traj))
     {
       // add node
-      auto node_index = tree.add_vertex<rrt_node_t, rrt_edge_t>();
-      auto new_tree_node = tree.get_vertex_as<rrt_node_t>(node_index);
+      auto node_index = _tree.add_vertex<rrt_node_t, rrt_edge_t>();
+      auto new_tree_node = _tree.get_vertex_as<rrt_node_t>(node_index);
       new_tree_node->point = state_space->clone_point(traj.back());
 
       new_tree_node->observation = observer.get_observed_space()->make_point();
       observer(rrt_spec->_sg, new_tree_node->observation);
 
       metric->add_node(new_tree_node.get());
-      edge_index_t edge_index = tree.add_edge(closest_node->get_index(), node_index);
-      auto new_edge = tree.get_edge_as<rrt_edge_t>(edge_index);
+      edge_index_t edge_index = _tree.add_edge(closest_node->get_index(), node_index);
+      auto new_edge = _tree.get_edge_as<rrt_edge_t>(edge_index);
       new_edge->plan = std::make_shared<plan_t>(plan);
       new_edge->traj = std::make_shared<trajectory_t>(traj);
       new_edge->edge_cost = edge_cost;
@@ -120,23 +120,23 @@ void rrt_t::_fulfill_query()
   if (goal_vertex != start_vertex && !use_replanning)
   {
     // backtrack to get the plan and trajectory
-    rrt_query->solution_cost = tree.get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come;
+    rrt_query->solution_cost = _tree.get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come;
     std::deque<node_index_t> node_indices;
     node_index_t current_index = goal_vertex;
     while (current_index != start_vertex)
     {
       node_indices.push_front(current_index);
-      current_index = tree[current_index]->get_parent();
+      current_index = _tree[current_index]->get_parent();
     }
 
-    rrt_query->solution_plan = *tree.get_edge_as<rrt_edge_t>(tree[node_indices[0]]->get_parent_edge())->plan;
-    rrt_query->solution_traj = *tree.get_edge_as<rrt_edge_t>(tree[node_indices[0]]->get_parent_edge())->traj;
+    rrt_query->solution_plan = *_tree.get_edge_as<rrt_edge_t>(_tree[node_indices[0]]->get_parent_edge())->plan;
+    rrt_query->solution_traj = *_tree.get_edge_as<rrt_edge_t>(_tree[node_indices[0]]->get_parent_edge())->traj;
 
     for (int i = 1; i < node_indices.size(); i++)
     {
       rrt_query->solution_traj.resize(rrt_query->solution_traj.size() - 1);
-      rrt_query->solution_plan += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->plan;
-      rrt_query->solution_traj += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->traj;
+      rrt_query->solution_plan += *_tree.get_edge_as<rrt_edge_t>(_tree[node_indices[i]]->get_parent_edge())->plan;
+      rrt_query->solution_traj += *_tree.get_edge_as<rrt_edge_t>(_tree[node_indices[i]]->get_parent_edge())->traj;
     }
   }
   else
@@ -149,39 +149,110 @@ void rrt_t::_fulfill_query()
     node_index_t current_index;
     if (goal_vertex != start_vertex)
     {
-      rrt_query->solution_cost = tree.get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come;
+      rrt_query->solution_cost = _tree.get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come;
       current_index = goal_vertex;
       while (current_index != start_vertex)
       {
         node_indices.push_front(current_index);
-        current_index = tree[current_index]->get_parent();
+        current_index = _tree[current_index]->get_parent();
       }
     }
     current_index = start_vertex;
     while (current_index != 0)
     {
       node_indices.push_front(current_index);
-      current_index = tree[current_index]->get_parent();
+      current_index = _tree[current_index]->get_parent();
     }
-    rrt_query->solution_plan = *tree.get_edge_as<rrt_edge_t>(tree[node_indices[0]]->get_parent_edge())->plan;
-    rrt_query->solution_traj = *tree.get_edge_as<rrt_edge_t>(tree[node_indices[0]]->get_parent_edge())->traj;
+    rrt_query->solution_plan = *_tree.get_edge_as<rrt_edge_t>(_tree[node_indices[0]]->get_parent_edge())->plan;
+    rrt_query->solution_traj = *_tree.get_edge_as<rrt_edge_t>(_tree[node_indices[0]]->get_parent_edge())->traj;
 
     for (int i = 1; i < node_indices.size(); i++)
     {
       rrt_query->solution_traj.resize(rrt_query->solution_traj.size() - 1);
-      rrt_query->solution_plan += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->plan;
-      rrt_query->solution_traj += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->traj;
+      rrt_query->solution_plan += *_tree.get_edge_as<rrt_edge_t>(_tree[node_indices[i]]->get_parent_edge())->plan;
+      rrt_query->solution_traj += *_tree.get_edge_as<rrt_edge_t>(_tree[node_indices[i]]->get_parent_edge())->traj;
     }
   }
+
   if (rrt_query->get_visualization)
   {
-    auto iter_bounds = tree.edges();
+    auto iter_bounds = _tree.edges();
     for (auto iter = iter_bounds.first; iter != iter_bounds.second; iter++)
     {
-      rrt_query->tree_visualization.push_back(*tree.get_edge_as<rrt_edge_t>((*iter)->get_index())->traj);
+      rrt_query->tree_visualization.push_back(*_tree.get_edge_as<rrt_edge_t>((*iter)->get_index())->traj);
     }
   }
 }
+
+// template <typename Node, typename Edge>
+// std::shared_ptr<prx::tree_t> rrt_t::_tree_of_solutions(const double& radius, const space_point_t& goal_state)
+// {
+//   // const double radius{ rrt_query->goal_region_radius };
+//   // const space_point_t goal_state{ rrt_query->goal_state };
+
+//   const std::vector<prx::proximity_node_t*>& goal_nodes{ metric->radius_and_closest_query(goal_state, radius) };
+//   std::shared_ptr<Node> root{ _tree.get_vertex_as<Node>(start_vertex) };
+
+//   std::stack<Node*> solution_nodes;
+//   std::unordered_set<prx::node_index_t> visited;
+//   std::queue<prx::proximity_node_t*> to_visit{};
+
+//   for (auto node : goal_nodes)
+//   {
+//     to_visit.push(node);
+//   }
+
+//   visited.insert(root->get_index());
+
+//   while (to_visit.size() > 0)
+//   {
+//     Node* curr_node{ dynamic_cast<Node*>(to_visit.front()) };
+//     const prx::node_index_t parent{ curr_node->get_parent() };
+
+//     if (visited.count(parent) == 0)
+//     {
+//       to_visit.push(_tree[parent].get());
+//       visited.insert(parent);
+//     }
+//     solution_nodes.push(curr_node);
+//     to_visit.pop();
+//   }
+//   // solution_nodes.push(root);
+
+//   std::shared_ptr<prx::tree_t> sln_tree{ std::make_shared<prx::tree_t>() };
+
+//   // [ original_index ] -> new_index
+//   std::unordered_map<prx::node_index_t, prx::node_index_t> new_index_map;
+
+//   const prx::node_index_t start_vertex{ sln_tree->add_vertex<Node, Edge>() };
+//   std::shared_ptr<Node> new_root_node{ sln_tree->get_vertex_as<Node>(start_vertex) };
+//   new_root_node->point = state_space->make_point();
+//   state_space->copy(new_root_node->point, root->point);
+
+//   new_index_map[root->get_index()] = start_vertex;
+
+//   while (not solution_nodes.empty())
+//   {
+//     Node* node{ solution_nodes.top() };
+//     // add node
+//     const prx::node_index_t node_index{ sln_tree->add_vertex<Node, Edge>() };
+//     std::shared_ptr<Node> new_tree_node{ sln_tree->get_vertex_as<Node>(node_index) };
+//     new_tree_node->point = state_space->make_point();
+//     state_space->copy(new_tree_node->point, node->point);
+//     new_tree_node->copy(*node);
+//     new_index_map[node->get_index()] = node_index;
+
+//     const std::shared_ptr<Edge> old_edge{ _tree.get_edge_as<Edge>(node->get_parent_edge()) };
+
+//     const prx::node_index_t parent_index{ new_index_map[node->get_parent()] };
+//     const prx::edge_index_t edge_index{ sln_tree->add_edge(parent_index, node_index) };
+//     std::shared_ptr<Edge> new_edge{ sln_tree->get_edge_as<Edge>(edge_index) };
+//     new_edge->copy(*old_edge);
+
+//     solution_nodes.pop();
+//   }
+//   return sln_tree;
+// }
 
 std::vector<std::string> rrt_t::get_statistics_header()
 {
@@ -201,7 +272,7 @@ std::vector<double> rrt_t::get_statistics()
 void rrt_t::_reset()
 {
   // clear the stuff
-  tree.purge();
+  _tree.purge();
   if (metric != nullptr)
   {
     delete metric;
@@ -211,12 +282,12 @@ void rrt_t::_reset()
 
 void rrt_t::update_goal(node_index_t node_index)
 {
-  auto new_tree_node = tree.get_vertex_as<rrt_node_t>(node_index);
+  auto new_tree_node = _tree.get_vertex_as<rrt_node_t>(node_index);
   // if(distance_function(rrt_query->goal_state,new_tree_node->point)<rrt_query->goal_region_radius)
   if (rrt_query->goal_check(new_tree_node->point))
   {
     if (goal_vertex == start_vertex ||
-        tree.get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come > new_tree_node->cost_to_come)
+        _tree.get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come > new_tree_node->cost_to_come)
     {
       current_solution = new_tree_node->cost_to_come;
       current_solution_time = timer.measure();
@@ -233,14 +304,14 @@ void rrt_t::update_goal(node_index_t node_index)
       {
         bnb(start_vertex, current_solution);
       }
-      tree.remove_vertices();
+      _tree.remove_vertices();
     }
   }
 }
 
 void rrt_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
 {
-  auto node = tree.get_vertex_as<rrt_node_t>(v);
+  auto node = _tree.get_vertex_as<rrt_node_t>(v);
   const bool res = delete_flag || node->cost_to_come > cost_bound;
   std::list<node_index_t> children = node->get_children();
   for (auto child : children)
@@ -253,7 +324,7 @@ void rrt_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
     // remove the node
     metric->remove_node(node.get());
     // tree.remove_vertex(v);
-    tree.mark_vertex_for_removal(v);
+    _tree.mark_vertex_for_removal(v);
   }
 }
 

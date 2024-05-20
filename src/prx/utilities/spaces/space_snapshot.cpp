@@ -9,7 +9,7 @@ space_snapshot_t::space_snapshot_t(const space_t* const in_parent, const std::si
 }
 void space_snapshot_t::init(const prx::param_loader& params)
 {
-  std::vector<double> values{ params.as<std::vector<double>>() };
+  const std::vector<double> values{ params.as<std::vector<double>>() };
   _parent->copy(*this, values);
 }
 }  // namespace prx

@@ -103,13 +103,21 @@ public:
 
   friend std::ostream& operator<<(std::ostream& os, const system_t& obj)
   {
-    os << "state_space: " << *obj.state_space << "\tcontrol_space: " << *obj.input_control_space;
+    os << "State Space: " << *obj.state_space << "\n";
+    os << "\tLower Bound: " << prx::utilities::convert_to<std::string>(obj.state_space->get_lower_bounds()) << "\n";
+    os << "\tUpper Bound: " << prx::utilities::convert_to<std::string>(obj.state_space->get_upper_bounds()) << "\n";
+    os << "Control Space: " << *obj.input_control_space << "\n";
+    os << "\tLower Bound: " << prx::utilities::convert_to<std::string>(obj.input_control_space->get_lower_bounds())
+       << "\n";
+    os << "\tUpper Bound: " << prx::utilities::convert_to<std::string>(obj.input_control_space->get_upper_bounds())
+       << "\n";
+    os << "Parameter Space: " << *obj.parameter_space << "\n";  // No bounds for parameter
     return os;
   }
 
   friend std::ostream& operator<<(std::ostream& os, const system_ptr_t& obj)
   {
-    os << "state_space: " << *(obj->state_space) << "\tcontrol_space: " << *(obj->input_control_space);
+    os << (*obj);
     return os;
   }
 

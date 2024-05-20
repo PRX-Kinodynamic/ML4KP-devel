@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
   dirt_spec.max_control_steps = max_steps;
   dirt_spec.blossom_number = params["blossom"].as<int>();
   dirt_spec.use_pruning = params["pruning"].as<bool>();
+  dirt_spec.bnb = false;
 
   dirt_query_t dirt_query(context.first->get_state_space(), context.first->get_control_space());
   dirt_query.start_state = context.first->get_state_space()->make_point();

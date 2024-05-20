@@ -87,7 +87,7 @@ protected:
 private:
   sst_node_t* get_vertex(node_index_t v) const
   {
-    return tree.get_vertex_as<sst_node_t>(v).get();
+    return _tree.get_vertex_as<sst_node_t>(v).get();
   }
   witness_node_t* get_witness(node_index_t v) const
   {
@@ -107,7 +107,7 @@ private:
     {
       metric->remove_node(get_vertex(v));
     }
-    tree.remove_vertex(v);
+    _tree.remove_vertex(v);
   }
 
   bool is_best_goal(node_index_t v) const

@@ -98,7 +98,7 @@ private:
 
   rastar_node_t* get_vertex(node_index_t v) const
   {
-    return tree.get_vertex_as<rastar_node_t>(v).get();
+    return _tree.get_vertex_as<rastar_node_t>(v).get();
   }
 
   bool is_leaf(node_index_t v)
@@ -110,7 +110,7 @@ private:
   {
     prx_assert(is_leaf(v), "Trying to remove a tree node that is not a leaf!");
     metric->remove_node(get_vertex(v));
-    tree.remove_vertex(v);
+    _tree.remove_vertex(v);
   }
 };
 }  // namespace prx

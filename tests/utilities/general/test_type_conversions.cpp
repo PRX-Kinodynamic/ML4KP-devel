@@ -70,3 +70,13 @@ BOOST_AUTO_TEST_CASE(passthrough_convertions)
   BOOST_CHECK_MESSAGE(_int == int_res, EXPECTED_GOT(_int, int_res));
   BOOST_CHECK_MESSAGE(_dbl == dbl_res, EXPECTED_GOT(_dbl, dbl_res));
 }
+
+BOOST_AUTO_TEST_CASE(container_to_string_convertion)
+{
+  const std::vector<int> vec_ints{ { 0, 1, 2, 3 } };
+  prx::constants::separating_value = ' ';
+  const std::string expected_ints{ "0 1 2 3 " };
+
+  const std::string result_ints{ convert_to<std::string>(vec_ints) };
+  BOOST_CHECK_MESSAGE(expected_ints == result_ints, EXPECTED_GOT(expected_ints, result_ints));
+}
