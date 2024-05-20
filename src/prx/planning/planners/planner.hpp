@@ -36,6 +36,7 @@ public:
     , solution_plan(control_space)
     , start_state(state_space->make_point())
     , goal_state(state_space->make_point())
+    , get_visualization(false)
   {
   }
   virtual ~planner_query_t()
@@ -56,13 +57,25 @@ public:
     {
       start_state->init(params["start_state"]);
     }
-    if (goal_state and params.exists("goal_state"))
+    if (goal_state and params.exists("goal"))
     {
-      goal_state->init(params["goal_state"]);
+      const prx::param_loader params_goal{ params["goal"] };
+      if (params_goal.exists("state"))
+      {
+        goal_state->init(params_goal["state"]);
+      }
     }
-    get_visualization = params.exists("get_visualization") ? params["get_visualization"].as<bool>() : false;
+    get_visualization = params.exists("visualize") ? params["visualize"].as<bool>() : get_visualization;
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const planner_query_t& obj)
+  {
+    os << "start_state: " << obj.start_state;
+    os << "goal_state: " << obj.goal_state;
+    os << "get_visualization: " << obj.get_visualization;
+
+    return os;
+  }
   // inputs
   space_point_t start_state;
   space_point_t goal_state;

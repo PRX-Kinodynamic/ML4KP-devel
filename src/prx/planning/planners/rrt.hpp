@@ -1,5 +1,8 @@
 #pragma once
 
+#include <stack>
+#include <queue>
+
 #include "prx/planning/planners/planner.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"
 #include "prx/utilities/data_structures/gnn.hpp"
@@ -26,6 +29,12 @@ public:
   {
   }
 
+  virtual void copy(const rrt_node_t& other)
+  {
+    cost_to_come = other.cost_to_come;
+    duration = other.duration;
+  }
+
   double cost_to_come;
   double duration;
 };
@@ -39,6 +48,19 @@ public:
   }
   virtual ~rrt_edge_t()
   {
+  }
+
+  virtual void copy(const rrt_edge_t& other)
+  {
+    if (other.plan != nullptr)
+    {
+      plan = std::make_shared<plan_t>(*(other.plan));
+    }
+    if (other.traj != nullptr)
+    {
+      traj = std::make_shared<trajectory_t>(*(other.traj));
+    }
+    edge_cost = other.edge_cost;
   }
 
   std::shared_ptr<plan_t> plan;
@@ -89,9 +111,23 @@ public:
     bnb = params.exists("bnb") ? params["bnb"].as<bool>() : false;
     use_replanning = params.exists("use_replanning") ? params["use_replanning"].as<bool>() : false;
 
-    min_control_steps = params.exists("min_control_steps") ? params["min_control_steps"].as<int>() : min_control_steps;
-    max_control_steps = params.exists("max_control_steps") ? params["max_control_steps"].as<int>() : max_control_steps;
-    blossom_number = params.exists("blossom_number") ? params["blossom_number"].as<int>() : 1;
+    if (params.exists("control_steps"))
+    {
+      const prx::param_loader params_cs{ params["control_steps"] };
+      min_control_steps = params_cs.exists("min") ? params_cs["min"].as<int>() : min_control_steps;
+      max_control_steps = params_cs.exists("max") ? params_cs["max"].as<int>() : max_control_steps;
+    }
+    blossom_number = params.exists("blossom_number") ? params["blossom_number"].as<int>() : blossom_number;
+  }
+  friend std::ostream& operator<<(std::ostream& os, const rrt_specification_t& obj)
+  {
+    os << "bnb: " << obj.bnb << "\n";
+    os << "use_replanning: " << obj.use_replanning << "\n";
+    os << "min_control_steps: " << obj.min_control_steps << "\n";
+    os << "max_control_steps: " << obj.max_control_steps << "\n";
+    os << "blossom_number: " << obj.blossom_number << "\n";
+
+    return os;
   }
   std::shared_ptr<system_group_t> _sg;
 
@@ -119,11 +155,10 @@ public:
 class rrt_query_t : public planner_query_t
 {
 public:
-  rrt_query_t(space_t* state_space, space_t* control_space) : planner_query_t(state_space, control_space)
+  rrt_query_t(space_t* state_space, space_t* control_space)
+    : planner_query_t(state_space, control_space), total_solutions(1), goal_region_radius(0.5)
   {
     clear_outputs();
-
-    goal_region_radius = 0.5;
 
     goal_check = [&](space_point_t s) { return default_goal_check(s, goal_state, goal_region_radius); };
   }
@@ -134,14 +169,33 @@ public:
   virtual void init(const prx::param_loader& params) override
   {
     planner_query_t::init(params);
-    goal_region_radius = params.exists("goal_region_radius") ? params["goal_region_radius"].as<double>() : 0.5;
+    if (goal_state and params.exists("goal"))
+    {
+      const prx::param_loader params_goal{ params["goal"] };
+      goal_region_radius = params_goal.exists("radius") ? params_goal["radius"].as<double>() : goal_region_radius;
+      total_solutions =
+          params_goal.exists("total_solutions") ? params_goal["total_solutions"].as<int>() : total_solutions;
+    }
   }
+
+  friend std::ostream& operator<<(std::ostream& os, const rrt_query_t& obj)
+  {
+    os << static_cast<planner_query_t>(obj) << "\n";
+    os << "goal_region_radius: " << obj.goal_region_radius;
+
+    return os;
+  }
+
   double goal_region_radius;
+  int total_solutions;
 };
 
 class rrt_t : public planner_t
 {
 public:
+  using Node = rrt_node_t;
+  using Edge = rrt_edge_t;
+
   rrt_t(const std::string& new_name);
   virtual ~rrt_t();
 
@@ -149,6 +203,36 @@ public:
 
   virtual std::vector<std::string> get_statistics_header() override;
   virtual std::vector<double> get_statistics() override;
+
+  graph_nearest_neighbors_t* graph_nearest_neighbors() const
+  {
+    return metric;
+  }
+
+  const tree_t& tree() const
+  {
+    return _tree;
+  }
+
+  template <typename RootNode>
+  std::shared_ptr<RootNode> root() const
+  {
+    return _tree.get_vertex_as<RootNode>(start_vertex);
+  }
+
+  virtual std::shared_ptr<prx::tree_t> tree_of_solutions()
+  {
+    // const double radius{ rrt_query->goal_region_radius };
+    const space_point_t goal_state{ rrt_query->goal_state };
+    const int total_solutions{ rrt_query->total_solutions };
+
+    // const space_point_t& goal_state{ rrt_query_t->goal_state };
+    const std::vector<prx::proximity_node_t*> goal_nodes{ metric->multi_query(goal_state, total_solutions) };
+
+    // std::shared_ptr<Node> root{ _tree.get_vertex_as<Node>(goal_nodes) };
+
+    return _tree_of_solutions<Node, Edge>(goal_nodes);
+  }
 
 protected:
   virtual void update_goal(node_index_t node_index);
@@ -159,6 +243,82 @@ protected:
   virtual void _resolve_query(condition_check_t* condition) override;
   virtual void _fulfill_query() override;
   virtual void _reset() override;
+
+  template <typename Node, typename Edge>
+  std::shared_ptr<prx::tree_t> _tree_of_solutions(const std::vector<prx::proximity_node_t*> goal_nodes)
+  {
+    std::stack<Node*> solution_nodes;
+    std::unordered_set<prx::node_index_t> visited;
+    std::queue<prx::proximity_node_t*> to_visit{};
+
+    for (auto node : goal_nodes)
+    {
+      // Node* curr_node{ dynamic_cast<Node*>(node) };
+
+      to_visit.push(node);
+    }
+
+    std::shared_ptr<Node> root{ _tree.get_vertex_as<Node>(start_vertex) };
+    visited.insert(root->get_index());
+    // [ original_index ] -> new_index
+    std::unordered_map<prx::node_index_t, prx::node_index_t> new_index_map;
+    std::shared_ptr<prx::tree_t> sln_tree{ std::make_shared<prx::tree_t>() };
+
+    // Add the root to the tree
+    const prx::node_index_t start_vertex{ sln_tree->add_vertex<Node, Edge>() };
+    std::shared_ptr<Node> new_root_node{ sln_tree->get_vertex_as<Node>(start_vertex) };
+    new_root_node->point = state_space->make_point();
+    state_space->copy(new_root_node->point, root->point);
+
+    new_index_map[root->get_index()] = start_vertex;
+
+    while (to_visit.size() > 0)
+    {
+      Node* curr_node{ dynamic_cast<Node*>(to_visit.front()) };
+      const prx::node_index_t parent{ curr_node->get_parent() };
+
+      if (visited.count(parent) == 0)
+      {
+        to_visit.push(_tree[parent].get());
+        visited.insert(curr_node->get_index());
+      }
+      solution_nodes.push(curr_node);
+      to_visit.pop();
+    }
+    // solution_nodes.push(root);
+
+    while (not solution_nodes.empty())
+    {
+      Node* node{ solution_nodes.top() };
+      // add node
+      const prx::node_index_t new_node_index{ sln_tree->add_vertex<Node, Edge>() };
+      new_index_map[node->get_index()] = new_node_index;
+      std::shared_ptr<Node> new_tree_node{ sln_tree->get_vertex_as<Node>(new_node_index) };
+      new_tree_node->point = state_space->make_point();
+      state_space->copy(new_tree_node->point, node->point);
+      new_tree_node->copy(*node);
+      solution_nodes.pop();
+    }
+
+    // new_index_map[node->get_index()]
+    for (auto pair : new_index_map)
+    {
+      const node_index_t old_index{ pair.first };
+      const node_index_t new_index{ pair.second };
+      std::shared_ptr<Node> old_node{ _tree.get_vertex_as<Node>(old_index) };
+
+      const prx::node_index_t parent_index{ new_index_map[old_node->get_parent()] };
+      const std::shared_ptr<Edge> old_edge{ _tree.get_edge_as<Edge>(old_node->get_parent_edge()) };
+
+      // const prx::node_index_t new_node_index{ new_index_map[node->get_index()] };
+
+      const prx::edge_index_t edge_index{ sln_tree->add_edge(parent_index, new_index) };
+      std::shared_ptr<Edge> new_edge{ sln_tree->get_edge_as<Edge>(edge_index) };
+      new_edge->copy(*old_edge);
+    }
+    PRX_DEBUG_VAR_1(sln_tree->size());
+    return sln_tree;
+  }
 
   virtual void bnb(node_index_t v, double cost_bound, bool delete_flag = false);
 
@@ -179,7 +339,7 @@ protected:
   expand_t expand;
   propagate_t propagate;
 
-  tree_t tree;
+  tree_t _tree;
   graph_nearest_neighbors_t* metric;
 
   space_t* state_space;

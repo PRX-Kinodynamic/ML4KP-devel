@@ -7,6 +7,7 @@
 
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/general/prx_assert.hpp"
+#include "prx/utilities/general/constants.hpp"
 
 namespace prx
 {
@@ -20,7 +21,8 @@ public:
 
   param_loader();
   param_loader(int argc, char* argv[]);
-  param_loader(std::string file_name);
+  param_loader(const std::string file_name);
+  param_loader(const std::string file_name, const std::string path);
   param_loader(std::vector<std::string> argv);
   param_loader(std::string file_name, int argc, char* argv[]);
   param_loader(std::string file_name, std::vector<std::string> argv);
@@ -57,11 +59,19 @@ public:
     params = val;
   }
 
-  void print();
+  void print() const;
 
   inline bool exists(const std::string& key) const
   {
-    return params[key] ? true : false;
+    std::string::size_type subkey_pos{ key.find("/", 0) };
+    if (subkey_pos == std::string::npos and params[key])
+      return true;
+    if (params[key.substr(0, subkey_pos)])
+    {
+      return exists(key.substr(0, subkey_pos));
+    }
+
+    return false;
   }
 
   void replace_env_var(YAML::Node& node);
@@ -121,7 +131,7 @@ protected:
 
   YAML::Node find(const std::string& key, YAML::Node node);
 
-  void print(const YAML::Node& pl, std::string prepath = "");
+  void print(const YAML::Node& pl, std::string prepath = "") const;
 
   YAML::Node params;
 

@@ -58,5 +58,23 @@ inline To convert_to(const From& value)
   return value;
 }
 
+// TODO: iterable to iterable eg: std::vector<double> to std::vector<string>
+template <typename StringType, typename From,
+          std::enable_if_t<                                        // no-lint
+              is_iterable<From>{}                                  // no-lint
+                  && std::is_same<StringType, std::string>::value  // no-lint
+                  && not std::is_same<From, std::string>::value,   // Need this because string is iterable
+                                                                   // but that case makes no sense here
+              bool> = true>
+inline StringType convert_to(const From& iterable)
+{
+  StringType str{};
+  for (auto value : iterable)
+  {
+    str += convert_to<StringType>(value);
+    str += prx::constants::separating_value;
+  }
+  return str;
+}
 }  // namespace utilities
 }  // namespace prx
