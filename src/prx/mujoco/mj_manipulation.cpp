@@ -3,7 +3,7 @@
 namespace prx
 {
     const double damping = 1e-4;
-    const double max_jnt_vel = PRX_PI /4;
+    const double max_jnt_vel = PRX_PI / 4;
     const float integration_dt = 1;
 
     // Currently hard coded
@@ -15,9 +15,9 @@ namespace prx
         int nq = qpos_inds.size();
 
         std::cout << "JACOBIAN STEERING" << std::endl;
-
-        std::string query_link_name = mj_id2name(sim->m, mjOBJ_BODY, body_id);
-
+    
+        // std::string query_link_name = mj_id2name(sim->m, mjOBJ_BODY, body_id);
+        
         double goal_quat[4]{};
 
         double curr_quat[4]{};
@@ -32,6 +32,12 @@ namespace prx
         double jacp[sim->m->nq * 3]{};
         double jacr[sim->m->nq * 3]{};
 
+        sim->d->qpos[3] = -1.57;
+        sim->d->qpos[5] = 1.57;
+        sim->d->qpos[6] = -.7853;
+
+        sim->step_simulation();
+
         config_t q_curr(nq);
         if (q_init.size() > 0){
             q_curr = q_init;
@@ -43,7 +49,94 @@ namespace prx
             std::copy(sim->d->qpos, sim->d->qpos+nq, q_curr.data());
         }
 
-        std::cout << "sites:" << sim->m->nsite << std::endl;
+        int target_id = mj_name2id(sim->m, mjOBJ_BODY, "target");
+
+        int mocap_id = sim->m->body_mocapid[target_id];
+
+        std::cout << sim->d->mocap_pos[3*mocap_id] << " " << sim->d->mocap_pos[3*mocap_id+1] << " " << sim->d->mocap_pos[3*mocap_id+2] << std::endl;
+        std::cout << sim->d->mocap_quat[3*mocap_id] << " " << sim->d->mocap_quat[3*mocap_id+1] << " " << sim->d->mocap_quat[3*mocap_id+2] <<  " " << sim->d->mocap_quat[3*mocap_id+3] << std::endl;
+        
+        config_t q_start{q_curr};
+        for(int i = 0; i < 100000; i++){
+
+            std::cout << "iteration " << i << std::endl;
+            // Eigen::Vector<double, 7> curr_pose = forward_kinematics(sim->m, sim->d, qpos_inds, query_link_name, q_curr);
+            vector_t curr_pos = {sim->d->site_xpos[3*mocap_id], sim->d->site_xpos[3*mocap_id+1], sim->d->site_xpos[3*mocap_id+2]};
+            double curr_xmat[9]{};
+
+            std::copy(sim->d->site_xmat+9*mocap_id, sim->d->site_xmat+9*mocap_id+9, curr_xmat);
+            mju_mat2Quat(curr_quat, curr_xmat);
+
+            Eigen::Vector<double, 7> goal_pose = {
+                sim->d->mocap_pos[3*mocap_id], sim->d->mocap_pos[3*mocap_id+1], sim->d->mocap_pos[3*mocap_id+2],
+                sim->d->mocap_quat[3*mocap_id], sim->d->mocap_quat[3*mocap_id+1], sim->d->mocap_quat[3*mocap_id+2], sim->d->mocap_quat[3*mocap_id+3]
+            };
+
+            dx = goal_pose({0, 1, 2}) - curr_pos({0, 1, 2});
+            // dx = {0, 0, 0};
+
+            std::cout << "x_goal: " << goal_pose({0, 1, 2}).transpose() << std::endl;
+            std::cout << "x_curr: " << curr_pos({0, 1, 2}).transpose() << std::endl;
+            std::cout << "dx: " << dx.transpose() << std::endl;
+
+            std::cout << "h_goal: " << goal_pose({3, 4, 5, 6}).transpose() << std::endl;
+            std::cout << "h_curr: " << curr_quat[0] << " " << curr_quat[1] << " " << curr_quat[2] << " " << curr_quat[3] << std::endl;
+
+            // curr_quat[0] = curr_pose(3, 6);
+            mju_negQuat(curr_quat_conj, curr_quat);
+
+            mju_mulQuat(error_quat, goal_quat, curr_quat_conj);
+
+            mju_quat2Vel(dtheta, error_quat, 1.0);
+
+            twist({0, 1, 2}) = dx;
+            twist({3, 4, 5}) = vector_t{dtheta};
+
+            compute_jacobian(sim->m, sim->d, jac, jacp, jacr, body_id, qpos_inds);
+
+            std::cout << jac << std::endl << std::endl;
+            std::cout << *jacp << std::endl;
+
+            auto identity = Eigen::MatrixXd::Identity(qpos_inds.size(), qpos_inds.size());
+
+            // std::cout << "J# dx" << std::endl;
+
+            auto jac_pinv_damped = (jac.transpose() * jac + damping * identity).inverse() * jac.transpose();
+            // std::cout << (jac_pinv_damped * twist).transpose() << std::endl;
+
+            Eigen::VectorXd dq = jac_pinv_damped * twist;
+
+            double dq_max = dq.cwiseAbs().maxCoeff();
+            if (dq_max > max_jnt_vel){
+                dq *= max_jnt_vel / dq_max;
+            }
+
+            // dq += (identity - (jac.transpose() * jac).inverse() * jac.transpose() * jac) * (q_start - q_curr);
+
+            double qpos[sim->m->nq]{};
+            std::copy(sim->d->qpos, sim->d->qpos+sim->m->nq, qpos);
+
+            /*
+            for(int i = 0; i < m->nq; i++){
+                std::cout << i << " " << *(qpos+i) << " ";
+                std::cout << d->qpos[i] << std::endl;
+            }
+            std::cout << std::endl;*/
+
+            mj_integratePos(sim->m, qpos, dq.data(), integration_dt);
+
+            for (int i = 0; i < nq; i++){
+                qpos[qpos_inds[i]] = std::max(sim->m->jnt_range[2*jnt_ids[i]], 
+                std::min(sim->m->jnt_range[2*jnt_ids[i]+1], qpos[qpos_inds[i]]));
+
+                sim->d->ctrl[ctrl_inds[i]] = qpos[qpos_inds[i]];
+            }
+            sim->step_simulation();
+
+            std::copy(sim->d->qpos, sim->d->qpos+nq, q_curr.data());
+
+        }
+        
         // sim->d->site_xmat
     }
 
@@ -83,7 +176,6 @@ namespace prx
         config_t q_start{q_curr};
         for(int i = 0; i < 100000; i++){
             // ITERATION STARTS HERE
-
             
             Eigen::Vector<double, 7> curr_pose = forward_kinematics(sim->m, sim->d, qpos_inds, query_link_name, q_curr);
 
@@ -173,6 +265,7 @@ namespace prx
         prx_assert(jac.cols() == qpos_inds.size(), "Mismatch between Jacobian columns and inds size: " << jac.cols() << ", " << qpos_inds.size());
 
         mj_jacBody(m, d, jacp, jacr, body_id);
+        mj_jacSite(m, d, jacp, jacr, 0);
 
         int len = 3 * m->nq;
         int curr_row = 0;
