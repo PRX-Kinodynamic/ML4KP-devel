@@ -1,6 +1,6 @@
 random_seed: 210896
 
-scene_xml_path: "franka_emika_panda/scene_box_cyl.xml"
+scene_xml_path: "franka_emika_panda/scene_steer.xml"
 heuristic_xml_path: "franka_emika_panda/scene_panda_hand.xml"
 
 visualize: false

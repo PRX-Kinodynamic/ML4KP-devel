@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     param_loader params;
     if (argc < 2)
     {
-        params = param_loader("examples/JIST/steer_test.yaml");
+        params = param_loader("examples/JIST/heuristic_test.yaml");
     }
     else
     {
@@ -51,15 +51,11 @@ int main(int argc, char* argv[])
     std::string hand = params["forward_name"].as<std::string>();
 
     Eigen::Vector<double, 7> q_init = start_state_vec(arm_qpos_inds);
-
-    /*
     Eigen::Vector<double, 7> q_goal(params["goal_config"].as<std::vector<double>>().data());
 
     Eigen::Vector<double, 7> q_steer(params["steer_config"].as<std::vector<double>>().data());
 
     auto x_steer = forward_kinematics(sim->m, sim->d, arm_qpos_inds, hand, q_steer);
-    */
-
     int body = mj_name2id(sim->m, mjOBJ_BODY, "hand");
 
     double jacp[3 * sim->m->nv] = {0};
@@ -72,7 +68,7 @@ int main(int argc, char* argv[])
 
     trajectory_t traj{ss};
     // jacobian_steering(sim->m, sim->d, traj, x_goal, body, arm_qpos_inds);
-    steer_test(sim, traj, body, arm_qpos_inds);
+    jacobian_steering(sim, traj, x_steer, body, arm_qpos_inds);
 
     // std::cout << jac << std::endl;
 

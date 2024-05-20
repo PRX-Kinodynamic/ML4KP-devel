@@ -10,6 +10,43 @@ namespace prx
     const std::vector<int> jnt_ids{0, 1, 2, 3, 4, 5, 6};
     const std::vector<int> ctrl_inds{0, 1, 2, 3, 4, 5, 6};
 
+    void steer_test(std::shared_ptr<prx::mujoco_simulator_t> sim, trajectory_t& traj, int body_id, std::vector<int>& qpos_inds, const config_t& q_init){
+
+        int nq = qpos_inds.size();
+
+        std::cout << "JACOBIAN STEERING" << std::endl;
+
+        std::string query_link_name = mj_id2name(sim->m, mjOBJ_BODY, body_id);
+
+        double goal_quat[4]{};
+
+        double curr_quat[4]{};
+        double curr_quat_conj[4]{};
+
+        double error_quat[4]{};
+        vector_t dx{};
+        double dtheta[3]{};
+
+        Eigen::Vector<double, 6> twist{};
+        jacobian_t jac{};
+        double jacp[sim->m->nq * 3]{};
+        double jacr[sim->m->nq * 3]{};
+
+        config_t q_curr(nq);
+        if (q_init.size() > 0){
+            q_curr = q_init;
+            // TODO: set sim configuration to provided initial configuration
+        }
+        else{
+            // HARD-CODED
+            prx_warn("No initial configuration provided. Using current simulation state.");
+            std::copy(sim->d->qpos, sim->d->qpos+nq, q_curr.data());
+        }
+
+        std::cout << "sites:" << sim->m->nsite << std::endl;
+        // sim->d->site_xmat
+    }
+
     void jacobian_steering(std::shared_ptr<prx::mujoco_simulator_t> sim, trajectory_t& traj, pose_t goal_pose, int body_id, std::vector<int>& qpos_inds, const config_t& q_init){
 
         int nq = qpos_inds.size();
