@@ -11,6 +11,7 @@ namespace prx
     const std::vector<int> ctrl_inds{0, 1, 2, 3, 4, 5, 6};
 
     void steer_test(std::shared_ptr<prx::mujoco_simulator_t> sim, trajectory_t& traj, int body_id, std::vector<int>& qpos_inds, const config_t& q_init){
+        prx_assert(body_id != -1, "ValueError: body_id is invalid");
 
         int nq = qpos_inds.size();
 
@@ -61,11 +62,9 @@ namespace prx
 
             std::cout << "iteration " << i << std::endl;
             // Eigen::Vector<double, 7> curr_pose = forward_kinematics(sim->m, sim->d, qpos_inds, query_link_name, q_curr);
-            vector_t curr_pos = {sim->d->site_xpos[3*mocap_id], sim->d->site_xpos[3*mocap_id+1], sim->d->site_xpos[3*mocap_id+2]};
-            double curr_xmat[9]{};
-
-            std::copy(sim->d->site_xmat+9*mocap_id, sim->d->site_xmat+9*mocap_id+9, curr_xmat);
-            mju_mat2Quat(curr_quat, curr_xmat);
+            vector_t curr_pos = {sim->d->xpos[3*body_id], sim->d->xpos[3*body_id+1],sim->d->xpos[3*body_id+2]};
+            
+            std::copy(sim->d->xquat+3*body_id, sim->d->xquat+3*body_id+4, curr_quat);
 
             Eigen::Vector<double, 7> goal_pose = {
                 sim->d->mocap_pos[3*mocap_id], sim->d->mocap_pos[3*mocap_id+1], sim->d->mocap_pos[3*mocap_id+2],
@@ -74,14 +73,14 @@ namespace prx
 
             dx = goal_pose({0, 1, 2}) - curr_pos({0, 1, 2});
             // dx = {0, 0, 0};
-
+            
             std::cout << "x_goal: " << goal_pose({0, 1, 2}).transpose() << std::endl;
             std::cout << "x_curr: " << curr_pos({0, 1, 2}).transpose() << std::endl;
             std::cout << "dx: " << dx.transpose() << std::endl;
-
+            
             std::cout << "h_goal: " << goal_pose({3, 4, 5, 6}).transpose() << std::endl;
             std::cout << "h_curr: " << curr_quat[0] << " " << curr_quat[1] << " " << curr_quat[2] << " " << curr_quat[3] << std::endl;
-
+            
             // curr_quat[0] = curr_pose(3, 6);
             mju_negQuat(curr_quat_conj, curr_quat);
 
@@ -91,11 +90,11 @@ namespace prx
 
             twist({0, 1, 2}) = dx;
             twist({3, 4, 5}) = vector_t{dtheta};
-
+            
             compute_jacobian(sim->m, sim->d, jac, jacp, jacr, body_id, qpos_inds);
 
-            std::cout << jac << std::endl << std::endl;
-            std::cout << *jacp << std::endl;
+            // std::cout << jac << std::endl << std::endl;
+            // std::cout << *jacp << std::endl;
 
             auto identity = Eigen::MatrixXd::Identity(qpos_inds.size(), qpos_inds.size());
 
@@ -116,12 +115,8 @@ namespace prx
             double qpos[sim->m->nq]{};
             std::copy(sim->d->qpos, sim->d->qpos+sim->m->nq, qpos);
 
-            /*
-            for(int i = 0; i < m->nq; i++){
-                std::cout << i << " " << *(qpos+i) << " ";
-                std::cout << d->qpos[i] << std::endl;
-            }
-            std::cout << std::endl;*/
+            // std::cout << "attachment id:" << mj_name2id(sim->m, mjOBJ_BODY, "attachment") << std::endl;
+            // std::cout << "body id:" << body_id << std::endl;
 
             mj_integratePos(sim->m, qpos, dq.data(), integration_dt);
 
@@ -265,7 +260,7 @@ namespace prx
         prx_assert(jac.cols() == qpos_inds.size(), "Mismatch between Jacobian columns and inds size: " << jac.cols() << ", " << qpos_inds.size());
 
         mj_jacBody(m, d, jacp, jacr, body_id);
-        mj_jacSite(m, d, jacp, jacr, 0);
+        // mj_jacSite(m, d, jacp, jacr, 0);
 
         int len = 3 * m->nq;
         int curr_row = 0;

@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     auto x_steer = forward_kinematics(sim->m, sim->d, arm_qpos_inds, hand, q_steer);
     */
 
-    int body = mj_name2id(sim->m, mjOBJ_BODY, "hand");
+    int body = mj_name2id(sim->m, mjOBJ_BODY, hand.c_str());
 
     double jacp[3 * sim->m->nv] = {0};
     double jacr[3 * sim->m->nv] = {0};

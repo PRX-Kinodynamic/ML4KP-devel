@@ -28,7 +28,6 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path, const bool
   simulation_step = m->opt.timestep;
   std::cout << "Using simulation step: " << simulation_step << std::endl;
 
-  // K TAG change this!
   if (_vis)
   {
     if (!glfwInit())
