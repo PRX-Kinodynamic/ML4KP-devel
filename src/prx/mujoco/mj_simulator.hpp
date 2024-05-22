@@ -110,6 +110,8 @@ public:
 
   void set_video_name(const std::string& video_name);
 
+  void set_frame_visualization();
+
   MujocoState get_state();
 
   void close_video()

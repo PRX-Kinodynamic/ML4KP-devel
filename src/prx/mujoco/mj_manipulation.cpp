@@ -1,4 +1,5 @@
 #include "prx/mujoco/mj_manipulation.hpp"
+#include <unistd.h>
 
 namespace prx
 {
@@ -10,16 +11,16 @@ namespace prx
     const std::vector<int> jnt_ids{0, 1, 2, 3, 4, 5, 6};
     const std::vector<int> ctrl_inds{0, 1, 2, 3, 4, 5, 6};
 
-    void steer_test(std::shared_ptr<prx::mujoco_simulator_t> sim, trajectory_t& traj, int body_id, std::vector<int>& qpos_inds, const config_t& q_init){
+    void steer_test(std::shared_ptr<prx::mujoco_simulator_t> sim, trajectory_t& traj, pose_t goal_pose, int body_id, std::vector<int>& qpos_inds, const config_t& q_init){
         prx_assert(body_id != -1, "ValueError: body_id is invalid");
 
         int nq = qpos_inds.size();
 
         std::cout << "JACOBIAN STEERING" << std::endl;
-    
-        // std::string query_link_name = mj_id2name(sim->m, mjOBJ_BODY, body_id);
         
+        // double *goal_quat = &goal_pose[3];
         double goal_quat[4]{};
+        std::copy(goal_pose.begin()+3, goal_pose.end(), goal_quat);
 
         double curr_quat[4]{};
         double curr_quat_conj[4]{};
@@ -50,37 +51,26 @@ namespace prx
             std::copy(sim->d->qpos, sim->d->qpos+nq, q_curr.data());
         }
 
-        int target_id = mj_name2id(sim->m, mjOBJ_BODY, "target");
+        // int target_id = mj_name2id(sim->m, mjOBJ_BODY, "target");
+        // int mocap_id = sim->m->body_mocapid[target_id];
 
-        int mocap_id = sim->m->body_mocapid[target_id];
-
-        std::cout << sim->d->mocap_pos[3*mocap_id] << " " << sim->d->mocap_pos[3*mocap_id+1] << " " << sim->d->mocap_pos[3*mocap_id+2] << std::endl;
-        std::cout << sim->d->mocap_quat[3*mocap_id] << " " << sim->d->mocap_quat[3*mocap_id+1] << " " << sim->d->mocap_quat[3*mocap_id+2] <<  " " << sim->d->mocap_quat[3*mocap_id+3] << std::endl;
+        // std::cout << sim->d->mocap_pos[3*mocap_id] << " " << sim->d->mocap_pos[3*mocap_id+1] << " " << sim->d->mocap_pos[3*mocap_id+2] << std::endl;
+        // std::cout << sim->d->mocap_quat[3*mocap_id] << " " << sim->d->mocap_quat[3*mocap_id+1] << " " << sim->d->mocap_quat[3*mocap_id+2] <<  " " << sim->d->mocap_quat[3*mocap_id+3] << std::endl;
         
         config_t q_start{q_curr};
         for(int i = 0; i < 100000; i++){
-
+            
             std::cout << "iteration " << i << std::endl;
+            std::cout << goal_pose.transpose() << std::endl;
             // Eigen::Vector<double, 7> curr_pose = forward_kinematics(sim->m, sim->d, qpos_inds, query_link_name, q_curr);
             vector_t curr_pos = {sim->d->xpos[3*body_id], sim->d->xpos[3*body_id+1],sim->d->xpos[3*body_id+2]};
             
             std::copy(sim->d->xquat+3*body_id, sim->d->xquat+3*body_id+4, curr_quat);
 
-            Eigen::Vector<double, 7> goal_pose = {
-                sim->d->mocap_pos[3*mocap_id], sim->d->mocap_pos[3*mocap_id+1], sim->d->mocap_pos[3*mocap_id+2],
-                sim->d->mocap_quat[3*mocap_id], sim->d->mocap_quat[3*mocap_id+1], sim->d->mocap_quat[3*mocap_id+2], sim->d->mocap_quat[3*mocap_id+3]
-            };
-
             dx = goal_pose({0, 1, 2}) - curr_pos({0, 1, 2});
             // dx = {0, 0, 0};
             
-            std::cout << "x_goal: " << goal_pose({0, 1, 2}).transpose() << std::endl;
-            std::cout << "x_curr: " << curr_pos({0, 1, 2}).transpose() << std::endl;
-            std::cout << "dx: " << dx.transpose() << std::endl;
-            
-            std::cout << "h_goal: " << goal_pose({3, 4, 5, 6}).transpose() << std::endl;
-            std::cout << "h_curr: " << curr_quat[0] << " " << curr_quat[1] << " " << curr_quat[2] << " " << curr_quat[3] << std::endl;
-            
+            // goal_quat = double[4]{0, 1, 0, 0};
             // curr_quat[0] = curr_pose(3, 6);
             mju_negQuat(curr_quat_conj, curr_quat);
 
@@ -91,35 +81,50 @@ namespace prx
             twist({0, 1, 2}) = dx;
             twist({3, 4, 5}) = vector_t{dtheta};
             
-            compute_jacobian(sim->m, sim->d, jac, jacp, jacr, body_id, qpos_inds);
+            std::cout << "h_goal: " << goal_pose({3, 4, 5, 6}).transpose() << std::endl;
+            std::cout << "h_curr: " << curr_quat[0] << " " << curr_quat[1] << " " << curr_quat[2] << " " << curr_quat[3] << std::endl;
+            std::cout << "dtheta: " << dtheta[0] << " " << dtheta[1] << " " << dtheta[2] << " " << std::endl;
+            
 
-            // std::cout << jac << std::endl << std::endl;
-            // std::cout << *jacp << std::endl;
+            /*
+            std::cout << "x_goal: " << goal_pose({0, 1, 2}).transpose() << std::endl;
+            std::cout << "x_curr: " << curr_pos({0, 1, 2}).transpose() << std::endl;
+            std::cout << "dx: " << dx.transpose() << std::endl;
+            
+            std::cout << "h_goal: " << goal_pose({3, 4, 5, 6}).transpose() << std::endl;
+            std::cout << "h_curr: " << curr_quat[0] << " " << curr_quat[1] << " " << curr_quat[2] << " " << curr_quat[3] << std::endl;
+            std::cout << "dtheta: " << dtheta[0] << " " << dtheta[1] << " " << dtheta[2] << " " << std::endl;
+            
+            std::cout << "error_quat: " << error_quat[0] << " " << error_quat[1] << " " << error_quat[2] << " " << error_quat[3] << " " << std::endl;
+            std::cout << "goal_quat: " << goal_quat[0] << " " << goal_quat[1] << " " << goal_quat[2] << " " << goal_quat[3] << " " << std::endl;
+            std::cout << "curr_quat_conj: " << curr_quat_conj[0] << " " << curr_quat_conj[1] << " " << curr_quat_conj[2] << " " << curr_quat_conj[3] << " " << std::endl;
+            std::cout << sim->d->mocap_quat[4*mocap_id] << std::endl;
+            std::cout << "target: " << sim->d->xquat[4*target_id] << " " << sim->d->xquat[4*target_id+1] << " " << sim->d->xquat[4*target_id+2] << " " << sim->d->xquat[4*target_id+3] << " " << std::endl;
+            */
+
+            compute_jacobian(sim->m, sim->d, jac, jacp, jacr, body_id, qpos_inds);
 
             auto identity = Eigen::MatrixXd::Identity(qpos_inds.size(), qpos_inds.size());
 
-            // std::cout << "J# dx" << std::endl;
-
             auto jac_pinv_damped = (jac.transpose() * jac + damping * identity).inverse() * jac.transpose();
-            // std::cout << (jac_pinv_damped * twist).transpose() << std::endl;
 
             Eigen::VectorXd dq = jac_pinv_damped * twist;
-
+            
+            // clamping joint velocities
             double dq_max = dq.cwiseAbs().maxCoeff();
             if (dq_max > max_jnt_vel){
                 dq *= max_jnt_vel / dq_max;
             }
 
             // dq += (identity - (jac.transpose() * jac).inverse() * jac.transpose() * jac) * (q_start - q_curr);
+            dq += (identity - jac.completeOrthogonalDecomposition().pseudoInverse() * jac) * (q_start - q_curr);
 
             double qpos[sim->m->nq]{};
             std::copy(sim->d->qpos, sim->d->qpos+sim->m->nq, qpos);
 
-            // std::cout << "attachment id:" << mj_name2id(sim->m, mjOBJ_BODY, "attachment") << std::endl;
-            // std::cout << "body id:" << body_id << std::endl;
-
             mj_integratePos(sim->m, qpos, dq.data(), integration_dt);
 
+            // clipping position controls
             for (int i = 0; i < nq; i++){
                 qpos[qpos_inds[i]] = std::max(sim->m->jnt_range[2*jnt_ids[i]], 
                 std::min(sim->m->jnt_range[2*jnt_ids[i]+1], qpos[qpos_inds[i]]));
@@ -129,7 +134,7 @@ namespace prx
             sim->step_simulation();
 
             std::copy(sim->d->qpos, sim->d->qpos+nq, q_curr.data());
-
+            sleep(.1);
         }
         
         // sim->d->site_xmat

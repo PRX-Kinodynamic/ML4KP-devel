@@ -3,5 +3,6 @@ random_seed: 210896
 scene_xml_path: "franka_emika_panda/scene_steer.xml"
 
 forward_name: "attachment"
+target_name: "target"
 
 joint_names: ["base_yaw", "base_pitch", "base_roll", "joint_1_pitch", "joint_1_roll", "joint_2_pitch", "joint_2_roll"]
