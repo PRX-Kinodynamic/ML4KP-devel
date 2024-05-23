@@ -7,6 +7,9 @@ namespace prx
     const double max_jnt_vel = PRX_PI / 4;
     const float integration_dt = 1;
 
+    const float Kpos = 1;
+    const float Kori = 1;
+
     // Currently hard coded
     const std::vector<int> jnt_ids{0, 1, 2, 3, 4, 5, 6};
     const std::vector<int> ctrl_inds{0, 1, 2, 3, 4, 5, 6};
@@ -33,7 +36,7 @@ namespace prx
         jacobian_t jac{};
         double jacp[sim->m->nq * 3]{};
         double jacr[sim->m->nq * 3]{};
-
+        
         sim->d->qpos[3] = -1.57;
         sim->d->qpos[5] = 1.57;
         sim->d->qpos[6] = -.7853;
@@ -50,13 +53,10 @@ namespace prx
             prx_warn("No initial configuration provided. Using current simulation state.");
             std::copy(sim->d->qpos, sim->d->qpos+nq, q_curr.data());
         }
-
-        // int target_id = mj_name2id(sim->m, mjOBJ_BODY, "target");
-        // int mocap_id = sim->m->body_mocapid[target_id];
-
-        // std::cout << sim->d->mocap_pos[3*mocap_id] << " " << sim->d->mocap_pos[3*mocap_id+1] << " " << sim->d->mocap_pos[3*mocap_id+2] << std::endl;
-        // std::cout << sim->d->mocap_quat[3*mocap_id] << " " << sim->d->mocap_quat[3*mocap_id+1] << " " << sim->d->mocap_quat[3*mocap_id+2] <<  " " << sim->d->mocap_quat[3*mocap_id+3] << std::endl;
         
+        for (int i = 0; i < sim->m->nbody; i++){
+            sim->m->body_gravcomp[i] = 1;
+        }
         config_t q_start{q_curr};
         for(int i = 0; i < 100000; i++){
             
@@ -65,7 +65,7 @@ namespace prx
             // Eigen::Vector<double, 7> curr_pose = forward_kinematics(sim->m, sim->d, qpos_inds, query_link_name, q_curr);
             vector_t curr_pos = {sim->d->xpos[3*body_id], sim->d->xpos[3*body_id+1],sim->d->xpos[3*body_id+2]};
             
-            std::copy(sim->d->xquat+3*body_id, sim->d->xquat+3*body_id+4, curr_quat);
+            std::copy(sim->d->xquat+4*body_id, sim->d->xquat+4*body_id+4, curr_quat);
 
             dx = goal_pose({0, 1, 2}) - curr_pos({0, 1, 2});
             // dx = {0, 0, 0};
@@ -78,19 +78,14 @@ namespace prx
 
             mju_quat2Vel(dtheta, error_quat, 1.0);
 
-            twist({0, 1, 2}) = dx;
-            twist({3, 4, 5}) = vector_t{dtheta};
+            twist({0, 1, 2}) = dx * Kpos / integration_dt;
+            twist({3, 4, 5}) = vector_t{dtheta} * Kori / integration_dt;
             
-            std::cout << "h_goal: " << goal_pose({3, 4, 5, 6}).transpose() << std::endl;
-            std::cout << "h_curr: " << curr_quat[0] << " " << curr_quat[1] << " " << curr_quat[2] << " " << curr_quat[3] << std::endl;
-            std::cout << "dtheta: " << dtheta[0] << " " << dtheta[1] << " " << dtheta[2] << " " << std::endl;
-            
-
             /*
             std::cout << "x_goal: " << goal_pose({0, 1, 2}).transpose() << std::endl;
             std::cout << "x_curr: " << curr_pos({0, 1, 2}).transpose() << std::endl;
             std::cout << "dx: " << dx.transpose() << std::endl;
-            
+
             std::cout << "h_goal: " << goal_pose({3, 4, 5, 6}).transpose() << std::endl;
             std::cout << "h_curr: " << curr_quat[0] << " " << curr_quat[1] << " " << curr_quat[2] << " " << curr_quat[3] << std::endl;
             std::cout << "dtheta: " << dtheta[0] << " " << dtheta[1] << " " << dtheta[2] << " " << std::endl;
@@ -98,10 +93,9 @@ namespace prx
             std::cout << "error_quat: " << error_quat[0] << " " << error_quat[1] << " " << error_quat[2] << " " << error_quat[3] << " " << std::endl;
             std::cout << "goal_quat: " << goal_quat[0] << " " << goal_quat[1] << " " << goal_quat[2] << " " << goal_quat[3] << " " << std::endl;
             std::cout << "curr_quat_conj: " << curr_quat_conj[0] << " " << curr_quat_conj[1] << " " << curr_quat_conj[2] << " " << curr_quat_conj[3] << " " << std::endl;
-            std::cout << sim->d->mocap_quat[4*mocap_id] << std::endl;
-            std::cout << "target: " << sim->d->xquat[4*target_id] << " " << sim->d->xquat[4*target_id+1] << " " << sim->d->xquat[4*target_id+2] << " " << sim->d->xquat[4*target_id+3] << " " << std::endl;
             */
 
+            // continue;
             compute_jacobian(sim->m, sim->d, jac, jacp, jacr, body_id, qpos_inds);
 
             auto identity = Eigen::MatrixXd::Identity(qpos_inds.size(), qpos_inds.size());
@@ -134,7 +128,9 @@ namespace prx
             sim->step_simulation();
 
             std::copy(sim->d->qpos, sim->d->qpos+nq, q_curr.data());
-            sleep(.1);
+
+            std::cout << "dq: " << dq.transpose() << std::endl;
+            // usleep(100000);
         }
         
         // sim->d->site_xmat

@@ -28,6 +28,7 @@ int main(int argc, char* argv[])
     std::shared_ptr<prx::mujoco_simulator_t> sim =
         std::make_shared<prx::mujoco_simulator_t>(params["scene_xml_path"].as<std::string>());
     sim->init_simulator();
+    sim->set_mjframe_visualization(mjFRAME_SITE);
 
     auto context = sim->get_context("mujoco");
     auto ss = context.first->get_state_space();
@@ -51,7 +52,7 @@ int main(int argc, char* argv[])
     std::string hand = params["forward_name"].as<std::string>();
 
     Eigen::Vector<double, 7> q_init = start_state_vec(arm_qpos_inds);
-
+    
     /*
     Eigen::Vector<double, 7> q_goal(params["goal_config"].as<std::vector<double>>().data());
 
@@ -78,11 +79,9 @@ int main(int argc, char* argv[])
     double temp_jacr[3 * sim->m->nv]{};    
     compute_jacobian(sim->m, sim->d, jac, temp_jacp, temp_jacr, body, arm_qpos_inds);
 
-    sim->set_frame_visualization();
-
     trajectory_t traj{ss};
     // jacobian_steering(sim->m, sim->d, traj, x_goal, body, arm_qpos_inds);
-    // steer_test(sim, traj, x_steer, body, arm_qpos_inds);
+    steer_test(sim, traj, x_steer, body, arm_qpos_inds);
 
     // std::cout << jac << std::endl;
 

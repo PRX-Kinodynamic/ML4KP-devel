@@ -426,8 +426,10 @@ void mujoco_simulator_t::scroll(GLFWwindow* window, double xoffset, double yoffs
   mjv_moveCamera(m, mjMOUSE_ZOOM, 0, 0.05 * yoffset, &scn, &cam);
 }
 
-void mujoco_simulator_t::set_frame_visualization(){
-  std::cout << "FRAME VIZ: " << opt.frame << std::endl;
+void mujoco_simulator_t::set_mjframe_visualization(int mjFrame){
+  prx_assert(mjFrame >= 0 && mjFrame < mjNFRAME, "Error: mjFrame input does not correspond to anything: " << mjFrame);
+
+  opt.frame = mjFrame;
 }
 
 }  // namespace prx
