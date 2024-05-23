@@ -9,7 +9,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include "prx/utilities/math/first_order_derivative.hpp"
-
+#include "prx/factor_graphs/utilities/symbols_factory.hpp"
 namespace prx
 {
 namespace fg
@@ -18,6 +18,8 @@ template <typename X, typename Xdot>
 class euler_integration_factor_t : public gtsam::NoiseModelFactor3<X, X, Xdot>
 {
   using Base = gtsam::NoiseModelFactor3<X, X, Xdot>;
+  using Derived = euler_integration_factor_t<X, Xdot>;
+
   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
   static constexpr Eigen::Index DimX{ gtsam::traits<X>::dimension };
   static constexpr Eigen::Index DimXdot{ gtsam::traits<Xdot>::dimension };
@@ -28,8 +30,11 @@ class euler_integration_factor_t : public gtsam::NoiseModelFactor3<X, X, Xdot>
 
 public:
   euler_integration_factor_t(const gtsam::Key key_xt1, const gtsam::Key key_xt0, const gtsam::Key key_xdot,
-                             const NoiseModel& cost_model, const double h)
-    : Base(cost_model, key_xt1, key_xt0, key_xdot), _h(h), _negative_identity(-1 * DerivativeX::Identity())
+                             const NoiseModel& cost_model, const double h, const std::string label = "EulerIntegration")
+    : Base(cost_model, key_xt1, key_xt0, key_xdot)
+    , _h(h)
+    , _negative_identity(-1 * DerivativeX::Identity())
+    , _label(label)
   {
   }
 
@@ -65,9 +70,24 @@ public:
     return error;
   }
 
+  void to_stream(std::ostream& os, const gtsam::Values& values) const
+  {
+    // const X& x1, const X& x0, const Xdot& xdot
+    const X x1{ values.at<X>(this->template key<1>()) };
+    const X x0{ values.at<X>(this->template key<2>()) };
+    const Xdot xdot{ values.at<Xdot>(this->template key<3>()) };
+    const char sp{ prx::constants::separating_value };
+    os << _label << sp;
+    os << symbol_factory_t::formatter(this->template key<1>()) << " " << x1.transpose() << sp;
+    os << symbol_factory_t::formatter(this->template key<2>()) << " " << x0.transpose() << sp;
+    os << symbol_factory_t::formatter(this->template key<3>()) << " " << xdot.transpose() << sp;
+    os << "\n";
+  }
+
 private:
   const double _h;
   const DerivativeX _negative_identity;
+  const std::string _label;
 };
 }  // namespace fg
 }  // namespace prx
