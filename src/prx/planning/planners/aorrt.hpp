@@ -123,6 +123,24 @@ public:
   {
   }
 
+  virtual void init(const prx::param_loader& params) override
+  {
+    rrt_specification_t::init(params);
+    cost_multiplier = params.exists("cost_multiplier") ? params["cost_multiplier"].as<double>() : cost_multiplier;
+    w_c = params.exists("w_c") ? params["w_c"].as<double>() : w_c;
+    w_x = params.exists("w_x") ? params["w_x"].as<double>() : w_x;
+  }
+  friend std::ostream& operator<<(std::ostream& os, const aorrt_specification_t& obj)
+  {
+    // rrt_specification_t::operator<<(os, obj);
+    os << static_cast<rrt_specification_t>(obj);
+    os << "cost_multiplier: " << obj.cost_multiplier << "\n";
+    os << "w_c: " << obj.w_c << "\n";
+    os << "w_x: " << obj.w_x << "\n";
+
+    return os;
+  }
+
   space_t* state_space;
   // space_t* Y_state_space;
   // space_t* control_space;

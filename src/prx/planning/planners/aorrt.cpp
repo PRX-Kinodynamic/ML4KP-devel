@@ -131,7 +131,7 @@ void aorrt_t::_resolve_query(condition_check_t* condition)
       if (_c_new > _c_max)
       {
         _c_max = _c_new;
-        _cost_state_space->set_bounds({ 0.0 }, { _c_max });
+        _cost_state_space->set_bounds({ 0.0 }, { _c_max * aorrt_spec->cost_multiplier });
       }
       // add vertex
       auto node_index = _tree.add_vertex<aorrt_node_t, aorrt_edge_t>();
@@ -247,7 +247,6 @@ void aorrt_t::update_goal(node_index_t node_index)
     Y_min_cost = _c_new;
     goal_vertex = node_index;
 
-    Y_min_cost = _c_new;
     // aorrt_spec->c_max = _c_new;
     aorrt_spec->w_x = _w_x_bk;
     aorrt_spec->w_c = _w_c_bk;
