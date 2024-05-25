@@ -50,12 +50,13 @@ int main(int argc, char* argv[])
 
     std::string hand = params["forward_name"].as<std::string>();
 
-    Eigen::Vector<double, 7> q_init = start_state_vec(arm_qpos_inds);
-    Eigen::Vector<double, 7> q_goal(params["goal_config"].as<std::vector<double>>().data());
+    Eigen::Vector<double, 7> q_plan_start = start_state_vec(arm_qpos_inds);
+    Eigen::Vector<double, 7> q_plan_goal(params["goal_config"].as<std::vector<double>>().data());
 
-    Eigen::Vector<double, 7> q_steer(params["steer_config"].as<std::vector<double>>().data());
+    Eigen::Vector<double, 7> q_steer_start(params["steer_start"].as<std::vector<double>>().data());
+    Eigen::Vector<double, 7> q_steer_goal(params["steer_goal"].as<std::vector<double>>().data());
 
-    auto x_steer = forward_kinematics(sim->m, sim->d, arm_qpos_inds, hand, q_steer);
+    auto x_steer = forward_kinematics(sim->m, sim->d, arm_qpos_inds, hand, q_steer_goal);
     int body = mj_name2id(sim->m, mjOBJ_BODY, "hand");
 
     double jacp[3 * sim->m->nv] = {0};
@@ -68,7 +69,7 @@ int main(int argc, char* argv[])
 
     trajectory_t traj{ss};
     // jacobian_steering(sim->m, sim->d, traj, x_goal, body, arm_qpos_inds);
-    jacobian_steering(sim, traj, x_steer, body, arm_qpos_inds);
+    steer_test(sim, traj, x_steer, body, arm_qpos_inds);
 
     // std::cout << jac << std::endl;
 

@@ -32,7 +32,10 @@
     </body>
     <body name="cyl_body" pos="0.0925 0.25 0.04">
     	<freejoint name="cyl_joint"/>
+    	<geom name="cyl_geom" contype="0" conaffinity="0" size=".02 .05 .02" type="cylinder" rgba="1 .3125 .5 1" mass="0.05" friction="2" solimp="0.95 0.99 0.001" solref="0.005 1"/>
+      <!--
     	<geom name="cyl_geom" contype="15" conaffinity="15" size=".02 .05 .02" type="cylinder" rgba="1 .3125 .5 1" mass="0.05" friction="2" solimp="0.95 0.99 0.001" solref="0.005 1"/>
+      -->
     </body>
     <body name="test" pos="0.0925 0.25 0.04">
     	<geom name="test" contype="0" conaffinity="0" size=".1 .1 .1" type="sphere" rgba="1 .3125 .5 0" mass="0.05" friction="2" solimp="0.95 0.99 0.001" solref="0.005 1"/>

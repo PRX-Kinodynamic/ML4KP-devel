@@ -43,9 +43,11 @@ int main(int argc, char* argv[])
   dirt_t dirt(params["planner_name"].as<>());
   dirt_specification_t dirt_spec(context.first, context.second);
 
+  /*
   dirt_spec.distance_function = [](const space_point_t& a, const space_point_t& b){
     return space_t::euclidean_2d(a, b, 0, 7);
   };
+  */
 
   std::vector<std::string> joint_names = params["joint_names"].as<std::vector<std::string>>();
   auto qpos_inds = get_indices(sim->m, mjOBJ_JOINT, joint_names);
@@ -57,16 +59,18 @@ int main(int argc, char* argv[])
       auto pose_a = forward_kinematics(sim->m, sim->d, qpos_inds, end_effector_body, a);
       auto pose_b = forward_kinematics(sim->m, sim->d, qpos_inds, end_effector_body, b);
 
+      dist += space_t::euclidean_2d(a, b, 0, 3);
+      /*
       double euclidean = 0;
       for (int i = 0; i < 3; i++){
         euclidean += std::pow(pose_a[i] - pose_b[i], 2.0);
       }
       euclidean = std::sqrt(euclidean);
-
-      dist += euclidean;
+      
+      dist += euclidean;*/
     }
 
-    return dist;
+    return dist/ee_names.size();
   };
   // specify distance function
 
@@ -101,8 +105,7 @@ int main(int argc, char* argv[])
     return dirt_spec.distance_function(point, dirt_query.goal_state) < dirt_query.goal_region_radius;
   };
   
-  condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());  //'
-
+  condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());
   dirt.link_and_setup_spec(&dirt_spec);
   dirt.preprocess();
   dirt.link_and_setup_query(&dirt_query);

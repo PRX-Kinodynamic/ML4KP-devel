@@ -64,13 +64,14 @@ int main(int argc, char* argv[])
     std::string target = params["target_name"].as<std::string>();
     int target_id = mj_name2id(sim->m, mjOBJ_BODY, target.c_str());
 
-    Eigen::Vector<double, 7> x_steer = {
+    Eigen::Vector<double, 7> X_steer = {
         sim->d->xpos[3*target_id], sim->d->xpos[3*target_id+1], sim->d->xpos[3*target_id+2],
         sim->d->xquat[4*target_id], sim->d->xquat[4*target_id+1], sim->d->xquat[4*target_id+2], sim->d->xquat[4*target_id+3]
     };
 
     int body = mj_name2id(sim->m, mjOBJ_BODY, hand.c_str());
-
+    
+    /*
     double jacp[3 * sim->m->nv] = {0};
     double jacr[3 * sim->m->nv] = {0};
 
@@ -78,10 +79,11 @@ int main(int argc, char* argv[])
     double temp_jacp[3 * sim->m->nv]{};
     double temp_jacr[3 * sim->m->nv]{};    
     compute_jacobian(sim->m, sim->d, jac, temp_jacp, temp_jacr, body, arm_qpos_inds);
-
+    */
+   
     trajectory_t traj{ss};
     // jacobian_steering(sim->m, sim->d, traj, x_goal, body, arm_qpos_inds);
-    steer_test(sim, traj, x_steer, body, arm_qpos_inds);
+    steer_test(sim, traj, X_steer, body, arm_qpos_inds);
 
     // std::cout << jac << std::endl;
 

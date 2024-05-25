@@ -1,6 +1,6 @@
 random_seed: 210896
 
-scene_xml_path: "franka_emika_panda/scene_steer.xml"
+scene_xml_path: "franka_emika_panda/scene_box_cyl.xml"
 heuristic_xml_path: "franka_emika_panda/scene_panda_hand.xml"
 
 visualize: false
@@ -8,8 +8,10 @@ visualize: false
 planner_name: "roadmap"
 
 test_config: [0, 0, 0, 0, 0, 0, 0]
-steer_config: [0, .494, 0, -2.37, 0, 2.9, -2.29]
-goal_config: [0, .494, 0, -2.37, 0, 2.9, -2.29]
+steer_goal: [0, .494, 0, -2.37, 0, 2.9, -2.29]
+
+
+plan_goal: [0, .494, 0, -2.37, 0, 2.9, -2.29]
 goal_region_radius: .005
 
 checker_type: "iterations"

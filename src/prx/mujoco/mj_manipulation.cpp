@@ -27,6 +27,7 @@ namespace prx
 
         double curr_quat[4]{};
         double curr_quat_conj[4]{};
+        vector_t curr_x{};
 
         double error_quat[4]{};
         vector_t dx{};
@@ -37,9 +38,9 @@ namespace prx
         double jacp[sim->m->nq * 3]{};
         double jacr[sim->m->nq * 3]{};
         
-        sim->d->qpos[3] = -1.57;
-        sim->d->qpos[5] = 1.57;
-        sim->d->qpos[6] = -.7853;
+        // sim->d->qpos[3] = -1.57;
+        // sim->d->qpos[5] = 1.57;
+        // sim->d->qpos[6] = -.7853;
 
         sim->step_simulation();
 
@@ -57,21 +58,16 @@ namespace prx
         for (int i = 0; i < sim->m->nbody; i++){
             sim->m->body_gravcomp[i] = 1;
         }
+
         config_t q_start{q_curr};
         for(int i = 0; i < 100000; i++){
             
-            std::cout << "iteration " << i << std::endl;
-            std::cout << goal_pose.transpose() << std::endl;
-            // Eigen::Vector<double, 7> curr_pose = forward_kinematics(sim->m, sim->d, qpos_inds, query_link_name, q_curr);
-            vector_t curr_pos = {sim->d->xpos[3*body_id], sim->d->xpos[3*body_id+1],sim->d->xpos[3*body_id+2]};
+            curr_x = {sim->d->xpos[3*body_id], sim->d->xpos[3*body_id+1],sim->d->xpos[3*body_id+2]};
             
             std::copy(sim->d->xquat+4*body_id, sim->d->xquat+4*body_id+4, curr_quat);
 
-            dx = goal_pose({0, 1, 2}) - curr_pos({0, 1, 2});
-            // dx = {0, 0, 0};
-            
-            // goal_quat = double[4]{0, 1, 0, 0};
-            // curr_quat[0] = curr_pose(3, 6);
+            dx = goal_pose({0, 1, 2}) - curr_x({0, 1, 2});
+        
             mju_negQuat(curr_quat_conj, curr_quat);
 
             mju_mulQuat(error_quat, goal_quat, curr_quat_conj);
@@ -80,20 +76,6 @@ namespace prx
 
             twist({0, 1, 2}) = dx * Kpos / integration_dt;
             twist({3, 4, 5}) = vector_t{dtheta} * Kori / integration_dt;
-            
-            /*
-            std::cout << "x_goal: " << goal_pose({0, 1, 2}).transpose() << std::endl;
-            std::cout << "x_curr: " << curr_pos({0, 1, 2}).transpose() << std::endl;
-            std::cout << "dx: " << dx.transpose() << std::endl;
-
-            std::cout << "h_goal: " << goal_pose({3, 4, 5, 6}).transpose() << std::endl;
-            std::cout << "h_curr: " << curr_quat[0] << " " << curr_quat[1] << " " << curr_quat[2] << " " << curr_quat[3] << std::endl;
-            std::cout << "dtheta: " << dtheta[0] << " " << dtheta[1] << " " << dtheta[2] << " " << std::endl;
-            
-            std::cout << "error_quat: " << error_quat[0] << " " << error_quat[1] << " " << error_quat[2] << " " << error_quat[3] << " " << std::endl;
-            std::cout << "goal_quat: " << goal_quat[0] << " " << goal_quat[1] << " " << goal_quat[2] << " " << goal_quat[3] << " " << std::endl;
-            std::cout << "curr_quat_conj: " << curr_quat_conj[0] << " " << curr_quat_conj[1] << " " << curr_quat_conj[2] << " " << curr_quat_conj[3] << " " << std::endl;
-            */
 
             // continue;
             compute_jacobian(sim->m, sim->d, jac, jacp, jacr, body_id, qpos_inds);

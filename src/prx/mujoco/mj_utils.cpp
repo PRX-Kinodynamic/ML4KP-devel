@@ -3,7 +3,7 @@
 namespace prx
 {
 
-// Indices for accessing qpos, xpos, xquat
+// Indices for accessing ctrl, qpos, xpos, xquat
 
 std::vector<int> get_indices(mjModel* m, const mjtObj& obj, const std::string& name)
 {
@@ -110,7 +110,7 @@ std::vector<int> get_body_indices(mjModel* m, const std::string& body_name)
 
   if (body_id == -1)
   {
-    prx_throw("Invalid body_name given.")
+    prx_throw("Invalid body_name given-- " << body_name << "")
   }
 
   std::vector<int> xpos_inds{3*body_id, 3*body_id+1, 3*body_id+2};

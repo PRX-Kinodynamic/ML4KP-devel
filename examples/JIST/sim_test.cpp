@@ -48,6 +48,8 @@ int main(int argc, char* argv[])
         sim->step_simulation();
         ee_sim->step_simulation();
         ee_sim->d->qpos[10] += .01;
+        std::cout << sim->d->qpos[3] << std::endl;
+
     }
 
 }
