@@ -662,6 +662,23 @@ public:
    */
   std::string get_topology() const;
 
+  // Increment the state by step_inc, given the bounds.
+  // Equivalent to how decimal works: increment(pt=[8], inc=3) -> 11. In this example, the bounds are [0,9]
+  template <typename Point>
+  bool state_increment(Point pt, double step_inc)
+  {
+    for (int i = 0; i < dimension; ++i)
+    {
+      pt[i] = pt[i] + step_inc;
+      if (pt[i] <= *upper_bounds[i])
+      {
+        return true;
+      }
+      pt[i] = *lower_bounds[i];
+    }
+    return false;
+  }
+
 protected:
   space_t(const space_t* other) : dimension{ other->dimension }
   {
