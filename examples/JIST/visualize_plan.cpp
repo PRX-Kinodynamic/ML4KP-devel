@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
   context.first->propagate(start, plan, traj);
 
   std::cout << "plan propagated" << std::endl;
+  std::cout << "last state in traj: " << traj[traj.size()-1] << std::endl;
 
   sim->close_video();
 
