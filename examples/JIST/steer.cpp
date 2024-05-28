@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     param_loader params;
     if (argc < 2)
     {
-        params = param_loader("examples/JIST/heuristic_test.yaml");
+        params = param_loader("examples/JIST/franka_steer.yaml");
     }
     else
     {
@@ -51,21 +51,13 @@ int main(int argc, char* argv[])
     std::string hand = params["forward_name"].as<std::string>();
 
     Eigen::Vector<double, 7> q_plan_start = start_state_vec(arm_qpos_inds);
-    Eigen::Vector<double, 7> q_plan_goal(params["goal_config"].as<std::vector<double>>().data());
+    Eigen::Vector<double, 7> q_plan_goal(params["plan_goal"].as<std::vector<double>>().data());
 
     Eigen::Vector<double, 7> q_steer_start(params["steer_start"].as<std::vector<double>>().data());
     Eigen::Vector<double, 7> q_steer_goal(params["steer_goal"].as<std::vector<double>>().data());
 
     auto x_steer = forward_kinematics(sim->m, sim->d, arm_qpos_inds, hand, q_steer_goal);
     int body = mj_name2id(sim->m, mjOBJ_BODY, "hand");
-
-    double jacp[3 * sim->m->nv] = {0};
-    double jacr[3 * sim->m->nv] = {0};
-
-    Eigen::Matrix<double, 6, 7> jac{};
-    double temp_jacp[3 * sim->m->nv]{};
-    double temp_jacr[3 * sim->m->nv]{};    
-    compute_jacobian(sim->m, sim->d, jac, temp_jacp, temp_jacr, body, arm_qpos_inds);
 
     trajectory_t traj{ss};
     // jacobian_steering(sim->m, sim->d, traj, x_goal, body, arm_qpos_inds);
