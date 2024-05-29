@@ -59,15 +59,15 @@ int main(int argc, char* argv[])
       auto pose_a = forward_kinematics(sim->m, sim->d, qpos_inds, end_effector_body, a);
       auto pose_b = forward_kinematics(sim->m, sim->d, qpos_inds, end_effector_body, b);
 
-      dist += space_t::euclidean_2d(a, b, 0, 3);
-      /*
+      //dist += space_t::euclidean_2d(a, b, 0, 3);
+      
       double euclidean = 0;
       for (int i = 0; i < 3; i++){
         euclidean += std::pow(pose_a[i] - pose_b[i], 2.0);
       }
       euclidean = std::sqrt(euclidean);
       
-      dist += euclidean;*/
+      dist += euclidean;
     }
 
     return dist/ee_names.size();

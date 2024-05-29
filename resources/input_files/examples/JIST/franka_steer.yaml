@@ -1,26 +1,29 @@
 random_seed: 210896
 
 scene_xml_path: "franka_emika_panda/scene_steer_hand.xml"
+ee_xml_path: "franka_emika_panda/scene_panda_hand.xml"
+
+joint_names: ["base_yaw", "base_pitch", "base_roll", "joint_1_pitch", "joint_1_roll", "joint_2_pitch", "joint_2_roll"]
+link_names: ["link0", "link1", "link2", "link3", "link4", "link5", "link6", "link7", "hand"]
 
 visualize: false
-
 
 steer_start: [0, 0, 0, 0, 0, 0, 0]
 steer_goal: [0, .494, 0, -2.37, 0, 2.9, -2.29]
 
+planner_name: "dirt"
 plan_goal: [0, .494, 0, -2.37, 0, 2.9, -2.29]
 goal_region_radius: .005
 
-output_plan: false
-output_path: "/home/kchen/robotics/ML4KP-devel/out/franka_dirt_output.txt"
-video_name: "/home/kchen/robotics/ML4KP-devel/out/heuristic_viz.mp4"
-
+checker_type: "time"
+checker_value: 1200
 
 forward_name: "hand"
 target_name: "target"
 end_effector: ["hand", "left_finger", "right_finger"]
 
-joint_names: ["base_yaw", "base_pitch", "base_roll", "joint_1_pitch", "joint_1_roll", "joint_2_pitch", "joint_2_roll"]
-link_names: ["link0", "link1", "link2", "link3", "link4", "link5", "link6", "link7", "hand"]
+output_plan: false
+output_path: "/home/kchen/robotics/ML4KP-devel/out/franka_dirt_output.txt"
+video_name: "/home/kchen/robotics/ML4KP-devel/out/heuristic_viz.mp4"
 
 ignored_pairs: [['world', 'cyl_body'], ['world', 'box_body'], ['left_finger', 'right_finger'], ['world', 'link0']]

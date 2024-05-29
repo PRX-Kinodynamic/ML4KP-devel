@@ -200,6 +200,9 @@ void mujoco_simulator_t::step_simulation(const int step_type)
   else if(step_type == 1){
     mj_step1(m, d);
   }
+  else if(step_type == -1){
+    mj_kinematics(m, d);
+  }
 
   if (_vis)
   {
