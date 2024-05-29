@@ -17,6 +17,10 @@
   <worldbody>
     <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
     <geom name="floor" size="1 1 0.01" type="plane" material="grid"/>
+    <body name="box_body" pos="0.5 0 .02"> <!-- this is how you add an object to the scene -->
+    	<freejoint name="box_joint"/>
+    	<geom name="box_geom" contype="15" conaffinity="15" size=".02 .02 .02" type="box" rgba=".5 .1 .5 1" mass="0.05" friction="2" solimp="0.95 0.99 0.001" solref="0.005 1"/>
+    </body>
     <body name="target" pos="0.5 0 .5" quat="0 1 0 0" mocap="true">
       <geom type="box" size=".05 .05 .05" contype="0" conaffinity="0" rgba=".6 .3 .3 .5"/>
       <site type="sphere" size="0.01" rgba="0 0 1 1" group="1"/>

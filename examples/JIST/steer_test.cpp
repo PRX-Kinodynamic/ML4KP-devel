@@ -80,7 +80,9 @@ int main(int argc, char* argv[])
     double temp_jacr[3 * sim->m->nv]{};    
     compute_jacobian(sim->m, sim->d, jac, temp_jacp, temp_jacr, body, arm_qpos_inds);
     */
-   
+
+    std::cout << "state space dim: " << ss->get_dimension() << std::endl;
+    std::cout << "m->nq: " << sim->m->nq << std::endl;
     trajectory_t traj{ss};
     // jacobian_steering(sim->m, sim->d, traj, x_goal, body, arm_qpos_inds);
     steer_test(sim, traj, X_steer, body, arm_qpos_inds);

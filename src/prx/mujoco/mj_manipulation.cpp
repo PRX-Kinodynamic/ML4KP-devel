@@ -3,119 +3,171 @@
 
 namespace prx
 {
+    // Steer constants
     const double damping = 1e-4;
-    const double max_jnt_vel = PRX_PI / 4;
-    const float integration_dt = 1;
+    const double max_jnt_vel = PRX_PI / 2;
+    const float integration_dt = .5;
 
     const float Kpos = 1;
     const float Kori = 1;
 
-    // Currently hard coded
+    const int STEER_LIMIT = 5000;
+    const double STEER_TOLERANCE = .01;
+
+    // Simulator indices (Currently hard coded for 7-DOF manipulator)
     const std::vector<int> jnt_ids{0, 1, 2, 3, 4, 5, 6};
     const std::vector<int> ctrl_inds{0, 1, 2, 3, 4, 5, 6};
 
-    void steer_test(std::shared_ptr<prx::mujoco_simulator_t> sim, trajectory_t& traj, pose_t goal_pose, int body_id, std::vector<int>& qpos_inds, const config_t& q_init){
+    // Pre-allocated steering variables
+    double goal_quat[4]{};
+
+    double curr_quat[4]{};
+    double curr_quat_conj[4]{};
+    vector_t curr_x{};
+
+    double error_quat[4]{};
+    vector_t dx{};
+    double dtheta[3]{};
+
+    Eigen::Vector<double, 6> twist{};
+    jacobian_t jac{};
+
+    bool steer_test(std::shared_ptr<prx::mujoco_simulator_t> sim, trajectory_t& traj, const pose_t goal_pose, 
+                    const int body_id, std::vector<int>& qpos_inds, const Eigen::VectorXd& start_state){
         prx_assert(body_id != -1, "ValueError: body_id is invalid");
+
+        bool result = false;
 
         int nq = qpos_inds.size();
 
-        std::cout << "JACOBIAN STEERING" << std::endl;
-        
-        // double *goal_quat = &goal_pose[3];
-        double goal_quat[4]{};
+        // Populate goal_quat with provided goal orientation
         std::copy(goal_pose.begin()+3, goal_pose.end(), goal_quat);
 
-        double curr_quat[4]{};
-        double curr_quat_conj[4]{};
-        vector_t curr_x{};
-
-        double error_quat[4]{};
-        vector_t dx{};
-        double dtheta[3]{};
-
-        Eigen::Vector<double, 6> twist{};
-        jacobian_t jac{};
-        double jacp[sim->m->nq * 3]{};
-        double jacr[sim->m->nq * 3]{};
+        // Allocate space for Jacobian computation
+        double jacp[sim->m->nv * 3]{};
+        double jacr[sim->m->nv * 3]{};
         
-        // sim->d->qpos[3] = -1.57;
-        // sim->d->qpos[5] = 1.57;
-        // sim->d->qpos[6] = -.7853;
-
+        sim->d->qpos[3] = -1.57;
+        sim->d->qpos[5] = 1.57;
+        sim->d->qpos[6] = -.7853;
         sim->step_simulation();
 
-        config_t q_curr(nq);
-        if (q_init.size() > 0){
-            q_curr = q_init;
-            // TODO: set sim configuration to provided initial configuration
-        }
-        else{
-            // HARD-CODED
-            prx_warn("No initial configuration provided. Using current simulation state.");
-            std::copy(sim->d->qpos, sim->d->qpos+nq, q_curr.data());
-        }
-        
+        // Save initial simulation state
+        double qpos_saved[sim->m->nq]{};
+        double qvel_saved[sim->m->nv]{};
+
+        std::copy(sim->d->qpos, sim->d->qpos + sim->m->nq, qpos_saved);
+        std::copy(sim->d->qvel, sim->d->qvel + sim->m->nv, qvel_saved);
+
+        // Turn on gravity compensation for steering computations
         for (int i = 0; i < sim->m->nbody; i++){
             sim->m->body_gravcomp[i] = 1;
         }
+        
+        // Set initial state for steering
+        if (start_state.size() > 0){
+            prx_assert(start_state.size() == sim->m->nq + sim->m->nv, "Size mismatch between provided start_state and simulator state: " 
+            << start_state.size() << ", " << sim->m->nq + sim->m->nv);
 
+            // Copy state positions into simulator
+            std::copy(start_state.data(), start_state.data() + sim->m->nq, sim->d->qpos);
+            // Copy state velocities into simulator
+            std::copy(start_state.data() + sim->m->nq, start_state.data() + sim->m->nq + sim->m->nv, sim->d->qvel);
+            // TODO: set sim configuration to provided initial configuration
+        }
+        else{
+            prx_warn("No initial configuration provided. Using current simulation state.");
+        }
+
+        // Populate current configuration
+        config_t q_curr(nq);
+        for(int i = 0; i < qpos_inds.size(); i++){
+            q_curr[i] = sim->d->qpos[qpos_inds[i]];
+        }
+
+        sim->step_simulation(-1);
+
+        Eigen::VectorXd state(sim->m->nq + sim->m->nv);
         config_t q_start{q_curr};
-        for(int i = 0; i < 100000; i++){
+
+        // Steering loop
+        for(int i = 0; i < STEER_LIMIT; i++){
             
+            // Keep track of current pose
             curr_x = {sim->d->xpos[3*body_id], sim->d->xpos[3*body_id+1],sim->d->xpos[3*body_id+2]};
-            
             std::copy(sim->d->xquat+4*body_id, sim->d->xquat+4*body_id+4, curr_quat);
 
+            // Twist computation
             dx = goal_pose({0, 1, 2}) - curr_x({0, 1, 2});
-        
             mju_negQuat(curr_quat_conj, curr_quat);
-
             mju_mulQuat(error_quat, goal_quat, curr_quat_conj);
-
             mju_quat2Vel(dtheta, error_quat, 1.0);
 
             twist({0, 1, 2}) = dx * Kpos / integration_dt;
             twist({3, 4, 5}) = vector_t{dtheta} * Kori / integration_dt;
 
-            // continue;
+            // Jacobian computation
             compute_jacobian(sim->m, sim->d, jac, jacp, jacr, body_id, qpos_inds);
 
             auto identity = Eigen::MatrixXd::Identity(qpos_inds.size(), qpos_inds.size());
 
             auto jac_pinv_damped = (jac.transpose() * jac + damping * identity).inverse() * jac.transpose();
 
+            // Joint velocity computation
             Eigen::VectorXd dq = jac_pinv_damped * twist;
             
-            // clamping joint velocities
+            // Clamping joint velocities
             double dq_max = dq.cwiseAbs().maxCoeff();
             if (dq_max > max_jnt_vel){
                 dq *= max_jnt_vel / dq_max;
             }
 
-            // dq += (identity - (jac.transpose() * jac).inverse() * jac.transpose() * jac) * (q_start - q_curr);
+            // Null-space optimization
             dq += (identity - jac.completeOrthogonalDecomposition().pseudoInverse() * jac) * (q_start - q_curr);
 
+            // Integrate velocity controls to get new positions
             double qpos[sim->m->nq]{};
             std::copy(sim->d->qpos, sim->d->qpos+sim->m->nq, qpos);
-
             mj_integratePos(sim->m, qpos, dq.data(), integration_dt);
 
-            // clipping position controls
+            // Clipping, setting position controls
             for (int i = 0; i < nq; i++){
                 qpos[qpos_inds[i]] = std::max(sim->m->jnt_range[2*jnt_ids[i]], 
                 std::min(sim->m->jnt_range[2*jnt_ids[i]+1], qpos[qpos_inds[i]]));
 
                 sim->d->ctrl[ctrl_inds[i]] = qpos[qpos_inds[i]];
             }
+
+            // Step simulation
             sim->step_simulation();
 
+            // Record current configuration for next iteration
             std::copy(sim->d->qpos, sim->d->qpos+nq, q_curr.data());
 
-            std::cout << "dq: " << dq.transpose() << std::endl;
-            // usleep(100000);
+            // Record current state in trajectory object
+            std::copy(sim->d->qpos, sim->d->qpos+sim->m->nq, state.segment(0, sim->m->nq).data());
+            std::copy(sim->d->qvel, sim->d->qpos+sim->m->nv, state.segment(sim->m->nq, sim->m->nq+sim->m->nv).data());
+
+            traj.copy_onto_back<>(state);
+            std::cout << "traj size: " << traj.size() << std::endl;
+
+            // Convergence condition
+            if (dq.cwiseAbs().maxCoeff() < STEER_TOLERANCE){
+                result = true;
+                break;
+            }
+        }
+
+        // Reset initial simulation state
+        std::copy(qpos_saved, qpos_saved + sim->m->nq, sim->d->qpos);
+        std::copy(qvel_saved, qvel_saved + sim->m->nv, sim->d->qvel);
+
+        // Turn off gravity compensation
+        for (int i = 0; i < sim->m->nbody; i++){
+            sim->m->body_gravcomp[i] = 0;
         }
         
-        // sim->d->site_xmat
+        return result;
     }
 
     void jacobian_steering(std::shared_ptr<prx::mujoco_simulator_t> sim, trajectory_t& traj, pose_t goal_pose, int body_id, std::vector<int>& qpos_inds, const config_t& q_init){

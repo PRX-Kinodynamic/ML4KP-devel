@@ -13,7 +13,8 @@
 
 namespace prx{
 
-void steer_test(std::shared_ptr<prx::mujoco_simulator_t> sim, trajectory_t& traj, pose_t goal_pose, int body_id, std::vector<int>& qpos_inds, const config_t& q_init=Eigen::VectorXd());
+bool steer_test(std::shared_ptr<prx::mujoco_simulator_t> sim, trajectory_t& traj, const pose_t goal_pose, 
+    const int body_id, std::vector<int>& qpos_inds, const Eigen::VectorXd& start_state=Eigen::VectorXd());
 
 void jacobian_steering(std::shared_ptr<prx::mujoco_simulator_t> sim, trajectory_t& traj, pose_t goal_pose, int body_id, std::vector<int>& qpos_inds, const config_t& q_init=Eigen::VectorXd());
 
