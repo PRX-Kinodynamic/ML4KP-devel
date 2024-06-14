@@ -3,6 +3,7 @@
 #include "prx/utilities/defs.hpp"
 
 #include "prx/external/PQP/PQP.h"
+#include "prx/utilities/geometry/geometry-imp.hpp"
 
 #include <memory>
 
@@ -48,6 +49,48 @@ public:
   std::string get_visualization_color()
   {
     return vis_color;
+  }
+
+  template <typename PQPModelType>
+  static std::shared_ptr<PQPModelType> create_collision_geometry(const geometry_type_t geom_type,
+                                                                 const std::vector<double>& params)
+  {
+    using namespace prx::utilities;
+
+    std::shared_ptr<PQPModelType> collision_geometry;
+    // prx_assert(params_set, "Geometry params have not been provided, so a collision geometry cannot be
+    // generated."); prx_assert(collision_geometry == nullptr, "Trying to recreate collision geometries when they
+    // have already been created.");
+    switch (geom_type)
+    {
+      case geometry_type_t::BOX:
+        prx_assert(params.size() >= 3, "geometry_type_t::Box needs 3 parameters");
+        collision_geometry =
+            std::shared_ptr<PQPModelType>(create_box_trimesh<PQPModelType>(params[0], params[1], params[2]));
+        break;
+      case geometry_type_t::SPHERE:
+        prx_assert(params.size() >= 1, "geometry_type_t::SPHERE needs 1 parameters");
+        collision_geometry = std::shared_ptr<PQPModelType>(create_sphere_trimesh<PQPModelType>(params[0]));
+        break;
+      case geometry_type_t::ELLIPSOID:
+        prx_assert(params.size() >= 3, "geometry_type_t::ELLIPSOID needs 3 parameters");
+        collision_geometry =
+            std::shared_ptr<PQPModelType>(create_ellipsoid_trimesh<PQPModelType>(params[0], params[1], params[2]));
+        break;
+      case geometry_type_t::CAPSULE:
+        prx_assert(params.size() >= 2, "geometry_type_t::CAPSULE needs 2 parameters");
+        collision_geometry = std::shared_ptr<PQPModelType>(create_capsule_trimesh<PQPModelType>(params[0], params[1]));
+        break;
+      case geometry_type_t::CONE:
+        prx_assert(params.size() >= 2, "geometry_type_t::CONE needs 2 parameters");
+        collision_geometry = std::shared_ptr<PQPModelType>(create_cone_trimesh<PQPModelType>(params[0], params[1]));
+        break;
+      case geometry_type_t::CYLINDER:
+        prx_assert(params.size() >= 2, "geometry_type_t::CYLINDER needs 2 parameters");
+        collision_geometry = std::shared_ptr<PQPModelType>(create_cylinder_trimesh<PQPModelType>(params[0], params[1]));
+        break;
+    };
+    return collision_geometry;
   }
 
 private:

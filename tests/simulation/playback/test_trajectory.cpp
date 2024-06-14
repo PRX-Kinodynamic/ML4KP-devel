@@ -132,3 +132,36 @@ BOOST_AUTO_TEST_CASE(trajectory_index_at_time)
   BOOST_REQUIRE_MESSAGE(expected_45 == res_idx4, EXPECTED_GOT(expected_45, res_idx4));
   BOOST_REQUIRE_MESSAGE(expected_45 == res_idx5, EXPECTED_GOT(expected_45, res_idx5));
 }
+
+BOOST_AUTO_TEST_CASE(trajectory_split)
+{
+  mock::trajectory_space_test_t test;
+  prx::space_t& space(test.space);
+  prx::trajectory_t traj(&space);
+
+  traj.push_back(Eigen::Vector2d(0.0, 0.0));  // 0.0
+  traj.push_back(Eigen::Vector2d(1.0, 1.0));  // 0.1
+  traj.push_back(Eigen::Vector2d(2.0, 2.0));  // 0.2
+  traj.push_back(Eigen::Vector2d(3.0, 3.0));  // 0.3
+  traj.push_back(Eigen::Vector2d(4.0, 4.0));  // 0.4
+
+  // prx::simulation_step is 0.1;
+  const double query{ 0.2 };  // 0.0
+
+  const prx::trajectory_t res_traj{ traj.split(query) };
+
+  const std::size_t expected_old_traj_size{ 3 };
+  const std::size_t expected_new_traj_size{ 2 };
+
+  BOOST_REQUIRE_MESSAGE(expected_old_traj_size == traj.size(), EXPECTED_GOT(expected_old_traj_size, traj.size()));
+  BOOST_REQUIRE_MESSAGE(expected_new_traj_size == res_traj.size(),
+                        EXPECTED_GOT(expected_new_traj_size, res_traj.size()));
+
+  const double epsilon{ 0.00001 };
+
+  BOOST_REQUIRE_CLOSE(0.0, traj[0]->at(0), epsilon);
+  BOOST_REQUIRE_CLOSE(1.0, traj[1]->at(0), epsilon);
+  BOOST_REQUIRE_CLOSE(2.0, traj[2]->at(0), epsilon);
+  BOOST_REQUIRE_CLOSE(3.0, res_traj[0]->at(0), epsilon);
+  BOOST_REQUIRE_CLOSE(4.0, res_traj[1]->at(0), epsilon);
+}

@@ -29,10 +29,29 @@ public:
   {
   }
 
+  double cost() const
+  {
+    return cost_to_come;
+  }
+
+  double& cost()
+  {
+    return cost_to_come;
+  }
+
   virtual void copy(const rrt_node_t& other)
   {
     cost_to_come = other.cost_to_come;
     duration = other.duration;
+  }
+
+  template <typename NodePtr, typename EdgePtr>
+  void update(NodePtr& parent_node, EdgePtr& parent_edge)
+  {
+    prx_assert(parent_node != nullptr, "Parent node is nullptr!");
+    prx_assert(parent_edge != nullptr, "Parent node is nullptr!");
+    cost_to_come = parent_node->cost_to_come + parent_edge->edge_cost;
+    duration = parent_node->duration + parent_edge->plan->duration();
   }
 
   double cost_to_come;
@@ -42,9 +61,8 @@ public:
 class rrt_edge_t : public tree_edge_t
 {
 public:
-  rrt_edge_t()
+  rrt_edge_t() : edge_cost(0)
   {
-    edge_cost = 0;
   }
   virtual ~rrt_edge_t()
   {
@@ -61,6 +79,13 @@ public:
       traj = std::make_shared<trajectory_t>(*(other.traj));
     }
     edge_cost = other.edge_cost;
+  }
+
+  void update(prx::plan_t& plan_in, prx::trajectory_t& traj_in, const double& cost)
+  {
+    plan = std::make_shared<prx::plan_t>(plan_in);
+    traj = std::make_shared<prx::trajectory_t>(traj_in);
+    edge_cost = cost;
   }
 
   std::shared_ptr<plan_t> plan;
@@ -195,6 +220,8 @@ class rrt_t : public planner_t
 public:
   using Node = rrt_node_t;
   using Edge = rrt_edge_t;
+  using EdgePtr = std::shared_ptr<Edge>;
+  using NodePtr = std::shared_ptr<Node>;
 
   rrt_t(const std::string& new_name);
   virtual ~rrt_t();
@@ -207,6 +234,11 @@ public:
   graph_nearest_neighbors_t* graph_nearest_neighbors() const
   {
     return metric;
+  }
+
+  tree_t& tree()
+  {
+    return _tree;
   }
 
   const tree_t& tree() const
@@ -234,6 +266,26 @@ public:
     return _tree_of_solutions<Node, Edge>(goal_nodes);
   }
 
+  // void split_edge(EdgePtr old_edge, EdgePtr new_edge, NodePtr source_node, NodePtr new_target,
+  //                 const double time_of_split)
+  EdgePtr split_edge(EdgePtr e0, const double time_of_split)
+  {
+    EdgePtr e1{ _tree.split_edge<Node, Edge>(e0->get_index()) };
+
+    NodePtr n0{ _tree.get_vertex_as<Node>(e0->get_source()) };
+    NodePtr n1{ _tree.get_vertex_as<Node>(e1->get_target()) };
+    NodePtr n2{ _tree.get_vertex_as<Node>(e1->get_source()) };
+
+    prx::plan_t e1_plan{ e0->plan->split(time_of_split) };
+    prx::trajectory_t e1_traj{ e0->traj->split(time_of_split) };
+    double e1_cost{ cost_function(e1_traj, e1_plan) };
+
+    e1->update(e1_plan, e1_traj, e1_cost);
+    n2->point = state_space->clone_point(e0->traj->back());
+    n2->update(n0, e0);
+    return e1;
+  }
+
 protected:
   virtual void update_goal(node_index_t node_index);
 
@@ -243,6 +295,9 @@ protected:
   virtual void _resolve_query(condition_check_t* condition) override;
   virtual void _fulfill_query() override;
   virtual void _reset() override;
+
+  node_index_t add_to_tree(prx::trajectory_t& traj, rrt_node_t* closest_node, const double& edge_cost,
+                           prx::plan_t& plan);
 
   template <typename Node, typename Edge>
   std::shared_ptr<prx::tree_t> _tree_of_solutions(const std::vector<prx::proximity_node_t*> goal_nodes)
@@ -269,6 +324,7 @@ protected:
     std::shared_ptr<Node> new_root_node{ sln_tree->get_vertex_as<Node>(start_vertex) };
     new_root_node->point = state_space->make_point();
     state_space->copy(new_root_node->point, root->point);
+    new_root_node->copy(*root);
 
     new_index_map[root->get_index()] = start_vertex;
 

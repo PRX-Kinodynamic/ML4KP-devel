@@ -43,12 +43,14 @@
 
 #include "PQP_Compile.h"
 
-struct Tri
+template <typename Point>
+struct TriBase
 {
-  PQP_REAL p1[3];
-  PQP_REAL p2[3];
-  PQP_REAL p3[3];
+  Point p1;
+  Point p2;
+  Point p3;
   int id;
 };
+using Tri = TriBase<PQP_REAL[3]>;
 
 #endif

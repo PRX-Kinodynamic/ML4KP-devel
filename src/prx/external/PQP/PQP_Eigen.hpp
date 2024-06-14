@@ -38,106 +38,11 @@
 
 \**************************************************************************/
 
-#ifndef PQP_H
-#define PQP_H
+#ifndef PQP_EIGEN_H
+#define PQP_EIGEN_H
 
-#include "PQP_Compile.h"
-#include "PQP_Internal.h"
-#include "PQP-imp.hpp"
-
-//----------------------------------------------------------------------------
-//
-//  PQP API Return Values
-//
-//----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------
-//
-//  PQP_REAL
-//
-//  The floating point type used throughout the package. The type is defined
-//  in PQP_Compile.h, and by default is "double"
-//
-//----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------
-//
-//  PQP_Model
-//
-//  A PQP_Model stores geometry to be used in a proximity query.
-//  The geometry is loaded with a call to BeginModel(), at least one call to
-//  AddTri(), and then a call to EndModel().
-//
-//  // create a two triangle model, m
-//
-//  PQP_Model m;
-//
-//  PQP_REAL p1[3],p2[3],p3[3];  // 3 points will make triangle p
-//  PQP_REAL q1[3],q2[3],q3[3];  // another 3 points for triangle q
-//
-//  // some initialization of these vertices not shown
-//
-//  m.BeginModel();              // begin the model
-//  m.AddTri(p1,p2,p3,0);        // add triangle p
-//  m.AddTri(q1,q2,q3,1);        // add triangle q
-//  m.EndModel();                // end (build) the model
-//
-//  The last parameter of AddTri() is the number to be associated with the
-//  triangle. These numbers are used to identify the triangles that overlap.
-//
-//  AddTri() copies into the PQP_Model the data pointed to by the three vertex
-//  pointers, so that it is safe to delete vertex data after you have
-//  passed it to AddTri().
-//
-//----------------------------------------------------------------------------
-//
-//  class PQP_Model  - declaration contained in PQP_Internal.h
-//  {
-//
-//  public:
-//    PQP_Model();
-//    ~PQP_Model();
-//
-//    int BeginModel(int num_tris = 8); // preallocate for num_tris triangles;
-//                                      // the parameter is optional, since
-//                                      // arrays are reallocated as needed
-//
-//    int AddTri(const PQP_REAL *p1, const PQP_REAL *p2, const PQP_REAL *p3,
-//               int id);
-//
-//    int EndModel();
-//    int MemUsage(int msg);  // returns model mem usage in bytes
-//                            // prints message to stderr if msg == TRUE
-//  };
-
-//----------------------------------------------------------------------------
-//
-//  PQP_CollideResult
-//
-//  This saves and reports results from a collision query.
-//
-//----------------------------------------------------------------------------
-//
-//  struct PQP_CollideResult - declaration contained in PQP_Internal.h
-//  {
-//    // statistics
-//
-//    int NumBVTests();
-//    int NumTriTests();
-//    PQP_REAL QueryTimeSecs();
-//
-//    // free the list of contact pairs; ordinarily this list is reused
-//    // for each query, and only deleted in the destructor.
-//
-//    void FreePairsList();
-//
-//    // query results
-//
-//    int Colliding();
-//    int NumPairs();
-//    int Id1(int k);
-//    int Id2(int k);
-//  };
+#include "PQP.h"
+#include "GetTime.h"
 
 //----------------------------------------------------------------------------
 //
@@ -167,15 +72,77 @@
 //
 //----------------------------------------------------------------------------
 
-int PQP_Collide(PQP_CollideResult* result, PQP_REAL R1[3][3], PQP_REAL T1[3], PQP_Model* o1, PQP_REAL R2[3][3],
-                PQP_REAL T2[3], PQP_Model* o2, int flag = PQP_ALL_CONTACTS);
-
-// template <typename PQPResultPtr, typename RotationDerived1, typename PQPModelPtr, typename RotationDerived2>
-// int PQP_Collide(PQPResultPtr result, Eigen::RotationBase<RotationDerived1, 3>& R1, Eigen::Ref<PQP_EIGEN_VECTOR> T1,
-//                 PQPModelPtr o1, Eigen::RotationBase<RotationDerived2, 3>& R2, Eigen::Ref<PQP_EIGEN_VECTOR> T2,
-//                 PQPModelPtr o2, int flag = PQP_ALL_CONTACTS)
+// struct PQP_EIGEN_CollideResult : public PQP_CollideResult
 // {
-// }
+//   PQP_EIGEN_MATRIX rotation;
+//   PQP_EIGEN_VECTOR translation;
+// };
+using PQP_CollideResult_Eigen = PQP_CollideResult_Base<PQP_EIGEN_MATRIX, PQP_EIGEN_VECTOR>;
+using PQP_Model_Eigen = PQP_Model_Base<PQP_EIGEN_MATRIX, PQP_EIGEN_VECTOR>;
+using PQP_DistanceResult_Eigen = PQP_DistanceResult_Base<PQP_EIGEN_MATRIX, PQP_EIGEN_VECTOR>;
+
+template <typename PQPResultPtr, typename PQPModelPtr>
+int PQP_Collide(PQPResultPtr result, Eigen::Ref<PQP_EIGEN_MATRIX> R1, Eigen::Ref<PQP_EIGEN_VECTOR> T1, PQPModelPtr o1,
+                Eigen::Ref<PQP_EIGEN_MATRIX> R2, Eigen::Ref<PQP_EIGEN_VECTOR> T2, PQPModelPtr o2,
+                int flag = PQP_ALL_CONTACTS)
+{
+  const double t1{ GetTime() };
+
+  // make sure that the models are built
+
+  if (o1->build_state != PQP_BUILD_STATE_PROCESSED)
+    return PQP_ERR_UNPROCESSED_MODEL;
+  if (o2->build_state != PQP_BUILD_STATE_PROCESSED)
+    return PQP_ERR_UNPROCESSED_MODEL;
+
+  // clear the stats
+
+  result->num_bv_tests = 0;
+  result->num_tri_tests = 0;
+
+  // don't release the memory, but reset the num_pairs counter
+
+  result->num_pairs = 0;
+
+  // Okay, compute what transform [R,T] that takes us from cs1 to cs2.
+  // [R,T] = [R1,T1]'[R2,T2] = [R1',-R1'T][R2,T2] = [R1'R2, R1'(T2-T1)]
+  // First compute the rotation part, then translation part
+
+  MTxM(result->R, R1, R2);
+  PQP_EIGEN_VECTOR Ttemp;
+
+  VmV(Ttemp, T2, T1);
+  MTxV(result->T, R1, Ttemp);
+
+  // compute the transform from o1->child(0) to o2->child(0)
+
+  PQP_EIGEN_MATRIX Rtemp;
+  PQP_EIGEN_MATRIX R;
+  PQP_EIGEN_VECTOR T;
+  // PQP_REAL Rtemp[3][3], R[3][3], T[3];
+
+  MxM(Rtemp, result->R, o2->child(0)->R);
+  MTxM(R, o1->child(0)->R, Rtemp);
+
+#if PQP_BV_TYPE & OBB_TYPE
+  MxVpV(Ttemp, result->R, o2->child(0)->To, result->T);
+  VmV(Ttemp, Ttemp, o1->child(0)->To);
+#else
+  MxVpV(Ttemp, result->R, o2->child(0)->Tr, result->T);
+  VmV(Ttemp, Ttemp, o1->child(0)->Tr);
+#endif
+
+  MTxV(T, o1->child(0)->R, Ttemp);
+
+  // now start with both top level BVs
+
+  CollideRecurse(result, R, T, o1, 0, o2, 0, flag);
+
+  const double t2{ GetTime() };
+  result->query_time_secs = t2 - t1;
+
+  return PQP_OK;
+}
 
 #if PQP_BV_TYPE & RSS_TYPE  // this is true by default,
                             // and explained in PQP_Compile.h
@@ -231,90 +198,15 @@ int PQP_Collide(PQP_CollideResult* result, PQP_REAL R1[3][3], PQP_REAL T1[3], PQ
 //
 //----------------------------------------------------------------------------
 
-// int PQP_Distance(PQP_DistanceResult* result, PQP_REAL R1[3][3], PQP_REAL T1[3], PQP_Model* o1, PQP_REAL R2[3][3],
-//                  PQP_REAL T2[3], PQP_Model* o2, PQP_REAL rel_err, PQP_REAL abs_err, int qsize = 2);
-template <typename PQPDistanceResultPtr, typename PQPModelPtr, typename Rotation, typename Translation>
-int PQP_Distance(PQPDistanceResultPtr res, Rotation& R1, Translation& T1, PQPModelPtr o1, Rotation& R2, Translation& T2,
-                 PQPModelPtr o2, PQP_REAL rel_err, PQP_REAL abs_err, int qsize = 2)
-{
-  double time1 = GetTime();
+// int PQP_Collide(PQPResultPtr result, Eigen::Ref<PQP_EIGEN_MATRIX> R1, Eigen::Ref<PQP_EIGEN_VECTOR> T1, PQPModelPtr
+// o1,
+//                 Eigen::Ref<PQP_EIGEN_MATRIX> R2, Eigen::Ref<PQP_EIGEN_VECTOR> T2, PQPModelPtr o2,
+//                 int flag = PQP_ALL_CONTACTS)
 
-  // make sure that the models are built
-
-  if (o1->build_state != PQP_BUILD_STATE_PROCESSED)
-    return PQP_ERR_UNPROCESSED_MODEL;
-  if (o2->build_state != PQP_BUILD_STATE_PROCESSED)
-    return PQP_ERR_UNPROCESSED_MODEL;
-
-  // Okay, compute what transform [R,T] that takes us from cs2 to cs1.
-  // [R,T] = [R1,T1]'[R2,T2] = [R1',-R1'T][R2,T2] = [R1'R2, R1'(T2-T1)]
-  // First compute the rotation part, then translation part
-
-  MTxM(res->R, R1, R2);
-  Translation Ttemp;
-  VmV(Ttemp, T2, T1);
-  MTxV(res->T, R1, Ttemp);
-
-  // establish initial upper bound using last triangles which
-  // provided the minimum distance
-
-  Translation p, q;
-  res->distance = TriDistance(res->R, res->T, o1->last_tri, o2->last_tri, p, q);
-  VcV(res->p1, p);
-  VcV(res->p2, q);
-
-  // initialize error bounds
-
-  res->abs_err = abs_err;
-  res->rel_err = rel_err;
-
-  // clear the stats
-
-  res->num_bv_tests = 0;
-  res->num_tri_tests = 0;
-
-  // compute the transform from o1->child(0) to o2->child(0)
-
-  Rotation Rtemp, R;
-  Translation T;
-
-  MxM(Rtemp, res->R, o2->child(0)->R);
-  MTxM(R, o1->child(0)->R, Rtemp);
-
-#if PQP_BV_TYPE & RSS_TYPE
-  MxVpV(Ttemp, res->R, o2->child(0)->Tr, res->T);
-  VmV(Ttemp, Ttemp, o1->child(0)->Tr);
-#else
-  MxVpV(Ttemp, res->R, o2->child(0)->To, res->T);
-  VmV(Ttemp, Ttemp, o1->child(0)->To);
-#endif
-  MTxV(T, o1->child(0)->R, Ttemp);
-
-  // choose routine according to queue size
-
-  if (qsize <= 2)
-  {
-    DistanceRecurse(res, R, T, o1, 0, o2, 0);
-  }
-  else
-  {
-    res->qsize = qsize;
-
-    DistanceQueueRecurse(res, R, T, o1, 0, o2, 0);
-  }
-
-  // res->p2 is in cs 1 ; transform it to cs 2
-
-  Translation u;
-  VmV(u, res->p2, res->T);
-  MTxV(res->p2, res->R, u);
-
-  double time2 = GetTime();
-  res->query_time_secs = time2 - time1;
-
-  return PQP_OK;
-}
-
+// template <typename PQPDistanceResultPtr, typename PQPModelPtr>
+// int PQP_Distance(PQPDistanceResultPtr result, PQP_REAL R1[3][3], PQP_REAL T1[3], PQPModelPtr o1, PQP_REAL R2[3][3],
+//                  PQP_REAL T2[3], PQPModelPtr o2, PQP_REAL rel_err, PQP_REAL abs_err, int qsize = 2)
+// {}
 //----------------------------------------------------------------------------
 //
 //  PQP_ToleranceResult
@@ -365,8 +257,8 @@ int PQP_Distance(PQPDistanceResultPtr res, Rotation& R1, Translation& T1, PQPMod
 //
 //----------------------------------------------------------------------------
 
-int PQP_Tolerance(PQP_ToleranceResult* res, PQP_REAL R1[3][3], PQP_REAL T1[3], PQP_Model* o1, PQP_REAL R2[3][3],
-                  PQP_REAL T2[3], PQP_Model* o2, PQP_REAL tolerance, int qsize = 2);
+// int PQP_Tolerance(PQP_ToleranceResult* res, PQP_REAL R1[3][3], PQP_REAL T1[3], PQP_Model* o1, PQP_REAL R2[3][3],
+//                   PQP_REAL T2[3], PQP_Model* o2, PQP_REAL tolerance, int qsize = 2);
 
 #endif
 #endif

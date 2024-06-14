@@ -33,13 +33,13 @@ public:
    */
   static system_ptr_t create_system(const std::string& name, const std::string& path = "");
 
-  template <typename PlantType, typename... Ts>
-  static std::shared_ptr<PlantType> create_system_as(const std::string& name, const std::string& path, Ts... args)
+  template <typename PlantType>
+  static std::shared_ptr<PlantType> create_system_as(const std::string& name, const std::string& path)
   {
     auto it = system_factory_t::get().system_generators.find(name);
     if (it != system_factory_t::get().system_generators.end())
     {
-      return std::make_shared<PlantType>(path, args...);
+      return std::dynamic_pointer_cast<PlantType>(create_system(name, path));
     }
 
     return nullptr;

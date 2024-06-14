@@ -34,9 +34,8 @@ double uniform_random(double min, double max)
 
 int uniform_int_random(int min, int max)
 {
-  // int val = (rand() % (max + 1 - min)) + min;
-  // int val = (global_generator() % (max + 1 - min)) + min;
-  int val = static_cast<int>(::prx::random::uniform_zero_one(global_generator) * (max - min) + min);
+  const double raw_rand{ ::prx::random::uniform_zero_one(global_generator) };
+  const int val{ static_cast<int>(std::floor(raw_rand * (max + 1 - min) + min)) };
   return val;
 }
 

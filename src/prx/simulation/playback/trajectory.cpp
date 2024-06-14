@@ -69,7 +69,7 @@ trajectory_t& trajectory_t::operator=(const trajectory_t& t)
 
     for (const auto& state : t)
     {
-      state_space->copy_point(*end_iterator, state);
+      state_space->copy(*end_iterator, state);
       ++num_states;
       ++end_iterator;
       ++const_end_iterator;

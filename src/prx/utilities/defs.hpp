@@ -1,5 +1,6 @@
 #include "prx/utilities/general/prx_assert.hpp"
 #include "prx/utilities/general/constants.hpp"
+#include "prx/utilities/general/debug_utils.hpp"
 #include "prx/utilities/general/random.hpp"
 #include "prx/utilities/general/transforms.hpp"
 #include "prx/utilities/general/string_manip.hpp"
