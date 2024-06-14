@@ -2,7 +2,7 @@
 #include <string>
 #include <boost/test/unit_test.hpp>
 #include "prx/utilities/defs.hpp"
-#include "prx/utilities/general/type_conversions.hpp"
+#include "prx/utilities/general/template_utils.hpp"
 
 BOOST_AUTO_TEST_CASE(shared_ptr_test)
 {
@@ -31,4 +31,11 @@ BOOST_AUTO_TEST_CASE(any_ptr_test)
   BOOST_REQUIRE(prx::utilities::is_any_ptr<double*>::value);
 
   BOOST_REQUIRE(not prx::utilities::is_any_ptr<double>::value);
+}
+
+BOOST_AUTO_TEST_CASE(is_streamable_test)
+{
+  BOOST_REQUIRE(prx::utilities::is_streamable<std::string>::value);
+  BOOST_REQUIRE(prx::utilities::is_streamable<double>::value);
+  BOOST_REQUIRE(not prx::utilities::is_streamable<std::vector<double>>::value);
 }

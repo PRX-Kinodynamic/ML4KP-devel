@@ -9,6 +9,7 @@ environment:
         collision_geometry:
           type: box
           dims: [ 3, 3, 2]
+          radius: 3
           material: 0xaaff0000
         config:
           position: [10, 10, 1]
@@ -17,7 +18,7 @@ environment:
         name: wall_bottom
         collision_geometry:
           type: box
-          dims: [ 30, 1, 2]
+          dims: [ 30, 0.4, 2]
           material: 0xaaff0000
         config:
           position: [10, -5, 1]

@@ -5,6 +5,7 @@ enable_testing()
 
 ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
 file(GLOB_RECURSE TESTS_FILES
+	${PROJECT_SOURCE_DIR}/tests/external/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/simulation/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/planning/*.cpp
 	${PROJECT_SOURCE_DIR}/tests/utilities/*.cpp

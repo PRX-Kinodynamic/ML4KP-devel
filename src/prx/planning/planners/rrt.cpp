@@ -79,7 +79,7 @@ void rrt_t::_resolve_query(condition_check_t* condition)
     // sample state
     sample_state(sample_point);
     // find closest
-    auto closest_node = static_cast<rrt_node_t*>(metric->single_query(sample_point));
+    rrt_node_t* closest_node{ static_cast<rrt_node_t*>(metric->single_query(sample_point)) };
     // expand
     std::vector<plan_t*> plans;
     std::vector<trajectory_t*> trajs;
@@ -89,32 +89,16 @@ void rrt_t::_resolve_query(condition_check_t* condition)
     edge_cost = cost_function(traj, plan);
 
     new_cost = closest_node->cost_to_come + edge_cost;
-    new_duration = closest_node->duration + plan.duration();
     // collision check && bnb && glc_conds
     if ((goal_vertex == start_vertex || closest_node->cost_to_come + edge_cost < current_solution) && valid_check(traj))
     {
-      // add node
-      auto node_index = _tree.add_vertex<rrt_node_t, rrt_edge_t>();
-      auto new_tree_node = _tree.get_vertex_as<rrt_node_t>(node_index);
-      new_tree_node->point = state_space->clone_point(traj.back());
-
-      new_tree_node->observation = observer.get_observed_space()->make_point();
-      observer(rrt_spec->_sg, new_tree_node->observation);
-
-      metric->add_node(new_tree_node.get());
-      edge_index_t edge_index = _tree.add_edge(closest_node->get_index(), node_index);
-      auto new_edge = _tree.get_edge_as<rrt_edge_t>(edge_index);
-      new_edge->plan = std::make_shared<plan_t>(plan);
-      new_edge->traj = std::make_shared<trajectory_t>(traj);
-      new_edge->edge_cost = edge_cost;
-      new_tree_node->cost_to_come = closest_node->cost_to_come + new_edge->edge_cost;
-
-      new_tree_node->duration = new_duration;
+      const node_index_t node_index{ add_to_tree(traj, closest_node, edge_cost, plan) };
       update_goal(node_index);
     }
     iteration_count++;
   } while (!condition->check());
 }
+
 void rrt_t::_fulfill_query()
 {
   if (goal_vertex != start_vertex && !use_replanning)
@@ -184,75 +168,32 @@ void rrt_t::_fulfill_query()
   }
 }
 
-// template <typename Node, typename Edge>
-// std::shared_ptr<prx::tree_t> rrt_t::_tree_of_solutions(const double& radius, const space_point_t& goal_state)
-// {
-//   // const double radius{ rrt_query->goal_region_radius };
-//   // const space_point_t goal_state{ rrt_query->goal_state };
+node_index_t rrt_t::add_to_tree(prx::trajectory_t& traj, rrt_node_t* closest_node, const double& edge_cost,
+                                prx::plan_t& plan)
+{
+  const node_index_t node_index{ _tree.add_vertex<rrt_node_t, rrt_edge_t>() };
+  std::shared_ptr<rrt_node_t> new_tree_node{ _tree.get_vertex_as<rrt_node_t>(node_index) };
+  new_tree_node->point = state_space->clone_point(traj.back());
 
-//   const std::vector<prx::proximity_node_t*>& goal_nodes{ metric->radius_and_closest_query(goal_state, radius) };
-//   std::shared_ptr<Node> root{ _tree.get_vertex_as<Node>(start_vertex) };
+  new_tree_node->observation = observer.get_observed_space()->make_point();
+  observer(rrt_spec->_sg, new_tree_node->observation);
 
-//   std::stack<Node*> solution_nodes;
-//   std::unordered_set<prx::node_index_t> visited;
-//   std::queue<prx::proximity_node_t*> to_visit{};
+  metric->add_node(new_tree_node.get());
+  const edge_index_t edge_index{ _tree.add_edge(closest_node->get_index(), node_index) };
 
-//   for (auto node : goal_nodes)
-//   {
-//     to_visit.push(node);
-//   }
+  std::shared_ptr<rrt_edge_t> new_edge{ _tree.get_edge_as<rrt_edge_t>(edge_index) };
+  new_edge->update(plan, traj, edge_cost);
+  // new_edge->plan = std::make_shared<plan_t>(plan);
+  // new_edge->traj = std::make_shared<trajectory_t>(traj);
+  // new_edge->edge_cost = edge_cost;
 
-//   visited.insert(root->get_index());
+  new_tree_node->update(closest_node, new_edge);
+  // new_tree_node->cost_to_come = closest_node->cost_to_come + new_edge->edge_cost;
 
-//   while (to_visit.size() > 0)
-//   {
-//     Node* curr_node{ dynamic_cast<Node*>(to_visit.front()) };
-//     const prx::node_index_t parent{ curr_node->get_parent() };
+  // new_tree_node->duration = closest_node->duration + plan.duration();
 
-//     if (visited.count(parent) == 0)
-//     {
-//       to_visit.push(_tree[parent].get());
-//       visited.insert(parent);
-//     }
-//     solution_nodes.push(curr_node);
-//     to_visit.pop();
-//   }
-//   // solution_nodes.push(root);
-
-//   std::shared_ptr<prx::tree_t> sln_tree{ std::make_shared<prx::tree_t>() };
-
-//   // [ original_index ] -> new_index
-//   std::unordered_map<prx::node_index_t, prx::node_index_t> new_index_map;
-
-//   const prx::node_index_t start_vertex{ sln_tree->add_vertex<Node, Edge>() };
-//   std::shared_ptr<Node> new_root_node{ sln_tree->get_vertex_as<Node>(start_vertex) };
-//   new_root_node->point = state_space->make_point();
-//   state_space->copy(new_root_node->point, root->point);
-
-//   new_index_map[root->get_index()] = start_vertex;
-
-//   while (not solution_nodes.empty())
-//   {
-//     Node* node{ solution_nodes.top() };
-//     // add node
-//     const prx::node_index_t node_index{ sln_tree->add_vertex<Node, Edge>() };
-//     std::shared_ptr<Node> new_tree_node{ sln_tree->get_vertex_as<Node>(node_index) };
-//     new_tree_node->point = state_space->make_point();
-//     state_space->copy(new_tree_node->point, node->point);
-//     new_tree_node->copy(*node);
-//     new_index_map[node->get_index()] = node_index;
-
-//     const std::shared_ptr<Edge> old_edge{ _tree.get_edge_as<Edge>(node->get_parent_edge()) };
-
-//     const prx::node_index_t parent_index{ new_index_map[node->get_parent()] };
-//     const prx::edge_index_t edge_index{ sln_tree->add_edge(parent_index, node_index) };
-//     std::shared_ptr<Edge> new_edge{ sln_tree->get_edge_as<Edge>(edge_index) };
-//     new_edge->copy(*old_edge);
-
-//     solution_nodes.pop();
-//   }
-//   return sln_tree;
-// }
+  return node_index;
+}
 
 std::vector<std::string> rrt_t::get_statistics_header()
 {

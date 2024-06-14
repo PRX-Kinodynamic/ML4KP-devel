@@ -152,6 +152,21 @@ BOOST_AUTO_TEST_CASE(baseRandomTestUsingStdUniformDistribution)
                       "K^+ Kolmogorov-Smirnov test failed!" << failed_msg_k_plus);
 }
 
+BOOST_AUTO_TEST_CASE(test_int_binary_random)
+{
+  // Really simple test: flip n coins and check that not all are the same
+  int zeros{ 0 };
+  int ones{ 0 };
+
+  for (int i = 0; i < 1000; ++i)
+  {
+    const int rand{ prx::uniform_int_random(0, 1) };
+    zeros += rand == 0 ? 1 : 0;
+    ones += rand == 1 ? 1 : 0;
+  }
+  BOOST_REQUIRE(zeros > 0);
+  BOOST_REQUIRE(ones > 0);
+}
 BOOST_AUTO_TEST_CASE(ksTestPrxUniformRandom)
 {
   prx::init_random(std::random_device()());

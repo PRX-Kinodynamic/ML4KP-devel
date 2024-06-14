@@ -166,6 +166,7 @@ public:
   {
     return target;
   }
+
   friend std::ostream& operator<<(std::ostream& os, const tree_edge_t* obj)
   {
     os << *obj;
@@ -336,6 +337,47 @@ public:
 
   void remove_vertices();
 
+  // Given: N0 -- E0 -- N1. Turn into: N0 -- E0 -- N2 -- E1 -- N1
+  // returns the new edge added
+  template <class NodeType, class EdgeType>
+  std::shared_ptr<EdgeType> split_edge(const edge_index_t edge0_id)
+  {
+    using NodePtr = std::shared_ptr<NodeType>;
+    using EdgePtr = std::shared_ptr<EdgeType>;
+
+    EdgePtr edge0{ get_edge_as<EdgeType>(edge0_id) };
+    prx_assert(edge0 != nullptr, "Edge [" << edge0_id << "] not found");
+
+    // PRX_DBG_VARS(edge0->source, edge0->target);
+    NodePtr node0{ get_vertex_as<NodeType>(edge0->source) };
+    NodePtr node1{ get_vertex_as<NodeType>(edge0->target) };
+
+    node1->parent = node1->index;
+
+    const node_index_t node2_id{ add_vertex<NodeType, EdgeType>() };
+    const edge_index_t edge1_id{ add_edge(node2_id, node1->get_index()) };
+
+    EdgePtr edge1{ get_edge_as<EdgeType>(edge1_id) };
+    NodePtr node2{ get_vertex_as<NodeType>(node2_id) };
+
+    // update E0
+    edge0->target = node2_id;
+
+    // update N0
+    const auto child_iter = std::find(node0->children.begin(), node0->children.end(), node1->get_index());
+    node0->children.erase(child_iter);
+    node0->children.push_back(node2_id);
+
+    // update N1
+    node1->parent = node2_id;
+    node1->parent_edge = edge1_id;
+
+    // update N2
+    node2->parent = node0->get_index();
+    node2->parent_edge = edge0_id;
+
+    return edge1;
+  }
   // Write the tree to a file with format:
   // parent_id edge_id node_id node_state
   void to_file(const std::string);

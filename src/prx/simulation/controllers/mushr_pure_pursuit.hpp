@@ -58,7 +58,7 @@ public:
     }
     if (_points != nullptr)
     {
-      unsigned window_size = std::min(_window + _nearest_index, _points->size());
+      unsigned window_size = std::min(_window + _nearest_index, static_cast<unsigned>(_points->size()));
 
       double dist = std::numeric_limits<double>::max();
       for (unsigned i = _nearest_index + 1; i < window_size; ++i)

@@ -116,3 +116,38 @@ BOOST_AUTO_TEST_CASE(plan_to_and_from_file_test)
   BOOST_REQUIRE_MESSAGE(2.0 == plan_from[1].control->at(1), EXPECTED_GOT(2.0, plan_from[1].control->at(1)));
   BOOST_REQUIRE_MESSAGE(2.0 == plan_from[1].duration, EXPECTED_GOT(2.0, plan_from[1].duration));
 }
+
+BOOST_AUTO_TEST_CASE(plan_split_test)
+{
+  mock::plan_space_test_t test;
+  prx::space_t& space(test.space);
+  prx::plan_t plan_to_split(&space);
+
+  Eigen::Vector2d u0(1.0, 1.0);
+
+  const double total_duration{ 4.0 };
+  plan_to_split.copy_onto_back(u0, 1.0);
+  plan_to_split.copy_onto_back(u0 * 2, 1.0);
+  plan_to_split.copy_onto_back(u0 * 3, 1.0);
+  plan_to_split.copy_onto_back(u0 * 4, 1.0);
+
+  const double duration_1p1{ 1.1 };
+  prx::plan_t plan_1p1{ plan_to_split.split(duration_1p1) };
+
+  const double epsilon{ 0.001 };
+
+  PRX_DBG_VARS(total_duration - duration_1p1, plan_1p1.duration());
+  BOOST_REQUIRE_CLOSE(total_duration - duration_1p1, plan_1p1.duration(), epsilon);
+  BOOST_REQUIRE_CLOSE(duration_1p1, plan_to_split.duration(), epsilon);
+
+  BOOST_REQUIRE_MESSAGE(u0[0] == plan_to_split[0].control->at(0), EXPECTED_GOT(u0[0], plan_to_split[0].control->at(0)));
+
+  BOOST_REQUIRE_MESSAGE(u0[1] * 2 == plan_to_split[1].control->at(0),
+                        EXPECTED_GOT(u0[1] * 2, plan_to_split[1].control->at(0)));
+
+  BOOST_REQUIRE_MESSAGE(u0[1] * 2 == plan_1p1[0].control->at(0), EXPECTED_GOT(u0[1] * 2, plan_1p1[0].control->at(0)));
+
+  BOOST_REQUIRE_MESSAGE(plan_1p1.size() == 3, EXPECTED_GOT(3, plan_1p1.size()));
+
+  BOOST_REQUIRE_MESSAGE(plan_to_split.size() == 2, EXPECTED_GOT(2, plan_to_split.size()));
+}

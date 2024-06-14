@@ -139,6 +139,7 @@ void aorrt_t::_resolve_query(condition_check_t* condition)
       _cost_state_space->copy(_cost_aux_pt, { _c_new });
       Y_state_space->point_union(traj.back(), _cost_aux_pt, Y_aux_pt);
       new_tree_node->point = Y_state_space->clone_point(Y_aux_pt);
+      new_tree_node->cost_to_come = _c_new;
 
       // add node to metric
       metric->add_node(new_tree_node.get());

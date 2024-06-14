@@ -1,3 +1,4 @@
+#include <fstream>
 #include "prx/utilities/defs.hpp"
 #include "prx/planning/world_model.hpp"
 #include "prx/planning/planners/aorrt.hpp"
@@ -6,8 +7,7 @@
 #include "prx/visualization/three_js_group.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
-
-#include <fstream>
+#include "prx/planning/planner_functions/tree_fix_time_discretization.hpp"
 
 using namespace prx;
 
@@ -95,6 +95,9 @@ int main(int argc, char* argv[])
 
   params.print();
 
+  aorrt.tree().to_file("/Users/Gary/pracsys/catkin_ws/dbg/tree_before.txt");
+  prx::planning::discretize_tree(aorrt.tree(), aorrt, params["max_edge_duration"].as<double>());
+  aorrt.tree().to_file("/Users/Gary/pracsys/catkin_ws/dbg/tree_discretized.txt");
   // TODO: Add function to visualization to replace tree_to_txt
   // tree_to_txt(dirt_query);
 

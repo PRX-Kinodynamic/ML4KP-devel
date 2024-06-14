@@ -28,6 +28,14 @@ using transform_t = Eigen::Transform<double, 3, Eigen::AffineCompact>;
 
 using ref_matrixXd_t = Eigen::Ref<const Eigen::MatrixXd>;
 
+inline transform_t create_transform(const matrix_t rotation, const vector_t translation)
+{
+  transform_t tf{};
+  tf.linear() = rotation;
+  tf.translation() = translation;
+  return tf;
+}
+
 // template<typename Derived>
 // static
 inline bool are_matrices_approx_equal(const ref_matrixXd_t m1, const ref_matrixXd_t m2, const double tolerance = 1e-7)

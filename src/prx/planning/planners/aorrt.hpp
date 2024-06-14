@@ -18,7 +18,6 @@ class aorrt_node_t : public rrt_node_t
 public:
   aorrt_node_t() : rrt_node_t()
   {
-    cost_to_go = 0;
   }
   virtual ~aorrt_node_t()
   {
@@ -26,10 +25,13 @@ public:
   virtual void copy(const aorrt_node_t& other)
   {
     this->rrt_node_t::copy(other);
-    cost_to_go = other.cost_to_go;
   }
 
-  double cost_to_go;
+  template <typename NodePtr, typename EdgePtr>
+  void update(NodePtr parent_node, EdgePtr parent_edge)
+  {
+    rrt_node_t::update(parent_node, parent_edge);
+  }
 };
 
 class aorrt_edge_t : public rrt_edge_t
@@ -45,6 +47,11 @@ public:
   {
     this->rrt_edge_t::copy(other);
   }
+  // template <typename EdgePtr, typename Planner>
+  // static void split(EdgePtr old_edge, EdgePtr new_edge, const double time_of_split, Planner& planner)
+  // {
+  //   rrt_edge_t::split(old_edge, new_edge, time_of_split, planner);
+  // }
 };
 
 // class cost_space_t : public space_t
@@ -172,6 +179,8 @@ class aorrt_t : public rrt_t
 public:
   using Node = aorrt_node_t;
   using Edge = aorrt_edge_t;
+  using EdgePtr = std::shared_ptr<Edge>;
+  using NodePtr = std::shared_ptr<Node>;
 
   aorrt_t(const std::string& new_name);
   virtual ~aorrt_t();
@@ -207,6 +216,41 @@ public:
 
     // const std::vector<prx::proximity_node_t*> goal_nodes{ metric->multi_query(Y_aux_pt, total_solutions) };
     return _tree_of_solutions<Node, Edge>(goal_nodes);
+  }
+
+  EdgePtr split_edge(EdgePtr e0, const double time_of_split)
+  {
+    // We get the edge0 and know the nodes: N0 -- E0 -- N1
+    // After split, we have N0 -- E0 -- N2 -- E1 -- N1
+
+    EdgePtr e1{ _tree.split_edge<Node, Edge>(e0->get_index()) };
+
+    NodePtr n0{ _tree.get_vertex_as<Node>(e0->get_source()) };
+    NodePtr n1{ _tree.get_vertex_as<Node>(e1->get_target()) };
+    NodePtr n2{ _tree.get_vertex_as<Node>(e1->get_source()) };
+
+    prx_assert(e0->get_target() == e1->get_source(), "Edges are not connected through a common node");
+    // PRX_DBG_VARS(n0->get_index(), n1->get_index(), n2->get_index());
+    // Split the plan and traj: Old = [ OldUpdated | New ]. AKA the new one correspond to the last part
+    prx::plan_t e1_plan{ e0->plan->split(time_of_split) };
+    prx::trajectory_t e1_traj_split{ e0->traj->split(time_of_split) };
+    prx::trajectory_t e1_traj{ X_state_space };
+    e1_traj.push_back(e0->traj->back());
+    e1_traj += e1_traj_split;
+    const double e1_cost{ cost_function(e1_traj_split, e1_plan) };
+    e1->update(e1_plan, e1_traj_split, e1_cost);
+
+    // Update cost of e0 given the split
+    e0->edge_cost = cost_function(*(e0->traj), *(e0->plan));
+
+    Y_state_space->split_point(n0->point, X_aux_pt, _cost_aux_pt);
+    _c_new = _cost_aux_pt->at(0) + e0->edge_cost;
+    _cost_state_space->copy(_cost_aux_pt, { _c_new });
+    Y_state_space->point_union(e0->traj->back(), _cost_aux_pt, Y_aux_pt);
+
+    n2->point = Y_state_space->clone_point(Y_aux_pt);
+    n2->update(n0, e0);
+    return e1;
   }
 
 protected:

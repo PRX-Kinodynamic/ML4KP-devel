@@ -2,6 +2,7 @@
 
 #include <deque>
 #include <fstream>
+#include <iterator>
 
 #include "prx/utilities/spaces/space.hpp"
 #include "prx/utilities/defs.hpp"
@@ -18,6 +19,13 @@ struct plan_step_t
   {
     space->copy_point(control, step.control);
     duration = step.duration;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const plan_step_t& obj)
+  {
+    os << obj.control << " ";
+    os << obj.duration << " ";
+    return os;
   }
 
   space_point_t control;
@@ -64,10 +72,13 @@ public:
    */
   inline double duration() const
   {
+    // TODO: In general, this is inefficient (O(n)), could change to constant by always storing the plan's duration or
+    // amortized cte by storing a dirty flag.
     double t = 0;
-    for (auto&& step : *this)
+    // for (auto&& step : *this)
+    for (auto iter = begin(); iter != end_iterator; iter++)
     {
-      t += step.duration;
+      t += iter->duration;
     }
     return t;
   }
@@ -95,6 +106,60 @@ public:
         t_accum -= step.duration;
     }
     prx_throw("Indexed into plan with time outside the plan's full duration.");
+  }
+
+  // Split at specified time: ThisOld = [ ThisNew | NewPlan ]
+  plan_t split(const double time_of_split)
+  {
+    plan_t new_plan(control_space);
+
+    bool split_done{ false };
+    double accum_duration{ 0.0 };
+    iterator split_iter;
+    for (auto iter = steps.begin(); iter != end_iterator; iter++)
+    {
+      if (accum_duration + iter->duration > time_of_split)
+      {
+        const double step_time_split{ time_of_split - accum_duration };
+        // new_plan.steps.insert(new_plan.steps.begin(), iter->split(step_time_split));
+        // PRX_DBG_VARS(time_of_split, accum_duration, iter->duration);
+        new_plan.copy_onto_back(iter->control, iter->duration - step_time_split);
+        iter->duration = step_time_split;
+        // PRX_DBG_VARS(new_plan);
+        // // Split at specified time: ThisOld = [ ThisNew | NewPlanStep ]
+        // plan_step_t split(const double time_to_split)
+        // {
+        //   prx_assert(time_to_split < duration, "Time to split is less than duration");
+        //   plan_step_t plan(control, duration - time_to_split);
+        //   duration = time_to_split;
+        //   return plan;
+        // }
+
+        split_iter = iter + 1;
+        break;
+      }
+      accum_duration += iter->duration;
+    }
+    if (split_iter != steps.end())
+    {
+      // new_plan.end_iterator = new_plan.steps.begin();
+      // PRX_DBG_VARS(new_plan.steps.size(), std::distance(steps.begin(), split_iter));
+      const long dist{ std::distance(split_iter, end_iterator) + 1 };
+      new_plan.steps.insert(new_plan.end_iterator, split_iter, end_iterator);
+      // PRX_DBG_VARS(dist, new_plan.steps.size());
+      steps.erase(split_iter, end_iterator);
+      new_plan.end_iterator = new_plan.steps.begin();
+      std::advance(new_plan.end_iterator, dist);
+
+      // new_plan.end_iterator = new_plan.steps.begin() + dist + 1;
+
+      // PRX_DBG_VARS(num_steps, std::distance(steps.begin(), end_iterator));
+      num_steps = std::distance(steps.begin(), end_iterator);
+      // PRX_DBG_VARS(new_plan.steps.size(), std::distance(new_plan.steps.begin(), new_plan.end_iterator));
+      new_plan.num_steps = std::distance(new_plan.steps.begin(), new_plan.end_iterator);
+    }
+
+    return new_plan;
   }
 
   inline plan_step_t& front()
