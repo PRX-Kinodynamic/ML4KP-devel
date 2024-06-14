@@ -2,16 +2,40 @@ random_seed: 210896
 simulation_step: 0.01
 
 plant: !file "plants/mushr.yaml"
-controller: "controllers/mushr_analytical.yaml"
-# feedback_controller: "controllers/mushr_stanley.yaml"
-feedback_controller: "controllers/mushr_pure_pursuit.yaml"
+learned_controller: "controllers/mushr_analytical.yaml"
+feedback_controller: "controllers/mushr_stanley.yaml"
+# feedback_controller: "controllers/mushr_pure_pursuit.yaml"
 
 environment: "environments/obstacle_0.yaml"
 # environment: "environments/obstacle_1.yaml"
+safe_distance: 0.5
 
 goal_state: [1.0, 5.0, 0.0, 0.0]
+# goal_state: [1.5, 5.0, 0.0, 0.0]
 goal_region_radius: 0.25
 
+# For debugging
+planner_name: "RoGuE"
+visualize: true
+repeats: 5
+output_dir: "RoGuE"
+
 min_time: 0.5
-max_time: 2.0
+max_time: 1.0
 blossom_number: 10
+
+roadmap:
+  xlims: [ 0.0, 2.0]
+  ylims: [-1.0, 6.0]
+  xres: 5
+  yres: 15
+  # dir: "obstacle_0/"
+  dir: "obstacle_1/"
+
+wavefront:
+  xlims: [-0.5, 2.5]
+  ylims: [-1.0, 6.0]
+  xstep: 0.01
+  ystep: 0.01
+
+

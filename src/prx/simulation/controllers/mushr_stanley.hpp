@@ -11,6 +11,7 @@ private:
 
 protected:
   double wheelbase, k_path, k_throttle, goal_radius;
+  double sign;
 
   int discretization;
   std::vector<unsigned> indices;
@@ -27,20 +28,28 @@ public:
     duration = 1.0 / params["frequency"].as<double>();
     discretization = std::floor(1.0 / (0.01 * params["frequency"].as<double>()));
 
+    sign = 1.0;
     reset();
   }
 
   virtual void set_points(std::shared_ptr<trajectory_t> _traj) override
   {
-    _points = _traj;
-    indices.clear();
-    for (int i = 0; i < _points->size(); i += discretization)
+    if (_traj->size() == 0)
     {
-      indices.push_back(i);
+      reset();
     }
-    if (_points->size() % discretization != 0)
+    else
     {
-      indices.push_back(_points->size() - 1);
+      _points = _traj;
+      indices.clear();
+      for (int i = 0; i < _points->size(); i += discretization)
+      {
+        indices.push_back(i);
+      }
+      if (_points->size() % discretization != 0)
+      {
+        indices.push_back(_points->size() - 1);
+      }
     }
   }
 
@@ -55,7 +64,7 @@ public:
     _points = nullptr;
     indices.clear();
   }
-  
+
   virtual void get_control(const space_point_t& current_state, Eigen::VectorXd& control) override
   {
     control.resize(2);
@@ -68,9 +77,22 @@ public:
     }
     if (_points != nullptr)
     {
+      double dx = _points->back()->at(0) - current_state->at(0);
+      double dy = _points->back()->at(1) - current_state->at(1);
+      double ang_to_goal = std::atan2(dy, dx);
+      double ang_diff = prx::norm_angle_pi(ang_to_goal - current_state->at(2));
+      if (std::fabs(ang_diff) > prx::constants::pi / 2.0)
+      {
+        sign = -1.0;
+      }
+      else
+      {
+        sign = 1.0;
+      }
+
       Eigen::Vector2d front_axle;
-      front_axle << current_state->at(0) + wheelbase * std::cos(current_state->at(2)),
-          current_state->at(1) + wheelbase * std::sin(current_state->at(2));
+      front_axle << current_state->at(0) + sign * wheelbase * std::cos(current_state->at(2)),
+          current_state->at(1) + sign * wheelbase * std::sin(current_state->at(2));
 
       std::vector<Eigen::Vector2d> diffs, projections;
       std::vector<double> l2s, dots, ts, dists;

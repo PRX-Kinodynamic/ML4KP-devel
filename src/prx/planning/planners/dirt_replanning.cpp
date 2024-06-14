@@ -22,6 +22,7 @@ void dirt_replan_t::_link_and_setup_spec(planner_specification_t* spec)
 
   expand = dirt_spec->expand;
   h = dirt_spec->h;
+  contingency_check = dirt_spec->contingency_check;
 
   planning_cycle_duration = dirt_spec->planning_cycle_duration;
   multiplier = 1.0 / simulation_step;
@@ -59,16 +60,15 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
     previous_child = start_vertex;
     best_node = start_vertex;
     best_cost = start_node->cost_to_go;
+    // best_cost = PRX_INFINITY;
     child_extension = true;
   }
 
-  /*
-  if (query->solution_plan.size() > 0)
+  if (query->solution_plan.duration() > 0)
   {
-    prx_warn("[DIRT] Seeding the tree with the provided solution plan of duration: " <<
-  query->solution_plan.duration()); std::pair<plan_t*, trajectory_t*> eg = std::make_pair(nullptr, nullptr);
+    std::pair<plan_t*, trajectory_t*> eg = std::make_pair(nullptr, nullptr);
     node_index_t current_node_idx = start_vertex;
-    dirt_node_t* current_node = get_vertex(current_node_idx);
+    dirt_replan_node_t* current_node = get_vertex(current_node_idx);
 
     for (unsigned i = 0; i < query->solution_plan.size(); i++)
     {
@@ -82,22 +82,19 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
       // Check if the edge is valid
       bool valid = valid_check(edge_traj);
       if (!valid)
-      {
-        prx_warn("[DIRT] Aborting seeding.");
         break;
-      }
 
       // Add the edge to the tree
       eg = std::make_pair(new plan_t(edge_plan), new trajectory_t(edge_traj));
       double new_node_dir_radius = distance_function(edge_traj.back(), current_node->point);
       double edge_cost = cost_function(edge_traj, edge_plan);
-      double end_heuristic = h(edge_traj.back(), dirt_query->goal_state);
+      double end_heuristic = h(edge_traj.back(), dirt_replan_query->goal_state);
 
       auto prox_nodes = metric->radius_and_closest_query(edge_traj.back(), std::max(new_node_dir_radius, max_radius));
-      std::vector<dirt_node_t*> dir_updates;
+      std::vector<dirt_replan_node_t*> dir_updates;
       std::transform(prox_nodes.begin(), prox_nodes.end(), std::back_inserter(dir_updates),
-                     [](proximity_node_t* prox_node) { return static_cast<dirt_node_t*>(prox_node); });
-      std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_node_t* node) {
+                     [](proximity_node_t* prox_node) { return static_cast<dirt_replan_node_t*>(prox_node); });
+      std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_replan_node_t* node) {
         if (current_node->cost_to_come + edge_cost + end_heuristic > node->cost_to_come + node->cost_to_go)
         {
           new_node_dir_radius = std::min(new_node_dir_radius, distance_function(edge_traj.back(), node->point));
@@ -105,13 +102,12 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
       });
 
       add_edge_to_tree(eg, current_node, dir_updates, new_node_dir_radius);
-      current_node_idx = tree.get_vertex_as<dirt_node_t>(current_node_idx)->get_children().front();
+      if (tree.get_vertex_as<dirt_replan_node_t>(current_node_idx)->get_children().empty())
+        break;
+      current_node_idx = tree.get_vertex_as<dirt_replan_node_t>(current_node_idx)->get_children().front();
       current_node = get_vertex(current_node_idx);
     }
-
-    prx_warn("[DIRT] Seeding complete.");
   }
-  */
 
   timer.reset();
   iteration_count = 0;
@@ -358,7 +354,7 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
 {
   double safety_time = simulation_step;
   if (closest_node->checkpoint_time < dirt_replan_query->start_time + planning_cycle_duration &&
-      closest_node->checkpoint_time + eg.first->duration() > dirt_replan_query->start_time + planning_cycle_duration)
+      closest_node->checkpoint_time + eg.first->duration() >= dirt_replan_query->start_time + planning_cycle_duration)
   {
     if (dirt_spec->use_contingency)
     {
@@ -372,20 +368,22 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
       stopping_plan->append_onto_back(safety_time);
       control_space->copy_to_point(stopping_plan->back().control);
       control_space->enforce_bounds(stopping_plan->back().control);
-      // Check for the next planning cycle.
-      // stopping_plan->append_onto_back(planning_cycle_duration);
       propagate(last_safe_state, *stopping_plan, *stopping_traj);
       bool valid = false;
-      valid = valid_check(*stopping_traj);
+      valid = contingency_check(*stopping_traj);
       delete stopping_traj;
       delete stopping_plan;
       if (!valid)
         return;
+      if (!closest_node->is_safe)
+      {
+        closest_node->is_safe = true;
+      }
     }
-    if (!closest_node->is_safe)
-    {
-      closest_node->is_safe = true;
-    }
+  }
+  if (!dirt_spec->use_contingency)
+  {
+    closest_node->is_safe = true;
   }
   auto node_index = tree.add_vertex<dirt_replan_node_t, rrt_edge_t>();
   auto new_tree_node = tree.get_vertex_as<dirt_replan_node_t>(node_index);
@@ -406,9 +404,7 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
   new_tree_node->is_safe = false;
   new_tree_node->safety_time = safety_time;
 
-  if (closest_node->is_safe && new_tree_node->cost_to_go < best_cost &&
-      new_tree_node->checkpoint_time >= dirt_replan_query->start_time + planning_cycle_duration)
-  // if (new_tree_node->cost_to_go < best_cost)
+  if (closest_node->is_safe && new_tree_node->cost_to_go < best_cost)
   {
     best_cost = new_tree_node->cost_to_go;
     best_node = new_tree_node->get_index();
@@ -521,7 +517,7 @@ void dirt_replan_t::_fulfill_query()
     {
       auto node = get_vertex(current_index);
       std::cout << current_index << " " << state_space->print_point(node->point, 4) << " " << node->is_safe << " "
-                << " " << node->checkpoint_time << " " << node->safety_time << std::endl;
+                << " " << node->checkpoint_time << std::endl;
       node_indices.push_front(current_index);
       current_index = tree[current_index]->get_parent();
     }
@@ -535,6 +531,8 @@ void dirt_replan_t::_fulfill_query()
       rrt_query->solution_plan += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->plan;
       rrt_query->solution_traj += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->traj;
     }
+    if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
+      rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
   }
   else if (best_node != start_vertex)
   {
@@ -545,7 +543,7 @@ void dirt_replan_t::_fulfill_query()
     {
       auto node = get_vertex(current_index);
       std::cout << current_index << " " << state_space->print_point(node->point, 4) << " " << node->is_safe << " "
-                << " " << node->checkpoint_time << " " << node->safety_time << std::endl;
+                << " " << node->checkpoint_time << std::endl;
       node_indices.push_front(current_index);
       current_index = tree[current_index]->get_parent();
     }
@@ -559,12 +557,17 @@ void dirt_replan_t::_fulfill_query()
       rrt_query->solution_plan += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->plan;
       rrt_query->solution_traj += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->traj;
     }
+    if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
+      rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
   }
   else
   {
     std::cout << "No solution found during planning cycle. # of nodes: " << metric->get_nr_nodes() << std::endl;
     rrt_query->solution_cost = 0;
   }
+  auto node = get_vertex(start_vertex);
+  std::cout << start_vertex << " " << state_space->print_point(node->point, 4) << " " << node->is_safe << " " << " "
+            << node->checkpoint_time << std::endl;
   if (rrt_query->get_visualization)
   {
     std::cout << "Visualizing " << tree.num_edges() << " edges" << std::endl;

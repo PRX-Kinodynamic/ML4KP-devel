@@ -1,7 +1,14 @@
 
 plant:
   accel_slope: &accel_slope .250
-  # params: [*accel_slope, 0.0, 0.0]
-  params: [0.9898, 0.4203, 0.6228]
+  parameter_space:
+    values: [0.9898, 0.4203, 0.6228]
+  state_space:
+    lower_bound: [-6, -6, -3.14159,-0.75]
+    upper_bound: [6, 6, 3.14159,0.75]
+  control_space:
+    lower_bound: [-1, -1]
+    upper_bound: [1, 1]
+
 out:
   trajectory_filename: "${DIRTMP_PATH}/out/mushr_traj.txt"

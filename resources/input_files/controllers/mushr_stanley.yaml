@@ -1,6 +1,8 @@
 name: "mushr_stanley"
 wheelbase: 0.2965
 k_path: 5.0
-k_throttle: 1.6057
-goal_radius: 0.1
+# k_throttle: 1.292
+# k_throttle: 1.6057
+k_throttle: 1.5764
+goal_radius: 0.25
 frequency: 30
