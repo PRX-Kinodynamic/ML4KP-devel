@@ -22,6 +22,7 @@ void dirt_replan_t::_link_and_setup_spec(planner_specification_t* spec)
 
   expand = dirt_spec->expand;
   h = dirt_spec->h;
+  wavefront_h = dirt_spec->wavefront_h;
   contingency_check = dirt_spec->contingency_check;
 
   planning_cycle_duration = dirt_spec->planning_cycle_duration;
@@ -59,7 +60,7 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
     metric->add_node(start_node.get());
     previous_child = start_vertex;
     best_node = start_vertex;
-    best_cost = start_node->cost_to_go;
+    best_cost = wavefront_h(start_node->point, dirt_replan_query->goal_state);
     // best_cost = PRX_INFINITY;
     child_extension = true;
   }
@@ -404,9 +405,10 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
   new_tree_node->is_safe = false;
   new_tree_node->safety_time = safety_time;
 
-  if (closest_node->is_safe && new_tree_node->cost_to_go < best_cost)
+  double wavefront_val = wavefront_h(eg.second->back(), dirt_replan_query->goal_state);
+  if (closest_node->is_safe && wavefront_val < best_cost)
   {
-    best_cost = new_tree_node->cost_to_go;
+    best_cost = wavefront_val;
     best_node = new_tree_node->get_index();
     // std::cout << "Updated best node to: " << state_space->print_point(closest_node->point,4) << " " <<
     // closest_node->is_safe << std::endl;
@@ -516,8 +518,8 @@ void dirt_replan_t::_fulfill_query()
     while (current_index != start_vertex)
     {
       auto node = get_vertex(current_index);
-      std::cout << current_index << " " << state_space->print_point(node->point, 4) << " " << node->is_safe << " "
-                << " " << node->checkpoint_time << std::endl;
+      // std::cout << current_index << " " << state_space->print_point(node->point, 4) << " " << node->is_safe << " "
+      //           << " " << node->checkpoint_time << std::endl;
       node_indices.push_front(current_index);
       current_index = tree[current_index]->get_parent();
     }
@@ -542,8 +544,8 @@ void dirt_replan_t::_fulfill_query()
     while (current_index != start_vertex)
     {
       auto node = get_vertex(current_index);
-      std::cout << current_index << " " << state_space->print_point(node->point, 4) << " " << node->is_safe << " "
-                << " " << node->checkpoint_time << std::endl;
+      // std::cout << current_index << " " << state_space->print_point(node->point, 4) << " " << node->is_safe << " "
+      //           << " " << node->checkpoint_time << std::endl;
       node_indices.push_front(current_index);
       current_index = tree[current_index]->get_parent();
     }

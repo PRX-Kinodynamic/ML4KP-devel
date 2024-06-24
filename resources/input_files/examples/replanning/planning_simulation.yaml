@@ -6,12 +6,18 @@ learned_controller: "controllers/mushr_analytical.yaml"
 feedback_controller: "controllers/mushr_stanley.yaml"
 # feedback_controller: "controllers/mushr_pure_pursuit.yaml"
 
-environment: "environments/obstacle_0.yaml"
-# environment: "environments/obstacle_1.yaml"
-safe_distance: 0.5
+# environment: "environments/movable.yaml"
+# environment: "environments/slip.yaml"
+# environment: "environments/obstacle_0.yaml"
+environment: "environments/obstacle_1.yaml"
+# environment: "environments/walls.yaml"
+safe_distance: 0.25
+safe_min: 0.05
+safe_mul: 0.25
 
-goal_state: [1.0, 5.0, 0.0, 0.0]
-# goal_state: [1.5, 5.0, 0.0, 0.0]
+# goal_state: [0.25, 4.0, 0.0, 0.0]
+# goal_state: [1.0, 5.0, 0.0, 0.0]
+goal_state: [1.5, 5.0, 0.0, 0.0]
 goal_region_radius: 0.25
 
 # For debugging
@@ -23,6 +29,9 @@ output_dir: "RoGuE"
 min_time: 0.5
 max_time: 1.0
 blossom_number: 10
+
+u_att: 1.0
+u_rep: 1.5
 
 roadmap:
   xlims: [ 0.0, 2.0]

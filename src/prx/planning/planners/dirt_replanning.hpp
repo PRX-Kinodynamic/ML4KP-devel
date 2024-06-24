@@ -58,6 +58,7 @@ public:
     h = [this](const space_point_t& s, const space_point_t& s2) {
       return default_heuristic_function(s, s2, distance_function);
     };
+    wavefront_h = h;
     contingency_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
     blossom_number = 5;
     use_pruning = true;
@@ -72,7 +73,7 @@ public:
   double planning_cycle_duration;
 
   bool use_pruning, use_contingency;
-  heuristic_function_t h;
+  heuristic_function_t h, wavefront_h;
   valid_trajectory_t contingency_check;
 };
 
@@ -88,6 +89,7 @@ public:
   }
 
   double start_time;
+  bool previous_contingency;
 };
 
 class dirt_replan_t : public rrt_t
@@ -125,7 +127,7 @@ protected:
   virtual void bnb(node_index_t v, double cost_bound, bool delete_flag = false) override;
 
 private:
-  heuristic_function_t h;
+  heuristic_function_t h, wavefront_h;
   expand_t expand;
   valid_trajectory_t contingency_check;
 
