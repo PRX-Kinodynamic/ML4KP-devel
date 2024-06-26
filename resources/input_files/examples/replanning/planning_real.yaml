@@ -1,0 +1,22 @@
+random_seed: 210896
+simulation_step: 0.01
+
+plant: !file "plants/mushr_real.yaml"
+feedback_controller: "controllers/mushr_stanley.yaml"
+
+environment: "environments/lab_obstacle.yaml"
+
+safe_distance: 0.25
+safe_min: 0.05
+safe_mul: 0.25
+
+u_att: 1.0
+u_rep: 1.5
+
+goal_state: [0.0, -1.0, 0.0, 0.0]
+goal_region_radius: 0.25
+
+min_time: 0.5
+max_time: 1.0
+blossom_number: 10
+

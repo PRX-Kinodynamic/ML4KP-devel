@@ -56,7 +56,7 @@ public:
       control[0] = 0.;
       control[1] = 0.;
     }
-    if (_points != nullptr)
+    if (_points != nullptr && _points->size() > 0)
     {
       unsigned window_size = std::min(_window + _nearest_index, _points->size());
 

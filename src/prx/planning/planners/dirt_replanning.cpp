@@ -533,8 +533,8 @@ void dirt_replan_t::_fulfill_query()
       rrt_query->solution_plan += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->plan;
       rrt_query->solution_traj += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->traj;
     }
-    if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
-      rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
+    // if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
+    //   rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
   }
   else if (best_node != start_vertex)
   {
@@ -559,8 +559,8 @@ void dirt_replan_t::_fulfill_query()
       rrt_query->solution_plan += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->plan;
       rrt_query->solution_traj += *tree.get_edge_as<rrt_edge_t>(tree[node_indices[i]]->get_parent_edge())->traj;
     }
-    if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
-      rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
+    // if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
+    //   rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
   }
   else
   {

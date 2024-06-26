@@ -1,0 +1,69 @@
+environment:
+    type: obstacle
+    root_configuration:
+      position: [0,0,0]
+      orientation: [0,0,0,1]
+    geometries:
+      -
+        name: wall_down
+        collision_geometry:
+          type: box
+          dims: [ 7.23, .1, .2]
+          material: 0x0015ff
+        config:
+          position: [0.0145, 0.13, .1]
+          orientation: [0,0,0,1]
+      - 
+        name: wall_left
+        collision_geometry:
+          type: box
+          dims: [ .1, 2.07, .2]
+          material: 0x0015ff
+        config:
+          position: [-3.6, 1.165, .1]
+          orientation: [0,0,0,1]
+      - 
+        name: wall_right
+        collision_geometry:
+          type: box
+          dims: [ .1, 2.07, .2]
+          material: 0x0015ff
+        config:
+          position: [3.63, 1.165, .1]
+          orientation: [0,0,0,1]
+      -
+        name: wall_up
+        collision_geometry:
+          type: box
+          dims: [ 7.23, .1, .2]
+          material: 0x0015ff
+        config:
+          position: [0.0145, 2.2, .1]
+          orientation: [0,0,0,1]
+      - 
+        name: obstacle_0
+        collision_geometry:
+          type: box
+          dims: [ .35, .45, .2]
+          material: 0x0015ff
+        config:
+          position: [0.65, -1.53, .1]
+          orientation: [0,0,0,1]
+      - 
+        name: obstacle_1
+        collision_geometry:
+          type: box
+          dims: [ .35, .45, .2]
+          material: 0x0015ff
+        config:
+          position: [1.31, -0.45, .1]
+          orientation: [0,0,0,1]
+      # -
+      #   name: obstacle_2
+      #   collision_geometry:
+      #     type: box
+      #     dims: [ -0.02, -1.65, .2]
+      #     material: 0x0015ff
+      #   config:
+      #     position: [-0.97, 1.51, .1]
+      #     orientation: [0,0,0,1]

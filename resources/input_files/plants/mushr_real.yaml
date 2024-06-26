@@ -13,6 +13,6 @@ control_space:
   upper_bound: [ 1, 0.5]
 
 parameter_space:
-  values: [0.65861, 0.00753, 0.24991]
+  values: [1., 0.46, 1.1]
 
 vis_body: "body"
