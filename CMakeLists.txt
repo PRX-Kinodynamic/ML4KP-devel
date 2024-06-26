@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 cmake_policy(SET CMP0079 NEW)
 
 set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
-set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
+set(BUILD_FOR_TORCH  OFF CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
 set(BUILD_FOR_GTSAM OFF CACHE BOOL "Set ON/TRUE for building GTSAM factor graphs")
@@ -49,6 +49,10 @@ link_directories("${PROJECT_SOURCE_DIR}/lib" ${Boost_LIBRARY_DIRS})
 
 find_package(Threads REQUIRED)
 # link_libraries(Threads::Threads)
+
+find_package (OpenCV 4.0.0 REQUIRED)
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+#include_directories ("/usr/include/opencv4/")
 
 if(BUILD_FOR_TORCH)
 	if(DEFINED ENV{Torch_DIR})

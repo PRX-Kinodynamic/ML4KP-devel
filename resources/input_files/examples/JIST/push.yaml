@@ -1,0 +1,19 @@
+random_seed: 42
+xml_path: push/model_hard.xml
+
+planner_name: "dirt"
+
+visualize: true
+goal_region_radius: 0.1
+
+checker_type: time
+checker_value: 120
+
+ignored_pairs: []
+
+blossom: 5
+
+output_plan: true
+output_plan_file: "/home/dhruv/2024/projects/NAMO/out/output_plan25.txt"
+
+goal_config: [-1.0, 0.]

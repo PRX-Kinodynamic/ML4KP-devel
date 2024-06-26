@@ -8,7 +8,7 @@
 
 namespace prx
 {
-
+extern double simulation_time;
 extern double simulation_step;
 class controller_t;
 class system_controller_t;

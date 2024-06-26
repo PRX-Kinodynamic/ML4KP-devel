@@ -77,12 +77,13 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
         {
           ss_lb.push_back(joint->range[0]);
           ss_ub.push_back(joint->range[1]);
+
         }
         else
         {
-          prx_warn("Slide joint is not limited. Setting limits to (-inf, inf)");
-          ss_lb.push_back(-PRX_INFINITY);
-          ss_ub.push_back(PRX_INFINITY);
+          prx_warn("Slide joint is not limited. Setting limits to (-101, 101)");
+          ss_lb.push_back(-101);
+          ss_ub.push_back(101);
         }
 
         state_memory[idx] = &sim->d->qpos[joint->qposadr];
@@ -130,14 +131,16 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
       default:
         prx_throw("Joint type not supported (yet)");
     }
+
+  
   }
 
   for (int i = 0; i < sim->m->nv; i++)
   {
     state_topo_string += "E";
     state_memory[idx + i] = &sim->d->qvel[i];
-    ss_lb.push_back(-PRX_INFINITY);
-    ss_ub.push_back(PRX_INFINITY);
+    ss_lb.push_back(-101);
+    ss_ub.push_back(101);
   }
 
   if (next_qpos != sim->m->nq)
@@ -145,6 +148,7 @@ void mujoco_plant_t::initialize(std::shared_ptr<mujoco_simulator_t> sim)
     std::cout << "Error: joint dims " << next_qpos << " != nq " << sim->m->nq << std::endl;
     prx_throw("Exiting...");
   }
+  
 
   for (int i = 0; i < sim->actuator_info.size(); i++)
   {

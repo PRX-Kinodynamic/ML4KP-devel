@@ -218,6 +218,7 @@ void plan_t::pop_back()
 std::string plan_t::print(unsigned precision) const
 {
   std::stringstream out(std::stringstream::out);
+    out << std::fixed << std::setprecision(prx::constants::precision);
   for (const plan_step_t& step : *this)
   {
     out << step.control << prx::constants::separating_value;

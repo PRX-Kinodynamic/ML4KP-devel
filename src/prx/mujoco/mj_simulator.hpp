@@ -7,7 +7,12 @@
 #include "prx/mujoco/mj_plant.hpp"
 
 #include "GLFW/glfw3.h"
-
+#include <opencv2/core/hal/interface.h>
+#include <opencv2/core/eigen.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/videoio.hpp>
 #include "mujoco/mujoco.h"
 
 namespace prx
@@ -16,6 +21,11 @@ class mujoco_plant_t;
 class mujoco_simulator_t : public simulator_t
 {
 private:
+  bool _vis;
+  bool _record_video;
+  double _recorded_secs;
+  const double _fps{ 30 };
+  std::string _video_name;
   mjvCamera cam;
   mjvOption opt;
   mjvScene scn;
@@ -35,23 +45,57 @@ protected:
   void scroll(GLFWwindow* window, double xoffset, double yoffset);
 
 public:
-  mujoco_simulator_t(const std::string& model_path);
+  mujoco_simulator_t()
+    : simulator_t(plant_type::MUJOCO)
+    , button_left(false)
+    , button_right(false)
+    , button_middle(false)
+    , lastx(0)
+    , lasty(0)
+    , _recorded_secs(0.0)
+    , _record_video(false)
+    , _video_name(prx::out_path + "mj_recording.mp4")
+  {
+  }
+  mujoco_simulator_t(const std::string& model_path, const bool _vis=true);
 
   virtual ~mujoco_simulator_t();
 
   void init_simulator();
 
   virtual void step_simulation() override;
+  void step_simulation(const int step_type);
 
   virtual void reset_simulation() override;
 
-  inline void set_goal(const space_point_t goal)
+
+  void add_frame();
+
+  void add_pair(const std::vector<std::pair<std::string, std::string>>& pairs);
+  void add_pair(std::pair<std::string, std::string> pair);
+
+  inline void set_goal(const std::vector<double> goal)
   {
     goal_pos.clear();
     for (int i = 0; i < 3; i++)
     {
-      // goal_pos.push_back(goal->at(i));
+      goal_pos.push_back(goal.at(i));
     }
+  }
+
+  inline void set_cam_elevation(const double elevation)
+  {
+    cam.elevation = elevation;
+  }
+
+  inline void set_cam_distance(const double distance)
+  {
+    cam.distance = distance;
+  }
+
+  inline void set_cam_azimuth(const double azimuth)
+  {
+    cam.azimuth = azimuth;
   }
 
   inline void set_goal_radius(double radius)
@@ -63,7 +107,17 @@ public:
 
   void set_state(const MujocoState& state);
 
+  void set_record_video(const bool record_video);
+
+  void set_video_name(const std::string& video_name);
+
   MujocoState get_state();
+
+  void close_video()
+  {
+    if (_output_video.isOpened())
+      _output_video.release();
+  }
 
   mjModel* m;
   mjData* d;
@@ -72,6 +126,7 @@ public:
   std::vector<mjActuatorInfo*> actuator_info;
 
   std::vector<double*> actuator_internal_state;
+  cv::VideoWriter _output_video;
 };
 
 class mujoco_collision_group_t : public collision_group_t
@@ -90,11 +145,19 @@ public:
   }
   virtual ~mujoco_collision_group_t(){};
 
+  void add_pair(std::pair<std::string, std::string> pair);
+  void add_pair(std::string body1, std::string body2);
+
   bool in_collision() override;
+
 
 protected:
   std::shared_ptr<mujoco_simulator_t> sim;
+  std::vector<std::pair<int, int>> ignored_pairs;
+  std::vector<std::pair<int, int>> collision_pairs;
+
   std::string collision_body1, collision_body2;
+  int collision_body_id1, collision_body_id2;
 };
 
 class mujoco_collision_checker_t : public collision_checker_t

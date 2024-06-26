@@ -33,8 +33,10 @@ else()
     target_include_directories(${PROJECT_NAME}_mjsim INTERFACE ${MJ_INCLUDE_DIR})
     target_link_directories(${PROJECT_NAME}_mjsim INTERFACE ${MJ_LIB_DIR})
     target_link_libraries(${PROJECT_NAME}_mjsim INTERFACE
-        ${MJ_LIB_DIR}/libmujoco.so
+        ${MJ_LIB_DIR}/libmujoco.so)
+    target_link_libraries(${PROJECT_NAME}_mjsim PUBLIC
         glfw
+        ${OpenCV_LIBS}
     )
     set_target_properties(${PROJECT_NAME}_mjsim PROPERTIES FRAMEWORK true)
 endif()

@@ -3,6 +3,7 @@
 namespace prx
 {
 double simulation_step;
+double simulation_time;
 
 bool is_child_system(system_ptr_t parent, system_ptr_t child)
 {
