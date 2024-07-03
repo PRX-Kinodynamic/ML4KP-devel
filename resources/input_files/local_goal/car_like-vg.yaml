@@ -9,7 +9,7 @@ environment: "environments/bar.yaml"
 plant: !file "plants/car_like_wh.yaml"
 
 use_learned_controller: true
-learned_controller: !file "networks/car_like_controller.yaml"
+learned_controller: !file "networks/car_like_HER_SAC.yaml"
 
 random_local_goal: false
 planner_name: "roadmap"
@@ -28,7 +28,7 @@ termination_classifier: !file "networks/svm_classifier.yaml"
 start_state: [  -9.0000, -9.0000 , 0.0000, 0.0000, 0.0000]
 goal_state:  [ 9.0000, 9.0000, 0.0000, 0.0000, 0.0000]
 
-debug: false
+debug: true
 
-output_dir: "stat_ver_4/"
-roadmap_dir: "stat_ver_4/"
+output_dir: "vel_goals/"
+roadmap_dir: "vel_goals/"

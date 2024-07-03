@@ -2,6 +2,7 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/learned_modules/learned_controller.hpp"
 #include "prx/utilities/learned_modules/planning/strict_reachable_roadmap.hpp"
+#include <stack>
 
 using namespace prx;
 
@@ -50,6 +51,7 @@ class reachable_roadmap_t
         std::vector<node_index_t> d_indices;
         std::unordered_map<node_index_t, double> a_costs;
         std::unordered_map<node_index_t, double> d_costs;
+        bool sample_velocities = true;
 
     public:
         reachable_roadmap_t() : max_failures(10), num_failures(0), vertex_counter(0), component_counter(0), collect_reachability(false) {}
@@ -99,6 +101,7 @@ class reachable_roadmap_t
 
     void get_indices(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller)
     {
+        
         a_indices.clear();
         d_indices.clear();
         a_costs.clear();
@@ -270,7 +273,8 @@ class reachable_roadmap_t
         components.erase(s);
     }
     
-    void build_roadmap(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, bool verify = false){       
+    void build_roadmap(rrt_query_t& query, rrt_specification_t& spec, learned_controller_t controller, bool verify = false){     
+        std::cout << "Building Roadmap" << std::endl;  
         std::ofstream outfile;
         outfile.open(reachability_file_path); // append instead of overwrite 
         outfile<<""; 
@@ -280,20 +284,43 @@ class reachable_roadmap_t
         int num_c = 0;
         int num_ft = 0;
 
+        std::stack<space_point_t> sample_buffer;
+
         pt = spec.state_space -> make_point();
         pt2 = spec.state_space -> make_point();
         do
         {
-            do
-            {
-                spec.sample_state(pt);
-            } while (!spec.valid_state(pt));
+            if(sample_velocities){
+                if(sample_buffer.empty()){
+                    auto vel_bounds = spec.state_space ->get_bounds()[4];
+                    do
+                    {
+                        spec.sample_state(pt);
+                    } while (!spec.valid_state(pt));
+                    space_point_t high_vel_pos_copy = spec.state_space -> clone_point(pt);
+                    high_vel_pos_copy -> at(4) = vel_bounds.first; //todo: insert high velocity
+                    if(!spec.valid_state(high_vel_pos_copy)){sample_buffer.push(high_vel_pos_copy);}
+                    space_point_t high_vel_neg_copy = spec.state_space -> clone_point(pt);
+                    high_vel_neg_copy -> at(4) = vel_bounds.second; //todo: insert high velocity
+                    if(!spec.valid_state(high_vel_pos_copy)){sample_buffer.push(high_vel_neg_copy);}
+                }else{
+                    spec.state_space->copy_point(pt, sample_buffer.top()); 
+                    sample_buffer.pop();
+                }
+            }else{
+                do
+                {
+                    spec.sample_state(pt);
+                } while (!spec.valid_state(pt));
+            }
+            
 
             pt_vec.clear();
             spec.state_space -> copy_vector_from_point(pt_vec,pt);
 
             get_indices(query,spec,controller);
-
+            std::cout << "arrivable nodes: "<< a_indices.size()<<", departable nodes: "<<d_indices.size() << std::endl;
+            
             if (a_indices.size() == 0 || d_indices.size() == 0)  // sample connected to no nodes, becomes a guard
             {
                 auto vertex = new ground_truth_vertex_t();

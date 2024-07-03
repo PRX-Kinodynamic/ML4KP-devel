@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
         if (argc <= 1)
         {
             // prx_throw("This executable needs a parameter file!");
-            params_file = "local_goal/car_like.yaml";
+            params_file = "local_goal/car_like-vg.yaml";
             // params_file = "local_goal/annotate_treaded.yaml";
         }
         else 
@@ -66,22 +66,29 @@ int main(int argc, char* argv[])
         init_random(random_seed);
         torch::set_num_threads(1);
 
+        std::cout << "Params Loaded" << std::endl;
+
         auto obstacles = load_obstacles(params["environment"].as<std::string>());
         auto obstacle_list = obstacles.second;
         auto obstacle_names = obstacles.first;
+        
+        std::cout << "Obstacles Loaded" << std::endl;
 
         std::string plant_name = params["/plant/name"].as<std::string>();
         std::string plant_path = params["/plant/path"].as<std::string>();
         auto plant = system_factory_t::create_system(plant_name,plant_path);
 
+        std::cout << "System Loaded" << std::endl;
+
         std::vector<double> lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
         std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
         plant -> set_state_space_bounds(lower_bounds,upper_bounds);
 
-
         world_model_t world_model({plant},{obstacle_list});
         world_model.create_context("planning_context",{plant_name},{obstacle_names});
         auto context = world_model.get_context("planning_context");
+
+        std::cout << "World Constructed" << std::endl;
 
         auto ss = context.first->get_state_space();
         auto cs = context.first->get_control_space();
@@ -97,10 +104,13 @@ int main(int argc, char* argv[])
         dirt_query.goal_state  = ss -> make_point();
         dirt_query.get_visualization = true;
         
+        std::cout << "DIRT spec Initialized" << std::endl;
 
         dirt_query.goal_region_radius = params["goal_radius"].as<double>();
 
         learned_controller_t controller(params);
+
+        std::cout << "Controller Loaded" << std::endl;
 
         dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
         {
@@ -124,6 +134,8 @@ int main(int argc, char* argv[])
         dirt_spec.blossom_number = 1;
         dirt_spec.use_pruning = false;
 
+        std::cout << "DIRT Initialized" << std::endl;
+
         std::vector<double> s = params["start_state"].as<std::vector<double>>();
         std::vector<double> g = params["goal_state"].as<std::vector<double>>();
         ss -> copy_point_from_vector(dirt_query.start_state,s);
@@ -138,6 +150,8 @@ int main(int argc, char* argv[])
         rrr.set_precision(params["precision"].as<int>());
 
         rrr.set_collect_reachability(params["collect_reachability"].as<bool>(),  out_path + "visibility_data.txt");
+
+        std::cout << "Roadmap Initialized" << std::endl;
 
         timer.reset();
         rrr.build_roadmap(dirt_query, dirt_spec, controller);
