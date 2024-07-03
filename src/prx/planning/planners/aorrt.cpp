@@ -124,14 +124,15 @@ void aorrt_t::_resolve_query(condition_check_t* condition)
 
     _c_new = _cost_aux_pt->at(0) + cost_function(traj, plan);
 
-    if (_c_new < (Y_min_cost * aorrt_spec->cost_multiplier) and valid_check(traj))
+    if (_c_new < (Y_min_cost) and valid_check(traj))
     {
       // The new cost is higher than the max in the tree but lower than min found to the goal
       // This happens when no solution has been found or if it is allowed to explore higher costs than the current goal
-      if (_c_new > _c_max)
+      // if (_c_new > _c_max)
+      if (goal_vertex == start_vertex and _c_new > _c_max)
       {
         _c_max = _c_new;
-        _cost_state_space->set_bounds({ 0.0 }, { _c_max * aorrt_spec->cost_multiplier });
+        _cost_state_space->set_bounds({ 0.0 }, { _c_max });
       }
       // add vertex
       auto node_index = _tree.add_vertex<aorrt_node_t, aorrt_edge_t>();
@@ -248,7 +249,7 @@ void aorrt_t::update_goal(node_index_t node_index)
     Y_min_cost = _c_new;
     goal_vertex = node_index;
 
-    // aorrt_spec->c_max = _c_new;
+    aorrt_spec->c_max = _c_new;
     aorrt_spec->w_x = _w_x_bk;
     aorrt_spec->w_c = _w_c_bk;
 
@@ -258,10 +259,10 @@ void aorrt_t::update_goal(node_index_t node_index)
     std::cout << " iter:" << current_solution_iters;
     std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
 
-    // cost_state_space->set_bounds({ 0.0 }, { aorrt_spec->c_max });
+    _cost_state_space->set_bounds({ 0.0 }, { aorrt_spec->c_max });
     if (_bnb)
     {
-      bnb(start_vertex, _c_new);
+      bnb(start_vertex, _c_new * aorrt_spec->cost_multiplier);
     }
   }
 }

@@ -5,9 +5,11 @@
 #include <gtsam/base/Testable.h>
 #include <gtsam/nonlinear/Expression.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include "prx/external/PQP/PQP_Eigen.hpp"
 #include "prx/utilities/geometry/geometry.hpp"
+#include "prx/utilities/geometry/movable_object.hpp"
 #include "prx/factor_graphs/lie_groups/se3.hpp"
 #include "prx/factor_graphs/utilities/symbols_factory.hpp"
 
@@ -17,6 +19,7 @@ namespace fg
 {
 struct collision_info_t
 {
+  using SharedPtr = std::shared_ptr<collision_info_t>;
   // using PQPModel = typename PQP_Model;
   // using PQPModel = typename PQP_Model_Eigen;
   collision_info_t(collision_info_t& other)
@@ -37,6 +40,34 @@ struct collision_info_t
   collision_info_t(const geometry_type_t geom_type, const std::vector<double>& params)
     : collision_info_t(geom_type, params, Eigen::Matrix3d::Identity(), Eigen::Vector3d::Zero()){};
 
+  static std::vector<SharedPtr> generate_infos(std::vector<std::shared_ptr<prx::movable_object_t>>& obstacle_list)
+  {
+    std::vector<SharedPtr> infos{};
+
+    for (auto obstacle : obstacle_list)
+    {
+      const prx::movable_object_t::Geometries geometries{ obstacle->get_geometries() };
+      const prx::movable_object_t::Configurations configurations{ obstacle->get_configurations() };
+
+      const std::size_t total_geoms{ geometries.size() };
+
+      for (int i = 0; i < total_geoms; ++i)
+      {
+        const std::shared_ptr<prx::geometry_t> g{ geometries[i].second };
+        const std::shared_ptr<prx::transform_t> tf{ configurations[i].second };
+
+        const prx::geometry_type_t g_type{ g->get_geometry_type() };
+        const std::vector<double> g_params{ g->get_geometry_params() };
+
+        const Eigen::Matrix3d rot{ tf->rotation() };
+        const Eigen::Vector3d t{ tf->translation() };
+
+        infos.emplace_back(new collision_info_t(g_type, g_params, rot, t));
+      }
+    }
+    return infos;
+  }
+
   prx::fg::se3_t pose;
 
   const geometry_type_t geom_type;
@@ -52,8 +83,14 @@ template <typename State, typename ConfigurationFromState>
 class obstacle_factor_t : public gtsam::NoiseModelFactor1<State>
 {
   using Base = gtsam::NoiseModelFactor1<State>;
+  using Derived = obstacle_factor_t<State, ConfigurationFromState>;
   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
   using CollisionInfoPtr = std::shared_ptr<collision_info_t>;
+
+  using Key = gtsam::Key;
+  using FactorGraph = gtsam::NonlinearFactorGraph;
+  using ObjectPtr = std::shared_ptr<prx::movable_object_t>;
+  using SF = prx::fg::symbol_factory_t;
 
   using Rotation = Eigen::Matrix3d;
   using Translation = Eigen::Vector3d;
@@ -61,14 +98,17 @@ class obstacle_factor_t : public gtsam::NoiseModelFactor1<State>
   static constexpr Eigen::Index StateDim{ gtsam::traits<State>::dimension };
 
 public:
+  using CollideResult = PQP_CollideResult;
+  using DistanceResult = PQP_DistanceResult;
+  using ToleranceResult = PQP_ToleranceResult;
+
   obstacle_factor_t(obstacle_factor_t&& other)
     : Base(other)
     , _obstacle_info(other._obstacle_info)
     , _robot_info(other._robot_info)
     , _max_error_dist(other._max_error_dist)
+    , _activation_distance(other._activation_distance)
   {
-    PRX_DBG_VARS(_obstacle_info->pose);
-    PRX_DBG_VARS(_robot_info->pose);
   }
 
   obstacle_factor_t(CollisionInfoPtr obstacle, CollisionInfoPtr robot, const gtsam::Key& robot_pose_key,
@@ -96,95 +136,111 @@ public:
   {
     // PRX_DBG_VARS(_obstacle_info->pose);
   }
-  bool in_collision(const State& x0) const
+
+  static bool in_collision(const State& x0, CollisionInfoPtr obstacle_info, CollisionInfoPtr robot_info,
+                           ConfigurationFromState& config_from_state, CollideResult& result)
   {
-    Eigen::Matrix3d robot_rot{ _robot_info->pose.quaternion().matrix() };
-    Eigen::Matrix3d obstacle_rot{ _obstacle_info->pose.quaternion().matrix() };
-    _config_from_state(robot_rot, _robot_info->pose.position(), x0);
+    Eigen::Matrix3d robot_rot{ robot_info->pose.quaternion().matrix() };
+    Eigen::Matrix3d obstacle_rot{ obstacle_info->pose.quaternion().matrix() };
+    config_from_state(robot_rot, robot_info->pose.position(), x0);
     PQP_REAL Mr[3][3], Tr[3];
     PQP_REAL Mo[3][3], To[3];
     copy(Mr, robot_rot);
     copy(Mo, obstacle_rot);
-    copy(Tr, _robot_info->pose.position());
-    copy(To, _obstacle_info->pose.position());
+    copy(Tr, robot_info->pose.position());
+    copy(To, obstacle_info->pose.position());
 
     // PQP_Collide(&_collision_result,                                                          // no-lint
-    //             robot_rot, _robot_info->pose.position(), _robot_info->model.get(),             // no-lint
-    //             obstacle_rot, _obstacle_info->pose.position(), _obstacle_info->model.get(),  // no-lint
+    //             robot_rot, robot_info->pose.position(), robot_info->model.get(),           // no-lint
+    //             obstacle_rot, obstacle_info->pose.position(), obstacle_info->model.get(),  // no-lint
     //             PQP_FIRST_CONTACT);
-    PQP_Collide(&_collision_result,                   // no-lint
-                Mr, Tr, _robot_info->model.get(),     // no-lint
-                Mo, To, _obstacle_info->model.get(),  // no-lint
+    PQP_Collide(&result,                             // no-lint
+                Mr, Tr, robot_info->model.get(),     // no-lint
+                Mo, To, obstacle_info->model.get(),  // no-lint
                 PQP_FIRST_CONTACT);
 
-    // printf("%.4f %.4f %d %d\n",                                         // no-lint
-    //        x0[0], x0[1],                                                // no-lint
-    //        _collision_result.Colliding(), _collision_result.NumPairs()  // no-lint
-    // );
-    return _collision_result.Colliding();
+    return result.Colliding();
   }
 
-  double distances(const State& x0, Eigen::Vector3d& closest_point, Eigen::Vector3d& p2) const
+  inline bool in_collision(const State& x0) const
   {
-    Eigen::Matrix3d robot_rot{ _robot_info->pose.quaternion().matrix() };
-    Eigen::Matrix3d obstacle_rot{ _obstacle_info->pose.quaternion().matrix() };
+    return in_collision(x0, _obstacle_info, _robot_info, _config_from_state, _collision_result);
+  }
+
+  static double distances(const State& x0, Eigen::Vector3d& closest_point, Eigen::Vector3d& p2,
+                          CollisionInfoPtr obstacle_info, CollisionInfoPtr robot_info,
+                          ConfigurationFromState& config_from_state, DistanceResult& result)
+  {
+    Eigen::Matrix3d robot_rot{ robot_info->pose.quaternion().matrix() };
+    Eigen::Matrix3d obstacle_rot{ obstacle_info->pose.quaternion().matrix() };
     PQP_REAL Mr[3][3], Tr[3];
     PQP_REAL Mo[3][3], To[3];
-    _config_from_state(robot_rot, _robot_info->pose.position(), x0);
+    config_from_state(robot_rot, robot_info->pose.position(), x0);
 
     copy(Mr, robot_rot);
     copy(Mo, obstacle_rot);
-    copy(Tr, _robot_info->pose.position());
-    copy(To, _obstacle_info->pose.position());
+    copy(Tr, robot_info->pose.position());
+    copy(To, obstacle_info->pose.position());
 
     // PQP_Distance(&_distance_result,                                                           // no-lint
-    //              robot_rot, _robot_info.pose.position(), _robot_info.model.get(),             // no-lint
-    //              obstacle_rot, _obstacle_info->pose.position(), _obstacle_info->model.get(),  // no-lint
+    //              robot_rot, robot_info.pose.position(), robot_info.model.get(),             // no-lint
+    //              obstacle_rot, obstacle_info->pose.position(), obstacle_info->model.get(),  // no-lint
     //              0.0, 0.0);
-    PQP_DistanceResult _distance_result_pqp;
-    PQP_Distance(&_distance_result_pqp,                // no-lint
-                 Mr, Tr, _robot_info->model.get(),     // no-lint
-                 Mo, To, _obstacle_info->model.get(),  // no-lint
+    PQP_Distance(&result,                             // no-lint
+                 Mr, Tr, robot_info->model.get(),     // no-lint
+                 Mo, To, obstacle_info->model.get(),  // no-lint
                  0.0, 0.0);
 
-    // Vprintg(_distance_result_pqp.P1());
-    // Vprintg(_distance_result_pqp.P2());
+    // Vprintg(result.P1());
+    // Vprintg(result.P2());
     // PRX_DBG_VARS(_distance_result.P1().transpose(), _distance_result.P2().transpose());
-    // closest_point = _robot_info.pose.position() + _distance_result.P1();
-    closest_point[0] = _distance_result_pqp.P1()[0];
-    closest_point[1] = _distance_result_pqp.P1()[1];
-    closest_point[2] = _distance_result_pqp.P1()[2];
+    // closest_point = robot_info.pose.position() + _distance_result.P1();
+    closest_point[0] = result.P1()[0];
+    closest_point[1] = result.P1()[1];
+    closest_point[2] = result.P1()[2];
 
-    p2[0] = _distance_result_pqp.P2()[0];
-    p2[1] = _distance_result_pqp.P2()[1];
-    p2[2] = _distance_result_pqp.P2()[2];
+    p2[0] = result.P2()[0];
+    p2[1] = result.P2()[1];
+    p2[2] = result.P2()[2];
     // printf("%.4f %.4f %d %.4f %.4f %.4f %.4f %.4f %.4f %.4f\n",                                       // no-lint
     //        x0[0], x0[1], in_collision(x0), _distance_result.Distance(),                               // no-lint
-    //        _distance_result_pqp.P1()[0], _distance_result_pqp.P1()[1], _distance_result_pqp.P1()[2],  // no-lint
-    //        _distance_result_pqp.P2()[0], _distance_result_pqp.P2()[1], _distance_result_pqp.P2()[2]   // no-lint
+    //        result.P1()[0], result.P1()[1], result.P1()[2],  // no-lint
+    //        result.P2()[0], result.P2()[1], result.P2()[2]   // no-lint
     // );                                                                                                // no-lint
-    // return _distance_result_pqp.Distance();
-    return _distance_result.Distance();
+    // return result.Distance();
+    return result.Distance();
   }
 
-  bool close_enough(const State& x0, const double tolerance) const
+  inline double distances(const State& x0, Eigen::Vector3d& closest_point, Eigen::Vector3d& p2) const
   {
-    Eigen::Matrix3d robot_rot{ _robot_info->pose.quaternion().matrix() };
-    Eigen::Matrix3d obstacle_rot{ _obstacle_info->pose.quaternion().matrix() };
+    return distances(x0, closest_point, p2, _obstacle_info, _robot_info, _config_from_state, _distance_result);
+  }
+
+  static bool close_enough(const State& x0, const double tolerance, CollisionInfoPtr obstacle_info,
+                           CollisionInfoPtr robot_info, ConfigurationFromState& config_from_state,
+                           ToleranceResult& result)
+  {
+    Eigen::Matrix3d robot_rot{ robot_info->pose.quaternion().matrix() };
+    Eigen::Matrix3d obstacle_rot{ obstacle_info->pose.quaternion().matrix() };
     PQP_REAL Mr[3][3], Tr[3];
     PQP_REAL Mo[3][3], To[3];
-    _config_from_state(robot_rot, _robot_info->pose.position(), x0);
+    config_from_state(robot_rot, robot_info->pose.position(), x0);
 
     copy(Mr, robot_rot);
     copy(Mo, obstacle_rot);
-    copy(Tr, _robot_info->pose.position());
-    copy(To, _obstacle_info->pose.position());
+    copy(Tr, robot_info->pose.position());
+    copy(To, obstacle_info->pose.position());
 
-    PQP_Tolerance(&_tolerance_result,                   // no-lint
-                  Mr, Tr, _robot_info->model.get(),     // no-lint
-                  Mo, To, _obstacle_info->model.get(),  // no-lint
+    PQP_Tolerance(&result,                             // no-lint
+                  Mr, Tr, robot_info->model.get(),     // no-lint
+                  Mo, To, obstacle_info->model.get(),  // no-lint
                   tolerance);
-    return _tolerance_result.CloserThanTolerance();
+    return result.CloserThanTolerance();
+  }
+
+  inline bool close_enough(const State& x0, const double tolerance) const
+  {
+    return close_enough(x0, tolerance, _obstacle_info, _robot_info, _config_from_state, _tolerance_result);
   }
 
   virtual std::size_t dim() const override
@@ -239,6 +295,35 @@ public:
     }
   }
 
+  static gtsam::NonlinearFactorGraph collision_factors(const Key& xkey, ObjectPtr obstacle,
+                                                       const CollisionInfoPtr robot, const double obstacle_tolerance,
+                                                       NoiseModel obstacle_noise = nullptr)
+  {
+    gtsam::NonlinearFactorGraph graph;
+
+    const prx::movable_object_t::Geometries geometries{ obstacle->get_geometries() };
+    const prx::movable_object_t::Configurations configurations{ obstacle->get_configurations() };
+
+    const std::size_t total_geoms{ geometries.size() };
+
+    for (int i = 0; i < total_geoms; ++i)
+    {
+      const std::shared_ptr<prx::geometry_t> g{ geometries[i].second };
+      const std::shared_ptr<prx::transform_t> tf{ configurations[i].second };
+
+      const prx::geometry_type_t g_type{ g->get_geometry_type() };
+      const std::vector<double> g_params{ g->get_geometry_params() };
+
+      const Eigen::Matrix3d rot{ tf->rotation() };
+      const Eigen::Vector3d t{ tf->translation() };
+
+      graph.emplace_shared<Derived>(g_type, g_params, rot, t,                  // no-lint
+                                    robot->geom_type, robot->params, xkey,     // no-lint
+                                    obstacle_tolerance, 0.1, obstacle_noise);  // 0.1 is not used?
+    }
+    return std::move(graph);
+  }
+
 private:
   const CollisionInfoPtr _obstacle_info;
   mutable CollisionInfoPtr _robot_info;
@@ -247,10 +332,10 @@ private:
   // const Eigen::Matrix3d obstacle_rotation;
   // std::shared_ptr<PQP_Model_Eigen> model;
 
-  mutable PQP_CollideResult _collision_result;
   // mutable PQP_CollideResult_Eigen _collision_result;
-  mutable PQP_DistanceResult_Eigen _distance_result;
-  mutable PQP_ToleranceResult _tolerance_result;
+  mutable CollideResult _collision_result;
+  mutable DistanceResult _distance_result;
+  mutable ToleranceResult _tolerance_result;
 
   mutable ConfigurationFromState _config_from_state;
   // const Pose _obstacle_pose;

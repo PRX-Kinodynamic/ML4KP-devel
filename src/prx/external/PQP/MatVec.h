@@ -461,6 +461,10 @@ sMxV(PQP_REAL Vr[3], PQP_REAL s1, const PQP_REAL M1[3][3], const PQP_REAL V1[3])
 	      M1[2][2] * V1[2]); 
 }
 
+// inline void MatCmC(PQP_REAL Mr[3][3], int mrid, const PQP_REAL M[3][3], int mid1, int m2id)
+// {
+//   VmV(Mr[mrid], M[mid1], M[m2id]); 
+// }
 
 inline
 void

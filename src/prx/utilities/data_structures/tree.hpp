@@ -213,35 +213,44 @@ public:
   template <class node_type, class edge_type>
   void allocate_memory(uint64_t new_size)
   {
-    uint64_t old_size = vertex_count;
+    const uint64_t vertex_old_count{ vertex_count };
+    const uint64_t edge_old_count{ edge_count };
     if (max_count < new_size)
     {
       v_index_map.resize(new_size);
       e_index_map.resize(new_size);
       for (uint64_t i = max_count; i < new_size; i++)
       {
-        vertex_list.insert(vertex_list.end(), std::make_shared<node_type>());
-        edge_list.insert(edge_list.end(), std::make_shared<edge_type>());
+        vertex_list.emplace_back(new node_type());
+        edge_list.emplace_back(new edge_type());
       }
       max_count = new_size;
     }
-    if (old_size == 0)
+    if (vertex_old_count == 0)
     {
       v_iter = vertex_list.begin();
-      e_iter = edge_list.begin();
       const_v_iter = vertex_list.begin();
-      const_e_iter = edge_list.begin();
+      // e_iter = edge_list.begin();
     }
     else
     {
       v_iter = vertex_list.begin();
-      e_iter = edge_list.begin();
       const_v_iter = vertex_list.begin();
+      std::advance(v_iter, vertex_old_count);
+      std::advance(const_v_iter, vertex_old_count);
+    }
+    if (edge_old_count == 0)
+    {
+      // const_v_iter = vertex_list.begin();
+      e_iter = edge_list.begin();
       const_e_iter = edge_list.begin();
-      std::advance(v_iter, old_size);
-      std::advance(const_v_iter, old_size);
-      std::advance(e_iter, old_size - 1);
-      std::advance(const_e_iter, old_size - 1);
+    }
+    else
+    {
+      e_iter = edge_list.begin();
+      const_e_iter = edge_list.begin();
+      std::advance(e_iter, edge_old_count);
+      std::advance(const_e_iter, edge_old_count);
     }
   }
 

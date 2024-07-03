@@ -223,14 +223,6 @@ param_loader param_loader::operator[](const std::string& key)
     // Tail recursive!
     return param_loader(new_node, key.substr(subkey_init, subkey_pos - subkey_init))[key.substr(subkey_pos)];
   }
-  // while (subkey_pos != std::string::npos)
-  // {
-  // subkey_init++;
-  // subkey_pos = key.find("/", subkey_init);
-  // std::cout << "\tsubkey: " << key.substr(subkey_init, subkey_pos - subkey_init) << " init: " << subkey_init << "
-  // pos: " << subkey_pos << std::endl; new_node = new_node[key.substr(subkey_init, subkey_pos - subkey_init)];
-  // subkey_init = subkey_pos + 1;
-  // }
 }
 
 void param_loader::print() const

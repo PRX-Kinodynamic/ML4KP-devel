@@ -25,7 +25,7 @@ edge_index_t tree_t::add_edge(node_index_t from, node_index_t to)
   v_index_map[from]->children.insert(v_index_map[from]->children.begin(), to);
   v_index_map[to]->parent = from;
 
-  auto edge = *e_iter;
+  std::shared_ptr<tree_edge_t> edge{ *e_iter };
   edge->index = edge_id_counter;
   edge->source = from;
   edge->target = to;

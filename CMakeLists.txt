@@ -26,12 +26,19 @@ if( NOT CMAKE_BUILD_TYPE )
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Release)
-	set(BUILD_FLAGS "-O3")
+	# -03 <- Turn on all optims
+	# -march=native <- Turn on eigen vectorization optimizations
+	set(BUILD_FLAGS "-O3 -march=native")
     add_definitions(-DRELEASE_BUILD)
 elseif(CMAKE_BUILD_TYPE MATCHES Debug)
 	set(BUILD_FLAGS "-O0 -fno-inline -g")
     add_definitions(-DDEBUG_BUILD)
 endif()
+
+if (UNIX)
+    list(APPEND BUILD_FLAGS "-fPIC")
+endif (UNIX)
+
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
 add_definitions(${BUILD_FLAGS})
