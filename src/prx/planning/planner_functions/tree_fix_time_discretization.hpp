@@ -20,15 +20,16 @@ void discretize_edge(EdgePtr& edge, tree_t& tree, const double desired_edge_dura
   using NodePtr = std::shared_ptr<Node>;
 
   // PRX_DEBUG_PRINT;
-  std::shared_ptr<plan_t> current_plan{ edge->plan };
+  // std::shared_ptr<plan_t> current_plan{ edge->plan };
   NodePtr previous_node{ tree.get_vertex_as<Node>(edge->get_source()) };
   EdgePtr current_edge{ edge };
   // prx_assert(previous_node != nullptr, "Node [" << previous_edge->get_index() << "] not found");
   NodePtr final_node{ tree.get_vertex_as<Node>(edge->get_target()) };
-  while (current_plan->duration() > desired_edge_duration)
+  double current_plan_duration{ edge->plan->duration() };
+  // PRX_DBG_VARS("--------");
+  while (current_plan_duration > desired_edge_duration)
   {
-    // PRX_DBG_VARS(current_plan->duration(), desired_edge_duration);
-
+    // PRX_DBG_VARS(current_plan_duration, current_edge->traj->size());
     // prx_assert(new_edge != nullptr, "Edge [" << previous_edge->get_index() << "] not found");
 
     EdgePtr e1{ planner.split_edge(current_edge, desired_edge_duration) };
@@ -36,16 +37,8 @@ void discretize_edge(EdgePtr& edge, tree_t& tree, const double desired_edge_dura
 
     // PRX_DBG_VARS(previous_node->get_index(), new_edge->get_index(), next_node->get_index());
     current_edge = e1;
-    // next_node->point = state_space->clone_point(traj.back());
-    // prx_assert(previous_node->point != nullptr, "Node point [" << previous_node->get_index() << "] not found");
-    // prx_assert(next_node->point != nullptr, "Node point [" << next_node->get_index() << "] not found");
-
-    // current_plan = new_edge->plan;
-    // previous_edge = new_edge;
-    // previous_node = next_node;
+    current_plan_duration = current_edge->plan->duration();
   }
-  // PRX_DBG_VARS(current_edge->traj->size());
-  // NodePtr next_node{ tree.get_vertex_as<Node>(previous_edge->get_target()) };
 }
 
 template <typename Planner>

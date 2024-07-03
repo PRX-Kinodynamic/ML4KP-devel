@@ -203,6 +203,7 @@ TriDist(PQP_REAL P[3], PQP_REAL Q[3], const PQP_REAL S[3][3], const PQP_REAL T[3
   PQP_REAL Sv[3][3], Tv[3][3];
   PQP_REAL VEC[3];
 
+  // MatCmC(Sv, 0, S, 1, 0);
   VmV(Sv[0], S[1], S[0]);
   VmV(Sv[1], S[2], S[1]);
   VmV(Sv[2], S[0], S[2]);

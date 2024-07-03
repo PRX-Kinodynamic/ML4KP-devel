@@ -179,7 +179,7 @@ inline void McolcMcol(Eigen::Ref<PQP_EIGEN_MATRIX> Mr, int cr, const Eigen::Ref<
 
 inline void McolcV(Eigen::Ref<PQP_EIGEN_MATRIX> Mr, int cr, const Eigen::Ref<PQP_EIGEN_VECTOR> V)
 {
-  Mr.col(cr) = V;
+  Mr.row(cr) = V;
 }
 
 inline void MxMpV(Eigen::Ref<PQP_EIGEN_MATRIX> Mr, const Eigen::Ref<PQP_EIGEN_MATRIX> M1,
@@ -263,6 +263,11 @@ inline void VmV(Eigen::Ref<PQP_EIGEN_VECTOR> Vr, const Eigen::Ref<PQP_EIGEN_VECT
 {
   Vr = V1 - V2;
 }
+// inline void MatCmC(Eigen::Ref<PQP_EIGEN_MATRIX> Mr, int mrid, const Eigen::Ref<PQP_EIGEN_MATRIX> M1, int mid1, int
+// mid2)
+// {
+//   VmV(Mr.col(mrid), M1.row(mid1), M1.row(mid2));
+// }
 
 inline void VpV(Eigen::Ref<PQP_EIGEN_VECTOR> Vr, const Eigen::Ref<PQP_EIGEN_VECTOR> V1,
                 const Eigen::Ref<PQP_EIGEN_VECTOR> V2)

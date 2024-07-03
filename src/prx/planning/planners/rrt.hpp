@@ -316,7 +316,7 @@ protected:
     std::shared_ptr<Node> root{ _tree.get_vertex_as<Node>(start_vertex) };
     visited.insert(root->get_index());
     // [ original_index ] -> new_index
-    std::unordered_map<prx::node_index_t, prx::node_index_t> new_index_map;
+    std::map<prx::node_index_t, prx::node_index_t> new_index_map;
     std::shared_ptr<prx::tree_t> sln_tree{ std::make_shared<prx::tree_t>() };
 
     // Add the root to the tree
@@ -372,7 +372,7 @@ protected:
       std::shared_ptr<Edge> new_edge{ sln_tree->get_edge_as<Edge>(edge_index) };
       new_edge->copy(*old_edge);
     }
-    PRX_DEBUG_VAR_1(sln_tree->size());
+    // PRX_DEBUG_VAR_1(sln_tree->size());
     return sln_tree;
   }
 

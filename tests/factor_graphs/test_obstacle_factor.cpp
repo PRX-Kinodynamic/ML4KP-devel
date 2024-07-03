@@ -64,6 +64,37 @@ BOOST_AUTO_TEST_CASE(obstacle_factor_in_collision_test)
   BOOST_REQUIRE(not factor.in_collision(x3));
 }
 
+BOOST_AUTO_TEST_CASE(obstacle_factor_box_sphere_in_collision_test)
+{
+  using State = Eigen::Vector2d;
+  using Rotation = Eigen::Matrix3d;
+  using Translation = Eigen::Vector3d;
+  using CollisionInfoPtr = std::shared_ptr<prx::fg::collision_info_t>;
+
+  std::vector<double> box_params({ 30, 0.5, 0.5 });
+  std::vector<double> sphere_params({ 1 });
+  const Rotation rotation{ Rotation::Identity() };
+  const Translation translation{ Translation::Zero() };
+  CollisionInfoPtr robot{ std::make_shared<prx::fg::collision_info_t>(prx::geometry_type_t::SPHERE, sphere_params,
+                                                                      rotation, translation) };
+  CollisionInfoPtr obstacle{ std::make_shared<prx::fg::collision_info_t>(prx::geometry_type_t::BOX, box_params,
+                                                                         rotation, translation) };
+
+  gtsam::Key key{ 0 };
+  prx::fg::obstacle_factor_t<State, mock::configuration_from_state> factor(obstacle, robot, key);
+  const State x0(0, 0);
+  const State x1(10, 0);
+  // const State x3(10, 10);
+  // PRX_DBG_VARS(factor.in_collision(x0));
+  // PRX_DBG_VARS(factor.in_collision(x1));
+  // PRX_DBG_VARS(factor.in_collision(x2));
+  // PRX_DBG_VARS(factor.in_collision(x3));
+  BOOST_REQUIRE(factor.in_collision(x0));
+  BOOST_REQUIRE(factor.in_collision(x1));
+  // BOOST_REQUIRE(factor.in_collision(x2));
+  // BOOST_REQUIRE(not factor.in_collision(x3));
+}
+
 BOOST_AUTO_TEST_CASE(obstacle_factor_distance_test)
 {
   using State = Eigen::Vector2d;

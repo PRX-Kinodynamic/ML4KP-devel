@@ -108,8 +108,8 @@ int main(int argc, char* argv[])
       {
         // ofs_map << factors[i].in_collision(state) << " ";
         colliding |= factors[i]->in_collision(state);
-        error += factors[i]->unwhitenedError(values, Hvec)[0];
-        H += Hvec[0];
+        // error += factors[i]->unwhitenedError(values, Hvec)[0];
+        // H += Hvec[0];
         // if (colliding)
         //   break;
       }

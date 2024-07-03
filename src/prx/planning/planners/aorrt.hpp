@@ -208,8 +208,9 @@ public:
       std::shared_ptr<tree_node_t> tree_node{ *iter };
       std::shared_ptr<Node> curr_node{ std::dynamic_pointer_cast<Node>(tree_node) };
       Y_state_space->split_point(curr_node->point, X_aux_pt, _cost_aux_pt);
-      if (distance_function(aorrt_query->goal_state, X_aux_pt) < radius)
+      if (distance_function(aorrt_query->goal_state, X_aux_pt) <= radius)
       {
+        // PRX_DBG_VARS(X_aux_pt);
         goal_nodes.push_back(tree_node.get());
       }
     }
@@ -235,10 +236,14 @@ public:
     prx::plan_t e1_plan{ e0->plan->split(time_of_split) };
     prx::trajectory_t e1_traj_split{ e0->traj->split(time_of_split) };
     prx::trajectory_t e1_traj{ X_state_space };
+    // PRX_DBG_VARS(e0->traj->size(), e1_traj_split.size());
+    // prx_assert(e0->traj->size() > 0, "Traj of zero size, edge:" << e0->get_index());
+
+    // e0->traj->push_back(e1_traj_split.front());
     e1_traj.push_back(e0->traj->back());
     e1_traj += e1_traj_split;
-    const double e1_cost{ cost_function(e1_traj_split, e1_plan) };
-    e1->update(e1_plan, e1_traj_split, e1_cost);
+    const double e1_cost{ cost_function(e1_traj, e1_plan) };
+    e1->update(e1_plan, e1_traj, e1_cost);
 
     // Update cost of e0 given the split
     e0->edge_cost = cost_function(*(e0->traj), *(e0->plan));
