@@ -94,7 +94,8 @@ public:
   virtual ~dirt_t();
 
   std::vector<long unsigned> random_edges_counter, blossom_edges_counter;
-
+  bool found_first_soln;
+  
 protected:
   virtual void update_goal(node_index_t node_index) override;
 

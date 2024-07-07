@@ -83,37 +83,42 @@ void rrt_t::_resolve_query(condition_check_t* condition)
     std::vector<plan_t*> plans;
     std::vector<trajectory_t*> trajs;
     expand(closest_node->point, plans, trajs, rrt_spec->blossom_number, false);
-    plan_t plan(*plans.front());
-    trajectory_t traj(*trajs.front());
-    edge_cost = cost_function(traj, plan);
 
-    new_cost = closest_node->cost_to_come + edge_cost;
-    new_duration = closest_node->duration + plan.duration();
-    // collision check && bnb && glc_conds
-    if ((goal_vertex == start_vertex || closest_node->cost_to_come + edge_cost < current_solution) && valid_check(traj))
+    for (int i = 0; i < plans.size(); i++)
     {
-      // add node
-      auto node_index = tree.add_vertex<rrt_node_t, rrt_edge_t>();
-      auto new_tree_node = tree.get_vertex_as<rrt_node_t>(node_index);
-      new_tree_node->point = state_space->clone_point(traj.back());
+      plan_t plan(*plans[i]);
+      trajectory_t traj(*trajs[i]);
 
-      new_tree_node->observation = observer.get_observed_space()->make_point();
-      observer(rrt_spec->_sg, new_tree_node->observation);
+      edge_cost = cost_function(traj, plan);
 
-      metric->add_node(new_tree_node.get());
-      edge_index_t edge_index = tree.add_edge(closest_node->get_index(), node_index);
-      auto new_edge = tree.get_edge_as<rrt_edge_t>(edge_index);
-      new_edge->plan = std::make_shared<plan_t>(plan);
-      new_edge->traj = std::make_shared<trajectory_t>(traj);
-      new_edge->edge_cost = edge_cost;
-      new_tree_node->cost_to_come = closest_node->cost_to_come + new_edge->edge_cost;
+      new_cost = closest_node->cost_to_come + edge_cost;
+      new_duration = closest_node->duration + plan.duration();
+      // collision check && bnb && glc_conds
+      if ((goal_vertex == start_vertex || closest_node->cost_to_come + edge_cost < current_solution) &&
+          valid_check(traj))
+      {
+        // add node
+        auto node_index = tree.add_vertex<rrt_node_t, rrt_edge_t>();
+        auto new_tree_node = tree.get_vertex_as<rrt_node_t>(node_index);
+        new_tree_node->point = state_space->clone_point(traj.back());
 
-      new_tree_node->duration = new_duration;
-      update_goal(node_index);
+        new_tree_node->observation = observer.get_observed_space()->make_point();
+        observer(rrt_spec->_sg, new_tree_node->observation);
+
+        metric->add_node(new_tree_node.get());
+        edge_index_t edge_index = tree.add_edge(closest_node->get_index(), node_index);
+        auto new_edge = tree.get_edge_as<rrt_edge_t>(edge_index);
+        new_edge->plan = std::make_shared<plan_t>(plan);
+        new_edge->traj = std::make_shared<trajectory_t>(traj);
+        new_edge->edge_cost = edge_cost;
+        new_tree_node->cost_to_come = closest_node->cost_to_come + new_edge->edge_cost;
+
+        new_tree_node->duration = new_duration;
+        update_goal(node_index);
+      }
     }
     iteration_count++;
-  }
-  while (!condition->check());
+  } while (!condition->check());
 }
 void rrt_t::_fulfill_query()
 {

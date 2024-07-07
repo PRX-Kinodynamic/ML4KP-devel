@@ -1,5 +1,5 @@
-random_seed: 2898
-xml_path: push/model_easy.xml
+random_seed: 42
+xml_path: push/model_open.xml
 
 planner_name: "dirt"
 
@@ -9,23 +9,18 @@ visualize_tree: true
 
 env_xlim: [-0.1, 0.6]
 env_ylim: [-0.25, 0.25]
-min_control_steps: 0.1
-max_control_steps: 1.0
-goal_pos_region_radius: 0.05
-goal_vel_region_radius: 0.01
-max_vel: 20
+goal_region_radius: 0.05
 
 checker_type: time
-checker_value: 20
+checker_value: 10
 
 ignored_pairs: []
 
-blossom: 1
-goal_bias: 0.2
+blossom: 100
 use_pruning: false
 
 output_plan: true
 output_tree_folder: "/home/dhruv/2024/projects/NAMO/out/trees/"
-output_plan_file: "/home/dhruv/2024/projects/NAMO/out/3.txt"
+output_plan_file: "/home/dhruv/2024/projects/NAMO/out/2.txt"
 
 goal_config: [0.5, 0.]

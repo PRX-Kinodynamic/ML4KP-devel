@@ -15,25 +15,45 @@
         <joint name="joint_x" type="slide" pos="0 0 0" axis="1 0 0" />
         <joint name="joint_y" type="slide" pos="0 0 0" axis="0 1 0" />
       </body>
-    
-      <body name="cube1" pos="0.2 0 .05" euler="0 0 0">
-        <freejoint />
-        <geom name="gcube_0" type="box" size="0.05 0.19 0.05" mass=".1" material="CubeMat1" condim="4" />
-        <site name="sensor_box_2" />
+
+      <body name="cube2" pos="0.2 0.1 .05">
+        <geom name="gcube_1" type="box" size="0.05 0.1 0.05" mass=".1" material="static" condim="4" />
       </body>
-  
-      <body name="cube2" pos="0.3 -0.1 .05">
-        <geom name="gcube_1" type="box" size="0.05 0.1 0.05" mass=".1" material="CubeMat2" condim="4" />
+
+      <body name="cube3" pos="0.45 -0.1 .05">
+        <geom name="cube3" type="box" size="0.05 0.05 0.05" mass=".1" material="static" condim="4" />
+      </body>
+
+      <body name="wall_1" pos="0.7 0.12 .05">
+        <geom name="wall_1" type="box" size="0.05 0.08 0.05" mass=".1" material="static" condim="4" />
+      </body>
+
+      <body name="wall_2" pos="0.7 -0.12 .05">
+        <geom name="wall_2" type="box" size="0.05 0.08 0.05" mass=".1" material="static" condim="4" />
+      </body>
+
+      <body name="movable_cube1" pos="0.3 0 .05" euler="0 0 0">
+        <freejoint />
+        <geom name="movable_cube1" type="box" size="0.05 0.19 0.05" mass=".1" material="movable" condim="4" />
+      </body>
+
+      <body name="movable_cube2" pos="0.58 0 .05" euler="0 0 0">
+        <freejoint />
+        <geom name="movable_cube2" type="box" size="0.05 0.05 0.05" mass=".1" material="movable" condim="4" />
+      </body>
+
+      <body name="movable_cube3" pos="0.850 0 .054" euler="2.5 0 0">
+        <freejoint />
+        <geom name="movable_cube3" type="box" size="0.05 0.035 0.05" mass=".1" material="movable" condim="4" />
       </body>
   
       <body name="case" pos="0 0 0.1">
         <geom name="gcase_a" type="box" size="0.05 0.22 0.1" pos="-.2 0 0" />
-        <geom name="gcase_b" type="box" size="0.05 0.22 0.1" pos=".7 0 0" />
-        <geom name="gcase_c" type="box" size="0.5 0.04 0.1" pos="0.25 .26 0" />
-        <geom name="gcase_d" type="box" size="0.5 0.04 0.1" pos="0.25 -.26 0" />
+        <geom name="gcase_b" type="box" size="0.05 0.22 0.1" pos="1.7 0 0" />        <geom name="gcase_c" type="box" size="1.0 0.04 0.1" pos="0.75 .26 0" />
+        <geom name="gcase_d" type="box" size="1.0 0.04 0.1" pos="0.75 -.26 0" />
       </body>
     
-      <site name="target" pos="0.55 0.0 0.05" size="0.02" rgba="0 1 0 1" />
+      <site name="target" pos="1.0 0.0 0.05" size="0.02" rgba="0 1 0 1" />
       
     </worldbody>
   
@@ -45,8 +65,8 @@
     <asset>
       <!-- Materials for visualization -->
       <material name="MatPlane" rgba="0.8 0.9 0.8 1" />
-      <material name="CubeMat1" rgba="0.94 1.0 0.0 1" />
-      <material name="CubeMat2" rgba="0.8 0.2 0.2 1" />
+      <material name="movable" rgba="0.94 1.0 0.0 1" />
+      <material name="static" rgba="0.8 0.2 0.2 1" />
       <material name="BallMat" rgba="0.2 0.2 0.8 1" />
   
       <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512"
@@ -66,7 +86,6 @@
   
   
     <sensor>
-      <velocimeter name="sensor_box2" site="sensor_box_2" />
       <velocimeter name="sensor_ball" site="sensor_ball" />
     </sensor>
   

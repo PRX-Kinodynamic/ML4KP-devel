@@ -6,6 +6,7 @@ dirt_t::dirt_t(const std::string& new_name) : rrt_t(new_name)
 {
   metric = nullptr;
   child_extension = true;
+  found_first_soln = false;
   max_radius = 0;
   planner_name = "DIRT";
 }
@@ -294,9 +295,9 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       delete eg.first;
       delete eg.second;
     }
-
     iteration_count++;
-  } while (!condition->check());
+  // } while (!condition->check());
+  } while (!found_first_soln);
   print_statistics();
 }
 
@@ -384,6 +385,8 @@ void dirt_t::update_goal(node_index_t node_index)
       std::cout << " iter:" << current_solution_iters;
       std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
       bnb(start_vertex, current_solution);
+      found_first_soln = true;
+      std::cout << "found solution" << found_first_soln;
     }
   }
 }
@@ -404,6 +407,7 @@ std::vector<double> dirt_t::get_statistics()
 void dirt_t::_reset()
 {
   // clear the stuff
+  found_first_soln = false;
   tree.purge();
   if (metric != nullptr)
   {

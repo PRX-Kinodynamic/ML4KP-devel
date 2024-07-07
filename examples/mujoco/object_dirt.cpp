@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 {
   param_loader params;
 
-  params = param_loader("examples/JIST/push.yaml");
+  params = param_loader("examples/JIST/object_dirt.yaml");
   init_random(params["random_seed"].as<int>());
 
   bool visualize = params["visualize"].as<bool>();
@@ -39,7 +39,6 @@ int main(int argc, char* argv[])
   {
     sim->step_simulation();
   }
-  std::cout << ss->print_memory() << std::endl;
 
   dirt_t dirt(params["planner_name"].as<>());
   dirt_specification_t dirt_spec(context.first, context.second);
@@ -51,39 +50,36 @@ int main(int argc, char* argv[])
   dirt_spec.use_pruning = params["use_pruning"].as<bool>();
 
   dirt_spec.distance_function = [](const space_point_t& a, const space_point_t& b) {
-    // std::cout << std::sqrt((b->at(0)-a->at(0))*(b->at(0)-a->at(0))+
-    //                 (b->at(1)-a->at(1))*(b->at(1)-a->at(1))) << std::endl;
-
     return std::sqrt((b->at(0) - a->at(0)) * (b->at(0) - a->at(0)) + (b->at(1) - a->at(1)) * (b->at(1) - a->at(1)));
   };
 
-  double max_vel = params["max_vel"].as<double>();
+  double max_vel = params["random_seed"].as<double>();
   dirt_spec.blossom_number = params["blossom"].as<int>();
   dirt_spec.h = [&](const space_point_t& s, const space_point_t& s2) {
-    return dirt_spec.distance_function(s, s2) / max_vel;
+    return 0; // dirt_spec.distance_function(s, s2) / max_vel;
   };
 
   std::vector<std::vector<double>> control_list = { { -1., -1. }, { -1., 0. }, { -1., 1. }, { 0., -1. },
                                                     { 0., 1. },   { 1., -1. }, { 1., 0. },  { 1., 1. } };
   dirt_spec.expand = [&](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn,
                          bool blossom_expand) {
-    if (blossom_expand)
-    {
-      plan_t plan(cs);
-      plan.append_onto_back(1.0);
-      for (auto control : control_list)
-      {
-        cs->copy(plan.back().control, control);
-        trajectory_t* traj = new trajectory_t(ss);
-        dirt_spec.propagate(s, plan, *traj);
-        plans.push_back(new plan_t(plan));
-        trajs.push_back(traj);
-      }
-    }
-    else
-    {
+    // if (blossom_expand)
+    // {
+    //   plan_t plan(cs);
+    //   plan.append_onto_back(1.0);
+    //   for (auto control : control_list)
+    //   {
+    //     cs->copy(plan.back().control, control);
+    //     trajectory_t* traj = new trajectory_t(ss);
+    //     dirt_spec.propagate(s, plan, *traj);
+    //     plans.push_back(new plan_t(plan));
+    //     trajs.push_back(traj);
+    //   }
+    // }
+    // else
+    // {
       default_expand(s, plans, trajs, bn, sg, dirt_spec.sample_plan, dirt_spec.propagate);
-    }
+    // }
   };
 
   // dirt query
@@ -99,10 +95,12 @@ int main(int argc, char* argv[])
   std::cout << "#### " << ss->print_point(dirt_query.start_state) << std::endl;
 
   // goal region radius
-  dirt_query.goal_region_radius = params["goal_region_radius"].as<double>();
+  dirt_query.goal_region_radius = params["goal_pos_region_radius"].as<double>();
+  auto goal_pos_region_radius = params["goal_pos_region_radius"].as<double>();
+  auto goal_angle_region_radius = params["goal_angle_region_radius"].as<double>();
 
-  // goal
-  std::vector<double> goal_vec = params["goal_config"].as<std::vector<double>>();
+  std::vector<double> goal_pos_vec = params["goal_pos"].as<std::vector<double>>();
+  std::vector<double> goal_angle_vec = params["goal_angle"].as<std::vector<double>>();
   std::vector<double> env_xlim = params["env_xlim"].as<std::vector<double>>();
   std::vector<double> env_ylim = params["env_ylim"].as<std::vector<double>>();
 
@@ -115,21 +113,38 @@ int main(int argc, char* argv[])
   ub.at(1) = env_ylim[1];
   ss->set_bounds(lb, ub);
 
-  for (int i = 0; i < ss->get_dimension(); i++)
-  {
-    std::cout << "dim " << i << " : " << lb.at(i) << " " << ub.at(i) << std::endl;
-  }
+  Eigen::Quaterniond q;
+  q = Eigen::AngleAxisd(goal_angle_vec[2], Eigen::Vector3d::UnitZ()) *
+      Eigen::AngleAxisd(goal_angle_vec[1], Eigen::Vector3d::UnitY()) *
+      Eigen::AngleAxisd(goal_angle_vec[0], Eigen::Vector3d::UnitX());
+  std::cout << "#### " << q.w() << " " << q.x() << " " << q.y() << " " << q.z() << std::endl;
 
-  for (int i = 0; i < 2; i++)
-  {
-    // rrt_query.goal_state->at(i) = goal_vec[i];
-    // dirt_query.goal_state->at(i) = dirt_query.start_state->at(i) + 0.1;
-    dirt_query.goal_state->at(i) = goal_vec[i];
-  }
+  dirt_query.goal_state->at(2) = goal_pos_vec.at(0);
+  dirt_query.goal_state->at(3) = goal_pos_vec.at(1);
+  dirt_query.goal_state->at(5) = q.w();
+  dirt_query.goal_state->at(6) = q.x();
+  dirt_query.goal_state->at(7) = q.y();
+  dirt_query.goal_state->at(8) = q.z();
 
   // check whether sampled state is in goal region
   dirt_query.goal_check = [&](const space_point_t& point) {
-    return dirt_spec.distance_function(point, dirt_query.goal_state) < dirt_query.goal_region_radius;
+    quaternion_t q;
+    q.w() = point->at(5);
+    q.x() = point->at(6);
+    q.y() = point->at(7);
+    q.z() = point->at(8);
+    auto e = quaternion_to_euler(q);
+
+    // intialize a vector with the goal pos from point
+    std::vector<double> curr_pos = { point->at(2), point->at(3) };
+
+    // sqrt between curr_pos and goal_pos_vec
+    double dist = std::sqrt((goal_pos_vec[0] - curr_pos[0]) * (goal_pos_vec[0] - curr_pos[0]) +
+                            (goal_pos_vec[1] - curr_pos[1]) * (goal_pos_vec[1] - curr_pos[1]));
+
+    return std::fabs(norm_angle_pi(e[2] - goal_angle_vec[2])) < goal_angle_region_radius &&
+           (dist < goal_pos_region_radius);
+    // return dirt_spec.distance_function(point, dirt_query.goal_state) < dirt_query.goal_region_radius;
   };
 
   condition_check_t checker(params["checker_type"].as<>(), params["checker_value"].as<int>());  //
@@ -143,6 +158,22 @@ int main(int argc, char* argv[])
   dirt.resolve_query(&checker);
 
   dirt.fulfill_query();
+
+  if (dirt_query.solution_traj.size() == 0)
+  {
+    std::cout << "No solution found!" << std::endl;
+  }
+  else
+  {
+    space_point_t achieved_goal = ss->clone_point(dirt_query.solution_traj.back());
+    quaternion_t achieved_q;
+    achieved_q.w() = achieved_goal->at(5);
+    achieved_q.x() = achieved_goal->at(6);
+    achieved_q.y() = achieved_goal->at(7);
+    achieved_q.z() = achieved_goal->at(8);
+    auto e = quaternion_to_euler(q);
+    std::cout << "Achieved Euler: " << e[2] << " radians and " << e[2] * 180 / PRX_PI << " degrees" << std::endl;
+  }
 
   unsigned count = 0;
   std::string output_folder = params["output_tree_folder"].as<std::string>();

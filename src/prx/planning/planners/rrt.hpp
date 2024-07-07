@@ -135,6 +135,9 @@ public:
   virtual std::vector<std::string> get_statistics_header() override;
   virtual std::vector<double> get_statistics() override;
 
+  timer_t timer;
+  double current_solution_time;
+
 protected:
   virtual void update_goal(node_index_t node_index);
 
@@ -173,11 +176,10 @@ protected:
   space_point_t sample_point;
 
   long unsigned iteration_count;
-  timer_t timer;
-
+  
   double current_solution;
   long unsigned current_solution_iters;
-  double current_solution_time;
+  
 
   bool use_replanning;
 

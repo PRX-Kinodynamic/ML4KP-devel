@@ -12,14 +12,6 @@ int main(int argc, char* argv[])
 {
   param_loader params;
   params = param_loader("examples/JIST/visualize_plan.yaml");
-  // if (argc < 2)
-  // {
-  //   params = param_loader("examples/JIST/visualize_plan.yaml");
-  // }
-  // else
-  // {
-  //   params = param_loader(argv[1]);
-  // }
   init_random(params["random_seed"].as<int>());
 
   std::shared_ptr<prx::mujoco_simulator_t> sim =
@@ -66,6 +58,7 @@ std::cout << "start" << start << std::endl;
 
   std::cout << "record_video set" << std::endl;
 
+  // plan.append_onto_back(1);
   context.first->propagate(start, plan, traj);
 
   std::cout << "plan propagated" << std::endl;

@@ -3,15 +3,16 @@
 
 namespace prx
 {
-mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path, const bool vis) : simulator_t(plant_type::MUJOCO)    
-    , button_left(false)
-    , button_right(false)
-    , button_middle(false)
-    , lastx(0)
-    , lasty(0)
-    , _recorded_secs(0.0)
-    , _record_video(false)
-    , _video_name(prx::out_path + "mj_recording.mp4")
+mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path, const bool vis)
+  : simulator_t(plant_type::MUJOCO)
+  , button_left(false)
+  , button_right(false)
+  , button_middle(false)
+  , lastx(0)
+  , lasty(0)
+  , _recorded_secs(0.0)
+  , _record_video(false)
+  , _video_name(prx::out_path + "mj_recording.mp4")
 {
   std::string full_model_path = mj_models_path + model_path;
   m = mj_loadXML(full_model_path.c_str(), NULL, NULL, 0);
@@ -20,7 +21,7 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path, const bool
   d = mj_makeData(m);
 
   button_left = button_right = button_middle = false;
-  lastx = lasty = 0; 
+  lastx = lasty = 0;
 
   _vis = MUJOCO_VIS && vis;
 
@@ -63,8 +64,9 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path, const bool
     });
     glfwSetWindowCloseCallback(
         window, [](GLFWwindow* window) { prx_throw("Closing the visualizer will cause the simulation to crash."); });
-    
-    if(_record_video){
+
+    if (_record_video)
+    {
       mjv_defaultFreeCamera(m, &cam);
       cam.type = mjtCamera::mjCAMERA_TRACKING;
       // change this
@@ -75,7 +77,6 @@ mujoco_simulator_t::mujoco_simulator_t(const std::string& model_path, const bool
       std::cout << "Tracking body: " << cam.trackbodyid << std::endl;
     }
   }
-
 
   // number of generalized coordinates
   std::cout << "nq = " << m->nq << std::endl;
@@ -195,10 +196,12 @@ void mujoco_simulator_t::step_simulation(const int step_type)
     d->qacc_warmstart[i] = 0;
   }
 
-  if(step_type == 0){
+  if (step_type == 0)
+  {
     mj_step(m, d);
   }
-  else if(step_type == 1){
+  else if (step_type == 1)
+  {
     mj_step1(m, d);
   }
 
@@ -299,37 +302,46 @@ MujocoState mujoco_simulator_t::get_state()
   return s;
 }
 
-void mujoco_simulator_t::add_pair(const std::vector<std::pair<std::string, std::string>>& pairs){
-  for (auto pair : pairs){
+void mujoco_simulator_t::add_pair(const std::vector<std::pair<std::string, std::string>>& pairs)
+{
+  for (auto pair : pairs)
+  {
     add_pair(pair);
   }
 }
 
-
-void mujoco_simulator_t::add_pair(std::pair<std::string, std::string> pair){
+void mujoco_simulator_t::add_pair(std::pair<std::string, std::string> pair)
+{
   auto cg = std::dynamic_pointer_cast<mujoco_collision_group_t>(collision_groups->get_collision_group("mujoco"));
   prx_assert(cg != nullptr, "collision_group_t could not be cast to mujoco_collision_group_t");
 
   cg->add_pair(pair);
 }
 
-void mujoco_collision_group_t::add_pair(std::pair<std::string, std::string> pair){
+void mujoco_collision_group_t::add_pair(std::pair<std::string, std::string> pair)
+{
   add_pair(pair.first, pair.second);
 }
-
 
 void mujoco_collision_group_t::add_pair(std::string body1, std::string body2)
 {
   int body_id1 = mj_name2id(sim->m, mjOBJ_BODY, body1.c_str());
   int body_id2 = mj_name2id(sim->m, mjOBJ_BODY, body2.c_str());
 
-  if (body_id1 != -1 && body_id2 != -1){
+  if (body_id1 != -1 && body_id2 != -1)
+  {
     std::pair<int, int> pair = std::make_pair(body_id1, body_id2);
-    ignored_pairs.push_back(pair);
+    collision_pairs.push_back(pair);
   }
-  else{
+  else
+  {
     prx_warn("Invalid geom pair: " << body1 << ", " << body2);
   }
+}
+
+void mujoco_collision_group_t::reset_pairs()
+{
+  collision_pairs.clear();
 }
 
 bool mujoco_collision_group_t::in_collision()
@@ -340,38 +352,46 @@ bool mujoco_collision_group_t::in_collision()
   {
     for (int i = 0; i < ncon; i++)
     {
-      collision_body1 = mj_id2name(sim->m, mjOBJ_BODY, sim->m->geom_bodyid[sim->d->contact[i].geom1]);
-      collision_body2 = mj_id2name(sim->m, mjOBJ_BODY, sim->m->geom_bodyid[sim->d->contact[i].geom2]);
-      // std::cout << ignored_pairs.size() << std::endl;
+      // collision_body1 = mj_id2name(sim->m, mjOBJ_BODY, sim->m->geom_bodyid[sim->d->contact[i].geom1]);
+      // collision_body2 = mj_id2name(sim->m, mjOBJ_BODY, sim->m->geom_bodyid[sim->d->contact[i].geom2]);
 
+      if (collision_pairs.size() > 0)
+      {
+        collision_body_id1 = sim->m->geom_bodyid[sim->d->contact[i].geom1];
+        collision_body_id2 = sim->m->geom_bodyid[sim->d->contact[i].geom2];
 
-      // if (collision_body1.find("ball") != std::string::npos && collision_body2.find("case") != std::string::npos){
+        for (int i = 0; i < collision_pairs.size(); i++)
+        {
+          if (collision_body_id1 == collision_pairs[i].first && collision_body_id2 == collision_pairs[i].second ||
+              collision_body_id1 == collision_pairs[i].second && collision_body_id2 == collision_pairs[i].first)
+          {
+            return true;
+          }
+        }
+      }
+
+      // if (collision_body1.find("obs") != std::string::npos ^ collision_body2.find("obs") != std::string::npos)
+      // {
       //   return true;
       // }
 
-      if (collision_body1.find("ball") != std::string::npos && collision_body2.find("case") != std::string::npos)
-      {
-        // std::cout << collision_body1 << " " << collision_body2 << " Collision between a ball and a case detected!" << std::endl;
-        return false;
-      }
+      // else if(ignored_pairs.size() > 0){
+      //   bool is_ignored_pair = false;
+      //   collision_body_id1 = sim->m->geom_bodyid[sim->d->contact[i].geom1];
+      //   collision_body_id2 = sim->m->geom_bodyid[sim->d->contact[i].geom2];
 
-      else if(ignored_pairs.size() > 0){
-        bool is_ignored_pair = false;
-        collision_body_id1 = sim->m->geom_bodyid[sim->d->contact[i].geom1];
-        collision_body_id2 = sim->m->geom_bodyid[sim->d->contact[i].geom2];
-        
-        for (int i = 0; i < ignored_pairs.size(); i++){
-          if (collision_body_id1 == ignored_pairs[i].first && collision_body_id2 == ignored_pairs[i].second || 
-              collision_body_id1 == ignored_pairs[i].second && collision_body_id2 == ignored_pairs[i].first){
-            is_ignored_pair = true;
-            break;
-          }
-        }
-        if (!is_ignored_pair){
-          // std::cout << collision_body1 << ", " << collision_body2 << std::endl;
-          return true;
-        }
-      }
+      //   for (int i = 0; i < ignored_pairs.size(); i++){
+      //     if (collision_body_id1 == ignored_pairs[i].first && collision_body_id2 == ignored_pairs[i].second ||
+      //         collision_body_id1 == ignored_pairs[i].second && collision_body_id2 == ignored_pairs[i].first){
+      //       is_ignored_pair = true;
+      //       break;
+      //     }
+      //   }
+      //   if (!is_ignored_pair){
+      //     // std::cout << collision_body1 << ", " << collision_body2 << std::endl;
+      //     return true;
+      //   }
+      // }
     }
   }
   return false;

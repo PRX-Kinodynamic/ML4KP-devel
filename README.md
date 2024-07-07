@@ -8,20 +8,6 @@ A library for integrating machine learning tools with state-of-the-art sampling-
 * Yaml-Cpp
 * Boost
 * Boost-python
-### _(Optional)_ Bullet Physics
-
-1. Add the ML4KP directory to `$DIRTMP_PATH`.
-
-2. Clone Bullet:
-git clone https://github.com/aravindsiv/bullet3.git
-
-3. Build Bullet:
-```
-cmake .. && make -j4 && make install
-```
-
-4. Add the Bullet directory to `$BULLET_PHYSICS_PATH`.
-
 
 ### _(Optional)_ LibTorch
 1. Download and extract the stable build of LibTorch (CPU) to `src/prx/external`. 
@@ -58,7 +44,7 @@ To build the package:
 cd $DIRTMP_PATH
 mkdir build
 cd build
-cmake ..
+cmake .. -DCMAKE_INSTALL_PREFIX=../install -DCMAKE_BUILD_TYPE=Debug
 make -j4
 ```
 

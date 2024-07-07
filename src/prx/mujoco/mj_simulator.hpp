@@ -73,6 +73,7 @@ public:
 
   void add_pair(const std::vector<std::pair<std::string, std::string>>& pairs);
   void add_pair(std::pair<std::string, std::string> pair);
+  void reset_pairs();
 
   inline void set_goal(const std::vector<double> goal)
   {
@@ -147,7 +148,7 @@ public:
 
   void add_pair(std::pair<std::string, std::string> pair);
   void add_pair(std::string body1, std::string body2);
-
+  void reset_pairs();
   bool in_collision() override;
 
 
