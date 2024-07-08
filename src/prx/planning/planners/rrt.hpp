@@ -363,7 +363,10 @@ protected:
       const node_index_t new_index{ pair.second };
       std::shared_ptr<Node> old_node{ _tree.get_vertex_as<Node>(old_index) };
 
-      const prx::node_index_t parent_index{ new_index_map[old_node->get_parent()] };
+      const node_index_t old_parent{ old_node->get_parent() };
+      if (old_index == old_parent)
+        continue;
+      const prx::node_index_t parent_index{ new_index_map[old_parent] };
       const std::shared_ptr<Edge> old_edge{ _tree.get_edge_as<Edge>(old_node->get_parent_edge()) };
 
       // const prx::node_index_t new_node_index{ new_index_map[node->get_index()] };
