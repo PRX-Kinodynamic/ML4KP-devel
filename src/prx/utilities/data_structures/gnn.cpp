@@ -478,6 +478,7 @@ proximity_node_t* graph_nearest_neighbors_t::basic_closest_search(proximity_node
   long unsigned nr_samples = sampling_function();
   double min_distance = std::numeric_limits<double>::max();
   long unsigned min_index = -1;
+  bool node_found{ false };
   for (int i = 0; i < nr_samples; i++)
   {
     int index_ = rand() % nr_nodes;
@@ -486,10 +487,11 @@ proximity_node_t* graph_nearest_neighbors_t::basic_closest_search(proximity_node
     {
       min_distance = distance;
       min_index = index_;
+      node_found = true;
     }
   }
   // PRX_DEBUG_VAR_1(nr_nodes);
-  prx_assert(min_index != -1, "Error: GNN couldn't find a close neighbor");
+  prx_assert(node_found, "Error: GNN couldn't find a close neighbor");
   int old_min_index = min_index;
   do
   {
