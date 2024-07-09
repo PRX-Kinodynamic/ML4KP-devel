@@ -3,12 +3,14 @@ xml_path: push/model_hard1.xml
 planner_name: "dirt"
 
 checker_type: time
-checker_value: 30
+checker_value: 60
 output_plan: true
 output_tree_folder: "/home/dhruv/2024/projects/NAMO/out/trees/"
-output_plan_file: "/home/dhruv/2024/projects/NAMO/out/1_3.txt"
+output_plan_file: "/home/dhruv/2024/projects/NAMO/out/1_5.txt"
+output_folder: "/home/dhruv/2024/projects/NAMO/out/only_navigate"
 visualize: false
-do_manipulate: true
+do_manipulate: false
+num_trials: 1
 
 navigate:
   env_xlim: [-0.1, 1.5]
@@ -30,9 +32,9 @@ manipulate:
   max_control_steps: 1.0
   ignored_pairs: []
   goal_pos_region_radius: 0.05
-  goal_angle_region_radius: 0.05
+  goal_angle_region_radius: 0.1
   goal_vel_region_radius: 0.0001
   max_vel: 20
-  blossom: 5
+  blossom: 1
   use_pruning: false
   visualize_tree: true

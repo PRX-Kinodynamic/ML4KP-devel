@@ -37,9 +37,10 @@ void manipulate_task_t::_prepare_specification()
   spec->distance_function = [&](const space_point_t& a, const space_point_t& b) {
     return std::sqrt((b->at(pos_indices[0]) - a->at(pos_indices[0])) * (b->at(pos_indices[0]) - a->at(pos_indices[0])) + (b->at(pos_indices[1]) - a->at(pos_indices[1])) * (b->at(pos_indices[1]) - a->at(pos_indices[1])));
   };
+  
 
   double max_vel = params["max_vel"].as<double>();
-  spec->h = [&](const space_point_t& s, const space_point_t& s2) { return 0;}; // spec->distance_function(s, s2)/max_vel; };
+  spec->h = [&](const space_point_t& s, const space_point_t& s2) { return spec->distance_function(s, s2)/max_vel; };
 
   // TODO: add spec->expand here for bang bang controls.
   // dirt_spec.expand = [&](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn, bool blossom_expand) {
@@ -77,7 +78,6 @@ void manipulate_task_t::_prepare_query(std::vector<double> goal_vec)
   goal_pos_tolerance = params["goal_pos_region_radius"].as<double>();
   goal_angle_tolerance = params["goal_angle_region_radius"].as<double>();
   goal_vel_tolerance = params["goal_vel_region_radius"].as<double>();
-  
 
   query->start_state = ss->make_point();
   ss->copy_to(query->start_state);
@@ -103,16 +103,31 @@ void manipulate_task_t::_prepare_query(std::vector<double> goal_vec)
     return std::sqrt(sqr_distance);
   };
 
-  quaternion_t goal_q = Eigen::Quaterniond(query->goal_state->at(5), query->goal_state->at(6), query->goal_state->at(7), query->goal_state->at(8));
+  // for (auto i : pos_indices)
+  // {
+  //   std::cout << "current: " << query->start_state->at(i) << std::endl;
+  //   std::cout << "Goal state: " << query->goal_state->at(i) << std::endl;
+  // }
+  
+  // for (auto i : angle_indices)
+  // {
+  //   std::cout << "current: " << query->start_state->at(i) << std::endl;
+  //   std::cout << "Goal state: " << query->goal_state->at(i) << std::endl;
+  // }
+
+  quaternion_t goal_q = Eigen::Quaterniond(query->goal_state->at(angle_indices[0]), query->goal_state->at(angle_indices[1]), query->goal_state->at(angle_indices[2]), query->goal_state->at(angle_indices[3]));
 
   query->goal_check = [&, goal_q](const space_point_t& point) {
     //check position
     bool is_position = goal_distance_function(point, query->goal_state, pos_indices) < goal_pos_tolerance;
     //check angle
-    quaternion_t curr_q = Eigen::Quaterniond(point->at(5), point->at(6), point->at(7), point->at(8));
+    quaternion_t curr_q = Eigen::Quaterniond(point->at(angle_indices[0]), point->at(angle_indices[1]), point->at(angle_indices[2]), point->at(angle_indices[3]));
     double angular_diff = curr_q.angularDistance(goal_q);
-    angular_diff *= angular_diff;
+    
+    // std::cout << "angular diff: " << angular_diff << std::endl;
+    // angular_diff *= angular_diff;
     bool is_angle = angular_diff < goal_angle_tolerance;
+
 
     // robot velocity -> zero
     // bool is_vel = goal_distance_function(point, query->goal_state, robot_vel_indices) < goal_vel_tolerance;

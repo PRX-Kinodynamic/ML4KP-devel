@@ -277,6 +277,11 @@ void mujoco_simulator_t::add_frame()
 
 void mujoco_simulator_t::reset_simulation()
 {
+    mj_resetData(m, d);
+    mj_forward(m, d);
+    auto cg = std::dynamic_pointer_cast<mujoco_collision_group_t>(collision_groups->get_collision_group("mujoco"));
+    prx_assert(cg != nullptr, "collision_group_t could not be cast to mujoco_collision_group_t");
+    cg->reset_pairs();
 }
 
 MujocoState mujoco_simulator_t::get_state()
@@ -327,7 +332,9 @@ void mujoco_collision_group_t::add_pair(std::string body1, std::string body2)
 {
   int body_id1 = mj_name2id(sim->m, mjOBJ_BODY, body1.c_str());
   int body_id2 = mj_name2id(sim->m, mjOBJ_BODY, body2.c_str());
-
+  std::cout << "Adding pair: " << body1 << ", " << body2 << std::endl;
+  std::cout << "Adding pair ids: " << body_id1 << ", " << body_id2 << std::endl;
+  
   if (body_id1 != -1 && body_id2 != -1)
   {
     std::pair<int, int> pair = std::make_pair(body_id1, body_id2);
@@ -362,8 +369,8 @@ bool mujoco_collision_group_t::in_collision()
 
         for (int i = 0; i < collision_pairs.size(); i++)
         {
-          if (collision_body_id1 == collision_pairs[i].first && collision_body_id2 == collision_pairs[i].second ||
-              collision_body_id1 == collision_pairs[i].second && collision_body_id2 == collision_pairs[i].first)
+          if ((collision_body_id1 == collision_pairs[i].first && collision_body_id2 == collision_pairs[i].second) ||
+              (collision_body_id1 == collision_pairs[i].second && collision_body_id2 == collision_pairs[i].first))
           {
             return true;
           }

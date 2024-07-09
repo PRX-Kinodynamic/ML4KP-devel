@@ -296,8 +296,10 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       delete eg.second;
     }
     iteration_count++;
-  // } while (!condition->check());
-  } while (!found_first_soln);
+    if (found_first_soln){
+      break;
+    }
+  } while (!condition->check());
   print_statistics();
 }
 
@@ -386,7 +388,6 @@ void dirt_t::update_goal(node_index_t node_index)
       std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
       bnb(start_vertex, current_solution);
       found_first_soln = true;
-      std::cout << "found solution" << found_first_soln;
     }
   }
 }

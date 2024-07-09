@@ -1,4 +1,4 @@
-random_seed: 100
+random_seed: 3
 xml_path: push/model_hard1.xml
 
 cam_distance: 1.5
@@ -8,6 +8,6 @@ cam_azimuth: 90
 goal_config: [1.0, 0., 0.]
 goal_region_radius: 0.05
 
-plan_filename: "/home/dhruv/2024/projects/NAMO/out/1_3.txt"
-video_name: "/home/dhruv/2024/projects/NAMO/out/1_3.mp4"
+plan_filename: "/home/dhruv/2024/projects/NAMO/out/manipulate_navigate/solution_0.txt"
+video_name: "/home/dhruv/2024/projects/NAMO/out/solution_0.mp4"
 record_video: true
