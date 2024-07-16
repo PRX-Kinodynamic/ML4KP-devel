@@ -83,8 +83,8 @@ Polygon_2 create_hole_from_obstacle(std::shared_ptr<prx::fg::collision_info_t> i
 
 int main()
 {
-  const std::string environment{ "environments/warehouse.yaml" };
-  // const std::string environment{ "environments/forest.yaml" };
+  // const std::string environment{ "environments/warehouse.yaml" };
+  const std::string environment{ "environments/forest.yaml" };
   auto obstacles = prx::load_obstacles(environment);
   std::string ignore_substr{ "wall" };
 
@@ -136,21 +136,32 @@ int main()
   std::ofstream ofs(prx::out_path + "/cgal_skw.txt");
 
   std::vector<std::pair<int, int>> edges;
+  std::vector<std::pair<int, Point>> points;
+  std::set<int> valid_ids;
   // Vertex_iterator   vertices_end ()
   for (auto iter = iss->halfedges_begin(); iter != iss->halfedges_end(); iter++)
   {
     if (iter->is_inner_bisector())
     {
-      ofs << iter->id() << " " << iter->vertex()->point() << "\n";
+      valid_ids.insert(iter->id());
+      // points.push_back(std::make_pair(iter->prev()->id(), iter->prev()->vertex()->point()));
+      points.push_back(std::make_pair(iter->id(), iter->vertex()->point()));
+      // ofs << iter->id() << " " << iter->vertex()->point() << "\n";
       edges.push_back(std::make_pair(iter->prev()->id(), iter->id()));
       // print_vertex(h->prev()->vertex());
     }
   }
 
+  for (auto id_pt : points)
+  {
+    if (valid_ids.count(id_pt.first) > 0)
+      ofs << id_pt.first << " " << id_pt.second << "\n";
+  }
   ofs << "\n";
   for (auto pair : edges)
   {
-    ofs << pair.first << " " << pair.second << "\n";
+    if (valid_ids.count(pair.first) > 0 and valid_ids.count(pair.second) > 0)
+      ofs << pair.first << " " << pair.second << "\n";
   }
   ofs.close();
 

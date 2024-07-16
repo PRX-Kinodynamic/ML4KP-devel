@@ -53,11 +53,16 @@ double gaussian_random(const double mean = 0.0, const double stddev = 1.0);
  * @brief Returns a random number from the uniform distribution within the given range.
  * @param min The minimum random value to return.
  * @param max The maximum random value to return.
- * @author Zakary Littlefield
+ * @author Zakary Littlefield, Edgar Granados
  *
  * @return A double precision random number in the given range.
  */
-double uniform_random(double min, double max);
+template <typename Type>
+double uniform_random(const Type min, const Type max)
+{
+  const double val{ ::prx::random::uniform_zero_one(global_generator) * (max - min) + min };
+  return val;
+}
 
 /**
  * Returns a random integer number from the uniform distribution within
@@ -71,6 +76,27 @@ double uniform_random(double min, double max);
  * @return An integer random number in the given range.
  */
 int uniform_int_random(int min, int max);
+
+//
+template <typename Container, typename Type>
+int uniform_random(Container& container, const Type min, const Type max)
+{
+  for (int i = 0; i < container.size(); ++i)
+  {
+    container[i] = uniform_random(min, max);
+  }
+}
+
+template <typename Container, typename Type, typename... Initializers>
+Container uniform_random(const Type min, const Type max, Initializers... args)
+{
+  Container container{ args... };
+  for (int i = 0; i < container.size(); ++i)
+  {
+    container[i] = uniform_random(min, max);
+  }
+  return container;
+}
 
 /**
  * Given a set of weights, randomly roll a "dice" and obtain an event

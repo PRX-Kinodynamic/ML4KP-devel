@@ -33,6 +33,6 @@ BOOST_AUTO_TEST_CASE(composition_test)
   const se3_t se3_1(R1, p1);
   const se3_t se3_01{ se3_0 * se3_1 };
 
-  BOOST_REQUIRE_MESSAGE(R01.isApprox(se3_01.matrix()), EXPECTED_GOT(R01, se3_01.matrix()));
+  BOOST_REQUIRE_MESSAGE(R01.isApprox(se3_01.rotation_matrix()), EXPECTED_GOT(R01, se3_01.rotation_matrix()));
   BOOST_REQUIRE_MESSAGE(p01.isApprox(se3_01.position()), EXPECTED_GOT(p01, se3_01.position()));
 }

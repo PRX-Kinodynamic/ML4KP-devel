@@ -14,29 +14,27 @@ void init_random(int seed)
 
 double uniform_random()
 {
-  // double val = rand()*1.0 / RAND_MAX;
-  // double val = static_cast<double>(global_generator()) / static_cast<double>(global_generator.max());
-  // double val = global_generator()*1.0 / global_generator.max();
-  const double val = ::prx::random::uniform_zero_one(global_generator);
-  return val;
+  //   // double val = rand()*1.0 / RAND_MAX;
+  //   // double val = static_cast<double>(global_generator()) / static_cast<double>(global_generator.max());
+  //   // double val = global_generator()*1.0 / global_generator.max();
+  //   const double val = ::prx::random::uniform_zero_one(global_generator);
+  return uniform_random(0.0, 1.0);
 }
 
-double uniform_random(double min, double max)
-{
-  // TODO: This implementation is problematic if (max - min) > std::::numeric_limits<double>::max()
-  // ==> change to use std::uniform_real_distribution?
-  // double val = (((double)rand() / (double)RAND_MAX) * (max - min)) + min;
-  const double val = ::prx::random::uniform_zero_one(global_generator) * (max - min) + min;
-  // double val = ((static_cast<double>(global_generator()) / static_cast<double>(global_generator.max())) * (max -
-  // min)) + min; std::uniform_real_distribution<double> dist(min, max); return dist(global_generator);
-  return val;
-}
+// double uniform_random(double min, double max)
+// {
+//   // TODO: This implementation is problematic if (max - min) > std::::numeric_limits<double>::max()
+//   // ==> change to use std::uniform_real_distribution?
+//   // double val = (((double)rand() / (double)RAND_MAX) * (max - min)) + min;
+//   const double val = ::prx::random::uniform_zero_one(global_generator) * (max - min) + min;
+//   // double val = ((static_cast<double>(global_generator()) / static_cast<double>(global_generator.max())) * (max -
+//   // min)) + min; std::uniform_real_distribution<double> dist(min, max); return dist(global_generator);
+//   return val;
+// }
 
 int uniform_int_random(int min, int max)
 {
-  const double raw_rand{ ::prx::random::uniform_zero_one(global_generator) };
-  const int val{ static_cast<int>(std::floor(raw_rand * (max + 1 - min) + min)) };
-  return val;
+  return uniform_random(min, max);
 }
 
 int roll_weighted_die(std::vector<double> const& weights)
