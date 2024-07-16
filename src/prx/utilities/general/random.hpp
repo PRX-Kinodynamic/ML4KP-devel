@@ -79,7 +79,7 @@ int uniform_int_random(int min, int max);
 
 //
 template <typename Container, typename Type>
-int uniform_random(Container& container, const Type min, const Type max)
+void uniform_random(Container& container, const Type min, const Type max)
 {
   for (int i = 0; i < container.size(); ++i)
   {
