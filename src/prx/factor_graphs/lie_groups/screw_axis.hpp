@@ -17,10 +17,15 @@ class screw_axis_t : public gtsam::LieGroup<screw_axis_t, 6>
 public:
   static constexpr Eigen::Index Dim = 6;
   static constexpr Eigen::Index dimension = 6;
+  static constexpr Eigen::Index RowsAtCompileTime = 6;
 
   using OmegaV = Eigen::Vector<double, 6>;
   using Twist = Eigen::Vector<double, 6>;
   using Rotation = Eigen::Matrix3d;
+  using SE3 = se3_t;
+  using Omega = Eigen::Vector3d;
+  using Velocity = Eigen::Vector3d;
+  using Scalar = double;
 
   screw_axis_t() : screw_axis_t(Eigen::Vector<double, 6>::Zero())
   {
@@ -30,8 +35,7 @@ public:
 
   // This constructor allows you to construct screw_axis_t from Eigen expressions
   template <typename OtherDerived>
-  screw_axis_t(const Eigen::MatrixBase<OtherDerived>& other)
-    : _omega_v(other), _omega(_omega_v.data(), 3, 1), _v(_omega_v.data() + 3, 3, 1)
+  screw_axis_t(const Eigen::MatrixBase<OtherDerived>& other) : _omega_v(other)
   {
   }
 
@@ -117,17 +121,16 @@ public:
 
   inline bool is_omega_zero() const
   {
-    return _omega.isApproxToConstant(0.0);
+    return omega().isApproxToConstant(0.0);
   }
 
   // \dot{\Theta} such that S \cdot \dot{\Theta} = V
   double theta_dot() const
   {
-    return is_omega_zero() ? _v.norm() : _omega.norm();
+    return is_omega_zero() ? v().norm() : omega().norm();
   }
 
-  template <typename SE3>
-  static SE3 expmap(const screw_axis_t& s, gtsam::OptionalJacobian<6, 6> H = boost::none)
+  static SE3 Expmap(const screw_axis_t& s, gtsam::OptionalJacobian<6, 6> H = boost::none)
   {
     if (H)
     {
@@ -143,29 +146,41 @@ public:
     return se3;
   }
 
-  Eigen::Map<Eigen::Vector3d> omega() const
+  // struct ChartAtOrigin
+  // {
+  //   static SE3 Retract(const Eigen::Vector<double, 6>& xi, ChartJacobian Hxi = boost::none)
+  //   {
+  //     return Expmap(xi, Hxi);
+  //   }
+  //   static Eigen::Vector<double, 6> Local(const screw_axis_t& screw_axis, ChartJacobian H = boost::none)
+  //   {
+  //     return Logmap(screw_axis, H);
+  //   }
+  // };
+
+  Omega omega() const
   {
-    return _omega;
+    return _omega_v.head(3);
   }
 
-  Eigen::Map<Eigen::Vector3d> v() const
+  Velocity v() const
   {
-    return _v;
+    return _omega_v.tail(3);
   }
 
-  Eigen::Map<Eigen::Vector3d>& omega()
-  {
-    return _omega;
-  }
+  // auto& omega()
+  // {
+  //   return _omega_v.head(3);
+  // }
 
-  Eigen::Map<Eigen::Vector3d>& v()
-  {
-    return _v;
-  }
+  // auto& v()
+  // {
+  //   return _omega_v.tail(3);
+  // }
 
   friend std::ostream& operator<<(std::ostream& os, const screw_axis_t& screw)
   {
-    os << screw.omega().transpose() << " " << screw.v().transpose();
+    os << screw._omega_v.transpose();
     return os;
   }
 
@@ -182,8 +197,8 @@ public:
 private:
   // Convinient maps to the two components of the screw axis
   OmegaV _omega_v;
-  Eigen::Map<Eigen::Vector3d> _omega;
-  Eigen::Map<Eigen::Vector3d> _v;
+  // Eigen::Map<Eigen::Vector3d> _omega;
+  // Eigen::Map<Eigen::Vector3d> _v;
 };
 
 }  // namespace fg
@@ -201,4 +216,20 @@ struct traits<prx::fg::screw_axis_t> : public gtsam::Testable<prx::fg::screw_axi
     return 6;
   }
 };
+
+prx::fg::screw_axis_t operator+(const prx::fg::screw_axis_t& s_A, const prx::fg::screw_axis_t& s_B)
+{
+  return prx::fg::screw_axis_t(s_A.vector() + s_B.vector());
+}
+
+prx::fg::screw_axis_t operator-(const prx::fg::screw_axis_t& s_A, const prx::fg::screw_axis_t& s_B)
+{
+  return prx::fg::screw_axis_t(s_A.vector() - s_B.vector());
+}
+
+// prx::fg::screw_axis_t operator+(const prx::fg::screw_axis_t& x, const Eigen::Vector<double, 6>& tangent)
+// {
+//   const prx::fg::screw_axis_t other{ tangent };
+//   return x + other;
+// }
 }  // namespace gtsam

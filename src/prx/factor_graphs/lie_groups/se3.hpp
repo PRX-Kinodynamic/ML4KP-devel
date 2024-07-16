@@ -6,7 +6,7 @@
 #include <gtsam/geometry/SO3.h>
 #include <gtsam/geometry/Pose3.h>
 #include "prx/factor_graphs/lie_groups/lie_operators.hpp"
-#include "prx/factor_graphs/lie_groups/screw_axis.hpp"
+// #include "prx/factor_graphs/lie_groups/screw_axis.hpp"
 
 namespace prx
 {
@@ -102,6 +102,11 @@ public:
     return result;
   }
 
+  Position operator*(const Position& x) const
+  {
+    return _quaternion * x + _position;
+  }
+
   gtsam::Pose3 to_pose() const
   {
     return gtsam::Pose3(gtsam::Rot3(_quaternion), _position);
@@ -114,10 +119,9 @@ public:
     return se3_t(gtsam::Pose3::Expmap(s_vec, H));
   }
 
-  template <typename ScrewAxis>
-  static ScrewAxis Logmap(const se3_t& s, gtsam::OptionalJacobian<6, 6> H = boost::none)
+  static Eigen::Vector<double, 6> Logmap(const se3_t& s, gtsam::OptionalJacobian<6, 6> H = boost::none)
   {
-    return ScrewAxis(gtsam::Pose3::Logmap(s.to_pose(), H));
+    return gtsam::Pose3::Logmap(s.to_pose(), H);
   }
 
   Eigen::Matrix<double, 6, 6> AdjointMap() const
@@ -159,12 +163,27 @@ public:
     return _position.isApprox(other.position(), tol) && _quaternion.isApprox(other.quaternion(), tol);
   }
 
-  inline transform_t transform() const
+  struct ChartAtOrigin
   {
-    return transform_t(_quaternion);
+    static se3_t Retract(const Eigen::Vector<double, 6>& xi, ChartJacobian Hxi = boost::none)
+    {
+      return Expmap(xi, Hxi);
+    }
+    static Eigen::Vector<double, 6> Local(const se3_t& pose, ChartJacobian Hpose = boost::none)
+    {
+      return Logmap(pose, Hpose);
+    }
+  };
+
+  inline Eigen::Transform<double, 3, Eigen::TransformTraits::Isometry> transform() const
+  {
+    Eigen::Transform<double, 3, Eigen::TransformTraits::Isometry> tf{};
+    tf.linear() = rotation_matrix();
+    tf.translation() = position();
+    return tf;
   }
 
-  inline Eigen::Matrix3d matrix() const
+  inline Eigen::Matrix3d rotation_matrix() const
   {
     return _quaternion.toRotationMatrix();
   }

@@ -8,6 +8,8 @@ set(${PROJECT_NAME}_HEADERS "${${PROJECT_NAME}_HEADERS};${HEADER_PRX_LIB_EXTERNA
 
 add_library(External ${SRC_PRX_LIB_EXTERNAL_PQP} ) 
 
+find_package(nlohmann_json QUIET)
+
 target_include_directories(External 
 														PUBLIC
 														"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
@@ -22,5 +24,11 @@ if(BUILD_FOR_TORCH AND DEFINED ENV{Torch_DIR})
 	target_link_libraries(External PUBLIC ${TORCH_LIBRARIES})
 endif()
 target_link_libraries(External PUBLIC Boost::filesystem Boost::system Threads::Threads)
+
+if( nlohmann_json_FOUND )
+	message(STATUS "Json library nlohmann_json Found ")
+  add_definitions(-DJSON)
+	target_link_libraries(External PUBLIC nlohmann_json::nlohmann_json)
+endif()
 
 set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};External" PARENT_SCOPE)
