@@ -24,6 +24,7 @@ public:
   plan_t get_solution_plan();
   simulation_context context;
   param_loader params;
+  std::vector<double> goal_vec;
 
 private:
   std::shared_ptr<dirt_specification_t> spec;
@@ -32,7 +33,7 @@ private:
   std::vector<unsigned> vel_indices;
   task_distance_function_t goal_distance_function;
   double goal_pos_tolerance, goal_vel_tolerance;
-  void _prepare_specification();
+  void _prepare_specification(std::vector<double> goal_vec);
   void _prepare_query(std::vector<double> goal_vec);
   void _set_bounds(std::vector<double> env_xlim, std::vector<double> env_ylim);
 };

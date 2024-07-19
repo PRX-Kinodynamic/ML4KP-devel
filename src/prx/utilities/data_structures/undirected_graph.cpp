@@ -143,7 +143,7 @@ void undirected_graph_t::dijkstra(node_index_t goal)
       continue;
 
     visited.insert(u->index);
-    // std::cout << "n: " << u -> index << " " << u -> point << " cost: " << u -> cost_to_go << std::endl;
+    // std::cout << "n: " << u -> index << " cost: " << u -> cost_to_go << std::endl;
     auto cost = u->cost_to_go;
     for (auto e : u->edges)
     {
@@ -159,11 +159,14 @@ void undirected_graph_t::dijkstra(node_index_t goal)
         // printf("Cost: %.2f\n", cost + edge -> value );
         candidate->cost_to_go = cost + edge->value;
         candidate->best_neighbor = u->index;
+        
         // visited.erase(candidate -> index);
       }
       // std::cout << "\tc: " << candidate -> index << " " << candidate -> point << std::endl;
       pq.push(candidate);
     }
+
+    std::cout << u->index << " " << u->cost_to_go << " " << u->best_neighbor << std::endl;
     // printf("%d - index: %lu\tcost_to_go: %.4f\t pt=(%.0f, %.0f)\n",
     // i, u -> index, u -> cost_to_go, u -> point -> at(1), u -> point -> at(0));
     // i++;
@@ -206,7 +209,7 @@ void undirected_graph_t::vertex_list_to_file(std::string file_name)
     // {
     // auto edge = e_index_map[e];
     // auto candidate = v_index_map[edge -> get_other(v -> index)];
-    ofs_map << "Point: ";
+    // ofs_map << "Point: ";
     for (int i = 0; i < v->point->get_dim(); ++i)
     {
       ofs_map << v->point->at(i) << " ";
@@ -217,12 +220,45 @@ void undirected_graph_t::vertex_list_to_file(std::string file_name)
       ofs_map << candidate->point->at(i) << " ";
     }
     // ofs_map << "cost: " << edge -> value;
-    ofs_map << "cost: "
-            << (v->cost_to_go == std::numeric_limits<double>::infinity() ? std::numeric_limits<double>::max() :
-                                                                           v->cost_to_go);
+    // ofs_map << "cost: "
+    //         << (v->cost_to_go == std::numeric_limits<double>::infinity() ? std::numeric_limits<double>::max() :
+    //                                                                        v->cost_to_go);
     ofs_map << std::endl;
     // }
   }
 }
 
+void undirected_graph_t::edge_list_to_file(std::string file_name)
+{
+  std::ofstream ofs_map;
+  ofs_map.open(file_name.c_str(), std::ofstream::trunc);
+
+  for (auto e : e_index_map)
+  {
+    if (e == nullptr)
+      continue;  // sanity check
+    // for (auto e : v -> edges)
+    // {
+    // auto edge = e_index_map[e];
+    // auto candidate = v_index_map[edge -> get_other(v -> index)];
+    // ofs_map << "Edge: ";
+
+    ofs_map << e->first << " ";
+
+    ofs_map << e->second << std::endl;
+    /*for (int i = 0; i < e -> point -> get_dim(); ++i)
+    {
+      ofs_map << v -> point -> at(i) << " ";
+    }
+    auto candidate = v_index_map[ v -> best_neighbor];
+    for (int i = 0; i < candidate -> point -> get_dim(); ++i)
+    {
+      ofs_map << candidate -> point -> at(i) << " ";
+    }
+    // ofs_map << "cost: " << edge -> value;
+    ofs_map << "cost: " << (v -> cost_to_go == std::numeric_limits<double>::infinity() ?
+    std::numeric_limits<double>::max() : v -> cost_to_go); ofs_map << std::endl;*/
+    // }
+  }
+}
 }  // namespace prx

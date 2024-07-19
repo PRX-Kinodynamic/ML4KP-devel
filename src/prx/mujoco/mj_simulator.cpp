@@ -332,8 +332,8 @@ void mujoco_collision_group_t::add_pair(std::string body1, std::string body2)
 {
   int body_id1 = mj_name2id(sim->m, mjOBJ_BODY, body1.c_str());
   int body_id2 = mj_name2id(sim->m, mjOBJ_BODY, body2.c_str());
-  std::cout << "Adding pair: " << body1 << ", " << body2 << std::endl;
-  std::cout << "Adding pair ids: " << body_id1 << ", " << body_id2 << std::endl;
+  // std::cout << "Adding pair: " << body1 << ", " << body2 << std::endl;
+  // std::cout << "Adding pair ids: " << body_id1 << ", " << body_id2 << std::endl;
   
   if (body_id1 != -1 && body_id2 != -1)
   {

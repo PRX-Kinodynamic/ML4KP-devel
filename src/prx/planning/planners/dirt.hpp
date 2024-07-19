@@ -95,6 +95,7 @@ public:
 
   std::vector<long unsigned> random_edges_counter, blossom_edges_counter;
   bool found_first_soln;
+  virtual std::vector<double> get_statistics() override;
   
 protected:
   virtual void update_goal(node_index_t node_index) override;
@@ -105,7 +106,6 @@ protected:
   virtual void _resolve_query(condition_check_t* condition) override;
   virtual void _reset() override;
 
-  virtual std::vector<double> get_statistics() override;
 
   dirt_specification_t* dirt_spec;
   dirt_query_t* dirt_query;

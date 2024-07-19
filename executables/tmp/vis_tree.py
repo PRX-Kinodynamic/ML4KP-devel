@@ -8,7 +8,7 @@ from matplotlib.patches import Rectangle, Circle
 
 with open('/home/dhruv/2024/projects/ml4kp_ktamp/resources/models/push/model_hard1.xml', 'r') as file:
     mjx_content = file.read()
-FOLDER = f'/home/dhruv/2024/projects/NAMO/out/only_navigate/trees/*'
+FOLDER = f'/home/dhruv/2024/projects/NAMO/out/hard/manip_nav/trees/*'
 root = ET.fromstring(mjx_content)
 
 
@@ -41,11 +41,10 @@ for task_id, folder in enumerate(sorted(list(glob(FOLDER)))):
         points = np.array(points)
         ax.plot(points[:, 0], points[:, 1], color=colors[task_id])
         points = []
-    
+
 ax.set_xlim(-0.1, 1.5)
 ax.set_ylim(-0.25, 0.25)
 # ax.scatter(0.0, 0, color='blue', label='Start')
 # ax.scatter(0.5, 0, color='green', label='Goal')
 plt.legend()
 plt.show()
-        

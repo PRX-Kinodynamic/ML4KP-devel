@@ -296,11 +296,8 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       delete eg.second;
     }
     iteration_count++;
-    if (found_first_soln){
-      break;
-    }
   } while (!condition->check());
-  print_statistics();
+  // print_statistics();
 }
 
 void dirt_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_node_t* closest_node,
@@ -381,11 +378,10 @@ void dirt_t::update_goal(node_index_t node_index)
       current_solution_time = timer.measure();
       current_solution_iters = iteration_count;
       goal_vertex = node_index;
-      std::cout << "[dirt] Found new goal: " << state_space->print_point(new_tree_node->point, 3);
-      std::cout << " cost:" << new_tree_node->cost_to_come;
-      std::cout << " time:" << current_solution_time;
-      std::cout << " iter:" << current_solution_iters;
-      std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
+      // std::cout << "[dirt] Found new goal: " << " cost:" << new_tree_node->cost_to_come;
+      // std::cout << " time:" << current_solution_time;
+      // std::cout << " iter:" << current_solution_iters;
+      // std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
       bnb(start_vertex, current_solution);
       found_first_soln = true;
     }

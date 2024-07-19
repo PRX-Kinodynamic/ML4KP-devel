@@ -19,7 +19,6 @@ manipulate_task_t::manipulate_task_t(param_loader params, simulation_context pla
   std::vector<double> env_ylim = params["env_ylim"].as<std::vector<double>>();
   _set_bounds(env_xlim, env_ylim);
   
-  
   _prepare_specification();
   _prepare_query(goal_vec);
 }
@@ -40,7 +39,7 @@ void manipulate_task_t::_prepare_specification()
   
 
   double max_vel = params["max_vel"].as<double>();
-  spec->h = [&](const space_point_t& s, const space_point_t& s2) { return spec->distance_function(s, s2)/max_vel; };
+  spec->h = [&](const space_point_t& s, const space_point_t& s2) { return 0;}; // return spec->distance_function(s, s2)/max_vel; };
 
   // TODO: add spec->expand here for bang bang controls.
   // dirt_spec.expand = [&](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn, bool blossom_expand) {

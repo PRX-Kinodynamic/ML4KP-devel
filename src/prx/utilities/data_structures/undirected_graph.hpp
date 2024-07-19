@@ -299,6 +299,7 @@ public:
   void dijkstra(node_index_t goal);
 
   void vertex_list_to_file(std::string file_name);
+  void edge_list_to_file(std::string file_name);
 
 protected:
   std::list<ug_node_ptr> vertex_list;

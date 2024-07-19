@@ -8,7 +8,7 @@
   
     <worldbody>
       
-      <body name="ball" pos=".0 0 .05">
+      <body name="ball" pos=".45 0.18 .05">
         <geom name="gball_0" type="sphere" size="0.02" mass="5." material="BallMat"
           friction=".5 0.005 0.001 " condim="4" />
         <site name="sensor_ball" />
@@ -37,12 +37,12 @@
         <geom name="movable_cube1" type="box" size="0.05 0.19 0.05" mass=".1" material="movable" condim="4" />
       </body>
 
-      <body name="movable_cube2" pos="0.58 -0.1 .05" euler="0 0 0">
+      <body name="movable_cube2" pos="0.58 -0.15 .05" euler="0 0 0">
         <freejoint />
         <geom name="movable_cube2" type="box" size="0.05 0.05 0.05" mass=".1" material="movable" condim="4" />
       </body>
 
-      <body name="movable_cube3" pos="0.850 0 .05" euler="0.0 0 0">
+      <body name="movable_cube3" pos="0.9 0 .05" euler="0.0 0 0">
         <freejoint />
         <geom name="movable_cube3" type="box" size="0.05 0.035 0.05" mass=".1" material="movable" condim="4" />
       </body>
@@ -53,7 +53,9 @@
         <geom name="gcase_d" type="box" size="1.0 0.04 0.1" pos="0.75 -.26 0" />
       </body>
     
-      <site name="target" pos="1.0 0.0 0.05" size="0.05 0.05 0.05" rgba="0 1 0 1" />
+      <site name="target" pos="0.8 -0.0 .05" size="0.05 0.05 0.05" rgba="0 1 0 1" />
+      <site name="target1" pos="1.2 -0.0 .05" size="0.05 0.05 0.05" rgba="0 1 0 1" />
+      <!-- <site name="target" pos="1.0 0.0 0.05" size="0.05 0.05 0.05" rgba="0 1 0 1" /> -->
       
     </worldbody>
   
