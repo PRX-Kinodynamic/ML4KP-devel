@@ -8,8 +8,8 @@
 #include <gtsam/nonlinear/Expression.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
-#include "prx/utilities/math/first_order_derivative.hpp"
 #include "prx/factor_graphs/utilities/symbols_factory.hpp"
+
 namespace prx
 {
 namespace fg
@@ -27,8 +27,15 @@ class euler_integration_factor_t : public gtsam::NoiseModelFactor3<X, X, Xdot>
   using DerivativeX = Eigen::Matrix<double, DimX, DimX>;
   using DerivativeXdot = Eigen::Matrix<double, DimXdot, DimXdot>;
   using OptDeriv = boost::optional<Eigen::MatrixXd&>;
+  using OptionalJacobianX = gtsam::OptionalJacobian<DimX, DimX>;
+
+  euler_integration_factor_t() : _h(0.0), _negative_identity(-1.0 * DerivativeX::Identity())
+  {
+  }
 
 public:
+  euler_integration_factor_t(const euler_integration_factor_t& other) = delete;
+
   euler_integration_factor_t(const gtsam::Key key_xt1, const gtsam::Key key_xt0, const gtsam::Key key_xdot,
                              const NoiseModel& cost_model, const double h, const std::string label = "EulerIntegration")
     : Base(cost_model, key_xt1, key_xt0, key_xdot)
@@ -38,14 +45,18 @@ public:
   {
   }
 
-  static X integrate(const X& xi, const Xdot& xdot_i, const double dt, OptDeriv Hx = boost::none,
-                     OptDeriv Hxdot = boost::none)
+  ~euler_integration_factor_t() override
+  {
+  }
+
+  static X integrate(const X& xi, const Xdot& xdot_i, const double dt,  // no-lint
+                     OptDeriv Hx = boost::none, OptDeriv Hxdot = boost::none)
   {
     return predict(xi, xdot_i, dt, Hx, Hxdot);
   }
 
-  static X predict(const X& x, const Xdot& xdot, const double dt, OptDeriv Hx = boost::none,
-                   OptDeriv Hxdot = boost::none)
+  static X predict(const X& x, const Xdot& xdot, const double dt,  // no-lint
+                   OptDeriv Hx = boost::none, OptDeriv Hxdot = boost::none)
   {
     // clang-format off
     if (Hx){ *Hx = DerivativeX::Identity(); }
@@ -56,8 +67,8 @@ public:
 
   // x1_predicted <- x0 + xdot dt
   // Error is: x1_predicted - x1_observed
-  virtual Eigen::VectorXd evaluateError(const X& x1, const X& x0, const Xdot& xdot, OptDeriv H1 = boost::none,
-                                        OptDeriv H0 = boost::none, OptDeriv Hdot = boost::none) const override
+  Eigen::VectorXd evaluateError(const X& x1, const X& x0, const Xdot& xdot,  // no-lint
+                                OptDeriv H1, OptDeriv H0 = boost::none, OptDeriv Hdot = boost::none) const override
   {
     const X prediction{ predict(x0, xdot, _h, H0, Hdot) };
     // X1_p (-) x1 => Eq. 26 from "A micro Lie theory [...]" https://arxiv.org/pdf/1812.01537.pdf
