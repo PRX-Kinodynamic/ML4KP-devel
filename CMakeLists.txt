@@ -28,10 +28,12 @@ endif()
 if (CMAKE_BUILD_TYPE MATCHES Release)
 	# -03 <- Turn on all optims
 	# -march=native <- Turn on eigen vectorization optimizations
-	set(BUILD_FLAGS "-O3 -march=native")
+	# set(BUILD_FLAGS "-O3 -march=native")
+	set(BUILD_FLAGS "-O3")
     add_definitions(-DRELEASE_BUILD)
 elseif(CMAKE_BUILD_TYPE MATCHES Debug)
 	set(BUILD_FLAGS "-O0 -fno-inline -g")
+    # list(APPEND BUILD_FLAGS "-fsanitize=address")
     add_definitions(-DDEBUG_BUILD)
 endif()
 

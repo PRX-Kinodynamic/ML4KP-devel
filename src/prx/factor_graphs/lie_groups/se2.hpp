@@ -61,6 +61,11 @@ public:
   {
   }
 
+  static SE2_t Zero()  // Equivalent to Eigen's Zero
+  {
+    return SE2_t(0, 0, 0);
+  }
+
   double& operator[](const std::size_t& idx)
   {
     switch (idx)
@@ -139,6 +144,17 @@ public:
     return os;
   }
 
+  struct ChartAtOrigin
+  {
+    static SE2_t Retract(const Eigen::Vector<double, 3>& xi, ChartJacobian Hxi = boost::none)
+    {
+      return Expmap(xi, Hxi);
+    }
+    static Eigen::Vector<double, 3> Local(const SE2_t& pose, ChartJacobian Hpose = boost::none)
+    {
+      return Logmap(pose, Hpose);
+    }
+  };
   void print(const std::string& str = "") const
   {
     std::cout << str << " " << (*this);
