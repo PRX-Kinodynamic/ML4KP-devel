@@ -134,6 +134,16 @@ public:
   {
   }
 
+  std::vector<node_index_t> get_out_edges(node_index_t v)
+  {
+    std::vector<node_index_t> out_edges;
+    for (auto e : edges[v])
+    {
+      out_edges.push_back(e->get_target_index());
+    }
+    return out_edges;
+  }
+
   void load_roadmap_from_file(std::string vertices_fname, std::string edges_fname)
   {
     std::vector<std::vector<double>> vertices_from_file = prx::utilities::read_vectors_from_file(vertices_fname);
