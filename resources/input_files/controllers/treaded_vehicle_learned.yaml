@@ -1,0 +1,13 @@
+controller_path: "controllers/treaded_vehicle.pt"
+random_seed: 111093
+
+state_indices: [0,1,2,3,4]
+goal_indices: [0,1,2]
+
+goal_uses_quat: false
+delta_input: false
+
+control_duration: 1.0
+max_duration: 60.0
+
+debug_controller: false

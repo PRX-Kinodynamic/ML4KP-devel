@@ -23,4 +23,14 @@ inline void range_hash_combine(std::size_t& seed, const T& range)
   range_hash_combine<T, n_i - 1>(seed, range);
 }
 
+template <typename T, std::size_t dimension>
+struct range_hash_combine_t
+{
+  const std::size_t operator()(const T& t_to_hash) const noexcept
+  {
+    std::size_t seed = 0;
+    range_hash_combine<T, dimension - 1>(seed, t_to_hash);
+    return seed;
+  }
+};
 }  // namespace prx

@@ -1,0 +1,13 @@
+random_seed: 210896
+
+xml_path: "mushr/mushr.xml"
+controller: "controllers/mushr_full_state_learned.yaml"
+
+env_xlims: [-9.0, 9.0]
+env_ylims: [-9.0, 9.0]
+env_xres: 19
+env_yres: 19
+
+roadmap_dir: "mushr_test/"
+
+goal_region_radius: 0.5

@@ -36,23 +36,11 @@ PRX_GETTER(dirt_node_t, random_expand)
 PRX_SETTER(dirt_node_t, indices)
 PRX_GETTER(dirt_node_t, indices)
 
-PRX_SETTER(dirt_node_t, checkpoint_time)
-PRX_GETTER(dirt_node_t, checkpoint_time)
-
-PRX_SETTER(dirt_node_t, is_safety_node)
-PRX_GETTER(dirt_node_t, is_safety_node)
-
 PRX_SETTER(dirt_specification_t, blossom_number)
 PRX_GETTER(dirt_specification_t, blossom_number)
 
 PRX_SETTER(dirt_specification_t, use_pruning)
 PRX_GETTER(dirt_specification_t, use_pruning)
-
-PRX_SETTER(dirt_specification_t, replanning_cycle)
-PRX_GETTER(dirt_specification_t, replanning_cycle)
-
-PRX_SETTER(dirt_specification_t, order)
-PRX_GETTER(dirt_specification_t, order)
 
 PRX_SETTER(dirt_specification_t, h)
 PRX_GETTER(dirt_specification_t, h)
@@ -86,11 +74,6 @@ void bindings()
       .add_property("random_expand", &get_dirt_node_t_random_expand<bool>, &get_dirt_node_t_random_expand<bool>)
       // TODO: Add "std::vector<std::pair<plan_t*,trajectory_t*>>" class
       .add_property("indices", &get_dirt_node_t_indices<std::vector<int>>, &get_dirt_node_t_indices<std::vector<int>>)
-      .add_property("checkpoint_time", &get_dirt_node_t_checkpoint_time<double>,
-                    &get_dirt_node_t_checkpoint_time<double>)
-      .add_property("is_safety_node", &get_dirt_node_t_is_safety_node<bool>, &get_dirt_node_t_is_safety_node<bool>)
-      // Comment to force ; to the next one
-      ;
 
   class_<prx::dirt_specification_t, std::shared_ptr<prx::dirt_specification_t>, bases<prx::rrt_specification_t>>(
       "dirt_specification", init<std::shared_ptr<prx::system_group_t>, std::shared_ptr<prx::collision_group_t>>())
@@ -98,9 +81,6 @@ void bindings()
                     &set_dirt_specification_t_blossom_number<int>)
       .add_property("use_pruning", &get_dirt_specification_t_use_pruning<bool>,
                     &set_dirt_specification_t_use_pruning<bool>)
-      .add_property("replanning_cycle", &get_dirt_specification_t_replanning_cycle<double>,
-                    &set_dirt_specification_t_replanning_cycle<double>)
-      .add_property("order", &get_dirt_specification_t_order<int>, &set_dirt_specification_t_order<int>)
       .add_property("h", &get_dirt_specification_t_h<prx::heuristic_function_t>,
                     &set_dirt_specification_t_h<prx::heuristic_function_t>)
       // Comment to force ; to the next one

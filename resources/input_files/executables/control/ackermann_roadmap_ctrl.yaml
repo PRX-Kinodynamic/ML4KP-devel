@@ -1,0 +1,27 @@
+simulation_step: 0.1
+random_seed: 921123
+
+# environment: "environments/empty.yaml"
+# environment: "environments/indoor.yaml"
+environment: "environments/indoor.yaml"
+controller: "controllers/car_like_learned.yaml"
+# environment: "environments/narrow.yaml"
+
+plant: !file "plants/car_like.yaml"
+experiment: "indoor"
+
+control:
+  kp: 0.2
+  ka: 1.5
+  kb: -0.3
+
+version: 1
+files: 
+  vertices: "${HOME}/Downloads/roadmaps/car_like_indoor/vertices.txt"
+  edges: "${HOME}/Downloads/roadmaps/car_like_indoor/edges.txt"
+  problems: "${HOME}/Downloads/roadmaps/car_like_indoor/problems.txt"
+problem: 1
+
+out:
+  graph_filename: "${DIRTMP_PATH}/out/roadmap.txt"
+  path_filename: "${DIRTMP_PATH}/out/path.txt"

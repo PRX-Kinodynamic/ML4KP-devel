@@ -1,7 +1,7 @@
-if(BUILD_FOR_MUJOCO)
+if(BUILD_FOR_TORCH)
     file(GLOB_RECURSE ROADMAPS_FILES *.cpp)
 
-    set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/mujoco)
+    set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/roadmaps)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-narrowing")
 
@@ -19,4 +19,4 @@ if(BUILD_FOR_MUJOCO)
             )
     endforeach()
 
-endif(BUILD_FOR_MUJOCO)
+endif(BUILD_FOR_TORCH)

@@ -34,8 +34,8 @@ protected:
   bool use_cost_map;
 
 private:
-  std::vector<double> lower_bound = { -11, -11, -3.15, -.7, -.7 };
-  std::vector<double> upper_bound = { 11, 11, 3.15, .7, .7 };
+  std::vector<double> lower_bound = { -30, -30, -3.15, -.7, -.7 };
+  std::vector<double> upper_bound = { 30, 30, 3.15, .7, .7 };
   friend system_factory_t;
 };
 

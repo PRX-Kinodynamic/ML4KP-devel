@@ -94,6 +94,8 @@ public:
     return *this;
   }
 
+  void replace_env_var(YAML::Node& node);
+
   inline iterator begin()
   {
     return params.begin();

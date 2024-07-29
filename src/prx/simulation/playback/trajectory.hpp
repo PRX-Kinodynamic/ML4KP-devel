@@ -159,7 +159,6 @@ public:
   }
 
   void to_file(const std::string, const std::ios_base::openmode _mode = std::ofstream::trunc) const;
-
   void from_file(const std::string file_name);
 
 protected:

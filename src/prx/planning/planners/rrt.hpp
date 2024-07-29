@@ -21,6 +21,7 @@ public:
   {
     cost_to_come = 0;
     duration = 0;
+    first_expand = true;
   }
   virtual ~rrt_node_t()
   {
@@ -28,6 +29,7 @@ public:
 
   double cost_to_come;
   double duration;
+  bool first_expand;
 };
 
 class rrt_edge_t : public tree_edge_t

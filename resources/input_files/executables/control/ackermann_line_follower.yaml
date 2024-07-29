@@ -1,0 +1,14 @@
+simulation_step: 0.1
+random_seed: 921123
+
+environment: "environments/empty.yaml"
+
+plant: !file "plants/car_like.yaml"
+
+distance_look_ahead: 1.0
+
+kp: [10.00, 10]
+ki: [.50, 0.01]
+
+duration: 100
+trajectory_file: "${DIRTMP_PATH}/out/car-like-traj.txt"

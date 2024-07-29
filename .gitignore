@@ -20,4 +20,5 @@ resources/input_files/mazes/*.yaml
 # src/prx/bullet_sim/external/bullet3
 experiments/
 data/
+resources/roadmaps/
 install/

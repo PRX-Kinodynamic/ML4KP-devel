@@ -211,7 +211,6 @@ void trajectory_t::to_file(const std::string file_name, const std::ios_base::ope
   {
     ofs_map << states[i] << "\n";
   }
-  ofs_map << "\n";
 
   ofs_map.close();
 }
@@ -227,14 +226,10 @@ void trajectory_t::from_file(const std::string file_name)
   {
     if (line.size() == 0)
       break;
-    // state_space->copy_from(aux, prx::split<double>(line));
-    copy_onto_back(prx::split<double>(line));
-  }
-}
 
-std::size_t trajectory_t::index_at_time(const double ti) const
-{
-  const double idx{ 0.00001 + ti / simulation_step };
-  return static_cast<std::size_t>(idx);
+    std::vector<double> state{ prx::split<double>(line) };
+    state_space->copy(aux, state);
+    copy_onto_back(aux);
+  }
 }
 }  // namespace prx

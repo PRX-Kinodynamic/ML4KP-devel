@@ -85,7 +85,7 @@ YAML::Node param_loader::expand_file(YAML::Node& node)
   {
     for (auto p : node)
     {
-      auto expanded = expand_file(p.second);
+      YAML::Node expanded = expand_file(p.second);
       if (!expanded.IsNull())
       {
         replace_env_var(expanded);
