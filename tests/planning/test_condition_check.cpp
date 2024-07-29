@@ -3,7 +3,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include "prx/utilities/spaces/space.hpp"
-#include "prx/planning/condition_check.hpp"
+#include "prx/utilities/general/condition_check.hpp"
+
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"

@@ -8,6 +8,9 @@ else()
 endif()
 
 file(GLOB_RECURSE SRC_PRX_LIB_MJSIM *.cpp)
+file(GLOB_RECURSE HEADER_PRX_LIB_MJSIM RELATIVE ${CMAKE_SOURCE_DIR}/src ./*.hpp)
+
+# set(${PROJECT_NAME}_HEADERS "${${PROJECT_NAME}_HEADERS};${HEADER_PRX_LIB_MJSIM}" PARENT_SCOPE)
 
 add_library(${PROJECT_NAME}_mjsim STATIC ${SRC_PRX_LIB_MJSIM})
 
@@ -39,3 +42,4 @@ endif()
 # TODO: Take care of this for Linux
 
 link_directories(${PROJECT_NAME}_mjsim PUBLIC ${MJ_LIB_DIR})
+# set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};${PROJECT_NAME}_mjsim" PARENT_SCOPE)

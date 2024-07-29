@@ -1,3 +1,8 @@
+#pragma once
+#include <boost/python/suite/indexing/map_indexing_suite.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
+#include "prx/utilities/general/template_utils.hpp"
 // Lets put python translating functions globally accesible here
 //
 //
@@ -6,17 +11,43 @@ using namespace boost::python;
 
 #define PRX_GETTER(obj, var)                                                                                           \
   template <class T>                                                                                                   \
-  T get_##obj##_##var(prx::obj& o)                                                                                     \
+  T get_##obj##_##var(obj& o)                                                                                          \
   {                                                                                                                    \
     return o.var;                                                                                                      \
   }
+
 #define PRX_SETTER(obj, var)                                                                                           \
   template <class T>                                                                                                   \
-  void set_##obj##_##var(prx::obj& o, T val)                                                                           \
+  void set_##obj##_##var(obj& o, T val)                                                                                \
+  {                                                                                                                    \
+    o.var = val;                                                                                                       \
+  }
+#define PRX_PTR_GETTER(obj, var)                                                                                       \
+  template <class T>                                                                                                   \
+  T get_ptr_##obj##_##var(obj& o)                                                                                      \
+  {                                                                                                                    \
+    return o->var;                                                                                                     \
+  }
+#define PRX_GETTER_TEMPLATE(obj, var)                                                                                  \
+  template <class T, typename... Targs>                                                                                \
+  T get_##obj##_##var(obj<Targs...>& o)                                                                                \
+  {                                                                                                                    \
+    return o.var;                                                                                                      \
+  }
+
+#define PRX_SETTER_TEMPLATE(obj, var)                                                                                  \
+  template <class T, typename... Targs>                                                                                \
+  void set_##obj##_##var(obj<Targs...>& o, T val)                                                                      \
   {                                                                                                                    \
     o.var = val;                                                                                                       \
   }
 
+#define PRX_PTR_GETTER_TEMPLATE(obj, var)                                                                              \
+  template <class T, typename... Targs>                                                                                \
+  T get_ptr_##obj##_##var(obj<Targs...>& o)                                                                            \
+  {                                                                                                                    \
+    return o->var;                                                                                                     \
+  }
 /*
  * Safety checking functions
  *
@@ -41,20 +72,58 @@ using namespace boost::python;
 
 #define PRX_ITERABLE_WRAPPER(CLASS, NAME)                                                                              \
   class_<CLASS>(NAME).def(vector_indexing_suite<CLASS>()).def("__str__", &iter_to_str<CLASS>);
+
 #define PRX_ITERABLE_WRAPPER_NONSTR(CLASS, NAME) class_<CLASS>(NAME).def(vector_indexing_suite<CLASS>());
 
 #define SINGLE_ARG(...) __VA_ARGS__
 
-/*
- * Iterating functions
- */
-template <typename T>
-std::string to_str(const std::vector<T>& v)
+// TODO: put everything inside these namespaces
+namespace pyprx
 {
-  // using namespace std;
+template <typename PtrType>
+static void register_ptr_with_check()
+{
+  boost::python::type_info info = boost::python::type_id<PtrType>();
+  const boost::python::converter::registration* reg = boost::python::converter::registry::query(info);
+  if (reg == NULL)
+  {
+    register_ptr_to_python<PtrType>();
+  }
+  else if ((*reg).m_to_python == NULL)
+  {
+    register_ptr_to_python<PtrType>();
+  }
+}
+
+template <std::size_t Counter, typename ContainerElement,
+          std::enable_if_t<!prx::utilities::is_iterable<ContainerElement>{}, bool> = true>
+inline std::string container_to_string_1(const ContainerElement& container_element, std::string& separator)
+{
   std::ostringstream os;
-  copy(v.begin(), v.end(), std::ostream_iterator<T>(os, " "));
+  os << container_element;
+  separator = " ";
   return os.str();
+}
+
+template <std::size_t Counter, typename Container,
+          std::enable_if_t<prx::utilities::is_iterable<Container>{}, bool> = true>
+std::string container_to_string_1(const Container& container, std::string& separator)
+{
+  std::ostringstream os;
+  for (auto& element : container)
+  {
+    os << container_to_string_1<Counter + 1>(element, separator) << separator;
+  }
+  std::string result{ os.str() };
+  result.erase(result.size() - 1, 1);
+  separator = "\n";
+  return result;
+}
+template <typename Container, std::enable_if_t<prx::utilities::is_iterable<Container>{}, bool> = true>
+std::string container_to_string(const Container& container)
+{
+  std::string separator = " ";
+  return container_to_string_1<0>(container, separator);
 }
 
 template <typename T>
@@ -71,6 +140,68 @@ std::string iter_to_str(T& v)
     os << v[i];
   }
   os << "]";
+  return os.str();
+}
+template <typename Vector>
+void vector_wrapper(const std::string name)
+{
+  class_<Vector>(name.c_str(), init<>())
+      .def(vector_indexing_suite<Vector>())
+      .def("__str__", &container_to_string<Vector>)
+      // Comment to force ; to the next one
+      ;
+}
+
+template <typename T>
+std::string stream_to_str(T& obj)
+{
+  std::stringstream ss;
+  ss << obj;
+  return ss.str();
+}
+
+// Haven't been able to bind operator[] directly, so this makes it almost the same
+template <typename T, typename R>
+R& wrapper_subscript_oper_to_get_item(T& obj, const std::size_t& idx)
+{
+  return obj[idx];
+}
+
+template <typename T, typename R>
+void wrapper_subscript_oper_to_set_item(T& obj, const std::size_t& idx, R data)
+{
+  obj[idx] = data;
+}
+template <typename T>
+void pylist_to_vector(std::vector<T>& vec_to, const boost::python::list& py_list_from)
+{
+  for (int i = 0; i < boost::python::len(py_list_from); ++i)
+  {
+    vec_to.push_back(boost::python::extract<T>(py_list_from[i]));
+  }
+}
+template <typename Container>
+void container_to_pyobject(boost::python::list& py_list_to, const Container& from)
+{
+  for (int i = 0; i < from.size(); ++i)
+  {
+    py_list_to[i] = from[i];
+  }
+}
+
+template <typename Owner, typename... Args, void (Owner::*F)(Args...)>
+void overload_member_function(Owner* owner, Args... args){
+  // F(args...);
+};
+/*
+ * Iterating functions
+ */
+template <typename T>
+std::string to_str(const std::vector<T>& v)
+{
+  // using namespace std;
+  std::ostringstream os;
+  copy(v.begin(), v.end(), std::ostream_iterator<T>(os, " "));
   return os.str();
 }
 
@@ -130,6 +261,14 @@ void prx_print(T obj)
   std::cout << obj;
 }
 
+template <class T>
+struct is_pyobject : std::false_type
+{
+};
+template <>
+struct is_pyobject<boost::python::list> : std::true_type
+{
+};
 /// @brief Type that allows for registration of conversions from
 ///        python iterable types.
 struct iterable_converter
@@ -193,3 +332,4 @@ boost::python::list returning_a_pylist(const T& v)
   boost::python::list l(iter);
   return l;
 }
+}  // namespace pyprx

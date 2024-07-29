@@ -1,6 +1,14 @@
 #include "prx/simulation/controllers/bang_bang.hpp"
 
-void pyprx_simulation_controllers_bang_bang()
+namespace pyprx
+{
+namespace simulation
+{
+namespace controllers
+{
+namespace bang_bang
+{
+void bindings()
 {
   class_<prx::bang_bang_t, std::shared_ptr<prx::bang_bang_t>, bases<prx::controller_t>>("bang_bang", no_init)
       .def("__init__",
@@ -12,3 +20,7 @@ void pyprx_simulation_controllers_bang_bang()
       .def("get_control_at", &prx::bang_bang_t::get_control_at)
       .def("get_num_ctrls", &prx::bang_bang_t::get_num_ctrls);
 }
+}  // namespace bang_bang
+}  // namespace controllers
+}  // namespace simulation
+}  // namespace pyprx

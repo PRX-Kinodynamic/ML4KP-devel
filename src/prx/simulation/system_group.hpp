@@ -1,10 +1,10 @@
 #pragma once
 
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/condition_check.hpp"
+
 #include "prx/simulation/system.hpp"
-// #include "prx/simulation/simulator.hpp"
 #include "prx/simulation/controller.hpp"
-#include "prx/planning/condition_check.hpp"
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/simulation/collision_checking/collision_checker.hpp"
@@ -30,7 +30,16 @@ public:
 
   void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, trajectory_t& result);
 
+  void steer(space_point_t, const space_point_t, const space_point_t, const double,
+             distance_function_t distance_function);
+
+  void steer(trajectory_t&, const space_point_t, const space_point_t, const double,
+             distance_function_t distance_function);
+
+  void steer_once(const space_point_t, const space_point_t, const double);
+
   void compute_stopping_maneuver(space_point_t start_state, std::vector<double>&, std::vector<double>&);
+
   inline space_t* get_state_space()
   {
     return state_space;
@@ -39,6 +48,11 @@ public:
   inline space_t* get_control_space()
   {
     return control_space;
+  }
+
+  inline space_t* get_parameter_space()
+  {
+    return _parameter_space;
   }
 
   void propagate_once(space_point_t control = nullptr);
@@ -62,6 +76,7 @@ protected:
   std::vector<system_ptr_t> group;
   space_t* state_space;
   space_t* control_space;
+  space_t* _parameter_space;
   simulator_t* sim;
 
   friend system_group_manager_t;

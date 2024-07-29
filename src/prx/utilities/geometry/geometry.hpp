@@ -5,6 +5,10 @@
 #include "prx/external/PQP/PQP.h"
 
 #include <memory>
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <sstream>
 
 namespace prx
 {
@@ -21,7 +25,9 @@ enum class geometry_type_t
   // initialed with radius of cone opening and height of cone
   CONE = 4,
   // initialized with radius of cylinder and height
-  CYLINDER = 5
+  CYLINDER = 5,
+  // initialized with .obj file name
+  OBJ = 6
 };
 
 class geometry_t
@@ -37,6 +43,8 @@ public:
   std::vector<double> get_geometry_params();
 
   void initialize_geometry(const std::vector<double>& geom_params);
+
+  void initialize_obj_geometry(const std::string& obj_fname);
 
   void generate_collision_geometry();
 
@@ -57,6 +65,7 @@ private:
 
   geometry_type_t geom_type;
   std::vector<double> params;
+  std::string obj_fname;
   bool params_set;
 };
 }  // namespace prx

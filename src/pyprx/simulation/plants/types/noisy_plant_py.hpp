@@ -4,6 +4,17 @@
 
 using namespace boost::python;
 
+namespace pyprx
+{
+namespace simulation
+{
+namespace plants
+{
+namespace types
+{
+namespace noisy_plant
+{
+
 template <class T, class... Types>
 void bind_noisy_plant(const std::string& name)
 {
@@ -15,7 +26,13 @@ void bind_noisy_plant(const std::string& name)
       ;
 }
 
-void pyprx_simulation_plants_types_noisy_plant()
+void bindings()
 {
   bind_noisy_plant<prx::uniform_noise_t, double, double>("uniform_noisy_plant");
 }
+
+}  // namespace noisy_plant
+}  // namespace types
+}  // namespace plants
+}  // namespace simulation
+}  // namespace pyprx

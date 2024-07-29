@@ -29,7 +29,7 @@ public:
    * @param pose The pose of the box.
    *
    */
-  sphere_t(const std::string& object_name, double radius, const transform_t& pose);
+  sphere_t(const std::string& object_name, double radius, const transform_t& pose, const std::string);
   virtual ~sphere_t()
   {
   }

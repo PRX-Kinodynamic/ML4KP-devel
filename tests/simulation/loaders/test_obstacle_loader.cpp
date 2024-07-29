@@ -26,3 +26,13 @@ BOOST_AUTO_TEST_CASE(test_simple_obstacle)
   BOOST_CHECK(obstacles_names[0] == "simple_obstacle");
   BOOST_CHECK(obstacles.size() == 1);
 }
+
+BOOST_AUTO_TEST_CASE(test_obj_obstacle)
+{
+  prx::obstacle_loader_t obstacle_loader = prx::obstacle_loader_t("environments/obstacle_obj.yaml");
+  std::vector<std::string> obstacles_names = obstacle_loader.get_names();
+  std::vector<std::shared_ptr<prx::movable_object_t>> obstacles = obstacle_loader.get_obstacles();
+
+  BOOST_CHECK(obstacles_names[0] == "test_hole");
+  BOOST_CHECK(obstacles.size() == 1);
+}

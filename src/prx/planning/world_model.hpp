@@ -5,11 +5,6 @@
 #include "prx/simulation/collision_checking/collision_checker.hpp"
 
 #include <unordered_map>
-#define system_group first
-#define collision_group second
-
-#define system_group first
-#define collision_group second
 
 namespace prx
 {
@@ -23,8 +18,6 @@ public:
                          const std::vector<std::shared_ptr<movable_object_t>>& all_obstacles)
     : simulator_t(plant_type::ANALYTICAL)
   {
-    // PRX_DEBUG_PRINT
-
     collision_groups = std::make_shared<collision_checker_t>();
 
     this->add_group(all_systems);
@@ -35,14 +28,16 @@ public:
     }
   }
 
-  // world_model_t(const std::vector<system_ptr_t>& all_systems,const std::vector<std::shared_ptr<movable_object_t>>&
-  // all_obstacles) 	: world_model_t<system_group_manager_t, collision_checker_t>(all_systems, all_obstacles)
-  // 	{};
+  template <typename Obstacle, typename... Args>
+  void emplace_obstacle(const std::string context_name, Args... args)
+  {
+    std::shared_ptr<Obstacle> obstacle_ptr{ std::make_shared<Obstacle>(args...) };
+    obstacles[obstacle_ptr->get_object_name()] = obstacle_ptr;
 
-  ~world_model_t(){
-    // delete system_groups;
-    // delete collision_groups;
-  };
+    collision_groups->get_collision_group(context_name)->add_new_obstacle(obstacle_ptr);
+  }
+
+  ~world_model_t(){};
 
   inline world_model_context get_context(const std::string& context_name)
   {
@@ -104,10 +99,22 @@ public:
     prx_throw("World model doesn't implement reset");
   }
 
-private:
-  // SGM* system_groups;
-  // CC* collision_groups;
+  std::vector<std::shared_ptr<movable_object_t>> get_obstacles()
+  {
+    std::vector<std::shared_ptr<movable_object_t>> obstacles_out;
+    for (auto pair : obstacles)
+    {
+      obstacles_out.push_back(pair.second);
+    }
+    return obstacles_out;
+  }
 
+  std::shared_ptr<movable_object_t> obstacle(const std::string& name)
+  {
+    return obstacles[name];
+  }
+
+private:
   std::unordered_map<std::string, std::shared_ptr<movable_object_t>> obstacles;
 
   std::vector<std::string> all_context_names;

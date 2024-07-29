@@ -66,6 +66,7 @@ private:
   space_point_t k6;
   space_point_t k7;
   space_point_t k_cache;
+  space_point_t start_integration_state;
 
   static constexpr double a21 = 1.0 / 5.0;
 

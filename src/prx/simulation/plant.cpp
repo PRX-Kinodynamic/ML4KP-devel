@@ -10,7 +10,7 @@ plant_t::plant_t(const std::string& path) : system_t(path), movable_object_t(pat
   derivative_space = nullptr;
 
   collision_list.clear();
-  set_integrator(integrator_t::kEULER);
+  // set_integrator(integrator_t::kEULER);
 }
 
 plant_t::~plant_t()

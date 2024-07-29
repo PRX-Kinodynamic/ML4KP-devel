@@ -36,13 +36,17 @@ system_group_t::system_group_t(const std::vector<system_ptr_t>& sys_group, plant
   // compose the state spaces and control spaces
   std::vector<const space_t*> state_spaces;
   std::vector<const space_t*> control_spaces;
+  std::vector<const space_t*> parameter_spaces;
+
   for (auto g1 : group)
   {
     state_spaces.push_back(g1->get_state_space());
     control_spaces.push_back(g1->get_control_space());
+    parameter_spaces.push_back(g1->get_parameter_space());
   }
   state_space = new space_t(state_spaces);
   control_space = new space_t(control_spaces);
+  _parameter_space = new space_t(parameter_spaces);
 }
 
 system_group_t::~system_group_t()
@@ -109,7 +113,7 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
 
 void system_group_t::propagate(space_point_t start_state, const plan_t& plan, trajectory_t& traj)
 {
-  state_space->copy_from_point(start_state);
+  state_space->copy_from(start_state);
 
   traj.clear();
   traj.copy_onto_back(state_space);
@@ -170,4 +174,50 @@ void system_group_t::compute_stopping_maneuver(space_point_t start_state, std::v
              "[system_group_t::compute_stopping_maneuver] Expected group of size 1 but got " << group.size());
   group[0]->compute_stopping_maneuver(start_state, times, ctrls);
 }
+
+void system_group_t::steer(space_point_t x_new, const space_point_t x_nearest, const space_point_t x_rand,
+                           const double eta, distance_function_t distance_function)
+{
+  const double total_steps{ eta / prx::simulation_step };
+  std::vector<double> steps{ prx::linspace(0.0, 1.0, total_steps) };
+
+  state_space->copy_from(x_nearest);
+  for (auto ti : steps)
+  {
+    steer_once(x_nearest, x_rand, ti);
+    state_space->copy_to(x_new);
+    if (eta < distance_function(x_nearest, x_new))
+      break;
+  }
+  state_space->copy_to(x_new);
+}
+
+void system_group_t::steer(trajectory_t& traj_out, const space_point_t x_nearest, const space_point_t x_rand,
+                           const double max_dist, distance_function_t distance_function)
+{
+  const double dist_to_x_rand{ distance_function(x_nearest, x_rand) };
+  const double dist{ std::min(max_dist, dist_to_x_rand) };
+  const double total_steps{ dist / prx::simulation_step };
+  const double t_end{ dist / dist_to_x_rand };
+  std::vector<double> steps{ prx::linspace(0.0, t_end, total_steps) };
+  // PRX_DEBUG_VAR_3(dist_to_x_rand, max_dist, dist);
+  // PRX_DEBUG_VAR_3(t_end, total_steps, steps.back());
+  // state_space->copy_from(x_nearest);
+  for (auto ti : steps)
+  {
+    steer_once(x_nearest, x_rand, ti);
+    traj_out.copy_onto_back(state_space);
+  }
+  traj_out.copy_onto_back(state_space);
+}
+
+void system_group_t::steer_once(const space_point_t x0, const space_point_t x1, const double ti)
+{
+  for (auto s : group)
+  {
+    // TODO: This won't work with multiple systems, need to split the x_rand
+    s->steer(x0, x1, ti);
+  }
+}
+
 }  // namespace prx

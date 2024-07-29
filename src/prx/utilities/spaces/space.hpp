@@ -48,6 +48,14 @@ public:
   void set_bounds(const std::vector<double>& lower, const std::vector<double>& upper);
 
   space_point_t make_point() const;
+
+  template <typename State>
+  space_point_t make_point(const State state) const
+  {
+    space_point_t pt{ make_point() };
+    copy(pt, state);
+    return pt;
+  }
   space_point_t clone_point(const space_point_t& point) const;
 
   /**
@@ -254,22 +262,42 @@ public:
   void enforce_bounds(Point& point) const
   {
     assert_point_dimension(point.size());
-    for (std::size_t i = 0; i < dimension; i++)
+    for (std::size_t i = 0; i < dimension;)
     {
-      double& p = point[i];
-      // double& p{ point->_memory[i] };
       if (topology[i] == topology_t::ROTATIONAL)
       {
+        double& p = point[i];
         p = norm_angle_pi(p, *lower_bounds[i], *upper_bounds[i]);
+        i++;
+      }
+      else if (topology[i] == topology_t::QUATERNION)
+      {
+        const double w{ point[i] };
+        const double x{ point[i + 1] };
+        const double y{ point[i + 2] };
+        const double z{ point[i + 3] };
+        Eigen::Quaterniond quat{ w, x, y, z };
+        quat.normalize();
+        point[i] = quat.w();
+        point[i + 1] = quat.x();
+        point[i + 2] = quat.y();
+        point[i + 3] = quat.z();
+        i += 4;
       }
       else
       {
+        double& p = point[i];
         p = std::max(*lower_bounds[i], std::min(*upper_bounds[i], p));
+        i++;
       }
     }
   }
 
-  void enforce_bounds() const;
+  inline void enforce_bounds() const
+  {
+    enforce_bounds(*this);
+  }
+
   bool satisfies_bounds(const space_point_t& point) const;
   virtual void sample(const space_point_t& point) const;
 
@@ -284,9 +312,14 @@ public:
     return *addresses[index];
   }
 
+  inline double& operator[](const std::size_t index)
+  {
+    return *addresses[index];
+  }
+
   inline double& operator[](const std::size_t index) const
   {
-    return at(index);
+    return *addresses[index];
   }
 
   inline double get_lower_bound(const std::size_t i) const
@@ -311,10 +344,203 @@ public:
 
   void print_bounds() const;
 
-  void integrate(const space_point_t& point, const space_t* derivative, double delta_t);
-  void integrate(const space_t* derivative, double delta_t);
+  // Step the system for dt checking for the topology of each dimension
+  // Implements: xt1 = xt0 + derivative * dt;
+  template <typename PointIn, typename PointOut,
+            std::enable_if_t<not prx::utilities::is_any_ptr<PointIn>::value, bool> = true,
+            std::enable_if_t<not prx::utilities::is_any_ptr<PointOut>::value, bool> = true>
+  void integrate(const PointIn& x_in, const space_t* derivative, double dt, PointOut& x_out)
+  {
+    assert_point_dimension(x_in.size());
+    assert_point_dimension(x_out.size());
+    for (unsigned i = 0; i < dimension; i++)
+    {
+      if (topology[i] == topology_t::EUCLIDEAN || topology[i] == topology_t::ROTATIONAL)
+      {
+        x_out[i] = x_in[i] + derivative->at(i) * dt;
+      }
+      else if (topology[i] == topology_t::DISCRETE)
+      {
+        x_out[i] = x_in[i] + derivative->at(i) * dt;
+        x_out[i] = std::roundl(x_out[i]);
+      }
+      else if (topology[i] == topology_t::IDLE)
+      {
+        continue;
+      }
+      else if (topology[i] == topology_t::QUATERNION)
+      {
+        const double w{ x_in[i] };
+        const double x{ x_in[i + 1] };
+        const double y{ x_in[i + 2] };
+        const double z{ x_in[i + 3] };
 
-  void interpolate(const space_point_t& point1, const space_point_t& point2, double t, space_point_t& result) const;
+        const double dw{ derivative->at(i) };
+        const double dx{ derivative->at(i + 1) };
+        const double dy{ derivative->at(i + 2) };
+        const double dz{ derivative->at(i + 3) };
+
+        Eigen::Quaterniond quat{ w, x, y, z };
+        const Eigen::Quaterniond dquat{ dw, dx, dy, dz };
+
+        quat.coeffs() += dt * dquat.coeffs();
+        quat.normalize();
+
+        x_out[i] = quat.w();
+        x_out[i + 1] = quat.x();
+        x_out[i + 2] = quat.y();
+        x_out[i + 3] = quat.z();
+        i += 4;
+      }
+    }
+    enforce_bounds();
+  }
+
+  // Step the system for dt checking for the topology of each dimension
+  // Implements: xt1 <- xt0 + derivative * dt;
+  template <typename PointIn, typename PointOut,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointIn>::value, bool> = true,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointOut>::value, bool> = true>
+  inline void integrate(const PointIn& xt0, const space_t* derivative, double dt, PointOut& xt1)
+  {
+    integrate(*xt0, derivative, dt, *xt1);
+  }
+
+  // Step the system for dt checking for the topology of each dimension
+  // Implements: xt1 <- xt0 + derivative * dt;
+  template <typename PointIn, typename PointOut,
+            std::enable_if_t<not prx::utilities::is_any_ptr<PointIn>::value, bool> = true,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointOut>::value, bool> = true>
+  inline void integrate(const PointIn& xt0, const space_t* derivative, double dt, PointOut& xt1)
+  {
+    integrate(xt0, derivative, dt, *xt1);
+  }
+
+  // Step the system for dt checking for the topology of each dimension
+  // Implements: xt1 <- xt0 + derivative * dt;
+  template <typename PointIn, typename PointOut,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointIn>::value, bool> = true,
+            std::enable_if_t<not prx::utilities::is_any_ptr<PointOut>::value, bool> = true>
+  inline void integrate(const PointIn& xt0, const space_t* derivative, double dt, PointOut& xt1)
+  {
+    integrate(*xt0, derivative, dt, xt1);
+  }
+
+  // Integrate and store it in the state space.
+  // Implements: state_space <- point + derivative * dt;
+  template <typename PointIn, std::enable_if_t<not prx::utilities::is_any_ptr<PointIn>::value, bool> = true>
+  void integrate(const PointIn& xt0, const space_t* derivative, double dt)
+  {
+    integrate(xt0, derivative, dt, *this);
+  }
+
+  // Step the system for dt checking for the topology of each dimension
+  // Implements: state_space <- xt0 + derivative * dt;
+  template <typename PointIn, std::enable_if_t<prx::utilities::is_any_ptr<PointIn>::value, bool> = true>
+  void integrate(const PointIn& xt0, const space_t* derivative, double dt)
+  {
+    integrate(*xt0, derivative, dt, *this);
+  }
+
+  // Integrate the point in the state space memory, store it in the state space
+  // Implements: state_space <- state_space + derivative * dt;
+  void integrate(const space_t* derivative, double dt)
+  {
+    integrate(*this, derivative, dt, *this);
+  }
+
+  template <typename PointSrc, typename PointTarget, typename PointOut,
+            std::enable_if_t<!prx::utilities::is_any_ptr<PointSrc>{}, bool> = true,
+            std::enable_if_t<!prx::utilities::is_any_ptr<PointTarget>{}, bool> = true,
+            std::enable_if_t<!prx::utilities::is_any_ptr<PointOut>{}, bool> = true>
+  void interpolate(const PointSrc& point_src, const PointTarget& point_target, const double t, PointOut& result) const
+  {
+    is_space_point_type(point_src);
+    is_space_point_type(point_target);
+    is_space_point_type(result);
+    prx_assert(0.0 <= t && t <= 1.0 + prx::constants::epsilon,
+               "Interpolation requires a value between 0 and 1: given `" << t << "`");
+
+    for (std::size_t i = 0; i < dimension;)
+    {
+      const double& x0_i{ point_src[i] };
+      const double& x1_i{ point_target[i] };
+      double& xres{ result[i] };
+      if (topology[i] == topology_t::ROTATIONAL)
+      {
+        if (std::fabs(x0_i - x1_i) < PRX_PI)
+        {
+          xres = (1.0 - t) * x0_i + t * x1_i;
+        }
+        else
+        {
+          if (x0_i < x1_i)
+            xres = x1_i + (1.0 - t) * (x0_i - x1_i + 2.0 * PRX_PI);
+          else
+            xres = x0_i + t * (2.0 * PRX_PI - x0_i + x1_i);
+        }
+        xres = norm_angle_pi(xres, *lower_bounds[i], *upper_bounds[i]);
+        i++;
+      }
+      else if (topology[i] == topology_t::DISCRETE)
+      {
+        if (t == 1.0)
+          xres = x1_i;
+        else
+          xres = x0_i;
+        i++;
+      }
+      else if (topology[i] == topology_t::QUATERNION)
+      {
+        const double w1{ point_src[i] };
+        const double x1{ point_src[i + 1] };
+        const double y1{ point_src[i + 2] };
+        const double z1{ point_src[i + 3] };
+
+        const double w2{ point_target[i] };
+        const double x2{ point_target[i + 1] };
+        const double y2{ point_target[i + 2] };
+        const double z2{ point_target[i + 3] };
+
+        Eigen::Quaterniond quat1{ w1, x1, y1, z1 };
+        const Eigen::Quaterniond quat2{ w2, x2, y2, z2 };
+
+        const Eigen::Quaterniond q_res{ quat1.slerp(t, quat2) };
+
+        result[i] = q_res.w();
+        result[i + 1] = q_res.x();
+        result[i + 2] = q_res.y();
+        result[i + 3] = q_res.z();
+        i += 4;
+      }
+      else
+      {
+        xres = (1.0 - t) * x0_i + t * x1_i;
+        i++;
+      }
+    }
+  }
+
+  template <typename PointSrc, typename PointTarget, typename PointOut,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointSrc>{}, bool> = true,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointTarget>{}, bool> = true,
+            std::enable_if_t<prx::utilities::is_any_ptr<PointOut>{}, bool> = true>
+  inline void interpolate(const PointSrc point_src, const PointTarget point_target, const double t,
+                          PointOut result) const
+  {
+    interpolate(*point_src, *point_target, t, *result);
+  }
+  // Interpolate towards point_in from the state in memory and keeping it in memory. t \in [0,1]
+  template <typename PointIn, std::enable_if_t<!prx::utilities::is_any_ptr<PointIn>{}, bool> = true>
+  void interpolate(const PointIn& x, const PointIn& y, double t)
+  {
+    interpolate(x, y, t, *this);
+  }
+  template <typename PointIn, std::enable_if_t<prx::utilities::is_any_ptr<PointIn>{}, bool> = true>
+  void interpolate(const PointIn x, const PointIn y, double t)
+  {
+    interpolate(*x, *y, t, *this);
+  }
 
   std::string print_point(const space_point_t& point, const std::size_t prec = 25) const;
 
@@ -447,11 +673,7 @@ protected:
       topology.push_back(other->topology[i]);
     }
 
-    // addresses = other -> addresses;
-    // lower_bounds = other -> lower_bounds;
-    // upper_bounds = other -> upper_bounds;
     space_name = other->space_name;
-    // topology = other -> topology;
     owned_values = false;
   }
 
@@ -476,20 +698,21 @@ protected:
     prx_assert(dim == dimension, "Dimension mismatch (" << space_name << "): " << dim << " vs " << dimension);
   }
 
-  template <typename Point,
-            std::enable_if_t<!(std::is_pointer<Point>{} || prx::utilities::is_shared_ptr<Point>{}), bool> = true>
-  inline void is_space_point_type(const Point point) const
+  // template <typename Point, std::enable_if_t<!std::is_any_ptr<Point>{}, bool> = true>
+  template <typename Point, std::enable_if_t<!std::is_same_v<Point, space_point_t>, bool> = true>
+  inline void is_space_point_type(const Point& point) const
   {
+    assert_point_dimension(point.size());
   }
-  template <typename Point,
-            std::enable_if_t<(std::is_pointer<Point>{} || prx::utilities::is_shared_ptr<Point>{}), bool> = true>
+
+  template <typename Point, std::enable_if_t<std::is_same_v<Point, space_point_t>, bool> = true>
   inline void is_space_point_type(const Point point) const
   {
-    if (std::static_pointer_cast<space_snapshot_t>(point) != nullptr)
-    {
-      const space_point_t aux{ std::static_pointer_cast<space_snapshot_t>(point) };
-      assert_point_space_name(aux);
-    }
+    // if (std::static_pointer_cast<space_snapshot_t>(point) != nullptr)
+    // {
+    // const space_point_t aux{ std::static_pointer_cast<space_snapshot_t>(point) };
+    assert_point_space_name(point);
+    // }
   }
 };
 

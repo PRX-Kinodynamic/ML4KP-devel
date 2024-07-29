@@ -35,8 +35,9 @@ void plan_t::resize(unsigned num_size)
   }
   end_iterator = steps.begin();
   const_end_iterator = steps.begin();
-  std::advance(end_iterator, num_steps);
-  std::advance(const_end_iterator, num_steps);
+  std::advance(end_iterator, num_size);
+  std::advance(const_end_iterator, num_size);
+  num_steps = num_size;
 }
 
 plan_t& plan_t::operator=(const plan_t& t)
@@ -189,6 +190,20 @@ void plan_t::extend_last_control(double time)
   this->back().duration += time;
 }
 
+void plan_t::reduce_last_control(double time)
+{
+  prx_assert(num_steps > 0, "Can't reduce the last control if a plan has no controls");
+  if (this->back().duration < time)
+  {
+    this->pop_back();
+    num_steps--;
+  }
+  else
+  {
+    this->back().duration -= time;
+  }
+}
+
 void plan_t::pop_front()
 {
   if (num_steps == 0)
@@ -220,11 +235,12 @@ void plan_t::pop_back()
 std::string plan_t::print(unsigned precision) const
 {
   std::stringstream out(std::stringstream::out);
-  out << "\n";
   for (const plan_step_t& step : *this)
   {
-    out << "[" << control_space->print_point(step.control, precision) << " , " << step.duration << "s]" << std::endl;
+    out << step.control << prx::constants::separating_value;
+    out << step.duration << "\n";
   }
+  out << "\n";
   return out.str();
 }
 
