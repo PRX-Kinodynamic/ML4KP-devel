@@ -82,7 +82,11 @@ void rrt_t::_resolve_query(condition_check_t* condition)
     // expand
     std::vector<plan_t*> plans;
     std::vector<trajectory_t*> trajs;
-    expand(closest_node->point, plans, trajs, rrt_spec->blossom_number, false);
+    expand(closest_node->point, plans, trajs, rrt_spec->blossom_number, closest_node->first_expand);
+    if (closest_node->first_expand)
+    {
+      closest_node->first_expand = false;
+    }
     plan_t plan(*plans.front());
     trajectory_t traj(*trajs.front());
     edge_cost = cost_function(traj, plan);
@@ -112,8 +116,7 @@ void rrt_t::_resolve_query(condition_check_t* condition)
       update_goal(node_index);
     }
     iteration_count++;
-  }
-  while (!condition->check());
+  } while (!condition->check());
 }
 void rrt_t::_fulfill_query()
 {
