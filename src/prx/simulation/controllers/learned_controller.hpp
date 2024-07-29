@@ -26,7 +26,8 @@ std::vector<double> extract_state_with_quat(const space_point_t& full_state)
   state.push_back(full_state->at(0));
   state.push_back(full_state->at(1));
 
-  prx::quaternion_t quat = prx::quaternion_t(full_state->at(3), full_state->at(4), full_state->at(5), full_state->at(6));
+  prx::quaternion_t quat =
+      prx::quaternion_t(full_state->at(3), full_state->at(4), full_state->at(5), full_state->at(6));
   auto euler = quat.toRotationMatrix().eulerAngles(0, 1, 2);
   state.push_back(euler[2]);
 
@@ -126,7 +127,7 @@ public:
     }
 
     state_input_vector.insert(state_input_vector.end(), goal_input_vector.begin(), goal_input_vector.end());
-    std::size_t input_size = state_input_vector.size();
+    int input_size = state_input_vector.size();
     at::Tensor input_tensor = torch::zeros({ 1, input_size }, device);
     for (int i = 0; i < input_size; i++)
     {
@@ -186,8 +187,8 @@ public:
                                    goal_input_vector[i].end());
     }
 
-    std::size_t input_size_0 = state_input_vector.size();
-    std::size_t input_size_1 = state_input_vector[0].size();
+    const int input_size_0 = state_input_vector.size();
+    const int input_size_1 = state_input_vector[0].size();
     at::Tensor input_tensor = torch::zeros({ input_size_0, input_size_1 }, device);
     for (int i = 0; i < input_size_0; i++)
     {
@@ -216,7 +217,7 @@ public:
     return controls;
   }
 
-  void fulfill_query(rrt_specification_t& spec,planner_query_t& query)
+  void fulfill_query(rrt_specification_t& spec, planner_query_t& query)
   {
     query.solution_plan.clear();
     query.solution_traj.clear();

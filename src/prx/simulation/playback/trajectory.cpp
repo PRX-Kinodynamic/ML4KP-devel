@@ -212,4 +212,35 @@ void trajectory_t::increase_buffer()
     const_end_iterator = states.begin();
   }
 }
+
+void trajectory_t::to_file(const std::string file_name, const std::ios_base::openmode _mode) const
+{
+  std::ofstream ofs_map;
+  ofs_map.open(file_name.c_str(), _mode);
+
+  for (unsigned i = 0; i < num_states; ++i)
+  {
+    ofs_map << states[i] << "\n";
+  }
+
+  ofs_map.close();
+}
+
+void trajectory_t::from_file(const std::string file_name)
+{
+  std::ifstream ifs(file_name);
+  std::string line;
+
+  space_point_t aux = state_space->make_point();
+
+  while (std::getline(ifs, line))
+  {
+    if (line.size() == 0)
+      break;
+
+    std::vector<double> state{ prx::split<double>(line) };
+    state_space->copy(aux, state);
+    copy_onto_back(aux);
+  }
+}
 }  // namespace prx

@@ -1,0 +1,11 @@
+simulation_step: 0.1
+
+environment: "environments/empty.yaml"
+
+plant: !file "plants/car_like.yaml"
+
+plan: "${DIRTMP_PATH}/data/plans/car-like.txt"
+
+out:
+  traj_to_file: true
+  traj_file: "${DIRTMP_PATH}/out/car-like-traj.txt"
