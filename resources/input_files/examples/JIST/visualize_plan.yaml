@@ -1,13 +1,18 @@
 random_seed: 3
-xml_path: push/model_bottlenecks.xml
+xml_path: push/model_object_interactions_6_bottlenecks.xml
 
 cam_distance: 1.5
 cam_elevation: -90
 cam_azimuth: 90
 
-goal_config: [1.5, 0., 0.]
+goal_config: [3.2, 0., 0.]
 goal_region_radius: 0.05
 
-plan_filename: "/home/dhruv/2024/projects/NAMO/out/bottlenecks/only_nav/solution_0.txt"
-video_name: "/home/dhruv/2024/projects/NAMO/out/solution_0.mp4"
+plan_filename: "/home/dhruv/2024/projects/NAMO/out/object_interactions_6_bottlenecks/26Jul/subgoals_room2room_fixed_plan_time/solution_20.txt"
+
+video_name: "/home/dhruv/2024/projects/NAMO/out/object_interactions_6_bottlenecks/26Jul/subgoals_room2room_fixed_plan_time/solution_20.mp4"
 record_video: true
+
+final_goal: [3.2, 0., 0.05]
+plan_folder: "/home/dhruv/2024/projects/NAMO/out/object_interactions_6_bottlenecks/26Jul/subgoals_room2room_4"
+subgoals_filename: "/home/dhruv/2024/projects/ml4kp_ktamp/build/object_interactions_6_bottlenecks/subgoals_room2room.txt"

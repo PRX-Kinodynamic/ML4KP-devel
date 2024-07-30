@@ -6,7 +6,6 @@ dirt_t::dirt_t(const std::string& new_name) : rrt_t(new_name)
 {
   metric = nullptr;
   child_extension = true;
-  found_first_soln = false;
   max_radius = 0;
   planner_name = "DIRT";
 }
@@ -151,12 +150,15 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       else
         closest_node->is_blossom_expand_done = true;
 
-      closest_node->blossom_number = 1;
+      closest_node->blossom_number =
+          1;  // once the node has been expanded with blossom, it will be expanded with random
+
       for (int i = 0; i < plans.size(); i++)
       {
         closest_node->edge_generators.push_back(std::make_pair(plans[i], trajs[i]));
       }
 
+      // closest_node->edge_generators is set of candidate edges and below it is sorted based on heuristic
       std::vector<double> pred_values;
       int index = 0;
       for (auto& temp_eg : closest_node->edge_generators)
@@ -164,6 +166,8 @@ void dirt_t::_resolve_query(condition_check_t* condition)
         pred_values.push_back(h(temp_eg.second->back(), dirt_query->goal_state));
         closest_node->indices.push_back(index++);
       }
+
+      // descending order
       std::sort(closest_node->indices.begin(), closest_node->indices.end(),
                 [this, pred_values](const int& a, const int& b) { return pred_values[a] > pred_values[b]; });
     }
@@ -193,9 +197,10 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       closest_node->indices.pop_back();
 
       // bnb
-      if ((goal_vertex != start_vertex &&
-           closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
+      if ((goal_vertex != start_vertex && closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
       {
+        // std::cout << closest_node->cost_to_come << " " << edge_cost << " " << end_heuristic << " " <<
+        // current_solution << std::endl;
         delete eg.first;
         delete eg.second;
         eg = std::make_pair(nullptr, nullptr);
@@ -211,9 +216,11 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       }
 
       // pruning condition
-      double parent_distance = distance_function(eg.second->back(), closest_node->point);
+      double parent_distance =
+          distance_function(eg.second->back(), closest_node->point);  // distance between x_sel and x_new
       new_node_dir_radius = parent_distance;
 
+      // find the dir radius of the new node
       auto prox_nodes = metric->radius_and_closest_query(eg.second->back(), std::max(parent_distance, max_radius));
       dir_updates.clear();
       std::transform(prox_nodes.begin(), prox_nodes.end(), std::back_inserter(dir_updates),
@@ -257,6 +264,7 @@ void dirt_t::_resolve_query(condition_check_t* condition)
 
       // validity check
       bool valid = valid_check(*eg.second);
+
       bool new_node_added = false;
       double eg_dur = eg.first->duration();
 
@@ -328,6 +336,7 @@ void dirt_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_node_t*
     const double sibling_distance = distance_function(node->point, new_tree_node->point);
     if (new_tree_node->cost_to_come + new_tree_node->cost_to_go < node->cost_to_come + node->cost_to_go)
     {
+      // if sibling distance less than nodes current dir radius, update it.
       node->dir_radius = std::min(node->dir_radius, sibling_distance);
       if (dirt_spec->use_pruning && node->dir_radius + sibling_distance < new_node_dir_radius && !node->is_safety_node)
       {
@@ -383,7 +392,6 @@ void dirt_t::update_goal(node_index_t node_index)
       // std::cout << " iter:" << current_solution_iters;
       // std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
       bnb(start_vertex, current_solution);
-      found_first_soln = true;
     }
   }
 }
@@ -404,7 +412,6 @@ std::vector<double> dirt_t::get_statistics()
 void dirt_t::_reset()
 {
   // clear the stuff
-  found_first_soln = false;
   tree.purge();
   if (metric != nullptr)
   {

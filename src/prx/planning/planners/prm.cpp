@@ -58,8 +58,11 @@ bool prm_t::_preprocess()
       metric->add_node(node.get());
       iter_count++;
     }
+    // std::cout << iter_count << std::endl;
 
   } while (iter_count < M);
+
+  std::cout << "Sampled vertices" << std::endl;
 
   // graph.vertex_list_to_file("output_v.txt");
 
@@ -76,8 +79,8 @@ bool prm_t::_preprocess()
     // std::cout << "Vertex: " << it->get()->get_index() << std::endl;
     state_space->copy_point(sample_point, it->get()->point);
     // Gotta do k + 1 otherwise it returns the same node as well.
-    // auto neighbors = metric->multi_query(sample_point, k + 1);
-    auto neighbors = metric->radius_and_closest_query(sample_point, r);
+    auto neighbors = metric->multi_query(sample_point, k + 1);
+    // auto neighbors = metric->radius_and_closest_query(sample_point, r);
 
     for (auto nn : neighbors)
     {
@@ -98,7 +101,7 @@ bool prm_t::_preprocess()
     }
   }
   // graph.edge_list_to_file("output_e.txt");
-
+  std::cout << "connected with edges" << std::endl;
   return true;
 }
 
@@ -178,7 +181,7 @@ void prm_t::_resolve_query(condition_check_t* condition)
 
   // prm_node_t* vertex;
   std::string output_path = "output_path.txt";
-  std::string subgoals = "subgoals.txt";
+  std::string subgoals = "subgoals_wide_long.txt";
   std::ofstream output_vertices, output_points;
   output_vertices.open(output_path.c_str(), std::ofstream::trunc);
   output_points.open(subgoals.c_str(), std::ofstream::trunc);
@@ -189,7 +192,7 @@ void prm_t::_resolve_query(condition_check_t* condition)
   {
 	auto point = graph.get_vertex_as<prm_node_t>(vertex_index)->point; 
     auto neighbor = graph.get_vertex_as<prm_node_t>(vertex_index)->get_best_neighbor();
-    std::cout << vertex_index << " " << neighbor << " "<< point->at(0) << " " << point->at(1) << std::endl;
+    // std::cout << vertex_index << " " << neighbor << " "<< point->at(0) << " " << point->at(1) << std::endl;
     output_vertices << vertex_index << " " << neighbor << " " << std::endl;
     output_points << point->at(0) << " " << point->at(1) << std::endl;
     vertex_index = neighbor;

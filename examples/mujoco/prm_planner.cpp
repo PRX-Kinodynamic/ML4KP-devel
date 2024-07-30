@@ -32,6 +32,14 @@ int main(int argc, char* argv[])
       { "ball", "wall_4" },
       { "ball", "wall_5" },
       { "ball", "wall_6" },
+
+      { "ball", "wall_7" },
+      { "ball", "wall_8" },
+      { "ball", "wall_9" },
+      { "ball", "wall_10" },
+      { "ball", "wall_11" },
+      { "ball", "wall_12" },
+
       // { "ball", "movable_cube1" },
       // { "ball", "movable_cube2" },
       // { "ball", "movable_cube3" },
@@ -76,14 +84,14 @@ int main(int argc, char* argv[])
     traj.copy_onto_back(end);
   };
 
-  prm_spec.M = 200; // number of prm vertices
+  prm_spec.M = 5000; // number of prm vertices
   prm_spec.k = 4; // number of prm vertices
-  prm_spec.r = 0.15; // number of prm vertices
+  prm_spec.r = 0.1; // number of prm vertices
 
   space_point_t test_start_state = ss->make_point();
   ss->copy_to(test_start_state);
   
-  prm_spec.sample_state = [&](space_point_t& s) {
+  prm_spec.sample_state = [&, env_xlim, env_ylim](space_point_t& s) {
     // Sample a state from the state space.
     
     s->at(0) = uniform_random(env_xlim[0], env_xlim[1]);
@@ -109,10 +117,9 @@ int main(int argc, char* argv[])
 
   prm_planner.link_and_setup_spec(&prm_spec);
   prm_planner.preprocess();
+  std::cout << "finished preprocessing" << std::endl;
   prm_planner.link_and_setup_query(&prm_query);
   prm_planner.resolve_query(&checker);
   prm_planner.fulfill_query();
-
-
 
 }

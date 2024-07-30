@@ -1,30 +1,36 @@
-random_seed: 0
-xml_path: push/model_bottlenecks.xml
+random_seed: 1
+xml_path: push/model_object_interactions_6_bottlenecks.xml
 planner_name: "dirt"
 
 checker_type: time
-checker_value: 20
+checker_value: 10
 output_plan: true
+goal_position: [3.2, 0.0, 0.05]
 output_tree_folder: "/home/dhruv/2024/projects/NAMO/out/trees/"
 output_plan_file: "/home/dhruv/2024/projects/NAMO/out/1_5.txt"
-output_folder: "/home/dhruv/2024/projects/NAMO/out/bottlenecks/18Jun_firstlast/subgoals_designed"
-subgoals_file: "/home/dhruv/2024/projects/ml4kp_ktamp/build/subgoals_designed.txt"
+output_folder: "/home/dhruv/2024/projects/NAMO/out/object_interactions_6_bottlenecks/29Jul/subgoals_room2room/"
+subgoals_file: "/home/dhruv/2024/projects/ml4kp_ktamp/build/object_interactions_6_bottlenecks/subgoals_room2room.txt"
 visualize: false
 do_subgoals: true
-num_trials: 10
+num_trials: 30
 
 navigate:
-  env_xlim: [-0.1, 1.6]
-  env_ylim: [-0.25, 0.25]
+  env_xlim: [-0.13, 3.4]
+  env_ylim: [-0.2, 0.2]
   min_control_steps: 0.1
   max_control_steps: 1.0
   ignored_pairs: []
   goal_pos_region_radius: 0.05
   goal_vel_region_radius: 0.01
-  max_vel: 10
-  blossom: 5
+
+  max_vel: 20
+  blossom: 10
   use_pruning: false
   visualize_tree: true
+  condition_checker:
+    type: "time"
+    value: 20
+    first_solution: true
 
 manipulate:
   env_xlim: [-0.1, 1.5]

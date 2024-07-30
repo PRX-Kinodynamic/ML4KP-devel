@@ -2,7 +2,8 @@
 
 namespace prx
 {
-navigate_task_t::navigate_task_t(param_loader params, simulation_context planning_context, std::vector<double> goal_vec)
+navigate_task_t::navigate_task_t(param_loader params, simulation_context planning_context, std::vector<double> goal_vec,
+                                 double goal_region_radius)
 {
   this->params = params;
   context = planning_context;
@@ -19,7 +20,8 @@ navigate_task_t::navigate_task_t(param_loader params, simulation_context plannin
   _set_bounds(env_xlim, env_ylim);
 
   _prepare_specification(goal_vec);
-  _prepare_query(goal_vec);
+  _prepare_query(goal_vec, goal_region_radius);
+  _set_condition_checker();
 }
 
 void navigate_task_t::_prepare_specification(std::vector<double> goal_vec)
@@ -41,21 +43,23 @@ void navigate_task_t::_prepare_specification(std::vector<double> goal_vec)
   };
 
   double max_vel = params["max_vel"].as<double>();
-  spec->h = [&](const space_point_t& s, const space_point_t& s2) { return spec->distance_function(s, s2) / max_vel; };
-
-  spec->sample_state = [ss, goal_vec](space_point_t& state) {
-    default_sample_state(state, ss);
-    if (uniform_random(0, 1) < 0.2)
-    {
-      state->at(0) = goal_vec[0];
-      state->at(1) = goal_vec[1];
-    } 
+  spec->h = [&, max_vel](const space_point_t& s, const space_point_t& s2) {
+    return spec->distance_function(s, s2) / max_vel;
   };
+
+  // spec->sample_state = [ss, goal_vec](space_point_t& state) {
+  //   default_sample_state(state, ss);
+  //   if (uniform_random(0, 1) < 0.2)
+  //   {
+  //     state->at(0) = goal_vec[0];
+  //     state->at(1) = goal_vec[1];
+  //   }
+  // };
 
   // TODO: add spec->expand here for bang bang controls.
 }
 
-void navigate_task_t::_prepare_query(std::vector<double> goal_vec)
+void navigate_task_t::_prepare_query(std::vector<double> goal_vec, double goal_region_radius)
 {
   auto system_group = context.first;
   auto ss = system_group->get_state_space();
@@ -66,8 +70,9 @@ void navigate_task_t::_prepare_query(std::vector<double> goal_vec)
   query->get_visualization = params["visualize_tree"].as<bool>();
   query->goal_region_radius = params["goal_pos_region_radius"].as<double>();
 
-  goal_pos_tolerance = params["goal_pos_region_radius"].as<double>();
-  goal_vel_tolerance = params["goal_vel_region_radius"].as<double>();
+  query->goal_region_radius = goal_region_radius;  // params["goal_pos_region_radius"].as<double>();
+  // goal_pos_tolerance = params["goal_pos_region_radius"].as<double>();
+  // goal_vel_tolerance = params["goal_vel_region_radius"].as<double>();
 
   query->start_state = ss->make_point();
   ss->copy_to(query->start_state);
@@ -79,11 +84,6 @@ void navigate_task_t::_prepare_query(std::vector<double> goal_vec)
     query->goal_state->at(i) = goal_vec[i];
   }
 
-  // for (auto i : vel_indices)
-  // {
-  //   query->goal_state->at(i) = goal_vec[i];
-  // }
-
   goal_distance_function = [&](const space_point_t& a, const space_point_t& b, std::vector<unsigned> indices) {
     double sqr_distance = 0;
     for (auto i : indices)
@@ -94,10 +94,77 @@ void navigate_task_t::_prepare_query(std::vector<double> goal_vec)
   };
 
   query->goal_check = [&](const space_point_t& point) {
-    return goal_distance_function(point, query->goal_state, pos_indices) < goal_pos_tolerance;
+    return goal_distance_function(point, query->goal_state, pos_indices) < query->goal_region_radius;
     //  &&
     //        goal_distance_function(point, query->goal_state, vel_indices) < goal_vel_tolerance;
   };
+
+  // return true;
+
+  spec->valid_check = [&, system_group, cs, ss](trajectory_t& traj) {
+    bool valid = default_valid_trajectory(traj, spec->valid_state);
+    if (valid)
+    {
+      auto final_point = traj.back();
+      if (query->goal_check(final_point))
+      {
+        // std::vector<std::vector<double>> control_list = {
+        //   { -1.0, 1.0 }, { 0.0, 1.0 }, { 1.0, 1.0 }, { -1.0, -1.0 }, { 0.0, -1.0 }, { 1.0, -1.0 },
+        // };
+
+        std::vector<std::vector<double>> control_list = {
+          {0.0, 0.0},
+        };
+
+        trajectory_t traj_ics(ss);
+        plan_t plan_ics(cs);
+        for (unsigned i = 0; i < control_list.size(); i++)
+        {
+          traj_ics.clear();
+          plan_ics.clear();
+
+          // TODO: What is the correct time duration for bang-bang control.
+          // spec->sample_plan(plan_ics, final_point);
+          default_sample_plan(plan_ics, cs, spec->max_control_steps, spec->max_control_steps);
+          // plan_ics.append_onto_back(1.0);
+          cs->copy(plan_ics.back().control, control_list[i]);
+          // std::cout << plan_ics.back().control << std::endl;
+          system_group->propagate(final_point, plan_ics, traj_ics);
+          if (!default_valid_trajectory(traj_ics, spec->valid_state))
+          {
+            // std::cout << "ICS check failed" << std::endl;
+            return false;
+          }
+        }
+      }
+    }
+    return valid;
+  };
+}
+
+void navigate_task_t::_set_condition_checker()
+{
+  condition_checker = std::make_shared<condition_check_t>(params["condition_checker"]["type"].as<>(),
+                                                          params["condition_checker"]["value"].as<int>());
+
+  if (params["condition_checker"]["first_solution"].as<bool>())
+  {
+    auto system_group = context.first;
+    auto ss = system_group->get_state_space();
+
+    custom_check_t custom_checker = [&, ss]() {
+      auto pt1 = ss->make_point();
+      ss->copy_to(pt1);
+      return query->goal_check(pt1);
+    };
+
+    custom_conditions.push_back(std::make_shared<condition_check_t>(custom_checker));
+
+    for (auto cond : custom_conditions)
+    {
+      condition_checker->add_condition(cond.get());
+    }
+  }
 }
 
 void navigate_task_t::_set_bounds(std::vector<double> env_xlim, std::vector<double> env_ylim)
@@ -129,4 +196,8 @@ plan_t navigate_task_t::get_solution_plan()
   return query->solution_plan;
 }
 
+condition_check_t* navigate_task_t::get_condition_checker()
+{
+  return condition_checker.get();
+}
 }  // namespace prx
