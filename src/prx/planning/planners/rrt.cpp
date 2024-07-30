@@ -229,11 +229,11 @@ void rrt_t::update_goal(node_index_t node_index)
       goal_vertex = node_index;
       // std::cout<<"Found new goal: "<<state_space->print_point(new_tree_node->point,3)<<"
       // "<<new_tree_node->cost_to_come<<std::endl;
-      std::cout << "[" + planner_name + "] Found new goal:" << state_space->print_point(new_tree_node->point, 3);
-      std::cout << " cost:" << new_tree_node->cost_to_come;
-      std::cout << " time:" << current_solution_time;
-      std::cout << " iter:" << current_solution_iters;
-      std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
+      // std::cout << "[" + planner_name + "] Found new goal:" << state_space->print_point(new_tree_node->point, 3);
+      // std::cout << " cost:" << new_tree_node->cost_to_come;
+      // std::cout << " time:" << current_solution_time;
+      // std::cout << " iter:" << current_solution_iters;
+      // std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
       bnb(start_vertex, current_solution);
       tree.remove_vertices();
     }

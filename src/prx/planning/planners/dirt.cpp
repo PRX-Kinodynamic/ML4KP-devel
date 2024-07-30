@@ -199,8 +199,7 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       // bnb
       if ((goal_vertex != start_vertex && closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
       {
-        // std::cout << closest_node->cost_to_come << " " << edge_cost << " " << end_heuristic << " " <<
-        // current_solution << std::endl;
+        
         delete eg.first;
         delete eg.second;
         eg = std::make_pair(nullptr, nullptr);

@@ -204,8 +204,11 @@ int main(int argc, char* argv[])
 
   for (int i = 0; i < num_trials; i++)
   {
-    output_progress_bar(i * 1.0 / num_trials);
+    
+    // output_progress_bar(i * 1.0 / num_trials);
     std::vector<std::vector<double>> all_stats;
+
+    std::cout << "solution_ " << i << std::endl;
 
     std::string solution_folder = output_folder_data + "solution_" + std::to_string(i) + "/";
     create_folder(solution_folder);
@@ -251,7 +254,7 @@ int main(int argc, char* argv[])
           goal_vec[1] = subgoal[1];
           goal_region_radius = subgoal[2];
 
-          std::cout << "subgoal " << subgoal[0] << ", " << subgoal[1] << ", " << subgoal[2] << std::endl;
+          // std::cout << "subgoal " << subgoal[0] << ", " << subgoal[1] << ", " << subgoal[2] << std::endl;
 
           new_start_state =
               navigate(params["navigate"], context, goal_vec, goal_region_radius, dirt_query_ptr, &dirt, &time_taken,
@@ -266,7 +269,7 @@ int main(int argc, char* argv[])
       goal_vec[1] = goal_position[1];
       goal_region_radius = goal_position[2];
 
-      std::cout << "goal " << goal_position[0] << ", " << goal_position[1] << " " << goal_region_radius << std::endl;
+      // std::cout << "goal " << goal_position[0] << ", " << goal_position[1] << " " << goal_region_radius << std::endl;
 
       new_start_state =
           navigate(params["navigate"], context, goal_vec, goal_region_radius, dirt_query_ptr, &dirt, &time_taken,
@@ -303,7 +306,7 @@ int main(int argc, char* argv[])
 
     full_stats.push_back(all_stats);
   }
-  output_progress_bar(num_trials * 1.0 / num_trials);
+  // output_progress_bar(num_trials * 1.0 / num_trials);
 
   std::cout << "Logging to file ..." << std::endl;
 

@@ -8,7 +8,7 @@ output_plan: true
 goal_position: [3.2, 0.0, 0.05]
 output_tree_folder: "/home/dhruv/2024/projects/NAMO/out/trees/"
 output_plan_file: "/home/dhruv/2024/projects/NAMO/out/1_5.txt"
-output_folder: "/home/dhruv/2024/projects/NAMO/out/object_interactions_6_bottlenecks/29Jul/subgoals_room2room/"
+output_folder: "/home/dhruv/2024/projects/NAMO/out/object_interactions_6_bottlenecks/29Jul/subgoals_room2room_withics_proper/"
 subgoals_file: "/home/dhruv/2024/projects/ml4kp_ktamp/build/object_interactions_6_bottlenecks/subgoals_room2room.txt"
 visualize: false
 do_subgoals: true
@@ -27,9 +27,10 @@ navigate:
   blossom: 10
   use_pruning: false
   visualize_tree: true
+  ics_filter: true
   condition_checker:
     type: "time"
-    value: 20
+    value: 60
     first_solution: true
 
 manipulate:
