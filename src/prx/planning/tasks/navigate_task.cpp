@@ -65,7 +65,6 @@ void navigate_task_t::_prepare_query(std::vector<double> goal_vec, double goal_r
   auto ss = system_group->get_state_space();
   auto cs = system_group->get_control_space();
 
-  
   query = std::make_shared<dirt_query_t>(ss, cs);
 
   query->get_visualization = params["visualize_tree"].as<bool>();
@@ -101,38 +100,66 @@ void navigate_task_t::_prepare_query(std::vector<double> goal_vec, double goal_r
   };
 
   // return true;
-  bool do_ics_check = params["ics_filter"].as<bool>();
-  spec->valid_check = [&, do_ics_check, system_group, cs, ss](trajectory_t& traj) {
+  param_loader ics = params["ics"];
+  spec->valid_check = [&, ics, system_group, cs, ss](trajectory_t& traj) {
     bool valid = default_valid_trajectory(traj, spec->valid_state);
     if (valid)
     {
+      bool do_ics_check = ics["do_ics_check"].as<bool>();
       if (do_ics_check)
       {
         auto final_point = traj.back();
         if (query->goal_check(final_point))
         {
-          std::vector<std::vector<double>> control_list = {
-            { -1.0, 1.0 }, { 0.0, 1.0 }, { 1.0, 1.0 }, { -1.0, -1.0 }, { 0.0, -1.0 }, { 1.0, -1.0 },
-          };
-
-          trajectory_t traj_ics(ss);
-          plan_t plan_ics(cs);
-          for (unsigned i = 0; i < control_list.size(); i++)
+          if (ics["type"].as<std::string>() == "blossom")
           {
-            traj_ics.clear();
-            plan_ics.clear();
-
-            // TODO: What is the correct time duration for bang-bang control.
-            spec->sample_plan(plan_ics, final_point);
-            // default_sample_plan(plan_ics, cs, spec->max_control_steps, spec->max_control_steps);
-            // plan_ics.append_onto_back(1.0);
-            cs->copy(plan_ics.back().control, control_list[i]);
-            // std::cout << plan_ics.back().control << std::endl;
-            system_group->propagate(final_point, plan_ics, traj_ics);
-            if (!default_valid_trajectory(traj_ics, spec->valid_state))
+            int ics_blossom = 25;
+            if (ics.exists("blossom"))
             {
-              // std::cout << "ICS check failed" << std::endl;
-              return false;
+              ics_blossom = ics["blossom"].as<int>();
+            }
+            std::vector<trajectory_t*> trajs_ics;
+            std::vector<plan_t*> plans_ics;
+            spec->expand(final_point, plans_ics, trajs_ics, 25, false);
+            for (int i = 0; i < plans_ics.size(); i++)
+            {
+              plan_t plan(*plans_ics[i]);
+              trajectory_t traj(*trajs_ics[i]);
+              if (!default_valid_trajectory(traj, spec->valid_state))
+              {
+                return false;
+              }
+            }
+          }
+          else if (ics["type"].as<std::string>() == "bang_bang")
+          {
+            double duration = 0.5;
+            if (ics.exists("duration")){
+              duration = ics["duration"].as<double>();
+            }
+
+            std::vector<std::vector<double>> control_list = {
+              { -1.0, 1.0 }, { 0.0, 1.0 }, { 1.0, 1.0 }, { -1.0, -1.0 }, { 0.0, -1.0 }, { 1.0, -1.0 },
+            };
+
+            trajectory_t traj_ics(ss);
+            plan_t plan_ics(cs);
+            for (unsigned i = 0; i < control_list.size(); i++)
+            {
+              traj_ics.clear();
+              plan_ics.clear();
+              // spec->sample_plan(plan_ics, final_point);
+              // default_sample_plan(plan_ics, cs, spec->max_control_steps, spec->max_control_steps);
+              // TODO: What is the correct time duration for bang-bang control.
+              plan_ics.append_onto_back(duration);
+              cs->copy(plan_ics.back().control, control_list[i]);
+              // std::cout << plan_ics.back().control << std::endl;
+              system_group->propagate(final_point, plan_ics, traj_ics);
+              if (!default_valid_trajectory(traj_ics, spec->valid_state))
+              {
+                // std::cout << "ICS check failed" << std::endl;
+                return false;
+              }
             }
           }
         }

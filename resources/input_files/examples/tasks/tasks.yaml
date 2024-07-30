@@ -8,7 +8,7 @@ output_plan: true
 goal_position: [3.2, 0.0, 0.05]
 output_tree_folder: "/home/dhruv/2024/projects/NAMO/out/trees/"
 output_plan_file: "/home/dhruv/2024/projects/NAMO/out/1_5.txt"
-output_folder: "/home/dhruv/2024/projects/NAMO/out/object_interactions_6_bottlenecks/29Jul/subgoals_room2room_withics_proper/"
+output_folder: "/home/dhruv/2024/projects/NAMO/out/object_interactions_6_bottlenecks/29Jul/subgoals_room2room_blossomics_t120/"
 subgoals_file: "/home/dhruv/2024/projects/ml4kp_ktamp/build/object_interactions_6_bottlenecks/subgoals_room2room.txt"
 visualize: false
 do_subgoals: true
@@ -22,15 +22,19 @@ navigate:
   ignored_pairs: []
   goal_pos_region_radius: 0.05
   goal_vel_region_radius: 0.01
-
   max_vel: 20
   blossom: 10
   use_pruning: false
   visualize_tree: true
-  ics_filter: true
+  ics:
+    do_ics_check: true
+    type: "blossom" # ["bang-bang", "blossom"] if bang-bang set duration (defaults to 0.5), if blossom set blossom (defaults to 25)
+    duration: 0.5
+    blossom: 25
+
   condition_checker:
     type: "time"
-    value: 60
+    value: 120
     first_solution: true
 
 manipulate:
