@@ -103,6 +103,7 @@ void navigate_task_t::_prepare_query(std::vector<double> goal_vec, double goal_r
   param_loader ics = params["ics"];
   spec->valid_check = [&, ics, system_group, cs, ss](trajectory_t& traj) {
     bool valid = default_valid_trajectory(traj, spec->valid_state);
+    // bool ics_valid = false;
     if (valid)
     {
       bool do_ics_check = ics["do_ics_check"].as<bool>();
@@ -120,47 +121,54 @@ void navigate_task_t::_prepare_query(std::vector<double> goal_vec, double goal_r
             }
             std::vector<trajectory_t*> trajs_ics;
             std::vector<plan_t*> plans_ics;
-            spec->expand(final_point, plans_ics, trajs_ics, 25, false);
+            spec->expand(final_point, plans_ics, trajs_ics, ics_blossom, false);
             for (int i = 0; i < plans_ics.size(); i++)
             {
-              plan_t plan(*plans_ics[i]);
-              trajectory_t traj(*trajs_ics[i]);
-              if (!default_valid_trajectory(traj, spec->valid_state))
+              // plan_t plan(*plans_ics[i]);
+              // trajectory_t traj(*trajs_ics[i]);
+              if (default_valid_trajectory(*trajs_ics[i], spec->valid_state))
               {
-                return false;
+                return true;
               }
             }
+
+            return false;
           }
-          else if (ics["type"].as<std::string>() == "bang_bang")
+          else if (ics["type"].as<std::string>() == "bang-bang")
           {
             double duration = 0.5;
-            if (ics.exists("duration")){
+            if (ics.exists("duration"))
+            {
               duration = ics["duration"].as<double>();
             }
 
             std::vector<std::vector<double>> control_list = {
-              { -1.0, 1.0 }, { 0.0, 1.0 }, { 1.0, 1.0 }, { -1.0, -1.0 }, { 0.0, -1.0 }, { 1.0, -1.0 },
+              { -1.0, 1.0 }, { 0.0, 1.0 }, { 1.0, 1.0 }, { -1.0, -1.0 }, { 0.0, -1.0 }, { 1.0, -1.0 }, {-1.0, 0.0}, {1.0, 0.0}
             };
 
             trajectory_t traj_ics(ss);
             plan_t plan_ics(cs);
+
+
+            plan_ics.append_onto_back(duration);
             for (unsigned i = 0; i < control_list.size(); i++)
             {
               traj_ics.clear();
-              plan_ics.clear();
+              // plan_ics.clear();
               // spec->sample_plan(plan_ics, final_point);
               // default_sample_plan(plan_ics, cs, spec->max_control_steps, spec->max_control_steps);
               // TODO: What is the correct time duration for bang-bang control.
-              plan_ics.append_onto_back(duration);
+             
               cs->copy(plan_ics.back().control, control_list[i]);
               // std::cout << plan_ics.back().control << std::endl;
-              system_group->propagate(final_point, plan_ics, traj_ics);
-              if (!default_valid_trajectory(traj_ics, spec->valid_state))
+              spec->propagate(final_point, plan_ics, traj_ics);
+              if (default_valid_trajectory(traj_ics, spec->valid_state))
               {
-                // std::cout << "ICS check failed" << std::endl;
-                return false;
+                return true;
+                
               }
             }
+            return false;
           }
         }
       }

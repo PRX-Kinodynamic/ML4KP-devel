@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
     // output_progress_bar(i * 1.0 / num_trials);
     std::vector<std::vector<double>> all_stats;
 
-    std::cout << "solution_ " << i << std::endl;
+    std::cout << "solution_" << i << std::endl;
 
     std::string solution_folder = output_folder_data + "solution_" + std::to_string(i) + "/";
     create_folder(solution_folder);
@@ -242,12 +242,6 @@ int main(int argc, char* argv[])
           {
             continue;
           }
-
-          // if (ctr == random_skip)
-          // {
-          //   std::cout << "skipping subgoal " << ctr  << " " << subgoal[0] << ", " <<  subgoal[1] << ", " <<
-          //   subgoal[2] << std::endl; continue;
-          // }
 
           goal_vec.assign(n, 0.0);
           goal_vec[0] = subgoal[0];
@@ -283,6 +277,7 @@ int main(int argc, char* argv[])
       // {
       //   full_solution.to_file(output_folder + "/solution_" + std::to_string(i) + ".txt");
       // }
+      std::cout << "FAILED: solution_" << i << std::endl;
       task_failure.push_back(ctr);
       failures += 1;
       continue;

@@ -101,11 +101,97 @@
         condim="4" />
     </body>
 
+
+    <body name="wall_13" pos="3.2 0.11 .05">
+      <geom name="wall_13" type="box" size="0.05 0.19 0.05" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="wall_14" pos="3.2 -0.25 .05">
+      <geom name="wall_14" type="box" size="0.05 0.05 0.05" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="movable_cube7" pos="3.2 -0.14 .05" euler="0 0 0">
+      <freejoint />
+      <geom name="movable_cube7" type="box" size="0.05 0.035 0.05" mass=".1" material="movable"
+        condim="4" />
+    </body>
+
+    <body name="wall_15" pos="3.7 0.25 .05">
+      <geom name="wall_15" type="box" size="0.05 0.05 0.05" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="wall_16" pos="3.7 -0.11 .05">
+      <geom name="wall_16" type="box" size="0.05 0.19 0.05" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="movable_cube8" pos="3.7 0.14 .05" euler="0 0 0">
+      <freejoint />
+      <geom name="movable_cube8" type="box" size="0.05 0.035 0.05" mass=".1" material="movable"
+        condim="4" />
+    </body>
+
+    <body name="wall_17" pos="4.2 0.11 .05">
+      <geom name="wall_17" type="box" size="0.05 0.19 0.05" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="wall_18" pos="4.2 -0.25 .05">
+      <geom name="wall_18" type="box" size="0.05 0.05 0.05" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="movable_cube9" pos="4.2 -0.14 .05" euler="0 0 0">
+      <freejoint />
+      <geom name="movable_cube9" type="box" size="0.05 0.035 0.05" mass=".1" material="movable"
+        condim="4" />
+    </body>
+
+
+    <body name="wall_19" pos="4.7 0.25 .05">
+      <geom name="wall_19" type="box" size="0.05 0.05 0.05" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="wall_20" pos="4.7 -0.11 .05">
+      <geom name="wall_20" type="box" size="0.05 0.19 0.05" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="movable_cube10" pos="4.7 0.14 .05" euler="0 0 0">
+      <freejoint />
+      <geom name="movable_cube10" type="box" size="0.05 0.035 0.05" mass=".1" material="movable"
+        condim="4" />
+    </body>
+
+    <body name="wall_21" pos="5.2 0.11 .05">
+      <geom name="wall_21" type="box" size="0.05 0.19 0.05" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="wall_22" pos="5.2 -0.25 .05">
+      <geom name="wall_22" type="box" size="0.05 0.05 0.05" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="movable_cube11" pos="5.2 -0.14 .05" euler="0 0 0">
+      <freejoint />
+      <geom name="movable_cube11" type="box" size="0.05 0.035 0.05" mass=".1" material="movable"
+        condim="4" />
+    </body>
+
+    <body name="wall_23" pos="5.7 0.25 .05">
+      <geom name="wall_23" type="box" size="0.05 0.05 0.05" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="wall_24" pos="5.7 -0.11 .05">
+      <geom name="wall_24" type="box" size="0.05 0.19 0.05" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="movable_cube12" pos="5.7 0.14 .05" euler="0 0 0">
+      <freejoint />
+      <geom name="movable_cube12" type="box" size="0.05 0.035 0.05" mass=".1" material="movable"
+        condim="4" />
+    </body>
+
     <body name="case" pos="0 0 0.1">
       <geom name="gcase_a" type="box" size="0.05 0.32 0.1" pos="-.2 0 0" />
-      <geom name="gcase_b" type="box" size="0.05 0.32 0.1" pos="3.2 0 0" />
-      <geom name="gcase_c" type="box" size="1.75 0.04 0.1" pos="1.5 .36 0" />
-      <geom name="gcase_d" type="box" size="1.75 0.04 0.1" pos="1.5 -.36 0" />
+      <geom name="gcase_b" type="box" size="0.05 0.32 0.1" pos="6.2 0 0" />
+      <geom name="gcase_c" type="box" size="3.25 0.04 0.1" pos="3 .36 0" />
+      <geom name="gcase_d" type="box" size="3.25 0.04 0.1" pos="3 -.36 0" />
     </body>
 
     <site name="target1" pos="0.45 -0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
@@ -113,8 +199,14 @@
     <site name="target3" pos="1.45 -0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
     <site name="target4" pos="1.95 0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
     <site name="target5" pos="2.45 -0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
-    <site name="target6" pos="3.0 0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
-    <site name="target7" pos="3.0 0.0 0.0" size="0.05" rgba="0 1 0 0.1" />
+    <site name="target6" pos="2.95 0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
+    <site name="target7" pos="3.45 -0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
+    <site name="target8" pos="3.95 0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
+    <site name="target9" pos="4.45 -0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
+    <site name="target10" pos="4.95 0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
+    <site name="target11" pos="5.45 -0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
+    <site name="target12" pos="5.95 0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
+    <site name="target13" pos="6.0 0.0 0.0" size="0.05" rgba="0 1 0 0.1" />
 
     <!-- <site name="target1" pos="0.2 -0.14 0.0" size="0.05" rgba="0 1 0 0.1" />
     <site name="target2" pos="0.45 -0.1 0.0" size="0.2" rgba="0 1 0 0.1" />

@@ -18,11 +18,11 @@ def process_subgoals(file_path):
         target_counter += 1
     
     # Add the final site
-    site_output = f'<site name="target{target_counter}" pos="3.0 0.0 0.0" size="0.05" rgba="0 1 0 0.1" />'
+    site_output = f'<site name="target{target_counter}" pos="1.7 0.0 0.0" size="0.05" rgba="0 1 0 0.1" />'
     output.append(site_output)
     
     for line in output:
         print(line)
 
 # Call the function with the path to your subgoals.txt file
-process_subgoals('/home/dhruv/2024/projects/ml4kp_ktamp/build/object_interactions_6_bottlenecks/subgoals_room2room.txt')
+process_subgoals('/home/dhruv/2024/projects/ml4kp_ktamp/build/turning_interactions/3/subgoals_room2room.txt')
