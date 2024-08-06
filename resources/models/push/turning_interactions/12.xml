@@ -195,10 +195,10 @@
 
 
     <body name="case" pos="0 0 0.1">
-      <geom name="gcase_a" type="box" size="0.05 0.32 0.1" pos="-.2 0 0" />
-      <geom name="gcase_b" type="box" size="0.05 0.32 0.1" pos="6.6 0 0" />
-      <geom name="gcase_c" type="box" size="3.45 0.04 0.1" pos="3.2 .36 0" />
-      <geom name="gcase_d" type="box" size="3.45 0.04 0.1" pos="3.2 -.36 0" />
+      <geom name="gcase_a" type="box" size="0.05 0.22 0.1" pos="-.2 0 0" />
+      <geom name="gcase_b" type="box" size="0.05 0.22 0.1" pos="6.6 0 0" />
+      <geom name="gcase_c" type="box" size="3.45 0.04 0.1" pos="3.2 .26 0" />
+      <geom name="gcase_d" type="box" size="3.45 0.04 0.1" pos="3.2 -.26 0" />
     </body>
 
     <site name="target1" pos="0.15 -0.1 0.0" size="0.12" rgba="0 1 0 0.1" />

@@ -110,7 +110,7 @@ void navigate_task_t::_prepare_query(std::vector<double> goal_vec, double goal_r
       if (do_ics_check)
       {
         auto final_point = traj.back();
-        if (query->goal_check(final_point))
+        if (true || query->goal_check(final_point))
         {
           if (ics["type"].as<std::string>() == "blossom")
           {

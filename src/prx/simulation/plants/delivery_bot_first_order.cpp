@@ -1,8 +1,8 @@
-#include "prx/simulation/plants/delivery_bot_first_order.hpp"
+#include "prx/simulation/plants/treaded_vehicle_first_order.hpp"
 
 namespace prx
 {
-delivery_bot_first_order_t::delivery_bot_first_order_t(const std::string& path) : plant_t(path)
+treaded_vehicle_first_order_t::treaded_vehicle_first_order_t(const std::string& path) : plant_t(path)
 {
   x = y = theta = 0;
   state_memory = { &x, &y, &theta };
@@ -28,17 +28,17 @@ delivery_bot_first_order_t::delivery_bot_first_order_t(const std::string& path) 
   set_integrator(integrator_t::kEULER);
 }
 
-delivery_bot_first_order_t::~delivery_bot_first_order_t()
+treaded_vehicle_first_order_t::~treaded_vehicle_first_order_t()
 {
 }
 
-void delivery_bot_first_order_t::propagate(const double simulation_step)
+void treaded_vehicle_first_order_t::propagate(const double simulation_step)
 {
   integrator->integrate(simulation_step);
   // euler_integration(simulation_step);
 }
 
-void delivery_bot_first_order_t::set_state_space_bounds(const std::vector<double>& lower,
+void treaded_vehicle_first_order_t::set_state_space_bounds(const std::vector<double>& lower,
                                                            const std::vector<double>& upper)
 {
   for (int i = 0; i < std::min(lower.size(), lower_bound.size()); ++i)
@@ -53,7 +53,7 @@ void delivery_bot_first_order_t::set_state_space_bounds(const std::vector<double
   state_space->set_bounds(lower_bound, upper_bound);
 }
 
-void delivery_bot_first_order_t::update_configuration()
+void treaded_vehicle_first_order_t::update_configuration()
 {
   auto body = configurations["body"];
   body->setIdentity();
@@ -61,7 +61,7 @@ void delivery_bot_first_order_t::update_configuration()
   body->translation() = (vector_t(x, y, 0));
 }
 
-void delivery_bot_first_order_t::compute_derivative()
+void treaded_vehicle_first_order_t::compute_derivative()
 {
   double _yicrL = -.3;
   double _yicrR = .3;
