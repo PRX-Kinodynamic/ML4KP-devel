@@ -66,6 +66,11 @@ public:
     return SE2_t(0, 0, 0);
   }
 
+  static std::size_t size()
+  {
+    return Dim;
+  }
+
   double& operator[](const std::size_t& idx)
   {
     switch (idx)

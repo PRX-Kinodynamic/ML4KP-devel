@@ -13,7 +13,7 @@ set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
-set(BUILD_FOR_GTSAM OFF CACHE BOOL "Set ON/TRUE for building GTSAM factor graphs")
+set(BUILD_FOR_GTSAM ON CACHE BOOL "Set ON/TRUE for building GTSAM factor graphs")
 
 set(${PROJECT_NAME}_VERSION 1.0)
 set(${PROJECT_NAME}_HEADERS "" CACHE STRING "Headers to be exported")
@@ -100,6 +100,13 @@ endif()
 
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 
+# Create a single library, mostly for installing
+add_library(${PROJECT_NAME} INTERFACE )
+foreach(LIBRARY IN ITEMS ${${PROJECT_NAME}_LIBRARIES} )
+	add_dependencies(${PROJECT_NAME} ${LIBRARY})
+	target_link_libraries(${PROJECT_NAME} INTERFACE ${LIBRARY})
+endforeach()
+
 add_subdirectory(examples)
 add_subdirectory(executables)
 
@@ -113,12 +120,7 @@ endif(BUILD_TESTS)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-# Create a single library, mostly for installing
-add_library(${PROJECT_NAME} INTERFACE )
-foreach(LIBRARY IN ITEMS ${${PROJECT_NAME}_LIBRARIES} )
-	add_dependencies(${PROJECT_NAME} ${LIBRARY})
-	target_link_libraries(${PROJECT_NAME} INTERFACE ${LIBRARY})
-endforeach()
+
 
 set(CMAKE_INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/")
 message(STATUS "Installing ${PROJECT_NAME} in: ${CMAKE_INSTALL_PREFIX}")
