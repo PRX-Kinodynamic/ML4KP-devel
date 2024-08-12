@@ -46,11 +46,13 @@ int main(int argc, char* argv[])
   std::shared_ptr<prx::mujoco_simulator_t> sim =
       std::make_shared<prx::mujoco_simulator_t>(params["xml_path"].as<std::string>(), true);
 
+  prx::constants::precision = 128;
   sim->init_simulator();
 
   sim->set_cam_distance(params["cam_distance"].as<double>());
   sim->set_cam_elevation(params["cam_elevation"].as<double>());
   sim->set_cam_azimuth(params["cam_azimuth"].as<double>());
+  
 
   sim->set_record_video(false);
 
@@ -85,7 +87,7 @@ int main(int argc, char* argv[])
   plan_folder += "/data";
   std::string video_file = "";
   video_file += plan_folder;
-  std::string solution_id = "/solution_2";
+  std::string solution_id = "/" + params["solution_id"].as<std::string>();
   plan_folder += solution_id;
   video_file += solution_id;
   std::string solution_plans = "/solutions/";
@@ -122,6 +124,7 @@ int main(int argc, char* argv[])
   auto final_goal = params["final_goal"].as<std::vector<double>>();
   subgoals.push_back(final_goal);
   
+  std::vector<double> cam_look_at = {0., 0., 0.};
   int ctr = 1;
   for (auto plans: subplans)
   {
@@ -131,14 +134,20 @@ int main(int argc, char* argv[])
     subgoal_vec.push_back(0.);
     sim->set_goal(subgoal_vec);
     sim->set_goal_radius(subgoals[ctr][2]);
+    // sim->
 
     plan.from_file(plans);
     std::cout << "plan: " << plan << std::endl;
 
     start = ss->make_point();
     ss->copy_to(start);
+    // cam_look_at[0] = start->at(0);
+
+    cam_look_at[0] = subgoal_vec[0];
+    // cam_look_at[1] = start->at(1);
 
     context.first->propagate(start, plan, traj);
+    sim->set_cam_lookat(cam_look_at);
 
     plan.clear();
     traj.clear();

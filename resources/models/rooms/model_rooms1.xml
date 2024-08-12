@@ -8,7 +8,7 @@
 
   <worldbody>
 
-    <body name="ball" pos=".0 0.0 .05">
+    <body name="ball" pos=".7 -0.1 .05">
       <geom name="gball_0" type="sphere" size="0.02" mass="5." material="BallMat"
         friction=".5 0.005 0.001 " condim="4" />
       <site name="sensor_ball" />
@@ -18,12 +18,15 @@
 
     <body name="wall_1" pos="0.45 0.4 .05">
       <geom name="wall_1" type="box" size="0.2 0.2 0.05" mass=".1" material="static" condim="4" />
-      <body name="movable_cube1" pos="0.25 -0.4 .0" euler="0 0 0">
-      <joint type="hinge" axis="0 0 1" pos="-0.025 0.2 0"/>
-        <geom name="movable_cube1" type="box" size="0.05 0.2 0.05" mass=".05" material="movable"
-          condim="4" />
-      </body>
+      
     </body>
+
+    <!-- 
+    <body name="movable_cube1" pos="0.225 -0.4 .0" euler="0 0 0">
+      <joint type="hinge" axis="0 0 1" pos="-0.025 0.2 0"/>
+        <geom name="movable_cube1" type="box" size="0.025 0.2 0.05" mass=".05" material="movable"
+          condim="4" />
+    </body> -->
 
     <body name="wall_2" pos="0.45 1.2 .05">
       <geom name="wall_2" type="box" size="0.2 0.2 0.05" mass=".1" material="static" condim="4" />
@@ -36,12 +39,18 @@
     <body name="wall_4" pos="1.2 1.2 .05">
       <geom name="wall_4" type="box" size="0.2 0.2 0.05" mass=".1" material="static" condim="4" />
     </body>
-<!-- 
-    <body name="movable_cube1" pos="0.95 0 .05" euler="0 0 0">
+
+    <body name="movable_cube1" pos="0.95 -0.025 .05" euler="0 0 0">
       <joint type="hinge" axis="0 0 1" pos="0 0.16 0"/>
-      <geom name="movable_cube1" type="box" size="0.05 0.18 0.05" mass=".05" material="movable"
+      <geom name="movable_cube1" type="box" size="0.05 0.16 0.05" mass=".05" material="movable"
         condim="4" />
-    </body> -->
+    </body>
+
+    <body name="movable_cube2" pos="0.78 0.2 .05" euler="0 0 90">
+      <joint type="hinge" axis="0 0 1" pos="0 -0.14 0"/>
+      <geom name="movable_cube2" type="box" size="0.05 0.12 0.05" mass=".05" material="movable"
+        condim="4" />
+    </body> 
 
     
     

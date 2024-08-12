@@ -99,6 +99,14 @@ public:
     cam.azimuth = azimuth;
   }
 
+  inline void set_cam_lookat(const std::vector<double> lookat)
+  {
+    cam.lookat[0] = lookat.at(0);
+    cam.lookat[1] = lookat.at(1);
+    cam.lookat[2] = lookat.at(2);
+  }
+
+
   inline void set_goal_radius(double radius)
   {
     goal_radius = radius;

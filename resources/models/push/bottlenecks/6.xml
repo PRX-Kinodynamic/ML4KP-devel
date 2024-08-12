@@ -113,7 +113,7 @@
     <site name="target3" pos="1.45 -0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
     <site name="target4" pos="1.95 0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
     <site name="target5" pos="2.45 -0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
-    <site name="target6" pos="3.0 0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
+    <site name="target6" pos="2.95 0.1 0.0" size="0.2" rgba="0 1 0 0.1" />
     <site name="target7" pos="3.0 0.0 0.0" size="0.05" rgba="0 1 0 0.1" />
 
     <!-- <site name="target1" pos="0.2 -0.14 0.0" size="0.05" rgba="0 1 0 0.1" />

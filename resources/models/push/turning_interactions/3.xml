@@ -66,11 +66,11 @@
       <geom name="gcase_d" type="box" size="1.2 0.04 0.1" pos="0.95 -.26 0" />
     </body>
    
-    <site name="target1" pos="0.15 -0.1 0.0" size="0.12" rgba="0 1 0 0.1" />
-    <site name="target2" pos="0.65 0.1 0.0" size="0.12" rgba="0 1 0 0.1" />
-    <site name="target3" pos="1.15 -0.1 0.0" size="0.12" rgba="0 1 0 0.1" />
-    <site name="target4" pos="1.65 0.1 0.0" size="0.12" rgba="0 1 0 0.1" />
-    <site name="target5" pos="1.9 0.0 0.0" size="0.05" rgba="0 1 0 0.1" />
+    <site name="target1" pos="0.15 -0.1 0.0" size="0.12" rgba="0 1 0.6 0.2" />
+    <site name="target2" pos="0.65 0.1 0.0" size="0.12" rgba="0 1 0.6 0.2" />
+    <site name="target3" pos="1.15 -0.1 0.0" size="0.12" rgba="0 1 0.6 0.2" />
+    <site name="target4" pos="1.65 0.1 0.0" size="0.12" rgba="0 1 0.6 0.2" />
+    <site name="target5" pos="1.9 0.0 0.0" size="0.05" rgba="0 1 0.6 0.2" />
 
   </worldbody>
 

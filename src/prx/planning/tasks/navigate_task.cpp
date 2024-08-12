@@ -110,7 +110,7 @@ void navigate_task_t::_prepare_query(std::vector<double> goal_vec, double goal_r
       if (do_ics_check)
       {
         auto final_point = traj.back();
-        if (true || query->goal_check(final_point))
+        if (query->goal_check(final_point))
         {
           if (ics["type"].as<std::string>() == "blossom")
           {
@@ -142,13 +142,12 @@ void navigate_task_t::_prepare_query(std::vector<double> goal_vec, double goal_r
               duration = ics["duration"].as<double>();
             }
 
-            std::vector<std::vector<double>> control_list = {
-              { -1.0, 1.0 }, { 0.0, 1.0 }, { 1.0, 1.0 }, { -1.0, -1.0 }, { 0.0, -1.0 }, { 1.0, -1.0 }, {-1.0, 0.0}, {1.0, 0.0}
-            };
+            std::vector<std::vector<double>> control_list = { { -1.0, 1.0 }, { 1.0, 1.0 }, { -1.0, -1.0 },
+                                                              { 1.0, -1.0 }, { 0.0, 1.0 }, { 0.0, -1.0 },
+                                                              { -1.0, 0.0 }, { 1.0, 0.0 } };
 
             trajectory_t traj_ics(ss);
             plan_t plan_ics(cs);
-
 
             plan_ics.append_onto_back(duration);
             for (unsigned i = 0; i < control_list.size(); i++)
@@ -158,14 +157,13 @@ void navigate_task_t::_prepare_query(std::vector<double> goal_vec, double goal_r
               // spec->sample_plan(plan_ics, final_point);
               // default_sample_plan(plan_ics, cs, spec->max_control_steps, spec->max_control_steps);
               // TODO: What is the correct time duration for bang-bang control.
-             
+
               cs->copy(plan_ics.back().control, control_list[i]);
               // std::cout << plan_ics.back().control << std::endl;
               spec->propagate(final_point, plan_ics, traj_ics);
               if (default_valid_trajectory(traj_ics, spec->valid_state))
               {
                 return true;
-                
               }
             }
             return false;
