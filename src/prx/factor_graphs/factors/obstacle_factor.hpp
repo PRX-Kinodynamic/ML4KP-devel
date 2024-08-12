@@ -19,6 +19,12 @@ namespace fg
 {
 struct collision_info_t
 {
+  enum CollisionErrorType
+  {
+    STEP = 0,
+    LINEAR,
+    QUADRATIC
+  };
   using SharedPtr = std::shared_ptr<collision_info_t>;
   // using PQPModel = typename PQP_Model;
   // using PQPModel = typename PQP_Model_Eigen;
@@ -79,11 +85,12 @@ struct collision_info_t
 };
 
 // using StateToConfiguration = void (*)(const std::size_t, const ml4kp_bridge::SpacePoint&);
-template <typename State, typename ConfigurationFromState>
+template <typename State, typename ConfigurationFromState,
+          collision_info_t::CollisionErrorType ERROR_TYPE = collision_info_t::CollisionErrorType::STEP>
 class obstacle_factor_t : public gtsam::NoiseModelFactor1<State>
 {
   using Base = gtsam::NoiseModelFactor1<State>;
-  using Derived = obstacle_factor_t<State, ConfigurationFromState>;
+  using Derived = obstacle_factor_t<State, ConfigurationFromState, ERROR_TYPE>;
   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
   using CollisionInfoPtr = std::shared_ptr<collision_info_t>;
 
@@ -256,15 +263,34 @@ public:
     return is_close;
   }
 
+  virtual bool sendable() const override
+  {
+    return false;
+  }
+
   virtual Eigen::VectorXd evaluateError(const State& x0,
                                         boost::optional<Eigen::MatrixXd&> H0 = boost::none) const override
   {
-    Eigen::VectorXd error{ Eigen::VectorXd::Zero(StateDim) };
+    Eigen::VectorXd error{ Eigen::Vector<double, StateDim>::Zero() };
+
     Eigen::Vector3d closest_point, p2;
-    // if (close_enough(x0, _activation_distance))
-    // {
-    error = Eigen::VectorXd::Ones(StateDim);
-    // }
+    const double dist{ std::max(distances(x0, closest_point, p2), _activation_distance) / _activation_distance };
+    if constexpr (ERROR_TYPE == collision_info_t::CollisionErrorType::STEP)
+    {
+      error = Eigen::Vector<double, StateDim>::Ones();
+    }
+    else if constexpr (ERROR_TYPE == collision_info_t::CollisionErrorType::LINEAR)  // 1 at collision, 0 at activation
+                                                                                    // distance linearly
+    {
+      // const double dist{ std::max(distances(x0, closest_point, p2), _activation_distance) / _activation_distance };
+      error = (1.0 - dist) * Eigen::Vector<double, StateDim>::Ones();
+    }
+    else if constexpr (ERROR_TYPE == collision_info_t::CollisionErrorType::QUADRATIC)  // 1 at collision, 0 at
+                                                                                       // activation distance
+    {
+      // const double dist{ std::max(distances(x0, closest_point, p2), _activation_distance) / _activation_distance };
+      error = (1.0 - std::pow(dist, 2)) * Eigen::Vector<double, StateDim>::Ones();
+    }
     // error = Eigen::VectorXd::Ones(StateDim);
     if (H0)
     {

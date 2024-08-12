@@ -84,7 +84,8 @@ Polygon_2 create_hole_from_obstacle(std::shared_ptr<prx::fg::collision_info_t> i
 int main()
 {
   // const std::string environment{ "environments/warehouse.yaml" };
-  const std::string environment{ "environments/forest.yaml" };
+  // const std::string environment{ "environments/forest.yaml" };
+  const std::string environment{ "environments/simple_obstacle.yaml" };
   auto obstacles = prx::load_obstacles(environment);
   std::string ignore_substr{ "wall" };
 
@@ -107,20 +108,20 @@ int main()
   auto obstacle_collision_infos = prx::fg::collision_info_t::generate_infos(obstacles.second);
 
   Polygon_2 outer;
-  outer.push_back(Point(-4, -4));
-  outer.push_back(Point(45, -4));
-  outer.push_back(Point(45, 30));
-  outer.push_back(Point(-4, 30));
   // outer.push_back(Point(-4, -4));
-  // outer.push_back(Point(24, -4));
-  // outer.push_back(Point(24, 24));
-  // outer.push_back(Point(-4, 24));
+  // outer.push_back(Point(45, -4));
+  // outer.push_back(Point(45, 30));
+  // outer.push_back(Point(-4, 30));
+  outer.push_back(Point(-4, -4));
+  outer.push_back(Point(24, -4));
+  outer.push_back(Point(24, 24));
+  outer.push_back(Point(-4, 24));
   // Polygon_2 hole;
   assert(outer.is_counterclockwise_oriented());
   Polygon_with_holes poly(outer);
   for (auto info : obstacle_collision_infos)
   {
-    PRX_DBG_VARS(info->pose.position().transpose());
+    // PRX_DBG_VARS(info->pose.position().transpose());
     Polygon_2 hole{ create_hole_from_obstacle(info) };
     assert(hole.is_clockwise_oriented());
     poly.add_hole(hole);

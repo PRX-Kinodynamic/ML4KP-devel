@@ -14,71 +14,148 @@ namespace prx
 {
 namespace fg
 {
-template <typename X, typename Xdot>
-class euler_integration_factor_t : public gtsam::NoiseModelFactor3<X, X, Xdot>
+template <typename X, typename Xdot, typename... Types>
+class euler_integration_factor_t : public gtsam::NoiseModelFactorN<X, X, Xdot, Types...>
 {
-  using Base = gtsam::NoiseModelFactor3<X, X, Xdot>;
-  using Derived = euler_integration_factor_t<X, Xdot>;
+  using Base = gtsam::NoiseModelFactorN<X, X, Xdot, Types...>;
+  using Derived = euler_integration_factor_t<X, Xdot, Types...>;
 
   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
+  // using X = std::tuple_element_t<0, std::tuple<Types...>>;
+  // static constexpr Eigen::Index DimX{ gtsam::traits<X>::dimension };
+  // static constexpr Eigen::Index DimXdot{ gtsam::traits<Xdot>::dimension };
+  static constexpr std::size_t NumTypes{ sizeof...(Types) };
+
+  // if constexpr (0 == sizeof...(Dt))
+  // {
+  // template <std::enable_if_t<DtKey, bool> = true>
+  // using DtType = double;
+  // using DtTypeFix = std::enable_if_t<DtKey, std::nullptr_t>;
+  // using DtType = typename std::conditional<DtKey, DtTypeFix, DtTypeKey>::type;
+
+  // using DerivativeX = Eigen::Matrix<double, DimX, DimX>;
+  // using DerivativeXdot = Eigen::Matrix<double, DimXdot, DimXdot>;
+  using OptDeriv = boost::optional<Eigen::MatrixXd&>;
+  template <typename T>
+  using OptionalMatrix = boost::optional<Eigen::MatrixXd&>;
+  // using OptionalJacobianX = gtsam::OptionalJacobian<DimX, DimX>;
   static constexpr Eigen::Index DimX{ gtsam::traits<X>::dimension };
   static constexpr Eigen::Index DimXdot{ gtsam::traits<Xdot>::dimension };
 
-  using DerivativeX = Eigen::Matrix<double, DimX, DimX>;
-  using DerivativeXdot = Eigen::Matrix<double, DimXdot, DimXdot>;
-  using OptDeriv = boost::optional<Eigen::MatrixXd&>;
-  using OptionalJacobianX = gtsam::OptionalJacobian<DimX, DimX>;
-
-  euler_integration_factor_t() : _h(0.0), _negative_identity(-1.0 * DerivativeX::Identity())
-  {
-  }
+  euler_integration_factor_t() = delete;
 
 public:
   euler_integration_factor_t(const euler_integration_factor_t& other) = delete;
 
+  // typename = std::enable_if_t<std::is_array<T>::value>>
+  // template <typename... Keys, std::enable_if_t<(3 == sizeof...(Keys)), bool> = true>
+  // euler_integration_factor_t(const Keys... keys, const NoiseModel& cost_model, const double h,
+  //                            const std::string label = "EulerIntegration")
+  //   : Base(cost_model, keys...), _h(h), _label(label)
+  // {
+  // }
+  template <std::size_t Num = NumTypes, typename std::enable_if_t<(0 == Num), bool> = true>
   euler_integration_factor_t(const gtsam::Key key_xt1, const gtsam::Key key_xt0, const gtsam::Key key_xdot,
                              const NoiseModel& cost_model, const double h, const std::string label = "EulerIntegration")
-    : Base(cost_model, key_xt1, key_xt0, key_xdot)
-    , _h(h)
-    , _negative_identity(-1 * DerivativeX::Identity())
-    , _label(label)
+    : Base(cost_model, key_xt1, key_xt0, key_xdot), _h(h), _label(label)
   {
   }
+
+  template <std::size_t Num = NumTypes, typename std::enable_if_t<(1 == Num), bool> = true>
+  euler_integration_factor_t(const gtsam::Key key_xt1, const gtsam::Key key_xt0, const gtsam::Key key_xdot,
+                             const gtsam::Key key_dt, const NoiseModel& cost_model,
+                             const std::string label = "EulerIntegration")
+    : Base(cost_model, key_xt1, key_xt0, key_xdot, key_dt), _h(0.0), _label(label)
+  {
+  }
+
+  // euler_integration_factor_t(const Keys... keys)
+  // {
+  // }
+
+  // template <std::enable_if_t<(4 == sizeof...(Types)), bool> = true>
+  // euler_integration_factor_t(const gtsam::Key key_xt1, const gtsam::Key key_xt0, const gtsam::Key key_xdot,
+  //                            const gtsam::Key key_dt, const NoiseModel& cost_model,
+  //                            const std::string label = "EulerIntegration")
+  //   : Base(cost_model, key_xt1, key_xt0, key_xdot, key_dt), _h(0.0), _label(label)
+  // {
+  // }
 
   ~euler_integration_factor_t() override
   {
   }
 
-  static X integrate(const X& xi, const Xdot& xdot_i, const double dt,  // no-lint
-                     OptDeriv Hx = boost::none, OptDeriv Hxdot = boost::none)
+  template <typename Dt>
+  static X integrate(const X& xi, const Xdot& xdot_i, const Dt& dt,  // no-lint
+                     OptDeriv Hx = boost::none, OptDeriv Hxdot = boost::none, OptDeriv Hdt = boost::none)
   {
-    return predict(xi, xdot_i, dt, Hx, Hxdot);
+    return predict(xi, xdot_i, dt, Hx, Hxdot, Hdt);
   }
 
-  static X predict(const X& x, const Xdot& xdot, const double dt,  // no-lint
-                   OptDeriv Hx = boost::none, OptDeriv Hxdot = boost::none)
+  template <typename Dt>
+  static X predict(const X& x, const Xdot& xdot, const Dt& dt,  // no-lint
+                   OptDeriv Hx = boost::none, OptDeriv Hxdot = boost::none, OptDeriv Hdt = boost::none)
   {
     // clang-format off
-    if (Hx){ *Hx = DerivativeX::Identity(); }
-    if (Hxdot){ *Hxdot = dt * DerivativeXdot::Identity(); }
+    if (Hx){ *Hx = Eigen::Matrix<double, DimX, DimX>::Identity(); }
+    if (Hxdot){ *Hxdot = dt * Eigen::Matrix<double, DimXdot, DimXdot>::Identity(); }
+    if (Hdt){ *Hdt = xdot; }
     // clang-format on
     return x + xdot * dt;
   }
 
   // x1_predicted <- x0 + xdot dt
   // Error is: x1_predicted - x1_observed
-  Eigen::VectorXd evaluateError(const X& x1, const X& x0, const Xdot& xdot,  // no-lint
-                                OptDeriv H1, OptDeriv H0 = boost::none, OptDeriv Hdot = boost::none) const override
+  template <typename Dt>
+  X error(const X& x1, const X& x0, const Xdot& xdot, const Dt& dt,  // no-lint
+          OptDeriv H1 = boost::none, OptDeriv H0 = boost::none, OptDeriv Hdot = boost::none,
+          OptDeriv Hdt = boost::none) const
   {
-    const X prediction{ predict(x0, xdot, _h, H0, Hdot) };
-    // X1_p (-) x1 => Eq. 26 from "A micro Lie theory [...]" https://arxiv.org/pdf/1812.01537.pdf
-    const Eigen::VectorXd error{ prediction - x1 };
+    static constexpr Eigen::Index DimX{ gtsam::traits<X>::dimension };
+
+    const X prediction{ predict(x0, xdot, dt, H0, Hdot, Hdt) };
+    const X error{ prediction - x1 };
 
     // clang-format off
-    if (H1) { *H1 = _negative_identity; }
+    if (H1) { *H1 = -1 * Eigen::Matrix<double, DimX, DimX>::Identity(); }
     // clang-format on
 
     return error;
+  }
+
+  // template <std::enable_if_t<DtKey, bool> = true>
+  // virtual Eigen::VectorXd evaluateError(const X& x1, const X& x0, const Xdot& xdot,  // no-lint
+  //                                       OptDeriv H1 = boost::none, OptDeriv H0 = boost::none,
+  //                                       OptDeriv Hdot = boost::none) const override
+  // {
+  //   return error(x1, x0, xdot, _h, H1, H0, Hdot);
+  // }
+
+  // template <std::enable_if_t<not DtKey, bool> = true>
+  virtual Eigen::VectorXd evaluateError(const X& x1, const X& x0, const Xdot& xdot, const Types&... xd,  // no-lint
+                                        OptDeriv H1 = boost::none, OptDeriv H0 = boost::none,
+                                        OptDeriv Hdot = boost::none, OptionalMatrix<Types>... H) const override
+  {
+    if constexpr (0 == NumTypes)
+    {
+      return error(x1, x0, xdot, _h, H1, H0, Hdot);
+      // return error(x1, x0, _h, H...);
+    }
+    else
+    {
+      return error(x1, x0, xdot, xd..., H1, H0, Hdot, H...);
+    }
+    // return error(x..., H...);
+    // return Eigen::VectorXd::Zero(3);
+  }
+
+  template <typename Dt>
+  void dt_to_stream(std::ostream& os, const gtsam::Values& values) const
+  {
+    const char sp{ prx::constants::separating_value };
+    const gtsam::Key key_dt{ this->template key<4>() };
+    const Dt dt{ values.at<Dt>(key_dt) };
+    os << symbol_factory_t::formatter(key_dt) << sp << dt << sp;
   }
 
   void to_stream(std::ostream& os, const gtsam::Values& values) const
@@ -92,13 +169,21 @@ public:
     os << symbol_factory_t::formatter(this->template key<1>()) << " " << x1.transpose() << sp;
     os << symbol_factory_t::formatter(this->template key<2>()) << " " << x0.transpose() << sp;
     os << symbol_factory_t::formatter(this->template key<3>()) << " " << xdot.transpose() << sp;
+    if constexpr (0 == NumTypes)
+    {
+      os << "dt " << _h << sp;
+    }
+    else
+    {
+      dt_to_stream<Types...>(values);
+    }
     os << "\n";
   }
 
 private:
   const double _h;
-  const DerivativeX _negative_identity;
   const std::string _label;
 };
+
 }  // namespace fg
 }  // namespace prx
