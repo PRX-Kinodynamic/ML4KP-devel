@@ -82,6 +82,7 @@ public:
   // TODO: is stepping all contexts ok?
   virtual void step_simulation() override
   {
+    world_change_callback();
     for (auto s : this->systems)
     {
       s.second->propagate(simulation_step);
@@ -98,6 +99,8 @@ public:
   {
     prx_throw("World model doesn't implement reset");
   }
+
+  std::function<void()> world_change_callback = []() {};
 
   std::vector<std::shared_ptr<movable_object_t>> get_obstacles()
   {
