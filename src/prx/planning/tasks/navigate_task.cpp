@@ -47,6 +47,8 @@ void navigate_task_t::_prepare_specification(std::vector<double> goal_vec)
     return spec->distance_function(s, s2) / max_vel;
   };
 
+  spec->bnb = params["bnb"].as<bool>();
+
   // spec->sample_state = [ss, goal_vec](space_point_t& state) {
   //   default_sample_state(state, ss);
   //   if (uniform_random(0, 1) < 0.2)

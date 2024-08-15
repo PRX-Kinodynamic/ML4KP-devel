@@ -197,7 +197,7 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       closest_node->indices.pop_back();
 
       // bnb
-      if ((goal_vertex != start_vertex && closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
+      if (dirt_spec->bnb && (goal_vertex != start_vertex && closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
       {
         
         delete eg.first;
@@ -390,7 +390,10 @@ void dirt_t::update_goal(node_index_t node_index)
       // std::cout << " time:" << current_solution_time;
       // std::cout << " iter:" << current_solution_iters;
       // std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
-      bnb(start_vertex, current_solution);
+      if (dirt_spec->bnb)
+      {
+        bnb(start_vertex, current_solution);
+      }
     }
   }
 }

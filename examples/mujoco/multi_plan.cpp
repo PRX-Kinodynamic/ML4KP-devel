@@ -81,17 +81,15 @@ space_point_t manipulate(param_loader params, simulation_context context, std::v
 
 space_point_t navigate(param_loader params, simulation_context context, std::vector<double> goal_vec,
                        double goal_region_radius, dirt_query_t* dirt_query_ptr, dirt_t* dirt, double* time_taken,
-                       plan_t* full_solution, std::string solution_folder,
-                       std::vector<std::vector<double>>* all_stats, std::string task_name)
+                       plan_t* full_solution, std::string solution_folder, std::vector<std::vector<double>>* all_stats,
+                       std::string task_name)
 {
-
-  
   navigate_task_t move_task = navigate_task_t(params, context, goal_vec, goal_region_radius);
 
   dirt_query_ptr = move_task.get_query();
 
   condition_check_t* checker = move_task.get_condition_checker();
-checker->reset();
+  checker->reset();
 
   // // how long to run the planner
   // call_planner(move_task.get_specification(), dirt_query_ptr, dirt, checker);
@@ -109,19 +107,21 @@ checker->reset();
 
   *time_taken += dirt->current_solution_time;
 
-  
   std::string solutions_path = solution_folder + "solutions/";
+  std::string trajectory_path = solution_folder + "trajectory/";
   std::string trees_path = solution_folder + "trees/";
   create_folder(solutions_path);
   create_folder(trees_path);
+  create_folder(trajectory_path);
 
   write_trees(dirt_query_ptr, trees_path, task_name);
 
   plan_t solution = move_task.get_solution_plan();
-  
-  solution.to_file(solutions_path + task_name + ".txt");
 
-  *full_solution += solution; // move_task.get_solution_plan();
+  solution.to_file(solutions_path + task_name + ".txt");
+  dirt_query_ptr->solution_traj.to_file(trajectory_path + task_name + ".txt");
+
+  *full_solution += solution;  // move_task.get_solution_plan();
 
   all_stats->push_back(dirt->get_statistics());
 
@@ -204,7 +204,6 @@ int main(int argc, char* argv[])
 
   for (int i = 0; i < num_trials; i++)
   {
-    
     // output_progress_bar(i * 1.0 / num_trials);
     std::vector<std::vector<double>> all_stats;
 
@@ -223,7 +222,35 @@ int main(int argc, char* argv[])
     dirt.reset();
     time_taken = 0.0;
 
-    sim->add_pair({ { "ball", "case" } });
+    // // all 24 walls
+    // sim->add_pair({ { "ball", "case" } });
+    // sim->add_pair({ { "ball", "wall_1" },
+    //                 { "ball", "wall_2" },
+    //                 { "ball", "wall_3" },
+    //                 { "ball", "wall_4" },
+    //                 { "ball", "wall_5" },
+    //                 { "ball", "wall_6" } });
+
+    // sim->add_pair({ { "ball", "wall_7" },
+    //                 { "ball", "wall_8" },
+    //                 { "ball", "wall_9" },
+    //                 { "ball", "wall_10" },
+    //                 { "ball", "wall_11" },
+    //                 { "ball", "wall_12" } });
+
+    // sim->add_pair({ { "ball", "wall_13" },
+    //                 { "ball", "wall_14" },
+    //                 { "ball", "wall_15" },
+    //                 { "ball", "wall_16" },
+    //                 { "ball", "wall_17" },
+    //                 { "ball", "wall_18" },
+    //                 { "ball", "wall_19" },
+    //                 { "ball", "wall_20" },
+    //                 { "ball", "wall_21" },
+    //                 { "ball", "wall_22" },
+    //                 { "ball", "wall_23" },
+    //                 { "ball", "wall_24" } });
+
     init_random(params["random_seed"].as<int>() + i);
 
     space_point_t new_start_state;
@@ -248,7 +275,7 @@ int main(int argc, char* argv[])
           goal_vec[1] = subgoal[1];
           goal_region_radius = subgoal[2];
 
-          // std::cout << "subgoal " << subgoal[0] << ", " << subgoal[1] << ", " << subgoal[2] << std::endl;
+          std::cout << "subgoal " << subgoal[0] << ", " << subgoal[1] << ", " << subgoal[2] << std::endl;
 
           new_start_state =
               navigate(params["navigate"], context, goal_vec, goal_region_radius, dirt_query_ptr, &dirt, &time_taken,

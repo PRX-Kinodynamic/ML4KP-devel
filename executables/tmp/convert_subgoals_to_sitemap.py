@@ -25,4 +25,4 @@ def process_subgoals(file_path):
         print(line)
 
 # Call the function with the path to your subgoals.txt file
-process_subgoals('/home/dhruv/2024/projects/ml4kp_ktamp/build/turning_interactions/3/subgoals_room2room.txt')
+process_subgoals('/home/dhruv/2024/projects/ml4kp_ktamp/build/turning_interactions/12/subgoals_room2room_finer.txt')
