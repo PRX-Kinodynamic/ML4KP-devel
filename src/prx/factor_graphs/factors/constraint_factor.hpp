@@ -25,11 +25,16 @@ struct VectorLessThanCmp
 
   Eigen::VectorXd error(const Vector& lhs, const Vector& rhs, OptionalMatrix H0 = boost::none) const
   {
-    const Vector error{ (lhs.array() < rhs.array()).matrix().template cast<double>() };
+    // const Vector error{ (lhs.array() < rhs.array()).matrix().template cast<double>() };
+
+    const Eigen::ArrayXd lesser_array{ (lhs.array() < rhs.array()).template cast<double>() };
+    const Vector error{ (lhs.array() * lesser_array).matrix().template cast<double>() };
+
+    // const Vector error{ error_array.matrix().template cast<double>() };
 
     if (H0)
     {
-      *H0 = Jacobian(-error);
+      *H0 = -1.0 * Jacobian(error);
     }
     return error;
   }
@@ -50,11 +55,14 @@ struct VectorGreaterThanCmp
 
   Eigen::VectorXd error(const Vector& lhs, const Vector& rhs, OptionalMatrix H0 = boost::none) const
   {
-    const Vector error{ (lhs.array() > rhs.array()).matrix().template cast<double>() };
+    const Eigen::ArrayXd greater_array{ (lhs.array() > rhs.array()).template cast<double>() };
+    const Vector error{ (lhs.array() * greater_array).matrix().template cast<double>() };
+
+    // const Vector error{ error_array.matrix().template cast<double>() };
 
     if (H0)
     {
-      *H0 = Jacobian(-error);
+      *H0 = -1.0 * Jacobian(error);
     }
     return error;
   }

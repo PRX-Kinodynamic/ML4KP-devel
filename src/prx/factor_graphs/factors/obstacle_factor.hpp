@@ -300,7 +300,7 @@ public:
         closest_point = -p2;
       }
       // distances(x0, closest_point);
-      _config_from_state(*H0, closest_point);
+      _config_from_state(x0, closest_point, *H0);
     }
     return error;
   }

@@ -43,14 +43,63 @@ struct first_order_derivative_table_t
   // clang-format on
 };
 
+template <typename InputState, typename T = void>
+struct derivative_input_types
+{
+  template <typename EpsilonMatrix>
+  static InputState add(const InputState&, const EpsilonMatrix&){};
+};
+template <typename OutputState, typename T = void>
+struct derivative_output_types
+{
+};
+
+// Eigen input
+template <typename InputState>
+struct derivative_input_types<InputState, std::enable_if_t<not std::is_floating_point_v<InputState>>>
+{
+  using Scalar = typename InputState::Scalar;
+  static constexpr Eigen::Index NInputs{ InputState::RowsAtCompileTime };
+  template <typename EpsilonMatrix>
+  static InputState add(const InputState& state, const EpsilonMatrix& epslion)
+  {
+    return state + epslion;
+  };
+};
+
+template <typename InputState>
+struct derivative_input_types<InputState, std::enable_if_t<std::is_floating_point_v<InputState>>>
+{
+  using Scalar = InputState;
+  static constexpr Eigen::Index NInputs{ 1 };
+  template <typename EpsilonMatrix>
+  static InputState add(const InputState& state, const EpsilonMatrix& epslion)
+  {
+    return state + epslion(0, 0);
+  };
+};
+
+// Eigen output
+template <typename OutputState>
+struct derivative_output_types<OutputState, std::enable_if_t<not std::is_floating_point_v<OutputState>>>
+{
+  static constexpr Eigen::Index NOutputs{ OutputState::RowsAtCompileTime };
+};
+
+template <typename OutputState>
+struct derivative_output_types<OutputState, std::enable_if_t<std::is_floating_point_v<OutputState>>>
+{
+  static constexpr Eigen::Index NOutputs{ 1 };
+};
+
 template <class Function, typename InputState, S Evaluations, I_min MinDifference = -1>
 class first_order_derivative_t
 {
-  using Scalar = typename InputState::Scalar;
+  using Scalar = typename derivative_input_types<InputState>::Scalar;
   using OutputState = typename std::invoke_result<Function, InputState>::type;
 
-  static constexpr Eigen::Index NInputs{ InputState::RowsAtCompileTime };
-  static constexpr Eigen::Index NOutputs{ OutputState::RowsAtCompileTime };
+  static constexpr Eigen::Index NInputs{ derivative_input_types<InputState>::NInputs };
+  static constexpr Eigen::Index NOutputs{ derivative_output_types<OutputState>::NOutputs };
 
   using output_matrix_t = Eigen::Matrix<Scalar, NOutputs, NInputs>;
   using epsilon_matrix_t = Eigen::Matrix<Scalar, NInputs, NInputs>;
@@ -105,7 +154,8 @@ private:
   inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative) const
   {
     const auto epsilon_column{ i * _epsilon_matrix.col(col_i) };
-    derivative.col(col_i) = derivative.col(col_i) + n_i * _model(input + epsilon_column);
+    const InputState delta{ derivative_input_types<InputState>::add(input, epsilon_column) };
+    derivative.col(col_i) = derivative.col(col_i) + n_i * _model(delta);
   }
 
   template <N_i n_i, int i, std::enable_if_t<(n_i == 0), bool> = true>

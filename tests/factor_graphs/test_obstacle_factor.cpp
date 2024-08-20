@@ -24,7 +24,7 @@ struct configuration_from_state
     translation[2] = 0;
   }
 
-  void operator()(Eigen::MatrixXd& H, const Translation& translation)
+  void operator()(const State& state, const Translation& translation, Eigen::MatrixXd& H)
   {
     H = Eigen::Matrix2d::Identity();
     H.diagonal() = translation.head(2);
