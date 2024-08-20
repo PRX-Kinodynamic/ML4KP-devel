@@ -1,6 +1,7 @@
 #pragma once
 #include <fstream>
 #include <gtsam/nonlinear/Values.h>
+#include "prx/factor_graphs/utilities/symbols_factory.hpp"
 
 namespace prx
 {

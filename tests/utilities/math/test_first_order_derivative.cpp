@@ -10,6 +10,37 @@
 using prx::math::I_min;
 using prx::math::S;
 
+struct _1D_model_test
+{
+  using VectorIn = double;  // Naming vector for backwards comp
+  using VectorOut = Eigen::Vector<double, 2>;
+  using Jacobian = Eigen::Matrix<double, 2, 1>;
+  VectorOut operator()(const double& x) const
+  {
+    const double y0{ 5.0 * x + std::sin(x) };
+    const double y1{ 5.0 * x * x };
+    return VectorOut(y0, y1);
+  }
+
+  static Jacobian analytical(const double& x)
+  {
+    Jacobian out{ Jacobian::Zero() };
+
+    out(0, 0) = 5.0 + std::cos(x);
+    out(1, 0) = 2.0 * 5.0 * x;
+    return out;
+  }
+
+  inline static VectorIn Zero(const Eigen::Index& dim)
+  {
+    return 0.0;
+  }
+  inline static VectorIn Random(const Eigen::Index& dim)
+  {
+    return Jacobian::Random()(0, 0);
+  }
+};
+
 template <Eigen::Index Dim>
 struct _2D_model_test
 {
@@ -39,6 +70,14 @@ struct _2D_model_test
     out(1, 1) = std::cos(y);
     return out;
   }
+  inline static VectorIn Zero(const Eigen::Index& dim)
+  {
+    return VectorIn::Zero(dim);
+  }
+  inline static VectorIn Random(const Eigen::Index& dim)
+  {
+    return VectorIn::Random(dim);
+  }
 };
 
 template <Eigen::Index Dim>
@@ -60,6 +99,15 @@ struct distance_model_test
     const Jacobian jac{ vector / norm };
     return jac;
   }
+
+  inline static VectorIn Zero(const Eigen::Index& dim)
+  {
+    return VectorIn::Zero(dim);
+  }
+  inline static VectorIn Random(const Eigen::Index& dim)
+  {
+    return VectorIn::Random(dim);
+  }
 };
 
 template <S s, I_min i_min, typename Model>
@@ -73,11 +121,11 @@ void model_test(const double h, const double tolerance_constant, const Eigen::In
   const double tolerance{ tolerance_constant * std::pow(h, s - 1) };
   const int total_evaluations{ 1 };
 
-  VectorIn x_in{ VectorIn::Zero(dim_in) };
+  VectorIn x_in{ Model::Zero(dim_in) };
   Derivative derivative(h, dim_in, dim_out);
   for (int i = 0; i < total_evaluations; ++i)
   {
-    x_in = 100 * VectorIn::Random(dim_in);
+    x_in = 100 * Model::Random(dim_in);
     Jacobian numerical_derivative = derivative(x_in);
     Jacobian analytical_derivative = Model::analytical(x_in);
 
@@ -107,6 +155,20 @@ void run_full_derivative_table(const Eigen::Index dim_in, const Eigen::Index dim
   model_test<5, -3, Model>(0.5, 1, dim_in, dim_out);
   model_test<5, -4, Model>(0.5, 1, dim_in, dim_out);
 }
+
+BOOST_AUTO_TEST_CASE(model_1D_test)
+{
+  using Model = _1D_model_test;
+  const int DimIn{ 1 };
+  const int DimOut{ 2 };
+  auto start = std::chrono::steady_clock::now();
+
+  run_full_derivative_table<Model>(DimIn, DimOut);
+  auto end = std::chrono::steady_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end - start;
+  std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
+}
+
 BOOST_AUTO_TEST_CASE(model_2D_test)
 {
   using Model = _2D_model_test<2>;
