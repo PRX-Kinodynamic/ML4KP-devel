@@ -86,6 +86,13 @@ space_point_t navigate(param_loader params, simulation_context context, std::vec
 {
   navigate_task_t move_task = navigate_task_t(params, context, goal_vec, goal_region_radius);
 
+  std::string solutions_path = solution_folder + "plans/";
+  std::string trajectory_path = solution_folder + "trajectories/";
+  std::string trees_path = solution_folder + "trees/";
+  create_folder(solutions_path);
+  create_folder(trees_path);
+  create_folder(trajectory_path);
+
   dirt_query_ptr = move_task.get_query();
 
   condition_check_t* checker = move_task.get_condition_checker();
@@ -107,26 +114,19 @@ space_point_t navigate(param_loader params, simulation_context context, std::vec
   }
 
   *time_taken += dirt->current_solution_time;
-
-  std::string solutions_path = solution_folder + "plans/";
-  std::string trajectory_path = solution_folder + "trajectories/";
-  std::string trees_path = solution_folder + "trees/";
-  create_folder(solutions_path);
-  create_folder(trees_path);
-  create_folder(trajectory_path);
+  all_stats->push_back(dirt->get_statistics());
 
   write_trees(dirt_query_ptr, trees_path, task_name);
 
   plan_t solution = move_task.get_solution_plan();
 
+
   solution.to_file(solutions_path + task_name + ".txt");
   dirt_query_ptr->solution_traj.to_file(trajectory_path + task_name + ".txt");
-
   *full_solution += solution;  // move_task.get_solution_plan();
 
-  all_stats->push_back(dirt->get_statistics());
-
   space_point_t new_start_state = dirt_query_ptr->solution_traj.back();
+
   dirt->reset();
   checker->reset();
 
@@ -288,6 +288,7 @@ int main(int argc, char* argv[])
       std::cout << "subgoal " << subgoal[0] << ", " << subgoal[1] << ", " << subgoal[2] << std::endl;
       try
       {
+        // if repeat this subgoal more than 5 times, then call it a failure
         if (repeats[ctr] > 5)
         {
           too_many_repeats = true;
@@ -299,7 +300,6 @@ int main(int argc, char* argv[])
                                    &time_taken, &full_solution, solution_folder, &all_stats,
                                    "subgoal" + std::to_string(ctr) + "_" + std::to_string(repeats[ctr]));
 
-        // start_states.push_back(new_start_state);
         ss->copy_from(new_start_state);
         ctr += 1;
         start_states[ctr] = new_start_state;
@@ -318,6 +318,7 @@ int main(int argc, char* argv[])
           }
           std::cout << "backtracking at " << ctr << " to " << ctr - 1 << std::endl;
           backtracks[i] = true;
+          time_taken += 20.0;
           ctr -= 1;
           std::cout << start_states[ctr]->at(0) << ", " << start_states[ctr]->at(1) << std::endl;
           ss->copy_from(start_states[ctr]);
