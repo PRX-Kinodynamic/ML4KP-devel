@@ -107,8 +107,8 @@ space_point_t navigate(param_loader params, simulation_context context, std::vec
 
   *time_taken += dirt->current_solution_time;
 
-  std::string solutions_path = solution_folder + "solutions/";
-  std::string trajectory_path = solution_folder + "trajectory/";
+  std::string solutions_path = solution_folder + "plans/";
+  std::string trajectory_path = solution_folder + "trajectories/";
   std::string trees_path = solution_folder + "trees/";
   create_folder(solutions_path);
   create_folder(trees_path);
@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
 
     std::cout << "solution_" << i << std::endl;
 
-    std::string solution_folder = output_folder_data + "solution_" + std::to_string(i) + "/";
+    std::string solution_folder = output_folder_data + "trial_" + std::to_string(i) + "/";
     create_folder(solution_folder);
 
     sim->reset_simulation();
@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
     time_taken = 0.0;
 
     // // all 24 walls
-    // sim->add_pair({ { "ball", "case" } });
+    sim->add_pair({ { "ball", "case" } });
     // sim->add_pair({ { "ball", "wall_1" },
     //                 { "ball", "wall_2" },
     //                 { "ball", "wall_3" },
@@ -275,11 +275,11 @@ int main(int argc, char* argv[])
           goal_vec[1] = subgoal[1];
           goal_region_radius = subgoal[2];
 
-          std::cout << "subgoal " << subgoal[0] << ", " << subgoal[1] << ", " << subgoal[2] << std::endl;
+          // std::cout << "subgoal " << subgoal[0] << ", " << subgoal[1] << ", " << subgoal[2] << std::endl;
 
           new_start_state =
               navigate(params["navigate"], context, goal_vec, goal_region_radius, dirt_query_ptr, &dirt, &time_taken,
-                       &full_solution, solution_folder, &all_stats, "task" + std::to_string(ctr));
+                       &full_solution, solution_folder, &all_stats, "subgoal" + std::to_string(ctr));
           ss->copy_from(new_start_state);
         }
       }
@@ -294,7 +294,7 @@ int main(int argc, char* argv[])
 
       new_start_state =
           navigate(params["navigate"], context, goal_vec, goal_region_radius, dirt_query_ptr, &dirt, &time_taken,
-                   &full_solution, solution_folder, &all_stats, "task" + std::to_string(ctr));
+                   &full_solution, solution_folder, &all_stats, "subgoal" + std::to_string(ctr));
       ss->copy_from(new_start_state);
     }
     catch (std::exception& e)
@@ -316,7 +316,7 @@ int main(int argc, char* argv[])
 
     if (params["output_plan"].as<bool>())
     {
-      full_solution.to_file(output_folder + "/solution_" + std::to_string(i) + ".txt");
+      full_solution.to_file(output_folder + "/plan_trial_" + std::to_string(i) + ".txt");
     }
 
     double timer_measure = 0.0;
