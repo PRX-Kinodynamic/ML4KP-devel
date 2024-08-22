@@ -89,6 +89,7 @@ space_point_t navigate(param_loader params, simulation_context context, std::vec
   dirt_query_ptr = move_task.get_query();
 
   condition_check_t* checker = move_task.get_condition_checker();
+  dirt->reset();
   checker->reset();
 
   // // how long to run the planner
@@ -161,6 +162,7 @@ int main(int argc, char* argv[])
 
   int num_trials = params["num_trials"].as<int>();
   bool do_subgoals = params["do_subgoals"].as<bool>();
+  bool do_backtrack = params["backtrack"].as<bool>();
 
   std::vector<double> goal_position = params["goal_position"].as<std::vector<double>>();
 
@@ -185,6 +187,10 @@ int main(int argc, char* argv[])
 
   std::vector<double> goal_vec(n, 0.0);
   double goal_region_radius = 0.05;
+
+  subgoals.push_back(goal_position);
+  subgoals.erase(subgoals.begin());
+
   plan_t full_solution(cs);
   double time_taken = 0.0;
   std::vector<double> record_time_taken;
@@ -199,6 +205,7 @@ int main(int argc, char* argv[])
   dirt_query_t* dirt_query_ptr;
   dirt_t dirt(params["planner_name"].as<>());
   int failures = 0;
+  std::unordered_map<int, bool> backtracks;
   std::vector<int> task_failure;
   std::vector<std::vector<std::vector<double>>> full_stats;
 
@@ -208,6 +215,7 @@ int main(int argc, char* argv[])
     std::vector<std::vector<double>> all_stats;
 
     std::cout << "solution_" << i << std::endl;
+    backtracks[i] = false;
 
     std::string solution_folder = output_folder_data + "trial_" + std::to_string(i) + "/";
     create_folder(solution_folder);
@@ -253,62 +261,75 @@ int main(int argc, char* argv[])
 
     init_random(params["random_seed"].as<int>() + i);
 
-    space_point_t new_start_state;
+    std::unordered_map<int, space_point_t> start_states;
+    space_point_t new_start_state = ss->make_point();
+    std::vector<int> repeats;
+    repeats.assign(subgoals.size(), 0);
+    // ss->copy_to_point(new_start_state);
+    start_states[0] = new_start_state;
+    // start_states.push_back(new_start_state);
 
-    int ctr = -1;
+    int ctr = 0;
     // std::cout << subgoals.size() << std::endl;
     int random_skip = uniform_int_random(1, subgoals.size());
-    try
+    bool too_many_repeats = false;
+    // PRX_DEBUG_PRINT
+    do
     {
-      if (do_subgoals)
+      if (ctr < 0)
       {
-        for (auto subgoal : subgoals)
+        break;
+      }
+      std::vector<double> subgoal = subgoals[ctr];
+      goal_vec.assign(n, 0.0);
+      goal_vec[0] = subgoal[0];
+      goal_vec[1] = subgoal[1];
+      goal_region_radius = subgoal[2];
+      std::cout << "subgoal " << subgoal[0] << ", " << subgoal[1] << ", " << subgoal[2] << std::endl;
+      try
+      {
+        if (repeats[ctr] > 5)
         {
-          ctr += 1;
-          if (ctr == 0)
+          too_many_repeats = true;
+          throw std::runtime_error("repeated subgoal");
+        }
+
+        repeats[ctr] += 1;
+        new_start_state = navigate(params["navigate"], context, goal_vec, goal_region_radius, dirt_query_ptr, &dirt,
+                                   &time_taken, &full_solution, solution_folder, &all_stats,
+                                   "subgoal" + std::to_string(ctr) + "_" + std::to_string(repeats[ctr]));
+
+        // start_states.push_back(new_start_state);
+        ss->copy_from(new_start_state);
+        ctr += 1;
+        start_states[ctr] = new_start_state;
+      }
+      catch (std::exception& e)
+      {
+        // std::cout << e.what() << std::endl;
+        task_failure.push_back(ctr);
+        if (do_backtrack)
+        {
+          if ((ctr == 0) || too_many_repeats)
           {
-            continue;
+            std::cout << "FAILED: solution_" << i << std::endl;
+            failures += 1;
+            break;
           }
-
-          goal_vec.assign(n, 0.0);
-          goal_vec[0] = subgoal[0];
-          goal_vec[1] = subgoal[1];
-          goal_region_radius = subgoal[2];
-
-          // std::cout << "subgoal " << subgoal[0] << ", " << subgoal[1] << ", " << subgoal[2] << std::endl;
-
-          new_start_state =
-              navigate(params["navigate"], context, goal_vec, goal_region_radius, dirt_query_ptr, &dirt, &time_taken,
-                       &full_solution, solution_folder, &all_stats, "subgoal" + std::to_string(ctr));
-          ss->copy_from(new_start_state);
+          std::cout << "backtracking at " << ctr << " to " << ctr - 1 << std::endl;
+          backtracks[i] = true;
+          ctr -= 1;
+          std::cout << start_states[ctr]->at(0) << ", " << start_states[ctr]->at(1) << std::endl;
+          ss->copy_from(start_states[ctr]);
+        }
+        else
+        {
+          failures += 1;
+          std::cout << "FAILED: solution_" << i << std::endl;
+          break;
         }
       }
-
-      ctr += 1;
-      goal_vec.assign(n, 0.0);
-      goal_vec[0] = goal_position[0];
-      goal_vec[1] = goal_position[1];
-      goal_region_radius = goal_position[2];
-
-      // std::cout << "goal " << goal_position[0] << ", " << goal_position[1] << " " << goal_region_radius << std::endl;
-
-      new_start_state =
-          navigate(params["navigate"], context, goal_vec, goal_region_radius, dirt_query_ptr, &dirt, &time_taken,
-                   &full_solution, solution_folder, &all_stats, "subgoal" + std::to_string(ctr));
-      ss->copy_from(new_start_state);
-    }
-    catch (std::exception& e)
-    {
-      std::cout << e.what() << std::endl;
-      // if (params["output_plan"].as<bool>())
-      // {
-      //   full_solution.to_file(output_folder + "/solution_" + std::to_string(i) + ".txt");
-      // }
-      std::cout << "FAILED: solution_" << i << std::endl;
-      task_failure.push_back(ctr);
-      failures += 1;
-      continue;
-    }
+    } while (ctr < subgoals.size());
 
     record_time_taken.push_back(time_taken);
 
@@ -344,26 +365,6 @@ int main(int argc, char* argv[])
   std::vector<std::vector<double>> per_subgoal_cost;
   std::vector<double> subgoal_time;
   subgoal_time.assign(subgoals.size(), 0.0);
-
-  //  for(auto all_stats: full_stats){
-  //   // each trial
-  //     for(auto stats: all_stats){
-  //       // each subplan
-  //       std::stringstream ss;
-  //           for (auto& data_point : stats)
-  //           {
-  //             auto last = data_point.end();
-  //             for (auto first = data_point.begin(); first != last;)
-  //             {
-  //               ss << *first;
-  //               if (++first != last)
-  //                 ss << ",";
-  //             }
-  //             ss << "\n";
-  //           }
-  //           return ss.str();
-  //     }
-  //  }
 
   for (auto all_stats : full_stats)
   {
@@ -417,6 +418,18 @@ int main(int argc, char* argv[])
   for (auto task : task_failure)
   {
     fout4 << task << std::endl;
+  }
+
+  if (do_backtrack)
+  {
+    std::ofstream fout_bt(output_folder + "/backtracks.txt");
+    for (int i = 0; i < num_trials; i++)
+    {
+      if (backtracks[i])
+      {
+        fout_bt << i << std::endl;
+      }
+    }
   }
 
   std::ofstream fout5(output_folder + "/final_statistics.txt");

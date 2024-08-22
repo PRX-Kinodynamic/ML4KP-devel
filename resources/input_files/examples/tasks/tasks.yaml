@@ -1,17 +1,18 @@
 random_seed: 1
-xml_path: push/turning_interactions/12.xml
+xml_path: push/turning_interactions/6.xml
 planner_name: "dirt"
 
 checker_type: time
 checker_value: 10
 output_plan: true
-goal_position: [6.4, 0.0, 0.05]
+goal_position: [3.4, 0.0, 0.05]
 output_tree_folder: "/home/dhruv/2024/projects/NAMO/out/trees/"
 output_plan_file: "/home/dhruv/2024/projects/NAMO/out/1_5.txt"
-output_folder: "/home/dhruv/2024/projects/NAMO/out/turning_interactions/12/14Aug/subgoals_room2room_nocollisions/"
-subgoals_file: "/home/dhruv/2024/projects/ml4kp_ktamp/build/turning_interactions/12/subgoals_room2room.txt"
+output_folder: "/home/dhruv/2024/projects/NAMO/out/turning_interactions/6/22Aug/subgoals_room2room_nobnb_walls_final/"
+subgoals_file: "/home/dhruv/2024/projects/ml4kp_ktamp/build/turning_interactions/6/subgoals_room2room.txt"
 visualize: false
 do_subgoals: true
+backtrack: true
 num_trials: 30
 
 # collision_pairs: [
@@ -22,7 +23,7 @@ num_trials: 30
 # ]
 
 navigate:
-  env_xlim: [-0.13, 6.6]
+  env_xlim: [-0.13, 3.6]
   env_ylim: [-0.2, 0.2]
   min_control_steps: 0.1
   max_control_steps: 1.0
@@ -36,7 +37,7 @@ navigate:
   visualize_tree: true
   condition_checker:
     type: "time"  
-    value: 240
+    value: 20
     first_solution: true 
   ics:
     do_ics_check: false
