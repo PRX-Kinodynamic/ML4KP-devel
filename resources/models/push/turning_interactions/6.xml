@@ -158,7 +158,6 @@
     <site name="target6" pos="2.60 0.1 0.0" size="0.15" rgba="0 1 0 0.1" />
     <site name="target7" pos="3.10 -0.1 0.0" size="0.15" rgba="0 1 0 0.1" />
     <site name="target8" pos="3.2 0.0 0.0" size="0.05" rgba="0 1 0 0.1" />   -->
-
   </worldbody>
 
   <actuator>

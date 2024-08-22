@@ -1,4 +1,4 @@
-random_seed: 1
+random_seed: 15
 xml_path: push/turning_interactions/6.xml
 planner_name: "dirt"
 
@@ -8,7 +8,7 @@ output_plan: true
 goal_position: [3.4, 0.0, 0.05]
 output_tree_folder: "/home/dhruv/2024/projects/NAMO/out/trees/"
 output_plan_file: "/home/dhruv/2024/projects/NAMO/out/1_5.txt"
-output_folder: "/home/dhruv/2024/projects/NAMO/out/turning_interactions/6/22Aug/subgoals_room2room_nobnb_walls_final1/"
+output_folder: "/home/dhruv/2024/projects/NAMO/out/turning_interactions/6/22Aug/subgoals_room2room_nobnb_walls_final3/"
 subgoals_file: "/home/dhruv/2024/projects/ml4kp_ktamp/build/turning_interactions/6/subgoals_room2room.txt"
 visualize: false
 do_subgoals: true

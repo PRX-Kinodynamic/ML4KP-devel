@@ -120,7 +120,6 @@ space_point_t navigate(param_loader params, simulation_context context, std::vec
 
   plan_t solution = move_task.get_solution_plan();
 
-
   solution.to_file(solutions_path + task_name + ".txt");
   dirt_query_ptr->solution_traj.to_file(trajectory_path + task_name + ".txt");
   *full_solution += solution;  // move_task.get_solution_plan();
@@ -263,6 +262,7 @@ int main(int argc, char* argv[])
 
     std::unordered_map<int, space_point_t> start_states;
     space_point_t new_start_state = ss->make_point();
+    ss->copy_to(new_start_state);
     std::vector<int> repeats;
     repeats.assign(subgoals.size(), 0);
     // ss->copy_to_point(new_start_state);
@@ -271,7 +271,7 @@ int main(int argc, char* argv[])
 
     int ctr = 0;
     // std::cout << subgoals.size() << std::endl;
-    int random_skip = uniform_int_random(1, subgoals.size());
+    // int random_skip = uniform_int_random(1, subgoals.size());
     bool too_many_repeats = false;
     // PRX_DEBUG_PRINT
     do
@@ -307,11 +307,12 @@ int main(int argc, char* argv[])
       catch (std::exception& e)
       {
         // std::cout << e.what() << std::endl;
-        task_failure.push_back(ctr);
+
         if (do_backtrack)
         {
           if ((ctr == 0) || too_many_repeats)
           {
+            task_failure.push_back(i);
             std::cout << "FAILED: solution_" << i << std::endl;
             failures += 1;
             break;
@@ -325,6 +326,7 @@ int main(int argc, char* argv[])
         }
         else
         {
+          task_failure.push_back(i);
           failures += 1;
           std::cout << "FAILED: solution_" << i << std::endl;
           break;
@@ -378,42 +380,42 @@ int main(int argc, char* argv[])
     {
       cost += stats[3];
       time += stats[0];
-      individual_time_taken.push_back(stats[0]);
-      individual_cost.push_back(stats[3]);
-      subgoal_time[ctr] += stats[0];
+      // individual_time_takestatsn.push_back(stats[0]);
+      // individual_cost.push_back(stats[3]);
+      // subgoal_time[ctr] += [0];
       ctr += 1;
     }
     time_to_first_soln.push_back(time);
     cost_to_first_soln.push_back(cost);
-    per_subgoal_time_taken.push_back(individual_time_taken);
-    per_subgoal_cost.push_back(individual_cost);
+    // per_subgoal_time_taken.push_back(individual_time_taken);
+    // per_subgoal_cost.push_back(individual_cost);
   }
 
-  std::ofstream fout1(output_folder + "/cost_to_first_soln.txt");
-  for (auto cost : cost_to_first_soln)
-  {
-    fout1 << cost << std::endl;
-  }
+  // std::ofstream fout1(output_folder + "/cost_to_first_soln.txt");
+  // for (auto cost : cost_to_first_soln)
+  // {
+  //   fout1 << cost << std::endl;
+  // }
 
-  std::ofstream fout2(output_folder + "/per_subgoal_time_taken.txt");
-  for (auto time : per_subgoal_time_taken)
-  {
-    for (auto t : time)
-    {
-      fout2 << t << " ";
-    }
-    fout2 << std::endl;
-  }
+  // std::ofstream fout2(output_folder + "/per_subgoal_time_taken.txt");
+  // for (auto time : per_subgoal_time_taken)
+  // {
+  //   for (auto t : time)
+  //   {
+  //     fout2 << t << " ";
+  //   }
+  // fout2 << std::endl;
+  // }
 
-  std::ofstream fout3(output_folder + "/per_subgoal_cost.txt");
-  for (auto cost : per_subgoal_cost)
-  {
-    for (auto c : cost)
-    {
-      fout3 << c << " ";
-    }
-    fout3 << std::endl;
-  }
+  // std::ofstream fout3(output_folder + "/per_subgoal_cost.txt");
+  // for (auto cost : per_subgoal_cost)
+  // {
+  //   for (auto c : cost)
+  //   {
+  //     fout3 << c << " ";
+  //   }
+  //   fout3 << std::endl;
+  // }
 
   std::ofstream fout4(output_folder + "/task_failure.txt");
   for (auto task : task_failure)
@@ -439,9 +441,9 @@ int main(int argc, char* argv[])
         << std::accumulate(time_to_first_soln.begin(), time_to_first_soln.end(), 0.0) / time_to_first_soln.size()
         << std::endl;
 
-  fout5 << "subgoal average times: ";
-  for (auto _time : subgoal_time)
-  {
-    fout5 << _time / (num_trials - failures) << " ";
-  }
+  // fout5 << "subgoal average times: ";
+  // for (auto _time : subgoal_time)
+  // {
+  //   fout5 << _time / (num_trials - failures) << " ";
+  // }
 }
