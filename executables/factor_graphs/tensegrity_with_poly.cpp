@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
   the sites naming convention is s_{end_cap/motor its on}_{end_cap/motor its connected to}
   **/
   std::ifstream f(prx::lib_path + "/data/tensegrity/6d_estimation.json");
-  nlohmann::json json{ nlohmann::json::parse(f) };
+  nlohmann::json json = nlohmann::json::parse(f);
 
   gtsam::NonlinearFactorGraph graph;
   gtsam::Values initial_values;
@@ -164,14 +164,14 @@ int main(int argc, char* argv[])
   std::vector<Bars> poses;
   std::vector<double> timestamps;
   std::vector<std::vector<BarEndCaps>> rods;
-  for (auto& element : json)
+  for (const nlohmann::json& element : json)
   {
     const double ti{ element["time"].template get<double>() };
     const std::vector<double> vec{ element["pos"].template get<std::vector<double>>() };
 
-    const nlohmann::json js_rod01{ element["end_pts"]["rod_01"] };
-    const nlohmann::json js_rod23{ element["end_pts"]["rod_23"] };
-    const nlohmann::json js_rod45{ element["end_pts"]["rod_45"] };
+    const nlohmann::json js_rod01 = element["end_pts"]["rod_01"];
+    const nlohmann::json js_rod23 = element["end_pts"]["rod_23"];
+    const nlohmann::json js_rod45 = element["end_pts"]["rod_45"];
 
     const Translation r01pt0{ js_rod01["rod_01_end_pt0"].template get<std::vector<double>>().data() };
     const Translation r01pt1{ js_rod01["rod_01_end_pt1"].template get<std::vector<double>>().data() };
