@@ -13,6 +13,13 @@ void indeterminant_linear_system_helper(gtsam::NonlinearFactorGraph& graph, gtsa
                                         std::ostream& os = std::cout)
 {
   boost::shared_ptr<gtsam::GaussianFactorGraph> fgl{ graph.linearize(values) };
+  os << "Keys:\n";
+  int idx{ 0 };
+  for (auto k : fgl->keys())
+  {
+    os << "[" << idx << "]: " << SF::formatter(k) << "\n";
+    idx++;
+  }
   os << "Use Matlab's 'sparse()':\n";
   os << fgl->sparseJacobian_() << "\n";
 

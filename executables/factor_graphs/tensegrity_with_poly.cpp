@@ -150,10 +150,12 @@ int main(int argc, char* argv[])
   int t{ 0 };
   const Translation offset(0, 0, 3.25 / 2.0);
   const double noise_limit{ params["noise"].as<double>() };
-
+  const double noise_sigma{ 1.0 };
+  // const double noise_sigma{ noise_limit == 0 ? 1.0 : noise_limit };
+  // const double noise_sigma{ noise_limit };
   gtsam::noiseModel::Base::shared_ptr se3_noise{ gtsam::noiseModel::Isotropic::Sigma(6, 1) };
   gtsam::noiseModel::Base::shared_ptr se3_prior{ gtsam::noiseModel::Isotropic::Sigma(6, 1e-2) };
-  gtsam::noiseModel::Base::shared_ptr z_noise{ gtsam::noiseModel::Isotropic::Sigma(3, 1.0) };
+  gtsam::noiseModel::Base::shared_ptr z_noise{ gtsam::noiseModel::Isotropic::Sigma(3, noise_sigma) };
 
   std::ofstream ofs_gt(prx::out_path + "/tensegrity_gt.txt");
   std::ofstream ofs_encaps(prx::out_path + "/tensegrity_gt_caps.txt");
@@ -238,8 +240,8 @@ int main(int argc, char* argv[])
       const std::string skX{ SF::formatter(kx) };
       const std::string skP{ SF::formatter(kp) };
 
-      const Translation rand0{ prx::uniform_random<Translation>(-noise_limit, noise_limit) };
-      const Translation rand1{ prx::uniform_random<Translation>(-noise_limit, noise_limit) };
+      const Translation rand0{ prx::gaussian_random<Translation>(-noise_limit, noise_limit) };
+      const Translation rand1{ prx::gaussian_random<Translation>(-noise_limit, noise_limit) };
 
       const BarEndCaps rod_caps{ rods[i][r] };
       const Translation r1{ rod_caps.first + rand0 };
@@ -271,8 +273,13 @@ int main(int argc, char* argv[])
   gtsam::LevenbergMarquardtOptimizer optimizer(graph, initial_values, lm_params);
   gtsam::Values result{ optimizer.optimize() };
   // result.print();
+  const std::function<bool(const gtsam::Factor* /*factor*/, double /*whitenedError*/, size_t /*index*/)>&
+      printCondition = [&](const gtsam::Factor*, double err, size_t) { return err > 2.0; };
 
-  std::ofstream ofs_fg(prx::out_path + "/tensegrity_fg.txt");
+  graph.printErrors(result, "Error: ", SF::formatter, printCondition);
+
+  std::ofstream ofs_fg_se3(prx::out_path + "/tensegrity_fg.txt");
+  std::ofstream ofs_fg_endcaps(prx::out_path + "/tensegrity_fg_caps.txt");
 
   for (int i = 0; i < timestamps.size(); ++i)
   {
@@ -284,11 +291,17 @@ int main(int argc, char* argv[])
     {
       const gtsam::Key kp{ poly_symbol(r, div_num) };
       gtsam::ParameterMatrix<6> params{ result.at<gtsam::ParameterMatrix<6>>(kp) };
-      ofs_fg << f(params) << " ";
+      const SE3 se3{ f(params) };
+      const Translation cap0{ SE3ObsFactor::predict(se3, offset) };
+      const Translation cap1{ SE3ObsFactor::predict(se3, -offset) };
+      ofs_fg_se3 << se3 << " ";
+      ofs_fg_endcaps << cap0.transpose() << " " << cap1.transpose() << " ";
     }
-    ofs_fg << "\n";
+    ofs_fg_se3 << "\n";
+    ofs_fg_endcaps << "\n";
   }
-  ofs_fg.close();
+  ofs_fg_se3.close();
+  ofs_fg_endcaps.close();
 
   return 0;
 }
