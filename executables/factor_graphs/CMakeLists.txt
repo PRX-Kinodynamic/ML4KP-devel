@@ -18,8 +18,6 @@ if(BUILD_FOR_GTSAM)
 	foreach(f ${EXECUTABLES_FACTOR_GRAPHS_FILES})
 		GET_FILENAME_COMPONENT(F_EXEC ${f} NAME_WE )
 		add_executable(${F_EXEC} ${f})
-		get_target_property(OUT FactorGraphs LINK_LIBRARIES)
-		message("OUT ${OUT}")
 
 		target_link_libraries(${F_EXEC} ${PROJECT_NAME} gtsam CGAL::CGAL 	)
 

@@ -207,6 +207,7 @@ public:
   {
     os << static_cast<planner_query_t>(obj) << "\n";
     os << "goal_region_radius: " << obj.goal_region_radius;
+    os << "total_solutions: " << obj.total_solutions;
 
     return os;
   }

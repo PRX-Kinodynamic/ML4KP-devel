@@ -44,7 +44,12 @@ double uniform_random();
  * @author Zakary Littlefield
  * @return A double precision random number.
  */
-double gaussian_random(const double mean = 0.0, const double stddev = 1.0);
+template <typename Type = double>
+Type gaussian_random(const Type mean = 0.0, const Type stddev = 1.0)
+{
+  const double x{ ::prx::random::gaussian_zero_one(global_generator) };
+  return x * stddev + mean;
+}
 
 /**
  * Returns a random number from the uniform distribution within the
@@ -94,6 +99,17 @@ Container uniform_random(const Type min, const Type max, Initializers... args)
   for (int i = 0; i < container.size(); ++i)
   {
     container[i] = uniform_random(min, max);
+  }
+  return container;
+}
+
+template <typename Container, typename Type, typename... Initializers>
+Container gaussian_random(const Type min, const Type max, Initializers... args)
+{
+  Container container{ args... };
+  for (int i = 0; i < container.size(); ++i)
+  {
+    container[i] = gaussian_random(min, max);
   }
   return container;
 }

@@ -85,9 +85,10 @@ int main()
 {
   // const std::string environment{ "environments/warehouse.yaml" };
   // const std::string environment{ "environments/forest.yaml" };
-  const std::string environment{ "environments/simple_obstacle.yaml" };
+  // const std::string environment{ "environments/simple_obstacle.yaml" };
+  const std::string environment{ "environments/bug_trap.yaml" };
   auto obstacles = prx::load_obstacles(environment);
-  std::string ignore_substr{ "wall" };
+  std::string ignore_substr{ "border" };
 
   int i{ 0 };
   while (i < obstacles.first.size())
@@ -108,14 +109,14 @@ int main()
   auto obstacle_collision_infos = prx::fg::collision_info_t::generate_infos(obstacles.second);
 
   Polygon_2 outer;
-  // outer.push_back(Point(-4, -4));
-  // outer.push_back(Point(45, -4));
-  // outer.push_back(Point(45, 30));
-  // outer.push_back(Point(-4, 30));
   outer.push_back(Point(-4, -4));
-  outer.push_back(Point(24, -4));
-  outer.push_back(Point(24, 24));
-  outer.push_back(Point(-4, 24));
+  outer.push_back(Point(45, -4));
+  outer.push_back(Point(45, 30));
+  outer.push_back(Point(-4, 30));
+  // outer.push_back(Point(-19, -16));  ////
+  // outer.push_back(Point(14, -16));   ////
+  // outer.push_back(Point(14, 16));    ////
+  // outer.push_back(Point(-19, 16));   ////
   // Polygon_2 hole;
   assert(outer.is_counterclockwise_oriented());
   Polygon_with_holes poly(outer);
