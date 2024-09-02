@@ -3,9 +3,9 @@
 #include <functional>
 
 #include "prx/simulation/controllers/lqr.hpp"
-#include "prx/simulation/system_controller.hpp"
+#include "prx/simulation/controller.hpp"
 #include "prx/utilities/math/first_order_derivative.hpp"
-
+#include "prx/simulation/plant.hpp"
 namespace prx
 {
 namespace simulation
@@ -32,10 +32,10 @@ public:
   using DerivB = prx::math::first_order_derivative_t<DynamicFunctionU, VectorU, Evaluations, MinDifference>;
 
   template <typename MatQ, typename MatR, typename VecX, typename VecU>
-  lqr_controller_t(system_ptr_t plant, const std::string& path, MatQ q, MatR r, VecX x0, VecU u0)
-    : system_controller_t(plant, path)
-    , _Xdim(plant->get_state_space()->size())
-    , _Udim(plant->get_control_space()->size())
+  lqr_controller_t(system_ptr_t system_ptr, const std::string& path, MatQ q, MatR r, VecX x0, VecU u0)
+    : controller_t(system_ptr, path)
+    , _Xdim(system_ptr->get_state_space()->size())
+    , _Udim(system_ptr->get_control_space()->size())
     , _x0(x0)
     , _u0(u0)
     , _dynamic_function_x(std::bind(&lqr_controller_t::dynamics, this, _1, _u0))
@@ -62,6 +62,11 @@ public:
     _plant->get_state_space()->copy_to(_x);
     const VectorU ctrl{ _lqr(_x, _x_ref) };
     _plant->get_control_space()->copy_from(ctrl);
+  }
+
+  virtual void compute_controls()
+  {
+    compute_control();
   }
 
   // get the underling LQR

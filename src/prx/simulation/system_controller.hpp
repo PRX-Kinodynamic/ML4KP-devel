@@ -11,7 +11,12 @@ namespace prx
 class system_controller_t : public system_t
 {
 public:
-  system_controller_t(system_ptr_t plant, const std::string& path);
+  system_controller_t(system_ptr_t plant, const std::string& path)
+    : system_t(path), _plant(std::dynamic_pointer_cast<prx::plant_t>(plant))
+  {
+    subsystems.clear();
+    composite_state_space = nullptr;
+  }
   virtual ~system_controller_t();
 
   virtual inline space_t* get_state_space() const override final
