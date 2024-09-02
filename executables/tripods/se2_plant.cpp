@@ -4,7 +4,7 @@
 #include "prx/utilities/general/type_conversions.hpp"
 #include "prx/factor_graphs/lie_groups/se3.hpp"
 #include "prx/factor_graphs/factors/se3_observation.hpp"
-#include "prx/simulation/controllers/lqr.hpp"
+#include "prx/simulation/controllers/lqr_controller.hpp"
 
 #include "prx/planning/world_model.hpp"
 #include "prx/planning/planners/rrt_star.hpp"
@@ -48,6 +48,7 @@ int main(int argc, char* argv[])
 
   params.add_opts(argc, argv);
 
+  prx::simulation_step = 0.01;
   const double time_limit{ params["/checker/time"].as<double>() };
   const int order{ params["order"].as<int>() };
   const int dimension{ order * 3 };
@@ -72,22 +73,29 @@ int main(int argc, char* argv[])
   prx::controller_ptr_t ctrl{ nullptr };
   if (params["controller"].as<>() == "LQR")
   {
+    using LQR = prx::simulation::lqr_controller_t<>;
     const Eigen::MatrixXd Q{ Eigen::MatrixXd::Identity(dimension, dimension) };
     const Eigen::MatrixXd R{ Eigen::MatrixXd::Identity(3, 3) };
-    std::shared_ptr<prx::lqr_t> lqr{ std::make_shared<prx::lqr_t>(plant, Q, R, "LQR") };
-    lqr->set_goal(Eigen::VectorXd::Zero(dimension));
-    ctrl = lqr;
+    const Eigen::VectorXd x_goal{ Eigen::VectorXd::Zero(dimension) };
+    const Eigen::VectorXd u_goal{ Eigen::VectorXd::Zero(3) };
+    ctrl = std::make_shared<LQR>(plant, "LQR", Q, R, x_goal, u_goal);
+
+    // ctrl = lqr;
   }
 
-  prx::condition_check_t checker("time", time_limit);
+  prx::condition_check_t checker("sim_time", time_limit);
 
   prx::space_point_t start_state{ ss->make_point() };
   prx::trajectory_t traj(ss);
 
+  start_state->at(0) = -10;
+  start_state->at(1) = -10;
+  start_state->at(2) = -1;
+
   sg->propagate(start_state, ctrl, checker, traj);
 
   prx::three_js_group_t* vis_group = new prx::three_js_group_t({ plant }, { obstacle_list });
-  std::string body_name{ "body" };
+  std::string body_name{ plant_name + "/body" };
 
   vis_group->add_detailed_vis_infos(prx::info_geometry_t::FULL_LINE, traj, body_name, ss);
   vis_group->add_animation(traj, ss, start_state);

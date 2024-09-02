@@ -1,114 +1,73 @@
 #define BOOST_AUTO_TEST_MAIN lqr_controller_test
-#include "prx/simulation/controllers/lqr.hpp"
-#include "prx/simulation/plants/plants.hpp"
-#include "prx/utilities/defs.hpp"
-#include "prx/utilities/general/transforms.hpp"
+
 #include <boost/test/unit_test.hpp>
 #include <string>
 
-BOOST_AUTO_TEST_CASE(lqr_pendulum_test)
+#include "prx/utilities/defs.hpp"
+#include "prx/simulation/controllers/lqr.hpp"
+
+// Example from https://www.mathworks.com/help/control/ref/lti.lqr.html
+// First example "LQR Control for Inverted Pendulum Model"
+BOOST_AUTO_TEST_CASE(lqr_from_known_linear_system)
 {
-  prx::simulation_step = 0.01;
-  prx::init_random(112392);
+  const Eigen::Index Xdim{ 4 };
+  const Eigen::Index Udim{ 1 };
+  using LQR = prx::simulation::lqr_t<Xdim, Udim>;
 
-  // std::cout << "Checking pendulum..." << std::endl;
-  std::string plant_name = "pendulum";
-  std::string plant_path = "pendulum";
-  auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
+  LQR::MatrixA A;
+  LQR::MatrixB B;
+  LQR::MatrixQ Q;
+  LQR::MatrixR R;
 
-  const auto ss = plant->get_state_space();
-  const auto cs = plant->get_control_space();
-  const auto ps = plant->get_parameter_space();
+  A << 0.0, +1.0, 0.0, 0.0,  // no-lint
+      +0.0, -0.1, 3.0, 0.0,  // no-lint
+      +0.0, +0.0, 0.0, 1.0,  // no-lint
+      +0.0, -0.5, 30., 0.0;
 
-  double length = 0.5;
-  double friction = 0.1;
-  double mass = 0.15;
-  double normalize = 1;
-  std::vector<double> v = { length, friction, mass, normalize };
-  ps->copy_from_vector(v);
+  B << 0.0, 2.0, 0.0, 5.0;
 
-  auto Q = Eigen::MatrixXd::Identity(2, 2);
-  auto R = Eigen::MatrixXd::Identity(1, 1);
-  // auto pendulum = std::dynamic_pointer_cast<prx::pendulum_t>(plant);
-  // auto pendulum = std::make_shared<prx::lti_t>(plant);
-  // pendulum -> linearize();
+  Q << 1, 0, 0, 0,  // no-lint
+      0, 0, 0, 0,   // no-lint
+      0, 0, 1, 0,   // no-lint
+      0, 0, 0, 0;
 
-  prx::lqr_t lqr(plant, Q, R, "LQR");
-  lqr.set_goal(Eigen::VectorXd::Zero(2));
-  lqr.compute_K();
-  Eigen::MatrixXd K = lqr.get_K();
-  // std::cout << "A: " << lqr.get_linearized_plant -> get_A() << std::endl;
-  // std::cout << "B: " << lqr.get_linearized_plant -> get_B() << std::endl;
-  // std::cout << "K: " << K << std::endl;
+  R << 1;
 
-  BOOST_CHECK(prx::are_approx_equal(K(0, 0), 7.39050619, 1e-5));
-  BOOST_CHECK(prx::are_approx_equal(K(0, 1), 2.60611851, 1e-5));
+  LQR lqr{ A, B, Q, R };
 
-  // std::cout << "Pendulum OK" << std::endl;
+  LQR::MatrixK K_expected;
+  K_expected << -1.0000, -1.7559, 16.9145, 3.2274;
+
+  const LQR::MatrixK K{ lqr.K() };
+
+  const LQR::VectorX x{ 2.0000, 0.5000, 1.0000, 0.5000 };
+
+  const LQR::VectorU u{ lqr(x) };
+  const LQR::VectorU u_expected{ -15.6502 };
+
+  BOOST_CHECK_MESSAGE(prx::are_matrices_approx_equal(K_expected, K, 1e-4), EXPECTED_GOT(K_expected, K));
+  BOOST_CHECK_MESSAGE(prx::are_matrices_approx_equal(u_expected, u, 1e-4), EXPECTED_GOT(u_expected, u));
 }
 
-BOOST_AUTO_TEST_CASE(lqr_acrobot_test)
+// Example from https://www.mathworks.com/help/control/ref/lti.lqr.html
+// First example "LQR Control using State-Space Matrices"
+BOOST_AUTO_TEST_CASE(lqr_from_known_K)
 {
-  prx::simulation_step = 0.01;
-  prx::init_random(112392);
+  const Eigen::Index Xdim{ 3 };
+  const Eigen::Index Udim{ 1 };
+  using LQR = prx::simulation::lqr_t<Xdim, Udim>;
 
-  // std::cout << "Checking acrobot..." << std::endl;
-  std::string plant_name = "Acrobot";
-  std::string plant_path = "Acrobot";
-  auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
+  LQR::MatrixK K_known;
+  K_known << -0.5034, 52.8645, 1.4142;
+  LQR lqr{ K_known };
 
-  const auto ss = plant->get_state_space();
-  const auto cs = plant->get_control_space();
-  const auto ps = plant->get_parameter_space();
+  const LQR::VectorX x{ 0, 0, 2 };
+  const LQR::VectorU u{ lqr(x) };
 
-  double mass = 1.0;
-  double g = 9.81;
-  double l1 = 1.0;
-  double l2 = 1.0;
-  double I1 = 0.2;
-  double I2 = 1.0;
-  double d1 = 1.0;  // Damping
-  double d2 = 1.0;
-  double viz_length = 20;
-  std::vector<double> v = { mass, g, l1, l2, I1, I2, d1, d2, viz_length };
-  ps->copy_from_vector(v);
+  // Should be -K * x = -1.4142 * 2
+  const LQR::VectorU u_expected{ -2.8284 };
 
-  // Eigen::Vector4d diagonal;
-  Eigen::Matrix4d Q = Eigen::Matrix4d::Zero();
-  Q.diagonal() << 10, 10, 1, 1;
-  // auto Q = diagonal.asDiagonal(); //Eigen::MatrixXd::Identity(4,4);
-  Eigen::MatrixXd R = Eigen::MatrixXd::Identity(1, 1);
-  // auto acrobot = std::dynamic_pointer_cast<prx::two_link_acrobot_t>(plant);
-  // auto acrobot = std::make_shared<prx::lti_t>(plant);
-  auto goal_pt = ss->make_point();
-  (*goal_pt)[0] = PRX_PI;
-  // std::cout << "Q: " << Q << std::endl;
-  // acrobot -> linearize();
-  // std::cout << "A: " << acrobot -> get_A() << std::endl;
-  // std::cout << "B: " << acrobot -> get_B() << std::endl;
-  prx::lqr_t lqr(plant, Q, R, "LQR");
-  lqr.set_goal(goal_pt);
-  lqr.compute_K();
-  Eigen::MatrixXd K = lqr.get_K();
-
-  Eigen::Matrix4d A_from_matlab;
-  A_from_matlab << 0, 0, 1.000000000000000, 0, 0, 0, 0, 1.000000000000000, 12.907894736841627, -2.581578947368598, 0, 0,
-      -14.456842105262695, 8.777368421053325, 0, 0;
-
-  Eigen::MatrixXd B_from_matlab;
-  B_from_matlab.resize(4, 1);
-  B_from_matlab << 0, 0, -1.578947368421053, 3.368421052631580;
-
-  Eigen::MatrixXd K_from_matlab;
-  K_from_matlab.resize(1, 4);
-  K_from_matlab << -1.263938740391128 * 1.0e+02, -0.328348178538952 * 1.0e+02, -0.492746311271306 * 1.0e+02,
-      -0.189862747615557 * 1.0e+02;
-
-  // std::cout << "A from matlab: " << A_from_matlab << std::endl;
-  // std::cout << "B from matlab: " << B_from_matlab << std::endl;
-  BOOST_CHECK(prx::are_matrices_approx_equal(lqr.get_linearized_plant()->get_A(), A_from_matlab, 1e-5));
-  BOOST_CHECK(prx::are_matrices_approx_equal(lqr.get_linearized_plant()->get_B(), B_from_matlab, 1e-5));
-  BOOST_CHECK(prx::are_matrices_approx_equal(K, K_from_matlab, 1e-5));
-
-  // std::cout << "Acrobot OK" << std::endl;
+  BOOST_CHECK_MESSAGE(prx::are_matrices_approx_equal(u_expected, u, 1e-4), EXPECTED_GOT(u_expected, u));
 }
+
+// BOOS
