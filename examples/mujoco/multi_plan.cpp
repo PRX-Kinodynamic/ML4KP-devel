@@ -28,7 +28,7 @@ void write_trees(dirt_query_t* dirt_query_ptr, std::string output_folder, std::s
     }
   }
   unsigned count = 0;
-  // PRX_DEBUG_PRINT
+  // 
   for (auto traj : dirt_query_ptr->tree_visualization)
   {
     std::string filename = foldername + std::to_string(count) + ".txt";
@@ -80,12 +80,12 @@ space_point_t manipulate(param_loader params, simulation_context context, std::v
 }
 
 space_point_t navigate(param_loader params, simulation_context context, std::vector<double> goal_vec,
-                       double goal_region_radius, dirt_query_t* dirt_query_ptr, dirt_t* dirt, double* time_taken,
+                       std::vector<double> goal_region_radius, dirt_query_t* dirt_query_ptr, dirt_t* dirt, double* time_taken,
                        plan_t* full_solution, std::string solution_folder, std::vector<std::vector<double>>* all_stats,
                        std::string task_name)
 {
-  navigate_task_t move_task = navigate_task_t(params, context, goal_vec, goal_region_radius);
-
+  navigate_task_t move_task = navigate_task_t(params, context, goal_vec);
+  move_task.initialize(goal_region_radius);
   std::string solutions_path = solution_folder + "plans/";
   std::string trajectory_path = solution_folder + "trajectories/";
   std::string trees_path = solution_folder + "trees/";
@@ -170,7 +170,6 @@ int main(int argc, char* argv[])
   std::string output_folder_data = output_folder + "/data/";
   create_folder(output_folder_data);
 
-  std::vector<std::vector<double>> subgoals = read_subgoals_from_file(params["subgoals_file"].as<std::string>());
 
   // intialize simulator with environment xml file
   bool visualize = params["visualize"].as<bool>();
@@ -185,10 +184,13 @@ int main(int argc, char* argv[])
   int n = ss->get_dimension();
 
   std::vector<double> goal_vec(n, 0.0);
-  double goal_region_radius = 0.05;
+  // double goal_region_radius = 0.05;
+   std::vector<double> goal_region_radius = {0., 0.};
 
-  subgoals.push_back(goal_position);
-  subgoals.erase(subgoals.begin());
+  std::vector<std::vector<double>> subgoals;
+
+  subgoals = read_subgoals_from_file(params["subgoals_file"].as<std::string>());
+
 
   plan_t full_solution(cs);
   double time_taken = 0.0;
@@ -204,9 +206,11 @@ int main(int argc, char* argv[])
   dirt_query_t* dirt_query_ptr;
   dirt_t dirt(params["planner_name"].as<>());
   int failures = 0;
-  std::unordered_map<int, bool> backtracks;
-  std::vector<int> task_failure;
+  std::unordered_map<int, int> backtracks;
+  std::vector<int> task_failure_list;
   std::vector<std::vector<std::vector<double>>> full_stats;
+
+  
 
   for (int i = 0; i < num_trials; i++)
   {
@@ -214,8 +218,9 @@ int main(int argc, char* argv[])
     std::vector<std::vector<double>> all_stats;
 
     std::cout << "solution_" << i << std::endl;
-    backtracks[i] = false;
-
+    
+    backtracks[i] = 0;
+    
     std::string solution_folder = output_folder_data + "trial_" + std::to_string(i) + "/";
     create_folder(solution_folder);
 
@@ -229,8 +234,8 @@ int main(int argc, char* argv[])
     dirt.reset();
     time_taken = 0.0;
 
-    // // all 24 walls
-    sim->add_pair({ { "ball", "case" } });
+    // // // all 24 walls
+    // sim->add_pair({ { "ball", "case" } });
     // sim->add_pair({ { "ball", "wall_1" },
     //                 { "ball", "wall_2" },
     //                 { "ball", "wall_3" },
@@ -273,7 +278,8 @@ int main(int argc, char* argv[])
     // std::cout << subgoals.size() << std::endl;
     // int random_skip = uniform_int_random(1, subgoals.size());
     bool too_many_repeats = false;
-    // PRX_DEBUG_PRINT
+    bool task_failure = false;
+    // 
     do
     {
       if (ctr < 0)
@@ -284,8 +290,9 @@ int main(int argc, char* argv[])
       goal_vec.assign(n, 0.0);
       goal_vec[0] = subgoal[0];
       goal_vec[1] = subgoal[1];
-      goal_region_radius = subgoal[2];
-      std::cout << "subgoal " << subgoal[0] << ", " << subgoal[1] << ", " << subgoal[2] << std::endl;
+      goal_region_radius[0] = subgoal[2];
+      goal_region_radius[1] = subgoal[3];
+      std::cout << "subgoal " << subgoal[0] << ", " << subgoal[1] << ", " << subgoal[2] << ", " << subgoal[3] <<  std::endl;
       try
       {
         // if repeat this subgoal more than 5 times, then call it a failure
@@ -306,27 +313,29 @@ int main(int argc, char* argv[])
       }
       catch (std::exception& e)
       {
-        // std::cout << e.what() << std::endl;
+        std::cout << e.what() << std::endl;
 
         if (do_backtrack)
         {
           if ((ctr == 0) || too_many_repeats)
           {
-            task_failure.push_back(i);
+            task_failure_list.push_back(i);
+            task_failure = true;
             std::cout << "FAILED: solution_" << i << std::endl;
             failures += 1;
             break;
           }
           std::cout << "backtracking at " << ctr << " to " << ctr - 1 << std::endl;
-          backtracks[i] = true;
-          time_taken += 20.0;
+          backtracks[i] += 1;
+          time_taken += 5.0;
           ctr -= 1;
           std::cout << start_states[ctr]->at(0) << ", " << start_states[ctr]->at(1) << std::endl;
           ss->copy_from(start_states[ctr]);
         }
         else
         {
-          task_failure.push_back(i);
+          task_failure_list.push_back(i);
+          task_failure = true;
           failures += 1;
           std::cout << "FAILED: solution_" << i << std::endl;
           break;
@@ -334,8 +343,10 @@ int main(int argc, char* argv[])
       }
     } while (ctr < subgoals.size());
 
-    record_time_taken.push_back(time_taken);
-
+    if (!task_failure)
+    {
+      record_time_taken.push_back(time_taken);
+    }
     // std::cout << "time taken: " << time_taken << std::endl;
 
     if (params["output_plan"].as<bool>())
@@ -350,7 +361,9 @@ int main(int argc, char* argv[])
       timer_measure += stats[0];
     }
 
-    full_stats.push_back(all_stats);
+    if (!task_failure){
+      full_stats.push_back(all_stats);
+    }
   }
   // output_progress_bar(num_trials * 1.0 / num_trials);
 
@@ -417,8 +430,8 @@ int main(int argc, char* argv[])
   //   fout3 << std::endl;
   // }
 
-  std::ofstream fout4(output_folder + "/task_failure.txt");
-  for (auto task : task_failure)
+  std::ofstream fout4(output_folder + "/task_failure_list.txt");
+  for (auto task : task_failure_list)
   {
     fout4 << task << std::endl;
   }
@@ -428,10 +441,7 @@ int main(int argc, char* argv[])
     std::ofstream fout_bt(output_folder + "/backtracks.txt");
     for (int i = 0; i < num_trials; i++)
     {
-      if (backtracks[i])
-      {
-        fout_bt << i << std::endl;
-      }
+      fout_bt << backtracks[i] << std::endl;
     }
   }
 
@@ -439,6 +449,11 @@ int main(int argc, char* argv[])
   fout5 << "success: " << num_trials - failures << " out of " << num_trials << std::endl;
   fout5 << "average time taken: "
         << std::accumulate(time_to_first_soln.begin(), time_to_first_soln.end(), 0.0) / time_to_first_soln.size()
+        << std::endl;
+  fout5 << "average backtracks: "
+        << std::accumulate(backtracks.begin(), backtracks.end(), 0.0,
+                           [](double sum, const std::pair<int, int>& p) { return sum + p.second; }) /
+               backtracks.size()
         << std::endl;
 
   // fout5 << "subgoal average times: ";

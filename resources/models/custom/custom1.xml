@@ -16,60 +16,31 @@
       <joint name="joint_y" type="slide" pos="0 0 0" axis="0 1 0" />
     </body>
 
-    <body name="wall_1" pos="0.2 0.11 .05">
-      <geom name="wall_1" type="box" size="0.05 0.19 0.05" mass=".1" material="static" condim="4" />
-    </body>
-
-    <body name="wall_2" pos="0.2 -0.25 .05">
-      <geom name="wall_2" type="box" size="0.05 0.05 0.05" mass=".1" material="static" condim="4" />
-    </body>
-
-    <body name="movable_cube1" pos="0.2 -0.14 .05" euler="0 0 0">
+    <body name="movable_1" pos="0.3 0.0 .05" euler="0 0 0">
       <freejoint />
-      <geom name="movable_cube1" type="box" size="0.05 0.035 0.05" mass=".1" material="movable"
-        condim="4" />
+      <geom name="movable_1" type="box" size="0.05 0.28 0.05" mass=".1" material="movable" condim="4" />
     </body>
 
-    <body name="wall_3" pos="0.7 0.25 .05">
-      <geom name="wall_3" type="box" size="0.05 0.05 0.05" mass=".1" material="static" condim="4" />
+    <body name="wall_2" pos="0.6 -0.2 .05">
+      <geom name="wall_2" type="box" size="0.05 0.1 0.05" mass=".1" material="static" condim="4" />
     </body>
 
-    <body name="wall_4" pos="0.7 -0.11 .05">
-      <geom name="wall_4" type="box" size="0.05 0.19 0.05" mass=".1" material="static" condim="4" />
-    </body>
-
-    <body name="movable_cube2" pos="0.7 0.14 .05" euler="0 0 0">
-      <freejoint />
-      <geom name="movable_cube2" type="box" size="0.05 0.035 0.05" mass=".1" material="movable"
-        condim="4" />
-    </body>
-
-    <body name="wall_5" pos="1.2 0.11 .05">
-      <geom name="wall_5" type="box" size="0.05 0.19 0.05" mass=".1" material="static" condim="4" />
-    </body>
-
-    <body name="wall_6" pos="1.2 -0.25 .05">
-      <geom name="wall_6" type="box" size="0.05 0.05 0.05" mass=".1" material="static" condim="4" />
-    </body>
-
-    <body name="movable_cube3" pos="1.2 -0.14 .05" euler="0 0 0">
-      <freejoint />
-      <geom name="movable_cube3" type="box" size="0.05 0.035 0.05" mass=".1" material="movable"
-        condim="4" />
+    <body name="wall_3" pos="0.5 0.18 .05">
+      <geom name="wall_3" type="box" size="0.1 0.12 0.05" mass=".1" material="static" condim="4" />
     </body>
 
     <body name="case" pos="0 0 0.1">
       <geom name="gcase_a" type="box" size="0.05 0.32 0.1" pos="-.2 0 0" />
-      <geom name="gcase_b" type="box" size="0.05 0.32 0.1" pos="1.7 0 0" />
-      <geom name="gcase_c" type="box" size="1.0 0.04 0.1" pos="0.75 .36 0" />
-      <geom name="gcase_d" type="box" size="1.0 0.04 0.1" pos="0.75 -.36 0" />
+      <geom name="gcase_b" type="box" size="0.05 0.32 0.1" pos="1.1 0 0" />
+      <geom name="gcase_c" type="box" size="0.7 0.04 0.1" pos="0.45 .36 0" />
+      <geom name="gcase_d" type="box" size="0.7 0.04 0.1" pos="0.45 -.36 0" />
     </body>
 
     <!-- room to room -->
-    <site name="target1" type="box" pos="0.45 -0.0 0.0" size="0.2 0.32" rgba="0 1 0.6 0.2" />
-    <site name="target2" type="box" pos="0.95 0.0 0.0" size="0.2 0.32" rgba="0 1 0.6 0.2" />
-    <site name="target3" type="box" pos="1.45 -0.0 0.0" size="0.2 0.32" rgba="0 1 0.6 0.2" />
-    <site name="target4" type="box" pos="1.5 0.0 0.0" size="0.05 0.05" rgba="0 1 0.6 0.2" />
+    <!-- <site name="target1" type="box" pos="0.2 -0.2 0.0" size="0.1 0.1" rgba="0 1 0.6 0.2" />
+    <site name="target2" type="box" pos="0.6 0.2 0.0" size="0.1 0.1" rgba="0 1 0.6 0.2" />
+    <site name="target3" type="box" pos="1.0 -0.2 0.0" size="0.1 0.1" rgba="0 1 0.6 0.2" /> -->
+    <site name="target4" type="box" pos="0.9 0.0 0.0" size="0.2 0.3" rgba="0 1 0.6 0.2" />
 
     <!-- room to movable too room -->
     <!-- <site name="target1" pos="0.2 -0.14 0.0" size="0.05" rgba="0 1 0 0.1" />

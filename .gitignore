@@ -14,6 +14,7 @@ resources/input_files/mazes/*.yaml
 *.html
 *.out
 *.pyc
+*.txt
 .vscode/
 **/.DS_Store
 **/._.DS_Store
