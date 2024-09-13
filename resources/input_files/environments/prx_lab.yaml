@@ -1,0 +1,42 @@
+environment:
+    type: obstacle
+    root_configuration:
+      position: [0,0,0]
+      orientation: [0,0,0,1]
+    geometries:
+      -
+        name: border_top_cam0
+        collision_geometry:
+          type: box
+          dims: [ 3, .2, 1]
+          material: 0x0015ff
+        config:
+          position: [1.5, -2.1, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_bottom_cam0
+        collision_geometry:
+          type: box
+          dims: [ 3, 0.2, 1]
+          material: 0x0015ff
+        config:
+          position: [1.5, -0.2, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_left_cam0
+        collision_geometry:
+          type: box
+          dims: [ .2, 2, 1]
+          material: 0x0015ff
+        config:
+          position: [3.3, -1, 0]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_200
+        collision_geometry:
+          type: box
+          dims: [ .41, .31, 1]
+          material: 0x0015ff
+        config:
+          position: [1.43, -1.06,0 ]
+          orientation: [0,0,0,1]
