@@ -69,7 +69,9 @@ else()
     add_definitions(-DTORCH_NOT_BUILT)
 endif()
 
-
+if(BUILD_FOR_GTSAM)
+	find_package(GTSAM REQUIRED) # Uses installed package
+endif()
 
 include_directories(src/prx/external)
 include_directories(src/prx/visualization)

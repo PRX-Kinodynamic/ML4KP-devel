@@ -1,7 +1,7 @@
 if(BUILD_FOR_GTSAM)
 	add_definitions(-DGTSAM_USE_QUATERNIONS)
 	
-	find_package(GTSAM REQUIRED) # Uses installed package
+	# find_package(GTSAM REQUIRED) # Uses installed package
 	# find_package(GTSAMCMakeTools)
 
 	file(GLOB_RECURSE HDS_PRX_LIB_FACTOR_GRAPHS *.hpp)
