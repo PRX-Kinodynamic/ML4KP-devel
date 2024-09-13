@@ -139,11 +139,11 @@ public:
   // x1_predicted <- x0 + xdot dt
   // Error is: x1_predicted - x1_observed
   template <typename Dt>
-  Eigen::VectorXd error(const X& x1, const X& x0, const Xdot& xdot, const Dt& dt,
-                        boost::optional<Eigen::MatrixXd&> Hx1 = boost::none,
-                        boost::optional<Eigen::MatrixXd&> Hx0 = boost::none,
-                        boost::optional<Eigen::MatrixXd&> Hxdot = boost::none,
-                        boost::optional<Eigen::MatrixXd&> Hdt = boost::none) const
+  static Eigen::VectorXd error(const X& x1, const X& x0, const Xdot& xdot, const Dt& dt,
+                               boost::optional<Eigen::MatrixXd&> Hx1 = boost::none,
+                               boost::optional<Eigen::MatrixXd&> Hx0 = boost::none,
+                               boost::optional<Eigen::MatrixXd&> Hxdot = boost::none,
+                               boost::optional<Eigen::MatrixXd&> Hdt = boost::none)
   {
     Eigen::Matrix<double, DimX, DimX> err_H_b;       // Deriv error wrt between
     Eigen::Matrix<double, DimX, DimX> b_H_q1;        // Deriv between wrt x1
@@ -152,7 +152,7 @@ public:
     Eigen::Matrix<double, DimX, DimXdot> qp_H_qdot;  // Deriv predicted wrt xdot
     Eigen::Matrix<double, DimX, 1> qp_H_qdt;         // Deriv predicted wrt dt
 
-    const X prediction{ predict(x0, xdot, _h,                  // no-lint
+    const X prediction{ predict(x0, xdot, dt,                  // no-lint
                                 Hx0 ? &qp_H_q0 : nullptr,      // no-lint
                                 Hxdot ? &qp_H_qdot : nullptr,  // no-lint
                                 Hdt ? &qp_H_qdt : nullptr) };

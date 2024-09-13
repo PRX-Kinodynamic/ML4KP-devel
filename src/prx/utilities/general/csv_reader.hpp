@@ -85,6 +85,7 @@ public:
   csv_reader_t(const std::string filename, const char separator = prx::constants::separating_value)
     : _filename(filename), file(filename.c_str())
   {
+    prx_assert(std::filesystem::exists(filename), "Filename [" << filename << "] does not exists.");
   }
 
   ~csv_reader_t()
