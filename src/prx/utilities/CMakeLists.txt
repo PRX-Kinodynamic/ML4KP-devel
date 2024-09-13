@@ -1,6 +1,7 @@
 ## Utilities library of DirtMP
-find_package(YAMLCPP NAMES Yaml-cpp YamlCpp)
-include_directories(${YAMLCPP_INCLUDE_DIR} ${YAML_CPP_INCLUDE_DIRS})
+find_package(YAMLCPP NAMES Yaml-cpp YamlCpp yaml-cpp)
+message(STATUS "yaml: ${YAMLCPP_INCLUDE_DIR} ${YAML_CPP_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIR}")
+include_directories(${YAMLCPP_INCLUDE_DIR} ${YAML_CPP_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIR})
 
 file(GLOB_RECURSE HEADER_PRX_LIB_UTILITIES RELATIVE ${CMAKE_SOURCE_DIR}/src ./*.hpp)
 file(GLOB_RECURSE SRC_PRX_LIB_UTILITIES  ./*.cpp)
