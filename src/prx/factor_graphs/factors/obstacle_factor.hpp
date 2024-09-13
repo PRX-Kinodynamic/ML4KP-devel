@@ -277,7 +277,8 @@ public:
     const double dist{ std::max(distances(x0, closest_point, p2), _activation_distance) / _activation_distance };
     if constexpr (ERROR_TYPE == collision_info_t::CollisionErrorType::STEP)
     {
-      error = Eigen::Vector<double, StateDim>::Ones();
+      // error = Eigen::Vector<double, StateDim>::Ones();
+      error = (closest_point - p2).head(2);
     }
     else if constexpr (ERROR_TYPE == collision_info_t::CollisionErrorType::LINEAR)  // 1 at collision, 0 at activation
                                                                                     // distance linearly
@@ -294,7 +295,7 @@ public:
     // error = Eigen::VectorXd::Ones(StateDim);
     if (H0)
     {
-      const double dist{ std::max(distances(x0, closest_point, p2), _max_error_dist) };
+      // const double dist{ std::max(distances(x0, closest_point, p2), _max_error_dist) };
       if (in_collision(x0))
       {
         closest_point = -p2;
