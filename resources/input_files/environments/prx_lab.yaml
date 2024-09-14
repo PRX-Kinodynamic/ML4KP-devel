@@ -14,6 +14,15 @@ environment:
           position: [1.5, -2.1, 0]
           orientation: [0,0,0,1]
       -
+        name: border_top_cam1
+        collision_geometry:
+          type: box
+          dims: [ 4.2, .2, 1]
+          material: 0x0015ff
+        config:
+          position: [-2.2, -2.1, 0]
+          orientation: [0,0,0,1]
+      -
         name: border_bottom_cam0
         collision_geometry:
           type: box
@@ -21,6 +30,15 @@ environment:
           material: 0x0015ff
         config:
           position: [1.5, 0.2, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_bottom_cam1
+        collision_geometry:
+          type: box
+          dims: [ 4.2, 0.2, 1]
+          material: 0x0015ff
+        config:
+          position: [-2.2, 0.2, 0]
           orientation: [0,0,0,1]
       -
         name: border_left_cam0
@@ -32,11 +50,38 @@ environment:
           position: [3.3, -1, 0]
           orientation: [0,0,0,1]
       -
-        name: obstacle_200
+        name: border_right_cam1
+        collision_geometry:
+          type: box
+          dims: [ .2, 2, 1]
+          material: 0x0015ff
+        config:
+          position: [-4.2, -1, 0]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_000
         collision_geometry:
           type: box
           dims: [ .41, .31, 1]
           material: 0x0015ff
         config:
           position: [1.43, -1.06,0 ]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_001
+        collision_geometry:
+          type: box
+          dims: [.31, .41, 1]
+          material: 0x0015ff
+        config:
+          position: [-1.2,-1.83,0 ]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_002
+        collision_geometry:
+          type: box
+          dims: [ .31, .41, 1]
+          material: 0x0015ff
+        config:
+          position: [-1.2,-0.48,0 ]
           orientation: [0,0,0,1]
