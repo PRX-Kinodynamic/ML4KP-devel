@@ -1,0 +1,141 @@
+environment:
+    type: obstacle
+    root_configuration:
+      position: [0,0,0]
+      orientation: [0,0,0,1]
+    geometries:
+      -
+        name: border_top_cam0
+        collision_geometry:
+          type: box
+          dims: [ 3, .2, 1]
+          material: 0x0015ff
+        config:
+          position: [1.5, -2.4, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_top_cam1
+        collision_geometry:
+          type: box
+          dims: [ 4.2, .2, 1]
+          material: 0x0015ff
+        config:
+          position: [-2.2, -2.4, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_bottom_cam0
+        collision_geometry:
+          type: box
+          dims: [ 3, 0.2, 1]
+          material: 0x0015ff
+        config:
+          position: [1.5, 0.5, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_bottom_cam1
+        collision_geometry:
+          type: box
+          dims: [ 4.2, 0.2, 1]
+          material: 0x0015ff
+        config:
+          position: [-2.2, 0.5, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_left_cam0
+        collision_geometry:
+          type: box
+          dims: [ .2, 2, 1]
+          material: 0x0015ff
+        config:
+          position: [3.5, -1, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_right_cam1
+        collision_geometry:
+          type: box
+          dims: [ .2, 2, 1]
+          material: 0x0015ff
+        config:
+          position: [-4.2, -1, 0]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_120
+        collision_geometry:
+          type: box
+          dims: [ .45, .35, 1]
+          material: 0x0015ff
+        config:
+          position: [1.43, -1.06, 0 ]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_125
+        collision_geometry:
+          type: box
+          dims: [ .35, .45, 1]
+          material: 0x0015ff
+        config:
+          position: [0.59, -0.0, 0 ]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_123
+        collision_geometry:
+          type: box
+          dims: [ .35, .45, 1]
+          material: 0x0015ff
+        config:
+          position: [0,-1.88, 0 ]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_200
+        collision_geometry:
+          type: box
+          dims: [ .35, .45, 1]
+          material: 0x0015ff
+        config:
+          position: [-0.65, -0.14, 0 ]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_203
+        collision_geometry:
+          type: box
+          dims: [.35,.45, 1]
+          material: 0x0015ff
+        config:
+          position: [-0.65, -0.72, 0 ]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_124
+        collision_geometry:
+          type: box
+          dims: [.45,  .35, 1]
+          material: 0x0015ff
+        config:
+          position: [-1.0, -1.0, 0 ]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_122
+        collision_geometry:
+          type: box
+          dims: [.45,  .35, 1]
+          material: 0x0015ff
+        config:
+          position: [-1.55, -1.0, 0 ]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_127
+        collision_geometry:
+          type: box
+          dims: [.45,  .35, 1]
+          material: 0x0015ff
+        config:
+          position: [-2.12, -1.0, 0 ]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_126
+        collision_geometry:
+          type: box
+          dims: [ .35,.45,  1]
+          material: 0x0015ff
+        config:
+          position: [-2.18, -1.4, 0 ]
+          orientation: [0,0,0,1]
