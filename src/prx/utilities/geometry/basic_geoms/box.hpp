@@ -30,7 +30,8 @@ public:
    * @param pose The pose of the box.
    *
    */
-  box_t(const std::string& object_name, double dim_x, double dim_y, double dim_z, const transform_t& pose);
+  box_t(const std::string& object_name, double dim_x, double dim_y, double dim_z, const transform_t& pose,
+        const std::string color = "0xff0000");
   virtual ~box_t()
   {
   }

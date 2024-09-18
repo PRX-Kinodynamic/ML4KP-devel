@@ -26,7 +26,7 @@ extern char separating_value;
 namespace color
 {
 
-constexpr std::string_view normal{ "\033[0m" };
+constexpr std::string_view normal = "\033[0m";
 constexpr std::string_view red{ "\033[31m" };
 constexpr std::string_view green{ "\033[32m" };
 constexpr std::string_view yellow{ "\033[33m" };
@@ -67,11 +67,15 @@ static inline bool are_approx_equal(std::vector<T> c1, std::vector<S> c2, double
 }
 
 const std::string lib_path = lib_path_safe("DIRTMP_PATH");
-const std::string mj_models_path = lib_path + "resources/models/";
+const std::string models_path = lib_path + "resources/models/";
+const std::string obj_models_path = lib_path + "resources/models/obj/";
 const std::string input_path = lib_path + "resources/input_files/";
 const std::string js_path = lib_path + "resources/js/";
 const std::string out_path = lib_path + "out/";
+
+// mujoco
 const bool MUJOCO_VIS = false;
+const std::string mj_models_path = lib_path + "resources/models/";
 
 enum plant_type
 {
@@ -231,6 +235,49 @@ inline Eigen::Vector3d quaternion_to_euler(const quaternion_t& q)
   const double z{ std::atan2(siny_cosp, cosy_cosp) };
 
   return { x, y, z };
+}
+// Split block by columns defined by Columns
+// A Block of with columns {C0,C1,C2} and given columns={{0,1}, {2}}
+// will return a block {C0,C1} and the input block will change to {C2}
+template <typename Block, typename ColumnsQuery>
+Block split_block(Block& block_in, ColumnsQuery columns)
+{
+  Block block_out;
+  const auto columns_out{ columns[0] };
+  const auto columns_in{ columns[1] };
+
+  std::vector<bool> columns_flags(columns_in.size() + columns_out.size());
+  for (auto idx : columns_out)
+  {
+    columns_flags[idx] = true;
+  }
+  for (auto idx : columns_in)
+  {
+    columns_flags[idx] = false;
+  }
+
+  for (std::size_t i = 0; i < block_in.size(); ++i)
+  {
+    auto line_in{ block_in[i] };
+    decltype(line_in) line_out;
+    decltype(line_in) line_in_new;
+
+    for (std::size_t ci = 0; ci < line_in.size(); ++ci)
+    {
+      const auto val = line_in[ci];
+      if (columns_flags[ci])
+      {
+        line_out.emplace_back(val);
+      }
+      else
+      {
+        line_in_new.emplace_back(val);
+      }
+    }
+    block_in[i] = line_in_new;
+    block_out.emplace_back(line_out);
+  }
+  return block_out;
 }
 
 }  // namespace prx

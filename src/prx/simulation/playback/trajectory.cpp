@@ -41,6 +41,12 @@ void trajectory_t::resize(unsigned num_size)
   std::advance(end_iterator, num_states);
   std::advance(const_end_iterator, num_states);
 }
+
+void trajectory_t::pop_back()
+{
+  resize(size() - 1);
+}
+
 void trajectory_t::copy(const trajectory_t& t)
 {
   (*this) = t;
@@ -124,23 +130,6 @@ void trajectory_t::clear()
   num_states = 0;
 }
 
-void trajectory_t::copy_onto_back(space_point_t state)
-{
-  if ((num_states + 1) >= max_num_states)
-  {
-    increase_buffer();
-
-    end_iterator = states.begin();
-    const_end_iterator = states.begin();
-    std::advance(end_iterator, num_states);
-    std::advance(const_end_iterator, num_states);
-  }
-  state_space->copy_point(*end_iterator, state);
-  ++end_iterator;
-  ++const_end_iterator;
-  ++num_states;
-}
-
 void trajectory_t::copy_onto_back(const space_t* space)
 {
   prx_assert(state_space->get_space_name() == space->get_space_name(),
@@ -211,5 +200,41 @@ void trajectory_t::increase_buffer()
     end_iterator = states.begin();
     const_end_iterator = states.begin();
   }
+}
+
+void trajectory_t::to_file(const std::string file_name, const std::ios_base::openmode _mode) const
+{
+  std::ofstream ofs_map;
+  ofs_map.open(file_name.c_str(), _mode);
+
+  for (unsigned i = 0; i < num_states; ++i)
+  {
+    ofs_map << states[i] << "\n";
+  }
+  ofs_map << "\n";
+
+  ofs_map.close();
+}
+
+void trajectory_t::from_file(const std::string file_name)
+{
+  std::ifstream ifs(file_name);
+  std::string line;
+
+  space_point_t aux = state_space->make_point();
+
+  while (std::getline(ifs, line))
+  {
+    if (line.size() == 0)
+      break;
+    // state_space->copy_from(aux, prx::split<double>(line));
+    copy_onto_back(prx::split<double>(line));
+  }
+}
+
+std::size_t trajectory_t::index_at_time(const double ti) const
+{
+  const double idx{ 0.00001 + ti / simulation_step };
+  return static_cast<std::size_t>(idx);
 }
 }  // namespace prx

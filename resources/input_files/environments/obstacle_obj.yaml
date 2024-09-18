@@ -1,0 +1,15 @@
+environment:
+    type: obstacle
+    root_configuration:
+      position: [0,0,0]
+      orientation: [0,0,0,1]
+    geometries:
+      -
+        name: test_hole
+        collision_geometry:
+          type: obj
+          filename: "test_hole.obj"
+          # filename: "full_hole.obj"
+        config:
+          position: [0, 0, 0]
+          orientation: [0,0,0,1]

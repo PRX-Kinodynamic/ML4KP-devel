@@ -1,21 +1,19 @@
 #include <iostream>
+#include <unordered_set>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 // #include "prx/utilities/geometry/movable_object.hpp"
+#include "pyprx/set_wrapper.hpp"
 
 using namespace boost::python;
-// typedef std::vector<double> double_list;
-// std::ostream& operator<<(std::ostream&,std::vector<double>);
 
-// template<typename T>
-// void list_assign(std::list<T>& l, object o) {
-//     // Turn a Python sequence into an STL input range
-//     stl_input_iterator<T> begin(o), end;
-//     l.assign(begin, end);
-// }
+namespace pyprx
+{
+namespace stdlib
+{
 
 template <typename T>
-inline std::vector<T> to_std_vector(boost::python::list& ns)
+std::vector<T> to_std_vector(boost::python::list& ns)
 {
   std::vector<T> v;
   for (int i = 0; i < len(ns); ++i)
@@ -25,7 +23,7 @@ inline std::vector<T> to_std_vector(boost::python::list& ns)
   return v;
 }
 
-void pyprx_stdlib_py()
+void bindings()
 {
   // class_<std::vector<double> >("std_vectorXd")
   //        .def(vector_indexing_suite<std::vector<double> >())
@@ -38,9 +36,16 @@ void pyprx_stdlib_py()
   //        .def("__repr__", &to_str<double>)
   //        // .def(str(self))
   //        ;
-  PRX_ITERABLE_WRAPPER(std::vector<std::string>, "vector_of_strings")
-  PRX_ITERABLE_WRAPPER(std::vector<double>, "vector_of_doubles")
-  PRX_ITERABLE_WRAPPER_NONSTR(std::vector<std::vector<double>>, "vector_of_vector_of_doubles")
+  // PRX_ITERABLE_WRAPPER(std::vector<std::string>, "vector_of_strings")
+  // PRX_ITERABLE_WRAPPER(std::vector<double>, "vector_of_doubles")
+  vector_wrapper<std::vector<std::string>>("vector_of_strings");
+  vector_wrapper<std::vector<double>>("vector_of_doubles");
+  vector_wrapper<std::vector<std::vector<double>>>("vector_of_vector_of_doubles");
+  vector_wrapper<std::vector<std::size_t>>("vector_of_unsigned");
+
+  set_wrapper<std::unordered_set<std::size_t>>::bindings("unordered_set_of_unsigned");
+
+  // PRX_ITERABLE_WRAPPER_NONSTR(std::vector<std::vector<double>>, "vector_of_vector_of_doubles")
   // PRX_ITERABLE_WRAPPER_NONSTR(std::vector<double*>, "vector_of_doubles_ptrs")
 
   // PRX_ITERABLE_WRAPPER(std::vector<double>&, "vector_of_doubles")
@@ -62,3 +67,6 @@ void pyprx_stdlib_py()
 
       ;
 }
+
+}  // namespace stdlib
+}  // namespace pyprx

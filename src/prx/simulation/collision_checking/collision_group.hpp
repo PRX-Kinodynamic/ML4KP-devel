@@ -49,19 +49,24 @@ public:
      * @brief A vector of distances between each collision pair in the collision cache.
      * */
     std::vector<double> distances;
-    /**
-     * @brief A vector of the closest point for each collision pair in the collision cache.
-     *
-     * For every element of the collision pair, the closest point corresponds to the point on the
-     * first element of the collision pair that is closest to the second element of the collision pair.
-     * By convention, when constructing the collision cache, the second element of each pair typically
-     * corresponds to a rigid body on a robot, while the first element corresponds to a rigid body that is
-     * considered to be an obstacle.
-     *
-     * As a result, this is a vector of the closest point on each obstacle for each rigid body present on the robot.
-     * */
-    std::vector<std::vector<double>> closest_points;
+    std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>> closest_points;
   };
+
+  void add_new_obstacle(std::shared_ptr<movable_object_t> obstacle)
+  {
+    // The new info is at "infos.back()"
+    add_obstacle_to_infos(obstacle);
+    prx_assert(infos.back() != nullptr, "Error adding new obstacle");
+
+    for (auto plant_info : plant_infos)
+    {
+      collision_cache.push_back(std::make_pair(infos.back(), plant_info));
+    }
+  }
+
+  // void update_obstacle_pose(const prx::transform_t& pose)
+  // {
+  // }
 
   /**
    * @brief Check if there is a collision in the scene.
@@ -79,6 +84,8 @@ public:
   pqp_distance_t get_distances();
 
 protected:
+  void add_obstacle_to_infos(const std::shared_ptr<movable_object_t> obstacle);
+
   /** @brief A structure that stores geometry information for PQP queries.*/
   struct pqp_info_t
   {
@@ -104,7 +111,11 @@ protected:
 
   /** @brief A list of all geometries in the world. */
   std::vector<std::shared_ptr<pqp_info_t>> infos;
+
+  // Subset of infos with the pqp_info_t specific to the plant.
+  std::vector<std::shared_ptr<pqp_info_t>> plant_infos;
+
   // private:
   collision_group_t(){};
-};
+};  // namespace prx
 }  // namespace prx

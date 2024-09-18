@@ -13,6 +13,9 @@ void three_js_group_t::vis_info_t::update_info()
 three_js_group_t::three_js_group_t(const std::vector<system_ptr_t>& in_plants,
                                    const std::vector<std::shared_ptr<movable_object_t>>& in_obstacles)
 {
+  set_floor_plane(std::vector<double>({ 0, 0, 0 }), std::vector<double>({ 0.707, 0, 0, 0.707 }),
+                  std::vector<double>({ 200, 200 }), "0xbbbbbb");
+
   state_infos.clear();
   obstacle_infos.clear();
 
@@ -309,7 +312,9 @@ void three_js_group_t::output_html(std::string filename)
   {
     std::string js_string;
     vis_geometry_init(element, js_string);
-    js_string += "var material = new THREE.MeshPhongMaterial( { color: " + element->color + ", flatShading: true } );";
+    js_string += "var material = new THREE.MeshPhongMaterial( { color: " + element->color +
+                 ", flatShading: true, transparent: true} );";
+    js_string += "material.opacity = " + get_opacity_from_color(element->color) + "; ";
     js_string += "var mesh = new THREE.Mesh( geometry, material );";
     js_string += "mesh.position.set( " + std::to_string(element->position.x()) + ", " +
                  std::to_string(element->position.y()) + ", " + std::to_string(element->position.z()) + " );";
@@ -684,7 +689,9 @@ void three_js_group_t::output_html(std::string filename)
 
     vis_geometry_init(element, js_string);
 
-    js_string += "var material = new THREE.MeshPhongMaterial( { color: " + element->color + ", flatShading: true } );";
+    js_string += "var material = new THREE.MeshPhongMaterial( { color: " + element->color +
+                 ", flatShading: true, transparent: true} );";
+    js_string += "material.opacity = " + get_opacity_from_color(element->color) + "; ";
     js_string += "var mesh = new THREE.Mesh( geometry, material );";
     js_string += "mesh.castShadow=true;";
     js_string += "mesh.receiveShadow=true;";
@@ -759,6 +766,7 @@ void three_js_group_t::output_html(std::string filename)
     fout << js_string;
   }
 
+  fout << _floor;
   fout << html_footer;
   fout.close();
 }

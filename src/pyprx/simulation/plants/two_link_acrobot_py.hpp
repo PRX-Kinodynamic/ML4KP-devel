@@ -2,11 +2,19 @@
 #include <boost/python.hpp>
 
 #include "prx/simulation/plants/two_link_acrobot.hpp"
-// #include "prx/simulation/plant.hpp"
 
 using namespace boost::python;
 
-void pyprx_simulation_plants_acrobot_py()
+namespace pyprx
+{
+namespace simulation
+{
+namespace plants
+{
+namespace acrobot
+{
+
+void bindings()
 {
   class_<prx::two_link_acrobot_t, std::shared_ptr<prx::two_link_acrobot_t>, bases<prx::plant_t>>("two_link_acrobot",
                                                                                                  no_init)
@@ -25,3 +33,7 @@ void pyprx_simulation_plants_acrobot_py()
       // .def("to_ptr", &create_ptr<prx::two_link_acrobot_t, prx::system_t> )
       ;
 }
+}  // namespace acrobot
+}  // namespace plants
+}  // namespace simulation
+}  // namespace pyprx

@@ -30,7 +30,8 @@ public:
    *
    */
 
-  cylinder_t(const std::string& object_name, double radius, double height, const transform_t& pose);
+  cylinder_t(const std::string& object_name, double radius, double height, const transform_t& pose,
+             const std::string color = "0xff0000");
   virtual ~cylinder_t()
   {
   }

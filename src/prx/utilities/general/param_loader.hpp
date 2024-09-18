@@ -59,7 +59,7 @@ public:
 
   void print();
 
-  inline bool exists(const std::string& key)
+  inline bool exists(const std::string& key) const
   {
     return !params[key].IsNull();
   }
@@ -67,7 +67,7 @@ public:
   void replace_env_var(YAML::Node& node);
 
   template <typename T = std::string>
-  T as()
+  T as() const
   {
     T val;
     try

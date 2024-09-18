@@ -1,27 +1,32 @@
 ## Python bindings for DirtMP
 # include_directories("${PROJECT_SOURCE_DIR}/src/prx/external")
 message("Building python bindings")
-find_package (Python COMPONENTS Interpreter Development)
-if (${Python_VERSION_MAJOR} EQUAL 3)
+string(COMPARE GREATER_EQUAL ${PY_VERSION} "3" USE_PY3)
+if(CMAKE_VERSION VERSION_GREATER "3.27") 
+    cmake_policy(SET CMP0148 OLD) 
+endif()
+if (${USE_PY3})
     message("Using Python 3")
-    # set(Python_ADDITIONAL_VERSIONS 3.9)
-    find_package(PythonLibs 3 REQUIRED)
 
-    # set(Python_versions_nums 3.9 3.8 3.7 3.6 3.5 3.4 3 )
-    set(Python_versions_nums 10 9 8 7 6 5 4 3 2 1 0 )
-        # message(STATUS "PYTHONLIBS_VERSION_STRING=${PYTHONLIBS_VERSION_STRING}") 
+    if (${PY_VERSION} EQUAL "3")
+        set(Python_versions_nums 3.12 3.11 3.10 3.9 3.8 3.7 3.6 3.5 3.4 3 )
+    else()
+        set(Python_versions_nums  ${PY_VERSION} )
+    endif()
+
     foreach(PYVER IN LISTS Python_versions_nums)
-        string(COMPARE GREATER ${PYTHONLIBS_VERSION_STRING} "3.${PYVER}" FOUND_PY_VERSION)
-        if(FOUND_PY_VERSION)
-            string(REPLACE "." "" PYVER_2 "3.${PYVER}")
+        find_package(Python  ${PYVER} EXACT COMPONENTS Interpreter Development QUIET)
+        find_package(PythonLibs ${PYVER} EXACT QUIET)
+        if(${PythonLibs_FOUND})
+            message("Found python ${PYVER}")
+            string(REPLACE "." "" PYVER_2 ${PYVER})
             find_package(Boost REQUIRED COMPONENTS "python${PYVER_2}")
             message("Boost_PY_LIBS ${Boost_PYTHON${PYVER_2}_LIBRARY}")
             set(Boost_PY_LIBS ${Boost_PYTHON${PYVER_2}_LIBRARY})
             break()
         endif()
     endforeach()
-
-    # set(Boost_PY_LIBS ${Boost_PYTHON38_LIBRARY})
+    add_definitions(-DBOOST_PYTHON_STATIC_LIB)
     include_directories(${Boost_INCLUDE_DIRS})
 	include_directories(${PYTHON_INCLUDE_DIRS})
 else()
@@ -36,20 +41,14 @@ endif()
 
 file(GLOB_RECURSE SRC_PRX_LIB_PY ./*.cpp)
 
-add_library(py${PROJECT_NAME} MODULE pyprx.cpp)
+add_library(Py${PROJECT_NAME} MODULE pyprx.cpp )
+set_target_properties(Py${PROJECT_NAME} 
+                      PROPERTIES PREFIX ""
+                      )
+target_include_directories(Py${PROJECT_NAME} PUBLIC ".")
 
-target_include_directories(py${PROJECT_NAME} PUBLIC ".")
+target_link_libraries(Py${PROJECT_NAME} ${Boost_PY_LIBS} ${PYTHON_LIBRARIES})
+target_link_libraries(Py${PROJECT_NAME} ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES})
+target_link_libraries(Py${PROJECT_NAME} ${PROJECT_NAME})
 
-target_link_libraries(py${PROJECT_NAME} ${Boost_PY_LIBS} ${PYTHON_LIBRARIES})
-target_link_libraries(py${PROJECT_NAME} ${YAMLCPP_LIBRARY} ${YAML_CPP_LIBRARIES})
-target_link_libraries(py${PROJECT_NAME} ${PROJECT_NAME}_external)
-target_link_libraries(py${PROJECT_NAME} ${PROJECT_NAME}_utilities)
-target_link_libraries(py${PROJECT_NAME} ${PROJECT_NAME}_visualization)
-target_link_libraries(py${PROJECT_NAME} ${PROJECT_NAME}_simulation)
-target_link_libraries(py${PROJECT_NAME} ${PROJECT_NAME}_planning)
-if(BUILD_FOR_BULLET)
-
-    target_link_libraries(py${PROJECT_NAME} ${PROJECT_NAME}_bullet_sim)
-
-endif()
 

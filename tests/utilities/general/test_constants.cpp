@@ -42,3 +42,42 @@ BOOST_AUTO_TEST_CASE(norm_angle_pi_test)
   a1 = upper;
   BOOST_CHECK(prx::norm_angle_pi(a1, lower, upper) == a1);
 }
+
+BOOST_AUTO_TEST_CASE(split_block_test)
+{
+  using Line = std::vector<double>;
+  using Block = std::vector<Line>;
+  using Columns = std::vector<std::size_t>;
+  using ColumnsQuery = std::vector<Columns>;
+
+  Block block0{};
+  block0.emplace_back(Line{ { 00, 01, 02, 03 } });
+  block0.emplace_back(Line{ { 10, 11, 12, 13 } });
+  block0.emplace_back(Line{ { 20, 21, 22, 23 } });
+
+  Columns c0{ 0 };
+  Columns c1{ { 1, 2, 3 } };
+  ColumnsQuery column_query{ c0, c1 };
+
+  Block expected_0{};
+  expected_0.emplace_back(Line{ { 01, 02, 03 } });
+  expected_0.emplace_back(Line{ { 11, 12, 13 } });
+  expected_0.emplace_back(Line{ { 21, 22, 23 } });
+
+  Block expected_1{};
+  expected_1.emplace_back(Line{ 00 });
+  expected_1.emplace_back(Line{ 10 });
+  expected_1.emplace_back(Line{ 20 });
+
+  Block block1{ prx::split_block(block0, column_query) };
+
+  const std::size_t num_lines{ 3 };
+  for (int i = 0; i < num_lines; ++i)
+  {
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(block0[i].begin(), block0[i].end(), expected_0[i].begin(), expected_0[i].end());
+  }
+  for (int i = 0; i < num_lines; ++i)
+  {
+    BOOST_REQUIRE_EQUAL_COLLECTIONS(block1[i].begin(), block1[i].end(), expected_1[i].begin(), expected_1[i].end());
+  }
+}

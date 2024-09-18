@@ -1,6 +1,14 @@
 #include "prx/utilities/general/noise.hpp"
 
 using namespace boost::python;
+namespace pyprx
+{
+namespace utilities
+{
+namespace general
+{
+namespace noise
+{
 
 template <class T>
 void add_noise_space_point_wrapper_3(T& noise, const prx::space_point_t& pt, unsigned int start, unsigned int end)
@@ -58,8 +66,13 @@ void bind_noise(const std::string& name)
       ;
 }
 
-void pyprx_utilities_general_noise()
+void bindings()
 {
   bind_noise<prx::gaussian_noise_t, double, double>("gaussian_noise");
   bind_noise<prx::uniform_noise_t, double, double>("uniform_noise");
 }
+
+}  // namespace noise
+}  // namespace general
+}  // namespace utilities
+}  // namespace pyprx

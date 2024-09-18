@@ -5,14 +5,14 @@ start_state: [0.0, 0.0, 0.0, 0.0]
 goal_state:  [0.0, 0.0, 0.0, 0.0]
 
 state_space:
-  lower_bound: [-100, -100, -3.14159, -10]
-  upper_bound: [100, 100, 3.14159, 10]
+  lower_bound: [-100, -100, -3.14159,-0.75]
+  upper_bound: [100, 100, 3.14159,0.75]
 
 control_space:
-  lower_bound: [-10, -1.57]
-  upper_bound: [10, 1.57]
+  lower_bound: [-1, -1]
+  upper_bound: [1, 1]
 
 parameter_space:
-  values: [1.0]
+  values: [0.9898, 0.4203, 0.6228]
   
 vis_body: "body"
