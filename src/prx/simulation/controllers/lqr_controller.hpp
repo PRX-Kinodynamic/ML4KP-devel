@@ -46,6 +46,8 @@ public:
     , _x(VectorX::Zero(_Xdim))
     , _x_ref(x0)
   {
+    prx_assert(plant->get_system_type() == plant_type::ANALYTICAL,
+               "lqr_controller_t only supports plant_type::ANALYTICAL plants");
     _lqr.Q() = q;
     _lqr.R() = r;
     _lqr.A() = _A_deriv(x0);

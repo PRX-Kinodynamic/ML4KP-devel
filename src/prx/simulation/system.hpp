@@ -71,12 +71,12 @@ public:
     return false;
   };
 
-  inline std::string get_pathname()
+  inline std::string get_pathname() const
   {
     return pathname;
   }
 
-  inline plant_type get_system_type()
+  inline plant_type get_system_type() const
   {
     return system_type;
   }
