@@ -1,4 +1,4 @@
-random_seed: 21081996
+random_seed: 260524
 simulation_step: 0.01
 
 plant: !file "plants/mushr.yaml"

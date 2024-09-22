@@ -333,7 +333,7 @@ public:
         if (query->solution_traj.size() > 0 && spec->valid_check(query->solution_traj))
         {
           a_indices.push_back(v.first);
-          a_costs[v.first] = (query->solution_traj.size() - 1) * simulation_step;
+          a_costs[v.first] = spec->cost_function(query->solution_traj,query->solution_plan);
         }
       }
       query->clear_outputs();
@@ -358,7 +358,7 @@ public:
         if (query->solution_traj.size() > 0 && spec->valid_check(query->solution_traj))
         {
           d_indices.push_back(v.first);
-          d_costs[v.first] = (query->solution_traj.size() - 1) * simulation_step;
+          d_costs[v.first] = spec->cost_function(query->solution_traj,query->solution_plan);
         }
       }
 

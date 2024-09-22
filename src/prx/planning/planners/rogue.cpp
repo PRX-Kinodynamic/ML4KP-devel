@@ -58,7 +58,7 @@ bool rogue_t::_link_and_setup_query(planner_query_t* query)
     child_extension = true;
   }
 
-  if (query->solution_plan.size() > 0)
+  if (query->solution_plan.duration() > 0)
   {
     prx_warn("[RoGuE] Seeding the tree with the provided solution plan of duration: " << query->solution_plan.duration());
     std::pair<plan_t*, trajectory_t*> eg = std::make_pair(nullptr, nullptr);
@@ -304,7 +304,7 @@ void rogue_t::update_goal(node_index_t node_index)
       current_solution_time = timer.measure();
       current_solution_iters = iteration_count;
       goal_vertex = node_index;
-      std::cout << "[dirt] Found new goal: " << state_space->print_point(new_tree_node->point, 3);
+      std::cout << "[RoGuE] Found new goal: " << state_space->print_point(new_tree_node->point, 3);
       std::cout << " cost:" << new_tree_node->cost_to_come;
       std::cout << " time:" << current_solution_time;
       std::cout << " iter:" << current_solution_iters;

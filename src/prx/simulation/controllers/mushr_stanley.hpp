@@ -26,7 +26,7 @@ public:
 
     goal_radius = params["goal_radius"].as<double>();
     duration = 1.0 / params["frequency"].as<double>();
-    discretization = std::floor(1.0 / (0.01 * params["frequency"].as<double>()));
+    discretization = std::floor(1.0 / (0.01 * params["frequency"].as<double>() * params["disc"].as<double>()));
 
     sign = 1.0;
     reset();

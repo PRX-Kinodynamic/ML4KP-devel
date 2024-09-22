@@ -1,13 +1,15 @@
-controller_path: "controllers/mushr_analytical.pt"
+controller_path: "controllers/mushr_pose_tight.pt"
+#controller_path: "controllers/mushr_position_tight.pt"
 random_seed: 111093
 
 state_indices: [0,1,2,3]
 goal_indices: [0,1,2]
+#goal_indices: [0,1]
 
 goal_uses_quat: false
 delta_input: false
 
-control_duration: 1.0
+control_duration: 0.5
 max_duration: 5.0
 
 debug_controller: true

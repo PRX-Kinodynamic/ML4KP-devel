@@ -1,0 +1,8 @@
+random_seed: 210896
+simulation_step: 0.01
+
+plant: !file "plants/mushr.yaml"
+learned_controller: "controllers/mushr_analytical.yaml"
+# learned_controller: "controllers/mushr_analytical_position.yaml"
+
+goal_region_radius: 0.25

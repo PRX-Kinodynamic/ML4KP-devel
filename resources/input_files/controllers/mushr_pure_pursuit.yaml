@@ -4,6 +4,6 @@ k_p: 1.0
 k_a: 1.5
 k_b: -0.25
 window: 50
-lookahead: 200
+lookahead: 100
 goal_radius: 0.25
 frequency: 30

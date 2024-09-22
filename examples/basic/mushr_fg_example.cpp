@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
   auto start_state = ss->make_point();
 
   ss->copy(start_state, Eigen::Vector<double, 4>(1, 0, 1.57, 0));
-  ps->copy_from(params["/plant/params"].as<std::vector<double>>());
+  ps->copy_from(params["/plant/parameter_space/values"].as<std::vector<double>>());
 
   plan_t plan(cs);
   trajectory_t traj(ss);
