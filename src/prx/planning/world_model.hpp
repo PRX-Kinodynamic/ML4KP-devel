@@ -5,11 +5,6 @@
 #include "prx/simulation/collision_checking/collision_checker.hpp"
 
 #include <unordered_map>
-#define system_group first
-#define collision_group second
-
-#define system_group first
-#define collision_group second
 
 namespace prx
 {
@@ -39,7 +34,7 @@ public:
   // all_obstacles) 	: world_model_t<system_group_manager_t, collision_checker_t>(all_systems, all_obstacles)
   // 	{};
 
-  ~world_model_t(){
+  ~world_model_t() {
     // delete system_groups;
     // delete collision_groups;
   };

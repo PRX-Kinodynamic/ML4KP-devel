@@ -16,6 +16,7 @@ namespace prx
  * @return A mapping from obstacle names to pointers to the bodies.
  */
 
+using PairNameObstacles = std::pair<std::vector<std::string>, std::vector<std::shared_ptr<movable_object_t>>>;
 class obstacle_loader_t
 {
 public:

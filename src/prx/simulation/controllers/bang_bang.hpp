@@ -13,7 +13,7 @@ public:
               std::string _name = "bang-bang_ctrl")
     : controller_t(_plant, _name), dimensions_set_points(_dimensions_set_points)
   {
-    auto cs = plant->get_control_space();
+    auto cs = _plant->get_control_space();
 
     auto cs_dim = cs->get_dimension();
     prx_assert(dimensions_set_points.size() == cs_dim,
@@ -29,8 +29,8 @@ public:
 
   virtual void compute_controls() override
   {
-    plant->get_control_space()->copy_from_point(ctrls[ctrl_to_use]);
-    plant->get_control_space()->enforce_bounds();
+    _plant->get_control_space()->copy_from_point(ctrls[ctrl_to_use]);
+    _plant->get_control_space()->enforce_bounds();
   }
 
   void set_control(unsigned int i)
@@ -53,7 +53,7 @@ public:
 protected:
   void generate_controls(int c_i)
   {
-    auto cs = plant->get_control_space();
+    auto cs = _plant->get_control_space();
     if (c_i == cs->get_dimension())
     {
       auto new_ctrl = cs->make_point();

@@ -11,10 +11,19 @@
 namespace prx
 {
 
-typedef std::pair<std::shared_ptr<system_group_t>, std::shared_ptr<collision_group_t>> simulation_context;
+using simulation_context = std::pair<std::shared_ptr<system_group_t>, std::shared_ptr<collision_group_t>>;
 
-// typedef std::pair<std::shared_ptr<system_group_t>,
-// std::shared_ptr<collision_group_t>> world_model_context;
+// syntactic sugar
+static inline std::shared_ptr<system_group_t> system_group(const simulation_context& context)
+{
+  return context.first;
+}
+
+// syntactic sugar
+static inline std::shared_ptr<collision_group_t> collision_group(const simulation_context& context)
+{
+  return context.second;
+}
 
 class simulator_t : public std::enable_shared_from_this<simulator_t>
 {

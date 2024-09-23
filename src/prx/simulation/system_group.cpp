@@ -58,7 +58,7 @@ system_group_t::~system_group_t()
 
 void system_group_t::propagate(space_point_t start_state, const plan_t& plan, space_point_t result)
 {
-  state_space->copy_from_point(start_state);
+  state_space->copy_from(start_state);
 
   for (const plan_step_t& step : plan)
   {
@@ -77,13 +77,13 @@ void system_group_t::propagate(space_point_t start_state, const plan_t& plan, sp
       propagate(steps, step.control);
     }
   }
-  state_space->copy_to_point(result);
+  state_space->copy_to(result);
 }
 
 void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
                                space_point_t result)
 {
-  state_space->copy_from_point(start_state);
+  state_space->copy_from(start_state);
 
   int i = 0;
   do
@@ -92,13 +92,13 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
     propagate_once(nullptr);
   } while (!cond_check.check());
 
-  state_space->copy_to_point(result);
+  state_space->copy_to(result);
 }
 
 void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
                                trajectory_t& result)
 {
-  state_space->copy_from_point(start_state);
+  state_space->copy_from(start_state);
 
   int i = 0;
   do
@@ -108,12 +108,12 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
     result.copy_onto_back(state_space);
   } while (!cond_check.check());
 
-  // state_space -> copy_to_point(result);
+  // state_space -> copy_to(result);
 }
 
 void system_group_t::propagate(space_point_t start_state, const plan_t& plan, trajectory_t& traj)
 {
-  state_space->copy_from_point(start_state);
+  state_space->copy_from(start_state);
 
   traj.clear();
   traj.copy_onto_back(state_space);
@@ -153,7 +153,7 @@ void system_group_t::propagate_once(space_point_t control)
 {
   if (control != nullptr)
   {
-    control_space->copy_from_point(control);
+    control_space->copy_from(control);
   }
   for (auto s : group)
   {
