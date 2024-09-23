@@ -1,6 +1,7 @@
 #pragma once
 
 #include "prx/simulation/system.hpp"
+#include "prx/simulation/plant.hpp"
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 
@@ -16,10 +17,10 @@ class controller_t : public std::enable_shared_from_this<controller_t>
 public:
   controller_t(const controller_t& other) = default;
 
-  controller_t(system_ptr_t _plant, std::string _name = "base_controller")
+  controller_t(system_ptr_t system_ptr, std::string name = "base_controller")
+    : _plant(std::dynamic_pointer_cast<prx::plant_t>(system_ptr)), _name(name)
   {
-    plant = _plant;
-    name = _name;
+    // set_points = std::make_shared<set_points_t>(plant -> get_state_space());
   }
   virtual ~controller_t();
 
@@ -28,24 +29,24 @@ public:
   void compute_controls(space_point_t& u)
   {
     compute_controls();
-    get_control_space()->copy_to_point(u);
+    get_control_space()->copy_to(u);
   }
 
   // wrapper functions for better readability
 
   inline space_t* get_state_space() const
   {
-    return plant->get_state_space();
+    return _plant->get_state_space();
   }
 
   inline space_t* get_control_space() const
   {
-    return plant->get_control_space();
+    return _plant->get_control_space();
   }
 
   virtual void propagate(const double simulation_step)
   {
-    plant->propagate(simulation_step);
+    _plant->propagate(simulation_step);
   }
   virtual void set_plan(const plan_t& _plan)
   {
@@ -64,7 +65,7 @@ public:
 
   virtual void set_goal(space_point_t _goal)
   {
-    plant->get_state_space()->copy_point(goal, _goal);
+    _plant->get_state_space()->copy_point(goal, _goal);
   }
 
   virtual bool goal_reached(const space_point_t& current_state, distance_function_t df, const double tolerance = 0.1)
@@ -80,13 +81,13 @@ public:
 protected:
   controller_t(const controller_ptr_t& other)
   {
-    plant = other->plant;
-    name = other->name;
+    _plant = other->_plant;
+    _name = other->_name;
     goal = other->goal;
     plan = other->plan;
   };
-  system_ptr_t plant;
-  std::string name;
+  std::shared_ptr<plant_t> _plant;
+  std::string _name;
 
   space_point_t goal;
   std::shared_ptr<plan_t> plan;  // Control sequence
