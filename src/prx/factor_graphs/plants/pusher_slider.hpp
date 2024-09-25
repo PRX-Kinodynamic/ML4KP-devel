@@ -82,7 +82,7 @@ public:
   {
     auto body = configurations["body"];
     body->linear() = Eigen::Matrix3d::Identity();
-    body->linear().block<2, 2>(0, 0) = _x.rotation();
+    body->linear().block<2, 2>(0, 0) = _x.rotation<Eigen::Matrix2d>();
     body->translation().head(2) = _x.translation();
     body->translation()[2] = 0.5;  // z is fix
   }

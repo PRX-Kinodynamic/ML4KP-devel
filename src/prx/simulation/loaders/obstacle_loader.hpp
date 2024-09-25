@@ -17,32 +17,51 @@ namespace prx
  */
 
 using PairNameObstacles = std::pair<std::vector<std::string>, std::vector<std::shared_ptr<movable_object_t>>>;
+using EnvironmentBounds = std::pair<Eigen::Vector3d, Eigen::Vector3d>;
 class obstacle_loader_t
 {
 public:
   static std::pair<std::vector<std::string>, std::vector<std::shared_ptr<movable_object_t>>>
   load_obstacles_from_file(const std::string obstacles_file);
+  static EnvironmentBounds bounds_from_yaml(const std::string obstacles_file);
 
   obstacle_loader_t(const std::string obstacles_file)
   {
     auto loaded_obst = obstacle_loader_t::load_obstacles_from_file(obstacles_file);
     names = loaded_obst.first;
     obstacles = loaded_obst.second;
+    _bounds = obstacle_loader_t::bounds_from_yaml(obstacles_file);
   }
 
-  const std::vector<std::string> get_names()
+  std::vector<std::string> get_names() const
   {
     return names;
   }
 
-  const std::vector<std::shared_ptr<movable_object_t>> get_obstacles()
+  std::vector<std::shared_ptr<movable_object_t>> get_obstacles() const
   {
     return obstacles;
+  }
+
+  EnvironmentBounds bounds() const
+  {
+    return _bounds;
+  }
+
+  Eigen::Vector3d min_bounds() const
+  {
+    return _bounds.first;
+  }
+
+  Eigen::Vector3d max_bounds() const
+  {
+    return _bounds.second;
   }
 
 private:
   std::vector<std::string> names;
   std::vector<std::shared_ptr<movable_object_t>> obstacles;
+  EnvironmentBounds _bounds;
 };
 
 inline PairNameObstacles load_obstacles(const std::string obstacles_file)

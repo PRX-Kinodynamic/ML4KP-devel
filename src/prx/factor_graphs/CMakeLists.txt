@@ -1,5 +1,5 @@
 if(BUILD_FOR_GTSAM)
-	add_definitions(-DGTSAM_USE_QUATERNIONS)
+	# add_definitions(-DGTSAM_USE_QUATERNIONS)
 	
 	# find_package(GTSAM REQUIRED) # Uses installed package
 	# find_package(GTSAMCMakeTools)
@@ -21,16 +21,17 @@ if(BUILD_FOR_GTSAM)
                             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 														)
 	target_link_libraries(FactorGraphs INTERFACE 
-														$<BUILD_INTERFACE:gtsam>)
+														$<BUILD_INTERFACE:gtsam>
+                            $<INSTALL_INTERFACE:gtsam>
 	# 													"$<BUILD_INTERFACE:gtsam>"
-  #                           "$<INSTALL_INTERFACE:gtsam>"
+														)
 	# 	)
 
 	# message(STATUS "GTSAM_USE_TBB: ${GTSAM_USE_TBB}")
 	# if (${GTSAM_USE_TBB})
 	# 	message(STATUS "GTSAM built with TBB")
 
-	# 	# target_link_libraries(FactorGraphs INTERFACE ${GTSAM_ADDITIONAL_LIBRARIES})
+		# target_link_libraries(FactorGraphs INTERFACE ${GTSAM_ADDITIONAL_LIBRARIES})
 	# endif()
 	# message(STATUS "GTSAM_LIBS gtsam::Eigen3::Eigen")
 	# target_link_libraries(${PROJECT_NAME}_factor_graphs INTERFACE fmt::fmt-header-only)

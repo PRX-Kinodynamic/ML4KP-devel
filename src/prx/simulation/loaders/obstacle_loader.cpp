@@ -69,4 +69,19 @@ obstacle_loader_t::load_obstacles_from_file(const std::string obstacles_file)
 
   return std::make_pair(std::move(obstacle_names), std::move(obstacle_list));
 }
+
+EnvironmentBounds obstacle_loader_t::bounds_from_yaml(const std::string obstacles_file)
+{
+  constexpr double inf{ std::numeric_limits<double>::infinity() };
+  if (obstacles_file == "")
+  {
+    prx_warn("No bounds found for environment in: " << obstacles_file);
+    return std::make_pair<Eigen::Vector3d, Eigen::Vector3d>({ -inf, -inf, -inf }, { inf, inf, inf });
+  }
+  const param_loader obstacle_loader(obstacles_file);
+  const Eigen::Vector3d min{ obstacle_loader["environment"]["bounds"]["min"].as<Eigen::Vector3d>() };
+  const Eigen::Vector3d max{ obstacle_loader["environment"]["bounds"]["max"].as<Eigen::Vector3d>() };
+  return std::make_pair(min, max);
+}
+
 }  // namespace prx

@@ -44,7 +44,7 @@ struct collision_info_t
     // model = geometry_t::create_collision_geometry<PQP_Model_Eigen>(geom_type, params);
   }
   collision_info_t(const geometry_type_t geom_type, const std::vector<double>& params)
-    : collision_info_t(geom_type, params, Eigen::Matrix3d::Identity(), Eigen::Vector3d::Zero()){};
+    : collision_info_t(geom_type, params, Eigen::Matrix3d::Identity(), Eigen::Vector3d::Zero()) {};
 
   static std::vector<SharedPtr> generate_infos(std::vector<std::shared_ptr<prx::movable_object_t>>& obstacle_list)
   {
@@ -157,10 +157,6 @@ public:
     copy(Tr, robot_info->pose.position());
     copy(To, obstacle_info->pose.position());
 
-    // PQP_Collide(&_collision_result,                                                          // no-lint
-    //             robot_rot, robot_info->pose.position(), robot_info->model.get(),           // no-lint
-    //             obstacle_rot, obstacle_info->pose.position(), obstacle_info->model.get(),  // no-lint
-    //             PQP_FIRST_CONTACT);
     PQP_Collide(&result,                             // no-lint
                 Mr, Tr, robot_info->model.get(),     // no-lint
                 Mo, To, obstacle_info->model.get(),  // no-lint
@@ -174,47 +170,67 @@ public:
     return in_collision(x0, _obstacle_info, _robot_info, _config_from_state, _collision_result);
   }
 
-  static double distances(const State& x0, Eigen::Vector3d& closest_point, Eigen::Vector3d& p2,
-                          CollisionInfoPtr obstacle_info, CollisionInfoPtr robot_info,
-                          ConfigurationFromState& config_from_state, DistanceResult& result)
+  void recover_collision(CollisionInfoPtr robot_info, CollisionInfoPtr obstacle_info, Eigen::Vector3d& p1,
+                         Eigen::Vector3d& p2, CollideResult& result) const
+  {
+    if (result.Colliding())
+    {
+      const int tri_1{ result.Id1(0) };
+      const int tri_2{ result.Id2(0) };
+      copy(p1, robot_info->model->tris[tri_1].p1);
+      copy(p2, obstacle_info->model->tris[tri_2].p1);
+
+      p1 = (robot_info->pose) * p1;
+      p2 = (obstacle_info->pose) * p2;
+      // PRX_DBG_VARS(p1.transpose(), p2.transpose());
+    }
+  }
+
+  static double distances(const State& x0, Eigen::Vector3d& p1, Eigen::Vector3d& p2, CollisionInfoPtr obstacle_info,
+                          CollisionInfoPtr robot_info, ConfigurationFromState& config_from_state,
+                          DistanceResult& result)
   {
     Eigen::Matrix3d robot_rot{ robot_info->pose.quaternion().matrix() };
     Eigen::Matrix3d obstacle_rot{ obstacle_info->pose.quaternion().matrix() };
     PQP_REAL Mr[3][3], Tr[3];
     PQP_REAL Mo[3][3], To[3];
     config_from_state(robot_rot, robot_info->pose.position(), x0);
+    // PRX_DBG_VARS(robot_rot);
+    robot_info->pose.quaternion() = robot_rot;
 
     copy(Mr, robot_rot);
     copy(Mo, obstacle_rot);
     copy(Tr, robot_info->pose.position());
     copy(To, obstacle_info->pose.position());
 
-    // PQP_Distance(&_distance_result,                                                           // no-lint
-    //              robot_rot, robot_info.pose.position(), robot_info.model.get(),             // no-lint
-    //              obstacle_rot, obstacle_info->pose.position(), obstacle_info->model.get(),  // no-lint
-    //              0.0, 0.0);
     PQP_Distance(&result,                             // no-lint
                  Mr, Tr, robot_info->model.get(),     // no-lint
                  Mo, To, obstacle_info->model.get(),  // no-lint
                  0.0, 0.0);
 
-    // Vprintg(result.P1());
-    // Vprintg(result.P2());
-    // PRX_DBG_VARS(_distance_result.P1().transpose(), _distance_result.P2().transpose());
-    // closest_point = robot_info.pose.position() + _distance_result.P1();
-    closest_point[0] = result.P1()[0];
-    closest_point[1] = result.P1()[1];
-    closest_point[2] = result.P1()[2];
+    // P1: is the point in the robot that is closest to a collision IN ROBOT FRAME
+    //
+    p1[0] = result.P1()[0];
+    p1[1] = result.P1()[1];
+    p1[2] = result.P1()[2];
 
+    // P2 is the vector to the 'center' of the obstacle where the closest collision happens
     p2[0] = result.P2()[0];
     p2[1] = result.P2()[1];
     p2[2] = result.P2()[2];
-    // printf("%.4f %.4f %d %.4f %.4f %.4f %.4f %.4f %.4f %.4f\n",                                       // no-lint
-    //        x0[0], x0[1], in_collision(x0), _distance_result.Distance(),                               // no-lint
-    //        result.P1()[0], result.P1()[1], result.P1()[2],  // no-lint
-    //        result.P2()[0], result.P2()[1], result.P2()[2]   // no-lint
-    // );                                                                                                // no-lint
-    // return result.Distance();
+    // PRX_DBG_VARS(x0);
+    // PRX_DBG_VARS(robot_info->pose);
+    // PRX_DBG_VARS(p1.transpose(), p2.transpose());
+
+    p1 = (robot_info->pose) * p1;
+    p2 = (obstacle_info->pose) * p2;
+
+    auto px0 = (robot_info->pose) * Eigen::Vector3d(1, 0, 0);
+    auto py0 = (robot_info->pose) * Eigen::Vector3d(0, 1, 0);
+
+    // PRX_DBG_VARS(px0.transpose());
+    // PRX_DBG_VARS(py0.transpose());
+    // PRX_DBG_VARS(p1.transpose(), p2.transpose());
     return result.Distance();
   }
 
@@ -271,38 +287,59 @@ public:
   virtual Eigen::VectorXd evaluateError(const State& x0,
                                         boost::optional<Eigen::MatrixXd&> H0 = boost::none) const override
   {
-    Eigen::VectorXd error{ Eigen::Vector<double, StateDim>::Zero() };
+    Eigen::VectorXd error{ Eigen::Vector<double, 1>::Zero() };
 
-    Eigen::Vector3d closest_point, p2;
-    const double dist{ std::max(distances(x0, closest_point, p2), _activation_distance) / _activation_distance };
+    Eigen::Vector3d p1, p2;
+    const double distance{ distances(x0, p1, p2) };
+    // const Eigen::Vector2d p1p{ x0[0] - p1[0], x0[1] - p1[1] };
+    // const Eigen::Vector2d p2p{ x0[0] - p2[0], x0[1] - p2[1] };
+    // PRX_DBG_VARS(distance, x0, p1p, p2p);
+    // PRX_DBG_VARS(distance, x0, p1.transpose());
+    const double dist{ std::max(distance, _activation_distance) / _activation_distance };
     if constexpr (ERROR_TYPE == collision_info_t::CollisionErrorType::STEP)
     {
       // error = Eigen::Vector<double, StateDim>::Ones();
-      error = (closest_point - p2).head(2);
+      // PRX_DBG_VARS(p1.transpose(), p2.transpose());
+      // const Eigen::VectorXd distance_to_collision{ _config_from_state.h(p1, p2) };
+      // const Eigen::VectorXd ones{ Eigen::VectorXd::Ones(distance_to_collision.size()) };
+      error[0] = -distance / _activation_distance + 1.0;
+      // error = Eigen::VectorXd::Ones(error.size()) * _activation_distance - error;
+      // PRX_DBG_VARS(_activation_distance, distance);
+      // PRX_DBG_VARS(error.transpose());
+      // error.normalize();
     }
     else if constexpr (ERROR_TYPE == collision_info_t::CollisionErrorType::LINEAR)  // 1 at collision, 0 at activation
                                                                                     // distance linearly
     {
-      // const double dist{ std::max(distances(x0, closest_point, p2), _activation_distance) / _activation_distance };
+      // const double dist{ std::max(distances(x0, p1, p2), _activation_distance) / _activation_distance };
       error = (1.0 - dist) * Eigen::Vector<double, StateDim>::Ones();
     }
     else if constexpr (ERROR_TYPE == collision_info_t::CollisionErrorType::QUADRATIC)  // 1 at collision, 0 at
                                                                                        // activation distance
     {
-      // const double dist{ std::max(distances(x0, closest_point, p2), _activation_distance) / _activation_distance };
+      // const double dist{ std::max(distances(x0, p1, p2), _activation_distance) / _activation_distance };
       error = (1.0 - std::pow(dist, 2)) * Eigen::Vector<double, StateDim>::Ones();
     }
     // error = Eigen::VectorXd::Ones(StateDim);
     if (H0)
     {
-      // const double dist{ std::max(distances(x0, closest_point, p2), _max_error_dist) };
-      if (in_collision(x0))
-      {
-        closest_point = -p2;
-      }
-      // distances(x0, closest_point);
-      _config_from_state(x0, closest_point, *H0);
+      // const double dist{ std::max(distances(x0, p1, p2), _max_error_dist) };
+      const bool collision{ in_collision(x0) };
+      // PRX_DBG_VARS(collision, p1.transpose(), p2.transpose());
+      // Eigen::Vector3d v0, v1;
+      // recover_collision(_robot_info, _obstacle_info, v0, v1, _collision_result);
+
+      // if (in_collision(x0))
+      // {
+      //   p1 = -p2;
+      // }
+      // distances(x0, p1);
+      _config_from_state(x0, p2 - p1, *H0);
     }
+    // PRX_DBG_VARS(distance, error.transpose());
+    // if (H0)
+    //   PRX_DBG_VARS(*H0);
+
     return error;
   }
 
@@ -369,6 +406,8 @@ private:
 
   const double _activation_distance;
   const double _max_error_dist;
+
+  Eigen::Transform<double, 3, Eigen::TransformTraits::Isometry> T_robot;
 };
 }  // namespace fg
 }  // namespace prx

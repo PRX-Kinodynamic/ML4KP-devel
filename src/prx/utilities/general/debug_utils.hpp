@@ -7,36 +7,47 @@ namespace prx
 namespace dbg
 {
 
-inline void print_variables(std::string name)
+inline void print_variables(std::ostream& stream, const std::string& name)
 {
-  std::cout << std::endl;
+  stream << std::endl;
 }
 
 template <typename Value, std::enable_if_t<prx::utilities::is_streamable<Value>::value, bool> = true>
-inline void print_value(const Value& value)
+inline void print_value(std::ostream& stream, const Value& value)
 {
-  std::cout << value << " ";
+  stream << value << " ";
 }
 
 template <typename Value, std::enable_if_t<prx::utilities::is_iterable<Value>::value and
                                                not prx::utilities::is_streamable<Value>::value,
                                            bool> = true>
-inline void print_value(const Value& value)
+inline void print_value(std::ostream& stream, const Value& value)
 {
   for (auto e : value)
   {
-    print_value(e);
+    print_value(stream, e);
   }
 }
 
+inline void print_values(std::ostream& stream)
+{
+  stream << "\n";
+}
+
 template <typename Var0, class... Vars>
-inline void print_variables(std::string name, Var0 var, Vars... vars)
+inline void print_values(std::ostream& stream, const Var0 var, Vars... vars)
+{
+  print_value(stream, var);
+  print_values(stream, vars...);
+}
+
+template <typename Var0, class... Vars>
+inline void print_variables(std::ostream& stream, const std::string& name, const Var0 var, Vars... vars)
 {
   const std::regex regex(",(\\s*)+");
   std::string var_name{ name };
   std::string other_names{ "" };
-  std::smatch match;  // <-- need a match object
-  // std::cout << "name: " << name << std::endl;
+  std::smatch match;                          // <-- need a match object
   if (std::regex_search(name, match, regex))  // <-- use it here to get the match
   {
     const int split_on = match.position();  // <-- use the match position
@@ -44,11 +55,18 @@ inline void print_variables(std::string name, Var0 var, Vars... vars)
     other_names = name.substr(split_on + match.length());  // <-- also, skip the whole math
   }
 
-  std::cout << var_name << ": ";
-  print_value(var);
-  print_variables(other_names, vars...);
+  stream << var_name << ": ";
+  print_value(stream, var);
+  print_variables(stream, other_names, vars...);
 }
 
 }  // namespace dbg
 }  // namespace prx
-#define PRX_DBG_VARS(...) prx::dbg::print_variables(#__VA_ARGS__, __VA_ARGS__);
+#define PRX_VALUES_TO_STREAM(ofs, ...) prx::dbg::print_values(ofs, __VA_ARGS__);
+#define PRX_PRINT_VALUES(...) prx::dbg::print_values(std::cout, __VA_ARGS__);
+#define PRX_DBG_VARS(...) prx::dbg::print_variables(std::cout, #__VA_ARGS__, __VA_ARGS__);
+#define PRX_MSG(MSG)                                                                                                   \
+  {                                                                                                                    \
+    const std::string msg{ MSG };                                                                                      \
+    PRX_DBG_VARS(msg)                                                                                                  \
+  };
