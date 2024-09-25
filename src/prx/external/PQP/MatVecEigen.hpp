@@ -89,12 +89,12 @@ inline void copy(PQP_REAL Mr[3][3], const Eigen::Ref<PQP_EIGEN_MATRIX> M)
   Mr[0][0] = M(0, 0);
   Mr[1][1] = M(1, 1);
   Mr[2][2] = M(2, 2);
-  Mr[1][0] = M(0, 1);
-  Mr[2][1] = M(1, 2);
-  Mr[0][2] = M(2, 0);
-  Mr[2][0] = M(0, 2);
-  Mr[0][1] = M(1, 0);
-  Mr[1][2] = M(2, 1);
+  Mr[1][0] = M(1, 0);
+  Mr[2][1] = M(2, 1);
+  Mr[0][2] = M(0, 2);
+  Mr[2][0] = M(2, 0);
+  Mr[0][1] = M(0, 1);
+  Mr[1][2] = M(1, 2);
 }
 
 inline void copy(Eigen::Ref<PQP_EIGEN_MATRIX> Mr, const PQP_REAL M[3][3])
@@ -102,12 +102,12 @@ inline void copy(Eigen::Ref<PQP_EIGEN_MATRIX> Mr, const PQP_REAL M[3][3])
   Mr(0, 0) = M[0][0];
   Mr(1, 1) = M[1][1];
   Mr(2, 2) = M[2][2];
-  Mr(0, 1) = M[1][0];
-  Mr(1, 2) = M[2][1];
-  Mr(2, 0) = M[0][2];
-  Mr(0, 2) = M[2][0];
-  Mr(1, 0) = M[0][1];
-  Mr(2, 1) = M[1][2];
+  Mr(0, 1) = M[0][1];
+  Mr(1, 2) = M[1][2];
+  Mr(2, 0) = M[2][0];
+  Mr(0, 2) = M[0][2];
+  Mr(1, 0) = M[1][0];
+  Mr(2, 1) = M[2][1];
 }
 
 inline void copy(PQP_REAL Vr[3], const Eigen::Ref<PQP_EIGEN_VECTOR> V)

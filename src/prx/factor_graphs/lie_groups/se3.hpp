@@ -109,7 +109,12 @@ public:
 
   gtsam::Pose3 to_pose() const
   {
-    return gtsam::Pose3(gtsam::Rot3(_quaternion), _position);
+    const gtsam::Rot3 rot(_quaternion.toRotationMatrix());
+    const gtsam::Pose3 pose(rot, _position);
+
+    // PRX_DBG_VARS(_quaternion, _position.transpose());
+    // PRX_DBG_VARS(pose);
+    return pose;
   }
 
   template <typename ScrewAxis>

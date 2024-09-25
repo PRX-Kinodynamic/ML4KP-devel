@@ -18,6 +18,8 @@ namespace fg
 // Mostly using the functionallity of gtsam::Pose2 but we need access to the raw values of p and q for prx::space_t
 class SE2_t : public gtsam::LieGroup<SE2_t, 3>
 {
+  static const inline Eigen::Vector3d max{ 100, 100, prx::constants::pi };
+
 public:
   static constexpr Eigen::Index Dim = 3;
   static constexpr Eigen::Index dimension = 3;
@@ -103,8 +105,8 @@ public:
 
   SE2_t operator*(const SE2_t& other) const
   {
-    const Rotation rot{ rotation() };
-    return SE2_t(translation() + rot * other.translation(), rot * other.rotation());
+    const Eigen::Matrix2d rot{ rotation<Eigen::Matrix2d>() };
+    return SE2_t(translation() + rot * other.translation(), rot * other.rotation<Eigen::Matrix2d>());
   }
 
   operator gtsam::Pose2() const
@@ -129,7 +131,7 @@ public:
   Eigen::Matrix<double, 3, 3> AdjointMap() const
   {
     Eigen::Matrix<double, 3, 3> adjM{ Eigen::Matrix<double, 3, 3>::Identity() };
-    adjM.block<2, 2>(0, 0) = rotation();
+    adjM.block<2, 2>(0, 0) = rotation<Eigen::Matrix2d>();
     adjM(0, 2) = y();
     adjM(1, 2) = -x();
     return adjM;
@@ -137,7 +139,7 @@ public:
 
   SE2_t inverse() const
   {
-    const RotationMatrix Rt{ rotation().transpose() };
+    const RotationMatrix Rt{ rotation<Eigen::Matrix2d>().transpose() };
     return SE2_t(-Rt * translation(), Rt);
   }
 
@@ -167,7 +169,7 @@ public:
 
   bool equals(const SE2_t& other, double tol = 1e-8) const
   {
-    const RotationMatrix id_test{ rotation().transpose() * other.rotation() };
+    const RotationMatrix id_test{ rotation<Eigen::Matrix2d>().transpose() * other.rotation<Eigen::Matrix2d>() };
     return _translation.isApprox(other.translation(), tol) && id_test.isIdentity(1e-3);
   }
 
@@ -181,9 +183,12 @@ public:
     return _angle;
   }
 
-  inline RotationMatrix rotation() const
+  template <typename RotationOut>
+  inline RotationOut rotation() const
   {
-    return Rotation(_angle).toRotationMatrix();
+    const Eigen::Vector<double, 1> vec{ _angle };
+    const Eigen::Matrix3d mat3d{ euler_to_rotation<Eigen::Matrix3d>(vec, "Z") };
+    return RotationOut{ mat3d.block<2, 2>(0, 0) };
   }
 
   inline Translation translation() const
@@ -214,6 +219,23 @@ public:
   inline double& y()
   {
     return _translation[1];
+  }
+
+  inline Eigen::Vector3d vector() const
+  {
+    return std::move(Eigen::Vector3d(x(), y(), angle()));
+  }
+
+  static inline SE2_t random(const Eigen::Vector3d& min_bound = -max, const Eigen::Vector3d max_bound = max)
+  {
+    prx_assert(min_bound.size() == 3, "Min bounds size mismatch: expected 3 but got " << min_bound.size());
+    prx_assert(max_bound.size() == 3, "Max bounds size mismatch: expected 3 but got " << max_bound.size());
+
+    const double x{ prx::uniform_random<double>(min_bound[0], max_bound[0]) };
+    const double y{ prx::uniform_random<double>(min_bound[1], max_bound[1]) };
+    const double theta{ prx::uniform_random<double>(min_bound[2], max_bound[2]) };
+
+    return std::move(SE2_t(x, y, theta));
   }
 
 private:

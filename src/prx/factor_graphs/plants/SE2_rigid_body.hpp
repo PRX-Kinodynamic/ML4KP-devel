@@ -66,7 +66,7 @@ public:
   {
     auto body = configurations["body"];
     body->translation().head(2) = _pose.translation();
-    body->linear().template block<2, 2>(0, 0) = _pose.rotation();
+    body->linear().template block<2, 2>(0, 0) = _pose.rotation<Eigen::Matrix2d>();
   }
 
   virtual void compute_derivative() override
