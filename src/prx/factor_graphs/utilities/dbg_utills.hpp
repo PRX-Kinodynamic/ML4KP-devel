@@ -9,7 +9,7 @@ namespace fg
 {
 using SF = prx::fg::symbol_factory_t;
 
-void indeterminant_linear_system_helper(gtsam::NonlinearFactorGraph& graph, gtsam::Values& values,
+void indeterminant_linear_system_helper(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& values,
                                         std::ostream& os = std::cout)
 {
   boost::shared_ptr<gtsam::GaussianFactorGraph> fgl{ graph.linearize(values) };

@@ -81,6 +81,49 @@ struct _2D_model_test
 };
 
 template <Eigen::Index Dim>
+struct _4D_2D_model_test
+{
+  using VectorIn = Eigen::Vector<double, Dim + 1>;
+  using VectorOut = Eigen::Vector<double, Dim>;
+  // Could be a Vector, but lets make it explicit that in general, J is a matrix
+  using Jacobian = Eigen::Matrix<double, Dim, Dim + 1>;
+  VectorOut operator()(const VectorIn& vector) const
+  {
+    const double x{ vector[0] };
+    const double y{ vector[1] };
+    const double z{ vector[2] };
+    VectorOut out{ Eigen::Vector2d::Zero() };
+    out[0] = x * y * z;
+    out[1] = 5.0 * x + std::sin(y);
+    return out;
+  }
+
+  static Jacobian analytical(const VectorIn& vector)
+  {
+    const double x{ vector[0] };
+    const double y{ vector[1] };
+    const double z{ vector[2] };
+    Jacobian out{ Jacobian::Zero() };
+
+    out(0, 0) = y * z;
+    out(0, 1) = x * z;
+    out(0, 2) = x * y;
+    out(1, 0) = 5.0;
+    out(1, 1) = std::cos(y);
+    out(1, 2) = 0;
+    return out;
+  }
+  inline static VectorIn Zero(const Eigen::Index& dim)
+  {
+    return VectorIn::Zero(dim);
+  }
+  inline static VectorIn Random(const Eigen::Index& dim)
+  {
+    return VectorIn::Random(dim);
+  }
+};
+
+template <Eigen::Index Dim>
 struct distance_model_test
 {
   using VectorIn = Eigen::Vector<double, Dim>;
@@ -173,6 +216,19 @@ BOOST_AUTO_TEST_CASE(model_2D_test)
 {
   using Model = _2D_model_test<2>;
   const int DimIn{ 2 };
+  const int DimOut{ 2 };
+  auto start = std::chrono::steady_clock::now();
+
+  run_full_derivative_table<Model>(DimIn, DimOut);
+  auto end = std::chrono::steady_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end - start;
+  std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
+}
+
+BOOST_AUTO_TEST_CASE(model_4D_2D_test)
+{
+  using Model = _4D_2D_model_test<2>;
+  const int DimIn{ 3 };
   const int DimOut{ 2 };
   auto start = std::chrono::steady_clock::now();
 
