@@ -128,13 +128,50 @@ public:
     return gtsam::Pose2::Logmap(pose2, H);
   }
 
-  Eigen::Matrix<double, 3, 3> AdjointMap() const
+  // This is the operator [Adj_V] for a vector V
+  static Eigen::Matrix<double, 3, 3> adjoint_map(const Eigen::Vector3d& v)
+  {
+    const double& x{ v[0] };
+    const double& y{ v[1] };
+    const double& th{ v[2] };
+    Eigen::Matrix<double, 3, 3> adjM;
+    adjM << 0, -th, y, th, 0, -x, 0, 0, 0;
+    return std::move(adjM);
+  }
+
+  // This is the adjoint for the current Pose/SE2
+  static Eigen::Matrix<double, 3, 3> AdjointMap(const SE2_t& pose)
   {
     Eigen::Matrix<double, 3, 3> adjM{ Eigen::Matrix<double, 3, 3>::Identity() };
-    adjM.block<2, 2>(0, 0) = rotation<Eigen::Matrix2d>();
-    adjM(0, 2) = y();
-    adjM(1, 2) = -x();
+    adjM.block<2, 2>(0, 0) = pose.rotation<Eigen::Matrix2d>();
+    adjM(0, 2) = pose.y();
+    adjM(1, 2) = -pose.x();
     return adjM;
+  }
+
+  Eigen::Matrix<double, 3, 3> AdjointMap() const
+  {
+    return AdjointMap(*this);
+  }
+
+  Eigen::Vector3d adjoint(const Eigen::Vector3d& v,  // no-lint
+                          gtsam::OptionalJacobian<3, 3> Hse2 = boost::none,
+                          gtsam::OptionalJacobian<3, 3> Hv = boost::none) const
+  {
+    return adjoint(*this, v, Hse2, Hv);
+  }
+
+  template <typename Pose>
+  static Eigen::Vector3d adjoint(const Pose& pose, const Eigen::Vector3d& v,  // no-lint
+                                 gtsam::OptionalJacobian<3, 3> Hse2 = boost::none,
+                                 gtsam::OptionalJacobian<3, 3> Hv = boost::none)
+  {
+    const Eigen::Matrix3d ad{ AdjointMap(pose) };
+    if (Hse2)
+      *Hse2 = -ad * adjoint_map(v);
+    if (Hv)
+      *Hv = ad;
+    return ad * v;
   }
 
   SE2_t inverse() const
