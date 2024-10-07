@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(care_test)
   Eigen::MatrixXd q(2, 2);
   q << 9, 6, 6, 4.;
 
-  auto r = Eigen::MatrixXd::Identity(1, 1);
+  Eigen::MatrixXd r{ Eigen::MatrixXd::Identity(1, 1) };
   auto x = prx::care::solve(a, b, q, r);
 
   std::cout << "x: " << x << std::endl;

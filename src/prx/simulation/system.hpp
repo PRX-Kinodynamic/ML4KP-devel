@@ -71,6 +71,7 @@ public:
     return false;
   };
 
+
   // Steering function[1]:
   // Given two points $$ from,to ∈ X $$:
   //      $$ Steer:  (from,to) -> result $$
@@ -91,12 +92,12 @@ public:
     PRX_NOT_IMPLEMENTED
   }
 
-  inline std::string get_pathname()
+  inline std::string get_pathname() const
   {
     return pathname;
   }
 
-  inline plant_type get_system_type()
+  inline plant_type get_system_type() const
   {
     return system_type;
   }

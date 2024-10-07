@@ -45,13 +45,13 @@ class lander_meditch_ctrl_t : public controller_t
 public:
   lander_meditch_ctrl_t(system_ptr_t _plant, std::string _name = "base_controller") : controller_t(_plant, _name)
   {
-    _aux = plant->get_control_space()->make_point();
+    _aux = _plant->get_control_space()->make_point();
     std::cout << "control limits: " << std::endl;
-    plant->get_control_space()->print_bounds();
+    _plant->get_control_space()->print_bounds();
 
-    auto ss = plant->get_state_space();
-    auto cs = plant->get_control_space();
-    auto ps = plant->get_parameter_space();
+    auto ss = _plant->get_state_space();
+    auto cs = _plant->get_control_space();
+    auto ps = _plant->get_parameter_space();
 
     // double x1 = ss -> at(0);
     // double x2 = ss -> at(1);
@@ -73,9 +73,9 @@ public:
 
   virtual void compute_controls() override
   {
-    auto ss = plant->get_state_space();
-    auto cs = plant->get_control_space();
-    auto ps = plant->get_parameter_space();
+    auto ss = _plant->get_state_space();
+    auto cs = _plant->get_control_space();
+    auto ps = _plant->get_parameter_space();
 
     double x1 = ss->at(0);
     double x2 = ss->at(1);
@@ -94,7 +94,7 @@ public:
       (*_aux)[0] = cs->get_upper_bound(0);
     }
 
-    cs->copy_from_point(_aux);
+    cs->copy_from(_aux);
   }
 
 private:
