@@ -21,11 +21,6 @@ using CollisionInfoPtr = std::shared_ptr<prx::fg::collision_info_t>;
 
 struct configuration_from_state
 {
-  Eigen::Vector2d h(const Eigen::Vector3d& p0, const Eigen::Vector3d& p1)
-  {
-    return p0.head(2);
-  }
-
   void operator()(Rotation& rotation, Translation& translation, const State& state)
   {
     rotation = Rotation::Identity();
@@ -36,25 +31,39 @@ struct configuration_from_state
   void operator()(const bool collision, const State& state, const Translation& p1, const Translation& p2,
                   Eigen::MatrixXd& H)
   {
-    H = Eigen::Matrix2d::Identity();
-    H.diagonal() = -p1.head(2);
+    H = Eigen::Matrix<double, 1, 2>::Zero();
+    Eigen::Vector2d vec{ (p1 - p2).head(2) };
+    // Eigen::Vector2d vec{ Eigen::Vector2d::Zero() };
+    if (collision)
+    {
+      // PRX_DBG_VARS(state.transpose(), p1.transpose(), p2.transpose());
+      vec = -p1.head(2);
+    }
+
+    H(0, 0) = vec[0];
+    H(0, 1) = vec[1];
   }
 };
 
 int main(int argc, char* argv[])
 {
   using ObstacleFactor = prx::fg::obstacle_factor_t<State, configuration_from_state>;
+  prx::param_loader params{};
+  params["step"].set(0.5);
+  params["env"].set("forest");
+  params.add_opts(argc, argv);
 
-  auto obstacles = prx::load_obstacles("environments/simple_obstacle.yaml");
+  const std::string environment_name{ "environments/" + params["env"].as<>() + ".yaml" };
+  auto obstacles = prx::load_obstacles(environment_name);
   std::vector<std::shared_ptr<prx::movable_object_t>> obstacle_list{ obstacles.second };
   std::vector<std::string> obstacle_names{ obstacles.first };
+  const prx::EnvironmentBounds bounds{ prx::obstacle_loader_t::bounds_from_yaml(environment_name) };
 
-  std::vector<double> sphere_params({ 1 });
+  std::vector<double> sphere_params({ 0.5 });
   const Rotation rotation{ Rotation::Identity() };
   const Translation translation{ Translation::Zero() };
   CollisionInfoPtr robot{ std::make_shared<prx::fg::collision_info_t>(prx::geometry_type_t::SPHERE, sphere_params,
                                                                       rotation, translation) };
-  PRX_DBG_VARS(obstacle_list.size());
 
   std::vector<std::shared_ptr<ObstacleFactor>> factors;
 
@@ -79,50 +88,59 @@ int main(int argc, char* argv[])
       const Translation t{ tf->translation() };
 
       // std::cout << static_cast<std::underlying_type<prx::geometry_type_t>::type>(g_type) << std::endl;
-      PRX_DBG_VARS(g_params, t.transpose());
+      // PRX_DBG_VARS(g_params, t.transpose());
       // PRX_DBG_VARS(rot);
 
       CollisionInfoPtr obstacle{ std::make_shared<prx::fg::collision_info_t>(g_type, g_params, rot, t) };
 
       // ObstacleFactor factor(obstacle, robot, key);
-      std::shared_ptr<ObstacleFactor> obs_factor{ std::make_shared<ObstacleFactor>(obstacle, robot, kr, 1) };
+      std::shared_ptr<ObstacleFactor> obs_factor{ std::make_shared<ObstacleFactor>(obstacle, robot, kr, 5) };
       factors.push_back(obs_factor);
       // factors.emplace_back(obstacle, robot, gtsam::Key(i));
     }
   }
 
   // boost::optional<std::vector<Matrix>&>
-  const double step{ 0.5 };
+  const double step{ params["step"].as<double>() };
   const std::size_t total_factors{ factors.size() };
-  std::ofstream ofs_map("/Users/Gary/pracsys/ML4KP-devel/out/sdf.txt");
-  for (double x = -10; x <= 30; x += step)
+  const std::string filename{ prx::out_path + "/sdf_" + params["env"].as<>() + ".txt" };
+  PRX_DBG_VARS(filename);
+  std::ofstream ofs_map(filename);
+
+  const Eigen::Vector3d min_bounds{ bounds.first };
+  const Eigen::Vector3d max_bounds{ bounds.second };
+  double min_dist{ 0.0 };
+  PRX_DBG_VARS(min_bounds.transpose());
+  PRX_DBG_VARS(max_bounds.transpose());
+
+  const double max_dist{ (max_bounds - min_bounds).norm() };
+  for (double x = min_bounds[0]; x <= max_bounds[0]; x += step)
   {
-    for (double y = -10; y <= 30; y += step)
+    for (double y = min_bounds[1]; y <= max_bounds[1]; y += step)
     {
       bool colliding{ false };
       double error{ 0.0 };
       std::vector<Eigen::MatrixXd> Hvec;
       Hvec.push_back(Eigen::Matrix2d::Zero());
-      Eigen::Matrix2d H{ Eigen::Matrix2d::Zero() };
+      Eigen::MatrixXd H{ Eigen::MatrixXd::Zero(1, 2) };
+      Eigen::MatrixXd H_min{ Eigen::MatrixXd::Zero(1, 2) };
 
       const State state(x, y);
-      values.insert_or_assign(kr, state);
-      // const State state(-5, -5);
 
-      // ofs_map << x << " " << y << " ";
+      min_dist = 0.0;
       for (int i = 0; i < total_factors; ++i)
       {
-        // ofs_map << factors[i].in_collision(state) << " ";
-        colliding |= factors[i]->in_collision(state);
-        // error += factors[i]->unwhitenedError(values, Hvec)[0];
-        // H += Hvec[0];
-        // if (colliding)
-        //   break;
+        // min_dist = std::min(min_dist, factors[i]->distances(state));
+        const double dist{ factors[i]->evaluateError(state, H)[0] };
+        if (dist > min_dist)
+        {
+          min_dist = dist;
+          H_min = H;
+        }
       }
-      H.normalize();
-      // ofs_map << colliding << "\n";
-      ofs_map << x << " " << y << " " << (colliding ? 1 : 0) << " " << error << " " << H(0, 0) << " " << H(1, 1)
-              << "\n";
+      H_min.normalize();
+      ofs_map << x << " " << y << " " << min_dist << " ";
+      ofs_map << H_min(0, 0) << " " << H_min(0, 1) << "\n";
     }
   }
   ofs_map.close();

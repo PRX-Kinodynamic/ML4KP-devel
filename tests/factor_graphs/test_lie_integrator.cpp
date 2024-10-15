@@ -10,6 +10,7 @@
 #include <gtsam/geometry/Rot2.h>
 
 #include <prx/factor_graphs/utilities/dbg_utills.hpp>
+#include <gtsam/base/numericalDerivative.h>
 
 namespace mock
 {
@@ -248,4 +249,50 @@ BOOST_AUTO_TEST_CASE(optimizer_find_xdot_test)
 
   const mock::Rdot result{ values.at<mock::Rdot>(key_xdot) };
   BOOST_REQUIRE_MESSAGE(expected.isApprox(result, 1e-3), EXPECTED_GOT(expected, result));
+}
+
+BOOST_AUTO_TEST_CASE(test_derivatives)
+{
+  using X = mock::SO2;
+  using Xdot = mock::Rdot;
+  using Dt = double;
+  using Integrator = prx::fg::lie_integration_factor_t<X, Xdot, Dt>;
+
+  const double dt{ 0.1 };
+  const double w{ 1 };
+  const mock::SO2 x0(0);
+  const mock::Rdot xdot0(0.5);
+  mock::SO2 x1(0);
+
+  // Check jacobians
+  Eigen::MatrixXd actualHx1, expectedHx1;
+  Eigen::MatrixXd actualHx0, expectedHx0;
+  Eigen::MatrixXd actualHxdot, expectedHxdot;
+  Eigen::MatrixXd actualHdt, expectedHdt;
+
+  std::function<gtsam::Vector(const X&, const X&, const Xdot&, const Dt&)> int_proxy =
+      [](const X& x1, const X& x0, const Xdot& xdot, const Dt& dt) { return Integrator::error(x1, x0, xdot, dt); };
+
+  Integrator::error(x1, x0, xdot0, dt, actualHx1, actualHx0, actualHxdot, actualHdt);
+  expectedHx1 = gtsam::numericalDerivative41(int_proxy, x1, x0, xdot0, dt);
+  expectedHx0 = gtsam::numericalDerivative42(int_proxy, x1, x0, xdot0, dt);
+  expectedHxdot = gtsam::numericalDerivative43(int_proxy, x1, x0, xdot0, dt);
+  expectedHdt = gtsam::numericalDerivative44(int_proxy, x1, x0, xdot0, dt);
+
+  // PRX_DBG_VARS(expectedHxd0);
+  // PRX_DBG_VARS(actualHxd0);
+
+  PRX_DBG_VARS(expectedHdt);
+  PRX_DBG_VARS(actualHdt);
+
+  // PRX_DBG_VARS(expectedHxdotd);
+  // PRX_DBG_VARS(actualHxdotd);
+
+  // PRX_DBG_VARS(expectedHK);
+  // PRX_DBG_VARS(actualHK);
+  const double tolerance{ 1e-5 };
+  BOOST_REQUIRE(expectedHx1.isApprox(actualHx1, tolerance));
+  BOOST_REQUIRE(expectedHx0.isApprox(actualHx0, tolerance));
+  BOOST_REQUIRE(expectedHxdot.isApprox(actualHxdot, tolerance));
+  BOOST_REQUIRE(expectedHdt.isApprox(actualHdt, tolerance));
 }

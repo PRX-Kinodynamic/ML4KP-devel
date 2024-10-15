@@ -17,6 +17,11 @@ using Translation = Eigen::Vector3d;
 
 struct configuration_from_state
 {
+  Eigen::Vector2d h(const Eigen::Vector3d& p0, const Eigen::Vector3d& p1)
+  {
+    return p0.head(2);
+  }
+
   void operator()(Rotation& rotation, Translation& translation, const State& state)
   {
     rotation = Rotation::Identity();
@@ -24,10 +29,11 @@ struct configuration_from_state
     translation[2] = 0;
   }
 
-  void operator()(const State& state, const Translation& translation, Eigen::MatrixXd& H)
+  void operator()(const bool collision, const State& state, const Translation& p1, const Translation& p2,
+                  Eigen::MatrixXd& H)
   {
     H = Eigen::Matrix2d::Identity();
-    H.diagonal() = translation.head(2);
+    H.diagonal() = (p2 - p1).head(2);
   }
 };
 
