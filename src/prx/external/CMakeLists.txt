@@ -22,7 +22,7 @@ add_library(External ${SRC_PRX_LIB_EXTERNAL_PQP} )
 target_include_directories(External 
 														PUBLIC
 														"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
-                            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}:${GTSAM_INCLUDE_DIR}>"
+                            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 														)
 
 # Silencing all warning for the external (non-prx) code

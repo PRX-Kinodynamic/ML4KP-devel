@@ -140,15 +140,27 @@ int main(int argc, char* argv[])
   the end caps are enumerated as 0 to 5 e.g. first rod is rod01, 2nd is rod23, 3rd is rod45
   also the motors are also enumerated b0 to b5
   the sites naming convention is s_{end_cap/motor its on}_{end_cap/motor its connected to}
+
+  --- Update:
+  There is a slight change in the format, instead of the end points in the form of 'rod01_endpt_0': [...], etc. It will
+  instead all just be in a list
+  end_pts: [[...], [...], [...], [...], [...], [...]]
+  in the order of rod01_endpt0, rod01_endpt1, rod23_endpt0, rod23_endpt1, rod45_endpt0, rod45_endpt1
+  I also computed the distances and placed them in the json as well. Only the sites without the letter "b" in
+  them have sensor readings i.e only 9 (soft) out of 15 cables
+  theyre in the format of "dists": {d_(rod_end0)_(rod_end1): (dist)
   **/
-  std::ifstream f(prx::lib_path + "/data/tensegrity/6d_estimation.json");
+  const std::string filename{ params["file"].as<>() };
+  prx_assert(std::filesystem::exists(filename), "Filename [" << filename << "] does not exists.");
+
+  std::ifstream f(filename);
   nlohmann::json json = nlohmann::json::parse(f);
 
   gtsam::NonlinearFactorGraph graph;
   gtsam::Values initial_values;
 
   int t{ 0 };
-  const Translation offset(0, 0, 3.25 / 2.0);
+  const Translation offset(0, 0.0, 3.25 / 2.0);
   const double noise_limit{ params["noise"].as<double>() };
   const double noise_sigma{ 1.0 };
   // const double noise_sigma{ noise_limit == 0 ? 1.0 : noise_limit };
@@ -169,26 +181,33 @@ int main(int argc, char* argv[])
   for (const nlohmann::json& element : json)
   {
     const double ti{ element["time"].template get<double>() };
-    const std::vector<double> vec{ element["pos"].template get<std::vector<double>>() };
+    const std::vector<double> positions{ element["pos"].template get<std::vector<double>>() };
+    const std::vector<double> quaternions{ element["quat"].template get<std::vector<double>>() };
 
-    const nlohmann::json js_rod01 = element["end_pts"]["rod_01"];
-    const nlohmann::json js_rod23 = element["end_pts"]["rod_23"];
-    const nlohmann::json js_rod45 = element["end_pts"]["rod_45"];
+    const nlohmann::json js_rods{ element["end_pts"] };
+    // Order: rod01_endpt0, rod01_endpt1, rod23_endpt0, rod23_endpt1, rod45_endpt0, rod45_endpt1
+    const Translation r01pt0{ js_rods[0].template get<std::vector<double>>().data() };
+    const Translation r01pt1{ js_rods[1].template get<std::vector<double>>().data() };
+    const Translation r23pt0{ js_rods[2].template get<std::vector<double>>().data() };
+    const Translation r23pt1{ js_rods[3].template get<std::vector<double>>().data() };
+    const Translation r45pt0{ js_rods[4].template get<std::vector<double>>().data() };
+    const Translation r45pt1{ js_rods[5].template get<std::vector<double>>().data() };
 
-    const Translation r01pt0{ js_rod01["rod_01_end_pt0"].template get<std::vector<double>>().data() };
-    const Translation r01pt1{ js_rod01["rod_01_end_pt1"].template get<std::vector<double>>().data() };
-    const Translation r23pt0{ js_rod23["rod_23_end_pt0"].template get<std::vector<double>>().data() };
-    const Translation r23pt1{ js_rod23["rod_23_end_pt1"].template get<std::vector<double>>().data() };
-    const Translation r45pt0{ js_rod45["rod_45_end_pt0"].template get<std::vector<double>>().data() };
-    const Translation r45pt1{ js_rod45["rod_45_end_pt1"].template get<std::vector<double>>().data() };
+    const Eigen::Vector3d position0(positions[0], positions[1], positions[2]);
+    const Eigen::Vector3d position1(positions[3 + 0], positions[3 + 1], positions[3 + 2]);
+    const Eigen::Vector3d position2(positions[6 + 0], positions[6 + 1], positions[6 + 2]);
+    const Eigen::Quaterniond quat0(std::abs(quaternions[0]), quaternions[1], quaternions[2], quaternions[3]);
+    const Eigen::Quaterniond quat1(std::abs(quaternions[4 + 0]), quaternions[4 + 1], quaternions[4 + 2],
+                                   quaternions[4 + 3]);
+    const Eigen::Quaterniond quat2(std::abs(quaternions[8 + 0]), quaternions[8 + 1], quaternions[8 + 2],
+                                   quaternions[8 + 3]);
 
-    const Eigen::Vector3d position0(vec[0], vec[1], vec[2]);
-    const Eigen::Quaterniond quat0(vec[3], vec[4], vec[5], vec[6]);
-    const Eigen::Vector3d position1(vec[7 + 0], vec[7 + 1], vec[7 + 2]);
-    const Eigen::Quaterniond quat1(vec[7 + 3], vec[7 + 4], vec[7 + 5], vec[7 + 6]);
-    const Eigen::Vector3d position2(vec[14 + 0], vec[14 + 1], vec[14 + 2]);
-    const Eigen::Quaterniond quat2(vec[14 + 3], vec[14 + 4], vec[14 + 5], vec[14 + 6]);
-
+    // PRX_DBG_VARS(position0.transpose());
+    // PRX_DBG_VARS(quat0);
+    // PRX_DBG_VARS(position1.transpose());
+    // PRX_DBG_VARS(quat1);
+    // PRX_DBG_VARS(position2.transpose());
+    // PRX_DBG_VARS(quat2);
     timestamps.emplace_back(ti);
     const SE3 b0{ quat0, position0 };
     const SE3 b1{ quat1, position1 };
@@ -227,10 +246,13 @@ int main(int argc, char* argv[])
   double a{ 0 };
   double b{ 0 };
 
+  const Translation offset_axis{ offset.normalized() };
   for (int i = 0; i < timestamps.size(); ++i)
   {
     const double ti{ timestamps[i] };
     const int div_num{ determine_limits(a, b, ti, t0, tF, div_size) };
+    const Bars& bars{ poses[i] };
+    const std::vector<SE3> rods_i{ { std::get<0>(bars), std::get<1>(bars), std::get<2>(bars) } };
 
     // PRX_DBG_VARS(ti, div_num, a, b);
     for (int r = 0; r < 3; ++r)
@@ -247,18 +269,29 @@ int main(int argc, char* argv[])
       const Translation r1{ rod_caps.first + rand0 };
       const Translation r2{ rod_caps.second + rand1 };
 
+      // PRX_DBG_VARS(r1.transpose(), r2.transpose());
       // graph.emplace_shared<ManifoldChebyshev>(0, poses[i], se3_noise, N, timestamps[i], a, b);
       graph.emplace_shared<manifold_evaluation_t<gtsam::Chebyshev2, SE3>>(kp, kx, se3_noise, N, ti, a, b);
 
       graph.emplace_shared<SE3ObsFactor>(kx, -offset, r1, z_noise);
       graph.emplace_shared<SE3ObsFactor>(kx, offset, r2, z_noise);
+
+      // g_T_r1.linear() = Eigen::Ma;
+      // R_T_r1;
       // graph.addPrior(kx0, poses[i], se3_prior);
       // initial_values.insert(kx0, poses[i]);
-      //
-      const Eigen::Quaterniond init_quat{ Eigen::Quaterniond::FromTwoVectors(Translation(0, 0, 1), r2 - r1) };
-      const SE3 midpt{ init_quat, (r1 + r2) / 2.0 };
+      const Eigen::Quaterniond init_quat{ Eigen::Quaterniond::FromTwoVectors(offset_axis, r2 - r1) };
+      const SE3 midpt_init{ init_quat, (r1 + r2) / 2.0 };
+      const SE3 midpt{ rods_i[r] };
 
-      initial_values.insert(kx, midpt);
+      // const Eigen::Quaterniond init_quat{ Eigen::Quaterniond::FromTwoVectors(r1, r2) };
+
+      // PRX_DBG_VARS(r1.transpose(), r2.transpose());
+      PRX_DBG_VARS(midpt);
+      PRX_DBG_VARS(midpt_init);
+
+      // initial_values.insert(kx, midpt);
+      initial_values.insert(kx, midpt_init);
       initial_values.insert_or_assign(kp, gtsam::ParameterMatrix<6>(N));
     }
   }
@@ -270,16 +303,20 @@ int main(int argc, char* argv[])
   // lm_params.setUseFixedLambdaFactor(true);
   lm_params.setMaxIterations(params["iterations"].as<int>());
 
+  PRX_MSG("Starting optimizer");
+
   gtsam::LevenbergMarquardtOptimizer optimizer(graph, initial_values, lm_params);
   gtsam::Values result{ optimizer.optimize() };
+  // gtsam::Values result{ initial_values };
   // result.print();
   const std::function<bool(const gtsam::Factor* /*factor*/, double /*whitenedError*/, size_t /*index*/)>&
       printCondition = [&](const gtsam::Factor*, double err, size_t) { return err > 2.0; };
 
-  graph.printErrors(result, "Error: ", SF::formatter, printCondition);
+  // graph.printErrors(result, "Error: ", SF::formatter, printCondition);
 
   std::ofstream ofs_fg_se3(prx::out_path + "/tensegrity_fg.txt");
   std::ofstream ofs_fg_endcaps(prx::out_path + "/tensegrity_fg_caps.txt");
+  ofs_fg_se3 << "# Qw0 Qx0 Qy0 Qz0 x0 y0 z0 Qw1 Qx1 Qy1 Qz1 x1 y1 z1 Qw2 Qx2 Qy2 Qz2 x2 y2 z2\n";
 
   for (int i = 0; i < timestamps.size(); ++i)
   {

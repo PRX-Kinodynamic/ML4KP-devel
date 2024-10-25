@@ -5,6 +5,7 @@ set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/factor_graphs )
 	
 find_package(CGAL REQUIRED)
 find_package(nlohmann_json QUIET)
+	# find_package(GTSAM REQUIRED)
 if( nlohmann_json_FOUND )
 	message(STATUS "Json library nlohmann_json Found ")
   # COMPILE_DEFINITIONS(JSON)

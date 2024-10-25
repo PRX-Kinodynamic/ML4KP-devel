@@ -29,7 +29,7 @@ environment:
           dims: [ 3, 0.2, 1]
           material: 0x0015ff
         config:
-          position: [1.5, 0.5, 0]
+          position: [1.5, 0.25, 0]
           orientation: [0,0,0,1]
       -
         name: border_bottom_cam1
@@ -38,7 +38,7 @@ environment:
           dims: [ 4.2, 0.2, 1]
           material: 0x0015ff
         config:
-          position: [-2.2, 0.5, 0]
+          position: [-2.2, 0.25, 0]
           orientation: [0,0,0,1]
       -
         name: border_left_cam0
