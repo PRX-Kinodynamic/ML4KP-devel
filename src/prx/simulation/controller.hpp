@@ -73,11 +73,6 @@ public:
     return df(current_state, goal) < tolerance;
   }
 
-  virtual bool goal_reached(const space_point_t& current_state, distance_function_t df, const double tolerance = 0.1)
-  {
-    return df(current_state, goal) < tolerance;
-  }
-
   std::shared_ptr<controller_t> get_ptr()
   {
     return shared_from_this();
