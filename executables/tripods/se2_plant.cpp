@@ -15,7 +15,6 @@
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/simulation/collision_checking/collision_group.hpp"
 
-#include "prx/factor_graphs/factors/obstacle_factor.hpp"
 #include "prx/factor_graphs/utilities/default_parameters.hpp"
 #include "prx/factor_graphs/lie_groups/screw_axis.hpp"
 #include "prx/factor_graphs/lie_groups/lie_integrator.hpp"

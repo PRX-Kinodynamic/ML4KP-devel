@@ -66,15 +66,17 @@ void rotation_with_noise(prx::param_loader& params)
   ofs.close();
 }
 
-void sphere_vectors_plot()
+void sphere_vectors_plot(const double epsilon = 0.1)
 {
   using prx::split;
   using prx::utilities::convert_to;
   const Eigen::Vector3d v(0, 0, 1);  // Point at north pole of sphere 1
-  const Eigen::Vector3d vp(Eigen::Vector3d(0, 0.05, 1).normalized());
+  const Eigen::Vector3d vp(Eigen::Vector3d(0, epsilon, 1).normalized());
   std::string input;
 
   Eigen::Matrix3d R{ Eigen::Matrix3d::Identity() };
+  Eigen::Quaterniond q{ Eigen::Quaterniond::Identity() };
+  Eigen::Vector4d vaux{ Eigen::Vector4d::Zero() };
   while (getline(std::cin, input))
   {
     const std::vector<std::string> line{ split<std::string>(input) };
@@ -103,6 +105,31 @@ void sphere_vectors_plot()
       }
       std::cout << "\n";
     }
+    else if (rotation_type == "Q")
+    {
+      const std::size_t total_nums{ line.size() - 1 };
+      prx_assert((total_nums % 4) == 0, "Wrong number of numbers");
+      const std::size_t total_qs{ static_cast<std::size_t>(total_nums / 4.0) };
+
+      for (int i = 0; i < total_qs; ++i)
+      {
+        for (int c = 0; c < 4; ++c)
+        {
+          const int idx{ 1 + (i * 4) + c };
+          // PRX_DBG_VARS(idx);
+          vaux[c] = convert_to<double>(line[idx]);
+        }
+        q.w() = vaux[0];
+        q.x() = vaux[1];
+        q.y() = vaux[2];
+        q.z() = vaux[3];
+
+        const Eigen::Vector3d v0{ q * v };
+        const Eigen::Vector3d v1{ q * vp - v0 };
+        std::cout << v0.transpose() << " " << v1.transpose() << " ";
+      }
+      std::cout << "\n";
+    }
   }
 }
 
@@ -127,7 +154,12 @@ void forward_propagation(prx::param_loader& params)
 
 int main(int argc, char* argv[])
 {
-  prx::param_loader params(argc, argv);
+  prx::param_loader params{};
+  params["epsilon"].set(0.1);
+
+  params.add_opts(argc, argv);
+
+  // prx::param_loader params(argc, argv);
 
   const std::string mode{ params["mode"].as<>() };
 
@@ -141,7 +173,9 @@ int main(int argc, char* argv[])
   }
   else if (mode == "to-plot")
   {
-    sphere_vectors_plot();
+    const double epsilon{ params["epsilon"].as<double>() };
+
+    sphere_vectors_plot(epsilon);
   }
   return 0;
 }

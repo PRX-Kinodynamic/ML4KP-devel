@@ -14,15 +14,14 @@ if(BUILD_FOR_GTSAM)
 	add_library(FactorGraphs INTERFACE  ${HDS_PRX_LIB_FACTOR_GRAPHS})
 	set_target_properties(FactorGraphs PROPERTIES LINKER_LANGUAGE CXX)
 
-	# message(STATUS "GTSAM_DIR: ${GTSAM_DIR}")
-	# message(STATUS "GTSAM_CONFIG: ${GTSAM_CONFIG}")
+	get_target_property(GTSAM_INCLUDE_DIRECTORIES gtsam INTERFACE_INCLUDE_DIRECTORIES)
 	target_include_directories(FactorGraphs INTERFACE
-														"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
-                            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+														"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR};${GTSAM_INCLUDE_DIRECTORIES}>"
+                            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR};${GTSAM_INCLUDE_DIRECTORIES}>"
 														)
-	target_link_libraries(FactorGraphs INTERFACE 
-														$<BUILD_INTERFACE:gtsam>
-                            $<INSTALL_INTERFACE:gtsam>
+	target_link_libraries(FactorGraphs INTERFACE gtsam
+														# $<BUILD_INTERFACE:gtsam>
+                            # $<INSTALL_INTERFACE:gtsam>
 	# 													"$<BUILD_INTERFACE:gtsam>"
 														)
 	# 	)

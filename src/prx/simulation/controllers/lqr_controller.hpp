@@ -2,10 +2,10 @@
 
 #include <functional>
 
-#include "prx/simulation/controllers/lqr.hpp"
 #include "prx/simulation/controller.hpp"
-#include "prx/utilities/math/first_order_derivative.hpp"
+#include "prx/simulation/controllers/lqr.hpp"
 #include "prx/simulation/plant.hpp"
+#include "prx/utilities/math/first_order_derivative.hpp"
 namespace prx
 {
 namespace simulation
@@ -45,8 +45,9 @@ public:
     , _lqr(_Xdim, _Udim)
     , _x(VectorX::Zero(_Xdim))
     , _x_ref(x0)
-    , _plant(std::dynamic_pointer_cast<prx::plant_t>(system_ptr))
   {
+    prx_assert(system_ptr->get_system_type() == plant_type::ANALYTICAL,
+               "lqr_controller_t only supports plant_type::ANALYTICAL plants");
     _lqr.Q() = q;
     _lqr.R() = r;
     _lqr.A() = _A_deriv(x0);
@@ -100,8 +101,6 @@ protected:
   DerivB _B_deriv;
 
   LQR _lqr;
-
-  std::shared_ptr<plant_t> _plant;
 
   VectorX _x;
   VectorX _x_ref;
