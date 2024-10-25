@@ -2,17 +2,17 @@
 
 #include <functional>
 
-#include "prx/simulation/controllers/lqr.hpp"
 #include "prx/simulation/controller.hpp"
-#include "prx/utilities/math/first_order_derivative.hpp"
+#include "prx/simulation/controllers/lqr.hpp"
 #include "prx/simulation/plant.hpp"
+#include "prx/utilities/math/first_order_derivative.hpp"
 namespace prx
 {
 namespace simulation
 {
 using namespace std::placeholders;
 template <uint8_t Evaluations = 5, int8_t MinDifference = -1>
-class lqr_controller_t : public system_controller_t
+class lqr_controller_t : public controller_t
 {
 public:
   using LQR = lqr_t<Eigen::Dynamic, Eigen::Dynamic>;
@@ -46,6 +46,8 @@ public:
     , _x(VectorX::Zero(_Xdim))
     , _x_ref(x0)
   {
+    prx_assert(system_ptr->get_system_type() == plant_type::ANALYTICAL,
+               "lqr_controller_t only supports plant_type::ANALYTICAL plants");
     _lqr.Q() = q;
     _lqr.R() = r;
     _lqr.A() = _A_deriv(x0);
@@ -57,7 +59,7 @@ public:
   {
   }
 
-  virtual void compute_control() override
+  virtual void compute_control()
   {
     _plant->get_state_space()->copy_to(_x);
     const VectorU ctrl{ _lqr(_x, _x_ref) };
