@@ -45,6 +45,12 @@ public:
   {
   }
 
+  se3_t(const double qw, const double qx, const double qy, const double qz,  // no-lint
+        const double x, const double y, const double z)
+    : _quaternion(qw, qx, qy, qz), _position(x, y, z)
+  {
+  }
+
   se3_t(const gtsam::Pose3& pose) : se3_t(pose.rotation().toQuaternion(), pose.translation())
   {
   }

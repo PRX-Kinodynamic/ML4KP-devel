@@ -10,6 +10,33 @@ namespace prx
 {
 namespace fg
 {
+
+template <typename Cmp>
+struct DoubleCmp
+{
+  using Jacobian = Eigen::Matrix<double, 1, 1>;
+  using OptionalMatrix = boost::optional<Eigen::MatrixXd&>;
+
+  constexpr bool operator()(const double& lhs, const double& rhs) const
+  {
+    return _cmp(lhs, rhs);
+  }
+
+  Eigen::VectorXd error(const double& lhs, const double& rhs, OptionalMatrix H0 = boost::none) const
+  {
+    const Eigen::VectorXd error{ Eigen::Vector<double, 1>(lhs - rhs) };
+
+    if (H0)
+    {
+      *H0 = Jacobian::Identity();
+    }
+    return error;
+  }
+
+private:
+  Cmp _cmp;
+};
+
 template <typename Vector>
 struct VectorLessThanCmp
 {

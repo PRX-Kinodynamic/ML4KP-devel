@@ -56,6 +56,14 @@ public:
     copy(pt, state);
     return pt;
   }
+
+  space_point_t make_point(const prx::param_loader& params)
+  {
+    space_point_t pt{ make_point() };
+    pt->init(params);
+    return pt;
+  }
+
   space_point_t clone_point(const space_point_t& point) const;
 
   /**
@@ -698,7 +706,7 @@ protected:
   std::string space_name;
   bool owned_values;
 
-  space_t(){};
+  space_t() {};
 
   inline void assert_point_space_name(const space_point_t& point) const
   {

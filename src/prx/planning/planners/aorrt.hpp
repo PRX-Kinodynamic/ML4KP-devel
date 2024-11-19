@@ -47,67 +47,18 @@ public:
   {
     this->rrt_edge_t::copy(other);
   }
-  // template <typename EdgePtr, typename Planner>
-  // static void split(EdgePtr old_edge, EdgePtr new_edge, const double time_of_split, Planner& planner)
-  // {
-  //   rrt_edge_t::split(old_edge, new_edge, time_of_split, planner);
-  // }
+
+  friend std::ostream& operator<<(std::ostream& os, const std::shared_ptr<aorrt_edge_t>& obj)
+  {
+    os << *obj;
+    return os;
+  }
+  friend std::ostream& operator<<(std::ostream& os, aorrt_edge_t& obj)
+  {
+    os << static_cast<rrt_edge_t>(obj);
+    return os;
+  }
 };
-
-// class cost_space_t : public space_t
-// {
-//   // friend class space_t;
-// public:
-//   cost_space_t() : space_t(), _min_cost(0.0), _max_cost(std::numeric_limits<double>::infinity()),
-//   _max_multiplier(1.0)
-//   {
-//     owned_values = true;
-//     addresses.clear();
-//     addresses.push_back(&_cost);
-
-//     dimension = addresses.size();
-
-//     topology.clear();
-//     lower_bounds.clear();
-//     upper_bounds.clear();
-
-//     topology.push_back(topology_t::EUCLIDEAN);
-//     lower_bounds.push_back(&_min_cost);
-//     upper_bounds.push_back(&_max_cost);
-
-//     space_name = "CostState";
-
-//     start_state = make_point();
-//     copy(start_state, { 0 });
-//   }
-
-//   space_point_t get_start_state()
-//   {
-//     return start_state;
-//   }
-
-//   void set_cost(const space_point_t& pt, double cost)
-//   {
-//     pt->at(0) = cost;
-//   }
-
-//   virtual ~cost_space_t()
-//   {
-//   }
-
-//   virtual sample(const space_point_t& point) const override
-//   {
-//     point->_memory[0] = prx::uniform_random(_min_cost, _max_cost * _max_multiplier);
-//   }
-
-//   double _max_cost;
-//   double _max_multiplier;
-
-// protected:
-//   double _cost;
-//   space_point_t start_state;
-//   double _min_cost;
-// };
 
 class aorrt_specification_t : public rrt_specification_t
 {
@@ -122,9 +73,6 @@ public:
     state_space = sg->get_state_space();
 
     //// Create the Y space = X U Cost
-
-    // cost_aux1 = cost_state_space->make_point();
-    // cost_aux2 = cost_state_space->make_point();
   }
   virtual ~aorrt_specification_t()
   {
@@ -149,11 +97,6 @@ public:
   }
 
   space_t* state_space;
-  // space_t* Y_state_space;
-  // space_t* control_space;
-
-  // space_point_t X_aux1, X_aux2;
-  // space_point_t cost_aux1, cost_aux2;
 
   double c_max;
   double w_c;
@@ -198,9 +141,14 @@ public:
     const double radius{ aorrt_query->goal_region_radius };
     // _cost_state_space->copy(_cost_aux_pt, { Y_min_cost });
     // Y_state_space->point_union(aorrt_query->goal_state, _cost_aux_pt, Y_aux_pt);
-    const int total_solutions{ aorrt_query->total_solutions };
+    const std::size_t total_solutions = aorrt_query->total_solutions;
 
     std::vector<prx::proximity_node_t*> goal_nodes{};
+
+    using PairNodeCost = std::pair<prx::proximity_node_t*, double>;
+    auto node_comp = [](const PairNodeCost& p1, const PairNodeCost& p2) { return p1.second < p2.second; };
+
+    std::priority_queue<PairNodeCost, std::vector<PairNodeCost>, decltype(node_comp)> pq_nodes{ node_comp };
 
     auto pair_iters_vertices = _tree.vertices();
     for (auto iter = pair_iters_vertices.first; iter != pair_iters_vertices.second; iter++)
@@ -208,11 +156,19 @@ public:
       std::shared_ptr<tree_node_t> tree_node{ *iter };
       std::shared_ptr<Node> curr_node{ std::dynamic_pointer_cast<Node>(tree_node) };
       Y_state_space->split_point(curr_node->point, X_aux_pt, _cost_aux_pt);
-      if (distance_function(aorrt_query->goal_state, X_aux_pt) <= radius)
+      const double dist{ distance_function(aorrt_query->goal_state, X_aux_pt) };
+      if (dist <= radius)
       {
+        pq_nodes.push(std::make_pair(tree_node.get(), dist));
         // PRX_DBG_VARS(X_aux_pt);
-        goal_nodes.push_back(tree_node.get());
+        // goal_nodes.push_back(tree_node.get());
       }
+    }
+
+    for (int i = 0; i < std::min(total_solutions, pq_nodes.size()); ++i)
+    {
+      goal_nodes.push_back(pq_nodes.top().first);
+      pq_nodes.pop();
     }
 
     // const std::vector<prx::proximity_node_t*> goal_nodes{ metric->multi_query(Y_aux_pt, total_solutions) };

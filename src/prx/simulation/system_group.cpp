@@ -97,7 +97,7 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
 void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check,
                                trajectory_t& result)
 {
-  state_space->copy_from_point(start_state);
+  state_space->copy_from(start_state);
 
   int i = 0;
   do

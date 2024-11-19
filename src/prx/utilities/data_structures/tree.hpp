@@ -87,13 +87,13 @@ public:
 
   friend std::ostream& operator<<(std::ostream& os, const tree_node_t& obj)
   {
-    os << "[TreeNode] parent" << prx::constants::separating_value;
+    os << prx::constants::separating_value;
     os << obj.parent << prx::constants::separating_value;
-    os << "edge" << prx::constants::separating_value;
+    os << prx::constants::separating_value;
     os << obj.parent_edge << prx::constants::separating_value;
-    os << "index" << prx::constants::separating_value;
+    os << prx::constants::separating_value;
     os << obj.index << prx::constants::separating_value;
-    os << "State:" << prx::constants::separating_value;
+    os << prx::constants::separating_value;
     if (obj.point == nullptr)
     {
       os << "nullptr";
@@ -102,7 +102,7 @@ public:
     {
       os << obj.point << prx::constants::separating_value;
     }
-    os << "Children:";
+    // os << "Children:";
     for (auto child : obj.children)
     {
       os << child << prx::constants::separating_value;
@@ -177,13 +177,11 @@ public:
     os << *obj;
     return os;
   }
+
   friend std::ostream& operator<<(std::ostream& os, const tree_edge_t& obj)
   {
-    os << "[TreeEdge] source" << prx::constants::separating_value;
     os << obj.source << prx::constants::separating_value;
-    os << "index" << prx::constants::separating_value;
     os << obj.index << prx::constants::separating_value;
-    os << "target" << prx::constants::separating_value;
     os << obj.target << prx::constants::separating_value;
     return os;
   }
@@ -459,10 +457,32 @@ public:
     }
   }
 
+  template <typename EdgeType>
+  void edges_to_file(const std::string filenname)
+  {
+    using prx::constants::separating_value;
+
+    std::cout << "Saving tree as:" << filenname << "\n";
+    std::ofstream ofs_edge{ filenname.c_str(), std::ofstream::trunc };
+
+    ofs_edge << "#" << separating_value;
+    ofs_edge << "edge" << separating_value << "\n";
+
+    // edge_list.begin(), const_e_iter
+    for (auto iter = edge_list.begin(); iter != const_e_iter; ++iter)
+    {
+      const std::shared_ptr<tree_edge_t> edge{ *iter };
+      auto cast_edge = std::dynamic_pointer_cast<EdgeType>(edge);
+      ofs_edge << cast_edge << "\n";
+    }
+    ofs_edge.close();
+  }
+
   bool is_node_valid(const node_index_t& idx)
   {
     return _invalid_nodes.count(idx) == 0;
   }
+
   uint64_t vertex_id_counter;
 
 protected:

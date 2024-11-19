@@ -43,6 +43,10 @@ public:
   {
   }
 
+  SE2_t(const Eigen::Vector3d vector) : _translation(vector.head(2)), _angle(vector[2])
+  {
+  }
+
   SE2_t(const Translation translation, const double theta) : _translation(translation), _angle(theta)
   {
   }
@@ -223,7 +227,7 @@ public:
   template <typename RotationOut>
   inline RotationOut rotation() const
   {
-    const Eigen::Vector<double, 1> vec{ _angle };
+    const Eigen::Vector<double, 1> vec{ angle() };
     const Eigen::Matrix3d mat3d{ euler_to_rotation<Eigen::Matrix3d>(vec, "Z") };
     return RotationOut{ mat3d.block<2, 2>(0, 0) };
   }
@@ -287,9 +291,7 @@ namespace gtsam
 {
 
 template <>
-struct traits<prx::fg::SE2_t> : public gtsam::Testable<prx::fg::SE2_t>,
-                                // public gtsam::internal::VectorSpaceImpl<prx::fg::SE2_t, 6>,
-                                public internal::LieGroupTraits<prx::fg::SE2_t>
+struct traits<prx::fg::SE2_t> : public gtsam::Testable<prx::fg::SE2_t>, public internal::LieGroupTraits<prx::fg::SE2_t>
 {
   static constexpr Eigen::Index dimension = 3;
   static int GetDimension(const prx::fg::SE2_t&)

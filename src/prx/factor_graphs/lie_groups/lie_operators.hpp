@@ -27,23 +27,36 @@ inline Eigen::Matrix3d hat(const Eigen::Vector3d& vec)
   return res;
 }
 
-// Equation 58 of https://arxiv.org/pdf/1812.01537.pdf
-// Y = f(x) ;             Dy/Dx
-// Z = g(Y) = g(f(x)) ;   Dz/Dx
-// Dz/Dx = Dz/Dy * Dy/Dx
-template <typename DZDX, typename DZDY, typename DYDX>
-inline void chain_rule(DZDX& dzdx, const DZDY& dzdy, const DYDX& dydx)
+// Compute \tau_x = Y (-) X, such that Y = X (+) \tau_x. \tau_x in local frame
+template <typename LieGroup, Eigen::Index Dim = gtsam::traits<LieGroup>::dimension>
+static inline Eigen::Vector<double, Dim> right_minus(const LieGroup& Y, const LieGroup& X,  // no-lint
+                                                     gtsam::OptionalJacobian<Dim, Dim> Hy = boost::none,
+                                                     gtsam::OptionalJacobian<Dim, Dim> Hx = boost::none)
 {
-  dzdx = dzdy * dydx;
+  Eigen::Matrix<double, Dim, Dim> xI_H_x, tau_H_diff, diff_H_xI, diff_H_y;
+
+  const LieGroup Xi{ X.inverse(Hx ? &xI_H_x : nullptr) };
+  const LieGroup diff{ gtsam::traits<LieGroup>::Compose(Xi, Y, Hx ? &diff_H_xI : nullptr, Hy ? &diff_H_y : nullptr) };
+  const Eigen::Vector3d tau{ LieGroup::Logmap(diff, (Hx or Hy) ? &tau_H_diff : nullptr) };
+
+  if (Hy)
+  {
+    *Hy = tau_H_diff * diff_H_y;
+  }
+  if (Hx)
+  {
+    *Hx = tau_H_diff * diff_H_xI * xI_H_x;
+  }
+
+  return tau;
 }
 
-// template <typename UV, typename DerivU, typename DerivV, typename DUDX, typename DVDX>
-// inline void leibniz_rule(UV& uv, const U& u, const V& v, const DUDX& dudx, const DVDX& dvdx)
-// {
-//   dudx = deriv_u(x);
-//   dvdx = deriv_v(x);
-//   uv = leibniz_rule(uv, u, v, dudx, dvdx);
-// }
+template <typename LieGroup, Eigen::Index Dim = gtsam::traits<LieGroup>::dimension>
+static inline double cost_to_go(const LieGroup x, const Eigen::Matrix3d& S, const LieGroup& goal)
+{
+  const Eigen::Vector<double, Dim> diff{ right_minus(x, goal) };
+  return diff.transpose() * S * diff;
+}
 
 }  // namespace lie_operators
 }  // namespace fg

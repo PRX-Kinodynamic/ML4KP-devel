@@ -24,8 +24,8 @@ struct plant2d_t
 class node_t : public prx::tree_node_t
 {
 public:
-  node_t() : duration(0){};
-  virtual ~node_t(){};
+  node_t() : duration(0) {};
+  virtual ~node_t() {};
 
   template <typename NodePtr, typename EdgePtr>
   void update(NodePtr parent_node, EdgePtr parent_edge)
@@ -38,8 +38,8 @@ public:
 
 struct edge_t : public prx::tree_edge_t
 {
-  edge_t() : edge_cost(0){};
-  virtual ~edge_t(){};
+  edge_t() : edge_cost(0) {};
+  virtual ~edge_t() {};
 
   std::shared_ptr<prx::plan_t> plan;
   std::shared_ptr<prx::trajectory_t> traj;
@@ -259,4 +259,87 @@ BOOST_AUTO_TEST_CASE(discretize_tree_test)
   BOOST_CHECK_MESSAGE(2 == e3->get_target(), EXPECTED_GOT(2, e3->get_target()));
 
   BOOST_CHECK_MESSAGE(0 == n2->get_children().size(), EXPECTED_GOT(0, n2->get_children().size()));
+}
+
+BOOST_AUTO_TEST_CASE(discretize_tree_test_same_dt)
+{
+  using Node = typename mock::node_t;
+  using Edge = typename mock::edge_t;
+  using NodePtr = std::shared_ptr<Node>;
+  using EdgePtr = std::shared_ptr<Edge>;
+  prx::simulation_step = 0.1;
+
+  mock::plant2d_t plant;  // using same space as control and state for simplicity
+  prx::space_t* space{ &(plant.space) };
+
+  prx::tree_t tree{};
+  mock::planner_t planner;
+  planner.tree = &tree;
+
+  tree.allocate_memory<Node, Edge>(10);
+
+  const prx::node_index_t n0_id{ tree.add_vertex<Node, Edge>() };
+  const prx::node_index_t n1_id{ tree.add_vertex<Node, Edge>() };
+  const prx::node_index_t n2_id{ tree.add_vertex<Node, Edge>() };
+
+  NodePtr n0{ tree.get_vertex_as<Node>(n0_id) };
+  NodePtr n1{ tree.get_vertex_as<Node>(n1_id) };
+  NodePtr n2{ tree.get_vertex_as<Node>(n2_id) };
+
+  const prx::edge_index_t e0_id{ tree.add_edge(n0_id, n1_id) };
+  const prx::edge_index_t e1_id{ tree.add_edge(n1_id, n2_id) };
+
+  EdgePtr e0{ tree.get_edge_as<Edge>(e0_id) };
+  EdgePtr e1{ tree.get_edge_as<Edge>(e1_id) };
+
+  prx::cost_function_t cost_f = [](const prx::trajectory_t& traj, const prx::plan_t& plan) { return plan.duration(); };
+
+  e0->traj = std::make_shared<prx::trajectory_t>(space);
+  e0->plan = std::make_shared<prx::plan_t>(space);
+
+  e1->traj = std::make_shared<prx::trajectory_t>(space);
+  e1->plan = std::make_shared<prx::plan_t>(space);
+
+  const double plan_duration_0{ 0.3 };  // 0 --0.3-- 1 ==> 0 -0.1- 1 -0.1- 2 -0.1- 3
+  const double plan_duration_1{ 0.5 };  // 1 --0.5-- 2 ==> 3 -0.1- 4 -0.1- 5 -0.1- 6 -0.1- 7 -0.1- 8
+  e0->plan->copy_onto_back(Eigen::Vector2d::Ones(), plan_duration_0);
+  e1->plan->copy_onto_back(Eigen::Vector2d::Ones(), plan_duration_1);
+
+  for (double ti = 0; ti < plan_duration_0; ti += prx::simulation_step)
+  {
+    e0->traj->push_back(Eigen::Vector2d::Ones());
+  }
+  for (double ti = 0; ti < plan_duration_1; ti += prx::simulation_step)
+  {
+    e1->traj->push_back(Eigen::Vector2d::Ones());
+  }
+
+  e0->edge_cost = cost_f(*(e0->traj), *(e0->plan));
+  e1->edge_cost = cost_f(*(e1->traj), *(e1->plan));
+
+  n1->update(n0, e0);
+  n2->update(n1, e1);
+
+  const double desired_edge_duration{ prx::simulation_step };
+
+  const int expected_original_size{ 3 };
+  BOOST_CHECK_MESSAGE(expected_original_size == tree.size(), EXPECTED_GOT(expected_original_size, tree.size()));
+
+  prx::planning::discretize_tree(tree, planner, desired_edge_duration);
+
+  const int expected_new_size{ 41 };  // 20+20+1
+  BOOST_CHECK_MESSAGE(expected_new_size == tree.size(), EXPECTED_GOT(expected_new_size, tree.size()));
+
+  const double epsilon{ 0.00001 };
+
+  auto edges = tree.edges();
+  for (auto iter = edges.first; iter != edges.second; iter++)
+  {
+    auto edge_i = std::dynamic_pointer_cast<Edge>(*iter);
+
+    const std::size_t id{ edge_i->get_index() };
+    const double duration{ edge_i->plan->duration() };
+    PRX_DBG_VARS(id, duration);
+    BOOST_REQUIRE_CLOSE(desired_edge_duration, edge_i->plan->duration(), epsilon);
+  }
 }

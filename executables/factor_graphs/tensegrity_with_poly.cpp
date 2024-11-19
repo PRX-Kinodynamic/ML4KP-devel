@@ -269,7 +269,6 @@ int main(int argc, char* argv[])
       const Translation r1{ rod_caps.first + rand0 };
       const Translation r2{ rod_caps.second + rand1 };
 
-      // PRX_DBG_VARS(r1.transpose(), r2.transpose());
       // graph.emplace_shared<ManifoldChebyshev>(0, poses[i], se3_noise, N, timestamps[i], a, b);
       graph.emplace_shared<manifold_evaluation_t<gtsam::Chebyshev2, SE3>>(kp, kx, se3_noise, N, ti, a, b);
 

@@ -88,6 +88,20 @@ public:
     edge_cost = cost;
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const std::shared_ptr<rrt_edge_t>& obj)
+  {
+    os << *obj;
+    return os;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const rrt_edge_t& obj)
+  {
+    os << static_cast<tree_edge_t>(obj) << prx::constants::separating_value;
+    os << obj.plan->duration();
+
+    return os;
+  }
+
   std::shared_ptr<plan_t> plan;
   std::shared_ptr<trajectory_t> traj;
   double edge_cost;
@@ -285,6 +299,24 @@ public:
     n2->point = state_space->clone_point(e0->traj->back());
     n2->update(n0, e0);
     return e1;
+  }
+
+  template <typename Edge>
+  static void tree_to_trajectories(prx::tree_t& tree, std::vector<trajectory_t>& trajectories)
+  {
+    auto iter_bounds = tree.edges();
+    for (auto iter = iter_bounds.first; iter != iter_bounds.second; iter++)
+    {
+      trajectories.push_back(*tree.get_edge_as<Edge>((*iter)->get_index())->traj);
+    }
+  }
+
+  template <typename Edge>
+  static std::vector<trajectory_t> tree_to_trajectories(prx::tree_t& tree)
+  {
+    std::vector<trajectory_t> trajs;
+    rrt_t::tree_to_trajectories<Edge>(tree, trajs);
+    return trajs;
   }
 
 protected:

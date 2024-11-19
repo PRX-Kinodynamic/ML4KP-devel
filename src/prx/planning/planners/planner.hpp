@@ -25,7 +25,7 @@ public:
   virtual ~planner_specification_t()
   {
   }
-  virtual void init(const prx::param_loader& params){};
+  virtual void init(const prx::param_loader& params) {};
 };
 
 class planner_query_t
