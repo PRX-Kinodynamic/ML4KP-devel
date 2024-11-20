@@ -27,7 +27,8 @@ void discretize_edge(EdgePtr& edge, tree_t& tree, const double desired_edge_dura
   NodePtr final_node{ tree.get_vertex_as<Node>(edge->get_target()) };
   double current_plan_duration{ edge->plan->duration() };
   // PRX_DBG_VARS("--------");
-  while (current_plan_duration > desired_edge_duration)
+  const double eps{ prx::simulation_step * prx::simulation_step };
+  while (current_plan_duration - desired_edge_duration > eps)
   {
     // PRX_DBG_VARS(current_plan_duration, current_edge->traj->size());
     // prx_assert(new_edge != nullptr, "Edge [" << previous_edge->get_index() << "] not found");
