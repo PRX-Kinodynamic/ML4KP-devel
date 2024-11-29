@@ -4,6 +4,7 @@
 #include "prx/utilities/learned_modules/learned_modules_utils.hpp"
 #include "prx/planning/planner_functions/planner_functions.hpp"
 #include "prx/planning/planners/dirt.hpp"
+#include <cmath>
 
 #include <torch/torch.h>
 #include <torch/script.h>
@@ -15,10 +16,10 @@ class learned_controller_t
     private:
         torch::jit::script::Module controller;
     protected:
-        bool normalize_input, delta_input, debug_controller;
+        bool normalize_input, delta_input, delta_goal, debug_controller;
         double control_duration, max_duration;
         std::vector<double> state_upper_bounds, state_lower_bounds, control_upper_bounds, control_lower_bounds;
-        std::vector<int> state_indices, goal_indices;
+        std::vector<int> state_indices, goal_indices, delta_goal_keep_mask;
     public:
     learned_controller_t(param_loader params)
     {
@@ -31,6 +32,7 @@ class learned_controller_t
         // Get some controller parameters.
         normalize_input = params["/learned_controller/normalize_input"].as<bool>();
         delta_input = params["/learned_controller/delta_input"].as<bool>();
+        delta_goal = params["/learned_controller/delta_goal"].as<bool>();
         control_duration = params["/learned_controller/control_duration"].as<double>();
         max_duration = params["/learned_controller/max_duration"].as<double>();
         debug_controller = params["/learned_controller/debug_controller"].as<bool>();
@@ -43,6 +45,7 @@ class learned_controller_t
 
         state_indices = params["/learned_controller/state_indices"].as<std::vector<int>>();
         goal_indices = params["/learned_controller/goal_indices"].as<std::vector<int>>();
+        delta_goal_keep_mask = params["/learned_controller/delta_goal_keep_mask"].as<std::vector<int>>();
         
         try
         {
@@ -102,33 +105,41 @@ class learned_controller_t
         std::vector<torch::jit::IValue> inputs;
         std::vector<std::vector<double>> normalized_states, normalized_goals;
 
-        if (normalize_input)
+        
+        for (int i = 0; i < states.size(); i++)
         {
-            for (int i = 0; i < states.size(); i++)
-            {
-                normalized_states.push_back(extract_state(normalize_vector(states[i],state_lower_bounds,state_upper_bounds),state_indices));
-                normalized_goals.push_back(extract_state(normalize_vector(goals[i],state_lower_bounds,state_upper_bounds),goal_indices));
+            std::vector<double> state = std::vector<double>(states[i]);
+            std::vector<double> goal = std::vector<double>(goals[i]);
+            if (normalize_input){
+                state = std::vector<double>(normalize_vector(states[i],state_lower_bounds,state_upper_bounds));
+                goal = std::vector<double>(normalize_vector(goals[i],state_lower_bounds,state_upper_bounds));
             }
-        }
-        else
-        {
-            for (int i = 0; i < states.size(); i++)
-            {
-                normalized_states.push_back(extract_state(states[i],state_indices));
-                normalized_goals.push_back(extract_state(goals[i],goal_indices));
-            }
-        }
-        if (delta_input)
-        {
-            for (int i = 0; i < normalized_goals.size(); i++)
-            {
-                for (int j = 0; j < 2; j++)
-                {
-                    normalized_goals[i][j] = normalized_goals[i][j] - normalized_states[i][j];
-                    normalized_states[i][j] = 0;
+            if (delta_input){
+                //it is assumed that the first 3 elements are x,y,theta - kindof a bad assumption, but i just want the code to work
+                for (int j = 0; j < 2; j++){
+                    goal[j] = goal[j] - state[j];
+                    state[j] = 0;
                 }
+                goal[0] = std::cos(-state[2]) * goal[0] - std::sin(-state[2]) * goal[1]; 
+                goal[1] = std::sin(-state[2]) * goal[0] + std::cos(-state[2]) * goal[1];
+                goal[2] -= state[2];
+                state[2] = 0;
             }
+            if(delta_goal){
+                //it is assumed that the first 3 elements are x,y,theta - kindof a bad assumption, but i just want the code to work
+                for (int j = 0; j < 2; j++){
+                    state[j] -= goal[j];
+                    goal[j] = 0;
+                }
+                state[0] = std::cos(-goal[2]) * state[0] - std::sin(-goal[2]) * state[1]; 
+                state[1] = std::sin(-goal[2]) * state[0] + std::cos(-goal[2]) * state[1];
+                state[2] -= goal[2];
+                goal[2] = 0;
+            }
+            normalized_states.push_back(extract_state(state,state_indices));
+            normalized_goals.push_back(extract_state(goal,goal_indices));
         }
+
         for (int i = 0; i < normalized_states.size(); i++)
         {
             normalized_states[i].insert(normalized_states[i].end(),normalized_goals[i].begin(),normalized_goals[i].end());
@@ -166,24 +177,37 @@ class learned_controller_t
         torch::Device device(torch::kCPU);
         std::vector<torch::jit::IValue> inputs;
         std::vector<double> normalized_state, normalized_goal;
-        if (normalize_input)
-        {
-            normalized_state = extract_state(normalize_vector(state,state_lower_bounds,state_upper_bounds),state_indices);
-            normalized_goal = extract_state(normalize_vector(goal,state_lower_bounds,state_upper_bounds),goal_indices);
+        std::vector<double> temp_state = std::vector<double>(state);
+        std::vector<double> temp_goal = std::vector<double>(goal);
+        if (normalize_input){
+            temp_state = std::vector<double>(normalize_vector(state,state_lower_bounds,state_upper_bounds));
+            temp_goal = std::vector<double>(normalize_vector(goal,state_lower_bounds,state_upper_bounds));
         }
-        else
-        {
-            normalized_state = extract_state(state,state_indices);
-            normalized_goal = extract_state(goal,goal_indices);
-        }
-        if (delta_input)
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                normalized_goal[i] = normalized_goal[i] - normalized_state[i];
-                normalized_state[i] = 0;
+        if (delta_input){
+            //it is assumed that the first 3 elements are x,y,theta - kindof a bad assumption, but i just want the code to work
+            for (int j = 0; j < 2; j++){
+                temp_goal[j] = temp_goal[j] - temp_state[j];
+                temp_state[j] = 0;
             }
+            temp_goal[0] = std::cos(-temp_state[2]) * temp_goal[0] - std::sin(-temp_state[2]) * temp_goal[1]; 
+            temp_goal[1] = std::sin(-temp_state[2]) * temp_goal[0] + std::cos(-temp_state[2]) * temp_goal[1];
+            temp_goal[2] -= temp_state[2];
+            temp_state[2] = 0;
         }
+        if(delta_goal){
+            //it is assumed that the first 3 elements are x,y,theta - kindof a bad assumption, but i just want the code to work
+            for (int j = 0; j < 2; j++){
+                temp_state[j] -= temp_goal[j];
+                temp_goal[j] = 0;
+            }
+            temp_state[0] = std::cos(-temp_goal[2]) * temp_state[0] - std::sin(-temp_goal[2]) * temp_state[1]; 
+            temp_state[1] = std::sin(-temp_goal[2]) * temp_state[0] + std::cos(-temp_goal[2]) * temp_state[1];
+            temp_state[2] -= temp_goal[2];
+            temp_goal[2] = 0;
+        }
+        normalized_state = extract_state(temp_state,state_indices);
+        normalized_goal = extract_state(temp_goal,goal_indices);
+
         normalized_state.insert(normalized_state.end(),normalized_goal.begin(),normalized_goal.end());
         if (debug_controller)
         {
@@ -206,10 +230,13 @@ class learned_controller_t
         // inputs.push_back(torch::from_blob(normalized_state.data(),{1,normalized_state.size()},options));
         auto output = controller.forward(inputs).toTensor();
         std::vector<double> control;
+        //if (debug_controller){std::cout << "Output: ";}
         for(int i = 0; i < output.size(1); i++)
         {
             control.push_back(output[0][i].item().toDouble());
+            //if (debug_controller) {std::cout << control.back() << " ";}
         }
+        //if (debug_controller){std::cout << std::endl;}
         return denormalize_control(control,control_lower_bounds,control_upper_bounds);
     }
     
@@ -233,9 +260,9 @@ class learned_controller_t
             query.solution_plan.append_onto_back(control_duration);
             sg -> get_state_space() -> copy_vector_from_point(state_vec,current);
             sg -> get_control_space() -> copy_point_from_vector(query.solution_plan.back().control,get_control(state_vec,goal_vec));
-            if (debug_controller) std::cout << sg -> get_control_space() -> print_point(query.solution_plan.back().control,4) << " " << query.solution_plan.back().duration << std::endl;
+            //if (debug_controller) std::cout << sg -> get_control_space() -> print_point(query.solution_plan.back().control,4) << " " << query.solution_plan.back().duration << std::endl;
             sg -> propagate(current, query.solution_plan, step_traj);
-            if (debug_controller) std::cout << sg -> get_state_space() -> print_point(step_traj.back(),4) << std::endl;
+            //if (debug_controller) std::cout << sg -> get_state_space() -> print_point(step_traj.back(),4) << std::endl;
             sg -> get_state_space() -> copy_point(current,step_traj.back());
             for (unsigned i = 0; i < step_traj.size() - 1; i++)
             {
@@ -270,7 +297,7 @@ class learned_controller_t
         plan_t step_plan(spec.control_space);
         space_point_t current = spec.state_space -> clone_point(query.start_state);
         spec.state_space -> copy_vector_from_point(goal_vec,query.goal_state);
-
+        if (debug_controller) std::cout << "-------------------"<<std::endl<< "----Begin Query----"<<std::endl << "-------------------"<<std::endl;
         while (time_so_far < max_duration && !query.goal_check(current))
         {
             state_vec.clear();
@@ -282,9 +309,9 @@ class learned_controller_t
             spec.state_space -> copy_vector_from_point(state_vec,current);
             spec.control_space -> copy_point_from_vector(query.solution_plan.back().control,get_control(state_vec,goal_vec));
             spec.control_space -> copy_point(step_plan.back().control,query.solution_plan.back().control);
-            if (debug_controller) std::cout << spec.control_space -> print_point(query.solution_plan.back().control,4) << " " << query.solution_plan.back().duration << std::endl;
+            //if (debug_controller) std::cout << spec.control_space -> print_point(query.solution_plan.back().control,4) << " " << query.solution_plan.back().duration << std::endl;
             spec.propagate(current, step_plan, step_traj);
-            if (debug_controller) std::cout << spec.state_space -> print_point(step_traj.back(),4) << std::endl;
+            //if (debug_controller) std::cout << spec.state_space -> print_point(step_traj.back(),4) << std::endl;
             spec.state_space -> copy_point(current,step_traj.back());
             for (unsigned i = 0; i < step_traj.size() - 1; i++)
             {

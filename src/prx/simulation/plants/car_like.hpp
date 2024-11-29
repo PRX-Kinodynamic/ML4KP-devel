@@ -7,7 +7,7 @@ namespace prx
     /**
      * @brief <b> A second-order car-like system. </b>
      * 
-     * @author Aravind Sivaramakrishnan, Edgar Granados
+     * @author Aravind Sivaramakrishnan, Edgar Granados, Noah Carver
      * 
      */
     class car_like_t : public plant_t
@@ -28,8 +28,8 @@ namespace prx
         double L = 0.6;
 
         private:
-        std::vector<double> lower_bound = {-11,-11,-3.15,-PRX_PI/3,-0.2};
-        std::vector<double> upper_bound = { 11, 11, 3.15, PRX_PI/3, 0.7};
+        std::vector<double> lower_bound = {-11,-11,-3.15,-0.2,-PRX_PI/6};
+        std::vector<double> upper_bound = { 11, 11, 3.15, 0.7, PRX_PI/6};
         friend system_factory_t;
     };
 }

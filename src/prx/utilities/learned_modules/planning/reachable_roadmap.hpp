@@ -285,25 +285,31 @@ class reachable_roadmap_t
         int num_ft = 0;
 
         std::stack<space_point_t> sample_buffer;
+        auto vel_bounds = spec.state_space ->get_bounds()[3];
 
         pt = spec.state_space -> make_point();
         pt2 = spec.state_space -> make_point();
         do
         {
-            if(sample_velocities){
+            std::cout << "vertices: "<< vertices.size() << std::endl;
+            if(false){
                 if(sample_buffer.empty()){
-                    auto vel_bounds = spec.state_space ->get_bounds()[4];
-                    do
-                    {
+                    
+                    // sample new state
+                    do{
                         spec.sample_state(pt);
                     } while (!spec.valid_state(pt));
+
+                    // add clones with high and low velocities
                     space_point_t high_vel_pos_copy = spec.state_space -> clone_point(pt);
-                    high_vel_pos_copy -> at(4) = vel_bounds.first; //todo: insert high velocity
-                    if(!spec.valid_state(high_vel_pos_copy)){sample_buffer.push(high_vel_pos_copy);}
+                    high_vel_pos_copy -> at(3) = vel_bounds.first; 
+                    if(spec.valid_state(high_vel_pos_copy)){sample_buffer.push(high_vel_pos_copy);}
                     space_point_t high_vel_neg_copy = spec.state_space -> clone_point(pt);
-                    high_vel_neg_copy -> at(4) = vel_bounds.second; //todo: insert high velocity
-                    if(!spec.valid_state(high_vel_pos_copy)){sample_buffer.push(high_vel_neg_copy);}
+                    high_vel_neg_copy -> at(3) = vel_bounds.second; 
+                    if(spec.valid_state(high_vel_neg_copy)){sample_buffer.push(high_vel_neg_copy);}
+
                 }else{
+                    // get point from sample buffer
                     spec.state_space->copy_point(pt, sample_buffer.top()); 
                     sample_buffer.pop();
                 }
@@ -319,7 +325,22 @@ class reachable_roadmap_t
             spec.state_space -> copy_vector_from_point(pt_vec,pt);
 
             get_indices(query,spec,controller);
-            std::cout << "arrivable nodes: "<< a_indices.size()<<", departable nodes: "<<d_indices.size() << std::endl;
+            std::cout << std::endl << "node: "<< pt_vec<< std::endl;
+            std::vector<double> t_vec;
+            std::cout << "arrivable nodes: "<< a_indices.size() << std::endl;
+            for(auto a : a_indices){
+                spec.state_space -> copy_vector_from_point(t_vec, get_point(a));
+                std::cout << "\t arriving node: " << t_vec << std::endl;
+                t_vec.clear();
+            }
+            
+            std::cout <<"departable nodes: "<<d_indices.size() << std::endl;
+            for(auto d : d_indices){
+                spec.state_space -> copy_vector_from_point(t_vec, get_point(d));
+                std::cout << "\t departing node: " << t_vec << std::endl;
+                t_vec.clear();
+            }
+
             
             if (a_indices.size() == 0 || d_indices.size() == 0)  // sample connected to no nodes, becomes a guard
             {

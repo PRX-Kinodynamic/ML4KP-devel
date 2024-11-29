@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
         std::cout << "Mean error in theta: " << std::accumulate(error_theta.begin(), error_theta.end(), 0.0) / error_theta.size() << std::endl;
 
         // Stddev
-        double sq_sum_x = std::inner_product(error_x.begin(), error_x.end(), error_x.begin(), 0.0);
+        double sq_sum_x = std::inner_product(error_x.begin(), error_x.end(), error_x.begin(), 0.0);`
         double mean_x = std::accumulate(error_x.begin(), error_x.end(), 0.0) / error_x.size();
         double stdev_x = std::sqrt(sq_sum_x / error_x.size() - mean_x * mean_x);
 

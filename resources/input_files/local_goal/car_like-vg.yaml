@@ -1,6 +1,6 @@
 random_seed: 210896
 # random_seed: 101193
-simulation_step: 0.1
+simulation_step: 0.3
 
 # "environments/bar.yaml"
 # "environments/indoor.yaml"
@@ -13,15 +13,15 @@ learned_controller: !file "networks/car_like_HER_SAC.yaml"
 
 random_local_goal: false
 planner_name: "roadmap"
-goal_radius: 0.5
+goal_radius: 1
 
 num_trajectories: 10
-sample_around: true
-verify_edge: true
+sample_around: false
+verify_edge: false
 validate: true
 num_failures: 10
 precision: 0
-collect_reachability: true
+collect_reachability: false
 stretch_factor: 3.0
 termination_classifier: !file "networks/svm_classifier.yaml"
 

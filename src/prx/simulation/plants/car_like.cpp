@@ -5,17 +5,17 @@ namespace prx
     car_like_t::car_like_t(const std::string& path) : plant_t(path)
     {
         x=y=theta=phi=v=0;
-        state_memory = {&x,&y,&theta,&phi,&v};
-        state_space = new space_t("EERRE",state_memory,"CarLikeState");
+        state_memory = {&x,&y,&theta,&v,&phi};
+        state_space = new space_t("EERER",state_memory,"CarLikeState");
         state_space->set_bounds(lower_bound,upper_bound);
 
-        dx=dy=dtheta=dphi=dv=0;
-        derivative_memory = {&dx,&dy,&dtheta,&dphi,&dv};
+        dx=dy=dtheta=dv=dphi=0;
+        derivative_memory = {&dx,&dy,&dtheta,&dv,&dphi};
         derivative_space = new space_t("EEEEE",derivative_memory,"CarLikeDerivative");
 
-        control_memory = {&dphi,&dv};
+        control_memory = {&dv,&dphi};
         input_control_space = new space_t("EE",control_memory,"CarLikeControl");
-        input_control_space -> set_bounds({-1.0, -0.3},{1.0, 0.3});
+        input_control_space -> set_bounds({-0.3, -1.0},{0.3, 1.0});
 
         geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
         geometries["body"]->initialize_geometry({.9,.6,.25});

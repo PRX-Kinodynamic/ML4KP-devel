@@ -1,13 +1,15 @@
-controller_path: "networks/HER_SAC_with_vel_best.pt"
+controller_path: "networks/HER_SAC_with_vel_best_delta_goal.pt"
 random_seed: 111093
 
-state_indices: [0,1,2,4,0,1,2,4]
-goal_indices: [0,1,2,4]
+state_indices: [0,1,2,3,4,0,1,2,3]
+goal_indices: [0,1,2,3]
 
 normalize_input: false
 delta_input: false
+delta_goal: true
+delta_goal_keep_mask: [0,0,0,1]
 
-control_duration: 1.0
-max_duration: 30.0
+control_duration: 0.3
+max_duration: 150.0
 
-debug_controller: true
+debug_controller: false
