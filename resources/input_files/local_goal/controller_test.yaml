@@ -4,7 +4,7 @@ simulation_step: 0.3
 
 # "environments/bar.yaml"
 # "environments/indoor.yaml"
-environment: "environments/bar.yaml"
+environment: "environments/empty.yaml"
 
 plant: !file "plants/car_like_wh.yaml"
 
