@@ -1,0 +1,34 @@
+random_seed: 210896
+# random_seed: 101193
+simulation_step: 0.3
+
+# "environments/bar.yaml"
+# "environments/indoor.yaml"
+environment: "environments/bar.yaml"
+
+plant: !file "plants/car_like_wh.yaml"
+
+use_learned_controller: true
+learned_controller: !file "networks/car_like_HER_SAC.yaml"
+
+random_local_goal: false
+planner_name: "roadmap"
+goal_radius: 1
+
+num_trajectories: 10
+sample_around: false
+verify_edge: false
+validate: true
+num_failures: 10
+precision: 0
+collect_reachability: false
+stretch_factor: 3.0
+termination_classifier: !file "networks/svm_classifier.yaml"
+
+start_state: [  -9.0000, -9.0000 , 0.0000, 0.0000, 0.0000]
+goal_state:  [ 9.0000, 9.0000, 0.0000, 0.0000, 0.0000]
+
+debug: true
+
+output_dir: "vel_goals/"
+roadmap_dir: "vel_goals/"
