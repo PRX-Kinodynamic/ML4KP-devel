@@ -204,17 +204,16 @@ int main(int argc, char* argv[])
             pt_vec.clear();
             dirt_spec.state_space -> copy_vector_from_point(pt_vec,pt);
 
-            
             ss -> copy_point_from_vector(dirt_query.start_state,pt_vec);
 
+            //TODO: set Goal to 0
 
+            /////////////////////////////////////////////////////////////////////////////////////////
+
+            //TODO: test controller.
             
         }
 
-        std::cout<< "------RESULTS------"<<std::endl;
-        std::cout<< "roadmap coverage: "<< (1.0 - num_fail_plan/100.0) << std::endl;
-        std::cout<< "single transition planner safety: "<< (1.0-num_fail_traj/tot_num_traj) << std::endl;
-        std::cout<< "avg execution before failure: "<< failure_point/num_fail_traj <<std::endl;
     }
     catch(const prx_assert_t& e) 
     {
