@@ -230,13 +230,13 @@ class learned_controller_t
         // inputs.push_back(torch::from_blob(normalized_state.data(),{1,normalized_state.size()},options));
         auto output = controller.forward(inputs).toTensor();
         std::vector<double> control;
-        //if (debug_controller){std::cout << "Output: ";}
+        if (debug_controller){std::cout << "Output: ";}
         for(int i = 0; i < output.size(1); i++)
         {
             control.push_back(output[0][i].item().toDouble());
-            //if (debug_controller) {std::cout << control.back() << " ";}
+            if (debug_controller) {std::cout << control.back() << " "; }
         }
-        //if (debug_controller){std::cout << std::endl;}
+        if (debug_controller){std::cout << std::endl;}
         return denormalize_control(control,control_lower_bounds,control_upper_bounds);
     }
     
@@ -260,7 +260,7 @@ class learned_controller_t
             query.solution_plan.append_onto_back(control_duration);
             sg -> get_state_space() -> copy_vector_from_point(state_vec,current);
             sg -> get_control_space() -> copy_point_from_vector(query.solution_plan.back().control,get_control(state_vec,goal_vec));
-            //if (debug_controller) std::cout << sg -> get_control_space() -> print_point(query.solution_plan.back().control,4) << " " << query.solution_plan.back().duration << std::endl;
+            if (debug_controller) std::cout << sg -> get_control_space() -> print_point(query.solution_plan.back().control,4) << " " << query.solution_plan.back().duration << std::endl;
             sg -> propagate(current, query.solution_plan, step_traj);
             //if (debug_controller) std::cout << sg -> get_state_space() -> print_point(step_traj.back(),4) << std::endl;
             sg -> get_state_space() -> copy_point(current,step_traj.back());

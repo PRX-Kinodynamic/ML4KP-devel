@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
         if (argc <= 1)
         {
             // prx_throw("This executable needs a parameter file!");
-            params_file = "local_goal/car_like-vg.yaml";
+            params_file = "local_goal/controller_test.yaml";
             // params_file = "local_goal/annotate_treaded.yaml";
         }
         else 
@@ -183,9 +183,7 @@ int main(int argc, char* argv[])
         // rrr.print_components();
 
 
-        double num_fail_plan = 0;
         double num_fail_traj = 0;
-        double failure_point = 0;
         double tot_num_traj = 0;
 
         for(int i = 0; i<100; i++){
@@ -206,13 +204,23 @@ int main(int argc, char* argv[])
 
             ss -> copy_point_from_vector(dirt_query.start_state,pt_vec);
 
-            //TODO: set Goal to 0
+            std::vector<double> goal_vec(pt_vec.size());
+            pt = dirt_spec.state_space -> make_point();
+            ss -> copy_point_from_vector(dirt_query.goal_state,goal_vec);
 
             /////////////////////////////////////////////////////////////////////////////////////////
 
             //TODO: test controller.
+            dirt_query.clear_outputs();
+            controller.fulfill_query(dirt_query, dirt_spec);
             
+            if (dirt_spec.valid_check(dirt_query.solution_traj) && dirt_query.solution_traj.size() > 1){
+                num_fail_traj++;
+            }
+            tot_num_traj++;
+
         }
+        std::printf("controller efficacy: %f/%f",num_fail_traj,tot_num_traj);
 
     }
     catch(const prx_assert_t& e) 
