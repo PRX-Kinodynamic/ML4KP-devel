@@ -15,7 +15,8 @@ namespace fg
 
 // aka a Pose.
 // A pair translation/position, rotation where the rotation is a quaternion: (p,q).
-// Mostly using the functionallity of gtsam::Pose3 but we need access to the raw values of p and q for prx::space_t
+// Mostly using the functionality of gtsam::Pose3 but we need access to the raw values of p and q for prx::space_t
+
 class se3_t : public gtsam::LieGroup<se3_t, 6>
 {
 public:
@@ -110,7 +111,27 @@ public:
 
   Position operator*(const Position& x) const
   {
-    return _quaternion * x + _position;
+    return action(x);
+  }
+
+  Position action(const Position& pt,  // no-lint
+                  gtsam::OptionalJacobian<3, 6> Hse3 = boost::none,
+                  gtsam::OptionalJacobian<3, 3> Hpt = boost::none) const
+  {
+    if (Hse3 or Hpt)
+    {
+      const Eigen::Matrix3d R{ rotation_matrix() };
+      if (Hse3)
+      {
+        Hse3->leftCols<3>() = R * gtsam::skewSymmetric(-pt[0], -pt[1], -pt[2]);
+        Hse3->rightCols<3>() = R;
+      }
+      if (Hpt)
+      {
+        *Hpt = R;
+      }
+    }
+    return _quaternion * pt + _position;
   }
 
   gtsam::Pose3 to_pose() const

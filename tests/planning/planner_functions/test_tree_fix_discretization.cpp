@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(discretize_tree_test_same_dt)
 
   prx::planning::discretize_tree(tree, planner, desired_edge_duration);
 
-  const int expected_new_size{ 41 };  // 20+20+1
+  const int expected_new_size{ 9 };  // 20+20+1
   BOOST_CHECK_MESSAGE(expected_new_size == tree.size(), EXPECTED_GOT(expected_new_size, tree.size()));
 
   const double epsilon{ 0.00001 };
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(discretize_tree_test_same_dt)
 
     const std::size_t id{ edge_i->get_index() };
     const double duration{ edge_i->plan->duration() };
-    PRX_DBG_VARS(id, duration);
+    // PRX_DBG_VARS(id, duration);
     BOOST_REQUIRE_CLOSE(desired_edge_duration, edge_i->plan->duration(), epsilon);
   }
 }

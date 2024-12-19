@@ -1,3 +1,6 @@
 environment:
     type: obstacle
+    bounds:
+        min: [ -10, -10, -1]
+        max: [ +10, +10,  1]
     geometries:

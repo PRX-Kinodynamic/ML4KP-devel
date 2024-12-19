@@ -62,6 +62,23 @@ public:
     _pose = LieIntegrator::integrate(_pose, _velocity, simulation_step);
   }
 
+  virtual void steer(const space_point_t from, const space_point_t to, const double ti) override
+  {
+    if constexpr (Order == 1)
+    {
+      get_state_space()->copy(_to, to);
+      get_state_space()->copy(_from, from);
+
+      const SE2_t f_T_t{ _from.between(_to) };
+
+      const Eigen::Vector3d tau{ SE2_t::Logmap(f_T_t) };
+    }
+    else
+    {
+      PRX_NOT_IMPLEMENTED
+    }
+  }
+
   virtual void update_configuration() override
   {
     auto body = configurations["body"];
@@ -77,7 +94,7 @@ protected:
   void init_geometry()
   {
     geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::BOX);
-    geometries["body"]->initialize_geometry({ 1.618, 1.0, 1.0 });
+    geometries["body"]->initialize_geometry({ 0.6, 0.25, 1.0 });
     geometries["body"]->generate_collision_geometry();
     geometries["body"]->set_visualization_color("0x00ff00");
     configurations["body"] = std::make_shared<transform_t>();
@@ -87,6 +104,9 @@ protected:
   SE2 _pose;
   Velocity _velocity;
   Acceleration _acceleration;
+
+  SE2 _from;
+  SE2 _to;
 };
 }  // namespace fg
 }  // namespace prx

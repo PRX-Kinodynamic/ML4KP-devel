@@ -37,7 +37,7 @@ static inline Eigen::Vector<double, Dim> right_minus(const LieGroup& Y, const Li
 
   const LieGroup Xi{ X.inverse(Hx ? &xI_H_x : nullptr) };
   const LieGroup diff{ gtsam::traits<LieGroup>::Compose(Xi, Y, Hx ? &diff_H_xI : nullptr, Hy ? &diff_H_y : nullptr) };
-  const Eigen::Vector3d tau{ LieGroup::Logmap(diff, (Hx or Hy) ? &tau_H_diff : nullptr) };
+  const Eigen::Vector<double, Dim> tau{ LieGroup::Logmap(diff, (Hx or Hy) ? &tau_H_diff : nullptr) };
 
   if (Hy)
   {

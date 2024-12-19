@@ -15,9 +15,9 @@ param_loader::param_loader()
   set_input_path(input_path);
 }
 
-param_loader::param_loader(const std::string filename) : param_loader(filename, prx::input_path){};
+param_loader::param_loader(const std::string filename) : param_loader(filename, prx::input_path) {};
 
-param_loader::param_loader(int argc, char* argv[]) : param_loader(std::vector<std::string>(argv, argv + argc)){};
+param_loader::param_loader(int argc, char* argv[]) : param_loader(std::vector<std::string>(argv, argv + argc)) {};
 
 param_loader::param_loader(std::vector<std::string> argv) : param_loader()
 {
@@ -25,7 +25,7 @@ param_loader::param_loader(std::vector<std::string> argv) : param_loader()
 }
 
 param_loader::param_loader(std::string filename, int argc, char* argv[])
-  : param_loader(filename, std::vector<std::string>(argv, argv + argc)){};
+  : param_loader(filename, std::vector<std::string>(argv, argv + argc)) {};
 
 param_loader::param_loader(std::string filename, std::vector<std::string> argv) : param_loader(filename)
 {
@@ -53,7 +53,8 @@ void param_loader::add_file(std::string file_name)
 {
   try
   {
-    auto nn = YAML::LoadFile(pl_input_path + file_name);
+    const std::string filename{ prx::check_which_file_exists(file_name, pl_input_path + file_name) };
+    auto nn = YAML::LoadFile(filename);
     params = std::move(expand_file(nn));
   }
   catch (...)

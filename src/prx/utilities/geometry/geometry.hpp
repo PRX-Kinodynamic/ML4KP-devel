@@ -29,7 +29,27 @@ class geometry_t
 {
 public:
   geometry_t(geometry_type_t new_geom_type);
+  geometry_t(const prx::param_loader& param_loader)
+  {
+    init(param_loader);
+  }
   ~geometry_t();
+
+  static inline geometry_type_t geometry_type(const std::string geom)
+  {
+    const std::map<std::string, geometry_type_t> available_types{
+      { "BOX", geometry_type_t::BOX },              // no-lint
+      { "SPHERE", geometry_type_t::SPHERE },        // no-lint
+      { "ELLIPSOID", geometry_type_t::ELLIPSOID },  // no-lint
+      { "CAPSULE", geometry_type_t::CAPSULE },      // no-lint
+      { "CONE", geometry_type_t::CONE },            // no-lint
+      { "CYLINDER", geometry_type_t::CYLINDER }     // no-lint
+    };
+
+    std::string upper_geom{ prx::to_upper(geom) };
+    // std::transform(geom.begin(), geom.end(), upper_geom.begin(), std::toupper);
+    return available_types.at(upper_geom);
+  }
 
   std::weak_ptr<PQP_Model> get_collision_geometry();
 
@@ -49,6 +69,20 @@ public:
   std::string get_visualization_color()
   {
     return vis_color;
+  }
+
+  virtual void init(const prx::param_loader& param_loader)
+  {
+    if (param_loader.exists("color"))
+    {
+      vis_color = param_loader["color"].as<std::string>();
+    }
+    if (param_loader.exists("type") and param_loader.exists("parameters"))
+    {
+      geom_type = geometry_type(param_loader["type"].as<std::string>());
+      params = param_loader["parameters"].as<std::vector<double>>();
+      generate_collision_geometry();
+    }
   }
 
   template <typename PQPModelType>

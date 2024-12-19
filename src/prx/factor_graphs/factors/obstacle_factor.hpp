@@ -46,6 +46,22 @@ struct collision_info_t
   collision_info_t(const geometry_type_t geom_type, const std::vector<double>& params)
     : collision_info_t(geom_type, params, Eigen::Matrix3d::Identity(), Eigen::Vector3d::Zero()) {};
 
+  collision_info_t(const prx::param_loader& param_loader)
+    : geom_type(geometry_t::geometry_type(param_loader["type"].as<std::string>()))
+    , params(param_loader["parameters"].as<std::vector<double>>())
+    , pose(Eigen::Matrix3d::Identity(), Eigen::Vector3d::Zero())
+  {
+    model = geometry_t::create_collision_geometry<PQP_Model>(geom_type, params);
+  }
+
+  static prx::param_loader default_parameters()
+  {
+    prx::param_loader params{};
+    params["type"].set("SPHERE");
+    params["parameters"].set(std::vector<double>({ 0.5 }));
+    return params;
+  }
+
   static std::vector<SharedPtr> generate_infos(std::vector<std::shared_ptr<prx::movable_object_t>>& obstacle_list)
   {
     std::vector<SharedPtr> infos{};
@@ -182,6 +198,56 @@ public:
   inline bool in_collision(const State& x0, Eigen::Vector3d& pt) const
   {
     return in_collision(x0, _obstacle_info, _robot_info, _config_from_state, _collision_result, pt);
+  }
+  inline bool inside_obstacle(const Eigen::Vector3d& pt) const
+  {
+    static double dummy_dist{ 0.0 };
+    return inside_obstacle(pt, dummy_dist);
+  }
+
+  inline bool inside_obstacle(const Eigen::Vector3d& pt, double& distance) const
+  {
+    return inside_obstacle(pt, _obstacle_info, distance);
+  }
+
+  inline static bool inside_obstacle(const State& x, CollisionInfoPtr obstacle_info,
+                                     ConfigurationFromState& config_from_state, double& distance)
+  {
+    Eigen::Matrix3d rot;
+    Eigen::Vector3d pt;
+    config_from_state(rot, pt, x);
+    return inside_obstacle(pt, obstacle_info, distance);
+  }
+
+  inline static bool inside_obstacle(const Eigen::Vector3d& pt, CollisionInfoPtr obstacle_info, double& distance)
+  {
+    const Eigen::Vector3d pt_r{ obstacle_info->pose.inverse() * pt };
+    bool is_inside{ false };
+
+    double aux{ 0.0 };
+    const std::vector<double>& params{ obstacle_info->params };
+    switch (obstacle_info->geom_type)
+    {
+      case prx::geometry_type_t::BOX:
+        is_inside = std::abs(pt_r[0]) < (params[0] * 0.5) and std::abs(pt_r[1]) < (params[1] * 0.5) and
+                    std::abs(pt_r[2]) < (params[2] * 0.5);
+        distance = std::min((params[0] * 0.5) - std::abs(pt_r[0]), (params[1] * 0.5) - std::abs(pt_r[1]));
+        distance = std::min(distance, (params[2] * 0.5) - std::abs(pt_r[2]));
+        break;
+      case prx::geometry_type_t::SPHERE:
+        aux = pt_r.norm();
+        is_inside = aux < params[0];
+        distance = params[0] - aux;
+        break;
+      case prx::geometry_type_t::CYLINDER:
+        aux = pt_r.head(2).norm();
+        is_inside = aux < params[0] and std::abs(pt_r[2]) < params[1];
+        distance = std::min(params[0] - aux, params[1] - std::abs(pt_r[2]));
+        break;
+      default:
+        prx_throw("Shape not supported");
+    };
+    return is_inside;
   }
 
   void recover_collision(CollisionInfoPtr robot_info, CollisionInfoPtr obstacle_info, Eigen::Vector3d& p1,
@@ -376,6 +442,11 @@ public:
                                     obstacle_tolerance, 0.1, obstacle_noise);  // 0.1 is not used?
     }
     return std::move(graph);
+  }
+
+  const CollisionInfoPtr obstacle_info() const
+  {
+    return _obstacle_info;
   }
 
 private:

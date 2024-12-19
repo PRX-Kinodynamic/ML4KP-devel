@@ -147,3 +147,43 @@ BOOST_AUTO_TEST_CASE(obstacle_factor_distance_test)
   // BOOST_REQUIRE(factor.in_collision(x2));
   // BOOST_REQUIRE(not factor.in_collision(x3));
 }
+
+BOOST_AUTO_TEST_CASE(obstacle_factor_inside_obstacle_test)
+{
+  using State = Eigen::Vector2d;
+  using Rotation = Eigen::Matrix3d;
+  using Translation = Eigen::Vector3d;
+  using CollisionInfoPtr = std::shared_ptr<prx::fg::collision_info_t>;
+
+  std::vector<double> box_params({ 30, 0.5, 0.5 });
+  std::vector<double> sphere_params({ 1 });
+  const Rotation rotation{ Eigen::Quaterniond(0.7071067812, 0.0, 0.0, 0.7071067812) };  // 90deg on Z
+  const Translation translation{ Translation(1, 1, 1) };
+  CollisionInfoPtr obstacle_box{ std::make_shared<prx::fg::collision_info_t>(prx::geometry_type_t::BOX, box_params,
+                                                                             rotation, translation) };
+  CollisionInfoPtr obstacle_sphere{ std::make_shared<prx::fg::collision_info_t>(prx::geometry_type_t::SPHERE,
+                                                                                sphere_params, rotation, translation) };
+
+  const gtsam::Key key{ 0 };
+  prx::fg::obstacle_factor_t<State, mock::configuration_from_state> box_factor(obstacle_box, nullptr, key);
+  prx::fg::obstacle_factor_t<State, mock::configuration_from_state> sphere_factor(obstacle_sphere, nullptr, key);
+  const Eigen::Vector3d x0(1, 1, 1);
+  const Eigen::Vector3d x1(2, 1, 1);
+  const Eigen::Vector3d x2(1, 2, 1);
+  const Eigen::Vector3d x3(1, 1, 3);
+  double distance{ 0.0 };
+  const double tolerance{ 1e-5 };
+  BOOST_REQUIRE(box_factor.inside_obstacle(x0, distance));
+  BOOST_REQUIRE_CLOSE(distance, 0.25, tolerance);  // Half of the length of the box
+  BOOST_REQUIRE(not box_factor.inside_obstacle(x1));
+  BOOST_REQUIRE(box_factor.inside_obstacle(x2, distance));
+  BOOST_REQUIRE_CLOSE(distance, 0.25, tolerance);  // Half of the length of the box
+  BOOST_REQUIRE(not box_factor.inside_obstacle(x3));
+  BOOST_REQUIRE(sphere_factor.inside_obstacle(x0, distance));
+  BOOST_REQUIRE_CLOSE(distance, 1.0, tolerance);
+  BOOST_REQUIRE(sphere_factor.inside_obstacle(x1, distance));
+  BOOST_REQUIRE_SMALL(distance, tolerance);  // Close to 0.0
+  BOOST_REQUIRE(sphere_factor.inside_obstacle(x2, distance));
+  BOOST_REQUIRE_SMALL(distance, tolerance);  // Close to 0.0
+  BOOST_REQUIRE(not sphere_factor.inside_obstacle(x3));
+}
