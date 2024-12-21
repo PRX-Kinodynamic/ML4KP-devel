@@ -12,7 +12,6 @@ namespace prx
         dx=dy=dtheta=dv=dphi=0;
         derivative_memory = {&dx,&dy,&dtheta,&dv,&dphi};
         derivative_space = new space_t("EEEEE",derivative_memory,"CarLikeDerivative");
-
         control_memory = {&dv,&dphi};
         input_control_space = new space_t("EE",control_memory,"CarLikeControl");
         input_control_space -> set_bounds({-0.3, -1.0},{0.3, 1.0});

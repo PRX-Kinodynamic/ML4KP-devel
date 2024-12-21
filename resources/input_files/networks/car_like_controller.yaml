@@ -4,10 +4,12 @@ random_seed: 111093
 state_indices: [0,1,2,3,4]
 goal_indices: [0,1,2]
 
+delta_goal: false
 normalize_input: false
 delta_input: false
+delta_goal_keep_mask: [0,0,0,0]
 
 control_duration: 1.0
-max_duration: 30.0
+max_duration: 150.0
 
-debug_controller: false
+debug_controller: true

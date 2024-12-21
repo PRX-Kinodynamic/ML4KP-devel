@@ -186,9 +186,9 @@ int main(int argc, char* argv[])
         double num_fail_traj = 0;
         double tot_num_traj = 0;
 
-        for(int i = 0; i<100; i++){
+        for(int i = 0; i<1; i++){
             
-            //std::cout<<"Start trial: "<<i<<std::endl; 
+            std::cout<<"Start trial: "<<i<<std::endl; 
 
             std::vector<double> pt_vec;
             space_point_t pt;
@@ -200,7 +200,15 @@ int main(int argc, char* argv[])
             } while (!dirt_spec.valid_state(pt));
 
             pt_vec.clear();
+            
             dirt_spec.state_space -> copy_vector_from_point(pt_vec,pt);
+
+            pt_vec = { -0.341736,7.833043,1.252700,-0.084688,0.00000};
+            
+            for( double val: pt_vec){
+                std::cout << val << ", ";
+            }
+            std::cout << std::endl;
 
             ss -> copy_point_from_vector(dirt_query.start_state,pt_vec);
 
@@ -214,9 +222,19 @@ int main(int argc, char* argv[])
             dirt_query.clear_outputs();
             controller.fulfill_query(dirt_query, dirt_spec);
             
+
+
             if (dirt_spec.valid_check(dirt_query.solution_traj) && dirt_query.solution_traj.size() > 1){
+                
                 num_fail_traj++;
             }
+
+            std::cout << "trajectory"<< std::endl;
+
+            for (auto s : dirt_query.solution_traj){
+                std::cout << (ss->print_point(s)) << std::endl;
+            }
+
             tot_num_traj++;
 
         }
