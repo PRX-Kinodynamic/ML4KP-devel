@@ -25,8 +25,8 @@ collect_reachability: false
 stretch_factor: 3.0
 termination_classifier: !file "networks/svm_classifier.yaml"
 
-start_state: [  -9.0000, -9.0000 , 0.0000, 0.0000, 0.0000]
-goal_state:  [ 9.0000, 9.0000, 0.0000, 0.0000, 0.0000]
+start_state: [ -0.341736,7.833043,1.252700,-0.084688,0.00000]
+goal_state:  [ 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]
 
 debug: true
 
