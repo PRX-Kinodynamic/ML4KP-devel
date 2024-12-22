@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
 {
     try
     {
+        // pull param file (worth a read)
         std::string params_file= "local_goal/controller_test.yaml";
         param_loader params(params_file);
         params.print();
@@ -39,18 +40,22 @@ int main(int argc, char* argv[])
 
         std::cout << "Params Loaded" << std::endl;
 
+
+        //unimportant, as empty.yaml has no obstacles (aside from boundaries)
         auto obstacles = load_obstacles(params["environment"].as<std::string>());
         auto obstacle_list = obstacles.second;
         auto obstacle_names = obstacles.first;
-        
         std::cout << "Obstacles Loaded" << std::endl;
 
+        // load plant. While i am worried that the dynamics could be different, it is failing on inference first.
         std::string plant_name = params["/plant/name"].as<std::string>();
         std::string plant_path = params["/plant/path"].as<std::string>();
         auto plant = system_factory_t::create_system(plant_name,plant_path);
 
         std::cout << "System Loaded" << std::endl;
 
+
+        // load world. v easy. no problems
         std::vector<double> lower_bounds = params["/plant/state_space_lower_bound"].as<std::vector<double>>();
         std::vector<double> upper_bounds = params["/plant/state_space_upper_bound"].as<std::vector<double>>();
         plant -> set_state_space_bounds(lower_bounds,upper_bounds);
@@ -61,6 +66,9 @@ int main(int argc, char* argv[])
 
         std::cout << "World Constructed" << std::endl;
 
+
+
+        
         auto ss = context.first->get_state_space();
         auto cs = context.first->get_control_space();
         auto sg = context.first;
@@ -74,14 +82,8 @@ int main(int argc, char* argv[])
         dirt_query.start_state = ss -> make_point();
         dirt_query.goal_state  = ss -> make_point();
         dirt_query.get_visualization = true;
-        
-        std::cout << "DIRT spec Initialized" << std::endl;
 
         dirt_query.goal_region_radius = params["goal_radius"].as<double>();
-
-        learned_controller_t controller(params);
-
-        std::cout << "Controller Loaded" << std::endl;
 
         dirt_spec.distance_function = [&](space_point_t a, space_point_t b)
         {
@@ -98,6 +100,12 @@ int main(int argc, char* argv[])
             // return dirt_spec.distance_function(s,dirt_query.goal_state) < dirt_query.goal_region_radius; 
             return ss -> euclidean_2d(s, dirt_query.goal_state, 0, 3) < dirt_query.goal_region_radius;
         };
+        
+        std::cout << "DIRT spec Initialized" << std::endl;
+
+        learned_controller_t controller(params);
+
+        std::cout << "Controller Loaded" << std::endl;
 
         dirt_t dirt("dirt");
         dirt_spec.min_control_steps = params["/plant/min_steps"].as<int>();
