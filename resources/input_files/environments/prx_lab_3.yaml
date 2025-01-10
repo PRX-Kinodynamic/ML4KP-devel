@@ -1,0 +1,90 @@
+environment:
+    type: obstacle
+    root_configuration:
+      position: [0,0,0]
+      orientation: [0,0,0,1]
+    geometries:
+      -
+        name: border_top_cam0
+        collision_geometry:
+          type: box
+          dims: [ 3.5, .2, 1]
+          material: 0x0015ff
+        config:
+          position: [1.7, -2.1, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_top_cam1
+        collision_geometry:
+          type: box
+          dims: [ 4.2, .2, 1]
+          material: 0x0015ff
+        config:
+          position: [-2.2, -2.1, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_bottom_cam0
+        collision_geometry:
+          type: box
+          dims: [ 3.5, 0.2, 1]
+          material: 0x0015ff
+        config:
+          position: [1.7, 0.2, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_bottom_cam1
+        collision_geometry:
+          type: box
+          dims: [ 4.2, 0.2, 1]
+          material: 0x0015ff
+        config:
+          position: [-2.2, 0.2, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_left_cam0
+        collision_geometry:
+          type: box
+          dims: [ .2, 2, 1]
+          material: 0x0015ff
+        config:
+          position: [3.5, -1, 0]
+          orientation: [0,0,0,1]
+      -
+        name: border_right_cam1
+        collision_geometry:
+          type: box
+          dims: [ .2, 2, 1]
+          material: 0x0015ff
+        config:
+          position: [-4.2, -1, 0]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_A
+        collision_geometry:
+          type: sphere
+          radius: 0.30
+          dims: [ .41, .31, 1]
+          material: 0x0015ff
+        config:
+          position: [-1.701, -0.919, 0.0 ]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_B
+        collision_geometry:
+          type: sphere
+          radius: 0.30
+          dims: [.31, .41, 1]
+          material: 0x0015ff
+        config:
+          position: [-0.79, -1.74, 0 ]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_C
+        collision_geometry:
+          type: sphere
+          radius: 0.30
+          dims: [ .31, .41, 1]
+          material: 0x0015ff
+        config:
+          position: [0.006, -0.3388, 0.0 ]
+          orientation: [0,0,0,1]
