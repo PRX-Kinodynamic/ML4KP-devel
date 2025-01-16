@@ -105,14 +105,16 @@ inline Rotation euler_to_rotation(const Angles& angles, const std::string order)
 }
 
 }  // namespace prx
-
+// Eigen::Matrix<double, 3, 1>
 // Conversions to/from YAML
 namespace YAML
 {
-template <typename Type, Eigen::Index N>
-struct convert<Eigen::Vector<Type, N>>
+// struct convert<Eigen::Matrix<Scalar,  Rows,  Cols,  Align,  RowsAtCompileTime,  ColsAtCompileTime> >{
+// template <typename Type, Eigen::Index N>
+template<class Type, int Dim, int Align, int RowsAtCompileTime, int ColsAtCompileTime>
+struct convert<Eigen::Matrix<Type, Dim, 1, Align, RowsAtCompileTime, ColsAtCompileTime>>
 {
-  using Vector = Eigen::Vector<Type, N>;
+  using Vector = Eigen::Matrix<Type, Dim, 1, Align, RowsAtCompileTime, ColsAtCompileTime>;
   static Node encode(const Vector& rhs)
   {
     Node node;
@@ -123,13 +125,13 @@ struct convert<Eigen::Vector<Type, N>>
     return node;
   }
 
-  template <Eigen::Index InputDim = N, std::enable_if_t<(InputDim != Eigen::Dynamic), bool> = true>
-  static bool decode(const Node& node, Vector& lhs)
-  {
-    return decode_imp(node, lhs);
-  }
+  // template <Eigen::Index InputDim = N, std::enable_if_t<(InputDim != Eigen::Dynamic), bool> = true>
+  // static bool decode(const Node& node, Vector& lhs)
+  // {
+  //   return decode_imp(node, lhs);
+  // }
 
-  template <Eigen::Index InputDim = N, std::enable_if_t<(InputDim == Eigen::Dynamic), bool> = true>
+  // template <Eigen::Index InputDim = N, std::enable_if_t<(InputDim == Eigen::Dynamic), bool> = true>
   static bool decode(const Node& node, Vector& lhs)
   {
     lhs = Vector::Zero(node.size());
