@@ -91,3 +91,13 @@ environment:
         config:
           position: [0.006, -0.3388, 0.0 ]
           orientation: [0,0,0,1]
+      -
+        name: obstacle_D
+        collision_geometry:
+          type: box
+          radius: 0.30
+          dims: [ 0.43, .32, 1]
+          material: 0x0015ff
+        config:
+          position: [1.572, -0.935, 0.0 ]
+          orientation: [0,0,0,1]
