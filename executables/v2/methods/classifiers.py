@@ -316,6 +316,7 @@ class MLPClassifier(Method):
                 features = features.to(self.device)
                 target = target.to(self.device)
                 output = self.model(features)
+                output = torch.sigmoid(output)
                 pred = (output > self.classification_threshold).float()
                 return output.item(), pred.item()
 
