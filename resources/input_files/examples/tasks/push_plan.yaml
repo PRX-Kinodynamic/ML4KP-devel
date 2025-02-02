@@ -1,0 +1,5 @@
+data_path: /media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_env/level_2/1
+discretization: 0.2
+random_seed: 1
+visualize: false
+xml_path: cylinder_env/level_2/env_config_139.xml

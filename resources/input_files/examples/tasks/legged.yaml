@@ -1,0 +1,5 @@
+random_seed: 2898
+xml_path: unitree_go1/scene.xml
+planner_name: "dirt"
+
+visualize: true

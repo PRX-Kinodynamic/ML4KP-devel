@@ -108,6 +108,8 @@ BOOST_PYTHON_FUNCTION_OVERLOADS(space_t_l1_norm_overloads, prx::space_t::l1_norm
 BOOST_PYTHON_FUNCTION_OVERLOADS(space_t_l2_norm_overloads, prx::space_t::l2_norm, 1, 2)
 BOOST_PYTHON_FUNCTION_OVERLOADS(space_t_euclidean_2d_overloads, prx::space_t::euclidean_2d, 2, 4)
 
+prx::space_point_t (prx::space_t::*make_point_func)() const = &prx::space_t::make_point;
+
 void (prx::space_t::*enforce_bounds0)() const = &prx::space_t::enforce_bounds;
 void (prx::space_t::*enforce_bounds1)(prx::space_point_t) const = &prx::space_t::enforce_bounds;
 
@@ -265,6 +267,10 @@ void py_copy_2(const prx::space_t* space, boost::python::list& py_list_to, const
   vector_to_pyobject(py_list_to, vec_aux_to);
 }
 
+void interpolate_wrapper(prx::space_t& space, const prx::space_point_t& start, const prx::space_point_t& end, double t, prx::space_point_t& result) {
+    space.interpolate(start, end, t, result);
+}
+
 void bindings()
 {
   class_<prx::space_point_t>("space_point", init<>())
@@ -306,10 +312,10 @@ void bindings()
       .def("__init__", make_constructor(&init_as_ptr<prx::space_t, std::string, std::vector<double*>&>,
                                         default_call_policies(), (args("topology"), args("addresses"))))
       .def("__init__", make_constructor(&init_as_ptr<prx::space_t, const std::vector<const prx::space_t*>&>,
-                                        default_call_policies(), (args("spaces"))))
+                                      default_call_policies(), (args("spaces"))))
       .def("__init__", make_constructor(&space_constructor_py, default_call_policies()))
       .def("set_bounds", &prx::space_t::set_bounds)
-      .def("make_point", &prx::space_t::make_point)
+      .def("make_point", make_point_func)
       .def("clone_point", &prx::space_t::clone_point)
       .def("enforce_bounds", enforce_bounds0)
       .def("enforce_bounds", enforce_bounds1)
@@ -351,7 +357,7 @@ void bindings()
       .def("get_bounds", &prx::space_t::get_bounds)
       .def("integrate", integrate_0)
       .def("integrate", integrate_1)
-      .def("interpolate", &prx::space_t::interpolate)
+      .def("interpolate", &interpolate_wrapper)
       .def("l1_norm", (double (*)(const prx::space_point_t& p1, const prx::space_point_t& p2))1,
            space_t_l1_norm_overloads())
       .staticmethod("l1_norm")
@@ -371,3 +377,4 @@ void bindings()
 }  // namespace spaces
 }  // namespace utilities
 }  // namespace pyprx
+

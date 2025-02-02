@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(ML4KP)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
@@ -9,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 cmake_policy(SET CMP0079 NEW)
 
-set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
+set(BUILD_FOR_PYTHON ON CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_TORCH  OFF CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
@@ -53,6 +54,14 @@ find_package(Threads REQUIRED)
 find_package (OpenCV 4.0.0 REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 #include_directories ("/usr/include/opencv4/")
+
+# Add JSON library using FetchContent
+include(FetchContent)
+FetchContent_Declare(
+    json
+    URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+)
+FetchContent_MakeAvailable(json)
 
 if(BUILD_FOR_TORCH)
 	if(DEFINED ENV{Torch_DIR})

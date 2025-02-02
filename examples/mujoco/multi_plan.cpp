@@ -114,11 +114,18 @@ space_point_t navigate(param_loader params, simulation_context context, std::vec
   }
 
   *time_taken += dirt->current_solution_time;
-  all_stats->push_back(dirt->get_statistics());
 
   write_trees(dirt_query_ptr, trees_path, task_name);
 
   plan_t solution = move_task.get_solution_plan();
+  auto stats = dirt->get_statistics();
+  
+  if (solution.size() == 0)
+  {
+    auto condition_checker = params["condition_checker"];
+    stats[0] = condition_checker["value"].as<double>();
+  }
+  all_stats->push_back(stats);
 
   solution.to_file(solutions_path + task_name + ".txt");
   dirt_query_ptr->solution_traj.to_file(trajectory_path + task_name + ".txt");
@@ -160,11 +167,11 @@ int main(int argc, char* argv[])
   init_random(params["random_seed"].as<int>());
 
   int num_trials = params["num_trials"].as<int>();
-  bool do_subgoals = params["do_subgoals"].as<bool>();
   bool do_backtrack = params["backtrack"].as<bool>();
+  bool do_retry = params["retry"].as<bool>();
 
   std::vector<double> goal_position = params["goal_position"].as<std::vector<double>>();
-
+   
   std::string output_folder = params["output_folder"].as<std::string>();
   create_folder(output_folder);
   std::string output_folder_data = output_folder + "/data/";
@@ -189,7 +196,10 @@ int main(int argc, char* argv[])
 
   std::vector<std::vector<double>> subgoals;
 
-  subgoals = read_subgoals_from_file(params["subgoals_file"].as<std::string>());
+
+  subgoals = read_subgoals_from_file(params["subgoals_file"].as<std::string>()); 
+
+  // have been using subgoals as fixed goal regions for navigation task, change to subgoal regions instead and sample a state from the region to build a motion planning query
 
 
   plan_t full_solution(cs);
@@ -287,13 +297,26 @@ int main(int argc, char* argv[])
         break;
       }
       std::vector<double> subgoal = subgoals[ctr];
+
       goal_vec.assign(n, 0.0);
-      goal_vec[0] = subgoal[0];
-      goal_vec[1] = subgoal[1];
-      goal_region_radius[0] = subgoal[2];
-      goal_region_radius[1] = subgoal[3];
-      std::cout << "subgoal " << subgoal[0] << ", " << subgoal[1] << ", " << subgoal[2] << ", " << subgoal[3] <<  std::endl;
-      try
+      
+      // Use subgoal as a region center
+      double region_center_x = subgoal[0];
+      double region_center_y = subgoal[1];
+      double region_radius_x = subgoal[2];
+      double region_radius_y = subgoal[3];
+
+      // Sample a random goal state within the region
+      goal_vec[0] = uniform_random(region_center_x - region_radius_x, region_center_x + region_radius_x);
+      goal_vec[1] = uniform_random(region_center_y - region_radius_y, region_center_y + region_radius_y);
+
+      // Set goal region radius to a small value for the sampled goal
+      goal_region_radius[0] = 0.05;
+      goal_region_radius[1] = 0.05;
+
+      std::cout << "sampled goal: (" << goal_vec[0] << ", " << goal_vec[1] << ")" << std::endl;
+
+      try 
       {
         // if repeat this subgoal more than 5 times, then call it a failure
         if (repeats[ctr] > 5)
@@ -327,8 +350,25 @@ int main(int argc, char* argv[])
           }
           std::cout << "backtracking at " << ctr << " to " << ctr - 1 << std::endl;
           backtracks[i] += 1;
-          time_taken += 5.0;
+          time_taken += 30.0;
           ctr -= 1;
+          std::cout << start_states[ctr]->at(0) << ", " << start_states[ctr]->at(1) << std::endl;
+          ss->copy_from(start_states[ctr]);
+        }
+        else if (do_retry)  
+        {
+
+          if (too_many_repeats)
+          {
+            task_failure_list.push_back(i);
+            task_failure = true;
+            std::cout << "FAILED: solution_" << i << std::endl;
+            failures += 1;
+            break;
+          }
+
+          std::cout << "retrying at " << ctr << std::endl;
+          repeats[ctr] += 1;
           std::cout << start_states[ctr]->at(0) << ", " << start_states[ctr]->at(1) << std::endl;
           ss->copy_from(start_states[ctr]);
         }

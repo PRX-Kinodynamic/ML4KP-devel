@@ -123,19 +123,29 @@ void mujoco_simulator_t::set_record_video(const bool record_video)
 
 void mujoco_simulator_t::init_simulator()
 {
+  // Link this simulator to the system groups
   system_groups->link_simulator(this);
+
+  // Set up the context for MuJoCo
   std::string context_name = "mujoco";
   std::vector<system_ptr_t> context_systems;
 
+  // Create a new MuJoCo plant system
   system_ptr_t system;
   system.reset(new mujoco_plant_t("mujoco_plant"));
   context_systems.push_back(system);
+
+  // Cast the system to a MuJoCo plant and the simulator to a MuJoCo simulator
   auto mj_ptr = std::dynamic_pointer_cast<mujoco_plant_t>(system);
   auto sim_ptr = std::static_pointer_cast<mujoco_simulator_t>(this->shared_ptr());
+
+  // Initialize the MuJoCo plant with the simulator
   mj_ptr->initialize(sim_ptr);
 
+  // Add the MuJoCo system group to the system groups
   system_groups->add_system_group(context_name, context_systems);
 
+  // Create a new MuJoCo collision checker and add a collision group
   collision_groups.reset(new mujoco_collision_checker_t(sim_ptr));
   collision_groups->add_collision_group(context_name, context_systems, {});
 }
@@ -152,6 +162,7 @@ void mujoco_simulator_t::step_simulation()
     d->qacc_warmstart[i] = 0;
   }
   mj_step(m, d);
+
 
   if (_vis)
   {
@@ -275,13 +286,26 @@ void mujoco_simulator_t::add_frame()
   _recorded_secs += prx::simulation_step;
 }
 
+
+// void mujoco_simulator_t::set_state(const MujocoState& state)
+// {
+//   d->qpos = state->qpos;
+//   d->qvel = state->qvel;
+//   mj_forward(m, d);
+// }
+
+void mujoco_simulator_t::reset_pairs()
+{
+  auto cg = std::dynamic_pointer_cast<mujoco_collision_group_t>(collision_groups->get_collision_group("mujoco"));
+  prx_assert(cg != nullptr, "collision_group_t could not be cast to mujoco_collision_group_t");
+  cg->reset_pairs();
+}
+
 void mujoco_simulator_t::reset_simulation()
 {
-    mj_resetData(m, d);
-    mj_forward(m, d);
-    auto cg = std::dynamic_pointer_cast<mujoco_collision_group_t>(collision_groups->get_collision_group("mujoco"));
-    prx_assert(cg != nullptr, "collision_group_t could not be cast to mujoco_collision_group_t");
-    cg->reset_pairs();
+  mj_resetData(m, d);
+  mj_forward(m, d);
+  reset_pairs();
 }
 
 MujocoState mujoco_simulator_t::get_state()
@@ -315,6 +339,13 @@ void mujoco_simulator_t::add_pair(const std::vector<std::pair<std::string, std::
   }
 }
 
+bool mujoco_simulator_t::in_collision()
+{
+  auto cg = std::dynamic_pointer_cast<mujoco_collision_group_t>(collision_groups->get_collision_group("mujoco"));
+  prx_assert(cg != nullptr, "collision_group_t could not be cast to mujoco_collision_group_t");
+  return cg->in_collision();
+}
+
 void mujoco_simulator_t::add_pair(std::pair<std::string, std::string> pair)
 {
   auto cg = std::dynamic_pointer_cast<mujoco_collision_group_t>(collision_groups->get_collision_group("mujoco"));
@@ -332,9 +363,7 @@ void mujoco_collision_group_t::add_pair(std::string body1, std::string body2)
 {
   int body_id1 = mj_name2id(sim->m, mjOBJ_BODY, body1.c_str());
   int body_id2 = mj_name2id(sim->m, mjOBJ_BODY, body2.c_str());
-  // std::cout << "Adding pair: " << body1 << ", " << body2 << std::endl;
-  // std::cout << "Adding pair ids: " << body_id1 << ", " << body_id2 << std::endl;
-  
+
   if (body_id1 != -1 && body_id2 != -1)
   {
     std::pair<int, int> pair = std::make_pair(body_id1, body_id2);
@@ -361,12 +390,11 @@ bool mujoco_collision_group_t::in_collision()
     {
       // collision_body1 = mj_id2name(sim->m, mjOBJ_BODY, sim->m->geom_bodyid[sim->d->contact[i].geom1]);
       // collision_body2 = mj_id2name(sim->m, mjOBJ_BODY, sim->m->geom_bodyid[sim->d->contact[i].geom2]);
-
-      if (collision_pairs.size() > 0)
       {
         collision_body_id1 = sim->m->geom_bodyid[sim->d->contact[i].geom1];
         collision_body_id2 = sim->m->geom_bodyid[sim->d->contact[i].geom2];
-
+        
+        
         for (int i = 0; i < collision_pairs.size(); i++)
         {
           if ((collision_body_id1 == collision_pairs[i].first && collision_body_id2 == collision_pairs[i].second) ||

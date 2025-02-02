@@ -1,0 +1,49 @@
+<mujoco model="ball_rigid_body">
+    <!-- <compiler angle="degree" coordinate="local"/> -->
+    <option integrator="RK4" timestep="0.01"/>
+
+    <!-- Default parameters for geoms -->
+    <default>
+        <geom solref="0.02 1" solimp="0.9 0.95 0.001"/>
+    </default>
+
+    <asset>
+        <texture builtin="gradient" height="3072" rgb1="0.3 0.5 0.7" rgb2="0 0 0" type="skybox" width="512"/>
+        <texture builtin="checker" height="300" mark="edge" markrgb="0.8 0.8 0.8" name="groundplane" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" type="2d" width="300"/>
+        <material name="groundplane" reflectance="0.2" texrepeat="5 5" texture="groundplane" texuniform="true"/>
+        <!-- <material name="robot" rgba="0.0 1.0 0.0 1"/> -->
+    </asset>
+
+    <!-- World body -->
+    <worldbody>
+        <light dir="0 0 -1" directional="true" pos="0 0 1.5"/>
+        <!-- Ground plane -->
+        <geom condim="4" friction="0.0 0.005 0.001" material="groundplane" name="floor" priority="2" size="0 0 0.05" type="plane"/>
+
+        <!-- Rigid body -->
+        <body name="rigid_body" pos="0.25 0 0.2">
+            <freejoint/>
+            <geom type="box" size="0.2 0.2 0.2" rgba="1 1 0 1" mass=".1" condim="6"/>
+        </body>
+
+        <!-- Ball robot -->
+        <body name="ball" pos="0.0 0 0.2">
+            <geom type="sphere" size="0.05" rgba="0.4 0.4 0.8 1" condim="4" mass="5." friction=".5 0.005 0.001"/>
+            <joint name="joint_x" type="slide" pos="0 0 0" axis="1 0 0"/>
+            <joint name="joint_y" type="slide" pos="0 0 0" axis="0 1 0"/>
+        </body>
+
+        <site name="target" type="box" pos="0.5 0.25 0.2" size="0.2 0.2 0.2" rgba="0 1 0. 0.2"/>
+s    </worldbody>
+
+    <!-- Weld constraint to attach ball to rigid body -->
+    <!-- <equality>
+        <weld body1="ball" body2="rigid_body" relpose="0.25 0 0.0 1 0 0 0"/>
+    </equality> -->
+
+    <actuator>  
+        <motor name="actuator_x" joint="joint_x" gear="1" ctrlrange="-5 5"/>
+        <motor name="actuator_y" joint="joint_y" gear="1" ctrlrange="-5 5"/>
+    </actuator>
+
+</mujoco>

@@ -1,5 +1,5 @@
 random_seed: 1
-xml_path: push/turning_interactions/3.xml
+xml_path: test/scene.xml
 
 cam_distance: 1.5
 cam_elevation: -90
@@ -13,7 +13,7 @@ plan_filename: "/home/dhruv/2024/projects/NAMO/out/object_interactions_6_turning
 video_name: "/home/dhruv/2024/projects/NAMO/out/object_interactions_6_turning_interactions/26Jul/subgoals_room2room_fixed_plan_time/solution_20.mp4"
 record_video: true
 
-final_goal: [1.9, 0., 0.05]
+final_goal: [2.5, 0., 0.2]
 plan_folder: "/media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/turning_interactions/3/4Aug/subgoals_room2room"
 subgoals_filename: "/home/dhruv/2024/projects/ml4kp_ktamp/build/turning_interactions/3/subgoals_room2room.txt"
-solution_id: "solution_2" 
+solution_id: "solution_2"

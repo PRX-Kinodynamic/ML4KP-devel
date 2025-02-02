@@ -1,0 +1,15 @@
+node_features: 5
+edge_features: 2
+hidden_dims: 64
+output_dims: 1
+batch_size: 128
+epochs: 50
+device: cuda:0
+learning_rate: 0.001
+patience: 10
+min_delta: 1e-4
+scheduler_step_size: 10
+scheduler_gamma: 0.5
+classification_threshold: 0.8 # TODO: This should not be here
+save_dir: saved_models
+model_name: direct_objects_gnn_classifier

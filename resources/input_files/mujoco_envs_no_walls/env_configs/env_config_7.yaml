@@ -1,0 +1,163 @@
+env_size:
+- 4
+- 4
+- 2.0
+worldbody:
+  asset:
+    material:
+    - name: groundplane
+      reflectance: 0.2
+      texrepeat:
+      - 5
+      - 5
+      texture: groundplane
+      texuniform: 'true'
+    - name: robot
+      rgba:
+      - 0.0
+      - 1.0
+      - 0.0
+      - 1
+    texture:
+    - builtin: gradient
+      height: 3072
+      rgb1:
+      - 0.3
+      - 0.5
+      - 0.7
+      rgb2:
+      - 0
+      - 0
+      - 0
+      type: skybox
+      width: 512
+    - builtin: checker
+      height: 300
+      mark: edge
+      markrgb:
+      - 0.8
+      - 0.8
+      - 0.8
+      name: groundplane
+      rgb1:
+      - 0.2
+      - 0.3
+      - 0.4
+      rgb2:
+      - 0.1
+      - 0.2
+      - 0.3
+      type: 2d
+      width: 300
+  geom:
+    condim: 4
+    friction:
+    - 1.0
+    - 0.005
+    - 0.001
+    material: groundplane
+    name: floor
+    size:
+    - 0
+    - 0
+    - 0.05
+    type: plane
+  light:
+    dir:
+    - 0
+    - 0
+    - -1
+    directional: 'true'
+    pos:
+    - 0
+    - 0
+    - 1.5
+  obstacles:
+  - condim: 4
+    edge_points:
+    - - -1.3084518654295516
+      - -2.1609095740105833
+    - - -1.528415525605419
+      - -1.9504539012658215
+    - - -1.7483791857812865
+      - -1.7399982285210598
+    - - -0.5816610987620157
+      - -1.4012837813996057
+    - - -0.8016247589378831
+      - -1.190828108654844
+    - - -1.0215884191137505
+      - -0.9803724359100824
+    - - -1.1629752832417912
+      - -0.9834956797428607
+    - - -1.457238856427928
+      - -1.2910535220679398
+    - - -1.7515024296140647
+      - -1.5986113643930189
+    - - -0.5785378549292375
+      - -1.5426706455276467
+    - - -0.8728014281153742
+      - -1.8502284878527258
+    - - -1.167065001301511
+      - -2.157786330177805
+    friction:
+    - 1.0
+    - 0.005
+    - 0.001
+    mass: 0.1
+    movable: true
+    name: obstacle_1_movable
+    pos:
+    - -1.165020142271651
+    - -1.5706410049603328
+    - 0.2
+    rgba:
+    - 1
+    - 1
+    - 0
+    - 1
+    rotation: 136.26546120389418
+    size:
+    - 0.30442667752418606
+    - 0.4256558197416441
+    - 0.2
+    type: box
+  - condim: 4
+    friction:
+    - 1.0
+    - 0.005
+    - 0.001
+    movable: false
+    name: obstacle_2_static
+    pos:
+    - 0.1499731124643473
+    - 0.25221562986461277
+    - 0.2
+    rgba:
+    - 1
+    - 0
+    - 0
+    - 1
+    rotation: 326.65771092252254
+    size:
+    - 0.5466845407824035
+    - 0.5405245055484849
+    - 0.2
+    type: box
+  robot:
+    friction:
+    - 1.0
+    - 0.005
+    - 0.0001
+    mass: 1.0
+    material: robot
+    name: robot
+    pos:
+    - 1.5636042832554584
+    - -1.5157041082399723
+    - 0.2
+    size:
+    - 0.3
+    - 0.14
+    - 0.2
+    type: box
+  walls: []

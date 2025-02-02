@@ -1,0 +1,70 @@
+<?xml version="1.0" ?>
+<mujoco model="generated_environment">
+  <option timestep="0.01" integrator="RK4" cone="elliptic"/>
+  <default>
+    <geom density="1" />
+  </default>
+  <asset>
+    <texture builtin="gradient" height="3072" rgb1="0.3 0.5 0.7" rgb2="0 0 0" type="skybox" width="512"/>
+    <texture builtin="checker" height="300" mark="edge" markrgb="0.8 0.8 0.8" name="groundplane" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" type="2d" width="300"/>
+    <material name="groundplane" reflectance="0.2" texrepeat="5 5" texture="groundplane" texuniform="true"/>
+    <texture name="body" type="cube" builtin="flat" mark="cross" width="128" height="128" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" markrgb="1 1 1" random="0.01"/>
+    <material name="body" texture="body" texuniform="true" rgba="0.8 0.6 .4 1"/>
+    <material name="robot" rgba="0.0 1.0 0.0 1"/>
+  </asset>
+  
+  
+  <visual>
+    <rgba contactforce="0.2 0.98 0.2 0.8"/>
+    <scale forcewidth="0.005" contactwidth="1.0" contactheight="0.04"/>
+    <map force="1"/>
+  </visual>
+  <worldbody>
+    <light dir="0 0 -1" directional="true" pos="0 0 1.5"/>
+    <geom condim="4" friction="1.0 0.005 0.001" material="groundplane" name="floor" size="0 0 0.05" type="plane"/>
+
+    <body name="robot">
+      <joint name="joint_x" type="slide" pos="0 0 0" axis="1 0 0"/>
+      <joint name="joint_y" type="slide" pos="0 0 0" axis="0 1 0"/>
+      <geom name="robot" type="sphere" pos="-1.877840559997522 -3.355819037237426 0.2" size="0.05" mass="5." friction="1.0 0.005 0.001" condim="4"/>
+      <site name="sensor_ball"/>
+    </body>
+    
+    <body name="obstacle_1_movable" >
+      <geom name="obstacle_1_movable" condim="4" rgba="1 1 0 1" pos="1.2851988978520885 1.444452229747672 0.2" euler="0 0 112.77846609561904" size="0.35 0.35 0.2" type="box" mass="0.1" friction="1.0 0.005 0.001"/>
+      <joint type="free"/>
+      <site name="FT"/>
+    </body>
+
+    <body name="walls" >
+      <geom name="wall_1" pos="-2.0 0 0.3" rgba="0.8 0.8 0.8 1" size="0.05 2.0 0.3" type="box"/>
+      <geom name="wall_2" pos="2.0 0 0.3" rgba="0.8 0.8 0.8 1" size="0.05 2.0 0.3" type="box"/>
+      <geom name="wall_3" pos="0 -2.0 0.3" rgba="0.8 0.8 0.8 1" size="2.0 0.05 0.3" type="box"/>
+      <geom name="wall_4" pos="0 2.0 0.3" rgba="0.8 0.8 0.8 1" size="2.0 0.05 0.3" type="box"/>
+    </body>
+
+    <site type="sphere" size="0.02" rgba="1 0 0 1" pos="0.1 0 0"/>
+    <site type="sphere" size="0.02" rgba="0 1 0 1" pos="0 0.1 0"/>
+    <site type="sphere" size="0.02" rgba="0 0 1 1" pos="0 0 0.1"/>
+
+    <!-- <site name="obstacle_1_movable_edge_point_0" type="sphere" size="0.02" rgba="0 0 1 1" pos="-0.9584359342453355 -0.0756003544903992 0"/>
+    <site name="obstacle_1_movable_edge_point_1" type="sphere" size="0.02" rgba="0 0 1 1" pos="-1.1654836974675378 0.0395935059410954 0"/>
+    <site name="obstacle_1_movable_edge_point_2" type="sphere" size="0.02" rgba="0 0 1 1" pos="-1.3725314606897403 0.15478736637259005 0"/>
+    <site name="obstacle_1_movable_edge_point_3" type="sphere" size="0.02" rgba="0 0 1 1" pos="-0.5942812798990396 0.5789259055631335 0"/>
+    <site name="obstacle_1_movable_edge_point_4" type="sphere" size="0.02" rgba="0 0 1 1" pos="-0.8013290431212419 0.6941197659946281 0"/>
+    <site name="obstacle_1_movable_edge_point_5" type="sphere" size="0.02" rgba="0 0 1 1" pos="-1.0083768063434444 0.8093136264261228 0"/>
+    <site name="obstacle_1_movable_edge_point_6" type="sphere" size="0.02" rgba="0 0 1 1" pos="-1.1443807855284722 0.7705461446167701 0"/>
+    <site name="obstacle_1_movable_edge_point_7" type="sphere" size="0.02" rgba="0 0 1 1" pos="-1.2778398640137825 0.530668745087194 0"/>
+    <site name="obstacle_1_movable_edge_point_8" type="sphere" size="0.02" rgba="0 0 1 1" pos="-1.4112989424990927 0.29079134555761793 0"/>
+    <site name="obstacle_1_movable_edge_point_9" type="sphere" size="0.02" rgba="0 0 1 1" pos="-0.5555137980896868 0.44292192637810557 0"/>
+    <site name="obstacle_1_movable_edge_point_10" type="sphere" size="0.02" rgba="0 0 1 1" pos="-0.6889728765749972 0.20304452684852956 0"/>
+    <site name="obstacle_1_movable_edge_point_11" type="sphere" size="0.02" rgba="0 0 1 1" pos="-0.8224319550603075 -0.036832872681046486 0"/> -->
+  </worldbody>
+
+  
+
+  <actuator>
+    <velocity name="actuator_x" joint="joint_x" gear="1" ctrlrange="-1 1"/>
+    <velocity name="actuator_y" joint="joint_y" gear="1" ctrlrange="-1 1"/>
+  </actuator>
+</mujoco>

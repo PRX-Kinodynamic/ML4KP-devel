@@ -15,7 +15,8 @@ prx::space_point_t at_1(prx::trajectory_t traj, int i)
 {
   return traj.at((unsigned)i);
 }
-prx::space_point_t (prx::trajectory_t::*at_2)(double) const = &prx::trajectory_t::at;
+// prx::space_point_t (prx::trajectory_t::*at_2)(double) const = &prx::trajectory_t::at;
+prx::space_point_t (prx::trajectory_t::*at_2)(double, bool) const = &prx::trajectory_t::at;
 
 void (prx::trajectory_t::*copy_onto_back_1)(prx::space_point_t) = &prx::trajectory_t::copy_onto_back;
 void (prx::trajectory_t::*copy_onto_back_2)(const prx::space_t*) = &prx::trajectory_t::copy_onto_back;

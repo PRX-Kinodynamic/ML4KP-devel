@@ -1,6 +1,6 @@
 import math
 import random
-import libpyDirtMP as prx
+import PyML4KP as prx
 
 # TODO: Try to join {rrt,sst,dirt}.py into one file
 
@@ -97,7 +97,7 @@ planner.link_and_setup_query(planner_query)
 
 ### Note: Python slows down computation ==> more time might be needed
 # checker = prx.condition_check("time", 60)
-checker = prx.condition_check("iterations", 50000)
+checker = prx.condition_check("iterations", 1000)
 
 planner.resolve_query(checker)
 planner.fulfill_query();

@@ -1,0 +1,11 @@
+data_path: /media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_data2
+eval_data_path: /media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_data
+test_data_path: /media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_data1
+
+train_success_folder: train_success_folders.txt
+train_fail_folder: train_fail_folders.txt
+eval_success_folder: eval_success_folders.txt
+eval_fail_folder: eval_fail_folders.txt
+
+scene_goals: 289
+balance_data: false

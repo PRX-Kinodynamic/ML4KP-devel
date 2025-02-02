@@ -1,0 +1,224 @@
+env_size:
+- 4.05
+- 4.05
+- 2.0
+worldbody:
+  asset:
+    material:
+    - name: groundplane
+      reflectance: 0.2
+      texrepeat:
+      - 5
+      - 5
+      texture: groundplane
+      texuniform: 'true'
+    - name: robot
+      rgba:
+      - 0.0
+      - 1.0
+      - 0.0
+      - 1
+    texture:
+    - builtin: gradient
+      height: 3072
+      rgb1:
+      - 0.3
+      - 0.5
+      - 0.7
+      rgb2:
+      - 0
+      - 0
+      - 0
+      type: skybox
+      width: 512
+    - builtin: checker
+      height: 300
+      mark: edge
+      markrgb:
+      - 0.8
+      - 0.8
+      - 0.8
+      name: groundplane
+      rgb1:
+      - 0.2
+      - 0.3
+      - 0.4
+      rgb2:
+      - 0.1
+      - 0.2
+      - 0.3
+      type: 2d
+      width: 300
+  geom:
+    condim: 4
+    friction:
+    - 1.0
+    - 0.005
+    - 0.001
+    material: groundplane
+    name: floor
+    size:
+    - 0
+    - 0
+    - 0.05
+    type: plane
+  light:
+    dir:
+    - 0
+    - 0
+    - -1
+    directional: 'true'
+    pos:
+    - 0
+    - 0
+    - 1.5
+  obstacles:
+  - condim: 4
+    friction:
+    - 1.0
+    - 0.005
+    - 0.001
+    mass: 0.1
+    movable: true
+    name: obstacle_movable_1
+    pos:
+    - 0.0
+    - 0.0
+    - 0.2
+    rgba:
+    - 1.0
+    - 1.0
+    - 0.0
+    - 1.0
+    rotation: 0.0
+    size:
+    - 0.2
+    - 0.2
+    - 0.0
+    type: cylinder
+  - condim: 4
+    friction:
+    - 1.0
+    - 0.005
+    - 0.001
+    movable: false
+    name: obstacle_2_static
+    pos:
+    - -0.7323693125671588
+    - 1.3457194431187969
+    - 0.3
+    rgba:
+    - 1
+    - 0
+    - 0
+    - 1
+    rotation: 315.35902783771684
+    size:
+    - 0.4291968684122788
+    - 0.2
+    - 0.3
+    type: box
+  - condim: 4
+    friction:
+    - 1.0
+    - 0.005
+    - 0.001
+    movable: false
+    name: obstacle_3_static
+    pos:
+    - 0.4702504412094095
+    - 1.061371360679561
+    - 0.3
+    rgba:
+    - 1
+    - 0
+    - 0
+    - 1
+    rotation: 188.5651660457154
+    size:
+    - 0.40073794641619737
+    - 0.2
+    - 0.3
+    type: box
+  robot:
+    condim: 4
+    name: robot
+    pos:
+    - 0.3
+    - 0.0
+    - 0.2
+    rgba:
+    - 0.5
+    - 0.5
+    - 0.5
+    - 1.0
+    size:
+    - 0.05
+    - 0.0
+    - 0.0
+    type: box
+  walls:
+  - condim: 4
+    name: wall_1
+    pos:
+    - -2.0
+    - 0.0
+    - 0.3
+    rgba:
+    - 0.800000011920929
+    - 0.800000011920929
+    - 0.800000011920929
+    - 1.0
+    size:
+    - 0.05
+    - 2.0
+    - 0.3
+    type: box
+  - condim: 4
+    name: wall_2
+    pos:
+    - 2.0
+    - 0.0
+    - 0.3
+    rgba:
+    - 0.800000011920929
+    - 0.800000011920929
+    - 0.800000011920929
+    - 1.0
+    size:
+    - 0.05
+    - 2.0
+    - 0.3
+    type: box
+  - condim: 4
+    name: wall_3
+    pos:
+    - 0.0
+    - -2.0
+    - 0.3
+    rgba:
+    - 0.800000011920929
+    - 0.800000011920929
+    - 0.800000011920929
+    - 1.0
+    size:
+    - 2.0
+    - 0.05
+    - 0.3
+    type: box
+  - condim: 4
+    name: wall_4
+    pos:
+    - 0.0
+    - 2.0
+    - 0.3
+    rgba:
+    - 0.800000011920929
+    - 0.800000011920929
+    - 0.800000011920929
+    - 1.0
+    size:
+    - 2.0
+    - 0.05
+    - 0.3
+    type: box

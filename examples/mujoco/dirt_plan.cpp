@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
   std::vector<std::pair<std::string, std::string>> ignored_pairs =
       params["ignored_pairs"].as<std::vector<std::pair<std::string, std::string>>>();
 
-  std::shared_ptr<prx::mujoco_simulator_t> sim =
+std::shared_ptr<prx::mujoco_simulator_t> sim =
       std::make_shared<prx::mujoco_simulator_t>(params["xml_path"].as<std::string>(), visualize);
   sim->init_simulator();
 

@@ -1,0 +1,175 @@
+<mujoco>
+  <option timestep="0.01" integrator="RK4" />
+
+  <worldbody>
+
+    <!--  6 sets -->
+
+    <!-- set 1 -->
+    <body name="wall_1" pos="1.0 0.5 0.25">
+      <geom name="wall_1" type="box" size="0.1 0.3 0.25" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="wall_2" pos="1.8 -0.6 .25">
+      <geom name="wall_2" type="box" size="0.1 0.2 0.25" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="movable_cube1" pos="1.3 0 .25" euler="0 0 0">
+      <freejoint />
+      <geom name="movable_cube1" type="box" size="0.15 0.6 0.25" mass=".1" material="movable"
+        condim="4" />
+    </body>
+
+    <!-- set 2 -->
+    <body name="wall_3" pos="2.8 -0.5 0.25">
+      <geom name="wall_3" type="box" size="0.1 0.3 0.25" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="wall_4" pos="3.6 0.6 .25">
+      <geom name="wall_4" type="box" size="0.1 0.2 0.25" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="movable_cube2" pos="3.1 0 .25" euler="0 0 0">
+      <freejoint />
+      <geom name="movable_cube2" type="box" size="0.15 0.6 0.25" mass=".1" material="movable"
+        condim="4" />
+    </body>
+
+    <!-- set 3 -->
+    <body name="wall_5" pos="4.6 0.5 .25">
+      <geom name="wall_5" type="box" size="0.1 0.3 0.25" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="wall_6" pos="5.4 -0.6 0.25">
+      <geom name="wall_6" type="box" size="0.1 0.2 0.25" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="movable_cube3" pos="4.9 0 .25" euler="0 0 0">
+      <freejoint />
+      <geom name="movable_cube3" type="box" size="0.15 0.6 0.25" mass=".1" material="movable"
+        condim="4" />
+    </body>
+
+    <!-- set 4 -->
+    <body name="wall_7" pos="6.4 -0.5 0.25">
+      <geom name="wall_7" type="box" size="0.1 0.3 0.25" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="wall_8" pos="7.2 0.6 .25">
+      <geom name="wall_8" type="box" size="0.1 0.2 0.25" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="movable_cube4" pos="6.7 0 .25" euler="0 0 0">
+      <freejoint />
+      <geom name="movable_cube4" type="box" size="0.15 0.6 0.25" mass=".1" material="movable"
+        condim="4" />
+    </body>
+
+    <!-- set 5 -->
+    <body name="wall_9" pos="8.2 0.5 .25">
+      <geom name="wall_9" type="box" size="0.1 0.3 0.25" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="wall_10" pos="9.0 -0.6 0.25">
+      <geom name="wall_10" type="box" size="0.1 0.2 0.25" mass=".1" material="static" condim="4" />
+    </body>
+
+    <body name="movable_cube5" pos="8.5 0 .25" euler="0 0 0">
+      <freejoint />
+      <geom name="movable_cube5" type="box" size="0.15 0.6 0.25" mass=".1" material="movable"
+        condim="4" />
+    </body>
+
+    <!-- set 6 -->
+    <body name="wall_11" pos="10.0 -0.5 0.25">
+      <geom name="wall_11" type="box" size="0.1 0.3 0.25" mass=".1" material="static" condim="4" />
+    </body>
+    
+    <body name="wall_12" pos="10.8 0.6 .25">
+      <geom name="wall_12" type="box" size="0.1 0.2 0.25" mass=".1" material="static" condim="4" />
+    </body>
+    
+    <body name="movable_cube6" pos="10.3 0 .25" euler="0 0 0">
+      <freejoint />
+      <geom name="movable_cube6" type="box" size="0.15 0.6 0.25" mass=".1" material="movable"
+        condim="4" />
+    </body>
+
+
+    <body name="case" pos="0 0 0.1">
+      <geom name="gcase_a" type="box" size="0.05 0.95 0.4" pos="-0.5 0 0.2" />
+      <geom name="gcase_b" type="box" size="0.05 0.95 0.4" pos="12.5 0 0.2" />
+      <geom name="gcase_c" type="box" size="6.525 0.05 0.4" pos="6 1 0.2" />
+      <geom name="gcase_d" type="box" size="6.525 0.05 0.4" pos="6 -1 0.2" />
+    </body>
+
+
+    <site name = "target1" type="box" pos="0.7 -0.4 0.25" size="0.25 0.25" rgba="0 1 0.6 0.2" />
+    <site name = "target2" type="box" pos="2.5 0.4 0.25" size="0.25 0.25" rgba="0 1 0.6 0.2" />
+    <site name = "target3" type="box" pos="4.3 -0.4 0.25" size="0.25 0.25" rgba="0 1 0.6 0.2" />
+    <site name = "target4" type="box" pos="6.1 0.4 0.25" size="0.25 0.25" rgba="0 1 0.6 0.2" />
+    <site name = "target5" type="box" pos="7.9 -0.4 0.25" size="0.25 0.25" rgba="0 1 0.6 0.2" />
+    <site name = "target6" type="box" pos="9.8 0.4 0.25" size="0.25 0.25" rgba="0 1 0.6 0.2" />
+    <site name = "target7" type="box" pos="11.6 -0.4 0.25" size="0.25 0.25" rgba="0 1 0.6 0.2" />
+    <site name="target8" type="box" pos="12.0 0 0.1" size="0.25 0.25" rgba="0 1 0.6 0.2" />
+
+    <!-- <site name="target1" pos="0.15 -0.1 0.0" size="0.12" rgba="0 1 0.6 0.2" />
+    <site name="target11" pos="0.3 -0.1 0.0" size="0.05" rgba="0 1 0.6 0.2" />
+    <site name="target12" pos="0.3 0.1 0.0" size="0.05" rgba="0 1 0.6 0.2" />
+    <site name="target2" pos="0.65 0.1 0.0" size="0.12" rgba="0 1 0.6 0.2" />
+    <site name="target21" pos="0.8 0.1 0.0" size="0.05" rgba="0 1 0.6 0.2" />
+    <site name="target22" pos="0.8 -0.1 0.0" size="0.05" rgba="0 1 0.6 0.2" />
+    <site name="target3" pos="1.15 -0.1 0.0" size="0.12" rgba="0 1 0.6 0.2" />
+    <site name="target31" pos="1.3 -0.1 0.0" size="0.05" rgba="0 1 0.6 0.2" />
+    <site name="target32" pos="1.3 0.1 0.0" size="0.05" rgba="0 1 0.6 0.2" />
+    <site name="target4" pos="1.65 0.1 0.0" size="0.12" rgba="0 1 0.6 0.2" />
+    <site name="target5" pos="1.9 0.0 0.0" size="0.05" rgba="0 1 0.6 0.2" /> -->
+    <!-- 
+    <site name="target1" pos="0.15 -0.1 0.0" size="0.12" rgba="0 1 0.6 0.2" />
+    <site name="target2" pos="0.3 -0.1 0.0" size="0.05" rgba="0 1 0.6 0.2" />
+    <site name="target3" pos="0.3 0.1 0.0" size="0.05" rgba="0 1 0.6 0.2" />
+    <site name="target4" pos="0.65 0.1 0.0" size="0.12" rgba="0 1 0.6 0.2" />
+    <site name="target5" pos="0.8 0.1 0.0" size="0.05" rgba="0 1 0.6 0.2" />
+    <site name="target6" pos="0.8 -0.1 0.0" size="0.05" rgba="0 1 0.6 0.2" />
+    <site name="target7" pos="1.15 -0.1 0.0" size="0.12" rgba="0 1 0.6 0.2" />
+    <site name="target8" pos="1.3 -0.1 0.0" size="0.05" rgba="0 1 0.6 0.2" />
+    <site name="target9" pos="1.3 0.1 0.0" size="0.05" rgba="0 1 0.6 0.2" />
+    <site name="target10" pos="1.65 0.1 0.0" size="0.12" rgba="0 1 0.6 0.2" />
+    <site name="target11" pos="1.9 0.0 0.0" size="0.05" rgba="0 1 0.6 0.2" /> -->
+
+  </worldbody>
+
+  <!-- <actuator>
+    <motor name="actuator_x" joint="joint_x" gear="1" />
+    <motor name="actuator_y" joint="joint_y" gear="1" />
+  </actuator> -->
+
+  <asset>
+    <!-- Materials for visualization -->
+    <!-- <material name="MatPlane" rgba="0.8 0.9 0.8 1" /> -->
+    <material name="movable" rgba="0.94 1.0 0.0 1" />
+    <material name="static" rgba="0.8 0.2 0.2 1" />
+    <!-- <material name="BallMat" rgba="0.2 0.2 0.8 1" /> -->
+
+    <!-- <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512"
+      height="3072" />
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4"
+      rgb2="0.1 0.2 0.3"
+      markrgb="0.8 0.8 0.8" width="300" height="300" />
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5"
+      reflectance="0.2" /> -->
+  </asset>
+
+  <!-- <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0" />
+    <rgba haze="0.15 0.25 0.35 1" />
+    <global azimuth="60" elevation="-20" />
+  </visual> -->
+
+
+  <!-- <sensor>
+    <velocimeter name="sensor_ball" site="sensor_ball" />
+  </sensor> -->
+
+
+</mujoco>

@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<mujoco model="generated_environment">
+  <option timestep="0.01" integrator="RK4" cone="elliptic"/>
+  <default>
+    <geom density="1" />
+    <!-- solimp="0.0 0.02 0.02 0.5 2" -->
+  </default>
+  <asset>
+    <texture builtin="gradient" height="3072" rgb1="0.3 0.5 0.7" rgb2="0 0 0" type="skybox" width="512"/>
+    <texture builtin="checker" height="300" mark="edge" markrgb="0.8 0.8 0.8" name="groundplane" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" type="2d" width="300"/>
+    <material name="groundplane" reflectance="0.2" texrepeat="5 5" texture="groundplane" texuniform="true"/>
+    <texture name="body" type="cube" builtin="flat" mark="cross" width="128" height="128" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" markrgb="1 1 1" random="0.01"/>
+    <material name="body" texture="body" texuniform="true" rgba="0.8 0.6 .4 1"/>
+    <material name="robot" rgba="0.0 1.0 0.0 1"/>
+  </asset>
+  
+  <visual>
+    <rgba contactforce="0.2 0.98 0.2 0.8"/>
+    <scale forcewidth="0.005" contactwidth="1.0" contactheight="0.04"/>
+    <map force="1"/>
+  </visual>
+  <worldbody>
+    <light dir="0 0 -1" directional="true" pos="0 0 1.5"/>
+    <geom condim="4" friction="1.0 0.005 0.001" material="groundplane" name="floor" size="0 0 0.05" type="plane"/>
+    <site name="x_axis" type="sphere" size="0.02" rgba="1 0 0 1" pos="0.1 0 0"/>
+    <site name="y_axis" type="sphere" size="0.02" rgba="0 1 0 1" pos="0 0.1 0"/>
+    <site name="z_axis" type="sphere" size="0.02" rgba="0 0 1 1" pos="0 0 0.1"/>
+  </worldbody>
+</mujoco>

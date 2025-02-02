@@ -1,5 +1,6 @@
-random_seed: 1
-xml_path: custom/custom1.xml
+random_seed: 2
+# xml_path: custom/custom1.xml
+xml_path: test/3.xml
 planner_name: "dirt"
 
 checker_type: time
@@ -8,23 +9,16 @@ output_plan: true
 goal_position: [0.0, 0.0, 0.05]
 output_tree_folder: "/home/dhruv/2024/projects/NAMO/out/trees/"
 output_plan_file: "/home/dhruv/2024/projects/NAMO/out/1_5.txt"
-output_folder: "/media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/out/custom/custom1/25Aug/subgoals/"
-subgoals_file: "/home/dhruv/2024/projects/ml4kp_ktamp/subgoals/custom/custom1/subgoals.txt"
+output_folder: "/media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/out/test/3/25Aug/subgoals_region/"
+subgoals_file: "/home/dhruv/2024/projects/ml4kp_ktamp/subgoals/test/3/subgoals_region.txt"
 visualize: false
-do_subgoals: true
 backtrack: false
-num_trials: 3
-
-# collision_pairs: [
-#   ["ball", "case"],
-#   ["ball", "wall_1"], ["ball", "wall_2"], ["ball", "wall_3"], ["ball", "wall_4"], ["ball", "wall_5"], ["ball", "wall_6"]] 
-#   ["ball", "wall_7"], ["ball", "wall_8"], ["ball", "wall_9"], ["ball", "wall_10"], ["ball", "wall_11"], ["ball", "wall_12" , ]] 
-#   ["ball", "wall_13"], ["ball", "wall_14"], ["ball", "wall_15"], ["ball", "wall_16"], ["ball", "wall_17"], ["ball", "wall_18"], ["ball", "wall_19"], ["ball", "wall_20"], ["ball", "wall_21"], ["ball", "wall_22"], ["ball", "wall_23"], ["ball", "wall_24"]
-# ]
+retry: true
+num_trials: 10
 
 navigate:
-  env_xlim: [-0.13, 1.0]
-  env_ylim: [-0.3, 0.3]
+  env_xlim: [-0.13, 7.0]
+  env_ylim: [-1, 1]
   min_control_steps: 0.1
   max_control_steps: 1.0
   ignored_pairs: []
@@ -36,9 +30,9 @@ navigate:
   use_pruning: false
   visualize_tree: true
   condition_checker:
-    type: "time"  
-    value: 100
-    first_solution: true
+    type: "time"
+    value: 50
+    first_solution: false
   ics:
     do_ics_check: false
     type: "bang-bang" # ["bang-bang", "blossom"] if bang-bang set duration (defaults to 0.5), if blossom set blossom (defaults to 25)

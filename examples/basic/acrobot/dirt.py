@@ -1,6 +1,6 @@
 import math
 import random
-import libpyDirtMP as prx
+import PyML4KP as prx
 
 
 prx.init_random(random.randint(1,999999))

@@ -16,12 +16,19 @@ namespace playback
 namespace plan
 {
 prx::space_point_t (prx::plan_t::*plan_at_2)(double) const = &prx::plan_t::at;
-void (prx::plan_t::*copy_onto_back_2)(prx::space_point_t, double) = &prx::plan_t::copy_onto_back;
+// void (prx::plan_t::*copy_onto_back_2)(prx::space_point_t, double) = &prx::plan_t::copy_onto_back;
+void copy_onto_back_wrapper(prx::plan_t& plan, const prx::space_point_t& point, double duration) {
+    plan.copy_onto_back(point, duration);
+}
 
 // void (prx::plan_t::*append_onto_back_2)(double, bool) = &prx::plan_t::append_onto_back;
 
 // TODO: not working because of multiple definitions of append_onto_back
 // BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(append_onto_back_overloads, append_onto_back, 1, 2)
+
+void copy_onto_front_wrapper(prx::plan_t& plan, const prx::space_point_t& point, double duration) {
+    plan.copy_onto_front(point, duration);
+}
 
 void bindings()
 {
@@ -48,8 +55,8 @@ void bindings()
       .def(self += other<prx::plan_t>())
       .def("clear", &prx::plan_t::clear)
       .def("copy_to", &prx::plan_t::copy_to)
-      .def("copy_onto_back", &prx::plan_t::copy_onto_back)
-      .def("copy_onto_front", &prx::plan_t::copy_onto_front)
+      .def("copy_onto_back", &copy_onto_back_wrapper)
+      .def("copy_onto_front", &copy_onto_front_wrapper)
       .def("append_onto_front", &prx::plan_t::append_onto_front)
       .def("append_onto_back", &prx::plan_t::append_onto_back)
       .def("extend_last_control", &prx::plan_t::extend_last_control)
