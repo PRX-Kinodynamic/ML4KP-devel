@@ -82,6 +82,12 @@ namespace fg
 //   //   return RotationType{ res };
 //   // }
 
+void add_noise(Eigen::Quaterniond& quat, const Eigen::Vector<double, 3>& noise)
+{
+  const gtsam::Rot3 rot{ gtsam::Rot3(quat) * gtsam::Rot3::Expmap(noise) };
+  quat = rot.toQuaternion();
+}
+
 gtsam::SO3 random_SO3()
 {
   using RotationType = Eigen::Matrix3d;
@@ -103,52 +109,5 @@ gtsam::SO3 random_SO3()
   const RotationType M{ (2.0 * V * V.transpose() - RotationType::Identity()) * R3 };
   return std::move(gtsam::SO3(M));
 }
-//   // static void random(SO3_t& rotation)
-//   // {
-//   //   const double s{ prx::uniform_random(0.0, 1.0) };
-//   //   const double sigma1{ std::sqrt(1.0 - s) };
-//   //   const double sigma2{ std::sqrt(s) };
-//   //   const double theta1{ 2.0 * prx::constants::pi * prx::uniform_random(0.0, 1.0) };
-//   //   const double theta2{ 2.0 * prx::constants::pi * prx::uniform_random(0.0, 1.0) };
-//   //   const double w{ std::cos(theta2) * sigma2 };
-//   //   const double x{ std::sin(theta1) * sigma1 };
-//   //   const double y{ std::cos(theta1) * sigma1 };
-//   //   const double z{ std::sin(theta2) * sigma2 };
-//   //   const Eigen::Quaterniond q{ w, x, y, z };
-
-//   //   const SO3_t rot{ q.toRotationMatrix() };
-//   //   rotation = std::move(rot);
-//   // }
-
-//   // static SO3_t random()
-//   // {
-//   //   SO3_t rotation;
-//   //   random(rotation);
-//   //   return std::move(rotation);
-//   // }
-
-// std::ostream& operator<<(std::ostream& out, const Fraction& f)
-
-//   void print(const std::string& str = "") const
-//   {
-//     std::cout << (*this);
-//   }
-
-// private:
-//   // RotationType _rotation;
-// };
 }  // namespace fg
 }  // namespace prx
-
-// namespace gtsam
-// {
-// template <>
-// struct traits<prx::fg::SO3_t> : public internal::LieGroup<prx::fg::SO3_t>
-// {
-//   static constexpr Eigen::Index dimension = 3;
-//   static constexpr int GetDimension(const prx::fg::SO3_t&)
-//   {
-//     return dimension;
-//   }
-// };
-// }  // namespace gtsam

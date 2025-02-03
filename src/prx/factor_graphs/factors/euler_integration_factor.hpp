@@ -107,9 +107,9 @@ public:
   // x1_predicted <- x0 + xdot dt
   // Error is: x1_predicted - x1_observed
   template <typename Dt>
-  X error(const X& x1, const X& x0, const Xdot& xdot, const Dt& dt,  // no-lint
-          OptDeriv H1 = boost::none, OptDeriv H0 = boost::none, OptDeriv Hdot = boost::none,
-          OptDeriv Hdt = boost::none) const
+  static X error(const X& x1, const X& x0, const Xdot& xdot, const Dt& dt,  // no-lint
+                 OptDeriv H1 = boost::none, OptDeriv H0 = boost::none, OptDeriv Hdot = boost::none,
+                 OptDeriv Hdt = boost::none)
   {
     static constexpr Eigen::Index DimX{ gtsam::traits<X>::dimension };
 

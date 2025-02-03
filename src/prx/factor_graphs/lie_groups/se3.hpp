@@ -52,7 +52,7 @@ public:
   {
   }
 
-  se3_t(const gtsam::Pose3& pose) : se3_t(pose.rotation().toQuaternion(), pose.translation())
+  se3_t(const gtsam::Pose3& pose) : se3_t(pose.rotation().matrix(), pose.translation())
   {
   }
 
@@ -104,6 +104,8 @@ public:
 
   se3_t operator*(const se3_t& other) const
   {
+    // return Pose3(R_ * T.R_, t_ + R_ * T.t_);
+    //
     const Position pos{ _quaternion * other.position() + _position };
     const se3_t result{ _quaternion * other.quaternion(), pos };
     return result;
@@ -162,8 +164,8 @@ public:
     const Eigen::Matrix3d A{ gtsam::skewSymmetric(_position) * R };
     Eigen::Matrix<double, 6, 6> adj;
     adj.block<3, 3>(0, 0) = R;
-    adj.block<3, 3>(0, 3) = A;
-    adj.block<3, 3>(3, 0) = Eigen::Matrix3d::Zero();
+    adj.block<3, 3>(0, 3) = Eigen::Matrix3d::Zero();
+    adj.block<3, 3>(3, 0) = A;
     adj.block<3, 3>(3, 3) = R;  //, Z_3x3, A, R;  // Gives [R 0; A R]
     return adj;
   }
@@ -192,7 +194,11 @@ public:
 
   bool equals(const se3_t& other, double tol = 1e-8) const
   {
-    return _position.isApprox(other.position(), tol) && _quaternion.isApprox(other.quaternion(), tol);
+    const Position diff{ _position - other.position() };
+    const bool is_close_to_zero(diff.isZero(tol));
+    // PRX_DBG_VARS(is_close_to_zero, diff.transpose());
+    // PRX_DBG_VARS(_position.transpose(), other.position().transpose());
+    return is_close_to_zero && _quaternion.isApprox(other.quaternion(), tol);
   }
 
   struct ChartAtOrigin

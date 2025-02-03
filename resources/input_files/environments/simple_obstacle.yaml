@@ -4,8 +4,8 @@ environment:
       position: [0,0,0]
       orientation: [0,0,0,1]
     bounds:
-      min: [ -5.5, -5.5, -1]
-      max: [ 25.5, 25.5,  1]
+      min: [ -5, -5, -1]
+      max: [ 25, 25,  1]
     geometries:
       -
         name: simple_obstacle
