@@ -54,9 +54,9 @@ class GNNClassifier(Method):
         self.criterion = self._get_criterion(balance_ratio)
         print(f"Balance ratio: {balance_ratio}")
         train_dataset = GNNClassifierDataset(training_data)
-        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4)
+        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=8)
         eval_dataset = GNNClassifierDataset(evaluation_data)
-        eval_loader = DataLoader(eval_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
+        eval_loader = DataLoader(eval_dataset, batch_size=self.batch_size, shuffle=False, num_workers=8)
 
         # Early stopping variables
         best_eval_loss = float('inf')
@@ -172,8 +172,8 @@ class GNNClassifier(Method):
             'loss': loss,
             'accuracy': accuracy
         }
-        path = os.path.join(self.save_dir, f"{self.model_name}_epoch_{epoch}.pt")
-        torch.save(checkpoint, path)
+        # path = os.path.join(self.save_dir, f"{self.model_name}_epoch_{epoch}.pt")
+        # torch.save(checkpoint, path)
 
         
         # Also save as best model if it's the best so far
@@ -192,6 +192,8 @@ class GNNClassifier(Method):
     def get_name(self):
         return self.name
 
+    def get_classification_threshold(self):
+        return self.classification_threshold
 
 class MLPClassifier(Method):
     def __init__(self, name, config):
@@ -229,9 +231,9 @@ class MLPClassifier(Method):
         print(f"Balance ratio: {balance_ratio}")
         self.criterion = self._get_criterion(balance_ratio)
         train_dataset = MLPClassifierDataset(training_data)
-        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4)
+        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=8)
         eval_dataset = MLPClassifierDataset(evaluation_data)
-        eval_loader = DataLoader(eval_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
+        eval_loader = DataLoader(eval_dataset, batch_size=self.batch_size, shuffle=False, num_workers=8)
 
         best_eval_loss = float('inf')
         patience_counter = 0
@@ -297,6 +299,7 @@ class MLPClassifier(Method):
                 # pbar.set_description(f"Eval loss: {eval_loss:.4f}")
                 pbar.update(1)
 
+                output = torch.sigmoid(output)
                 pred = (output > self.classification_threshold).float()
                 correct_preds += (pred == target).sum().item()
                 total_preds += target.size(0)
@@ -316,6 +319,7 @@ class MLPClassifier(Method):
                 features = features.to(self.device)
                 target = target.to(self.device)
                 output = self.model(features)
+                output = torch.sigmoid(output)
                 pred = (output > self.classification_threshold).float()
                 return output.item(), pred.item()
 
@@ -347,6 +351,7 @@ class MLPClassifier(Method):
         print(f"Saved best model to {best_model_path}")
 
     def load_model(self):
+        print(f"Loading model from {self.save_dir}")
         model_path = os.path.join(self.save_dir, f"{self.model_name}_best.pt")
         checkpoint = torch.load(model_path)
         self.model.load_state_dict(checkpoint['model_state_dict'])
@@ -356,3 +361,6 @@ class MLPClassifier(Method):
 
     def get_name(self):
         return self.name
+
+    def get_classification_threshold(self):
+        return self.classification_threshold

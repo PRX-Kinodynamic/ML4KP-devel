@@ -17,7 +17,9 @@ class GNNClassifierModel(nn.Module):
         
         # Edge feature processing
         self.edge_mlp = nn.Sequential(
-            nn.Linear(edge_features, 1),  # Reduce edge features to a single weight
+            nn.Linear(edge_features, 32),  # Reduce edge features to a single weight
+            nn.ReLU(),
+            nn.Linear(32, 1),
             nn.Sigmoid()
         )
         
@@ -29,7 +31,7 @@ class GNNClassifierModel(nn.Module):
         self.graph_predictor = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
-            nn.Dropout(0.5),
+            # nn.Dropout(0.2),
             nn.Linear(hidden_dim, 1),
         )
 

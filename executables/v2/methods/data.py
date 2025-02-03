@@ -4,6 +4,7 @@ import os
 import torch
 import json
 import numpy as np
+from utils import get_rectangle_corners
 
 DATA_FOLDER = "/media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_data2"
 MODEL_PROPS = "resources/temp"
@@ -19,6 +20,8 @@ class GNNClassifierDataset(Dataset):
         node_features = []
         edge_index = []
         edge_attr = []
+
+        goal_threshold = 0.1
 
         folder = self.data[idx]
         metadata = {}
@@ -40,15 +43,21 @@ class GNNClassifierDataset(Dataset):
         with open(os.path.join(MODEL_PROPS, f"{xml_path.stem}.json"), 'r') as f:
             model_props = json.load(f)
 
+
         target_object = 0
         for key, value in model_props.items():
             if "obstacle" in key:
                 pos = value['pos'][:2]
                 rot = [value['rot']]
-                size = value['size'][:2]
-                node_features.append(torch.tensor(pos + rot + size))
+                size = (np.array(value['size'][:2]) * 2).tolist()
+                # get four corners of the rectangle given the center, size, and rotation
+                corners = get_rectangle_corners(pos, size, rot)
+                node_features.append(torch.tensor([*pos, *corners.flatten()]))
                 if "movable" in key:
                     target_object = len(node_features) - 1
+                    goal_size = (size[0] * 2) + goal_threshold
+                    # print(pos, rot, corners.flatten(), size)
+
             # adding robot node to the node features
             # if "robot" in key:
             #     size = value['size'][:2]
@@ -67,15 +76,16 @@ class GNNClassifierDataset(Dataset):
                     edge_attr.append(rel_pos)
 
         # special edge from target object to goal
-        goal_node = torch.tensor([goal[0], goal[1], 0, 0, 0])
+        goal_corners = get_rectangle_corners(goal, [goal_size]*2, 0)
+        goal_node = torch.tensor([*goal, *goal_corners.flatten()])
         node_features.append(goal_node)
         edge_index.append([target_object, len(node_features) - 1])
         edge_attr.append(goal_node[:2] - node_features[target_object][:2])
        
-        node_features = torch.stack(node_features)
+        node_features = torch.stack(node_features).float()
         # node_features = node_features
         edge_index = torch.tensor(edge_index).long().transpose(0, 1) # transpose to make it COO format.
-        edge_attr = torch.stack(edge_attr)
+        edge_attr = torch.stack(edge_attr).float()
         label = torch.tensor([label])
 
         return Data(x=node_features, edge_index=edge_index, edge_attr=edge_attr, y=label)
@@ -92,6 +102,8 @@ class MLPClassifierDataset(Dataset):
         folder = self.data[idx]
         features = []
         metadata = {}
+        goal_threshold = 0.1
+        goal_size = None
         with open(os.path.join(folder, "metadata.txt"), 'r') as f:
             for line in f.readlines():
                 key, value = line.strip().split(":")
@@ -114,15 +126,19 @@ class MLPClassifierDataset(Dataset):
             if "obstacle" in key:
                 pos = value['pos'][:2]
                 rot = [value['rot']]
-                size = value['size'][:2]
-                features.append(torch.tensor(pos + rot + size))
+                size = (np.array(value['size'][:2]) * 2).tolist()
+                corners = get_rectangle_corners(pos, size, rot)
+                features.append(torch.tensor([*pos, *corners.flatten()]))
+                if "movable" in key:
+                    goal_size = (size[0] * 2) + goal_threshold
             # if "robot" in key:
             #     size = value['size'][:2]
             #     robot_features = torch.tensor([robot_pos[0], robot_pos[1], 0, size[0], size[1]])
             #     features.append(robot_features)
                 
         features = torch.stack(features)
-        goal_node = torch.tensor([goal[0], goal[1], 0, 0, 0])
+        goal_corners = get_rectangle_corners(goal, [goal_size]*2, 0)
+        goal_node = torch.tensor([*goal, *goal_corners.flatten()])
         features = torch.cat([features, goal_node.unsqueeze(0)], dim=0).float().flatten()
         label = torch.tensor([label]).float()
 

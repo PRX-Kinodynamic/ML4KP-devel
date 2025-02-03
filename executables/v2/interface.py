@@ -38,7 +38,7 @@ method_map = {
     }
 }
 
-def plot_predictions(predictions, file_name, fpr=None):
+def plot_predictions(predictions, file_name, fpr=None, classification_threshold=0.5):
     fig = plt.figure(figsize=(15, 5))
     ax1 = fig.add_subplot(131)
     ax2 = fig.add_subplot(132)
@@ -74,7 +74,7 @@ def plot_predictions(predictions, file_name, fpr=None):
     ax1.set_title('Ground Truth')
     ax2.set_xlim(-2, 2)
     ax2.set_ylim(-2, 2)
-    ax2.set_title('Prediction > 0.5')
+    ax2.set_title(f'Prediction > {classification_threshold}')
     ax3.set_xlim(-2, 2)
     ax3.set_ylim(-2, 2)
     ax3.set_title('Prediction')
@@ -84,13 +84,15 @@ def plot_predictions(predictions, file_name, fpr=None):
     plt.close()
 
 def run(problem: Problem, method: Method, load_model=False, verbose=False):
-    fpr_folder = f'fpr_predictions/{problem.get_name()}_{method.get_name()}'
+    classification_threshold = method.get_classification_threshold()
+    fpr_folder = f'fpr_predictions/{problem.get_name()}_{method.get_name()}_{classification_threshold}'
     if not os.path.exists(fpr_folder):
         os.makedirs(fpr_folder)
     if load_model:  
         method.load_model()
     else:
         method.train(problem.get_training_data(), problem.get_evaluation_data(), problem.get_balance_ratio(), verbose)
+        method.load_model()
 
     test_data = problem.get_test_data()
     pbar = tqdm(test_data, total=len(test_data))
@@ -157,12 +159,14 @@ def run(problem: Problem, method: Method, load_model=False, verbose=False):
                       recall=recall,
                       f1_score=f1_score)
     
+    print(metrics)
+    
     sorted_local_fpr_list = sorted(local_fpr_list, key=lambda x: x[1])[::-1]
     for i, (xml_path, fpr, predictions) in enumerate(sorted_local_fpr_list):
         # print(f"{i+1}. {xml_path}: {fpr:.2f}")
         file_name = Path(xml_path).stem
-        plot_predictions(predictions, f'{fpr_folder}/{fpr:.2f}_{file_name}', fpr)
-        if fpr < 0.05:
+        plot_predictions(predictions, f'{fpr_folder}/{fpr:.2f}_{file_name}', fpr, classification_threshold)
+        if fpr < 0.01:
             break
 
     return metrics

@@ -62,19 +62,19 @@ def main(main_data_path, data_folders):
 if __name__ == "__main__":
 
     # to split the data into success and fail folders   
-    main_data_path = Path("/media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_env/level_2")
-    data_folders = [ '0' ]
+    # main_data_path = Path("/media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_env/level_2")
+    # data_folders = [ '0' ]
 
     # main(main_data_path, data_folders)
 
     # to extract the data from the mujoco using xml files
-    # resources_folder_temp = Path("resources/temp")
-    # resources_folder_temp.mkdir(parents=True, exist_ok=True)
-    # xml_folder = Path("resources/models/cylinder")
-    # for xml_file in tqdm(xml_folder.iterdir()):
-    #     data = save_data_from_objects(xml_file.as_posix())
-    #     with open(resources_folder_temp / f"{xml_file.stem}.json", 'w') as f:
-    #         json.dump(data, f)
+    resources_folder_temp = Path("resources/temp")
+    resources_folder_temp.mkdir(parents=True, exist_ok=True)
+    xml_folder = Path("resources/models/cylinder")
+    for xml_file in tqdm(xml_folder.iterdir()):
+        data = save_data_from_objects(xml_file.as_posix())
+        with open(resources_folder_temp / f"{xml_file.stem}.json", 'w') as f:
+            json.dump(data, f)
     # first_idx = 0
     # first_points = []
     # second_points = []
@@ -94,8 +94,8 @@ if __name__ == "__main__":
     #                 second_points.append([float(x) for x in trajectory[2].split(' ')[:2]])
     #             except:
     #                 print("no second point")
-    #             # if first_idx == 0:
-    #             #     first_idx += 1
+                # if first_idx == 0:
+                #     first_idx += 1
 
     # first_points = np.array(first_points)
     # second_points = np.array(second_points)
