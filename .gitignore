@@ -37,3 +37,6 @@ resources/temp/
 *.pth
 models/*.pth
 .git_backup/
+fpr_predictions*/
+resources/input_files/cylinder_env*/
+resources/input_files/level_*/

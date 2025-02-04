@@ -1,5 +1,7 @@
-data_path: /media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_env/level_2/1
+data_path: /media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_env/random_goals_test
 discretization: 0.2
+goal_sampling_mode: discretized
+num_random_goals: 100
 random_seed: 1
 visualize: false
-xml_path: cylinder_env/level_2/env_config_139.xml
+xml_path: cylinder_env/random_start/level_1/env_config_401.xml

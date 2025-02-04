@@ -201,10 +201,10 @@ def generate_env_config(env_size, robot_pos, gen_config, walls, robot, obstacles
             # Check if the obstacle collides with any existing objects in the environment
             if all(not check_collision(obstacle, obj) for obj in config['worldbody']['walls'] + config['worldbody']['obstacles']):
                 # If no collision is detected, add the obstacle to the environment
-                if not check_collision(obstacle, config['worldbody']['robot']):
-                    config['worldbody']['obstacles'].append(obstacle)
-                    movable_done = is_movable
-                    break  # Exit the loop for this obstacle
+                # if not check_collision(obstacle, config['worldbody']['robot']):
+                config['worldbody']['obstacles'].append(obstacle)
+                movable_done = is_movable
+                break  # Exit the loop for this obstacle
         # else:
         #     # If the loop completes without finding a valid placement, print a message and exit
         #     print(f"Could not find a valid placement for obstacle {i+1} after {max_attempts} attempts. Proceeding with {len(config['worldbody']['obstacles'])} obstacles.")
@@ -263,6 +263,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='executables/mujoco_env_creator/generator_config.yaml')
     parser.add_argument('--model_path', type=str, default='resources/models/simple_envs/cylinder_empty.xml')
+    parser.add_argument('--random_start', action='store_true')
     args = parser.parse_args()
     return args
 
@@ -271,6 +272,7 @@ if __name__ == "__main__":
     generator_config = load_generator_config(args.config)
     model_path = args.model_path
     num_configs = generator_config['num_configs']
+    random_start = args.random_start
     config_dir = generator_config.get('config_dir', 'env_configs')
     os.makedirs(config_dir, exist_ok=True)
 
@@ -308,34 +310,31 @@ if __name__ == "__main__":
                 'condim': model.geom(i).condim.item()
             }
 
-
-        if model.geom(i).name.startswith('obstacle_'):
-            is_movable = any(joint_type in model.geom(i).name for joint_type in ['movable'])
-            obstacle = {
-                'movable': is_movable,
-                'condim': 4
-            }
+        # if model.geom(i).name.startswith('obstacle_'):
+        #     is_movable = any(joint_type in model.geom(i).name for joint_type in ['movable'])
+        #     obstacle = {
+        #         'movable': is_movable,
+        #         'condim': 4
+        #     }
             
-            obstacle = {
-                'name': model.geom(i).name,
-                'type':['plane', 'hfield', 'sphere', 'capsule', 'ellipsoid', 'cylinder', 'box'][int(model.geom(i).type)],
-                'pos': model.geom(i).pos.tolist(),
-                'rotation': R.from_quat(model.geom(i).quat.tolist()).as_euler('xyz', degrees=True)[2],
-                'size': model.geom(i).size.tolist(),
-                'rgba': model.geom(i).rgba.tolist(),
-                'condim': model.geom(i).condim.item(),
-                'movable': is_movable,
-                'friction': generator_config['obstacles']['friction'],
-                'condim': 4
-            }
+        #     obstacle = {
+        #         'name': model.geom(i).name,
+        #         'type':['plane', 'hfield', 'sphere', 'capsule', 'ellipsoid', 'cylinder', 'box'][int(model.geom(i).type)],
+        #         'pos': model.geom(i).pos.tolist(),
+        #         'rotation': R.from_quat(model.geom(i).quat.tolist()).as_euler('xyz', degrees=True)[2],
+        #         'size': model.geom(i).size.tolist(),
+        #         'rgba': model.geom(i).rgba.tolist(),
+        #         'condim': model.geom(i).condim.item(),
+        #         'movable': is_movable,
+        #         'friction': generator_config['obstacles']['friction'],
+        #         'condim': 4
+        #     }
 
-
-            if is_movable:
-                obstacle['mass'] = generator_config['obstacles']['movable_mass']
+        #     if is_movable:
+        #         obstacle['mass'] = generator_config['obstacles']['movable_mass']
             
-            obstacles.append(obstacle)
+        #     obstacles.append(obstacle)
             
-    
     for i in tqdm(range(num_configs), desc="Generating environment configs"):
         preprocessed_obstacles = obstacles.copy()
         env_size = [
@@ -345,9 +344,46 @@ if __name__ == "__main__":
         ]
         env_size[0] = max(x_limits) - min(x_limits)
         env_size[1] = max(y_limits) - min(y_limits)
+        main_obstacle = None
+        for geom_idx in range(model.ngeom):
+            if model.geom(geom_idx).name.startswith('obstacle_'):
+                is_movable = any(joint_type in model.geom(geom_idx).name for joint_type in ['movable'])
+                obstacle = {
+                    'movable': is_movable,
+                    'condim': 4
+                }
+                obstacle = {
+                    'name': model.geom(geom_idx).name,
+                    'type':['plane', 'hfield', 'sphere', 'capsule', 'ellipsoid', 'cylinder', 'box'][int(model.geom(geom_idx).type)],
+                    'pos': model.geom(geom_idx).pos.tolist(),
+                    'rotation': R.from_quat(model.geom(geom_idx).quat.tolist()).as_euler('xyz', degrees=True)[2],
+                    'size': model.geom(geom_idx).size.tolist(),
+                    'rgba': model.geom(geom_idx).rgba.tolist(),
+                    'condim': model.geom(geom_idx).condim.item(),
+                    'movable': is_movable,
+                    'friction': generator_config['obstacles']['friction'],
+                    'condim': 4
+                }
+
+                if is_movable:
+                    obstacle['mass'] = generator_config['obstacles']['movable_mass']
+                    if random_start:
+                        min_distance = max(obstacle['size'][0], obstacle['size'][1]) + 0.1
+                        for _ in range(100):
+                            obstacle['pos'][:2] = [np.random.uniform(-env_size[0]/2 + min_distance, env_size[0]/2 - min_distance),
+                                            np.random.uniform(-env_size[1]/2 + min_distance, env_size[1]/2 - min_distance)]
+                            # check for collision with robot
+                            if robot is not None:
+                                if check_collision(obstacle, robot):
+                                    continue
+                            break
+                        
+                main_obstacle = obstacle.copy()
         # print(env_size)
         # print(env_size, min(x_limits), max(x_limits), min(y_limits), max(y_limits))
         # exit()
+        if main_obstacle is not None:
+            preprocessed_obstacles.append(main_obstacle)
         robot_size = generator_config['robot']['size']
         
         # Calculate the minimum distance from the wall
@@ -360,5 +396,4 @@ if __name__ == "__main__":
         ]
         config = generate_env_config(env_size, robot_pos, generator_config, walls, robot, preprocessed_obstacles)
         save_config(config, os.path.join(config_dir, f'env_config_{i+1}.yaml'))
-    
     print(f"{num_configs} environment configurations generated and saved in the '{config_dir}' directory")

@@ -4,6 +4,7 @@
 #include <memory>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <random>
 
 namespace prx
 {
@@ -105,6 +106,11 @@ private:
 class PushEnvironment
 {
 public:
+  enum class GoalSamplingMode {
+    DISCRETIZED,
+    RANDOM
+  };
+
   PushEnvironment(const std::string& xml_path, bool visualize)
     : sim(std::make_shared<mujoco_simulator_t>(xml_path, visualize))
   {
@@ -154,6 +160,8 @@ public:
     );
 
     init_robot_pos = &sim->d->geom_xpos[3 * robot_id];
+
+    // std::cout << "init_robot_pos: " << init_robot_pos[0] << ", " << init_robot_pos[1] << std::endl;
 
     // Create reusable state points
     current_state = ss->make_point();
@@ -205,26 +213,41 @@ public:
     sim->set_goal(goal_state_vec);
     sim->set_goal_radius(0.3);
     warm_up();
+
+
+    ss->copy_to(current_state);
+
   }
 
   void step(const space_point_t& control, double duration)
   {
+
     for (int i = 0; i < sim->m->nu; i++)
     {
       sim->d->qvel[i] = 0.0;
     }
+
+
     sim->step_simulation();
 
     trajectory_t traj(ss);
     plan_t plan(cs);
+    traj.clear();
+    plan.clear();
 
     plan.append_onto_back(duration);
     plan.back().control = control;
 
-    ss->copy_to(current_state);
+
+    ss->copy_to(current_state); 
+
 
     sg->propagate(current_state, plan, traj);
+    
+    
     ss->copy_from(traj.back());
+
+    
   }
 
   space_point_t get_cylinder_state()
@@ -258,37 +281,78 @@ public:
     return cs->make_point();
   }
 
-  // Returns nullptr when all goals have been exhausted
-  space_point_t next_goal()
-  {
-    if (!location_iterator->has_next())
-    {
-      return nullptr;
+  void set_discretization(double step) {
+    location_iterator = std::make_shared<CylinderLocationIterator>(ss, ss->get_lower_bounds()[0], ss->get_upper_bounds()[0], ss->get_lower_bounds()[1], ss->get_upper_bounds()[1], cylinder_radius, step);
+  }
+
+  // Set the goal sampling mode
+  void set_goal_sampling_mode(GoalSamplingMode mode) {
+    sampling_mode = mode;
+    reset_goals();
+  }
+
+  // Set number of random goals to generate
+  void set_random_goals(int num_goals) {
+    random_goals.clear();
+    random_goals.reserve(num_goals);
+    
+    // Get bounds accounting for cylinder radius
+    double x_min = ss->get_lower_bounds()[0] + 2 * cylinder_radius;
+    double x_max = ss->get_upper_bounds()[0] - 2 * cylinder_radius;
+    double y_min = ss->get_lower_bounds()[1] + 2 * cylinder_radius;
+    double y_max = ss->get_upper_bounds()[1] - 2 * cylinder_radius;
+
+    // Create random distribution
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> x_dist(x_min, x_max);
+    std::uniform_real_distribution<> y_dist(y_min, y_max);
+
+    // Generate random goals
+    for (int i = 0; i < num_goals; i++) {
+      space_point_t goal = ss->make_point();
+      goal->at(0) = x_dist(gen);
+      goal->at(1) = y_dist(gen);
+      random_goals.push_back(goal);
     }
-
-    auto goal_state = location_iterator->next();
-
-    reset(goal_state);
-    return goal_state;
+    current_goal_index = 0;
   }
 
-  // Reset iterator to start over with goals
-  void reset_goals()
-  {
-    location_iterator->reset();
+  // Modified next_goal to handle both modes
+  space_point_t next_goal() {
+    if (sampling_mode == GoalSamplingMode::DISCRETIZED) {
+      if (!location_iterator->has_next()) {
+        return nullptr;
+      }
+      auto goal_state = location_iterator->next();
+      reset(goal_state);
+      return goal_state;
+    } else {  // RANDOM mode
+      if (random_goals.empty() || current_goal_index >= random_goals.size()) {
+        return nullptr;
+      }
+      auto goal_state = random_goals[current_goal_index++];
+      reset(goal_state);
+      return goal_state;
+    }
   }
 
-  // Set discretization step size (will reset iterator)
-  void set_discretization(double step)
-  {
-    location_iterator = std::make_shared<CylinderLocationIterator>(ss, ss->get_lower_bounds()[0],
-                                                                   ss->get_upper_bounds()[0], ss->get_lower_bounds()[1],
-                                                                   ss->get_upper_bounds()[1], cylinder_radius, step);
+  // Modified reset_goals to handle both modes
+  void reset_goals() {
+    if (sampling_mode == GoalSamplingMode::DISCRETIZED) {
+      location_iterator->reset();
+    } else {  // RANDOM mode
+      current_goal_index = 0;
+    }
   }
 
-  int get_total_goals() const
-  {
-    return location_iterator->get_total_goals();
+  // Modified get_total_goals to handle both modes
+  int get_total_goals() const {
+    if (sampling_mode == GoalSamplingMode::DISCRETIZED) {
+      return location_iterator->get_total_goals();
+    } else {  // RANDOM mode
+      return random_goals.size();
+    }
   }
 
   space_point_t get_current_state()
@@ -324,6 +388,14 @@ public:
     return geom_info;
   }
 
+  space_point_t get_goal_at_index(int index) {
+    if (index >= get_total_goals()) {
+        return nullptr;
+    }
+    // Return the goal at the specified index
+    return location_iterator->next();
+  }
+
 private:
   void warm_up()
   {
@@ -336,6 +408,10 @@ private:
   void setup_robot_position(const space_point_t& goal_state)
   {
     sim->reset_simulation();
+
+
+    warm_up();
+
     double* cylinder_pos = &sim->d->geom_xpos[3 * cylinder_id];
     // double* init_robot_pos = &sim->d->geom_xpos[3*robot_id];
 
@@ -349,10 +425,14 @@ private:
     double robot_x = cylinder_pos[0] - total_radius * cos(angle);
     double robot_y = cylinder_pos[1] - total_radius * sin(angle);
 
+  
     sim->d->qpos[0] = robot_x - init_robot_pos[0];
     sim->d->qpos[1] = robot_y - init_robot_pos[1];
     sim->d->qvel[0] = 0.0;
     sim->d->qvel[1] = 0.0;
+
+    warm_up();
+
   }
 
   // system properties
@@ -375,5 +455,9 @@ private:
   space_point_t cylinder_state;  // this is the position of the cylinder relative to the origin of the environment
 
   std::shared_ptr<CylinderLocationIterator> location_iterator;  // goal iterator
+
+  GoalSamplingMode sampling_mode = GoalSamplingMode::DISCRETIZED;
+  std::vector<space_point_t> random_goals;
+  size_t current_goal_index = 0;
 };
 }  // namespace prx
