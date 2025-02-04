@@ -1,6 +1,7 @@
 from .base_problem import Problem
 import random
 import os
+import numpy as np
 
 
 class DirectObjects(Problem):
@@ -9,19 +10,29 @@ class DirectObjects(Problem):
         self.name = name
         self.data_path = config['data_path']
         self.test_data_path = config['test_data_path']
-        self.train_success_folder = config['train_success_folder']
-        self.train_fail_folder = config['train_fail_folder']
-        self.eval_success_folder = config['eval_success_folder']
-        self.eval_fail_folder = config['eval_fail_folder']
+        # self.train_success_folder = config['train_success_folder']
+        # self.train_fail_folder = config['train_fail_folder']
+        # self.eval_success_folder = config['eval_success_folder']
+        # self.eval_fail_folder = config['eval_fail_folder']
 
         self.scene_goals = config['scene_goals']
-
         self.balance_data = config['balance_data']
+        
+        train_success_folders = []
+        train_fail_folders = []
 
-        with open(self.train_success_folder, 'r') as f:
-            train_success_folders = [os.path.join(self.data_path, line.strip()) for line in f.readlines()]
-        with open(self.train_fail_folder, 'r') as f:
-            train_fail_folders = [os.path.join(self.data_path, line.strip()) for line in f.readlines()]
+        # problem specific
+        env_config_folders = os.listdir(self.data_path)
+        test_env_configs = os.listdir(self.test_data_path)
+        
+        random.shuffle(env_config_folders)
+        train_env_configs = env_config_folders[:300]
+        eval_env_configs = env_config_folders[350:]
+        
+        for env_config_folder in train_env_configs:
+            train_path = os.path.join(self.data_path, env_config_folder)
+            train_success_folders.extend([os.path.join(train_path, "success", folder) for folder in os.listdir(os.path.join(train_path, "success"))])
+            train_fail_folders.extend([os.path.join(train_path, "failure", folder) for folder in os.listdir(os.path.join(train_path, "failure"))])
 
         if self.balance_data:
             min_len_data = min(len(train_success_folders), len(train_fail_folders))
@@ -31,10 +42,12 @@ class DirectObjects(Problem):
         self.balance_ratio = len(train_success_folders) / len(train_fail_folders)
         self.training_data = train_success_folders + train_fail_folders
         
-        with open(self.eval_success_folder, 'r') as f:
-            eval_success_folders = [os.path.join(self.data_path, line.strip()) for line in f.readlines()]
-        with open(self.eval_fail_folder, 'r') as f:
-            eval_fail_folders = [os.path.join(self.data_path, line.strip()) for line in f.readlines()]
+        eval_success_folders = []
+        eval_fail_folders = []
+        for env_config_folder in eval_env_configs:
+            eval_path = os.path.join(self.data_path, env_config_folder)
+            eval_success_folders.extend([os.path.join(eval_path, "success", folder) for folder in os.listdir(os.path.join(eval_path, "success"))])
+            eval_fail_folders.extend([os.path.join(eval_path, "failure", folder) for folder in os.listdir(os.path.join(eval_path, "failure"))])
 
         if self.balance_data:
             min_len_data = min(len(eval_success_folders), len(eval_fail_folders))
@@ -43,13 +56,12 @@ class DirectObjects(Problem):
        
         self.evaluation_data = eval_success_folders + eval_fail_folders
 
-        test_data = sorted(os.listdir(self.test_data_path), key=lambda x: int(x))
-        self.test_data = []
-        for k in range(len(test_data)//self.scene_goals):
-            folder_data = []
-            for i in range(self.scene_goals):
-                folder_data.append(os.path.join(self.test_data_path, test_data[k*self.scene_goals + i]))
-            self.test_data.append(folder_data)
+        test_data = []
+        for env_config_folder in test_env_configs:
+            test_path = os.path.join(self.test_data_path, env_config_folder)
+            test_data.extend([os.path.join(test_path, "success", folder) for folder in os.listdir(os.path.join(test_path, "success"))])
+            test_data.extend([os.path.join(test_path, "failure", folder) for folder in os.listdir(os.path.join(test_path, "failure"))])
+        self.test_data = test_data
 
     def get_training_data(self):
         return self.training_data

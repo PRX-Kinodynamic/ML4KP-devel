@@ -13,7 +13,7 @@ class GNNClassifier(Method):
         self.name = name
         self.node_features = int(config['node_features'])
         self.edge_features = int(config['edge_features'])
-        self.hidden_dims = int(config['hidden_dims'])
+        # self.hidden_dims = int(config['hidden_dims'])
         self.output_dims = int(config['output_dims'])
         self.batch_size = int(config['batch_size'])
         self.device = config['device']
@@ -27,7 +27,7 @@ class GNNClassifier(Method):
         self.min_delta = float(config.get('min_delta', 1e-4))  # Minimum change to qualify as an improvement
         
         # Initialize model
-        self.model = GNNClassifierModel(self.node_features, self.edge_features, self.hidden_dims)
+        self.model = GNNClassifierModel(self.node_features, self.edge_features, config)
         self.model.to(self.device)
 
         # Initialize optimizer
@@ -151,7 +151,7 @@ class GNNClassifier(Method):
                 output = self.model(data)
                 output = torch.sigmoid(output)
                 pred = (output > self.classification_threshold).float()
-                return output.item(), pred.item()
+                return output.item(), pred.item(), data.y.item()
 
     def predict_list(self, data_list):
         predictions = []
@@ -321,7 +321,7 @@ class MLPClassifier(Method):
                 output = self.model(features)
                 output = torch.sigmoid(output)
                 pred = (output > self.classification_threshold).float()
-                return output.item(), pred.item()
+                return output.item(), pred.item(), target.item()
 
     def predict_list(self, data_list):
         predictions = []

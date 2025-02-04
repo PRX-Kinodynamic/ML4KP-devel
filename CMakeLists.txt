@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 cmake_policy(SET CMP0079 NEW)
 
-set(BUILD_FOR_PYTHON ON CACHE BOOL "Set ON/TRUE for building Python Bindings")
+set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
 set(BUILD_FOR_TORCH  OFF CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")

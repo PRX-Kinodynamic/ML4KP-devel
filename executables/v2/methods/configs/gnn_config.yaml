@@ -1,6 +1,9 @@
 node_features: 10
 edge_features: 2
-hidden_dims: 64
+node_hidden_dims: [128, 64, 32]
+edge_hidden_dims: [32, 16]
+gcn_hidden_dims: [128, 64, 32]
+graph_predictor_hidden_dims: [32, 16]
 output_dims: 1
 batch_size: 32
 epochs: 50
@@ -10,6 +13,6 @@ patience: 10
 min_delta: 1e-4
 scheduler_step_size: 10
 scheduler_gamma: 0.5
-classification_threshold: 0.8 # TODO: This should not be here
+classification_threshold: 0.5 # TODO: This should not be here
 save_dir: saved_models
-model_name: direct_objects_gnn_classifier_edge
+model_name: direct_objects_gnn_classifier_gat

@@ -5,6 +5,7 @@ import torch
 import json
 import numpy as np
 from utils import get_rectangle_corners
+from scipy.spatial.transform import Rotation as R
 
 DATA_FOLDER = "/media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_data2"
 MODEL_PROPS = "resources/temp"
@@ -25,38 +26,39 @@ class GNNClassifierDataset(Dataset):
 
         folder = self.data[idx]
         metadata = {}
-        with open(os.path.join(folder, "metadata.txt"), 'r') as f:
-            for line in f.readlines():
-                key, value = line.strip().split(":")
-                metadata[key.strip()] = value.strip()
+        with open(os.path.join(folder, "metadata.json"), 'r') as f:
+            metadata = json.load(f)
+
+        env_props = metadata["environment"]
         xml_path = Path(metadata["xml_path"])
-        goal = [float(x) for x in metadata["goal_state"].strip().split()[:2]]
+        goal = metadata["goal_state"][:2]
 
-        trajectory_path = os.path.join(folder, "trajectory.txt")
-        with open(trajectory_path, "r") as f:
-            _ = f.readline()
-            robot_pos = [float(x) for x in f.readline().split(' ')[:2]]
-        # print(robot_pos)
+        # goal = [float(x) for x in metadata["goal_state"].strip().split()[:2]]
+        # trajectory_path = os.path.join(folder, "trajectory.txt")
+        # with open(trajectory_path, "r") as f:
+        #     _ = f.readline()
+        #     robot_pos = [float(x) for x in f.readline().split(' ')[:2]]
+        # # print(robot_pos)
+        # label = int(metadata['success'])
 
-        label = int(metadata['success'])
-        
-        with open(os.path.join(MODEL_PROPS, f"{xml_path.stem}.json"), 'r') as f:
-            model_props = json.load(f)
-
+        label = float(metadata['success'])
 
         target_object = 0
-        for key, value in model_props.items():
-            if "obstacle" in key:
-                pos = value['pos'][:2]
-                rot = [value['rot']]
-                size = (np.array(value['size'][:2]) * 2).tolist()
+        for model_props in env_props:
+            name = model_props["name"]
+            pos = model_props["pos"][:2]
+            rot = R.from_quat(model_props["quat"], scalar_first=True).as_euler('xyz')[2]
+            size = model_props["size"][:2]
+            if "obstacle" in name:
+                
+                new_size = (np.array(size[:2]) * 2).tolist()
                 # get four corners of the rectangle given the center, size, and rotation
-                corners = get_rectangle_corners(pos, size, rot)
+                corners = get_rectangle_corners(pos, new_size, rot)
                 node_features.append(torch.tensor([*pos, *corners.flatten()]))
-                if "movable" in key:
+                if "movable" in name:
                     target_object = len(node_features) - 1
                     goal_size = (size[0] * 2) + goal_threshold
-                    # print(pos, rot, corners.flatten(), size)
+                        # print(pos, rot, corners.flatten(), size)
 
             # adding robot node to the node features
             # if "robot" in key:
@@ -86,7 +88,7 @@ class GNNClassifierDataset(Dataset):
         # node_features = node_features
         edge_index = torch.tensor(edge_index).long().transpose(0, 1) # transpose to make it COO format.
         edge_attr = torch.stack(edge_attr).float()
-        label = torch.tensor([label])
+        label = torch.tensor([label]).float()
 
         return Data(x=node_features, edge_index=edge_index, edge_attr=edge_attr, y=label)
 
@@ -104,32 +106,37 @@ class MLPClassifierDataset(Dataset):
         metadata = {}
         goal_threshold = 0.1
         goal_size = None
-        with open(os.path.join(folder, "metadata.txt"), 'r') as f:
-            for line in f.readlines():
-                key, value = line.strip().split(":")
-                metadata[key.strip()] = value.strip()
+
+        with open(os.path.join(folder, "metadata.json"), 'r') as f:
+            metadata = json.load(f)
+
+        env_props = metadata["environment"]
         xml_path = Path(metadata["xml_path"])
-        goal = [float(x) for x in metadata["goal_state"].strip().split()[:2]]
-        label = int(metadata['success'])
+        goal = metadata["goal_state"][:2]
 
-        trajectory_path = os.path.join(folder, "trajectory.txt")
-        with open(trajectory_path, "r") as f:
-            trajectory = f.readlines()
-        robot_pos = [float(x) for x in trajectory[1].split(' ')[:2]]
+        label = float(metadata['success'])
+
+        # trajectory_path = os.path.join(folder, "trajectory.txt")
+        # with open(trajectory_path, "r") as f:
+        #     trajectory = f.readlines()
+        # robot_pos = [float(x) for x in trajectory[1].split(' ')[:2]]
         
-        with open(os.path.join(MODEL_PROPS, f"{xml_path.stem}.json"), 'r') as f:
-            model_props = json.load(f)
-
+        # with open(os.path.join(MODEL_PROPS, f"{xml_path.stem}.json"), 'r') as f:
+        #     model_props = json.load(f)
+        
 
         target_object = 0
-        for key, value in model_props.items():
-            if "obstacle" in key:
-                pos = value['pos'][:2]
-                rot = [value['rot']]
-                size = (np.array(value['size'][:2]) * 2).tolist()
-                corners = get_rectangle_corners(pos, size, rot)
+        for model_props in env_props:
+            name = model_props["name"]
+            pos = model_props["pos"][:2]
+            rot = R.from_quat(model_props["quat"], scalar_first=True).as_euler('xyz')[2]
+            size = model_props["size"][:2]
+            if "obstacle" in name:
+                new_size = (np.array(size[:2]) * 2).tolist()
+                # get four corners of the rectangle given the center, size, and rotation
+                corners = get_rectangle_corners(pos, new_size, rot)
                 features.append(torch.tensor([*pos, *corners.flatten()]))
-                if "movable" in key:
+                if "movable" in name:
                     goal_size = (size[0] * 2) + goal_threshold
             # if "robot" in key:
             #     size = value['size'][:2]

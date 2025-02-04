@@ -1,5 +1,5 @@
 input_dims: 30
-hidden_dims: [64, 32]
+hidden_dims: [256, 256, 128, 64, 32]
 output_dims: 1
 batch_size: 32
 epochs: 50
@@ -9,6 +9,6 @@ patience: 10
 min_delta: 1e-4
 scheduler_step_size: 10
 scheduler_gamma: 0.5
-classification_threshold: 0.8
+classification_threshold: 0.5
 save_dir: saved_models
 model_name: direct_objects_mlp_classifier

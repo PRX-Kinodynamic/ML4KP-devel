@@ -10,6 +10,12 @@ from methods.base_method import Method
 from utils import convert_yaml_to_dict
 import os
 import argparse
+import json
+import random
+import numpy as np
+
+random.seed(42)
+np.random.seed(42)
 
 @dataclass
 class Metrics:
@@ -47,18 +53,15 @@ def plot_predictions(predictions, file_name, fpr=None, classification_threshold=
     patch_output, patch_pred, patch_label = [], [], []
     for pred in predictions:
         folder = pred[0]
-        output, pred = pred[1]
+        output, pred, success = pred[1]
         metadata = {}
-        with open(folder + '/metadata.txt', 'r') as f:
-            for line in f.readlines():
-                key, value = line.strip().split(":")
-                metadata[key.strip()] = value.strip()
-        xml_path = Path(metadata["xml_path"])
-        goal = [float(x) for x in metadata["goal_state"].strip().split()[:2]]
+        with open(os.path.join(folder, "metadata.json"), "r") as f:
+            metadata = json.load(f)
+        goal = metadata["goal_state"][:2]
         patch_output.append(Circle(goal, 0.1, color='black', alpha=output))
-        patch_pred.append(Circle(goal, 0.1, color='black', alpha=pred))
-        patch_label.append(Circle(goal, 0.1, color='black', alpha= float(metadata['success'])))
-        success_pred += pred == float(metadata['success'])
+        patch_pred.append(Circle(goal, 0.1, color='green' if pred == 1.0 else 'red'))
+        patch_label.append(Circle(goal, 0.1, color= 'green' if float(success) == 1.0 else 'red'))
+        success_pred += pred == float(success)
     success_rate = success_pred / len(predictions)
     for patch in patch_label:
         ax1.add_patch(patch)
@@ -95,7 +98,19 @@ def run(problem: Problem, method: Method, load_model=False, verbose=False):
         method.load_model()
 
     test_data = problem.get_test_data()
-    pbar = tqdm(test_data, total=len(test_data))
+    
+    print("Processing test data...")
+    temp_dict = {}
+    for data in test_data:
+        metadata = {}
+        with open(os.path.join(data, "metadata.json"), "r") as f:
+            metadata = json.load(f)
+        if metadata["xml_path"] not in temp_dict:
+            temp_dict[metadata["xml_path"]] = []
+        temp_dict[metadata["xml_path"]].append(data)
+
+
+    pbar = tqdm(temp_dict.items(), total=len(temp_dict))
     
     true_positive_count = 0
     false_positive_count = 0
@@ -104,21 +119,15 @@ def run(problem: Problem, method: Method, load_model=False, verbose=False):
 
     local_fpr_list = []
 
-    for data in pbar:
+    for xml_path, data in pbar:
         # this will change 
         local_fp_count = 0
         local_tn_count = 0
-
+        
         predictions = method.predict_list(data) 
         for prediction in predictions:
-            output, pred = prediction[1]
-            metadata = {}
-            with open(prediction[0] + '/metadata.txt', 'r') as f:
-                for line in f.readlines():
-                    key, value = line.strip().split(":")
-                    metadata[key.strip()] = value.strip()
-
-            success = int(metadata['success'])
+            output, pred, success = prediction[1]
+           
             # calculate metrics
             true_positive = pred == 1 and success == 1
             false_positive = pred == 1 and success == 0
@@ -136,7 +145,7 @@ def run(problem: Problem, method: Method, load_model=False, verbose=False):
         local_fpr = 0
         if local_fp_count + local_tn_count > 0:
             local_fpr = local_fp_count / (local_fp_count + local_tn_count)
-        local_fpr_list.append((metadata['xml_path'], local_fpr, predictions))
+        local_fpr_list.append((xml_path, local_fpr, predictions))
         pbar.update(1)
     pbar.close()
 
