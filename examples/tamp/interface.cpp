@@ -27,7 +27,7 @@ int count_folders(const std::string& path) {
                         [](const directory_entry& entry) { return is_directory(entry); });
 }
 
-void save_data(std::string base_folder, trajectory_t* traj, trajectory_t* control_traj, std::string xml_path, 
+void save_data(std::string base_folder, trajectory_t* traj, trajectory_t* control_traj, trajectory_t* target_obj_traj, std::string xml_path, 
                space_point_t goal_state, bool success, int num_steps, const PushEnvironment& env)
 {
     // Create success/failure subfolder
@@ -42,7 +42,7 @@ void save_data(std::string base_folder, trajectory_t* traj, trajectory_t* contro
     // Save trajectories
     traj->to_file(save_folder + "/trajectory.txt");
     control_traj->to_file(save_folder + "/control_trajectory.txt");
-    
+    target_obj_traj->to_file(save_folder + "/target_obj_trajectory.txt");
     // Create JSON metadata
     json metadata;
     metadata["xml_path"] = xml_path;
@@ -62,10 +62,16 @@ void save_data(std::string base_folder, trajectory_t* traj, trajectory_t* contro
     file.close();
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-    // Load parameters
-    param_loader params("examples/tasks/push_plan.yaml");
+    // Check if parameter file path is provided
+    if (argc != 2) {
+        std::cout << "Usage: " << argv[0] << " <parameter_file_path>" << std::endl;
+        return 1;
+    }
+
+    // Load parameters from command line argument
+    param_loader params(argv[1]); 
     init_random(params["random_seed"].as<int>());
     
     std::string data_path = params["data_path"].as<std::string>();
@@ -82,25 +88,31 @@ int main()
     // Initialize environment
     PushEnvironment env(params["xml_path"].as<std::string>(), 
                        params["visualize"].as<bool>());
-
-    // get obstacle sizes and locations to save in the metadata file from the env.
+    
+    if(params["goal_sampling_mode"].as<std::string>() == "random") {
+        env.set_goal_sampling_mode(PushEnvironment::GoalSamplingMode::RANDOM);
+        env.set_random_goals(params["num_random_goals"].as<int>());
+    }
+    else if (params["goal_sampling_mode"].as<std::string>() == "discretized") {
+        env.set_goal_sampling_mode(PushEnvironment::GoalSamplingMode::DISCRETIZED);
+        env.set_discretization(discretization);
+    }
+    else {
+        std::cout << "Invalid goal sampling mode" << std::endl;
+        return 1;
+    }
 
     // Initialize controller
     auto control_point = env.get_control_space_point(); // Get control point
     SimplePushController controller(control_point);
-
-    // Set different discretization step, check if params["discretization"] exists
-    if(params.exists("discretization")) {
-        env.set_discretization(discretization);
-    }
     
     int total_goals = env.get_total_goals();
     progress_bar_t progress(total_goals, "Processing goals");
-    
 
     // Initialize for forward propagation and data collection
     space_point_t current_state = env.get_cylinder_state();
     trajectory_t* traj = new trajectory_t(env.get_state_space());
+    trajectory_t* target_obj_traj = new trajectory_t(env.get_state_space());
     trajectory_t* control_traj = new trajectory_t(env.get_control_space());
     
     // Create success/failure folders at startup
@@ -110,18 +122,21 @@ int main()
     // Iterate through all possible goals
     while (auto goal_state = env.next_goal()) {
         // Try to reach this goal
+
+        // std::cout << "----------------------------------------" << std::endl;
         traj->clear();
         control_traj->clear();
+        target_obj_traj->clear();
         bool success = false;
         num_steps = 0;
         progress.update(++goal_count);
 
         env.add_pair(); // add collision pairs between the target movable obstacle and static obstacles for faster data collection.
         
-        for(int i = 0; i < 250; i++) {
+        for(int i = 0; i < 500; i++) {
             traj->copy_onto_back(env.get_current_state());
             current_state = env.get_cylinder_state();
-
+            target_obj_traj->copy_onto_back(current_state);
             // assigns the control to control_point
             controller.compute_control(current_state, goal_state);
             control_traj->copy_onto_back(control_point);
@@ -141,9 +156,10 @@ int main()
                 break;
             }
         }
-
+        
+        target_obj_traj->copy_onto_back(env.get_current_state());
         traj->copy_onto_back(env.get_current_state());
-        save_data(data_path, traj, control_traj, params["xml_path"].as<std::string>(), 
+        save_data(data_path, traj, control_traj,  target_obj_traj, params["xml_path"].as<std::string>(), 
                   goal_state, success, num_steps, env);
     }
 

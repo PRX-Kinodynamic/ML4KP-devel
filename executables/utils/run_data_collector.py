@@ -9,7 +9,7 @@ push_plan_yaml = "resources/input_files/examples/tasks/push_plan.yaml"
 with open(push_plan_yaml, 'r') as file:
     params = yaml.safe_load(file)
 
-xml_dir = "resources/models/cylinder_env/level_2"
+xml_dir = "resources/models/cylinder_env/random_start/level_1"
 xml_files = [f for f in os.listdir(xml_dir) if f.endswith('.xml')]
 
 log_file = 'data_collection_log.txt'
@@ -19,12 +19,11 @@ with open('xml_paths.pkl', 'rb') as f:
     xml_paths = pickle.load(f)
 
 try:
-    for xml_file in tqdm(xml_files[252:260]):
-        params['xml_path'] = f"cylinder_env/level_2/{xml_file}"
-        if any([params['xml_path'] in path for path in xml_paths]):
-            print(f"Skipping {xml_file} because it has already been collected")
-            continue
-
+    for xml_file in tqdm(xml_files[:500]):
+        params['xml_path'] = f"cylinder_env/random_start/level_1/{xml_file}"
+        # if any([params['xml_path'] in path for path in xml_paths]):
+        #     print(f"Skipping {xml_file} because it has already been collected")
+        #     continue
         with open(push_plan_yaml, 'w') as file:
             yaml.dump(params, file)
         try:
