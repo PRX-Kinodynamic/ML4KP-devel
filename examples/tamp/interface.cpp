@@ -80,8 +80,12 @@ int main(int argc, char* argv[])
 
     int folder_count = count_folders(data_path);
     double discretization = params["discretization"].as<double>();
+    double duration = params["step_duration"].as<double>();
+    int time_limit = params["time_limit"].as<int>();
+    double control_scale = params["control_scale"].as<double>();
+
+    int control_steps = time_limit / duration;
     
-    double duration = 0.1;
     int goal_count = 0;
     int success_count = 0;
     int num_steps = 0;
@@ -105,7 +109,7 @@ int main(int argc, char* argv[])
 
     // Initialize controller
     auto control_point = env.get_control_space_point(); // Get control point
-    SimplePushController controller(control_point);
+    SimplePushController controller(control_point, control_scale);
     
     int total_goals = env.get_total_goals();
     progress_bar_t progress(total_goals, "Processing goals");
@@ -132,7 +136,7 @@ int main(int argc, char* argv[])
 
         env.add_pair(); // add collision pairs between the target movable obstacle and static obstacles for faster data collection.
         
-        for(int i = 0; i < 500; i++) {
+        for(int i = 0; i < control_steps; i++) {
             traj->copy_onto_back(env.get_current_state());
             current_state = env.get_current_state();
             // assigns the control to control_point
