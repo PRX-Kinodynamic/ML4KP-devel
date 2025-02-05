@@ -122,15 +122,9 @@ public:
     ss = sg->get_state_space();
     cs = sg->get_control_space();
 
+    // Update to only track robot (which is now the cylinder)
     robot_id = mj_name2id(sim->m, mjOBJ_GEOM, "robot");
-    cylinder_id = mj_name2id(sim->m, mjOBJ_GEOM, "obstacle_movable_1");
-
-    
-
-    // Store cylinder radius from the model
-    cylinder_radius = sim->m->geom_size[cylinder_id * 3];  // First element of size array is radius for cylinder
-    robot_radius = sim->m->geom_size[robot_id * 3];        // For sphere, size is radius
-
+    robot_radius = sim->m->geom_size[robot_id * 3];  // First element of size array is radius for cylinder
 
     // look for a body named walls in the model and find the bounds of the environment by parsing each geom element and
     // finding the min and max x and y values
@@ -155,7 +149,7 @@ public:
 
     location_iterator = std::make_shared<CylinderLocationIterator>(ss, ss->get_lower_bounds()[0],
                                                                    ss->get_upper_bounds()[0], ss->get_lower_bounds()[1],
-                                                                   ss->get_upper_bounds()[1], cylinder_radius,
+                                                                   ss->get_upper_bounds()[1], robot_radius,
                                                                    0.1  // default discretization step
     );
 
@@ -165,18 +159,14 @@ public:
 
     // Create reusable state points
     current_state = ss->make_point();
-    cylinder_state = ss->make_point();
-
-    // return_state = ss->make_point();
   }
-
 
   void add_pair()
   {
     for (int i = 0; i < sim->m->ngeom; i++)
     {
       std::string geom_name = std::string(sim->m->names + sim->m->name_geomadr[i]);
-      if (geom_name == "obstacle_movable_1" || geom_name == "robot")
+      if (geom_name == "robot")
       {
         continue;
       }
@@ -185,7 +175,7 @@ public:
         // check if name contains "wall" or "static"
         if (geom_name.find("static") != std::string::npos)
         {
-          sim->add_pair(std::make_pair(geom_name, "obstacle_movable_1"));
+          sim->add_pair(std::make_pair(geom_name, "robot"));
         }
       }
     }
@@ -206,29 +196,25 @@ public:
 
   void reset(const space_point_t& goal_state)
   {
-    setup_robot_position(goal_state);
+    sim->reset_simulation();
+    warm_up();
 
     std::vector<double> goal_state_vec;
     ss->copy_vector_from_point(goal_state_vec, goal_state);
     sim->set_goal(goal_state_vec);
     sim->set_goal_radius(0.3);
-    warm_up();
-
-
+    
     ss->copy_to(current_state);
-
   }
 
   void step(const space_point_t& control, double duration)
   {
+    // for (int i = 0; i < sim->m->nu; i++)
+    // {
+    //   sim->d->qvel[i] = 0.0;
+    // }
 
-    for (int i = 0; i < sim->m->nu; i++)
-    {
-      sim->d->qvel[i] = 0.0;
-    }
-
-
-    sim->step_simulation();
+    // sim->step_simulation();
 
     trajectory_t traj(ss);
     plan_t plan(cs);
@@ -238,32 +224,18 @@ public:
     plan.append_onto_back(duration);
     plan.back().control = control;
 
-
     ss->copy_to(current_state); 
-
 
     sg->propagate(current_state, plan, traj);
     
-    
     ss->copy_from(traj.back());
-
-    
-  }
-
-  space_point_t get_cylinder_state()
-  {
-    // return the geom xpos of the cylinder
-    double* cylinder_pos = &sim->d->geom_xpos[3 * cylinder_id];
-    cylinder_state->at(0) = cylinder_pos[0];
-    cylinder_state->at(1) = cylinder_pos[1];
-    return cylinder_state;
   }
 
   bool is_in_goal_region(const space_point_t& goal_state)
   {
-    double* cylinder_pos = &sim->d->geom_xpos[3 * cylinder_id];
-    return (cylinder_pos[0] - goal_state->at(0)) * (cylinder_pos[0] - goal_state->at(0)) +
-               (cylinder_pos[1] - goal_state->at(1)) * (cylinder_pos[1] - goal_state->at(1)) <
+    double* robot_pos = &sim->d->geom_xpos[3 * robot_id];
+    return (robot_pos[0] - goal_state->at(0)) * (robot_pos[0] - goal_state->at(0)) +
+           (robot_pos[1] - goal_state->at(1)) * (robot_pos[1] - goal_state->at(1)) <
            0.01;
   }
 
@@ -282,7 +254,7 @@ public:
   }
 
   void set_discretization(double step) {
-    location_iterator = std::make_shared<CylinderLocationIterator>(ss, ss->get_lower_bounds()[0], ss->get_upper_bounds()[0], ss->get_lower_bounds()[1], ss->get_upper_bounds()[1], cylinder_radius, step);
+    location_iterator = std::make_shared<CylinderLocationIterator>(ss, ss->get_lower_bounds()[0], ss->get_upper_bounds()[0], ss->get_lower_bounds()[1], ss->get_upper_bounds()[1], robot_radius, step);
   }
 
   // Set the goal sampling mode
@@ -297,10 +269,10 @@ public:
     random_goals.reserve(num_goals);
     
     // Get bounds accounting for cylinder radius
-    double x_min = ss->get_lower_bounds()[0] + 2 * cylinder_radius;
-    double x_max = ss->get_upper_bounds()[0] - 2 * cylinder_radius;
-    double y_min = ss->get_lower_bounds()[1] + 2 * cylinder_radius;
-    double y_max = ss->get_upper_bounds()[1] - 2 * cylinder_radius;
+    double x_min = ss->get_lower_bounds()[0] + 2 * robot_radius;
+    double x_max = ss->get_upper_bounds()[0] - 2 * robot_radius;
+    double y_min = ss->get_lower_bounds()[1] + 2 * robot_radius;
+    double y_max = ss->get_upper_bounds()[1] - 2 * robot_radius;
 
     // Create random distribution
     std::random_device rd;
@@ -405,36 +377,6 @@ private:
     }
   }
 
-  void setup_robot_position(const space_point_t& goal_state)
-  {
-    sim->reset_simulation();
-
-
-    warm_up();
-
-    double* cylinder_pos = &sim->d->geom_xpos[3 * cylinder_id];
-    // double* init_robot_pos = &sim->d->geom_xpos[3*robot_id];
-
-    double dx = goal_state->at(0) - cylinder_pos[0];
-    double dy = goal_state->at(1) - cylinder_pos[1];
-    double angle = atan2(dy, dx);
-
-    // Now using the stored radius values
-    double total_radius = cylinder_radius + robot_radius;
-
-    double robot_x = cylinder_pos[0] - total_radius * cos(angle);
-    double robot_y = cylinder_pos[1] - total_radius * sin(angle);
-
-  
-    sim->d->qpos[0] = robot_x - init_robot_pos[0];
-    sim->d->qpos[1] = robot_y - init_robot_pos[1];
-    sim->d->qvel[0] = 0.0;
-    sim->d->qvel[1] = 0.0;
-
-    warm_up();
-
-  }
-
   // system properties
   std::shared_ptr<mujoco_simulator_t> sim;
   std::shared_ptr<system_group_t> sg;
@@ -448,11 +390,6 @@ private:
   double* init_robot_pos;  // this is the initial position of the robot relative to the origin of the environment, used
                            // to offset the robot qpos for establishing pushing point on the cylinder
   double robot_radius;
-
-  // cylinder properties
-  int cylinder_id;
-  double cylinder_radius;
-  space_point_t cylinder_state;  // this is the position of the cylinder relative to the origin of the environment
 
   std::shared_ptr<CylinderLocationIterator> location_iterator;  // goal iterator
 
