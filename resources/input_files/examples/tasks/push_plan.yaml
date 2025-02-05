@@ -1,4 +1,4 @@
-data_path: /common/users/dm1487/temp/test
+data_path: /media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_env/random_goals
 discretization: 0.2
 goal_sampling_mode: discretized
 num_random_goals: 100
