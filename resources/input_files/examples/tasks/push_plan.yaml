@@ -1,7 +1,7 @@
 data_path: /common/users/dm1487/temp/test
 discretization: 0.2
-goal_sampling_mode: discretized
+goal_sampling_mode: random
 num_random_goals: 100
 random_seed: 1
-visualize: false
-xml_path: cylinder_env/random_start/level_1/env_config_401.xml
+visualize: true
+xml_path: cylinder_envs/1_static/env_config_2.xml

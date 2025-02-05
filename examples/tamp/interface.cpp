@@ -27,8 +27,9 @@ int count_folders(const std::string& path) {
                         [](const directory_entry& entry) { return is_directory(entry); });
 }
 
-void save_data(std::string base_folder, trajectory_t* traj, trajectory_t* control_traj, trajectory_t* target_obj_traj, std::string xml_path, 
-               space_point_t goal_state, bool success, int num_steps, const PushEnvironment& env)
+void save_data(std::string base_folder, trajectory_t* traj, trajectory_t* control_traj, 
+               std::string xml_path, space_point_t goal_state, bool success, 
+               int num_steps, const PushEnvironment& env)
 {
     // Create success/failure subfolder
     std::string folder = base_folder + "/" + (success ? "success" : "failure");
@@ -42,7 +43,7 @@ void save_data(std::string base_folder, trajectory_t* traj, trajectory_t* contro
     // Save trajectories
     traj->to_file(save_folder + "/trajectory.txt");
     control_traj->to_file(save_folder + "/control_trajectory.txt");
-    target_obj_traj->to_file(save_folder + "/target_obj_trajectory.txt");
+
     // Create JSON metadata
     json metadata;
     metadata["xml_path"] = xml_path;
@@ -80,7 +81,7 @@ int main(int argc, char* argv[])
     int folder_count = count_folders(data_path);
     double discretization = params["discretization"].as<double>();
     
-    double duration = 1.0;
+    double duration = 0.1;
     int goal_count = 0;
     int success_count = 0;
     int num_steps = 0;
@@ -110,9 +111,8 @@ int main(int argc, char* argv[])
     progress_bar_t progress(total_goals, "Processing goals");
 
     // Initialize for forward propagation and data collection
-    space_point_t current_state = env.get_cylinder_state();
+    space_point_t current_state = env.get_current_state();
     trajectory_t* traj = new trajectory_t(env.get_state_space());
-    trajectory_t* target_obj_traj = new trajectory_t(env.get_state_space());
     trajectory_t* control_traj = new trajectory_t(env.get_control_space());
     
     // Create success/failure folders at startup
@@ -126,7 +126,6 @@ int main(int argc, char* argv[])
         // std::cout << "----------------------------------------" << std::endl;
         traj->clear();
         control_traj->clear();
-        target_obj_traj->clear();
         bool success = false;
         num_steps = 0;
         progress.update(++goal_count);
@@ -135,8 +134,7 @@ int main(int argc, char* argv[])
         
         for(int i = 0; i < 500; i++) {
             traj->copy_onto_back(env.get_current_state());
-            current_state = env.get_cylinder_state();
-            target_obj_traj->copy_onto_back(current_state);
+            current_state = env.get_current_state();
             // assigns the control to control_point
             controller.compute_control(current_state, goal_state);
             control_traj->copy_onto_back(control_point);
@@ -157,9 +155,8 @@ int main(int argc, char* argv[])
             }
         }
         
-        target_obj_traj->copy_onto_back(env.get_current_state());
         traj->copy_onto_back(env.get_current_state());
-        save_data(data_path, traj, control_traj,  target_obj_traj, params["xml_path"].as<std::string>(), 
+        save_data(data_path, traj, control_traj, params["xml_path"].as<std::string>(), 
                   goal_state, success, num_steps, env);
     }
 

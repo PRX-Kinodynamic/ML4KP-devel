@@ -137,17 +137,17 @@ def create_robot(worldbody: Element, robot_config: Dict[str, Any]) -> None:
     # Define geometry for the ball robot
     geom = SubElement(robot, 'geom')
     geom.set('name', robot_name)
-    geom.set('type', 'sphere')
+    geom.set('type', robot_config['type'])
     geom.set('pos', ' '.join(map(str, robot_config['pos'])))
-    geom.set('size', '0.05')
-    geom.set('mass', '5.')
-    # geom.set('material', 'BallMat')
-    geom.set('friction', '1.0 0.005 0.0001')
+    geom.set('size', ' '.join(map(str, robot_config['size'])))
+    geom.set('mass', str(robot_config['mass']))
+    # geom.set('material', robot_config['material'])
+    geom.set('friction', ' '.join(map(str, robot_config['friction'])))
     geom.set('condim', '4')
 
     # Add a site for the sensor
-    site = SubElement(robot, 'site')
-    site.set('name', 'sensor_ball')
+    # site = SubElement(robot, 'site')
+    # site.set('name', 'sensor_ball')
 
     # Set other properties from robot_config if provided
     for key, value in robot_config.items():

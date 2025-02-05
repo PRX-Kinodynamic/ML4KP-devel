@@ -26,15 +26,14 @@
     <body name="robot">
       <joint name="joint_x" type="slide" pos="0 0 0" axis="1 0 0"/>
       <joint name="joint_y" type="slide" pos="0 0 0" axis="0 1 0"/>
-      <geom name="robot" type="sphere" pos="0.0 0.0 0.2" size="0.05" mass="5." friction="1.0 0.005 0.0001" condim="4"/>
+      <geom name="robot" type="cylinder" pos="0.0 0.0 0.2" size="0.2 0.2" mass="5.0" friction="1.0 0.005 0.0001" condim="4" rgba="1 1 0 1"/>
       <site name="sensor_ball"/>
     </body>
 
-
-    <body name="obstacle_movable_1">
+    <!-- <body name="obstacle_movable_1">
       <freejoint/>
       <geom name="obstacle_movable_1" type="cylinder" pos="0 0 0.2" size="0.2 0.2" mass="0.1" friction="1.0 0.005 0.001" rgba="1 1 0 1" />
-    </body>
+    </body> -->
 
     <!-- <body name="obstacle_1_static">
       <geom name="obstacle_1_static" condim="4" pos="0.8946884303821905 -1.208737110912853 0.2" euler="0 0 151.59874500181877" friction="1.0 0.005 0.001" rgba="1 0 0 1" size="0.23401768454791116 0.21562191329315294 0.2" type="box"/>
