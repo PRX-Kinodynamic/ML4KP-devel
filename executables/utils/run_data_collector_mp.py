@@ -17,7 +17,7 @@ def process_xml_file(xml_file, params_template, push_plan_yaml, command_line_arg
     
     # Create a copy of params for this process
     params = params_template.copy()
-    params['xml_path'] = f"cylinder_env/level_1/{xml_file}"
+    params['xml_path'] = f"cylinder_envs/1_movable/{xml_file}"
     
     # Modify data_path to include environment name
     base_data_path = params['data_path']
@@ -46,8 +46,8 @@ def main():
         params_template = yaml.safe_load(file)
     cmd_args = "examples/tasks/push_plan"
 
-    xml_dir = "resources/models/cylinder_env/level_1"
-    xml_files = [f for f in os.listdir(xml_dir) if f.endswith('.xml')][400:500]
+    xml_dir = "resources/models/cylinder_envs/1_movable"
+    xml_files = [f for f in sorted(os.listdir(xml_dir), key=lambda x: int(x.split('.')[0].split('_')[-1])) if f.endswith('.xml')][:1000]
 
     # Create a directory for log files
     log_dir = 'data_collection_logs'
@@ -55,7 +55,7 @@ def main():
 
     # Number of processes to use (adjust based on your CPU cores)
     
-    num_processes = 6 # max(1, 4) # multiprocessing.cpu_count() - 1)  # Leave one core free
+    num_processes = min(len(xml_files), 24) # max(1, 4) # multiprocessing.cpu_count() - 1)  # Leave one core free
 
     try:
         # Create a pool of workers

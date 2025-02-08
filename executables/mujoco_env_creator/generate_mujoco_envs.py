@@ -206,7 +206,7 @@ def create_actuators(mujoco: Element) -> None:
     
     # Add torque actuators for x and y joints
     for axis in ['x', 'y']:
-        motor = SubElement(actuator, 'motor')
+        motor = SubElement(actuator, 'velocity')
         motor.set('name', f'actuator_{axis}')
         motor.set('joint', f'joint_{axis}')
         motor.set('gear', '1')  # Adjust this value as needed
@@ -227,6 +227,13 @@ if __name__ == "__main__":
     generator_config = load_generator_config(args.config)
     config_dir = generator_config.get('config_dir', 'env_configs')
     output_dir = generator_config.get('output_dir', 'mujoco_envs')
+    
+    # Clear out existing XML files
+    if os.path.exists(output_dir):
+        for file in os.listdir(output_dir):
+            if file.endswith('.xml'):
+                os.remove(os.path.join(output_dir, file))
+    
     os.makedirs(output_dir, exist_ok=True)
 
     config_files = [f for f in os.listdir(config_dir) if f.endswith('.yaml')]
@@ -238,6 +245,8 @@ if __name__ == "__main__":
             mujoco_xml = create_mujoco_xml(config)
             output_file = os.path.join(output_dir, f"{os.path.splitext(config_file)[0]}.xml")
             save_mujoco_xml(mujoco_xml, output_file)
+            # Remove the config file after successful creation of XML
+            os.remove(config_path)
         except Exception as e:
             print(f"Error processing {config_file}: {e}")
 

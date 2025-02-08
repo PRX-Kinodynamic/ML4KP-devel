@@ -83,6 +83,7 @@ int main(int argc, char* argv[])
     double duration = params["step_duration"].as<double>();
     int time_limit = params["time_limit"].as<int>();
     double control_scale = params["control_scale"].as<double>();
+    bool collision_check = params["collision_check"].as<bool>();
 
     int control_steps = time_limit / duration;
     
@@ -147,11 +148,11 @@ int main(int argc, char* argv[])
             env.step(control_point, duration);
             num_steps += 1;
 
-            if (env.is_in_collision()) {
+            if (collision_check && env.is_in_collision()) {
                 success = false;
                 break;
             }
-            
+                
             if (env.is_in_goal_region(goal_state)) {
                 success_count++;
                 success = true;

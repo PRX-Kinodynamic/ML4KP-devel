@@ -1,6 +1,6 @@
-num_configs: 5
-config_dir: 'resources/input_files/cylinder_envs/1_static'
-output_dir: 'resources/models/cylinder_envs/1_static'
+num_configs: 5000
+config_dir: 'resources/input_files/cylinder_envs/many_static_movable'
+output_dir: 'resources/models/cylinder_envs/many_static_movable'
 
 wall:
   thickness: 0.05
@@ -18,7 +18,7 @@ obstacles:
       max: 1.0
     depth:
       min: 0.1
-      max: 0.5
+      max: 1.0
   movable_mass: 0.1
   color:
     movable: [1, 1, 0, 1]

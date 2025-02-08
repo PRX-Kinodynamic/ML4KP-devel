@@ -1,10 +1,11 @@
-data_path: /media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_env/test
-step_duration: 0.01
-time_limit: 20
-control_scale: 0.1
+data_path: /common/users/dm1487/ktamp_data_rename/cylinder_envs/1_movable_train_no_vel/random
+step_duration: 0.1
+time_limit: 60
+collision_check: true
+control_scale: 2.0
 discretization: 0.2
 goal_sampling_mode: random
 num_random_goals: 100
 random_seed: 1
 visualize: false
-xml_path: cylinder_envs/1_static/env_config_1.xml
+xml_path: cylinder_envs/1_movable/env_config_1034.xml

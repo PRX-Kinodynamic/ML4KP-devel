@@ -33,6 +33,8 @@ class GNNClassifierDataset(Dataset):
         xml_path = Path(metadata["xml_path"])
         goal = metadata["goal_state"][:2]
 
+
+
         # goal = [float(x) for x in metadata["goal_state"].strip().split()[:2]]
         # trajectory_path = os.path.join(folder, "trajectory.txt")
         # with open(trajectory_path, "r") as f:
@@ -49,16 +51,20 @@ class GNNClassifierDataset(Dataset):
             pos = model_props["pos"][:2]
             rot = R.from_quat(model_props["quat"], scalar_first=True).as_euler('xyz')[2]
             size = model_props["size"][:2]
-            if "obstacle" in name:
-                
+            features = []
+            if "obstacle" in name or "robot" in name:
                 new_size = (np.array(size[:2]) * 2).tolist()
                 # get four corners of the rectangle given the center, size, and rotation
                 corners = get_rectangle_corners(pos, new_size, rot)
-                node_features.append(torch.tensor([*pos, *corners.flatten()]))
-                if "movable" in name:
+                features.extend([*pos, *corners.flatten()])
+                if "robot" in name:
                     target_object = len(node_features) - 1
                     goal_size = (size[0] * 2) + goal_threshold
-                        # print(pos, rot, corners.flatten(), size)
+                    features.extend([1.0, 0.0, 0.0])
+                else:
+                    features.extend([0.0, 1.0, 0.0])
+                
+                node_features.append(torch.tensor(features))
 
             # adding robot node to the node features
             # if "robot" in key:
@@ -79,7 +85,7 @@ class GNNClassifierDataset(Dataset):
 
         # special edge from target object to goal
         goal_corners = get_rectangle_corners(goal, [goal_size]*2, 0)
-        goal_node = torch.tensor([*goal, *goal_corners.flatten()])
+        goal_node = torch.tensor([*goal, *goal_corners.flatten(), 0.0, 0.0, 1.0])
         node_features.append(goal_node)
         edge_index.append([target_object, len(node_features) - 1])
         edge_attr.append(goal_node[:2] - node_features[target_object][:2])
@@ -131,12 +137,12 @@ class MLPClassifierDataset(Dataset):
             pos = model_props["pos"][:2]
             rot = R.from_quat(model_props["quat"], scalar_first=True).as_euler('xyz')[2]
             size = model_props["size"][:2]
-            if "obstacle" in name:
+            if "obstacle" in name or "robot" in name:
                 new_size = (np.array(size[:2]) * 2).tolist()
                 # get four corners of the rectangle given the center, size, and rotation
                 corners = get_rectangle_corners(pos, new_size, rot)
                 features.append(torch.tensor([*pos, *corners.flatten()]))
-                if "movable" in name:
+                if "robot" in name:
                     goal_size = (size[0] * 2) + goal_threshold
             # if "robot" in key:
             #     size = value['size'][:2]

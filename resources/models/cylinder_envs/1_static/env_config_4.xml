@@ -25,11 +25,11 @@
       <geom name="robot" type="cylinder" pos="0.0 0.0 0.2" size="0.2 0.2 0.0" mass="5.0" friction="1.0 0.005 0.0001" condim="4" rgba="1.0 1.0 0.0 1.0"/>
     </body>
     <body name="obstacle_1_static">
-      <geom name="obstacle_1_static" condim="4" pos="-0.8847363697098081 0.4845187830297779 0.3" euler="0 0 312.1851978347566" friction="1.0 0.005 0.001" rgba="1 0 0 1" size="0.10485342806974328 0.1741124150450321 0.3" type="box"/>
+      <geom name="obstacle_1_static" condim="4" pos="-0.6096023701599137 0.5802510357211976 0.3" euler="0 0 101.82637384346764" friction="1.0 0.005 0.001" rgba="1 0 0 1" size="0.44391447286120755 0.7858025251906533 0.3" type="box"/>
     </body>
   </worldbody>
   <actuator>
-    <motor name="actuator_x" joint="joint_x" gear="1" ctrlrange="-1 1"/>
-    <motor name="actuator_y" joint="joint_y" gear="1" ctrlrange="-1 1"/>
+    <velocity name="actuator_x" joint="joint_x" gear="1" ctrlrange="-1 1"/>
+    <velocity name="actuator_y" joint="joint_y" gear="1" ctrlrange="-1 1"/>
   </actuator>
 </mujoco>

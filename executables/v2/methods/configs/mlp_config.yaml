@@ -1,7 +1,7 @@
 input_dims: 30
 hidden_dims: [256, 256, 128, 64, 32]
 output_dims: 1
-batch_size: 32
+batch_size: 128
 epochs: 50
 device: cuda:0
 learning_rate: 0.001
@@ -11,4 +11,4 @@ scheduler_step_size: 10
 scheduler_gamma: 0.5
 classification_threshold: 0.8
 save_dir: saved_models
-model_name: direct_objects_mlp_classifier
+model_name: direct_objects_mlp_classifier_movable
