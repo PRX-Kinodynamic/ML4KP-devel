@@ -5,9 +5,9 @@ namespace prx {
 
 class PushController {
 public:
-    PushController(space_point_t control_point, double control_scale) {
+    PushController(param_loader params, space_point_t control_point) {
+        this->params = params;
         this->control_point = control_point;
-        this->control_scale = control_scale;
     }
 
     virtual ~PushController() = default;
@@ -17,13 +17,14 @@ public:
         const space_point_t goal_state) = 0;
 
 protected:
+    param_loader params;
     space_point_t control_point;
-    double control_scale;
 };
 
 class SimplePushController : public PushController {
 public:
-    SimplePushController(space_point_t control_point, double control_scale) : PushController(control_point, control_scale) {}
+    SimplePushController(param_loader params, space_point_t control_point) : PushController(params, control_point) {
+    }
     
     void compute_control(
         const space_point_t current_state,
@@ -34,18 +35,15 @@ public:
         double dy = goal_state->at(1) - current_state->at(1);
         double angle = atan2(dy, dx);
 
-        control_point->at(0) = cos(angle) * control_scale;
-        control_point->at(1) = sin(angle) * control_scale;
-        
-        // Normalize the vector and scale for control
-        // double magnitude = sqrt(dx*dx + dy*dy);
-        // if (magnitude > 0) {
-        //     control_point->at(0) = dx/magnitude;
-        //     control_point->at(1) = dy/magnitude;
-        // } else {
-        //     control_point->at(0) = 0;
-        //     control_point->at(1) = 0;
-        // }
+        bool allow_collision = params["allow_collision"].as<bool>();
+        double scale = params["control_scale"].as<double>();
+
+        if (allow_collision){
+            double distance = sqrt(dx*dx + dy*dy);
+            scale = std::min(scale, distance);
+        }
+        control_point->at(0) = cos(angle) * scale;
+        control_point->at(1) = sin(angle) * scale;
     }
 }; 
 

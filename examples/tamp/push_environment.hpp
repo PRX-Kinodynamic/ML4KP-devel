@@ -163,19 +163,22 @@ public:
 
   void add_pair()
   {
-    for (int i = 0; i < sim->m->ngeom; i++)
+
+    // std::cout << "N"
+    for (int i = 0; i < sim->m->nbody; i++)
     {
-      std::string geom_name = std::string(sim->m->names + sim->m->name_geomadr[i]);
-      if (geom_name == "robot")
+      
+      std::string body_name = std::string(sim->m->names + sim->m->name_bodyadr[i]);
+      if (body_name == "robot")
       {
         continue;
       }
       else
       {
-        // check if name contains "wall" or "static"
-        if (geom_name.find("static") != std::string::npos)
+        // check if name contains "wall" or "obstacle"
+        if (body_name.find("wall") != std::string::npos || body_name.find("obstacle") != std::string::npos)
         {
-          sim->add_pair(std::make_pair(geom_name, "robot"));
+          sim->add_pair(std::make_pair(body_name, "robot"));
         }
       }
     }
@@ -209,12 +212,12 @@ public:
 
   void step(const space_point_t& control, double duration)
   {
-    for (int i = 0; i < sim->m->nu; i++)
-    {
-      sim->d->qvel[i] = 0.0;
-    }
+  //   for (int i = 0; i < sim->m->nu; i++)
+  //   {
+  //     sim->d->qvel[i] = 0.0;
+  //   }
 
-    sim->step_simulation();
+  //   sim->step_simulation();
 
     trajectory_t traj(ss);
     plan_t plan(cs);

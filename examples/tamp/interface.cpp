@@ -82,8 +82,10 @@ int main(int argc, char* argv[])
     double discretization = params["discretization"].as<double>();
     double duration = params["step_duration"].as<double>();
     int time_limit = params["time_limit"].as<int>();
-    double control_scale = params["control_scale"].as<double>();
-    bool collision_check = params["collision_check"].as<bool>();
+
+    std::string controller_mode = params["controller_mode"].as<std::string>();
+    
+    param_loader controller_params = params[controller_mode];
 
     int control_steps = time_limit / duration;
     
@@ -110,7 +112,7 @@ int main(int argc, char* argv[])
 
     // Initialize controller
     auto control_point = env.get_control_space_point(); // Get control point
-    SimplePushController controller(control_point, control_scale);
+    SimplePushController controller(controller_params, control_point);
     
     int total_goals = env.get_total_goals();
     progress_bar_t progress(total_goals, "Processing goals");
@@ -148,7 +150,7 @@ int main(int argc, char* argv[])
             env.step(control_point, duration);
             num_steps += 1;
 
-            if (collision_check && env.is_in_collision()) {
+            if (!controller_params["allow_collision"].as<bool>() && env.is_in_collision()) {
                 success = false;
                 break;
             }
