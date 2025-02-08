@@ -10,6 +10,7 @@ class DirectObjects(Problem):
         self.name = name
         self.data_path = config['data_path']
         self.test_data_path = config['test_data_path']
+        self.problem_type = config['problem_type']
         # self.train_success_folder = config['train_success_folder']
         # self.train_fail_folder = config['train_fail_folder']
         # self.eval_success_folder = config['eval_success_folder']
@@ -26,14 +27,19 @@ class DirectObjects(Problem):
         test_env_configs = os.listdir(self.test_data_path)
         
         random.shuffle(env_config_folders)
-        train_env_configs = env_config_folders[:300]
-        eval_env_configs = env_config_folders[350:]
+        # 90 - 10 split
+        train_env_configs = env_config_folders[:int(0.9 * len(env_config_folders))]
+        eval_env_configs = env_config_folders[int(0.9 * len(env_config_folders)):]
+        
+        print(len(train_env_configs), len(eval_env_configs))
         
         for env_config_folder in train_env_configs:
             train_path = os.path.join(self.data_path, env_config_folder)
             train_success_folders.extend([os.path.join(train_path, "success", folder) for folder in os.listdir(os.path.join(train_path, "success"))])
             train_fail_folders.extend([os.path.join(train_path, "failure", folder) for folder in os.listdir(os.path.join(train_path, "failure"))])
 
+        print("Train: ", len(train_success_folders), len(train_fail_folders))
+        
         if self.balance_data:
             min_len_data = min(len(train_success_folders), len(train_fail_folders))
             train_success_folders = random.sample(train_success_folders, min_len_data)
@@ -48,6 +54,8 @@ class DirectObjects(Problem):
             eval_path = os.path.join(self.data_path, env_config_folder)
             eval_success_folders.extend([os.path.join(eval_path, "success", folder) for folder in os.listdir(os.path.join(eval_path, "success"))])
             eval_fail_folders.extend([os.path.join(eval_path, "failure", folder) for folder in os.listdir(os.path.join(eval_path, "failure"))])
+
+        print("Eval: ", len(eval_success_folders), len(eval_fail_folders))
 
         if self.balance_data:
             min_len_data = min(len(eval_success_folders), len(eval_fail_folders))
@@ -77,6 +85,9 @@ class DirectObjects(Problem):
     
     def get_name(self):
         return self.name
+    
+    def get_problem_type(self):
+        return self.problem_type
 
 
     

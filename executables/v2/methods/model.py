@@ -56,12 +56,12 @@ class GNNClassifierModel(nn.Module):
         x = self.node_mlp(x)
         
         # Process edge features
-        edge_attr = self.edge_mlp(edge_attr)
+        # edge_attr = self.edge_mlp(edge_attr)
         
         # Message passing with processed edge features
         for i, layer in enumerate(self.gat):
             if isinstance(layer, GATv2Conv):
-                x = layer(x, edge_index, edge_attr=edge_attr)
+                x = layer(x, edge_index)
             else:  # ReLU
                 x = layer(x)
         

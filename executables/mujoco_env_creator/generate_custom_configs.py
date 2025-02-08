@@ -201,10 +201,10 @@ def generate_env_config(env_size, robot_pos, gen_config, walls, robot, obstacles
             # Check if the obstacle collides with any existing objects in the environment
             if all(not check_collision(obstacle, obj) for obj in config['worldbody']['walls'] + config['worldbody']['obstacles']):
                 # If no collision is detected, add the obstacle to the environment
-                # if not check_collision(obstacle, config['worldbody']['robot']):
-                config['worldbody']['obstacles'].append(obstacle)
-                movable_done = is_movable
-                break  # Exit the loop for this obstacle
+                if not check_collision(obstacle, config['worldbody']['robot']):
+                    config['worldbody']['obstacles'].append(obstacle)
+                    movable_done = is_movable
+                    break  # Exit the loop for this obstacle
         # else:
         #     # If the loop completes without finding a valid placement, print a message and exit
         #     print(f"Could not find a valid placement for obstacle {i+1} after {max_attempts} attempts. Proceeding with {len(config['worldbody']['obstacles'])} obstacles.")
@@ -219,7 +219,7 @@ def check_collision(obj1, obj2):
         if obj['name'] == 'robot':
             x, y = obj['pos'][0], obj['pos'][1]
             w, h = obj['size'][0], obj['size'][0]
-            return Polygon([(x - w/2, y - h/2), (x + w/2, y - h/2), (x + w/2, y + h/2), (x - w/2, y + h/2)])
+            return Polygon([(x - w, y - h), (x + w, y - h), (x + w, y + h), (x - w, y + h)])
     
         x, y = obj['pos'][0], obj['pos'][1]
         w, h = obj['size'][0], obj['size'][1]

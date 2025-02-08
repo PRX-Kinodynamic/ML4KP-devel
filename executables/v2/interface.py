@@ -2,7 +2,7 @@ from problems.direct_objects import DirectObjects
 from pathlib import Path
 from methods.classifiers import GNNClassifier, MLPClassifier
 from matplotlib import pyplot as plt
-from matplotlib.patches import Circle
+from matplotlib.patches import Circle, Rectangle
 from tqdm import tqdm
 from dataclasses import dataclass
 from problems.base_problem import Problem
@@ -13,7 +13,7 @@ import argparse
 import json
 import random
 import numpy as np
-
+from scipy.spatial.transform import Rotation as R
 random.seed(42)
 np.random.seed(42)
 
@@ -51,6 +51,7 @@ def plot_predictions(predictions, file_name, fpr=None, classification_threshold=
     ax3 = fig.add_subplot(133)
     success_pred = 0
     patch_output, patch_pred, patch_label = [], [], []
+    object_patches = []
     for pred in predictions:
         folder = pred[0]
         output, pred, success = pred[1]
@@ -58,9 +59,27 @@ def plot_predictions(predictions, file_name, fpr=None, classification_threshold=
         with open(os.path.join(folder, "metadata.json"), "r") as f:
             metadata = json.load(f)
         goal = metadata["goal_state"][:2]
-        patch_output.append(Circle(goal, 0.1, color='black', alpha=output))
-        patch_pred.append(Circle(goal, 0.1, color='green' if pred == 1.0 else 'red'))
-        patch_label.append(Circle(goal, 0.1, color= 'green' if float(success) == 1.0 else 'red'))
+        env = metadata["environment"]
+        print(env)
+        patch_output.append(Rectangle(goal, 0.2, 0.2, color='black', alpha=output))
+        patch_pred.append(Rectangle(goal, 0.2, 0.2, color='green' if pred == 1.0 else 'red'))
+        patch_label.append(Rectangle(goal, 0.2, 0.2, color= 'green' if float(success) == 1.0 else 'red'))
+        for obj in env:
+            if 'obstacle' in obj['name'] or 'robot' in obj['name']:
+                pos = obj['pos'][:2]
+                quat = R.from_quat(obj['quat'], scalar_first=True).as_euler('xyz', degrees=True)
+                size = obj['size'][:2]
+                color = 'blue'
+                if 'robot' in obj['name'] or 'movable' in obj['name']:
+                    color = 'yellow'
+                
+                # 3 patches for 3 plots, matplotlib does not have copy on patches
+                obj_patch = []
+                for _ in range(3):
+                    rect_patch = Rectangle((pos[0] - size[0], pos[1] - size[1]), size[0] * 2, size[1] * 2, angle=quat[2], rotation_point='center', color=color, alpha=0.5, fill=False)
+                    obj_patch.append(rect_patch)
+                object_patches.append(obj_patch)
+                
         success_pred += pred == float(success)
     success_rate = success_pred / len(predictions)
     for patch in patch_label:
@@ -71,6 +90,11 @@ def plot_predictions(predictions, file_name, fpr=None, classification_threshold=
 
     for patch in patch_output:
         ax3.add_patch(patch)
+
+    for patch in object_patches:
+        ax1.add_patch(patch[0])
+        ax2.add_patch(patch[1])
+        ax3.add_patch(patch[2])
 
     ax1.set_xlim(-2, 2)
     ax1.set_ylim(-2, 2)
@@ -88,7 +112,8 @@ def plot_predictions(predictions, file_name, fpr=None, classification_threshold=
 
 def run(problem: Problem, method: Method, load_model=False, verbose=False):
     classification_threshold = method.get_classification_threshold()
-    fpr_folder = f'fpr_predictions/{problem.get_name()}_{method.get_name()}_{classification_threshold}'
+    # TODO: define this folder in a run config
+    fpr_folder = f'fpr_predictions_{problem.get_problem_type()}/{problem.get_name()}_{method.get_name()}_{classification_threshold}'
     if not os.path.exists(fpr_folder):
         os.makedirs(fpr_folder)
     if load_model:  
@@ -147,6 +172,7 @@ def run(problem: Problem, method: Method, load_model=False, verbose=False):
             local_fpr = local_fp_count / (local_fp_count + local_tn_count)
         local_fpr_list.append((xml_path, local_fpr, predictions))
         pbar.update(1)
+    
     pbar.close()
 
     accuracy = round((true_positive_count + true_negative_count) / (true_positive_count + true_negative_count + false_positive_count + false_negative_count), 2)
@@ -200,7 +226,6 @@ if __name__ == '__main__':
         os.makedirs(prediction_folder)
     
     all_metrics = {}
-
 
     for problem_name in problem_map:
         if args.problem is not None and problem_name != args.problem:

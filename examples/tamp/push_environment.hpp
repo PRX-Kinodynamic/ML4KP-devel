@@ -209,12 +209,12 @@ public:
 
   void step(const space_point_t& control, double duration)
   {
-    // for (int i = 0; i < sim->m->nu; i++)
-    // {
-    //   sim->d->qvel[i] = 0.0;
-    // }
+    for (int i = 0; i < sim->m->nu; i++)
+    {
+      sim->d->qvel[i] = 0.0;
+    }
 
-    // sim->step_simulation();
+    sim->step_simulation();
 
     trajectory_t traj(ss);
     plan_t plan(cs);

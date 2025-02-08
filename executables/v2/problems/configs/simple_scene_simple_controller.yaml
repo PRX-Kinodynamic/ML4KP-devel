@@ -1,6 +1,8 @@
-data_path: "/common/users/dm1487/ktamp/random_goals"
+data_path: "/common/users/dm1487/ktamp_data_rename/cylinder_envs/1_movable_train_1/random"
 # eval_data_path: ["/common/users/dm1487/ktamp/random/1"]
-test_data_path: "/common/users/dm1487/ktamp/random_goals_test"
+test_data_path: "/common/users/dm1487/ktamp_data_rename/cylinder_envs/1_movable_test_1/discretized"
+
+problem_type: "1_movable_1"
 
 scene_goals: 289
 balance_data: false

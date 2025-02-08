@@ -29,3 +29,7 @@ class Problem:
     @abc.abstractmethod
     def get_balance_ratio(self):
         """Balance ratio for the data."""
+    
+    @abc.abstractmethod
+    def get_problem_type(self):
+        """Type of the problem."""

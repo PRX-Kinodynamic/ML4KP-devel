@@ -1,10 +1,11 @@
 data_path: /media/dhruv/a7519aee-b272-44ae-a117-1f1ea1796db6/2024/NAMO/cylinder_env/test
-step_duration: 0.01
+step_duration: 0.1
 time_limit: 60
-control_scale: 0.1
+collision_check: true
+control_scale: 2.0
 discretization: 0.2
 goal_sampling_mode: discretized
 num_random_goals: 100
 random_seed: 1
-visualize: true
-xml_path: cylinder_envs/1_static/env_config_1.xml
+visualize: false
+xml_path: cylinder_envs/1_movable/env_config_1034.xml
