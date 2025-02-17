@@ -46,8 +46,10 @@ struct first_order_derivative_table_t
 template <typename InputState, typename T = void>
 struct derivative_input_types
 {
-  template <typename EpsilonMatrix>
-  static InputState add(const InputState&, const EpsilonMatrix&){};
+  template <typename State, typename DeltaVec>
+  static State Plus(const State&, const DeltaVec&) {};
+  template <typename State>
+  static State Log(const State&, const State&) {};
 };
 template <typename OutputState, typename T = void>
 struct derivative_output_types
@@ -60,10 +62,16 @@ struct derivative_input_types<InputState, std::enable_if_t<not std::is_floating_
 {
   using Scalar = typename InputState::Scalar;
   static constexpr Eigen::Index NInputs{ InputState::RowsAtCompileTime };
-  template <typename EpsilonMatrix>
-  static InputState add(const InputState& state, const EpsilonMatrix& epslion)
+  template <typename DeltaVec>
+  static InputState Plus(const InputState& state, const DeltaVec& delta)
   {
-    return state + epslion;
+    return state + delta;
+  };
+  // F(x) (-) F(x')
+  template <typename State>
+  static State Log(const State& x)
+  {
+    return x;
   };
 };
 
@@ -72,10 +80,16 @@ struct derivative_input_types<InputState, std::enable_if_t<std::is_floating_poin
 {
   using Scalar = InputState;
   static constexpr Eigen::Index NInputs{ 1 };
-  template <typename EpsilonMatrix>
-  static InputState add(const InputState& state, const EpsilonMatrix& epslion)
+  template <typename DeltaVec>
+  static InputState Plus(const InputState& state, const DeltaVec& delta)
   {
-    return state + epslion(0, 0);
+    return state + delta(0, 0);
+  };
+  // F(x) (-) F(x')
+  template <typename State>
+  static State Log(const State& x)
+  {
+    return x;
   };
 };
 
@@ -92,7 +106,8 @@ struct derivative_output_types<OutputState, std::enable_if_t<std::is_floating_po
   static constexpr Eigen::Index NOutputs{ 1 };
 };
 
-template <class Function, typename InputState, S Evaluations, I_min MinDifference = -1>
+template <class Function, typename InputState, S Evaluations, I_min MinDifference = -1,
+          typename Delta = derivative_input_types<InputState>>
 class first_order_derivative_t
 {
   using Scalar = typename derivative_input_types<InputState>::Scalar;
@@ -105,6 +120,8 @@ class first_order_derivative_t
   using epsilon_matrix_t = Eigen::Matrix<Scalar, NInputs, NInputs>;
 
   using FirstOrderDerivative = first_order_derivative_t<Function, InputState, Evaluations, MinDifference>;
+
+  // using Operations = derivative_input_types<InputState>;
 
 public:
   first_order_derivative_t(const double h, const Eigen::Index n_inputs, const Eigen::Index n_outputs)
@@ -154,9 +171,20 @@ private:
   inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative) const
   {
     const auto epsilon_column{ i * _epsilon_matrix.col(col_i) };
-    const InputState delta{ derivative_input_types<InputState>::add(input, epsilon_column) };
-    derivative.col(col_i) = derivative.col(col_i) + n_i * _model(delta);
+    const InputState delta{ Delta::Plus(input, epsilon_column) };
+    const OutputState Fi{ _model(delta) };
+    // const OutputState Fnew{ Delta::plus(f1, derivative.col(col_i)) };
+    derivative.col(col_i) = derivative.col(col_i) + n_i * Delta::Log(Fi);
+    // derivative.col(col_i) = Delta::plus(n_i * _model(delta), derivative.col(col_i));
   }
+
+  // template <N_i n_i, int i, std::enable_if_t<(n_i < 0), bool> = true>
+  // inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative) const
+  // {
+  //   const auto epsilon_column{ i * _epsilon_matrix.col(col_i) };
+  //   const InputState delta{ Delta::plus(input, epsilon_column) };
+  //   derivative.col(col_i) = Delta::minus(n_i * _model(delta), derivative.col(col_i));
+  // }
 
   template <N_i n_i, int i, std::enable_if_t<(n_i == 0), bool> = true>
   inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative) const
@@ -221,9 +249,10 @@ public:
   const output_matrix_t _zero_matrix;
   const epsilon_matrix_t _epsilon_matrix;
 };
-template <class Function, typename InputState, S Evaluations, I_min MinDifference>
+
+template <class Function, typename InputState, S Evaluations, I_min MinDifference, typename Delta>
 constexpr approximation_row_t
-    first_order_derivative_t<Function, InputState, Evaluations, MinDifference>::approximation_row;
+    first_order_derivative_t<Function, InputState, Evaluations, MinDifference, Delta>::approximation_row;
 
 }  // namespace math
 }  // namespace prx

@@ -99,7 +99,6 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
 {
   state_space->copy_from(start_state);
 
-  int i = 0;
   do
   {
     ctrl->compute_controls();
@@ -152,7 +151,7 @@ void system_group_t::propagate_once(space_point_t control)
 {
   if (control != nullptr)
   {
-    control_space->copy_from_point(control);
+    control_space->copy_from(control);
   }
   for (auto s : group)
   {

@@ -55,3 +55,26 @@ BOOST_AUTO_TEST_CASE(param_loader_test)
   std::cout << "[ OK ] " << std::endl;
   // TODO: add checks for nested params
 }
+
+BOOST_AUTO_TEST_CASE(param_loader_save_load_test)
+{
+  prx::param_loader params;
+  params["a"].set(1);
+  params["b"].set("B");
+  params["c"].set(std::vector<double>{ 0.0, 1.0 });
+
+  const std::string filename{ "/tmp/param_loader_save_load_test" };
+  params.save(filename);
+  prx::param_loader params_in(filename);
+
+  BOOST_CHECK(params["a"].as<int>() == params_in["a"].as<int>());
+  BOOST_CHECK(params["b"].as<>() == params_in["b"].as<>());
+
+  const std::vector<double> c_original{ params["c"].as<std::vector<double>>() };
+  const std::vector<double> c_from_file{ params_in["c"].as<std::vector<double>>() };
+
+  BOOST_CHECK(c_original.size() == 2);
+  BOOST_CHECK(c_from_file.size() == 2);
+  BOOST_CHECK(c_original[0] == c_from_file[0]);
+  BOOST_CHECK(c_original[1] == c_from_file[1]);
+}

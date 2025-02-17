@@ -23,38 +23,48 @@ public:
   using VectorX = Eigen::Vector<double, Xdim>;
   using VectorU = Eigen::Vector<double, Udim>;
 
+  using Diff = std::function<VectorX(const VectorX&, const VectorX&)>;
+
+  inline static Diff DefaultDiff = [](const VectorX& a, const VectorX& b) { return a - b; };
+
   template <typename MatA, typename MatB, typename MatQ, typename MatR, typename MatK>
-  lqr_t(const MatA a, const MatB b, const MatQ q, const MatR r, const MatK k) : _A(a), _B(b), _Q(q), _R(r), _K(k)
+  lqr_t(const MatA a, const MatB b, const MatQ q, const MatR r, const MatK k, const Diff diff = DefaultDiff)
+    : _A(a), _B(b), _Q(q), _R(r), _K(k), _diff(diff)
   {
   }
 
   template <Eigen::Index InputDim = Xdim, std::enable_if_t<(InputDim == Eigen::Dynamic), bool> = true>
-  lqr_t(const std::size_t& xdim, const std::size_t& udim)
+  lqr_t(const std::size_t& xdim, const std::size_t& udim, const Diff diff = DefaultDiff)
     : lqr_t(MatrixA::Identity(xdim, xdim), MatrixB::Identity(xdim, udim), MatrixQ::Identity(xdim, xdim),
-            MatrixR::Identity(udim, udim), MatrixK::Zero(udim, xdim))
+            MatrixR::Identity(udim, udim), MatrixK::Zero(udim, xdim), diff)
   {
   }
 
   template <Eigen::Index InputDim = Xdim, std::enable_if_t<(InputDim != Eigen::Dynamic), bool> = true>
   lqr_t()
     : lqr_t(MatrixA::Identity(Xdim, Xdim), MatrixB::Identity(Xdim, Udim), MatrixQ::Identity(Xdim, Xdim),
-            MatrixR::Identity(Udim, Udim), MatrixK::Zero(Udim, Xdim))
+            MatrixR::Identity(Udim, Udim), MatrixK::Zero(Udim, Xdim), DefaultDiff)
   {
   }
 
   template <typename MatA, typename MatB, typename MatQ, typename MatR>
-  lqr_t(const MatA a, const MatB b, const MatQ q, const MatR r) : lqr_t(a, b, q, r, MatrixK::Zero())
+  lqr_t(const MatA a, const MatB b, const MatQ q, const MatR r) : lqr_t(a, b, q, r, MatrixK::Zero(), DefaultDiff)
   {
     compute_K();
   }
 
   template <typename MatK>
   lqr_t(const MatK k)
-    : _A(MatrixA::Identity()), _B(MatrixB::Identity()), _Q(MatrixQ::Zero()), _R(MatrixR::Zero()), _K(k)
+    : _A(MatrixA::Identity())
+    , _B(MatrixB::Identity())
+    , _Q(MatrixQ::Zero())
+    , _R(MatrixR::Zero())
+    , _K(k)
+    , _diff(DefaultDiff)
   {
   }
 
-  virtual ~lqr_t(){};
+  virtual ~lqr_t() {};
 
   MatrixQ Q() const
   {
@@ -134,7 +144,9 @@ public:
   // Computes the control u = -K * (X-X_ref);
   inline VectorU operator()(const VectorX& x, const VectorX& x_ref) const
   {
-    return -_K * (x - x_ref);
+    const VectorX df{ _diff(x, x_ref) };
+    return -_K * df;
+    // return -_K * (x - x_ref);
   }
 
 protected:
@@ -145,6 +157,8 @@ protected:
   MatrixR _R;
 
   MatrixK _K;
+
+  const Diff _diff;
 };
 }  // namespace simulation
 }  // namespace prx

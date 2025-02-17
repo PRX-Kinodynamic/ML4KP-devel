@@ -3,7 +3,7 @@
  * @file condition_check.hpp
  * @brief A class which checks if a condition is met.
  * @details A class which checks if a condition is met.
- * @author Zakary Littlefield, Aravind Sivaramakrishnan
+ * @author Zakary Littlefield, Aravind Sivaramakrishnan, Edgar Granados
  */
 
 #include <map>
@@ -32,6 +32,8 @@ public:
   condition_check_t(std::string type, double check);
 
   condition_check_t(custom_check_t _custom_check);
+
+  condition_check_t(const prx::param_loader&);
 
   /**
    * @brief Resets the internal counts and timers.
@@ -106,8 +108,44 @@ public:
     }
   }
 
+  virtual prx::param_loader init()
+  {
+    prx::param_loader params{};
+
+    for (auto type : available_types)
+    {
+      if (type.second == condition_type)
+        params["type"].set(type.first);
+    }
+    params["value"].set(condition_check);
+    return params;
+  }
+
+  virtual void init(const prx::param_loader& params)
+  {
+    if (params.exists("type"))
+    {
+      condition_type = available_types[params["type"].as<>()];
+    }
+    else
+    {
+      prx_throw("[Condition Check] No condition type");
+    }
+    if (params.exists("value"))
+    {
+      condition_check = params["value"].as<double>();
+    }
+    else
+    {
+      prx_throw("[Condition Check] No value type");
+    }
+  }
+
 protected:
-  condition_check_t() : iteration_counter(0), sim_time_accum(0){};
+  condition_check_t() : iteration_counter(0), condition_check(0), condition_type(0), sim_time_accum(0)
+  {
+    timer.reset();
+  }
 
   // condition_check_t(const condition_check_t&) = default ;
 

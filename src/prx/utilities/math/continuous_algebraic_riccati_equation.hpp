@@ -28,6 +28,10 @@ public:
     prx_assert(A.rows() == n && A.cols() == n, "Wrong A matrix dimensions");
     prx_assert(Q.rows() == n && Q.cols() == n, "Wrong Q matrix dimensions");
     prx_assert(R_c.matrixL().rows() == m && R_c.matrixL().cols() == m, "Wrong R matrix dimensions");
+#if EIGEN_WORLD_VERSION >= 3 && EIGEN_MAJOR_VERSION >= 4
+    prx_assert(!std::isnan(A.template maxCoeff<Eigen::PropagateNaN>()), "[CARE] A Matrix contains NaNs!" << A);
+    prx_assert(!std::isnan(B.template maxCoeff<Eigen::PropagateNaN>()), "[CARE] B Matrix contains NaNs!" << B);
+#endif
 
     Eigen::MatrixXd H(2 * n, 2 * n);
 

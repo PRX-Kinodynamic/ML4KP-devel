@@ -80,15 +80,31 @@ enum plant_type
   MUJOCO
 };
 
-static inline double norm_angle_pi(double angle, double min_angle = -PRX_PI, double max_angle = PRX_PI)
+static inline double norm_angle_pi(double angle, const double min_angle = -constants::pi,
+                                   const double max_angle = constants::pi)
 {
-  // prx_warn_cond(std::fabs(angle) < 100 * max_angle, "Angle might be too high: " << std::to_string(angle));
+  // keeping this for back comp
 
   while (angle > max_angle)
     angle -= 2.0 * PRX_PI;
   while (angle < min_angle)
     angle += 2.0 * PRX_PI;
   return angle;
+}
+
+static inline double angle_bound(const double& angle, const double min_angle = -constants::pi,
+                                 const double max_angle = constants::pi)
+{
+  double res{ angle };
+  if (angle < min_angle or max_angle < angle)
+  {
+    // Eqs. 116,117 on micro lie theory
+    const double r21{ std::sin(angle) };
+    const double r11{ std::cos(angle) };
+    res = min_angle + std::atan2(r21, r11);
+  }
+
+  return res;
 }
 
 static inline vector_t heatmap_value(double val)

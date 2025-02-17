@@ -86,8 +86,8 @@ public:
   using Error = Eigen::Vector<double, Dim0>;
   using PartialX0 = std::function<Error(const X0&)>;
   using PartialX1 = std::function<Error(const X1&)>;
-  using FirstOrderDerivativeX0 = prx::math::first_order_derivative_t<PartialX0, X0, Evaluations>;
-  using FirstOrderDerivativeX1 = prx::math::first_order_derivative_t<PartialX1, X1, Evaluations>;
+  using FirstOrderDerivativeX0 = prx::math::first_order_derivative_t<PartialX0, X0, Evaluations, -1>;
+  using FirstOrderDerivativeX1 = prx::math::first_order_derivative_t<PartialX1, X1, Evaluations, -1>;
   using Base = gtsam::NoiseModelFactor3<X0, X1>;
   using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
 

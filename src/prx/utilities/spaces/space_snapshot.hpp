@@ -6,6 +6,7 @@
 #include <numeric>
 
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/template_utils.hpp"
 
 namespace prx
 {
@@ -188,7 +189,37 @@ public:
     return space_snapshot._map_vector;
   }
 
+  virtual prx::param_loader init();
+
   virtual void init(const prx::param_loader& params);
+
+  bool step(const double step_inc);
+
+  // template <typename LowerBound, typename UpperBound>
+  template <typename StepInc, typename LowerBound, typename UpperBound,
+            std::enable_if_t<not prx::utilities::is_iterable<StepInc>{}, bool> = true>
+  bool step(const StepInc step_inc, const LowerBound& lower_bound, const UpperBound& upper_bound)
+  {
+    const std::vector<double> si(lower_bound.size(), step_inc);
+    return step(si, lower_bound, upper_bound);
+  }
+
+  template <typename StepInc, typename LowerBound, typename UpperBound,
+            std::enable_if_t<prx::utilities::is_iterable<StepInc>{}, bool> = true>
+  bool step(const StepInc& step_inc, const LowerBound& lower_bound, const UpperBound& upper_bound)
+  {
+    // for (int i = 0; i < size(); ++i)
+    for (int i = size() - 1; i >= 0; --i)
+    {
+      _map_vector[i] = _map_vector[i] + step_inc[i];
+      if (_map_vector[i] <= upper_bound[i])
+      {
+        return true;
+      }
+      _map_vector[i] = lower_bound[i];
+    }
+    return false;
+  }
 
 protected:
   /**

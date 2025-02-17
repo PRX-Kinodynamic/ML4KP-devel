@@ -662,6 +662,7 @@ public:
 
     return std::sqrt(accum);
   }
+
   virtual void init(const prx::param_loader& params)
   {
     std::vector<double> lower_bound{ params.exists("lower_bound") ? params["lower_bound"].as<std::vector<double>>() :
@@ -672,9 +673,25 @@ public:
                                                           std::vector<double>{} };
 
     if (lower_bound.size() == dimension and upper_bound.size() == dimension)
+    {
       set_bounds(lower_bound, upper_bound);
+    }
     if (values.size() == dimension)
+    {
       copy_from(values);
+    }
+  }
+
+  virtual prx::param_loader init()
+  {
+    prx::param_loader params{};
+    std::vector<double> aux(dimension, 0.0);
+    copy_to(aux);
+    params["lower_bound"].set(get_lower_bounds());
+    params["upper_bound"].set(get_upper_bounds());
+    params["values"].set(aux);
+
+    return params;
   }
   /**
    * @brief      Gets the topology as a string in the same format as its input

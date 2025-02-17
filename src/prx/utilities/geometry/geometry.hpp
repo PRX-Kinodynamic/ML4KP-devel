@@ -45,10 +45,22 @@ public:
       { "CONE", geometry_type_t::CONE },            // no-lint
       { "CYLINDER", geometry_type_t::CYLINDER }     // no-lint
     };
-
     std::string upper_geom{ prx::to_upper(geom) };
-    // std::transform(geom.begin(), geom.end(), upper_geom.begin(), std::toupper);
+
     return available_types.at(upper_geom);
+  }
+  static inline std::string geometry_type(const geometry_type_t& geom)
+  {
+    const std::map<geometry_type_t, std::string> available_types{
+      { geometry_type_t::BOX, "BOX" },              // no-lint
+      { geometry_type_t::SPHERE, "SPHERE" },        // no-lint
+      { geometry_type_t::ELLIPSOID, "ELLIPSOID" },  // no-lint
+      { geometry_type_t::CAPSULE, "CAPSULE" },      // no-lint
+      { geometry_type_t::CONE, "CONE" },            // no-lint
+      { geometry_type_t::CYLINDER, "CYLINDER" }     // no-lint
+    };
+
+    return available_types.at(geom);
   }
 
   std::weak_ptr<PQP_Model> get_collision_geometry();
@@ -69,6 +81,15 @@ public:
   std::string get_visualization_color()
   {
     return vis_color;
+  }
+
+  virtual prx::param_loader init()
+  {
+    prx::param_loader pl{};
+    pl["color"].set(vis_color);
+    pl["type"].set(geometry_type(geom_type));
+    pl["parameters"].set(params);
+    return pl;
   }
 
   virtual void init(const prx::param_loader& param_loader)

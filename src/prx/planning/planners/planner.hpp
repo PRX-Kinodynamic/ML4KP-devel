@@ -25,6 +25,10 @@ public:
   virtual ~planner_specification_t()
   {
   }
+  virtual prx::param_loader init()
+  {
+    return prx::param_loader();
+  };
   virtual void init(const prx::param_loader& params) {};
 };
 
@@ -49,6 +53,31 @@ public:
     solution_plan.clear();
     solution_cost = 0;
     tree_visualization.clear();
+  }
+
+  virtual prx::param_loader init()
+  {
+    prx::param_loader params;
+    if (start_state)
+    {
+      params["start_state"] = start_state->init();
+    }
+    else
+    {
+      params["start_state"].set(std::vector<double>({}));
+    }
+
+    params["goal"] = prx::param_loader();
+    if (goal_state)
+    {
+      params["goal/state"] = goal_state->init();
+    }
+    else
+    {
+      params["goal/state"].set(std::vector<double>({}));
+    }
+    params["visualize"].set(get_visualization);
+    return params;
   }
 
   virtual void init(const prx::param_loader& params)

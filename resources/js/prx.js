@@ -270,8 +270,8 @@ CapsuleBufferGeometry.prototype.constructor = CapsuleBufferGeometry;
 var scene, camera, renderer;
 var mixers = [];
 var play_animation = false;
-image_width = 600;
-image_height = 600;
+image_width = 1280;
+image_height = 720;
 
 scene = new THREE.Scene();
 camera = new THREE.PerspectiveCamera(45, image_width / image_height, 0.1, 1000);

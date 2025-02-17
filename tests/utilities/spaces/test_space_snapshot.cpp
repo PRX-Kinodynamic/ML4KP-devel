@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(test_space_makes_points_correctly)
   prx::space_t& space{ test.space };
   prx::space_point_t pt_sp1 = space.make_point();
 
-  space.copy_to_point(pt_sp1);
+  space.copy_to(pt_sp1);
 
   BOOST_CHECK((*pt_sp1)[0] == pt_sp1->at(0));
   BOOST_CHECK((*pt_sp1)[1] == pt_sp1->at(1));
@@ -163,6 +163,54 @@ BOOST_AUTO_TEST_CASE(space_snapshot_init_params)
   BOOST_REQUIRE_MESSAGE(values[0] == pt->at(0), EXPECTED_GOT(values[0], pt->at(0)));
   BOOST_REQUIRE_MESSAGE(values[1] == pt->at(1), EXPECTED_GOT(values[1], pt->at(1)));
   BOOST_REQUIRE_MESSAGE(values[2] == pt->at(2), EXPECTED_GOT(values[2], pt->at(2)));
-  // BOOST_CHECK(space.equal_points(pt1, result1));
-  // BOOST_CHECK_MESSAGE(space.equal_points(pt_half, expected_half), EXPECTED_GOT(expected_half, pt_half));
+}
+
+BOOST_AUTO_TEST_CASE(space_snapshot_init_populate_params)
+{
+  mock::space3d_t test;
+  prx::space_point_t pt{ test.space.make_point() };
+
+  prx::param_loader params{};
+  std::vector<double> values{ { 0.5, 0.5, 0.5 } };
+  params.set<std::vector<double>>(values);
+
+  prx::param_loader params_new{};
+  params_new["pt"] = pt->init();
+  std::vector<double> new_values{ params_new["pt"].as<std::vector<double>>() };
+
+  BOOST_REQUIRE_MESSAGE(new_values[0] == pt->at(0), EXPECTED_GOT(new_values[0], pt->at(0)));
+  BOOST_REQUIRE_MESSAGE(new_values[1] == pt->at(1), EXPECTED_GOT(new_values[1], pt->at(1)));
+  BOOST_REQUIRE_MESSAGE(new_values[2] == pt->at(2), EXPECTED_GOT(new_values[2], pt->at(2)));
+}
+
+BOOST_AUTO_TEST_CASE(test_space_step)
+{
+  const double tolerance{ 1e-4 };
+
+  mock::space3d_t test;
+  prx::space_t& space{ test.space };
+  const std::vector<double> lower({ 0.0, 0.0, 0.0 });
+  const std::vector<double> upper({ 1.0, 1.0, 3.14 * 2 });
+  space.set_bounds(lower, upper);
+
+  prx::space_point_t pt{ space.make_point(lower) };
+
+  BOOST_CHECK(pt->step(0.5));
+  BOOST_CHECK((Vec(pt) - Eigen::Vector3d(0.0, 0.0, 0.5)).isZero(tolerance));
+  BOOST_CHECK(pt->step(0.5));
+  BOOST_CHECK((Vec(pt) - Eigen::Vector3d(0.0, 0.0, 1.0)).isZero(tolerance));
+  BOOST_CHECK(pt->step(5.0));
+  BOOST_CHECK((Vec(pt) - Eigen::Vector3d(0.0, 0.0, 6.0)).isZero(tolerance));
+  BOOST_CHECK(pt->step(0.5));
+  BOOST_CHECK((Vec(pt) - Eigen::Vector3d(0.0, 0.5, 0.0)).isZero(tolerance));
+  BOOST_CHECK(pt->step(6.1));
+  BOOST_CHECK(pt->step(0.5));
+  BOOST_CHECK((Vec(pt) - Eigen::Vector3d(0.0, 1.0, 0.0)).isZero(tolerance));
+  BOOST_CHECK(pt->step(6.1));
+  BOOST_CHECK(pt->step(0.5));
+  BOOST_CHECK((Vec(pt) - Eigen::Vector3d(0.5, 0.0, 0.0)).isZero(tolerance));
+  BOOST_CHECK(pt->step(6.1));      // 0.5, 0.0, 6.1
+  BOOST_CHECK(pt->step(1.0));      // 0.5, 1.0, 0.0
+  BOOST_CHECK(pt->step(6.1));      // 0.5, 1.0, 6.1
+  BOOST_CHECK(not pt->step(1.0));  // 0.0, 0.0, 0.0
 }

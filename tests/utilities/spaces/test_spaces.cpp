@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(test_space_norms)
   prx::space_t space_1("EER", address_1, "space_1");
 
   prx::space_point_t pt_sp1 = space_1.make_point();
-  space_1.copy_to_point(pt_sp1);
+  space_1.copy_to(pt_sp1);
   prx::space_point_t pt_sp2 = space_1.clone_point(pt_sp1);
   (*pt_sp1)[0] = 0;
   (*pt_sp1)[1] = -1;
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(test_space_copy_to_and_copy_from_point)
 
   prx::space_point_t pt_sp1 = space_1.make_point();
 
-  space_1.copy_to_point(pt_sp1);
+  space_1.copy_to(pt_sp1);
   prx::space_point_t pt_sp2 = space_1.clone_point(pt_sp1);
   BOOST_CHECK(space_1.equal_points(pt_sp1, pt_sp2));
   (*pt_sp1)[0] = 10;
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(comparing_speed_of_copy_point_vs_copy)
   for (std::size_t i = 0; i < total_copies; ++i)
   {
     space.sample(pt_from);
-    space.copy_point(pt_to, pt_from);
+    space.copy(pt_to, pt_from);
   }
   auto end_copy_point = std::chrono::steady_clock::now();
   std::chrono::duration<double> elapsed_copy_point{ end_copy_point - start_copy_point };
@@ -470,6 +470,41 @@ BOOST_AUTO_TEST_CASE(space_init_params)
   BOOST_REQUIRE_MESSAGE(values[0] == space.at(0), EXPECTED_GOT(values[0], space.at(0)));
   BOOST_REQUIRE_MESSAGE(values[1] == space.at(1), EXPECTED_GOT(values[1], space.at(1)));
   BOOST_REQUIRE_MESSAGE(values[2] == space.at(2), EXPECTED_GOT(values[2], space.at(2)));
+  // BOOST_CHECK(space.equal_points(pt1, result1));
+  // BOOST_CHECK_MESSAGE(space.equal_points(pt_half, expected_half), EXPECTED_GOT(expected_half, pt_half));
+}
+
+BOOST_AUTO_TEST_CASE(space_init_populate_params)
+{
+  mock::space3d_t test;
+  prx::space_t& space{ test.space };
+  prx::param_loader params{};
+  std::vector<double> lower_bound{ { -5, -5, -5 } };
+  std::vector<double> upper_bound{ { 5, 5, 5 } };
+  std::vector<double> values{ { 0.5, 0.5, 0.5 } };
+  params["lower_bound"].set<std::vector<double>>(lower_bound);
+  params["upper_bound"].set<std::vector<double>>(upper_bound);
+  params["values"].set<std::vector<double>>(values);
+
+  space.init(params);
+
+  prx::param_loader params_new{ space.init() };
+
+  const std::vector<double> lower_bound_new{ params_new["lower_bound"].as<std::vector<double>>() };
+  const std::vector<double> upper_bound_new{ params_new["upper_bound"].as<std::vector<double>>() };
+  const std::vector<double> values_new{ params_new["values"].as<std::vector<double>>() };
+
+  BOOST_CHECK(lower_bound_new[0] == space.get_lower_bound(0));
+  BOOST_CHECK(lower_bound_new[1] == space.get_lower_bound(1));
+  BOOST_CHECK(lower_bound_new[2] == space.get_lower_bound(2));
+
+  BOOST_CHECK(upper_bound_new[0] == space.get_upper_bound(0));
+  BOOST_CHECK(upper_bound_new[1] == space.get_upper_bound(1));
+  BOOST_CHECK(upper_bound_new[2] == space.get_upper_bound(2));
+
+  BOOST_REQUIRE_MESSAGE(values_new[0] == space.at(0), EXPECTED_GOT(values_new[0], space.at(0)));
+  BOOST_REQUIRE_MESSAGE(values_new[1] == space.at(1), EXPECTED_GOT(values_new[1], space.at(1)));
+  BOOST_REQUIRE_MESSAGE(values_new[2] == space.at(2), EXPECTED_GOT(values_new[2], space.at(2)));
   // BOOST_CHECK(space.equal_points(pt1, result1));
   // BOOST_CHECK_MESSAGE(space.equal_points(pt_half, expected_half), EXPECTED_GOT(expected_half, pt_half));
 }

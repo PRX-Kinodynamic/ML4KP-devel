@@ -145,6 +145,23 @@ public:
   virtual ~rrt_specification_t()
   {
   }
+
+  virtual prx::param_loader init() override
+  {
+    prx::param_loader params;
+
+    params["bnb"].set(bnb);
+    params["use_replanning"].set(use_replanning);
+
+    params["control_steps"] = prx::param_loader();
+    params["control_steps/min"] = min_control_steps;
+    params["control_steps/max"] = max_control_steps;
+
+    params["blossom_number"].set(blossom_number);
+
+    return params;
+  }
+
   virtual void init(const prx::param_loader& params) override
   {
     bnb = params.exists("bnb") ? params["bnb"].as<bool>() : false;
@@ -158,6 +175,7 @@ public:
     }
     blossom_number = params.exists("blossom_number") ? params["blossom_number"].as<int>() : blossom_number;
   }
+
   friend std::ostream& operator<<(std::ostream& os, const rrt_specification_t& obj)
   {
     os << "bnb: " << obj.bnb << "\n";

@@ -121,7 +121,7 @@ void param_loader::add_opts(std::vector<std::string> argv)
   // Bool can be without value: "--/some/bool/param"
   const std::regex opt_regex_bool("--((\\/)?\\w)+=?");
   // Special case for the executable: "./executable_name"
-  const std::regex opt_regex_exec("\\.(\\/\\w+)+");
+  const std::regex opt_regex_exec("(.)+(\\/\\w+)+");
   const std::regex opt_regex_expy("(.)+\\.py");
 
   auto argc = argv.size();
@@ -154,6 +154,9 @@ void param_loader::add_opts(std::vector<std::string> argv)
         pos_eq = pos_eq - 2;
       }
       (*this)[opt.substr(2, pos_eq)] = YAML::Load("true");
+    }
+    else if (i == 0)
+    {  // Skip the first()
     }
     else
     {
@@ -268,6 +271,7 @@ void param_loader::print(const YAML::Node& pl, std::string prepath) const
       prx_throw("Problem printing param_loader! Is there a new type?\n");
   }
 }
+
 void param_loader::replace_env_var(YAML::Node& node)
 {
   const std::regex env_var_regex("\\$\\{(.)+\\}");
@@ -297,4 +301,5 @@ void param_loader::replace_env_var(YAML::Node& node)
     }
   }
 }
+
 }  // namespace prx

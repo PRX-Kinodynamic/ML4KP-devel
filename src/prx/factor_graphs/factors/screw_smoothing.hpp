@@ -23,7 +23,7 @@ class screw_smoothing_factor_t : public noise_model_2factor_t<screw_axis_t, scre
 public:
   screw_smoothing_factor_t(const gtsam::Key s0_key, const gtsam::Key s1_key, const double Lwv,
                            const NoiseModel& cost_model)
-    : screw_smoothing_factor_t(s0_key, s1_key, Lwv, Lwv, cost_model){};
+    : screw_smoothing_factor_t(s0_key, s1_key, Lwv, Lwv, cost_model) {};
 
   screw_smoothing_factor_t(const gtsam::Key s0_key, const gtsam::Key s1_key, const double Lw, const double Lv,
                            const NoiseModel& cost_model)

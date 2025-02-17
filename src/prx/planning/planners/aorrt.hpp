@@ -78,6 +78,16 @@ public:
   {
   }
 
+  virtual prx::param_loader init() override
+  {
+    prx::param_loader params{ rrt_specification_t::init() };
+
+    params["cost_multiplier"].set(cost_multiplier);
+    params["w_c"].set(w_c);
+    params["w_x"].set(w_x);
+    return params;
+  }
+
   virtual void init(const prx::param_loader& params) override
   {
     rrt_specification_t::init(params);
@@ -85,6 +95,7 @@ public:
     w_c = params.exists("w_c") ? params["w_c"].as<double>() : w_c;
     w_x = params.exists("w_x") ? params["w_x"].as<double>() : w_x;
   }
+
   friend std::ostream& operator<<(std::ostream& os, const aorrt_specification_t& obj)
   {
     // rrt_specification_t::operator<<(os, obj);

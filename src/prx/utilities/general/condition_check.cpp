@@ -12,12 +12,7 @@ condition_check_t::condition_check_t(std::string type, double check) : condition
 {
   condition_check = check;
   condition_type = available_types[type];
-  // if(type=="iterations")
-  // 	condition_type = 0;
-  // else if(type=="time")
-  // 	condition_type = 1;
-  // else if(type=="sim_time")
-  // 	condition_type = 2;
+
   if (condition_type > 2)
   {
     prx_throw("Condition type is invalid!");
@@ -30,6 +25,11 @@ condition_check_t::condition_check_t(custom_check_t _custom_check) : condition_c
 {
   condition_type = available_types["custom"];
   custom_check = _custom_check;
+}
+
+condition_check_t::condition_check_t(const prx::param_loader& params) : condition_check_t()
+{
+  init(params);
 }
 
 void condition_check_t::add_condition(condition_check_t* _cond)

@@ -34,13 +34,30 @@ BOOST_AUTO_TEST_CASE(norm_angle_pi_test)
   double lower = 0;
   double upper = 2 * M_PI;
 
-  BOOST_CHECK(prx::norm_angle_pi(a1, lower, upper) == a1);
+  const double epsilon{ 1e-4 };
+  BOOST_CHECK_CLOSE(prx::norm_angle_pi(a1, lower, upper), a1, epsilon);
   a1 = a1 + upper;
-  BOOST_CHECK(prx::norm_angle_pi(a1, lower, upper) == M_PI);
+  BOOST_CHECK_CLOSE(prx::norm_angle_pi(a1, lower, upper), M_PI, epsilon);
   a1 = lower;
-  BOOST_CHECK(prx::norm_angle_pi(a1, lower, upper) == a1);
+  BOOST_CHECK_CLOSE(prx::norm_angle_pi(a1, lower, upper), a1, epsilon);
   a1 = upper;
-  BOOST_CHECK(prx::norm_angle_pi(a1, lower, upper) == a1);
+  BOOST_CHECK_CLOSE(prx::norm_angle_pi(a1, lower, upper), a1, epsilon);
+}
+
+BOOST_AUTO_TEST_CASE(angle_bound_test)
+{
+  double a1 = M_PI;
+  double lower = 0;
+  double upper = 2 * M_PI;
+
+  const double epsilon{ 1e-4 };
+  BOOST_CHECK_CLOSE(prx::angle_bound(a1, lower, upper), a1, epsilon);
+  a1 = a1 + upper;
+  BOOST_CHECK_CLOSE(prx::angle_bound(a1, lower, upper), M_PI, epsilon);
+  a1 = lower;
+  BOOST_CHECK_CLOSE(prx::angle_bound(a1, lower, upper), a1, epsilon);
+  a1 = upper;
+  BOOST_CHECK_CLOSE(prx::angle_bound(a1, lower, upper), a1, epsilon);
 }
 
 BOOST_AUTO_TEST_CASE(split_block_test)

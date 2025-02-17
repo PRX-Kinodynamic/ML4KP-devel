@@ -11,7 +11,8 @@ namespace prx
 namespace simulation
 {
 using namespace std::placeholders;
-template <uint8_t Evaluations = 5, int8_t MinDifference = -1>
+template <uint8_t Evaluations = 5, int8_t MinDifference = -1,
+          typename Delta = math::derivative_input_types<Eigen::VectorXd>>
 class lqr_controller_t : public controller_t
 {
 public:
@@ -28,11 +29,15 @@ public:
   using DynamicFunctionX = std::function<VectorX(const VectorX&)>;
   using DynamicFunctionU = std::function<VectorX(const VectorU&)>;
 
-  using DerivA = prx::math::first_order_derivative_t<DynamicFunctionX, VectorX, Evaluations, MinDifference>;
-  using DerivB = prx::math::first_order_derivative_t<DynamicFunctionU, VectorU, Evaluations, MinDifference>;
+  using DerivA = prx::math::first_order_derivative_t<DynamicFunctionX, VectorX, Evaluations, MinDifference, Delta>;
+  using DerivB = prx::math::first_order_derivative_t<DynamicFunctionU, VectorU, Evaluations, MinDifference, Delta>;
 
+  using Diff = LQR::Diff;
+  // inline static Diff DefaultDiff = [](const VectorX& a, const VectorX& b) { return a - b; };
+  // using Operations = std::function<VectorX>
   template <typename MatQ, typename MatR, typename VecX, typename VecU>
-  lqr_controller_t(system_ptr_t system_ptr, const std::string& path, MatQ q, MatR r, VecX x0, VecU u0)
+  lqr_controller_t(system_ptr_t system_ptr, const std::string& path, MatQ q, MatR r, VecX x0, VecU u0,
+                   Diff diff = LQR::DefaultDiff)
     : controller_t(system_ptr, path)
     , _Xdim(system_ptr->get_state_space()->size())
     , _Udim(system_ptr->get_control_space()->size())
@@ -42,10 +47,12 @@ public:
     , _dynamic_function_u(std::bind(&lqr_controller_t::dynamics, this, _x0, _1))
     , _A_deriv(_dynamic_function_x, prx::simulation_step, _Xdim, _Xdim)
     , _B_deriv(_dynamic_function_u, prx::simulation_step, _Udim, _Xdim)
-    , _lqr(_Xdim, _Udim)
+    , _lqr(_Xdim, _Udim, diff)
     , _x(VectorX::Zero(_Xdim))
     , _x_ref(x0)
+
   {
+    prx_assert(prx::simulation_step > 0, "simulation step not set!");
     prx_assert(system_ptr->get_system_type() == plant_type::ANALYTICAL,
                "lqr_controller_t only supports plant_type::ANALYTICAL plants");
     _lqr.Q() = q;

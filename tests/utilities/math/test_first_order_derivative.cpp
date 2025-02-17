@@ -159,7 +159,7 @@ void model_test(const double h, const double tolerance_constant, const Eigen::In
   using VectorIn = typename Model::VectorIn;
   using Jacobian = typename Model::Jacobian;
   using Derivative = prx::math::first_order_derivative_t<Model, VectorIn, s, i_min>;
-  // Error is: O(h^{s-1}). Obviusly, the actual error might be a somewhat higher...
+  // Error is: O(h^{s-1}). Obviously, the actual error might be a somewhat higher...
   // so we test using tolerance = C*h^{s-1}
   const double tolerance{ tolerance_constant * std::pow(h, s - 1) };
   const int total_evaluations{ 1 };

@@ -38,6 +38,11 @@ public:
     return configurations[name];
   }
 
+  transform_t configuration(const std::string name)
+  {
+    return *(configurations[name]);
+  }
+
   inline std::string get_object_name()
   {
     return object_name;

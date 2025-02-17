@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fstream>
 #include <regex>
 #include <string>
 #include <unordered_map>
@@ -122,6 +123,18 @@ public:
   inline const_iterator end() const
   {
     return params.end();
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const param_loader& obj)
+  {
+    os << obj.params;
+    return os;
+  }
+
+  void save(const std::string filename) const
+  {
+    std::ofstream ofs(filename.c_str());
+    ofs << params;
   }
 
 protected:

@@ -192,8 +192,12 @@ public:
 
   friend std::ostream& operator<<(std::ostream& os, const trajectory_t& obj)
   {
-    os << obj.print() << " ";
-    // os << std::endl;
+    for (unsigned i = 0; i < obj.num_states; ++i)
+    {
+      os << obj.states[i] << "\n";
+    }
+    os << "\n";
+
     return os;
   }
 
