@@ -1,0 +1,5 @@
+data_path: "/common/users/dm1487/ktamp_data_rename/cylinder_envs_large_aggregate_temp"
+test_data_path: "/common/users/dm1487/ktamp_data_rename/cylinder_envs_large_aggregate_test"
+problem_type: "direct_objects_to_radius/1_mixed_push" 
+
+balance_data: false

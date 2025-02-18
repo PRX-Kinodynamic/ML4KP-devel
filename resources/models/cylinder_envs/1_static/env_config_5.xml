@@ -12,12 +12,12 @@
   </asset>
   <worldbody>
     <light dir="0 0 -1" directional="true" pos="0 0 1.5"/>
-    <geom condim="4" friction="1.0 0.005 0.001" material="groundplane" name="floor" size="0 0 0.05" type="plane"/>
+    <geom condim="4" friction="0.5 0.005 0.001" material="groundplane" name="floor" size="0 0 0.05" type="plane"/>
     <body name="walls">
-      <geom name="wall_1" condim="4" pos="-2.0 0.0 0.3" rgba="0.800000011920929 0.800000011920929 0.800000011920929 1.0" size="0.05 2.0 0.3" type="box"/>
-      <geom name="wall_2" condim="4" pos="2.0 0.0 0.3" rgba="0.800000011920929 0.800000011920929 0.800000011920929 1.0" size="0.05 2.0 0.3" type="box"/>
-      <geom name="wall_3" condim="4" pos="0.0 -2.0 0.3" rgba="0.800000011920929 0.800000011920929 0.800000011920929 1.0" size="2.0 0.05 0.3" type="box"/>
-      <geom name="wall_4" condim="4" pos="0.0 2.0 0.3" rgba="0.800000011920929 0.800000011920929 0.800000011920929 1.0" size="2.0 0.05 0.3" type="box"/>
+      <geom name="wall_1" condim="4" pos="-10.0 0.0 0.3" rgba="0.800000011920929 0.800000011920929 0.800000011920929 1.0" size="0.05 2.0 0.3" type="box"/>
+      <geom name="wall_2" condim="4" pos="10.0 0.0 0.3" rgba="0.800000011920929 0.800000011920929 0.800000011920929 1.0" size="0.05 2.0 0.3" type="box"/>
+      <geom name="wall_3" condim="4" pos="0.0 -10.0 0.3" rgba="0.800000011920929 0.800000011920929 0.800000011920929 1.0" size="2.0 0.05 0.3" type="box"/>
+      <geom name="wall_4" condim="4" pos="0.0 10.0 0.3" rgba="0.800000011920929 0.800000011920929 0.800000011920929 1.0" size="2.0 0.05 0.3" type="box"/>
     </body>
     <body name="robot">
       <joint name="joint_x" type="slide" pos="0 0 0" axis="1 0 0"/>
@@ -25,11 +25,11 @@
       <geom name="robot" type="cylinder" pos="0.0 0.0 0.2" size="0.2 0.2 0.0" mass="5.0" friction="1.0 0.005 0.0001" condim="4" rgba="1.0 1.0 0.0 1.0"/>
     </body>
     <body name="obstacle_1_static">
-      <geom name="obstacle_1_static" condim="4" pos="0.5718691201729462 -0.8475026949740243 0.3" euler="0 0 333.65463742688763" friction="1.0 0.005 0.001" rgba="1 0 0 1" size="0.3455360327748148 0.7607046293506878 0.3" type="box"/>
+      <geom name="obstacle_1_static" condim="4" pos="-0.5274027162810861 1.4586573099216409 0.3" euler="0 0 20.075632164511358" friction="0.0 0.005 0.001" rgba="1 0 0 1" size="0.9046033145457832 0.4921145751970477 0.3" type="box"/>
     </body>
   </worldbody>
   <actuator>
-    <velocity name="actuator_x" joint="joint_x" gear="1" ctrlrange="-1 1"/>
-    <velocity name="actuator_y" joint="joint_y" gear="1" ctrlrange="-1 1"/>
+    <motor name="actuator_x" joint="joint_x" gear="1" ctrlrange="-1 1"/>
+    <motor name="actuator_y" joint="joint_y" gear="1" ctrlrange="-1 1"/>
   </actuator>
 </mujoco>

@@ -15,7 +15,3 @@ class Method(abc.ABC):
   @abc.abstractmethod
   def get_name(self):
     """Name of the method."""
-
-  @abc.abstractmethod
-  def get_classification_threshold(self):
-    """Classification threshold of the method."""

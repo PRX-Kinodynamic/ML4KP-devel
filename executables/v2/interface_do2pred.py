@@ -1,3 +1,4 @@
+### This interface pertains to the problem of predicting yes/no for a given scene configuration and the ability of the robot to reach the goal state
 from problems.direct_objects import DirectObjects
 from pathlib import Path
 from methods.classifiers import GNNClassifier, MLPClassifier
@@ -29,7 +30,7 @@ class Metrics:
 problem_map = {
     'simple_scene_simple_controller_direct_objects': {
         'class': DirectObjects,
-        'config': 'executables/v2/problems/configs/simple_scene_simple_controller.yaml'
+        'config': 'executables/v2/problems/configs/direct_objects/simple_scene_simple_controller.yaml'
     }
 }
 
@@ -55,15 +56,19 @@ def plot_predictions(predictions, file_name, fpr=None, classification_threshold=
     for pred in predictions:
         folder = pred[0]
         output, pred, success = pred[1]
+        # if int(folder.split('/')[-1]) % 2 != 0:
+        #     continue
         metadata = {}
         with open(os.path.join(folder, "metadata.json"), "r") as f:
             metadata = json.load(f)
         goal = metadata["goal_state"][:2]
+        goal_pt_patch = goal.copy()
+        goal_pt_patch[0] -= 0.1
+        goal_pt_patch[1] -= 0.1
         env = metadata["environment"]
-        print(env)
-        patch_output.append(Rectangle(goal, 0.2, 0.2, color='black', alpha=output))
-        patch_pred.append(Rectangle(goal, 0.2, 0.2, color='green' if pred == 1.0 else 'red'))
-        patch_label.append(Rectangle(goal, 0.2, 0.2, color= 'green' if float(success) == 1.0 else 'red'))
+        patch_output.append(Rectangle(goal_pt_patch, 0.2, 0.2, color='black', alpha=output))
+        patch_pred.append(Rectangle(goal_pt_patch, 0.2, 0.2, color='green' if pred == 1.0 else 'red'))
+        patch_label.append(Rectangle(goal_pt_patch, 0.2, 0.2, color= 'green' if float(success) == 1.0 else 'red'))
         for obj in env:
             if 'obstacle' in obj['name'] or 'robot' in obj['name']:
                 pos = obj['pos'][:2]
@@ -201,8 +206,6 @@ def run(problem: Problem, method: Method, load_model=False, verbose=False):
         # print(f"{i+1}. {xml_path}: {fpr:.2f}")
         file_name = Path(xml_path).stem
         plot_predictions(predictions, f'{fpr_folder}/{fpr:.2f}_{file_name}', fpr, classification_threshold)
-        if fpr < 0.01:
-            break
 
     return metrics
 

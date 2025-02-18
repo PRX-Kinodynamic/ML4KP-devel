@@ -5,6 +5,8 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <random>
+#include <fstream>
+#include <sstream>
 
 namespace prx
 {
@@ -19,10 +21,10 @@ public:
     : ss(state_space), step(discretization_step)
   {
     // Account for cylinder radius in bounds
-    x_min_ = x_min + 2 * cylinder_radius;
-    x_max_ = x_max - 2 * cylinder_radius;
-    y_min_ = y_min + 2 * cylinder_radius;
-    y_max_ = y_max - 2 * cylinder_radius;
+    x_min_ = x_min + 2 * cylinder_radius; // -1.6
+    x_max_ = x_max - 2 * cylinder_radius; // 1.6
+    y_min_ = y_min + 2 * cylinder_radius; // -1.6
+    y_max_ = y_max - 2 * cylinder_radius; // 1.6
 
     // Initialize current position
     current_x = x_min_;
@@ -108,10 +110,13 @@ class PushEnvironment
 public:
   enum class GoalSamplingMode {
     DISCRETIZED,
-    RANDOM
+    RANDOM,
+    FILE
   };
 
-  PushEnvironment(const std::string& xml_path, bool visualize)
+  double goal_radius;
+
+  PushEnvironment(const std::string& xml_path, bool visualize, double goal_radius)
     : sim(std::make_shared<mujoco_simulator_t>(xml_path, visualize))
   {
     sim->init_simulator();
@@ -121,6 +126,8 @@ public:
     sg = context.first;
     ss = sg->get_state_space();
     cs = sg->get_control_space();
+
+    this->goal_radius = goal_radius;
 
     // Update to only track robot (which is now the cylinder)
     robot_id = mj_name2id(sim->m, mjOBJ_GEOM, "robot");
@@ -134,17 +141,27 @@ public:
     double x_max = -std::numeric_limits<double>::infinity();
     double y_min = std::numeric_limits<double>::infinity();
     double y_max = -std::numeric_limits<double>::infinity();
-    for (int i = 0; i < sim->m->ngeom; i++)
-    {
-      if (sim->m->geom_bodyid[i] == walls)
-      {
-        x_min = std::min(x_min, sim->m->geom_pos[i * 3]);
-        x_max = std::max(x_max, sim->m->geom_pos[i * 3]);
-        y_min = std::min(y_min, sim->m->geom_pos[i * 3 + 1]);
-        y_max = std::max(y_max, sim->m->geom_pos[i * 3 + 1]);
-      }
-    }
 
+    // for (int i = 0; i < sim->m->ngeom; i++)
+    // {
+    //   if (sim->m->geom_bodyid[i] == walls)
+    //   {
+    //     x_min = std::min(x_min, *(sim->m->geom_pos + i * 3));
+    //     x_max = std::max(x_max, *(sim->m->geom_pos + i * 3));
+    //     y_min = std::min(y_min, *(sim->m->geom_pos + i * 3 + 1));
+    //     y_max = std::max(y_max, *(sim->m->geom_pos + i * 3 + 1));
+    //   }
+    // }
+
+    // artificially set bounds to be 2 units away from the origin
+
+    
+    x_min = -2.0; // std::min(x_min, -2);
+    x_max = 2.0; // std::max(x_max, 2);
+    y_min = -2.0; // std::min(y_min, -2);
+    y_max = 2.0; // std::max(y_max, 2);
+
+    std::cout << "x_min: " << x_min << ", x_max: " << x_max << ", y_min: " << y_min << ", y_max: " << y_max << std::endl;
     set_bounds(x_min, x_max, y_min, y_max);
 
     location_iterator = std::make_shared<CylinderLocationIterator>(ss, ss->get_lower_bounds()[0],
@@ -205,9 +222,10 @@ public:
     std::vector<double> goal_state_vec;
     ss->copy_vector_from_point(goal_state_vec, goal_state);
     sim->set_goal(goal_state_vec);
-    sim->set_goal_radius(0.3);
+    sim->set_goal_radius(goal_radius);
     
     ss->copy_to(current_state);
+
   }
 
   void step(const space_point_t& control, double duration)
@@ -237,9 +255,9 @@ public:
   bool is_in_goal_region(const space_point_t& goal_state)
   {
     double* robot_pos = &sim->d->geom_xpos[3 * robot_id];
-    return (robot_pos[0] - goal_state->at(0)) * (robot_pos[0] - goal_state->at(0)) +
-           (robot_pos[1] - goal_state->at(1)) * (robot_pos[1] - goal_state->at(1)) <
-           0.01;
+    return sqrt((robot_pos[0] - goal_state->at(0)) * (robot_pos[0] - goal_state->at(0)) +
+           (robot_pos[1] - goal_state->at(1)) * (robot_pos[1] - goal_state->at(1))) <
+           goal_radius;
   }
 
   bool is_in_collision()
@@ -293,7 +311,46 @@ public:
     current_goal_index = 0;
   }
 
-  // Modified next_goal to handle both modes
+  // Add new method to load goals from file
+  void load_goals_from_file(const std::string& filename) {
+    random_goals.clear();  // We'll reuse the random_goals vector for file goals
+    std::ifstream file(filename);
+    
+    if (!file.is_open()) {
+      throw std::runtime_error("Could not open goal file: " + filename);
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+      // Skip empty lines
+      if (line.empty()) continue;
+
+      // Parse x,y coordinates
+      std::stringstream line_stream(line);  // Renamed from ss to line_stream
+      std::string x_str, y_str;
+      
+      if (std::getline(line_stream, x_str, ',') && std::getline(line_stream, y_str)) {
+        try {
+          double x = std::stod(x_str);
+          double y = std::stod(y_str);
+          
+          // Create goal state point
+          space_point_t goal = ss->make_point();  // Now ss refers to the state space
+          goal->at(0) = x;
+          goal->at(1) = y;
+          random_goals.push_back(goal);
+        } catch (const std::exception& e) {
+          std::cerr << "Error parsing line: " << line << std::endl;
+          continue;
+        }
+      }
+    }
+    
+    current_goal_index = 0;
+    file.close();
+  }
+
+  // Modified next_goal to handle file mode
   space_point_t next_goal() {
     if (sampling_mode == GoalSamplingMode::DISCRETIZED) {
       if (!location_iterator->has_next()) {
@@ -302,7 +359,7 @@ public:
       auto goal_state = location_iterator->next();
       reset(goal_state);
       return goal_state;
-    } else {  // RANDOM mode
+    } else {  // RANDOM or FILE mode
       if (random_goals.empty() || current_goal_index >= random_goals.size()) {
         return nullptr;
       }
@@ -312,20 +369,20 @@ public:
     }
   }
 
-  // Modified reset_goals to handle both modes
+  // Modified reset_goals to handle file mode
   void reset_goals() {
     if (sampling_mode == GoalSamplingMode::DISCRETIZED) {
       location_iterator->reset();
-    } else {  // RANDOM mode
+    } else {  // RANDOM or FILE mode
       current_goal_index = 0;
     }
   }
 
-  // Modified get_total_goals to handle both modes
+  // Modified get_total_goals to handle file mode
   int get_total_goals() const {
     if (sampling_mode == GoalSamplingMode::DISCRETIZED) {
       return location_iterator->get_total_goals();
-    } else {  // RANDOM mode
+    } else {  // RANDOM or FILE mode
       return random_goals.size();
     }
   }

@@ -1,0 +1,18 @@
+node_features: 13  # 2 (pos) + 8 (corners) + 3 (type) 
+edge_features: 2   # relative position
+batch_size: 512
+device: "cuda"
+epochs: 50
+save_dir: "models/radius"
+model_name: "gnn_radius"
+learning_rate: 0.001
+scheduler_step_size: 10
+scheduler_gamma: 0.5
+patience: 10
+min_delta: 1e-4
+
+# Model architecture
+node_hidden_dims: [64, 128, 256]
+edge_hidden_dims: [32, 64]
+gcn_hidden_dims: [256, 256, 256]
+graph_predictor_hidden_dims: [256, 128, 64] 

@@ -1,0 +1,30 @@
+# Input dimensions
+mask_size: 40  # Size of input masks
+latent_dim: 256  # Size of mask embeddings
+node_features: 256  # Size of node features (same as latent_dim)
+edge_features: 2  # Relative positions between nodes
+
+# GNN architecture
+node_hidden_dims: [256, 512]
+edge_hidden_dims: [32, 64] 
+gcn_hidden_dims: [512, 512, 512]
+
+# Decoder architecture
+decoder_dims: [
+    [512, 2, 2],
+    [256, 4, 4], 
+    [128, 9, 9],
+    [64, 17, 17]
+]
+
+# Training params
+batch_size: 32
+epochs: 50
+device: cuda:0
+learning_rate: 0.001
+patience: 10
+min_delta: 1e-4
+scheduler_step_size: 10
+scheduler_gamma: 0.5
+save_dir: saved_models
+model_name: mask_to_image_gnn 

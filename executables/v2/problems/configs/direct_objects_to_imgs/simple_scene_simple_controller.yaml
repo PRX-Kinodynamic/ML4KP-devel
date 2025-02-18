@@ -1,0 +1,7 @@
+data_path: "/common/users/dm1487/ktamp_data_rename/cylinder_envs_large_aggregate/1_mixed_push"
+test_data_path: "/common/users/dm1487/ktamp_data_rename/cylinder_envs_large_aggregate/1_mixed_push_test"
+
+problem_type: "direct_objects_to_imgs/1_mixed_push"
+
+scene_goals: 289
+balance_data: false

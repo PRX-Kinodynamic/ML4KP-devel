@@ -153,7 +153,7 @@ def generate_env_config(env_size, robot_pos, gen_config, walls, robot, obstacles
 
     num_obstacles = np.random.randint(gen_config['obstacles']['count']['min'], gen_config['obstacles']['count']['max'] + 1)
     max_attempts = 500
-    movable_done = False
+    movable_done = None
     existing_obstacles_count = len(config['worldbody']['obstacles'])
     # exit()
     for i in range(num_obstacles):
@@ -171,8 +171,17 @@ def generate_env_config(env_size, robot_pos, gen_config, walls, robot, obstacles
             # Generate a random rotation for the obstacle
             rotation = np.random.uniform(0, 360)
             # Randomly decide if the obstacle is movable or not
-
+            
+            
             is_movable = np.random.choice([True, False], p=[gen_config['obstacles']['movable_probability'], 1 - gen_config['obstacles']['movable_probability']])
+            
+            # if gen_config['obstacles']['movable_probability'] == 0.5:
+            #     if movable_done is None:
+            #         pass
+            #     elif movable_done:
+            #         is_movable = False
+            #     else:
+            #         is_movable = True
             # if not movable_done:    
             #     is_movable = True # np.random.choice([True, False], p=[gen_config['obstacles']['movable_probability'], 1 - gen_config['obstacles']['movable_probability']])
                 
@@ -345,8 +354,10 @@ if __name__ == "__main__":
             np.random.uniform(generator_config['env_size']['depth']['min'], generator_config['env_size']['depth']['max']),
             np.random.uniform(generator_config['env_size']['height']['min'], generator_config['env_size']['height']['max'])
         ]
-        env_size[0] = max(x_limits) - min(x_limits)
-        env_size[1] = max(y_limits) - min(y_limits)
+
+        # TODO: artifically set env size to be 4x4, figure out how to do this in a better way
+        env_size[0] = 4 # max(x_limits) - min(x_limits)
+        env_size[1] = 4 # max(y_limits) - min(y_limits)
         main_obstacle = None
         for geom_idx in range(model.ngeom):
             if model.geom(geom_idx).name.startswith('obstacle_'):

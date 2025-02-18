@@ -38,14 +38,14 @@ public:
         bool allow_collision = params["allow_collision"].as<bool>();
         double scale = params["control_scale"].as<double>();
 
-        if (allow_collision){
-            double distance = sqrt(dx*dx + dy*dy);
+        double distance = sqrt(dx*dx + dy*dy);
+        if (allow_collision && distance < 0.1){
             scale = std::min(scale, distance);
         }
+        
         control_point->at(0) = cos(angle) * scale;
         control_point->at(1) = sin(angle) * scale;
     }
 }; 
-
 
 }  // namespace prx

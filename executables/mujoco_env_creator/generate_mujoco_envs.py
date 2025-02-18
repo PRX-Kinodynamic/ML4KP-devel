@@ -206,7 +206,7 @@ def create_actuators(mujoco: Element) -> None:
     
     # Add torque actuators for x and y joints
     for axis in ['x', 'y']:
-        motor = SubElement(actuator, 'velocity')
+        motor = SubElement(actuator, 'motor')
         motor.set('name', f'actuator_{axis}')
         motor.set('joint', f'joint_{axis}')
         motor.set('gear', '1')  # Adjust this value as needed

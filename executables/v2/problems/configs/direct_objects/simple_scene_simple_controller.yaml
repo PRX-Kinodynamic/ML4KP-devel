@@ -1,0 +1,8 @@
+data_path: "/common/users/dm1487/ktamp_data_rename/cylinder_envs_large/1_mixed_push_1/discretized"
+# eval_data_path: ["/common/users/dm1487/ktamp/random/1"]
+test_data_path: "/common/users/dm1487/ktamp_data_rename/cylinder_envs_large/1_mixed_push_1/discretized_test"
+
+problem_type: "meeting/1_mixed_push_1_balanced"
+
+scene_goals: 289
+balance_data: true

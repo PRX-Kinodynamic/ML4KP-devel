@@ -1,0 +1,14 @@
+input_dims: 11  # 2 (pos) + 8 (corners) + 3 (type)
+batch_size: 32
+device: "cuda"
+epochs: 100
+save_dir: "models/radius"
+model_name: "mlp_radius"
+learning_rate: 0.001
+scheduler_step_size: 10
+scheduler_gamma: 0.5
+patience: 10
+min_delta: 1e-4
+
+# Model architecture
+hidden_dims: [256, 512, 256, 128, 64]
