@@ -14,6 +14,7 @@ set(BUILD_FOR_TORCH  OFF CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
 set(BUILD_FOR_GTSAM ON CACHE BOOL "Set ON/TRUE for building GTSAM factor graphs")
+set(BUILD_WITH_SIMD OFF CACHE BOOL "Set ON/TRUE for building with SIMD (vectorized) operations")
 
 set(${PROJECT_NAME}_VERSION 1.0)
 set(${PROJECT_NAME}_HEADERS "" CACHE STRING "Headers to be exported")
@@ -36,6 +37,10 @@ elseif(CMAKE_BUILD_TYPE MATCHES Debug)
     # list(APPEND BUILD_FLAGS "-fsanitize=address")
     add_definitions(-DDEBUG_BUILD)
 endif()
+
+if(BUILD_WITH_SIMD)
+	list(APPEND BUILD_FLAGS "-march=native")
+end(BUILD_WITH_SIMD)
 
 if (UNIX)
 	if (NOT APPLE)
