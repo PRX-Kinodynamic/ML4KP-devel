@@ -1,6 +1,6 @@
 num_configs: 5000
-config_dir: 'resources/input_files/cylinder_envs/many_mixed'
-output_dir: 'resources/models/cylinder_envs/many_mixed'
+config_dir: 'resources/input_files/cylinder_envs/single_pair_arc'
+output_dir: 'resources/models/cylinder_envs/single_pair_arc'
 
 wall:
   thickness: 0.05
@@ -8,10 +8,18 @@ wall:
   condim: 4
 
 obstacles:
-  condim: 4
+  placement_strategy: "single_pair_arc"  # Options: "single_pair_arc", "multi_movable_arc", "quadrant_mixed"
+  
+  # For multi_movable_arc strategy
+  num_movable: 3  # Number of movable objects when using multi_movable_arc
+  
+  # For quadrant_mixed strategy
   count:
-    min: 1
-    max: 5
+    min: 2  # Minimum total obstacles
+    max: 6  # Maximum total obstacles
+  movable_probability: 0.6  # Probability of an obstacle being movable (0-1)
+  
+  # Common obstacle configurations
   size:
     width:
       min: 0.1
@@ -24,8 +32,8 @@ obstacles:
     movable: [1, 1, 0, 1]
     static: [1, 0, 0, 1]
   friction: [0.0, 0.005, 0.001]
-  num_movable: 1
-  movable_probability: 0.6 # Probability of an obstacle being movable
+  num_movable: 3
+  movable_probability: 0.6
 
 env_size:
   width: # corridor width

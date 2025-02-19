@@ -43,4 +43,4 @@ resources/input_files/level_*/
 resources/models/cylinder_envs*/
 meeting*/
 predictions*
-models*/
+models/radius*
