@@ -40,7 +40,7 @@ endif()
 
 if(BUILD_WITH_SIMD)
 	list(APPEND BUILD_FLAGS "-march=native")
-end(BUILD_WITH_SIMD)
+endif(BUILD_WITH_SIMD)
 
 if (UNIX)
 	if (NOT APPLE)
