@@ -18,5 +18,7 @@ num_random_goals: 300
 random_seed: 1
 visualize: false
 
+base_config_path: resources/models/mujoco_envs_search_push/env_config_base.xml
+primitives_path: resources/input_files/examples/namo/motion_primitives
 radius_step: 0.05
-xml_path: cylinder_envs/1_movable/env_config_1.xml
+xml_path: cylinder_envs/1_movable/env_config_10.xml

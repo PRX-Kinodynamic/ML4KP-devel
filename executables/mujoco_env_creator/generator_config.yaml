@@ -1,6 +1,6 @@
-num_configs: 5000
-config_dir: 'resources/input_files/cylinder_envs/single_pair_arc'
-output_dir: 'resources/models/cylinder_envs/single_pair_arc'
+num_configs: 10
+config_dir: 'resources/input_files/cylinder_envs/test'
+output_dir: 'resources/models/cylinder_envs/test'
 
 wall:
   thickness: 0.05

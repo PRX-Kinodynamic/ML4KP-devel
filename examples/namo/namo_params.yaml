@@ -1,0 +1,7 @@
+# Environment configuration
+xml_path: "examples/namo/environments/simple_room.xml"
+visualize: true
+random_seed: 42
+
+# Optional: specify an object to query detailed information about
+query_object: "movable_box_1" 

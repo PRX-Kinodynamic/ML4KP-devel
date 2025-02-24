@@ -106,7 +106,7 @@ class PlacementStrategy(ABC):
         self.robot_pos = robot_pos
         self.gen_config = gen_config
         self.max_attempts = 500
-        self.min_robot_distance = 0.5
+        self.min_robot_distance = 0.1
 
     def is_valid_distance_from_robot(self, pos):
         """Check if position is far enough from robot."""
@@ -171,89 +171,89 @@ class ArcBasedStrategy(PlacementStrategy):
         )
 
 class SinglePairArcPlacement(ArcBasedStrategy):
-    """Place one movable and one static object in 32 arcs, with static further away."""
+    """Place one movable and one static object in 32 arcs, with static behind movable."""
     def __init__(self, env_size, robot_pos, gen_config):
         super().__init__(env_size, robot_pos, gen_config, num_arcs=32)
         
+    def is_within_bounds(self, pos):
+        """Check if position is within environment bounds."""
+        return (0 <= pos[0] <= self.env_size[0] and 
+                0 <= pos[1] <= self.env_size[1])
+    
     def place_obstacles(self, existing_objects):
-        obstacles = []
-        
         for attempt in range(self.max_attempts):
-            # Place movable first
+            # 1. Randomly select an arc
             arc_index = np.random.randint(0, self.num_arcs)
-            base_angle = arc_index * self.arc_size
+            arc_angle = arc_index * self.arc_size
+            angle = arc_angle + np.random.uniform(-self.arc_size/2, self.arc_size/2)
             
-            # Try movable placement
-            movable = self._place_movable(base_angle, existing_objects)
+            # 2. Place movable in the arc
+            movable_size = generate_random_size(self.gen_config)
+            movable = None
+            
+            # Keep sampling until we get a valid movable position
+            for _ in range(self.max_attempts):
+                distance = np.random.uniform(self.min_robot_distance, min(self.env_size)/2)
+                movable_pos = [
+                    self.robot_pos[0] + distance * np.cos(angle),
+                    self.robot_pos[1] + distance * np.sin(angle),
+                    movable_size[2]
+                ]
+                
+                if not self.is_within_bounds(movable_pos):
+                    continue
+                
+                movable = create_obstacle(
+                    pos=movable_pos,
+                    size=movable_size,
+                    rotation=np.random.uniform(0, 360),
+                    is_movable=True,
+                    index=1,
+                    gen_config=self.gen_config
+                )
+                
+                if is_valid_placement(movable, existing_objects):
+                    break
+                movable = None
+            
             if not movable:
                 continue
                 
-            # Try static placement
-            static = self._place_static(movable, base_angle, existing_objects + [movable])
-            if static:
-                return [movable, static]
-                
-        return obstacles
-
-    def _place_movable(self, base_angle, existing_objects):
-        """Place movable object in arc."""
-        movable_size = generate_random_size(self.gen_config)
-        movable_distance = np.random.uniform(0.8, 1.5)
-        movable_angle = base_angle + np.random.uniform(0, self.arc_size)
-        
-        movable_pos = [
-            self.robot_pos[0] + movable_distance * np.cos(movable_angle),
-            self.robot_pos[1] + movable_distance * np.sin(movable_angle),
-            0.3
-        ]
-        movable_pos = self.clamp_position(movable_pos, movable_size)
-        
-        movable = create_obstacle(
-            pos=movable_pos,
-            size=movable_size,
-            rotation=np.random.uniform(0, 360),
-            is_movable=True,
-            index=1,
-            gen_config=self.gen_config
-        )
-        
-        return movable if is_valid_placement(movable, existing_objects) else None
-
-    def _place_static(self, movable, base_angle, existing_objects):
-        """Place static object further than movable."""
-        movable_distance = self.distance_to_robot(movable['pos'])
-        
-        for _ in range(self.max_attempts):
+            # 3. Place static in the same arc
             static_size = generate_random_size(self.gen_config)
-            static_distance = np.random.uniform(movable_distance + 0.1, 2.5)
-            static_angle = base_angle + np.random.uniform(-self.arc_size/4, self.arc_size/4)
             
-            static_pos = [
-                self.robot_pos[0] + static_distance * np.cos(static_angle),
-                self.robot_pos[1] + static_distance * np.sin(static_angle),
-                0.3
-            ]
-            static_pos = self.clamp_position(static_pos, static_size)
-            static_rotation = np.random.uniform(0, 360)
-            
-            # Check corner distances
-            corners = self.get_corner_points(static_pos, static_size, static_rotation)
-            corner_distances = [self.distance_to_robot(corner) for corner in corners]
-            if sum(1 for dist in corner_distances if dist > movable_distance) < 3:
-                continue
-            
-            static = create_obstacle(
-                pos=static_pos,
-                size=static_size,
-                rotation=static_rotation,
-                is_movable=False,
-                index=2,
-                gen_config=self.gen_config
-            )
-            
-            if is_valid_placement(static, existing_objects):
-                return static
-        return None
+            for _ in range(self.max_attempts):
+                distance = np.random.uniform(self.min_robot_distance, min(self.env_size)/2)
+                static_pos = [
+                    self.robot_pos[0] + distance * np.cos(angle),
+                    self.robot_pos[1] + distance * np.sin(angle),
+                    static_size[2]
+                ]
+                
+                if not self.is_within_bounds(static_pos):
+                    continue
+                
+                static = create_obstacle(
+                    pos=static_pos,
+                    size=static_size,
+                    rotation=np.random.uniform(0, 360),
+                    is_movable=False,
+                    index=2,
+                    gen_config=self.gen_config
+                )
+                
+                # Check if static is behind movable
+                movable_corners = self.get_corner_points(movable['pos'], movable['size'], movable['rotation'])
+                max_movable_distance = max(self.distance_to_robot(corner) for corner in movable_corners)
+                static_corners = self.get_corner_points(static['pos'], static['size'], static['rotation'])
+                
+                if any(self.distance_to_robot(corner) <= max_movable_distance for corner in static_corners):
+                    continue
+                    
+                if is_valid_placement(static, existing_objects + [movable]):
+                    return [movable, static]
+                    
+        return []
 
 class MultiMovableArcPlacement(ArcBasedStrategy):
     """Place multiple movable objects in 16 arcs with increasing distances."""
