@@ -6,6 +6,7 @@
 #include <queue>
 #include <chrono>
 #include "namo_utility.hpp"
+#include "motion_primitive_generator.hpp"
 
 using namespace prx;
 
@@ -263,7 +264,7 @@ int main(int argc, char* argv[]) {
     param_loader params(argv[1]);
     
     // Initialize random seed if provided
-    // init_random(params["random_seed"].as<int>());
+    init_random(params["random_seed"].as<int>());
 
     // Create environment
     std::string xml_path = params["xml_path"].as<std::string>();
@@ -291,25 +292,19 @@ int main(int argc, char* argv[]) {
 
         controller.preprocess_all_motion_primitives(push_steps, control_steps, control_scale);
 
-        // extract the name of the file stem from xml_path
-        // std::string stem = xml_path.substr(0, xml_path.find_last_of("."));
-        // controller.save_motion_primitives(stem);
 
         std::unordered_map<std::string, std::vector<MotionPrimitive>> all_primitives = controller.get_all_primitives();
 
-        // std::vector<NAMOEnvironment::ObjectInfo> movable_objects = env.get_movable_objects();
-
-        // for (const auto& obj : movable_objects) {
-        //     std::vector<double> start_state = {obj.position[0], obj.position[1], obj.quaternion[0], obj.quaternion[1], obj.quaternion[2], obj.quaternion[3]};
-        //     std::vector<double> goal_state = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-        //     std::vector<double> avoid_edge_points = {};
-        //     controller.compute_control_plan(obj.name, start_state, goal_state, avoid_edge_points);
-        // }
-
-        std::unordered_map<std::string, std::vector<std::array<double, 2>>> goal_positions = controller.get_object_edge_points_all();
+        auto [goal_positions, mid_points] = controller.get_object_edge_points_all();
         // Compute wavefront
         double resolution = 0.05;  // Adjust resolution as needed
         auto [wavefront, reachable_points, reachability_flags] = compute_wavefront_with_goals(env, robot_start, goal_positions, resolution, robot_size);
+
+
+        // save wavefront to file
+        std::string output_path = "wavefront_data.txt";
+        save_wavefront_to_file(wavefront, output_path, bounds, resolution);
+
 
         // You can now use reachability_flags to see which edge points are reachable for each object
         for (const auto& [obj_name, flags] : reachability_flags) {
@@ -348,9 +343,6 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        // Save wavefront to file
-        std::string output_path = "wavefront_data.txt";
-        save_wavefront_to_file(wavefront, output_path, bounds, resolution);
         
         // In your main function where you're testing the motion primitive
         std::vector<double> start_state = {

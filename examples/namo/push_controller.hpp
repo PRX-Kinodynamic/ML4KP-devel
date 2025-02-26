@@ -54,22 +54,21 @@ public:
     }
 
     
-    std::unordered_map<std::string, std::vector<std::array<double, 2>>> get_object_edge_points_all() {
+    std::pair<std::unordered_map<std::string, std::vector<std::array<double, 2>>>, std::unordered_map<std::string, std::vector<std::array<double, 2>>>> get_object_edge_points_all() {
         std::unordered_map<std::string, std::vector<std::array<double, 2>>> edge_points;
+        std::unordered_map<std::string, std::vector<std::array<double, 2>>> mid_points;
         for (const auto& obj : movable_objects) {
-            auto [points, mid_points] = MotionPrimitiveGenerator::generate_edge_points(obj.position, obj.size, obj.quaternion);
-            edge_points[obj.name] = points;
+            auto [edge_points_vec, mid_points_vec] = MotionPrimitiveGenerator::generate_edge_points(obj.position, obj.size, obj.quaternion);
+            edge_points[obj.name] = edge_points_vec;
+            mid_points[obj.name] = mid_points_vec;
         }
-        return edge_points;
+        return {edge_points, mid_points};
     }
 
 
 
-
-
-
     // for object, compute the full control plan from start state to goal state assuming there is no other object in the environment
-    std::vector<int> compute_control_plan(
+    std::vector<PlanStep> compute_control_plan(
         const std::string& object_name, 
         const std::vector<double>& start_state, 
         const std::vector<double>& goal_state,

@@ -13,10 +13,11 @@ struct SearchState {
     std::vector<double> state;  // x, y, theta
     double cost;
     int primitive_idx;
+    int push_steps;
     SearchState* parent;
 
-    SearchState(const std::vector<double>& state, double cost, int primitive_idx, SearchState* parent = nullptr)
-        : state(state), cost(cost), primitive_idx(primitive_idx), parent(parent) {}
+    SearchState(const std::vector<double>& state, double cost, int primitive_idx, int push_steps, SearchState* parent = nullptr)
+        : state(state), cost(cost), primitive_idx(primitive_idx), push_steps(push_steps), parent(parent) {}
 };
 
 struct SearchStateCompare {
@@ -25,9 +26,18 @@ struct SearchStateCompare {
     }
 };
 
+struct PlanStep {
+    int edge_idx;
+    int push_steps;
+    std::vector<double> pose;  // x, y, theta (SE(2) pose)
+    
+    PlanStep(int edge_idx, int push_steps, const std::vector<double>& pose)
+        : edge_idx(edge_idx), push_steps(push_steps), pose(pose) {}
+};
+
 class GreedyBestFirstSearchPlanner {
 public:
-    static std::vector<int> plan_push_sequence(
+    static std::vector<PlanStep> plan_push_sequence(
         const std::vector<double>& start_state,
         const std::vector<double>& goal_state,
         const std::vector<MotionPrimitive>& primitives,
@@ -54,7 +64,7 @@ public:
         std::vector<SearchState*> all_states;  // For memory management
         
         // Start from origin (transformed start state)
-        SearchState* start = new SearchState({0, 0, 0}, heuristic({0, 0, 0}, transformed_goal, object_info), -1);
+        SearchState* start = new SearchState({0, 0, 0}, heuristic({0, 0, 0}, transformed_goal, object_info), -1, -1);
         open_set.push(start);
         all_states.push_back(start);
 
@@ -66,13 +76,37 @@ public:
 
             // Check if we reached the goal
             if (is_goal_reached(current->state, transformed_goal, object_info, distance_threshold, angle_threshold)) {
-                std::vector<int> primitive_sequence;
+                std::vector<PlanStep> plan_sequence;
+                std::vector<SearchState*> path;
+                
+                // Collect states in reverse order
                 SearchState* trace = current;
                 while (trace->parent != nullptr) {
-                    primitive_sequence.push_back(trace->primitive_idx);
+                    path.push_back(trace);
+                    std::cout << "edge_idx: " << trace->primitive_idx << " push_steps: " << trace->push_steps << std::endl;
                     trace = trace->parent;
                 }
-                std::reverse(primitive_sequence.begin(), primitive_sequence.end());
+                
+                // Reverse to get correct order
+                std::reverse(path.begin(), path.end());
+                
+                // Transform local coordinates back to global
+                for (auto state : path) {
+                    // Find the primitive that was used
+                    
+                    // Get the global pose by transforming from local frame
+                    std::vector<double> global_pose = transform_to_global_frame(
+                        start_state, 
+                        state->state
+                    );
+                    
+                    // Create plan step with edge_idx, push_steps, and pose
+                    plan_sequence.emplace_back(
+                        state->primitive_idx,
+                        state->push_steps,
+                        global_pose
+                    );
+                }
                 
                 std::ofstream outfile("search_states/search_states_final.txt");
                 outfile << std::setprecision(6);  // Set precision for floating point
@@ -87,7 +121,7 @@ public:
                     delete state;
                 }
                 
-                return primitive_sequence;
+                return plan_sequence;
             }
 
             // Expand current state using allowed primitives
@@ -97,7 +131,7 @@ public:
                 if (primitive.push_steps == 0) {
                     continue;
                 }
-                // std::cout << "Applying primitive " << primitive.edge_idx << " " << primitive.push_steps << " " << primitive.control_steps << " " << primitive.scaling << std::endl;
+                
                 bool is_allowed = false;
                 for (int i = 0; i < allowed_primitive_indices.size(); i++) {
                     if (allowed_primitive_indices[i] == primitive.edge_idx) {
@@ -109,7 +143,7 @@ public:
                     // Apply primitive to get new state
                     std::vector<double> new_state = apply_primitive(current->state, primitive);
                     double new_cost = heuristic(new_state, transformed_goal, object_info);
-                    SearchState* next_state = new SearchState(new_state, new_cost, primitive.edge_idx, current);
+                    SearchState* next_state = new SearchState(new_state, new_cost, primitive.edge_idx, primitive.push_steps, current);
                     open_set.push(next_state);
                     all_states.push_back(next_state);
                 }
@@ -129,11 +163,9 @@ public:
             }
             iter++;
 
-            if (iter > 100) {
+            if (iter > 500) {
                 break;
             }
-
-           
         }
 
         
@@ -285,6 +317,24 @@ private:
         double rot_dist = quaternion_distance_symmetric(q1, q2, object_info.symmetry_rotations, true);
         
         return distance < distance_threshold && rot_dist < angle_threshold;
+    }
+
+    static std::vector<double> transform_to_global_frame(
+        const std::vector<double>& reference,
+        const std::vector<double>& local
+    ) {
+        double cos_ref = std::cos(reference[2]);
+        double sin_ref = std::sin(reference[2]);
+        
+        // Rotate point by reference[2]
+        double x = local[0] * cos_ref - local[1] * sin_ref;
+        double y = local[0] * sin_ref + local[1] * cos_ref;
+        
+        return {
+            reference[0] + x,
+            reference[1] + y,
+            reference[2] + local[2]
+        };
     }
 };
 
