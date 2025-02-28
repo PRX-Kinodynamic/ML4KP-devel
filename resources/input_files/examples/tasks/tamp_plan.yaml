@@ -15,7 +15,7 @@ discretization: 0.2
 goal_sampling_mode: file
 goals_file: predictions/radius1/simple_scene_radius_gnn/goal_lists/env_config_4512.txt
 num_random_goals: 300
-random_seed: 4
+random_seed: 100
 visualize: false
 
 base_config_path: resources/models/mujoco_envs_search_push/env_config_base.xml

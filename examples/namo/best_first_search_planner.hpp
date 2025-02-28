@@ -42,8 +42,8 @@ public:
         const std::vector<double>& goal_state,
         const std::vector<MotionPrimitive>& primitives,
         const std::vector<int>& allowed_primitive_indices,
-        double distance_threshold = 0.2,
-        double angle_threshold = 0.2
+        double distance_threshold = 0.05,
+        double angle_threshold = 0.05
     ) {
 
         // clean up search_states folder
@@ -68,6 +68,10 @@ public:
         open_set.push(start);
         all_states.push_back(start);
 
+        // Track best node (closest to goal)
+        SearchState* best_node = start;
+        double best_heuristic = best_node->cost;
+
         int iter = 0;
 
         while (!open_set.empty()) {
@@ -81,7 +85,10 @@ public:
                 
                 // Collect states in reverse order
                 SearchState* trace = current;
-                while (trace->parent != nullptr) {
+                while (trace != nullptr) {
+                    if (trace->parent == nullptr) {
+                        trace->push_steps = 0;
+                    }
                     path.push_back(trace);
                     std::cout << "edge_idx: " << trace->primitive_idx << " push_steps: " << trace->push_steps << std::endl;
                     trace = trace->parent;
@@ -124,6 +131,15 @@ public:
                 return plan_sequence;
             }
 
+            // Update best node if this one is closer to the goal
+            double current_heuristic = heuristic(current->state, transformed_goal, object_info);
+            if (current_heuristic < best_heuristic) {
+                best_node = current;
+                best_heuristic = current_heuristic;
+
+                std::cout << "Best node distance to goal: " << best_heuristic << std::endl;
+            }
+
             // Expand current state using allowed primitives
             for (int idx = 0; idx < primitives.size(); idx++) {
                 auto& primitive = primitives[idx];
@@ -150,8 +166,6 @@ public:
             }
 
             if (iter % 2 == 0) {
-
-
                 std::ofstream outfile("search_states/search_states_" + std::to_string(iter) + ".txt");
                 outfile << std::setprecision(6);  // Set precision for floating point
                 // put goal state on top of the file
@@ -163,19 +177,53 @@ public:
             }
             iter++;
 
-            if (iter > 500) {
+            if (iter > 50) {
                 break;
             }
         }
 
+        // If we get here, we didn't find a path to goal
+        // Instead of returning empty, return path to the best node
+        std::cout << "No path to goal found. Returning path to closest node." << std::endl;
+        std::cout << "Best node distance to goal: " << best_heuristic << std::endl;
         
-
-        // Cleanup if no path found
+        std::vector<PlanStep> plan_sequence;
+        std::vector<SearchState*> path;
+        
+        // Collect states in reverse order
+        SearchState* trace = best_node;
+        while (trace != nullptr) {
+            if (trace->parent == nullptr) {
+                trace->push_steps = 0;
+            }
+            path.push_back(trace);
+            std::cout << "edge_idx: " << trace->primitive_idx << " push_steps: " << trace->push_steps << std::endl;
+            trace = trace->parent;
+        }
+        
+        // Reverse to get correct order
+        std::reverse(path.begin(), path.end());
+        
+        // Transform local coordinates back to global
+        for (auto state : path) {
+            std::vector<double> global_pose = transform_to_global_frame(
+                start_state, 
+                state->state
+            );
+            
+            plan_sequence.emplace_back(
+                state->primitive_idx,
+                state->push_steps,
+                global_pose
+            );
+        }
+        
+        // Cleanup before returning
         for (auto state : all_states) {
             delete state;
         }
         
-        return {};  // Return empty sequence if no path found
+        return plan_sequence;
     }
 
 private:
@@ -185,7 +233,7 @@ private:
     ) {
         double dx = target[0] - reference[0];
         double dy = target[1] - reference[1];
-        double dtheta = target[2] - reference[2];
+        double dtheta = normalize_angle(target[2] - reference[2]);  // Normalize angle difference
         
         // Rotate point by -reference[2]
         double cos_ref = std::cos(-reference[2]);
@@ -267,14 +315,13 @@ private:
         double dy = state[1] - goal[1];
         double pos_dist = std::sqrt(dx*dx + dy*dy);
         
-        
-        
         // Orientation distance with symmetry
         std::array<double, 4> q1 = yaw_to_quaternion(state[2], true);
         std::array<double, 4> q2 = yaw_to_quaternion(goal[2], true);
         double rot_dist = quaternion_distance_symmetric(q1, q2, object_info.symmetry_rotations, true);
         
-        return pos_dist + 0.5 * rot_dist;
+        // Increase rotation weight (adjust this value as needed)
+        return pos_dist + 1.0 * rot_dist; 
     }
 
     static std::vector<double> apply_primitive(
@@ -290,12 +337,10 @@ private:
         
         double yaw = quaternion_to_yaw(primitive.quaternion, true);
 
-
-        
         return {
             state[0] + dx * cos_theta - dy * sin_theta,
             state[1] + dx * sin_theta + dy * cos_theta,
-            state[2] + yaw
+            normalize_angle(state[2] + yaw)  // Normalize the resulting angle
         };
     }
 
@@ -333,8 +378,14 @@ private:
         return {
             reference[0] + x,
             reference[1] + y,
-            reference[2] + local[2]
+            normalize_angle(reference[2] + local[2])  // Normalize combined angle
         };
+    }
+
+    static double normalize_angle(double angle) {
+        while (angle > M_PI) angle -= 2.0 * M_PI;
+        while (angle < -M_PI) angle += 2.0 * M_PI;
+        return angle;
     }
 };
 

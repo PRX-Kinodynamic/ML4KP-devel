@@ -31,7 +31,22 @@ public:
     // Geometric properties
     std::array<double, 3> position;    // geom_pos
     std::array<double, 3> size;        // geom_size
-    std::array<double, 4> quaternion;  // geom_quat
+    std::array<double, 4> quaternion;  // geom_quat 
+    mjtGeom geom_type;                 // geom_type
+  };
+  
+  /**
+   * @brief Structure to store object state
+   * 
+   * Contains the current state (position, orientation, velocities) of an object
+   */
+  struct ObjectState {
+    std::string name;                  ///< Object name
+    std::array<double, 3> position;    ///< Current position
+    std::array<double, 3> size;        ///< Current size
+    std::array<double, 4> quaternion;  ///< Current orientation (quaternion)
+    std::array<double, 3> linear_vel;  ///< Linear velocity
+    std::array<double, 3> angular_vel; ///< Angular velocity
   };
 
   /**
@@ -88,8 +103,8 @@ public:
     // std::vector<double> upper_bounds = {bounds[1], bounds[3]};  
     // ss->set_bounds(lower_bounds, upper_bounds);
 
-    init_robot_pos = &sim->d->geom_xpos[3 * robot_id];
-    current_state = ss->make_point();
+    init_robot_pos = {sim->d->geom_xpos[3 * robot_id], sim->d->geom_xpos[3 * robot_id + 1], sim->d->geom_xpos[3 * robot_id + 2]};
+    current_qpos = ss->make_point();
 
   }
 
@@ -133,7 +148,10 @@ public:
   {
     sim->reset_simulation();
     warm_up();
-    ss->copy_to(current_state);
+    ss->copy_to(current_qpos);
+    
+    // Initialize object states after reset
+    update_object_states();
   }
 
   /**
@@ -152,11 +170,21 @@ public:
     plan.append_onto_back(duration);
     plan.back().control = control;
 
-    ss->copy_to(current_state);
+    ss->copy_to(current_qpos);
 
-    sg->propagate(current_state, plan, traj);
+    sg->propagate(current_qpos, plan, traj);
     
     ss->copy_from(traj.back());
+    
+    // Update object states after simulation step
+    update_object_states();
+  }
+
+  void step_simulation() {
+    sim->step_simulation();
+    
+    // Update object states after simulation step
+    update_object_states();
   }
 
   /**
@@ -190,9 +218,9 @@ public:
    * @brief Get current state of the environment
    * @return space_point_t Current state
    */
-  space_point_t get_current_state()
+  space_point_t get_current_qpos()
   {
-    return current_state;
+    return current_qpos;
   }
 
   /**
@@ -305,6 +333,94 @@ public:
    */
   const ObjectInfo& get_robot_info() const { return robot_info; }
 
+
+  void set_robot_position(const std::array<double, 2>& pos) {
+    // Initial robot positioning
+    std::cout << "init_robot_pos: " << init_robot_pos[0] << " " << init_robot_pos[1] << " " << init_robot_pos[2] << std::endl;
+    std::array<double, 3> robot_pos = {
+        pos[0] - init_robot_pos[0], 
+        pos[1] - init_robot_pos[1], 
+        robot_info.size[2]
+    };
+    sim->d->qpos[0] = robot_pos[0];
+    sim->d->qpos[1] = robot_pos[1];
+    // sim->d->qpos[2] = robot_pos[2];
+
+    for(int i = 0; i < sim->m->nv; i++) {
+      sim->d->qvel[i] = 0.0;
+    }
+    mj_forward(sim->m, sim->d);
+  }
+
+  void set_zero_velocity() {
+    for(int i = 0; i < sim->m->nv; i++) {
+      sim->d->qvel[i] = 0.0;
+    }
+    mj_forward(sim->m, sim->d);
+    update_object_states();
+  }
+  
+  void set_goal(const MujocoGoal& goal) {
+    sim->set_goal(goal);
+  }
+
+  /**
+   * @brief Update the state of all objects after simulation step
+   * 
+   * Updates the internal object_states map with current positions and velocities
+   */
+  void update_object_states() {
+    
+
+    // Update movable objects
+    for (const auto& obj : movable_objects) {
+      ObjectState& state = object_states[obj.name];
+      state.name = obj.name;
+      
+      // Get position from mjData
+      for (int i = 0; i < 3; i++) {
+        state.position[i] = sim->d->geom_xpos[obj.geom_id * 3 + i];
+      }
+      
+      // Get quaternion from mjData
+      mjtNum* obj_quat = sim->d->geom_xmat + obj.geom_id * 9;
+      mju_mat2Quat(state.quaternion.data(), obj_quat);
+      
+      // Get velocities
+      if (obj.body_id >= 0) {
+        int body_vel_adr = 6 * obj.body_id;
+        for (int i = 0; i < 3; i++) {
+          state.linear_vel[i] = sim->d->cvel[body_vel_adr + i];
+          state.angular_vel[i] = sim->d->cvel[body_vel_adr + 3 + i];
+        }
+      }
+
+      for (int i = 0; i < 3; i++) {
+        state.size[i] = sim->m->geom_size[obj.geom_id * 3 + i];
+      }
+    }
+  }
+
+  /**
+   * @brief Get the current state of an object
+   * 
+   * @param name Object name
+   * @return const ObjectState* Pointer to object state, nullptr if not found
+   */
+  const ObjectState* get_object_state(const std::string& name) const {
+    auto it = object_states.find(name);
+    return it != object_states.end() ? &(it->second) : nullptr;
+  }
+
+  /**
+   * @brief Get all object states
+   * 
+   * @return const std::unordered_map<std::string, ObjectState>& Map of all object states
+   */
+  const std::unordered_map<std::string, ObjectState>& get_all_object_states() const {
+    return object_states;
+  }
+
 private:
   /**
    * @brief Warm up the simulator
@@ -347,7 +463,8 @@ private:
           obj.geom_id = j;
           std::string geom_name = std::string(sim->m->names + sim->m->name_geomadr[j]);
           obj.name = geom_name;
-          
+          // Cast int to mjtGeom enum
+          obj.geom_type = static_cast<mjtGeom>(sim->m->geom_type[j]);
           // Store geometric properties
           for (int k = 0; k < 3; k++) {
             obj.position[k] = sim->m->geom_pos[j * 3 + k];
@@ -385,11 +502,11 @@ private:
   std::shared_ptr<system_group_t> sg;
   space_t* ss;
   space_t* cs;
-  space_point_t current_state;
+  space_point_t current_qpos;
 
   // robot properties
   int robot_id;
-  double* init_robot_pos;
+  std::array<double, 3> init_robot_pos;
 
   // Object tracking
   std::vector<ObjectInfo> static_objects;
@@ -398,6 +515,9 @@ private:
 
   // Add robot info member
   ObjectInfo robot_info;
+
+  // Object state tracking
+  std::unordered_map<std::string, ObjectState> object_states;
 };
 
 }  // namespace prx 

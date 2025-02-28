@@ -18,6 +18,18 @@
 namespace prx
 {
 class mujoco_plant_t;
+
+/**
+ * @brief Structure to represent a goal in the simulation
+ */
+struct MujocoGoal {
+  std::array<double, 3> position = {0.0, 0.0, 0.0};  // x,y,z position
+  std::array<double, 4> orientation = {1.0, 0.0, 0.0, 0.0};  // quaternion (w,x,y,z)
+  std::array<double, 3> size = {0.1, 0.1, 0.1};  // x,y,z dimensions
+  mjtGeom geom_type = mjGEOM_SPHERE;  // Geometry type from MuJoCo
+};
+
+
 class mujoco_simulator_t : public simulator_t
 {
 private:
@@ -37,8 +49,12 @@ protected:
   bool button_left, button_right, button_middle;
   double lastx, lasty;
   mjrRect viewport;
+  
+  mjtGeom* goal_geom;
   std::vector<double> goal_pos;
   double goal_radius;
+
+  std::shared_ptr<MujocoGoal> goal;
 
   void mouse_button(GLFWwindow* window, int button, int act, int mods);
   void mouse_move(GLFWwindow* window, double xpos, double ypos);
@@ -82,6 +98,11 @@ public:
     {
       goal_pos.push_back(goal.at(i));
     }
+  }
+
+  inline void set_goal(const MujocoGoal& goal)
+  {
+    this->goal = std::make_shared<MujocoGoal>(goal);
   }
 
   inline void set_cam_elevation(const double elevation)

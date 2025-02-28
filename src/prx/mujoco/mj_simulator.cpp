@@ -171,20 +171,32 @@ void mujoco_simulator_t::step_simulation()
 
     // Refer here: https://github.com/deepmind/mujoco/issues/132
     // and here: https://roboti.us/forum/index.php?threads/rendering-geoms.3460/#post-3963
-    if (goal_pos.size() != 0)
+    
+    if (goal)
     {
       mjvGeom* goal_geom = scn.geoms + scn.ngeom++;
-      mjv_initGeom(goal_geom, mjGEOM_SPHERE, NULL, NULL, NULL, NULL);
+      mjv_initGeom(goal_geom, goal->geom_type, NULL, NULL, NULL, NULL);
       goal_geom->rgba[0] = 0.0;
       goal_geom->rgba[1] = 1.0;
       goal_geom->rgba[2] = 0.0;
       goal_geom->rgba[3] = 0.25;
-      goal_geom->size[0] = goal_radius;
-      goal_geom->size[1] = goal_radius;
-      goal_geom->size[2] = goal_radius;
-      goal_geom->pos[0] = goal_pos[0];
-      goal_geom->pos[1] = goal_pos[1];
-      goal_geom->pos[2] = goal_pos[2];
+      goal_geom->size[0] = goal->size[0];
+      goal_geom->size[1] = goal->size[1];
+      goal_geom->size[2] = goal->size[2];
+      goal_geom->pos[0] = goal->position[0];
+      goal_geom->pos[1] = goal->position[1];
+      goal_geom->pos[2] = goal->position[2];
+
+      // Use MuJoCo's built-in quaternion to matrix conversion
+      // Handle type mismatch between mjtNum (double) and float
+      mjtNum mat[9];
+      mju_quat2Mat(mat, goal->orientation.data());
+      
+      // Copy the converted matrix to goal_geom->mat
+      for (int i = 0; i < 9; i++)
+      {
+        goal_geom->mat[i] = static_cast<float>(mat[i]);
+      }
 
       // TODO: Add a quat2euler to visualize the orientation
     }

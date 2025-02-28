@@ -23,6 +23,7 @@ public:
         
         // Get movable objects from environment
         movable_objects = env.get_movable_objects();
+
     }
 
     /**
@@ -37,13 +38,14 @@ public:
     void preprocess_all_motion_primitives(
         int push_steps = 20,
         int control_steps = 500,
-        double scaling = 0.5) {
+        double scaling = 0.5,
+        bool visualize_primitives = false) {
 
         // for each movable object, generate motion primitives and store them in a map
         
         for (const auto& obj : movable_objects) {
             auto primitives = MotionPrimitiveGenerator::generate_primitives(
-                obj, base_config_path, visualize, push_steps, control_steps, scaling);
+                obj, base_config_path, visualize_primitives, push_steps, control_steps, scaling);
             
             if (!primitives.empty()) {
                 all_primitives[obj.name] = primitives;
@@ -82,18 +84,20 @@ public:
         // Convert states to x, y, theta format if needed
         std::vector<double> start_pose = {start_state[0], start_state[1], 
                                         quaternion_to_yaw({start_state[3], start_state[4], 
-                                                         start_state[5], start_state[6]})};
+                                                         start_state[5], start_state[6]}, true)};
         
         std::vector<double> goal_pose = {goal_state[0], goal_state[1], 
                                        quaternion_to_yaw({goal_state[3], goal_state[4], 
-                                                        goal_state[5], goal_state[6]})};
+                                                        goal_state[5], goal_state[6]}, true)};
 
         // Use motion planner to find sequence of primitives
         return GreedyBestFirstSearchPlanner::plan_push_sequence(
             start_pose, 
             goal_pose, 
             primitives, 
-            allowed_primitive_indices
+            allowed_primitive_indices,
+            0.05,
+            0.1
         );
     }
 
@@ -106,6 +110,7 @@ private:
     bool visualize;
     std::unordered_map<std::string, std::vector<MotionPrimitive>> all_primitives;
     std::vector<NAMOEnvironment::ObjectInfo> movable_objects;
+    
 };
 
 } // namespace prx 

@@ -124,7 +124,6 @@ public:
         
         double angle = std::atan2(dy, dx);
 
-        
         return {
             scaling * std::cos(angle),
             scaling * std::sin(angle)
@@ -140,8 +139,13 @@ public:
         const std::array<double, 3>& obj_size,
         const std::array<double, 4>& obj_quat) {
         
-        auto [edge_points, mid_points] = generate_edge_points(obj_pos, obj_size, obj_quat);
+        auto [untransformed_edge_points, untransformed_mid_points] = generate_edge_points(obj_pos, obj_size, obj_quat);
         
+        // transform edge points and mid points to world coordinates
+        auto edge_points = transform_points(untransformed_edge_points, obj_pos, obj_quat);
+        auto mid_points = transform_points(untransformed_mid_points, obj_pos, obj_quat);
+
+
         // Update current points while maintaining same edge_idx
         state.current_edge_point = edge_points[state.edge_idx];
         state.current_mid_point = mid_points[state.edge_idx];
@@ -274,7 +278,7 @@ public:
         sim->setZeroControl();
         sim->step();
         
-        for (int step = 0; step < push_steps; step++) {
+        for (int step = 1; step <= push_steps; step++) {
             sim->setZeroVelocity();
             sim->setZeroControl();
             sim->step();
@@ -330,13 +334,14 @@ public:
         const std::array<double, 4>& rotation) {
         
         std::vector<std::array<double, 2>> points;
-        double x = pos[0], y = pos[1];
+        double x = 0, y = 0;
         double w = size[0] - 0.05, d = size[1] - 0.05;
-        double angle = quaternion_to_yaw(rotation, true);
+        double angle = 0.0; // quaternion_to_yaw(rotation, true);
         double offset = 0.1;
 
         // Generate 3 points on each edge
-        std::vector<std::array<double, 2>> edge_points = {{x - w, y + d + offset}, {x - w, y - d - offset}, {x, y + d + offset}, {x, y - d - offset}, {x + w, y + d + offset}, {x + w, y - d - offset}, {x + w + offset, y - d}, {x - w - offset, y - d}, {x + w + offset, y}, {x - w - offset, y}, {x + w + offset, y + d}, {x - w - offset, y + d}};
+        std::vector<std::array<double, 2>> cedge_points = {{x - w, y + d + offset}, {x - w, y - d - offset}, {x, y + d + offset}, {x, y - d - offset}, {x + w, y + d + offset}, {x + w, y - d - offset}, {x + w + offset, y - d}, {x - w - offset, y - d}, {x + w + offset, y}, {x - w - offset, y}, {x + w + offset, y + d}, {x - w - offset, y + d}};
+        // std::vector<std::array<double, 2>> edge_points = {{x, y + d + offset}, {x, y - d - offset}, {x + w + offset, y}, {x - w - offset, y}};
 
 
         // Apply rotation if needed
@@ -359,6 +364,29 @@ public:
             }
         }
         return std::make_pair(points, mid_points);
+    }
+
+    static std::vector<std::array<double, 2>> transform_points(
+        const std::vector<std::array<double, 2>>& points,
+        const std::array<double, 3>& pos,
+        const std::array<double, 4>& rotation) {
+        
+        std::vector<std::array<double, 2>> transformed_points;
+        double angle = quaternion_to_yaw(rotation, true);
+        
+        for (const auto& point : points) {
+            // First rotate around origin (0,0)
+            std::array<double, 2> rotated_point = rotate_point(point[0], point[1], 0, 0, angle);
+            
+            // Then translate to world coordinates
+            std::array<double, 2> transformed_point = {
+                rotated_point[0] + pos[0],
+                rotated_point[1] + pos[1]
+            };
+            
+            transformed_points.push_back(transformed_point);
+        }
+        return transformed_points;
     }
 
     private:

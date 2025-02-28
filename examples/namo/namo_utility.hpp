@@ -70,4 +70,28 @@ std::array<double, 2> get_mid_point(
     };
 };
 
+
+std::array<std::array<double, 3>, 3> quaternion_to_rotation_matrix(const std::array<double, 4>& quaternion, bool scalar_first=false){
+    double w, x, y, z;
+    if (scalar_first){
+        w = quaternion[0];
+        x = quaternion[1];
+        y = quaternion[2];
+        z = quaternion[3];
+    }
+    else{
+        w = quaternion[3];
+        x = quaternion[0];
+        y = quaternion[1];
+        z = quaternion[2];
+    }
+    std::array<std::array<double, 3>, 3> rotation_matrix = {
+        {
+            {1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)},
+            {2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)},
+            {2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)}
+        }
+    };
+    return rotation_matrix;
+}
 } // namespace prx 

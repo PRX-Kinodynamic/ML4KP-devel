@@ -65,7 +65,7 @@
   
 
   <actuator>
-    <velocity name="actuator_x" joint="joint_x" gear="1" ctrlrange="-1 1"/>
-    <velocity name="actuator_y" joint="joint_y" gear="1" ctrlrange="-1 1"/>
+    <motor name="actuator_x" joint="joint_x" gear="1" ctrlrange="-1 1"/>
+    <motor name="actuator_y" joint="joint_y" gear="1" ctrlrange="-1 1"/>
   </actuator>
 </mujoco>

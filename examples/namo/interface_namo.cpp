@@ -46,10 +46,12 @@ void print_object_info(const NAMOEnvironment::ObjectInfo& obj) {
 bool is_point_in_rotated_object(
     double point_x, 
     double point_y, 
-    const NAMOEnvironment::ObjectInfo& obj
+    const NAMOEnvironment::ObjectInfo& obj,
+    const NAMOEnvironment::ObjectState* obj_state=nullptr
 ) {
-    // Convert quaternion to 2D rotation angle using utility function
-    double angle = quaternion_to_yaw(obj.quaternion, true);
+    // Check if state is provided or use object info directly
+    if (obj_state == nullptr) {
+        double angle = quaternion_to_yaw(obj.quaternion, true);
 
     // Translate point to object's local coordinates
     double local_x = point_x - obj.position[0];
@@ -61,6 +63,20 @@ bool is_point_in_rotated_object(
     // Check if point is inside the rectangle in local coordinates
     return std::abs(rotated[0] - obj.position[0]) <= obj.size[0] && 
            std::abs(rotated[1] - obj.position[1]) <= obj.size[1];
+    }
+    else {
+        double angle = quaternion_to_yaw(obj_state->quaternion, true);
+
+        // Translate point to object's local coordinates
+        double local_x = point_x - obj_state->position[0];
+        double local_y = point_y - obj_state->position[1];
+            
+        // Use utility function to rotate point
+        auto rotated = rotate_point(point_x, point_y, obj_state->position[0], obj_state->position[1], -angle);
+        
+        return std::abs(rotated[0] - obj_state->position[0]) <= obj_state->size[0] && 
+               std::abs(rotated[1] - obj_state->position[1]) <= obj_state->size[1];
+    }   
 }
 
 /**
@@ -124,10 +140,12 @@ compute_wavefront_with_goals(
             if (grid[x][y] != -2) {
                 for (const auto& obj : env.get_movable_objects()) {
                     NAMOEnvironment::ObjectInfo inflated_obj = obj;
+                    const NAMOEnvironment::ObjectState* inflated_obj_state = env.get_object_state(obj.name);
+
                     inflated_obj.size[0] += robot_size[0];
                     inflated_obj.size[1] += robot_size[0];
                     
-                    if (is_point_in_rotated_object(world_x, world_y, inflated_obj)) {
+                    if (is_point_in_rotated_object(world_x, world_y, inflated_obj, inflated_obj_state)) {
                         grid[x][y] = -2;
                         break;
                     }
@@ -242,6 +260,86 @@ void save_wavefront_to_file(
 }
 
 /**
+ * @brief Transform a global pose to local frame relative to reference pose
+ * 
+ * @param reference_pose Reference pose [x, y, z, qw, qx, qy, qz]
+ * @param global_pose Global pose to transform [x, y, z, qw, qx, qy, qz]
+ * @return std::vector<double> Local pose [x, y, z, qw, qx, qy, qz]
+ */
+std::vector<double> transform_global_to_local_frame(
+    const std::vector<double>& reference_pose,
+    const std::vector<double>& global_pose)
+{
+    // Extract positions
+    double ref_x = reference_pose[0];
+    double ref_y = reference_pose[1];
+    double ref_z = reference_pose[2];
+    
+    // Extract reference orientation as yaw
+    std::array<double, 4> ref_quat = {
+        reference_pose[3], reference_pose[4], 
+        reference_pose[5], reference_pose[6]
+    };
+    double ref_yaw = quaternion_to_yaw(ref_quat, true);
+    
+    // Extract global position and orientation
+    double global_x = global_pose[0];
+    double global_y = global_pose[1];
+    double global_z = global_pose[2];
+    std::array<double, 4> global_quat = {
+        global_pose[3], global_pose[4], 
+        global_pose[5], global_pose[6]
+    };
+    double global_yaw = quaternion_to_yaw(global_quat, true);
+    
+    // Translate global position relative to reference
+    double dx = global_x - ref_x;
+    double dy = global_y - ref_y;
+    
+    // Rotate translated position by negative reference yaw
+    double cos_ref = std::cos(-ref_yaw);
+    double sin_ref = std::sin(-ref_yaw);
+    double local_x = dx * cos_ref - dy * sin_ref;
+    double local_y = dx * sin_ref + dy * cos_ref;
+    
+    // Calculate relative orientation (local yaw)
+    double local_yaw = global_yaw - ref_yaw;
+    
+    // Normalize yaw to [-π, π]
+    while (local_yaw > M_PI) local_yaw -= 2.0 * M_PI;
+    while (local_yaw < -M_PI) local_yaw += 2.0 * M_PI;
+    
+    // Convert local yaw to quaternion
+    std::array<double, 4> local_quat = yaw_to_quaternion(local_yaw, true);
+    
+    // Return local pose vector [x, y, z, qw, qx, qy, qz]
+    return {
+        local_x, local_y, global_z - ref_z,
+        local_quat[0], local_quat[1], local_quat[2], local_quat[3]
+    };
+}
+
+/**
+ * @brief Print object pose information in local frame
+ * 
+ * @param primitive_idx Index of the current primitive
+ * @param step_idx Step index within the primitive
+ * @param local_pose Local pose [x, y, z, qw, qx, qy, qz]
+ */
+void print_local_pose(const std::vector<double>& local_pose) {
+    double local_yaw = quaternion_to_yaw({
+        local_pose[3], local_pose[4], local_pose[5], local_pose[6]
+    }, true);
+    
+    std::cout << "  Local position: [" 
+              << std::fixed << std::setprecision(3)
+              << local_pose[0] << ", " << local_pose[1] << ", " << local_pose[2] << "]\n";
+    std::cout << "  Local yaw (radians): " << local_yaw << "\n";
+    std::cout << "  Local yaw (degrees): " << (local_yaw * 180.0 / M_PI) << "\n";
+    std::cout << "-------------------\n";
+}
+
+/**
  * @brief Main entry point for NAMO interface
  * 
  * Sets up the environment and provides a command-line interface for:
@@ -273,7 +371,7 @@ int main(int argc, char* argv[]) {
     try {
         NAMOEnvironment env(xml_path, visualize);
         NAMOEnvironment::ObjectInfo robot_info = env.get_robot_info();
-        
+
         auto bounds = env.get_environment_bounds();
 
         // Initialize the push controller with the environment
@@ -290,21 +388,36 @@ int main(int argc, char* argv[]) {
         int control_steps = 500;
         double control_scale = 0.5;
 
-        controller.preprocess_all_motion_primitives(push_steps, control_steps, control_scale);
+        env.reset();
 
+        bool visualize_primitives = false;
+
+        controller.preprocess_all_motion_primitives(push_steps, control_steps, control_scale, visualize_primitives);
 
         std::unordered_map<std::string, std::vector<MotionPrimitive>> all_primitives = controller.get_all_primitives();
 
-        auto [goal_positions, mid_points] = controller.get_object_edge_points_all();
+        auto [all_edge_points, all_mid_points] = controller.get_object_edge_points_all();
+
+        std::unordered_map<std::string, std::vector<std::array<double, 2>>> transformed_edge_points;
+        std::unordered_map<std::string, std::vector<std::array<double, 2>>> transformed_mid_points;
+        
+        for (const auto& [obj_name, edge_points] : all_edge_points) {
+            auto obj_info = env.get_object_info(obj_name);
+            std::cout << "obj_name: " << obj_name << std::endl;
+            std::cout << "obj position: " << obj_info->position[0] << " " << obj_info->position[1] << std::endl;
+            // std::cout << "obj quaternion: " << obj_info->quaternion[0] << " " << obj_info->quaternion[1] << " " << obj_info->quaternion[2] << " " << obj_info->quaternion[3] << std::endl;
+            transformed_edge_points[obj_name] = MotionPrimitiveGenerator::transform_points(edge_points, obj_info->position, obj_info->quaternion);
+            transformed_mid_points[obj_name] = MotionPrimitiveGenerator::transform_points(all_mid_points[obj_name], obj_info->position, obj_info->quaternion);
+        }
+        
         // Compute wavefront
         double resolution = 0.05;  // Adjust resolution as needed
-        auto [wavefront, reachable_points, reachability_flags] = compute_wavefront_with_goals(env, robot_start, goal_positions, resolution, robot_size);
+        auto [wavefront, reachable_points, reachability_flags] = compute_wavefront_with_goals(env, robot_start, transformed_edge_points, resolution, robot_size);
 
 
         // save wavefront to file
         std::string output_path = "wavefront_data.txt";
         save_wavefront_to_file(wavefront, output_path, bounds, resolution);
-
 
         // You can now use reachability_flags to see which edge points are reachable for each object
         for (const auto& [obj_name, flags] : reachability_flags) {
@@ -333,10 +446,12 @@ int main(int argc, char* argv[]) {
         auto random_object_info = env.get_object_info(random_object);
 
         // distance between current pos and goal pos
-        std::vector<double> goal_pose;
+        std::array<double, 3> goal_pose;
+        
 
         while (true) {
-            goal_pose = env.get_random_state();
+            auto random_state = env.get_random_state();
+            goal_pose = {random_state[0], random_state[1],  0.0};
             double distance = std::sqrt(std::pow(random_object_info->position[0] - goal_pose[0], 2) + std::pow(random_object_info->position[1] - goal_pose[1], 2));
             if (distance > 0.5 && distance < 2.0) {
                 break;
@@ -359,7 +474,7 @@ int main(int argc, char* argv[]) {
         std::uniform_real_distribution<> angle_dis(-M_PI, M_PI);
         double random_yaw = angle_dis(gen);
 
-        std::array<double, 4> goal_quaternion = yaw_to_quaternion(random_yaw);
+        std::array<double, 4> goal_quaternion = yaw_to_quaternion(random_yaw, true);
         std::vector<double> goal_state = {goal_pose[0], goal_pose[1], 0.0, goal_quaternion[0], goal_quaternion[1], goal_quaternion[2], goal_quaternion[3]};  // Your goal state
 
         // Get the allowed primitive indices from your reachability flags
@@ -378,13 +493,153 @@ int main(int argc, char* argv[]) {
             allowed_indices
         );
 
+        MujocoGoal goal;
+        goal.position = goal_pose;
+        goal.orientation = goal_quaternion;
+        goal.size = random_object_info->size;
+        goal.geom_type = random_object_info->geom_type;
+        env.set_goal(goal);
+
+        env.reset();
+
+        space_point_t control_point = env.get_control_space_point();
+        
+        // Open a file to record primitive execution states
+        std::ofstream primitive_state_file("primitive_execution_states.txt");
+        if (!primitive_state_file.is_open()) {
+            std::cerr << "Error: Could not open primitive_execution_states.txt for writing" << std::endl;
+        }
+
+        // Open a file to record primitive execution states
+        std::ofstream primitive_poses_file("primitive_poses.txt");
+        if (!primitive_poses_file.is_open()) {
+            std::cerr << "Error: Could not open primitive_poses.txt for writing" << std::endl;
+        }
+        
         // Use the sequence...
         if (!primitive_sequence.empty()) {
-            std::cout << "Found plan with " << primitive_sequence.size() << " primitives" << std::endl;
+            // Save the initial state
+            if (primitive_state_file.is_open()) {
+                primitive_state_file << start_state[0] << " " << start_state[1] << " " << start_state[2] << " "
+                                    << start_state[3] << " " << start_state[4] << " " << start_state[5] << " " 
+                                    << start_state[6] << "\n";
+            }
+            
+            int previous_edge_idx = -1;
+            int ctr = 0;
+            std::vector<double> original_state = start_state;
+            
+            for (int primitive_idx = 0; primitive_idx < primitive_sequence.size(); primitive_idx++) {
+                const auto& primitive = primitive_sequence[primitive_idx];
+                
+                std::cout << "Executing primitive "
+                          << " (edge_idx: " << primitive.edge_idx 
+                          << ", push_steps: " << primitive.push_steps << ")\n";
+                
+                env.set_zero_velocity();
+                for (int i = 0; i < 5; i++) {
+                    env.step_simulation();
+                }
+                auto object_state = env.get_object_state(random_object);
+
+
+                
+                
+                // std::cout << "object_state: " << object_state->position[0] << " " << object_state->position[1] << std::endl;
+                // position and orientation of the random object with respect to the initial position and orientation, make sure the orientation transfromed correctly from the initial orientation
+                auto push_points = MotionPrimitiveGenerator::transform_points(all_edge_points[random_object], object_state->position, object_state->quaternion);
+                auto mid_points = MotionPrimitiveGenerator::transform_points(all_mid_points[random_object], object_state->position, object_state->quaternion);
+
+                transformed_edge_points[random_object] = push_points;
+                auto [wavefront_1, reachable_points_1, reachability_flags_1] = compute_wavefront_with_goals(env, robot_start, transformed_edge_points, resolution, robot_size);
+
+                // save wavefront to file
+                std::string output_path = "wavefront_data_1.txt";
+                save_wavefront_to_file(wavefront_1, output_path, bounds, resolution);
+                
+                MotionPrimitiveGenerator::PushState push_state;
+                
+                for (int i = 0; i < primitive.push_steps; i++) {
+                    if (i == 0) {
+                        // for the push step, set the robot position to the push point
+                        if (ctr == 0) {
+                            env.set_robot_position(push_points[primitive.edge_idx]);
+                        } else if (ctr > 0 && previous_edge_idx != primitive.edge_idx) {
+                            env.set_robot_position(push_points[primitive.edge_idx]);
+                        }
+                        ctr++;
+                        push_state.edge_idx = primitive.edge_idx;
+                        previous_edge_idx = primitive.edge_idx;
+                    }
+                    env.set_zero_velocity();
+                    env.step_simulation();
+                    for (int j = 0; j < control_steps; j++) {
+                        // update the push_point, mid_point, based on the current state of the selected random object
+                        auto current_object_state = env.get_object_state(random_object);
+                        auto current_push_points = MotionPrimitiveGenerator::transform_points(all_edge_points[random_object], current_object_state->position, current_object_state->quaternion);
+                        auto current_mid_points = MotionPrimitiveGenerator::transform_points(all_mid_points[random_object], current_object_state->position, current_object_state->quaternion);
+
+                        // update the push_state and generate new control
+                        push_state.current_edge_point = current_push_points[primitive.edge_idx];
+                        push_state.current_mid_point = current_mid_points[primitive.edge_idx];
+                        auto control = MotionPrimitiveGenerator::compute_control1(push_state, control_scale);
+                        control_point->at(0) = control[0];
+                        control_point->at(1) = control[1];
+                        env.step(control_point, 0.01);
+
+                        current_object_state = env.get_object_state(random_object);
+                        // std::cout << "current_object_state: " << current_object_state->position[0] << " " << current_object_state->position[1] << std::endl;
+                    }
+                    env.set_zero_velocity();
+                    env.step_simulation();
+                    
+                    // std::cout << "push step current_object_state: " << current_object_state->position[0] << " " << current_object_state->position[1] << std::endl;
+                }
+
+                auto final_object_state = env.get_object_state(random_object);
+
+                std::cout << "final_object_state: " << final_object_state->position[0] << " " << final_object_state->position[1] << std::endl;
+
+                // After primitive execution, record the state
+                if (primitive_state_file.is_open()) {
+                    primitive_state_file << final_object_state->position[0] << " "
+                                        << final_object_state->position[1] << " "
+                                        << final_object_state->position[2] << " "
+                                        << final_object_state->quaternion[0] << " "
+                                        << final_object_state->quaternion[1] << " "
+                                        << final_object_state->quaternion[2] << " "
+                                        << final_object_state->quaternion[3] << "\n";
+                }
+
+                if (primitive_poses_file.is_open()) {
+                    primitive_poses_file << primitive.pose[0] << " " << primitive.pose[1] << " " << primitive.pose[2] << " " << "\n";
+                }
+            }
+            
+            std::cout << std::endl;
             // Execute primitives...
         } else {
             std::cout << "No plan found" << std::endl;
+            
+            if (primitive_state_file.is_open()) {
+                primitive_state_file.close();
+            }
+
+            if (primitive_poses_file.is_open()) {
+                primitive_poses_file.close();
+            }
         }
+
+        // measure square root of the error in the pose
+        auto final_object_state = env.get_object_state(random_object);
+        double error_x = std::abs(goal_pose[0] - final_object_state->position[0]);
+        double error_y = std::abs(goal_pose[1] - final_object_state->position[1]);
+        double error = std::sqrt(error_x * error_x + error_y * error_y);
+
+        // print final pose and goal pose
+        std::cout << "final pose: " << final_object_state->position[0] << " " << final_object_state->position[1] << std::endl;
+        std::cout << "goal pose: " << goal_pose[0] << " " << goal_pose[1] << std::endl;
+        std::cout << "error: " << error << std::endl;
         
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

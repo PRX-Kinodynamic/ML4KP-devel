@@ -42,7 +42,7 @@
   </worldbody>
 
   <actuator>
-    <general name="actuator_x" joint="joint_x" ctrlrange="-1 1" biastype="affine" biasprm="0 0 -1"/>
-    <general name="actuator_y" joint="joint_y" ctrlrange="-1 1" biastype="affine" biasprm="0 0 -1"/>
+    <general name="actuator_x" joint="joint_x" ctrlrange="-1 1"/>
+    <general name="actuator_y" joint="joint_y" ctrlrange="-1 1"/>
   </actuator>
 </mujoco>
