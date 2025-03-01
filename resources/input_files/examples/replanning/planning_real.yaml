@@ -2,7 +2,8 @@ random_seed: 210896
 simulation_step: 0.01
 
 plant: !file "plants/mushr_real.yaml"
-feedback_controller: "controllers/mushr_pure_pursuit.yaml"
+# feedback_controller: "controllers/mushr_pure_pursuit.yaml"
+feedback_controller: "controllers/mushr_stanley_real.yaml"
 
 environment: "environments/lab_obstacle.yaml"
 

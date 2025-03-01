@@ -60,6 +60,7 @@ public:
     };
     wavefront_h = h;
     contingency_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
+    plan_safety_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
     blossom_number = 5;
     use_pruning = true;
     use_contingency = true;
@@ -75,6 +76,7 @@ public:
   bool use_pruning, use_contingency;
   heuristic_function_t h, wavefront_h;
   valid_trajectory_t contingency_check;
+  valid_trajectory_t plan_safety_check;
 };
 
 class dirt_replan_query_t : public rrt_query_t
@@ -130,6 +132,7 @@ private:
   heuristic_function_t h, wavefront_h;
   expand_t expand;
   valid_trajectory_t contingency_check;
+  valid_trajectory_t plan_safety_check;
 
   double planning_cycle_duration;
   double multiplier;

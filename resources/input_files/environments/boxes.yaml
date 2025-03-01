@@ -62,7 +62,7 @@ environment:
         name: wall_left
         collision_geometry:
           type: box
-          dims: [ .1, 7, .2]
+          dims: [ .1, 7, .1]
           material: 0x0015ff
         config:
           position: [-.25, 2.5, .1]
@@ -71,7 +71,7 @@ environment:
         name: wall_right
         collision_geometry:
           type: box
-          dims: [ .1, 7, .2]
+          dims: [ .1, 7, .1]
           material: 0x0015ff
         config:
           position: [2.25, 2.5, .1]

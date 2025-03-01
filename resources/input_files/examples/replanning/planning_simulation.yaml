@@ -3,17 +3,15 @@ simulation_step: 0.01
 
 plant: !file "plants/mushr.yaml"
 learned_controller: "controllers/mushr_analytical.yaml"
-feedback_controller: "controllers/mushr_stanley.yaml"
+feedback_controller: "controllers/mushr_stanley_sim.yaml"
 # feedback_controller: "controllers/mushr_pure_pursuit.yaml"
 
 # environment: "environments/movable.yaml"
 # environment: "environments/slip.yaml"
-# environment: "environments/obstacle_0.yaml"
-environment: "environments/obstacle_1.yaml"
+environment: "environments/boxes.yaml"
+# environment: "environments/turns.yaml"
 # environment: "environments/walls.yaml"
 safe_distance: 0.25
-safe_min: 0.05
-safe_mul: 0.25
 
 # goal_state: [0.25, 4.0, 0.0, 0.0]
 goal_state: [1.0, 5.0, 0.0, 0.0]
@@ -48,3 +46,15 @@ wavefront:
   ystep: 0.01
 
 
+
+
+
+plan_safety_params:
+  safe_min: 0.02
+  safe_mul: 0.15
+  safe_quad_mul: 0.0
+
+contingency_safety_params:
+  safe_min: 0.03
+  safe_mul: 0.17
+  safe_quad_mul: 0.0

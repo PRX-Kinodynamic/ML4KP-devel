@@ -40,48 +40,48 @@ environment:
         config:
           position: [-0.125, -2.2, .1]
           orientation: [0,0,0,1]
-      - 
-        name: obstacle_0_short
-        collision_geometry:
-          type: box
-          dims: [ .35, .45, .2]
-          material: 0x0015ff
-        config:
-          position: [0.622, -1.59, .1]
-          orientation: [0,0,0,1]
-      - 
-        name: obstacle_1_short
-        collision_geometry:
-          type: box
-          dims: [ .35, .45, .2]
-          material: 0x0015ff
-        config:
-          position: [1.28, -0.37, .1]
-          orientation: [0,0,0,1]
       # - 
-      #   name: obstacle_0_long
+      #   name: obstacle_0_short
       #   collision_geometry:
       #     type: box
       #     dims: [ .35, .45, .2]
       #     material: 0x0015ff
       #   config:
-      #     position: [1.268, -0.367, .1]
+      #     position: [0.622, -1.59, .1]
       #     orientation: [0,0,0,1]
       # - 
-      #   name: obstacle_1_long
+      #   name: obstacle_1_short
       #   collision_geometry:
       #     type: box
       #     dims: [ .35, .45, .2]
       #     material: 0x0015ff
       #   config:
-      #     position: [-0.119, -1.744, .1]
+      #     position: [1.28, -0.37, .1]
       #     orientation: [0,0,0,1]
-      # -
-      #   name: obstacle_2_long
-      #   collision_geometry:
-      #     type: box
-      #     dims: [.35, .45, .2]
-      #     material: 0x0015ff
-      #   config:
-      #     position: [-1.429, -1.009, .1]
-      #     orientation: [0,0,0,1]
+      - 
+        name: obstacle_0_long
+        collision_geometry:
+          type: box
+          dims: [ .35, .45, .2]
+          material: 0x0015ff
+        config:
+          position: [1.268, -0.367, .1]
+          orientation: [0,0,0,1]
+      - 
+        name: obstacle_1_long
+        collision_geometry:
+          type: box
+          dims: [ .35, .45, .2]
+          material: 0x0015ff
+        config:
+          position: [-0.119, -1.744, .1]
+          orientation: [0,0,0,1]
+      -
+        name: obstacle_2_long
+        collision_geometry:
+          type: box
+          dims: [.35, .45, .2]
+          material: 0x0015ff
+        config:
+          position: [-1.429, -1.009, .1]
+          orientation: [0,0,0,1]

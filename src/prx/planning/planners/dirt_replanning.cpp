@@ -24,6 +24,7 @@ void dirt_replan_t::_link_and_setup_spec(planner_specification_t* spec)
   h = dirt_spec->h;
   wavefront_h = dirt_spec->wavefront_h;
   contingency_check = dirt_spec->contingency_check;
+  plan_safety_check = dirt_spec->plan_safety_check;
 
   planning_cycle_duration = dirt_spec->planning_cycle_duration;
   multiplier = 1.0 / simulation_step;
@@ -371,7 +372,7 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
       control_space->enforce_bounds(stopping_plan->back().control);
       propagate(last_safe_state, *stopping_plan, *stopping_traj);
       bool valid = false;
-      valid = contingency_check(*stopping_traj);
+      valid = plan_safety_check(*stopping_traj);
       delete stopping_traj;
       delete stopping_plan;
       if (!valid)
