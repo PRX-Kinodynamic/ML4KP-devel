@@ -5,7 +5,8 @@
 #include <unordered_map>
 #include <cmath>
 #include "motion_primitive_generator.hpp"
-
+#include "environment.hpp"
+#include "namo_utility.hpp"
 
 namespace prx {
 
@@ -42,9 +43,11 @@ public:
         const std::vector<double>& goal_state,
         const std::vector<MotionPrimitive>& primitives,
         const std::vector<int>& allowed_primitive_indices,
-        double distance_threshold = 0.05,
-        double angle_threshold = 0.05
+        int best_first_expansion_limit,
+        std::function<double(const std::vector<double>&, const std::vector<double>&, const int)> get_distance = nullptr,
+        std::function<bool(const std::vector<double>&, const std::vector<double>&, const int)> is_goal_reached_fn = nullptr
     ) {
+        // These functions are now passed as parameters with default values of nullptr
 
         // clean up search_states folder
         std::string search_states_folder = "search_states";
@@ -54,8 +57,8 @@ public:
         std::filesystem::create_directory(search_states_folder);
 
         // Get object info from first primitive (they should all be the same)
-        const ObjectInfo& object_info = primitives[0].object_info;
-
+        const NAMOEnvironment::ObjectInfo& object_info = primitives[0].object_info;
+        const int symmetry_rotations = object_info.symmetry_rotations;
         // Transform goal state relative to start state
         std::vector<double> transformed_goal = transform_to_local_frame(start_state, goal_state);
         
@@ -64,7 +67,7 @@ public:
         std::vector<SearchState*> all_states;  // For memory management
         
         // Start from origin (transformed start state)
-        SearchState* start = new SearchState({0, 0, 0}, heuristic({0, 0, 0}, transformed_goal, object_info), -1, -1);
+        SearchState* start = new SearchState({0, 0, 0}, get_distance({0, 0, 0}, transformed_goal, symmetry_rotations), -1, -1);
         open_set.push(start);
         all_states.push_back(start);
 
@@ -79,7 +82,7 @@ public:
             open_set.pop();
 
             // Check if we reached the goal
-            if (is_goal_reached(current->state, transformed_goal, object_info, distance_threshold, angle_threshold)) {
+            if (is_goal_reached_fn(current->state, transformed_goal, symmetry_rotations)) {
                 std::vector<PlanStep> plan_sequence;
                 std::vector<SearchState*> path;
                 
@@ -90,7 +93,6 @@ public:
                         trace->push_steps = 0;
                     }
                     path.push_back(trace);
-                    std::cout << "edge_idx: " << trace->primitive_idx << " push_steps: " << trace->push_steps << std::endl;
                     trace = trace->parent;
                 }
                 
@@ -132,12 +134,11 @@ public:
             }
 
             // Update best node if this one is closer to the goal
-            double current_heuristic = heuristic(current->state, transformed_goal, object_info);
+            double current_heuristic = get_distance(current->state, transformed_goal, symmetry_rotations);
             if (current_heuristic < best_heuristic) {
                 best_node = current;
                 best_heuristic = current_heuristic;
 
-                std::cout << "Best node distance to goal: " << best_heuristic << std::endl;
             }
 
             // Expand current state using allowed primitives
@@ -158,7 +159,7 @@ public:
                 if (is_allowed) {
                     // Apply primitive to get new state
                     std::vector<double> new_state = apply_primitive(current->state, primitive);
-                    double new_cost = heuristic(new_state, transformed_goal, object_info);
+                    double new_cost = get_distance(new_state, transformed_goal, symmetry_rotations);
                     SearchState* next_state = new SearchState(new_state, new_cost, primitive.edge_idx, primitive.push_steps, current);
                     open_set.push(next_state);
                     all_states.push_back(next_state);
@@ -177,15 +178,13 @@ public:
             }
             iter++;
 
-            if (iter > 50) {
+            if (iter > best_first_expansion_limit) {
                 break;
             }
         }
 
         // If we get here, we didn't find a path to goal
         // Instead of returning empty, return path to the best node
-        std::cout << "No path to goal found. Returning path to closest node." << std::endl;
-        std::cout << "Best node distance to goal: " << best_heuristic << std::endl;
         
         std::vector<PlanStep> plan_sequence;
         std::vector<SearchState*> path;
@@ -197,7 +196,6 @@ public:
                 trace->push_steps = 0;
             }
             path.push_back(trace);
-            std::cout << "edge_idx: " << trace->primitive_idx << " push_steps: " << trace->push_steps << std::endl;
             trace = trace->parent;
         }
         
@@ -246,84 +244,6 @@ private:
         };
     }
 
-    static double quaternion_distance_symmetric(
-        const std::array<double, 4>& q1,
-        const std::array<double, 4>& q2,
-        int symmetry_rotations,
-        bool scalar_first = true
-    ) {
-        // Normalize quaternions and handle scalar position
-        auto normalize = [scalar_first](std::array<double, 4> q) {
-            double norm = std::sqrt(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
-            std::array<double, 4> normalized = {q[0]/norm, q[1]/norm, q[2]/norm, q[3]/norm};
-            
-            // If scalar-last, convert to scalar-first for internal calculations
-            if (!scalar_first) {
-                normalized = {normalized[3], normalized[0], normalized[1], normalized[2]};
-            }
-            return normalized;
-        };
-        
-        auto q1_norm = normalize(q1);
-        auto q2_norm = normalize(q2);
-        
-        // Check all symmetric rotations
-        double min_dist = std::numeric_limits<double>::infinity();
-        for (int i = 0; i < symmetry_rotations; ++i) {
-            double angle = i * (2 * M_PI / symmetry_rotations);
-            
-            // Create rotation quaternion around Z axis (in scalar-first format)
-            double half_angle = angle * 0.5;
-            std::array<double, 4> sym_rot = {
-                std::cos(half_angle),  // w
-                0,                     // x
-                0,                     // y
-                std::sin(half_angle)   // z
-            };
-            
-            // Apply symmetric rotation (quaternion multiplication)
-            std::array<double, 4> q2_sym = {
-                sym_rot[0]*q2_norm[0] - sym_rot[3]*q2_norm[3],  // w
-                sym_rot[0]*q2_norm[1] - sym_rot[3]*q2_norm[2],  // x
-                sym_rot[0]*q2_norm[2] + sym_rot[3]*q2_norm[1],  // y
-                sym_rot[0]*q2_norm[3] + sym_rot[3]*q2_norm[0]   // z
-            };
-            
-            // Calculate distance
-            double dot_product = std::abs(
-                q1_norm[0]*q2_sym[0] + 
-                q1_norm[1]*q2_sym[1] + 
-                q1_norm[2]*q2_sym[2] + 
-                q1_norm[3]*q2_sym[3]
-            );
-            dot_product = std::min(1.0, std::max(-1.0, dot_product));
-            double dist = 1.0 - dot_product;
-            
-            min_dist = std::min(min_dist, dist);
-        }
-        
-        return min_dist;
-    }
-
-    static double heuristic(
-        const std::vector<double>& state,
-        const std::vector<double>& goal,
-        const ObjectInfo& object_info
-    ) {
-        // Position distance
-        double dx = state[0] - goal[0];
-        double dy = state[1] - goal[1];
-        double pos_dist = std::sqrt(dx*dx + dy*dy);
-        
-        // Orientation distance with symmetry
-        std::array<double, 4> q1 = yaw_to_quaternion(state[2], true);
-        std::array<double, 4> q2 = yaw_to_quaternion(goal[2], true);
-        double rot_dist = quaternion_distance_symmetric(q1, q2, object_info.symmetry_rotations, true);
-        
-        // Increase rotation weight (adjust this value as needed)
-        return pos_dist + 1.0 * rot_dist; 
-    }
-
     static std::vector<double> apply_primitive(
         const std::vector<double>& state,
         const MotionPrimitive& primitive
@@ -342,26 +262,6 @@ private:
             state[1] + dx * sin_theta + dy * cos_theta,
             normalize_angle(state[2] + yaw)  // Normalize the resulting angle
         };
-    }
-
-    static bool is_goal_reached(
-        const std::vector<double>& state,
-        const std::vector<double>& goal,
-        const ObjectInfo& object_info,
-        double distance_threshold,
-        double angle_threshold
-    ) {
-        // Position check
-        double dx = state[0] - goal[0];
-        double dy = state[1] - goal[1];
-        double distance = std::sqrt(dx*dx + dy*dy);
-        
-        // Orientation check with symmetry
-        std::array<double, 4> q1 = yaw_to_quaternion(state[2], true);
-        std::array<double, 4> q2 = yaw_to_quaternion(goal[2], true);
-        double rot_dist = quaternion_distance_symmetric(q1, q2, object_info.symmetry_rotations, true);
-        
-        return distance < distance_threshold && rot_dist < angle_threshold;
     }
 
     static std::vector<double> transform_to_global_frame(

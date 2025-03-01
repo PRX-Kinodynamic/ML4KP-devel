@@ -1,3 +1,4 @@
+#pragma once
 #include "prx/utilities/defs.hpp"
 #include "prx/mujoco/mj_simulator.hpp"
 #include <vector>
@@ -33,6 +34,17 @@ public:
     std::array<double, 3> size;        // geom_size
     std::array<double, 4> quaternion;  // geom_quat 
     mjtGeom geom_type;                 // geom_type
+
+    int symmetry_rotations;
+
+    // Add default constructor
+    ObjectInfo() : size({1.0, 1.0, 1.0}), symmetry_rotations(4) {}
+    
+    ObjectInfo(const std::array<double, 3>& size) : size(size) {
+        // If x and y dimensions are within 5% of each other, 4-way symmetry
+        double size_ratio = std::max(size[0], size[1]) / std::min(size[0], size[1]);
+        symmetry_rotations = (size_ratio < 1.05) ? 4 : 2;
+    }
   };
   
   /**
@@ -43,8 +55,8 @@ public:
   struct ObjectState {
     std::string name;                  ///< Object name
     std::array<double, 3> position;    ///< Current position
-    std::array<double, 3> size;        ///< Current size
     std::array<double, 4> quaternion;  ///< Current orientation (quaternion)
+    std::array<double, 3> size;        ///< Current size
     std::array<double, 3> linear_vel;  ///< Linear velocity
     std::array<double, 3> angular_vel; ///< Angular velocity
   };
@@ -114,7 +126,7 @@ public:
     std::vector<double> state(3);
     state[0] = uniform_random(bounds[0], bounds[1]);
     state[1] = uniform_random(bounds[2], bounds[3]);
-    state[2] = uniform_random(-M_PI, M_PI);
+    state[2] = 0.0;
     return state;
   }
 
@@ -336,7 +348,6 @@ public:
 
   void set_robot_position(const std::array<double, 2>& pos) {
     // Initial robot positioning
-    std::cout << "init_robot_pos: " << init_robot_pos[0] << " " << init_robot_pos[1] << " " << init_robot_pos[2] << std::endl;
     std::array<double, 3> robot_pos = {
         pos[0] - init_robot_pos[0], 
         pos[1] - init_robot_pos[1], 
@@ -421,6 +432,60 @@ public:
     return object_states;
   }
 
+  /**
+   * @brief Sample a goal state for a specific object and set it as the environment goal
+   * 
+   * @param object_name Name of the object to sample goal for
+   * @param min_distance Minimum distance from current position
+   * @param max_distance Maximum distance from current position
+   * @return std::vector<double> Sampled goal state [x, y, z, qw, qx, qy, qz]
+   */
+  std::vector<double> set_goal_configuration(const std::string& object_name, 
+                                                        double min_distance = 0.5, 
+                                                        double max_distance = 2.0) {
+    // Get object information
+    auto object_info = get_object_info(object_name);
+    if (!object_info) {
+      throw std::runtime_error("Object not found: " + object_name);
+    }
+    
+    // Sample a valid goal position
+    std::array<double, 3> goal_pose;
+    std::vector<double> random_state;
+    double distance;
+    
+    // Keep sampling until we find a position within the desired distance range
+    do {
+      random_state = get_random_state();
+      goal_pose = {random_state[0], random_state[1], 0.0};
+      distance = std::sqrt(std::pow(object_info->position[0] - goal_pose[0], 2) + 
+                           std::pow(object_info->position[1] - goal_pose[1], 2));
+    } while (distance < min_distance || distance > max_distance);
+    
+    // Sample a random orientation
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> angle_dis(-M_PI, M_PI);
+    double random_yaw = angle_dis(gen);
+    std::array<double, 4> goal_quaternion = yaw_to_quaternion(random_yaw, true);
+    
+    // Set the goal in the environment
+    MujocoGoal goal;
+    goal.position = goal_pose;
+    goal.orientation = goal_quaternion;
+    goal.size = object_info->size;
+    goal.geom_type = object_info->geom_type;
+    set_goal(goal);
+    
+    // Return the full goal state
+    std::vector<double> goal_state = {
+      goal_pose[0], goal_pose[1], 0.0,
+      goal_quaternion[0], goal_quaternion[1], goal_quaternion[2], goal_quaternion[3]
+    };
+    
+    return goal_state;
+  }
+
 private:
   /**
    * @brief Warm up the simulator
@@ -458,7 +523,8 @@ private:
       for (int j = 0; j < sim->m->ngeom; j++) {
 
         if (sim->m->geom_bodyid[j] == i) {
-          ObjectInfo obj;
+          std::array<double, 3> size = {sim->m->geom_size[j * 3], sim->m->geom_size[j * 3 + 1], sim->m->geom_size[j * 3 + 2]};
+          ObjectInfo obj(size);
           obj.body_id = i;
           obj.geom_id = j;
           std::string geom_name = std::string(sim->m->names + sim->m->name_geomadr[j]);
@@ -468,7 +534,6 @@ private:
           // Store geometric properties
           for (int k = 0; k < 3; k++) {
             obj.position[k] = sim->m->geom_pos[j * 3 + k];
-            obj.size[k] = sim->m->geom_size[j * 3 + k];
           }
           for (int k = 0; k < 4; k++) {
             obj.quaternion[k] = sim->m->geom_quat[j * 4 + k];

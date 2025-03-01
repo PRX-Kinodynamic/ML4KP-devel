@@ -3,22 +3,10 @@
 #include <filesystem>
 #include <fstream>
 #include "namo_utility.hpp"
+#include "environment.hpp"
 
 namespace prx {
 
-struct ObjectInfo {
-    std::array<double, 3> size;  // [x, y, z]
-    int symmetry_rotations;    // 2 or 4 based on object shape
-    
-    // Add default constructor
-    ObjectInfo() : size({1.0, 1.0, 1.0}), symmetry_rotations(4) {}
-    
-    ObjectInfo(const std::array<double, 3>& size) : size(size) {
-        // If x and y dimensions are within 5% of each other, 4-way symmetry
-        double size_ratio = std::max(size[0], size[1]) / std::min(size[0], size[1]);
-        symmetry_rotations = (size_ratio < 1.05) ? 4 : 2;
-    }
-};
 
 /**
  * @brief Structure to store a single motion primitive
@@ -34,10 +22,10 @@ struct MotionPrimitive {
     int push_steps;
     int control_steps;
     double scaling;
-    ObjectInfo object_info;  // Add object info
+    NAMOEnvironment::ObjectInfo object_info;  // Add object info
 
     // Add default constructor
-    MotionPrimitive() : 
+    MotionPrimitive(std::array<double, 3> size) : 
         position(std::vector<double>(3, 0.0)),
         quaternion({1.0, 0.0, 0.0, 0.0}),
         edge_idx(0),
@@ -46,7 +34,7 @@ struct MotionPrimitive {
         push_steps(0),
         control_steps(0),
         scaling(1.0),
-        object_info() {}
+        object_info(size) {}
 };
 
 /**
@@ -303,7 +291,7 @@ public:
                 update_push_state(current_state, obj_pos, obj.size, obj_quat);
             }
             // Record state
-            MotionPrimitive primitive;
+            MotionPrimitive primitive(obj.size);
             primitive.position = {obj_pos[0], obj_pos[1]};
             primitive.quaternion = {obj_quat[0], obj_quat[1], obj_quat[2], obj_quat[3]};
             primitive.edge_point = current_state.current_edge_point;
@@ -312,8 +300,6 @@ public:
             primitive.control_steps = control_steps;
             primitive.scaling = scaling;
             primitive.edge_idx = current_state.edge_idx;
-            ObjectInfo object_info(obj.size);
-            primitive.object_info = object_info;
             trajectory.push_back(primitive);
         }
 
@@ -340,7 +326,7 @@ public:
         double offset = 0.1;
 
         // Generate 3 points on each edge
-        std::vector<std::array<double, 2>> cedge_points = {{x - w, y + d + offset}, {x - w, y - d - offset}, {x, y + d + offset}, {x, y - d - offset}, {x + w, y + d + offset}, {x + w, y - d - offset}, {x + w + offset, y - d}, {x - w - offset, y - d}, {x + w + offset, y}, {x - w - offset, y}, {x + w + offset, y + d}, {x - w - offset, y + d}};
+        std::vector<std::array<double, 2>> edge_points = {{x - w, y + d + offset}, {x - w, y - d - offset}, {x, y + d + offset}, {x, y - d - offset}, {x + w, y + d + offset}, {x + w, y - d - offset}, {x + w + offset, y - d}, {x - w - offset, y - d}, {x + w + offset, y}, {x - w - offset, y}, {x + w + offset, y + d}, {x - w - offset, y + d}};
         // std::vector<std::array<double, 2>> edge_points = {{x, y + d + offset}, {x, y - d - offset}, {x + w + offset, y}, {x - w - offset, y}};
 
 
