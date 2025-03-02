@@ -127,7 +127,7 @@ public:
 
     state_input_vector.insert(state_input_vector.end(), goal_input_vector.begin(), goal_input_vector.end());
     std::size_t input_size = state_input_vector.size();
-    at::Tensor input_tensor = torch::zeros({ 1, input_size }, device);
+    at::Tensor input_tensor = torch::zeros({ 1, static_cast<int>(input_size) }, device);
     for (int i = 0; i < input_size; i++)
     {
       input_tensor[0][i] = state_input_vector[i];
@@ -188,7 +188,7 @@ public:
 
     std::size_t input_size_0 = state_input_vector.size();
     std::size_t input_size_1 = state_input_vector[0].size();
-    at::Tensor input_tensor = torch::zeros({ input_size_0, input_size_1 }, device);
+    at::Tensor input_tensor = torch::zeros({ static_cast<int>(input_size_0), static_cast<int>(input_size_1) }, device);
     for (int i = 0; i < input_size_0; i++)
     {
       // input_tensor[i] = torch::from_blob(state_input_vector[i].data(), { input_size_1 }, device);

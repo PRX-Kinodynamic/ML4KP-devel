@@ -156,6 +156,7 @@ int main(int argc, char* argv[])
   }
 }
 #else
+#include <iostream>
 int main(int argc, char* argv[])
 {
   std::cout << "Torch not built!" << std::endl;

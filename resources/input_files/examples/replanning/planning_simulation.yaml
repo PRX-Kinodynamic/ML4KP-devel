@@ -49,6 +49,7 @@ wavefront:
 
 
 
+
 plan_safety_params:
   safe_min: 0.02
   safe_mul: 0.15
@@ -56,5 +57,5 @@ plan_safety_params:
 
 contingency_safety_params:
   safe_min: 0.03
-  safe_mul: 0.17
-  safe_quad_mul: 0.0
+  safe_mul: 0.18
+  safe_quad_mul: 0.01
