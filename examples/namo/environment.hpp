@@ -345,7 +345,8 @@ public:
    */
   const ObjectInfo& get_robot_info() const { return robot_info; }
 
-
+  const std::array<double, 3>& get_robot_size() const { return robot_info.size; }
+  
   void set_robot_position(const std::array<double, 2>& pos) {
     // Initial robot positioning
     std::array<double, 3> robot_pos = {
@@ -449,18 +450,30 @@ public:
       throw std::runtime_error("Object not found: " + object_name);
     }
     
+    // Get environment bounds
+    std::vector<double> bounds = get_environment_bounds();
+    double x_min = bounds[0], x_max = bounds[1];
+    double y_min = bounds[2], y_max = bounds[3];
+    
     // Sample a valid goal position
     std::array<double, 3> goal_pose;
     std::vector<double> random_state;
     double distance;
+
+    bool within_bounds = false;
     
-    // Keep sampling until we find a position within the desired distance range
+    // Keep sampling until we find a position within the desired distance range and environment bounds
     do {
       random_state = get_random_state();
       goal_pose = {random_state[0], random_state[1], 0.0};
       distance = std::sqrt(std::pow(object_info->position[0] - goal_pose[0], 2) + 
                            std::pow(object_info->position[1] - goal_pose[1], 2));
-    } while (distance < min_distance || distance > max_distance);
+      
+      // Check if within environment bounds
+      within_bounds = goal_pose[0] >= x_min && goal_pose[0] <= x_max && 
+                          goal_pose[1] >= y_min && goal_pose[1] <= y_max;
+                          
+    } while (distance < min_distance || distance > max_distance || !within_bounds);
     
     // Sample a random orientation
     std::random_device rd;

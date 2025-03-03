@@ -1,0 +1,80 @@
+<?xml version="1.0" ?>
+<mujoco model="generated_environment">
+  <option timestep="0.01" integrator="RK4" cone="elliptic"/>
+  <default>
+    <geom density="1"/>
+  </default>
+  <asset>
+    <texture builtin="gradient" height="3072" rgb1="0.3 0.5 0.7" rgb2="0 0 0" type="skybox" width="512"/>
+    <texture builtin="checker" height="300" mark="edge" markrgb="0.8 0.8 0.8" name="groundplane" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" type="2d" width="300"/>
+    <material name="groundplane" reflectance="0.2" texrepeat="5 5" texture="groundplane" texuniform="true"/>
+    <material name="robot" rgba="1.0 1.0 0.0 1.0"/>
+  </asset>
+  <worldbody>
+    <light dir="0 0 -1" directional="true" pos="0 0 1.5"/>
+    <geom condim="4" friction="0.5 0.005 0.001" material="groundplane" name="floor" size="0 0 0.05" type="plane"/>
+    <body name="walls">
+      <geom name="wall_1" condim="4" pos="-3.0 0.0 0.3" rgba="0.800000011920929 0.800000011920929 0.800000011920929 1.0" size="0.05 3.0 0.3" type="box"/>
+      <geom name="wall_2" condim="4" pos="3.0 0.0 0.3" rgba="0.800000011920929 0.800000011920929 0.800000011920929 1.0" size="0.05 3.0 0.3" type="box"/>
+      <geom name="wall_3" condim="4" pos="0.0 -3.0 0.3" rgba="0.800000011920929 0.800000011920929 0.800000011920929 1.0" size="3.0 0.05 0.3" type="box"/>
+      <geom name="wall_4" condim="4" pos="0.0 3.0 0.3" rgba="0.800000011920929 0.800000011920929 0.800000011920929 1.0" size="3.0 0.05 0.3" type="box"/>
+    </body>
+    <body name="robot">
+      <joint name="joint_x" type="slide" pos="0 0 0" axis="1 0 0"/>
+      <joint name="joint_y" type="slide" pos="0 0 0" axis="0 1 0"/>
+      <geom name="robot" type="sphere" pos="-2.75 -2.75 0.2" size="0.1 0.0 0.0" mass="5.0" friction="1.0 0.005 0.001" condim="4" rgba="0.5 0.5 0.5 1.0"/>
+    </body>
+    <body name="obstacle_1_movable">
+      <geom name="obstacle_1_movable" condim="4" pos="0.0721655984460523 -0.019303537190749953 0.3" euler="0 0 21.700800160723674" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.6991271715330365 0.607466128449534 0.3" type="box" mass="0.1"/>
+      <joint type="free"/>
+    </body>
+    <body name="obstacle_2_movable">
+      <geom name="obstacle_2_movable" condim="4" pos="-2.287236591825087 2.2686950260165206 0.3" euler="0 0 23.49960169402943" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.32607593744892494 0.5343576091059028 0.3" type="box" mass="0.1"/>
+      <joint type="free"/>
+    </body>
+    <body name="obstacle_3_movable">
+      <geom name="obstacle_3_movable" condim="4" pos="-2.2594027728924893 -0.2339474989497452 0.3" euler="0 0 223.4090556981975" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.47192831491488274 0.36399668948795266 0.3" type="box" mass="0.1"/>
+      <joint type="free"/>
+    </body>
+    <body name="obstacle_4_movable">
+      <geom name="obstacle_4_movable" condim="4" pos="1.3687778934421457 -0.7182156215411024 0.3" euler="0 0 331.2288620172782" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.32167185657217395 0.5121640029461236 0.3" type="box" mass="0.1"/>
+      <joint type="free"/>
+    </body>
+    <body name="obstacle_5_movable">
+      <geom name="obstacle_5_movable" condim="4" pos="0.2734693723208097 -1.8073687098255289 0.3" euler="0 0 123.74303948775095" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.6167228353460634 0.609277424160797 0.3" type="box" mass="0.1"/>
+      <joint type="free"/>
+    </body>
+    <body name="obstacle_6_movable">
+      <geom name="obstacle_6_movable" condim="4" pos="1.9475710320938893 0.34902980766695935 0.3" euler="0 0 44.139123468015725" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.5038970313295115 0.31703779845271174 0.3" type="box" mass="0.1"/>
+      <joint type="free"/>
+    </body>
+    <body name="obstacle_7_movable">
+      <geom name="obstacle_7_movable" condim="4" pos="2.151165443270671 -2.4606153319180533 0.3" euler="0 0 185.59176750717236" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.4991113052173456 0.43435228939318216 0.3" type="box" mass="0.1"/>
+      <joint type="free"/>
+    </body>
+    <body name="obstacle_8_movable">
+      <geom name="obstacle_8_movable" condim="4" pos="2.3574667024035785 -0.6674691622767011 0.3" euler="0 0 236.86919082529178" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.5189206823507003 0.32789836122545607 0.3" type="box" mass="0.1"/>
+      <joint type="free"/>
+    </body>
+    <body name="obstacle_9_movable">
+      <geom name="obstacle_9_movable" condim="4" pos="-0.8904533042681038 1.325709378645346 0.3" euler="0 0 53.4945218096306" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.7283757240941665 0.41505270476428435 0.3" type="box" mass="0.1"/>
+      <joint type="free"/>
+    </body>
+    <body name="obstacle_10_movable">
+      <geom name="obstacle_10_movable" condim="4" pos="-1.0964526506620744 -2.0187172850553505 0.3" euler="0 0 182.24746038384754" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.35192781116810773 0.4967603436839799 0.3" type="box" mass="0.1"/>
+      <joint type="free"/>
+    </body>
+    <body name="obstacle_11_movable">
+      <geom name="obstacle_11_movable" condim="4" pos="1.1827453818641933 1.8920800043461958 0.3" euler="0 0 340.5711976391924" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.6326428531194339 0.6971347089548363 0.3" type="box" mass="0.1"/>
+      <joint type="free"/>
+    </body>
+    <body name="obstacle_12_movable">
+      <geom name="obstacle_12_movable" condim="4" pos="-1.9534486198790086 -1.3668635375779798 0.3" euler="0 0 254.66959007655683" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.5884706513375398 0.3590947164194389 0.3" type="box" mass="0.1"/>
+      <joint type="free"/>
+    </body>
+  </worldbody>
+  <actuator>
+    <motor name="actuator_x" joint="joint_x" gear="1" ctrlrange="-1 1"/>
+    <motor name="actuator_y" joint="joint_y" gear="1" ctrlrange="-1 1"/>
+  </actuator>
+</mujoco>

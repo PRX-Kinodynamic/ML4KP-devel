@@ -14,7 +14,7 @@ namespace prx {
  * Contains the state information and control parameters for a pushing motion
  */
 struct MotionPrimitive {
-    std::vector<double> position;
+    std::array<double, 2> position;
     std::array<double, 4> quaternion;
     int edge_idx;
     std::array<double, 2> edge_point;
@@ -22,19 +22,7 @@ struct MotionPrimitive {
     int push_steps;
     int control_steps;
     double scaling;
-    NAMOEnvironment::ObjectInfo object_info;  // Add object info
 
-    // Add default constructor
-    MotionPrimitive(std::array<double, 3> size) : 
-        position(std::vector<double>(3, 0.0)),
-        quaternion({1.0, 0.0, 0.0, 0.0}),
-        edge_idx(0),
-        edge_point({0.0, 0.0}),
-        mid_point({0.0, 0.0}),
-        push_steps(0),
-        control_steps(0),
-        scaling(1.0),
-        object_info(size) {}
 };
 
 /**
@@ -56,6 +44,7 @@ public:
      */
     static std::vector<MotionPrimitive> generate_primitives(
         const NAMOEnvironment::ObjectInfo& obj,
+        const std::array<double, 3>& robot_size,
         const std::string& base_config_path,
         bool visualize = false,
         int push_steps = 20,
@@ -88,7 +77,7 @@ public:
             sim->step();
         }
         // Generate primitives
-        return generate_primitives_for_object(sim, obj, push_steps, control_steps, scaling, base_robot_pos, temp_folder);
+        return generate_primitives_for_object(sim, obj, robot_size, push_steps, control_steps, scaling, base_robot_pos, temp_folder);
     }
 
 
@@ -125,9 +114,10 @@ public:
         PushState& state,
         const std::array<double, 3>& obj_pos,
         const std::array<double, 3>& obj_size,
-        const std::array<double, 4>& obj_quat) {
+        const std::array<double, 4>& obj_quat,
+        const std::array<double, 3>& robot_size) {
         
-        auto [untransformed_edge_points, untransformed_mid_points] = generate_edge_points(obj_pos, obj_size, obj_quat);
+        auto [untransformed_edge_points, untransformed_mid_points] = generate_edge_points(obj_pos, obj_size, obj_quat, robot_size);
         
         // transform edge points and mid points to world coordinates
         auto edge_points = transform_points(untransformed_edge_points, obj_pos, obj_quat);
@@ -201,6 +191,7 @@ public:
     static std::vector<MotionPrimitive> generate_primitives_for_object(
         std::unique_ptr<MujocoWrapper>& sim,
         const NAMOEnvironment::ObjectInfo& obj,
+        const std::array<double, 3>& robot_size,
         int push_steps,
         int control_steps,
         double scaling,
@@ -213,7 +204,7 @@ public:
         sim->getBodyPosition(obj.name, obj_pos);
         sim->getBodyQuaternion(obj.name, obj_quat);
 
-        auto [edge_points, mid_points] = generate_edge_points(obj_pos, obj.size, obj_quat);
+        auto [edge_points, mid_points] = generate_edge_points(obj_pos, obj.size, obj_quat, robot_size);
 
         for (int edge_idx = 0; edge_idx < edge_points.size(); edge_idx++) {
             PushState initial_state{
@@ -225,7 +216,7 @@ public:
             };
             
             auto trajectory = simulate_push(sim, obj, initial_state, 
-                                         push_steps, control_steps, scaling, base_robot_pos);
+                                         push_steps, control_steps, scaling, base_robot_pos, robot_size);
             
             // Save trajectory to file
             std::string filename = temp_folder + "/" + obj.name + "_edge" + 
@@ -249,7 +240,8 @@ public:
         int push_steps,
         int control_steps,
         double scaling,
-        const std::array<double, 3>& base_robot_pos) {
+        const std::array<double, 3>& base_robot_pos,
+        const std::array<double, 3>& robot_size) {
 
         std::vector<MotionPrimitive> trajectory;
         PushState current_state = initial_state;
@@ -274,7 +266,7 @@ public:
             std::array<double, 4> obj_quat;
             sim->getBodyPosition(obj.name, obj_pos);
             sim->getBodyQuaternion(obj.name, obj_quat);
-            update_push_state(current_state, obj_pos, obj.size, obj_quat);
+            update_push_state(current_state, obj_pos, obj.size, obj_quat, robot_size);
             
             for (int i = 0; i < control_steps; i++) {
                 // Get current object state
@@ -288,10 +280,10 @@ public:
                 sim->step();
                 sim->getBodyPosition(obj.name, obj_pos);
                 sim->getBodyQuaternion(obj.name, obj_quat);
-                update_push_state(current_state, obj_pos, obj.size, obj_quat);
+                update_push_state(current_state, obj_pos, obj.size, obj_quat, robot_size);
             }
             // Record state
-            MotionPrimitive primitive(obj.size);
+            MotionPrimitive primitive;
             primitive.position = {obj_pos[0], obj_pos[1]};
             primitive.quaternion = {obj_quat[0], obj_quat[1], obj_quat[2], obj_quat[3]};
             primitive.edge_point = current_state.current_edge_point;
@@ -317,13 +309,14 @@ public:
     static std::pair<std::vector<std::array<double, 2>>, std::vector<std::array<double, 2>>> generate_edge_points(
         const std::array<double, 3>& pos,
         const std::array<double, 3>& size,
-        const std::array<double, 4>& rotation) {
+        const std::array<double, 4>& rotation,
+        const std::array<double, 3>& robot_size) {
         
         std::vector<std::array<double, 2>> points;
         double x = 0, y = 0;
         double w = size[0] - 0.05, d = size[1] - 0.05;
         double angle = 0.0; // quaternion_to_yaw(rotation, true);
-        double offset = 0.1;
+        double offset = robot_size[0] + 0.05;
 
         // Generate 3 points on each edge
         std::vector<std::array<double, 2>> edge_points = {{x - w, y + d + offset}, {x - w, y - d - offset}, {x, y + d + offset}, {x, y - d - offset}, {x + w, y + d + offset}, {x + w, y - d - offset}, {x + w + offset, y - d}, {x - w - offset, y - d}, {x + w + offset, y}, {x - w - offset, y}, {x + w + offset, y + d}, {x - w - offset, y + d}};

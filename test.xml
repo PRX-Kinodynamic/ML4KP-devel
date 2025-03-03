@@ -32,12 +32,12 @@
     <body name="robot">
       <joint name="joint_x" pos="0 0 0" axis="1 0 0" type="slide"/>
       <joint name="joint_y" pos="0 0 0" axis="0 1 0" type="slide"/>
-      <geom name="robot" size="0.05" pos="-5 -5 0.3" condim="4" mass="5"/>
+      <geom name="robot" size="0.1" pos="-5 -5 0.3" condim="4" mass="5"/>
       <site name="sensor_ball" pos="0 0 0"/>
     </body>
-    <body name="obstacle_9_movable">
+    <body name="obstacle_14_movable">
       <joint type="free" limited="false" actuatorfrclimited="false"/>
-      <geom name="obstacle_9_movable" size="0.503858 0.399729 0.2" pos="0 0 0.2" type="box" condim="4" friction="0 0.005 0.001" mass="0.1" rgba="1 1 0 1"/>
+      <geom name="obstacle_14_movable" size="0.458848 0.404824 0.3" pos="0 0 0.3" type="box" condim="4" friction="0 0.005 0.001" mass="0.1" rgba="1 1 0 1"/>
     </body>
   </worldbody>
 

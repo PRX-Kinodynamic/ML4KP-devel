@@ -262,7 +262,7 @@ def save_config(config, filename):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='executables/mujoco_env_creator/generator_config.yaml')
-    parser.add_argument('--model_path', type=str, default='resources/models/simple_envs/cylinder_empty.xml')
+    parser.add_argument('--model_path', type=str, default='resources/models/custom/benchmark_empty_walled.xml')
     parser.add_argument('--random_start', action='store_true')
     args = parser.parse_args()
     return args
@@ -303,11 +303,13 @@ if __name__ == "__main__":
         if model.geom(i).name == 'robot':
             robot = {
                 'name': model.geom(i).name,
-                'type': 'box',
+                'type': 'sphere',
                 'pos': model.geom(i).pos.tolist(),
                 'size': model.geom(i).size.tolist(),
                 'rgba': model.geom(i).rgba.tolist(),
-                'condim': model.geom(i).condim.item()
+                'condim': model.geom(i).condim.item(),
+                'friction': model.geom(i).friction.tolist(),
+                'mass': generator_config['robot']['mass']
             }
 
         # if model.geom(i).name.startswith('obstacle_'):
@@ -379,9 +381,7 @@ if __name__ == "__main__":
                             break
                         
                 main_obstacle = obstacle.copy()
-        # print(env_size)
-        # print(env_size, min(x_limits), max(x_limits), min(y_limits), max(y_limits))
-        # exit()
+
         if main_obstacle is not None:
             preprocessed_obstacles.append(main_obstacle)
         robot_size = generator_config['robot']['size']

@@ -1,6 +1,6 @@
 num_configs: 10
-config_dir: 'resources/input_files/cylinder_envs/test'
-output_dir: 'resources/models/cylinder_envs/test'
+config_dir: 'resources/input_files/custom_walled_envs/empty'
+output_dir: 'resources/models/custom_walled_envs/empty'
 
 wall:
   thickness: 0.05
@@ -15,25 +15,24 @@ obstacles:
   
   # For quadrant_mixed strategy
   count:
-    min: 2  # Minimum total obstacles
-    max: 6  # Maximum total obstacles
-  movable_probability: 0.6  # Probability of an obstacle being movable (0-1)
+    min: 10  # Minimum total obstacles
+    max: 15 # Maximum total obstacles
+  movable_probability: 1.0  # Probability of an obstacle being movable (0-1)
   
   # Common obstacle configurations
   size:
     width:
-      min: 0.1
-      max: 1.0
+      min: 0.3
+      max: 0.8
     depth:
-      min: 0.1
-      max: 1.0
+      min: 0.3
+      max: 0.8
   movable_mass: 0.1
   color:
     movable: [1, 1, 0, 1]
     static: [1, 0, 0, 1]
   friction: [0.0, 0.005, 0.001]
   num_movable: 3
-  movable_probability: 0.6
 
 env_size:
   width: # corridor width

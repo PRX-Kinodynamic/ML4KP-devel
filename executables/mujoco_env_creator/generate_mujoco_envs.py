@@ -135,11 +135,15 @@ def create_robot(worldbody: Element, robot_config: Dict[str, Any]) -> None:
         joint.set('axis', f'{"1" if axis == "x" else "0"} {"1" if axis == "y" else "0"} 0')
 
     # Define geometry for the ball robot
+    robot_size = robot_config['size']
+    robot_size[0] = 0.1
+    robot_size[1] = 0.0
+    robot_size[2] = 0.0
     geom = SubElement(robot, 'geom')
     geom.set('name', robot_name)
     geom.set('type', robot_config['type'])
     geom.set('pos', ' '.join(map(str, robot_config['pos'])))
-    geom.set('size', ' '.join(map(str, robot_config['size'])))
+    geom.set('size', ' '.join(map(str, robot_size)))
     geom.set('mass', str(robot_config['mass']))
     # geom.set('material', robot_config['material'])
     geom.set('friction', ' '.join(map(str, robot_config['friction'])))
@@ -151,6 +155,7 @@ def create_robot(worldbody: Element, robot_config: Dict[str, Any]) -> None:
 
     # Set other properties from robot_config if provided
     for key, value in robot_config.items():
+        
         if key not in [NAME, POS, 'type', 'size', 'mass', 'material', 'friction', 'condim']:
             if isinstance(value, list):
                 geom.set(key, ' '.join(map(str, value)))
@@ -239,15 +244,14 @@ if __name__ == "__main__":
     config_files = [f for f in os.listdir(config_dir) if f.endswith('.yaml')]
     
     for config_file in tqdm(config_files, desc="Generating MuJoCo XML files"):
-        try:
-            config_path = os.path.join(config_dir, config_file)
-            config = load_config(config_path)
-            mujoco_xml = create_mujoco_xml(config)
-            output_file = os.path.join(output_dir, f"{os.path.splitext(config_file)[0]}.xml")
-            save_mujoco_xml(mujoco_xml, output_file)
-            # Remove the config file after successful creation of XML
-            os.remove(config_path)
-        except Exception as e:
-            print(f"Error processing {config_file}: {e}")
+        config_path = os.path.join(config_dir, config_file)
+        config = load_config(config_path)
+        mujoco_xml = create_mujoco_xml(config)
+        output_file = os.path.join(output_dir, f"{os.path.splitext(config_file)[0]}.xml")
+        save_mujoco_xml(mujoco_xml, output_file)
+        # Remove the config file after successful creation of XML
+        os.remove(config_path)
+        # except Exception as e:
+        #     print(f"Error processing {config_file}: {e}")
 
     print(f"MuJoCo XML files generated and saved in the '{output_dir}' directory")

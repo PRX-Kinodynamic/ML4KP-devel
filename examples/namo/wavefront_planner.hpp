@@ -64,6 +64,48 @@ void save_wavefront_to_file(
     double resolution
 );
 
+/**
+ * @brief Checks if a goal region is reachable in the computed wavefront
+ * 
+ * @param grid The computed wavefront grid
+ * @param goal_pos The position of the goal region
+ * @param bounds The environment bounds [x_min, x_max, y_min, y_max]
+ * @param resolution The grid resolution
+ * @param goal_size The size of the goal region
+ * @return true if any part of the goal region is reachable, false otherwise
+ */
+bool is_goal_reachable(
+    const std::vector<std::vector<int>>& grid,
+    const std::vector<double>& goal_pos,
+    NAMOEnvironment& env,
+    double resolution,
+    double goal_size = 0.05
+) {
+    // Calculate the grid bounds for the goal region
+    auto bounds = env.get_environment_bounds();
+    int min_x = static_cast<int>(std::floor((goal_pos[0] - goal_size - bounds[0]) / resolution));
+    int max_x = static_cast<int>(std::ceil((goal_pos[0] + goal_size - bounds[0]) / resolution));
+    int min_y = static_cast<int>(std::floor((goal_pos[1] - goal_size - bounds[2]) / resolution));
+    int max_y = static_cast<int>(std::ceil((goal_pos[1] + goal_size - bounds[2]) / resolution));
+    
+    // Clamp to grid bounds
+    min_x = std::max(0, min_x);
+    max_x = std::min(static_cast<int>(grid.size()) - 1, max_x);
+    min_y = std::max(0, min_y);
+    max_y = std::min(static_cast<int>(grid[0].size()) - 1, max_y);
+    
+    // Check if any cell in the goal region is reachable (value > 0)
+    for (int x = min_x; x <= max_x; x++) {
+        for (int y = min_y; y <= max_y; y++) {
+            if (grid[x][y] >= 0) {
+                return true;
+            }
+        }
+    }
+    
+    return false;
+}
+
 // Implementations
 
 /**
@@ -100,8 +142,8 @@ bool is_point_in_rotated_object(
         // Use utility function to rotate point
         auto rotated = rotate_point(point_x, point_y, obj_state->position[0], obj_state->position[1], -angle);
         
-        return std::abs(rotated[0] - obj_state->position[0]) <= obj_state->size[0] && 
-               std::abs(rotated[1] - obj_state->position[1]) <= obj_state->size[1];
+        return std::abs(rotated[0] - obj_state->position[0]) <= obj.size[0] && 
+               std::abs(rotated[1] - obj_state->position[1]) <= obj.size[1];
     }   
 }
 
@@ -153,6 +195,7 @@ compute_wavefront_with_goals(
             // Check static and movable objects
             for (const auto& obj : env.get_static_objects()) {
                 NAMOEnvironment::ObjectInfo inflated_obj = obj;
+                
                 inflated_obj.size[0] += robot_size[0];
                 inflated_obj.size[1] += robot_size[0];
                 
@@ -165,7 +208,6 @@ compute_wavefront_with_goals(
                 for (const auto& obj : env.get_movable_objects()) {
                     NAMOEnvironment::ObjectInfo inflated_obj = obj;
                     const NAMOEnvironment::ObjectState* inflated_obj_state = env.get_object_state(obj.name);
-
                     inflated_obj.size[0] += robot_size[0];
                     inflated_obj.size[1] += robot_size[0];
                     

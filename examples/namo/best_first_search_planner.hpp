@@ -43,6 +43,7 @@ public:
         const std::vector<double>& goal_state,
         const std::vector<MotionPrimitive>& primitives,
         const std::vector<int>& allowed_primitive_indices,
+        const int& symmetry_rotations,
         int best_first_expansion_limit,
         std::function<double(const std::vector<double>&, const std::vector<double>&, const int)> get_distance = nullptr,
         std::function<bool(const std::vector<double>&, const std::vector<double>&, const int)> is_goal_reached_fn = nullptr
@@ -57,8 +58,6 @@ public:
         std::filesystem::create_directory(search_states_folder);
 
         // Get object info from first primitive (they should all be the same)
-        const NAMOEnvironment::ObjectInfo& object_info = primitives[0].object_info;
-        const int symmetry_rotations = object_info.symmetry_rotations;
         // Transform goal state relative to start state
         std::vector<double> transformed_goal = transform_to_local_frame(start_state, goal_state);
         

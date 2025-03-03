@@ -12,22 +12,26 @@
   </asset>
   <worldbody>
     <light dir="0 0 -1" directional="true" pos="0 0 1.5"/>
-    <geom condim="4" friction="1.0 0.005 0.001" material="groundplane" name="floor" size="0 0 0.05" type="plane"/>
+    <geom condim="4" friction="0.5 0.005 0.001" material="groundplane" name="floor" size="0 0 0.05" type="plane"/>
     <body name="walls">
-      <geom name="wall_1" condim="4" pos="-2 0 0.3" rgba="0.8 0.8 0.8 1" size="0.05 2 0.3" type="box"/>
-      <geom name="wall_2" condim="4" pos="2 0 0.3" rgba="0.8 0.8 0.8 1" size="0.05 2 0.3" type="box"/>
-      <geom name="wall_3" condim="4" pos="0 -2 0.3" rgba="0.8 0.8 0.8 1" size="2 0.05 0.3" type="box"/>
-      <geom name="wall_4" condim="4" pos="0 2 0.3" rgba="0.8 0.8 0.8 1" size="2 0.05 0.3" type="box"/>
+      <geom name="wall_1" condim="4" pos="-3 0 0.3" rgba="0.8 0.8 0.8 1" size="0.05 3 0.3" type="box"/>
+      <geom name="wall_2" condim="4" pos="3 0 0.3" rgba="0.8 0.8 0.8 1" size="0.05 3 0.3" type="box"/>
+      <geom name="wall_3" condim="4" pos="0 -3 0.3" rgba="0.8 0.8 0.8 1" size="3 0.05 0.3" type="box"/>
+      <geom name="wall_4" condim="4" pos="0 3 0.3" rgba="0.8 0.8 0.8 1" size="3 0.05 0.3" type="box"/>
+      <!-- <geom name="wall_5" condim="4" pos="0 1.5 0.3" rgba="0.8 0.8 0.8 1" size="0.05 1.5 0.3" type="box"/> -->
     </body>
-    <site name="origin_x" pos="0.1 0 0.0" rgba="1 0 0 1" size="0.05" type="sphere"/>
+    <!-- <site name="origin_x" pos="0.1 0 0.0" rgba="1 0 0 1" size="0.05" type="sphere"/>
     <site name="origin_y" pos="0 0.1 0" rgba="0 1 0 1" size="0.05" type="sphere"/>
-    <site name="origin_z" pos="0 0 0.1" rgba="0 0 1 1" size="0.05" type="sphere"/>
-    <!-- <body name="robot">
+    <site name="origin_z" pos="0 0 0.1" rgba="0 0 1 1" size="0.05" type="sphere"/> -->
+    <body name="robot">
       <joint name="joint_x" type="slide" pos="0 0 0" axis="1 0 0"/>
       <joint name="joint_y" type="slide" pos="0 0 0" axis="0 1 0"/>
-      <geom name="robot" type="sphere" pos="-0.46136447470318165 -1.0387669317915091 0.2" size="0.05" mass="5." friction="1.0 0.005 0.0001" condim="4"/>
+      <geom name="robot" type="sphere" pos="-2.75 -2.75 0.2" size="0.15" mass="5." friction="1.0 0.005 0.001" condim="4"/>
       <site name="sensor_ball"/>
-    </body> -->
+    </body>
+
+    <site name="goal" pos="2.5 2.5 0.0" rgba="0 1 0 0.2" size="0.3" type="sphere"/>
+    
     <!-- <body name="obstacle_1_movable">
       <geom name="obstacle_1_movable" condim="4" pos="-0.24364663383342156 0.11224405245710045 0.2" euler="0 0 150.91002518518613" friction="1.0 0.005 0.001" rgba="1 1 0 1" size="0.23693543790751914 0.27450408455106834 0.2" type="box" mass="0.2"/>
       <joint type="free"/>

@@ -17,17 +17,24 @@ num_random_goals: 300
 random_seed: 111
 visualize: false
 radius_step: 0.05
-xml_path: mujoco_envs_b1/env_config_1.xml
+xml_path: custom_walled_envs/empty/env_config_1.xml
+robot_goal: [2.5, 2.5]
+total_iter: 50
+
+wavefront_planner:
+  resolution: 0.05
 
 motion_primitives:
   base_config_path: resources/models/mujoco_envs_search_push/env_config_base.xml
   primitives_path: resources/input_files/examples/namo/motion_primitives
-  visualize: false
   push_steps: 10
   control_steps: 500
   control_scale: 0.5
+  reprocess_primitives: true
+  visualize: false
+
 control_planner:
   distance_threshold: 0.05
   angle_threshold: 0.1
-  mpc_steps_limit: 20
+  mpc_steps_limit: 5
   best_first_expansion_limit: 50
