@@ -12,9 +12,9 @@ push:
 goal_radius: 0.1
 discretization: 0.2
 goal_sampling_mode: file
-goals_file: predictions/radius1/simple_scene_radius_gnn/goal_lists/env_config_4512.txt
+goals_file: predictions/radius1/simple_scene_radiusgnn/goal_lists/env_config_4512.txt
 num_random_goals: 300
-random_seed: 111
+random_seed: 0
 visualize: false
 radius_step: 0.05
 xml_path: custom_walled_envs/empty/env_config_1.xml
@@ -30,7 +30,7 @@ motion_primitives:
   push_steps: 10
   control_steps: 500
   control_scale: 0.5
-  reprocess_primitives: true
+  reprocess_primitives: false
   visualize: false
 
 control_planner:

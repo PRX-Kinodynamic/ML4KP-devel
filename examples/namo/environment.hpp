@@ -383,7 +383,12 @@ public:
    */
   void update_object_states() {
     
-
+    // Update robot state
+    robot_state.name = "robot";
+    for (int i = 0; i < 3; i++) {
+      robot_state.position[i] = sim->d->geom_xpos[robot_id * 3 + i];
+    }
+    
     // Update movable objects
     for (const auto& obj : movable_objects) {
       ObjectState& state = object_states[obj.name];
@@ -422,6 +427,10 @@ public:
   const ObjectState* get_object_state(const std::string& name) const {
     auto it = object_states.find(name);
     return it != object_states.end() ? &(it->second) : nullptr;
+  }
+
+  const ObjectState* get_robot_state() const {
+    return &robot_state;
   }
 
   /**
@@ -596,6 +605,7 @@ private:
 
   // Object state tracking
   std::unordered_map<std::string, ObjectState> object_states;
+  ObjectState robot_state;
 };
 
 }  // namespace prx 

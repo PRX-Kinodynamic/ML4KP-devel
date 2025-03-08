@@ -22,12 +22,13 @@ public:
      * @param env Reference to the NAMO environment
      * @param visualize Whether to enable visualization
      */
-    PushController(NAMOEnvironment& env, bool visualize = false, std::function<double(const std::vector<double>&, const std::vector<double>&, const int)> get_distance = nullptr, std::function<bool(const std::vector<double>&, const std::vector<double>&, const int)> is_goal_reached_fn = nullptr, int mpc_steps_limit = 20, int best_first_expansion_limit = 50) 
-        :visualize(visualize), env(env), get_distance(get_distance), is_goal_reached_fn(is_goal_reached_fn), mpc_steps_limit(mpc_steps_limit), best_first_expansion_limit(best_first_expansion_limit)  { 
+    PushController(NAMOEnvironment& env, bool visualize = false, const int control_steps = 500, const double scaling = 0.5, std::function<double(const std::vector<double>&, const std::vector<double>&, const int)> get_distance = nullptr, std::function<bool(const std::vector<double>&, const std::vector<double>&, const int)> is_goal_reached_fn = nullptr, const int mpc_steps_limit = 20, const int best_first_expansion_limit = 50) 
+        :visualize(visualize), env(env), control_steps(control_steps), scaling(scaling), get_distance(get_distance), is_goal_reached_fn(is_goal_reached_fn), mpc_steps_limit(mpc_steps_limit), best_first_expansion_limit(best_first_expansion_limit)  { 
         
         // Get movable objects from environment
         movable_objects = env.get_movable_objects();
         robot_size = env.get_robot_size();
+        
     }
 
     bool execute_push_action(const std::string& object_name, const std::vector<int>& allowed_primitive_indices, const std::vector<double>& goal_state) {
@@ -130,13 +131,10 @@ public:
     void preprocess_all_motion_primitives(
         std::string base_config_path,
         int push_steps = 20,
-        int control_steps = 500,
-        double scaling = 0.5,
         bool visualize_primitives = false) {
 
         // for each movable object, generate motion primitives and store them in a map
-        this->control_steps = control_steps;
-        this->scaling = scaling;
+        
 
         auto robot_info = env.get_robot_info();
         std::array<double, 3> robot_size = {robot_info.size[0], robot_info.size[1], robot_info.size[2]};
