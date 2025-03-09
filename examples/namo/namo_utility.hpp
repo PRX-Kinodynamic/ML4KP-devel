@@ -236,4 +236,53 @@ double quaternion_distance_symmetric(
     return min_dist;
 }
 
+/**
+ * @brief Simple timer class for profiling code sections
+ */
+class Timer {
+private:
+    std::string name;
+    std::chrono::high_resolution_clock::time_point start_time;
+    std::unordered_map<std::string, double>& timing_map;
+    std::unordered_map<std::string, double>& total_timing_map;
+    bool active;
+
+public:
+    /**
+     * @brief Create a new timer and start it
+     * 
+     * @param name Name of the section being timed
+     * @param timing_map Map to store individual timing results
+     * @param total_timing_map Map to store cumulative timing results
+     */
+    Timer(const std::string& name, 
+          std::unordered_map<std::string, double>& timing_map,
+          std::unordered_map<std::string, double>& total_timing_map)
+        : name(name), timing_map(timing_map), total_timing_map(total_timing_map), active(true) {
+        start_time = std::chrono::high_resolution_clock::now();
+    }
+
+    /**
+     * @brief Stop the timer and record elapsed time
+     */
+    void stop() {
+        if (active) {
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+            double ms = duration.count() / 1000.0;
+            
+            timing_map[name] = ms;
+            total_timing_map[name] += ms;
+            active = false;
+        }
+    }
+
+    /**
+     * @brief Destructor automatically stops the timer if still active
+     */
+    ~Timer() {
+        stop();
+    }
+};
+
 } // namespace prx 

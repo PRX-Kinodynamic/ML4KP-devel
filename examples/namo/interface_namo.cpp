@@ -95,7 +95,9 @@ int main(int argc, char* argv[]) {
     // Add timing data structure
     std::unordered_map<std::string, double> timing_stats;
     std::unordered_map<std::string, double> total_timing_stats; // Add total timing stats
-    std::ofstream timing_file;
+    // std::ofstream timing_file;
+    total_timing_stats["wavefront"] = 0.0;
+    total_timing_stats["control"] = 0.0;
     
     // Create all_stats directory if it doesn't exist - moved outside try block
     std::filesystem::path all_stats_dir("all_stats");
@@ -226,8 +228,12 @@ int main(int argc, char* argv[]) {
             transformed_edge_points[obj_name] = MotionPrimitiveGenerator::transform_points(edge_points, obj_info->position, obj_info->quaternion);
         }
 
-        double resolution = params["wavefront_planner"]["resolution"].as<double>();  // Adjust resolution as needed
-        // setup ends
+        
+
+        double resolution = params["wavefront_planner"]["resolution"].as<double>();
+        
+        // Initialize wavefront planner once instead of recreating it each iteration
+        WavefrontPlanner wavefront_planner(resolution, env, robot_size);
         
         std::vector<double> robot_global_goal = params["robot_goal"].as<std::vector<double>>();
         
@@ -235,8 +241,8 @@ int main(int argc, char* argv[]) {
         int total_iter = params["total_iter"].as<int>();
         bool global_goal_reachable = false;
 
-
         while(current_iter < total_iter) {
+            // Update transformed edge points (this still needs to happen each iteration)
             for (const auto& [obj_name, edge_points] : all_edge_points) {
                 auto obj_state = env.get_object_state(obj_name);
                 transformed_edge_points[obj_name] = MotionPrimitiveGenerator::transform_points(edge_points, obj_state->position, obj_state->quaternion);
@@ -245,17 +251,26 @@ int main(int argc, char* argv[]) {
             auto robot_state = env.get_robot_state();
             robot_start[0] = robot_state->position[0];
             robot_start[1] = robot_state->position[1];
-            std::cout << "robot start: " << robot_start[0] << " " << robot_start[1] << std::endl;
+            // std::cout << "robot start: " << robot_start[0] << " " << robot_start[1] << std::endl;
 
-            // Compute wavefront to find reachable edge points for each object given the robot start position and size
-            auto [wavefront, reachable_points, reachability_flags] = compute_wavefront_with_goals(resolution, env, robot_start, robot_size, transformed_edge_points);
-            std::string output_path = (wavefront_run_dir / ("wavefront_data_" + std::to_string(current_iter) + ".txt")).string();
-            save_wavefront_to_file(wavefront, output_path, bounds, resolution);
+            // Use the wavefront planner instead of calling compute_wavefront_with_goals
+            
+            std::chrono::high_resolution_clock::time_point wavefront_start_timer = std::chrono::high_resolution_clock::now();
+            auto [wavefront, reachable_points, reachability_flags] = 
+                wavefront_planner.compute_wavefront(env, robot_start, transformed_edge_points);
+            std::chrono::high_resolution_clock::time_point wavefront_end_timer = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> wavefront_duration = std::chrono::duration_cast<std::chrono::duration<double>>(wavefront_end_timer - wavefront_start_timer);
+            std::cout << "Wavefront computation took " << wavefront_duration.count() << " seconds" << std::endl;
+            total_timing_stats["wavefront"] += wavefront_duration.count();
+            // std::cout << "Wavefront computation took " << wavefront_duration.count() << " seconds" << std::endl;
+            // Save wavefront to file using the planner's method
+            // std::string output_path = (wavefront_run_dir / ("wavefront_data_" + std::to_string(current_iter) + ".txt")).string();
+            // wavefront_planner.save_wavefront_to_file(output_path);
 
-            // check if the goal is reachable kinematically
-            global_goal_reachable = is_goal_reachable(wavefront, robot_global_goal, env, resolution, 0.3);
+            // Check if the goal is reachable using the planner's method
+            global_goal_reachable = wavefront_planner.is_goal_reachable(robot_global_goal, 0.3);
 
-            std::cout << "global goal reachable: " << global_goal_reachable << std::endl;
+            // std::cout << "global goal reachable: " << global_goal_reachable << std::endl;
 
             if (global_goal_reachable) {
                 // Record success and iterations to file
@@ -300,7 +315,12 @@ int main(int argc, char* argv[]) {
             // std::cout << "moving " << random_object << " from " << start_state[0] << " " << start_state[1] << " to " << goal_state[0] << " " << goal_state[1] << std::endl;
 
             // controller functionality 
+            std::chrono::high_resolution_clock::time_point controller_start_timer = std::chrono::high_resolution_clock::now();
             bool controller_success = controller.execute_push_action(random_object, allowed_indices, goal_state);
+            std::chrono::high_resolution_clock::time_point controller_end_timer = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> controller_duration = std::chrono::duration_cast<std::chrono::duration<double>>(controller_end_timer - controller_start_timer);
+            std::cout << "Controller execution took " << controller_duration.count() << " seconds" << std::endl;
+            total_timing_stats["control"] += controller_duration.count();
             
             // measure square root of the error in the pose
             auto final_object_state = env.get_object_state(random_object);
@@ -326,6 +346,11 @@ int main(int argc, char* argv[]) {
                 break;
             }
         }
+
+        // print total timing stats
+        std::cout << "Total timing stats:" << std::endl;
+        std::cout << "Wavefront: " << total_timing_stats["wavefront"] << " seconds" << std::endl;
+        std::cout << "Control: " << total_timing_stats["control"] << " seconds" << std::endl;
         
     } catch (const std::exception& e) {
 

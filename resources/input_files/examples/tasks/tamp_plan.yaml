@@ -36,5 +36,5 @@ motion_primitives:
 control_planner:
   distance_threshold: 0.05
   angle_threshold: 0.1
-  mpc_steps_limit: 5
+  mpc_steps_limit: 1
   best_first_expansion_limit: 50

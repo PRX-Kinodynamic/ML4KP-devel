@@ -52,22 +52,25 @@ public:
         while(num_steps < mpc_steps_limit) {
 
             // generate the control plan which is a sequence of motion primitives
+            std::chrono::high_resolution_clock::time_point control_plan_start_timer = std::chrono::high_resolution_clock::now();
             std::vector<PlanStep> control_plan = compute_control_plan(object_name, start_pose, goal_pose, allowed_primitive_indices, symmetry_rotations);
+            std::chrono::high_resolution_clock::time_point control_plan_end_timer = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> control_plan_duration = std::chrono::duration_cast<std::chrono::duration<double>>(control_plan_end_timer - control_plan_start_timer);
+            std::cout << "Control plan computation took " << control_plan_duration.count() << " seconds" << std::endl;
             space_point_t control_point = env.get_control_space_point();
 
             if (control_plan.empty()) {
                 std::cout << "No control plan found for object: " << object_name << std::endl;
                 return false;
             }
-
+            std::chrono::high_resolution_clock::time_point control_start_timer = std::chrono::high_resolution_clock::now();
             for (int plan_step = 0; plan_step < control_plan.size(); plan_step++) {
                 const PlanStep& step = control_plan[plan_step];
                 
                 // execute the primitive
                 env.set_zero_velocity();
-                for (int i = 0; i < 1; i++) {
-                    env.step_simulation();
-                }
+                env.step_simulation();
+                
                 auto object_state = env.get_object_state(object_name);
                 auto [all_edge_points, all_mid_points] = get_object_edge_points_all();
                 auto push_points = MotionPrimitiveGenerator::transform_points(all_edge_points[object_name], object_state->position, object_state->quaternion);
@@ -106,10 +109,14 @@ public:
                     break;
                 }
             }
+            std::chrono::high_resolution_clock::time_point control_end_timer = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> control_duration = std::chrono::duration_cast<std::chrono::duration<double>>(control_end_timer - control_start_timer);
+            std::cout << "Control execution took " << control_duration.count() << " seconds" << std::endl;
 
             object_state = env.get_object_state(object_name);
             start_state = {object_state->position[0], object_state->position[1], 0.0, object_state->quaternion[0], object_state->quaternion[1], object_state->quaternion[2], object_state->quaternion[3]};
             start_pose = {start_state[0], start_state[1], quaternion_to_yaw({start_state[3], start_state[4], start_state[5], start_state[6]}, true)};
+            
             num_steps++;
 
             if (is_goal_reached_fn(start_pose, goal_pose, symmetry_rotations)) {
@@ -134,7 +141,6 @@ public:
         bool visualize_primitives = false) {
 
         // for each movable object, generate motion primitives and store them in a map
-        
 
         auto robot_info = env.get_robot_info();
         std::array<double, 3> robot_size = {robot_info.size[0], robot_info.size[1], robot_info.size[2]};
