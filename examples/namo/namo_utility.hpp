@@ -1,6 +1,11 @@
 #pragma once
 namespace prx {
 
+// void wait_for_user_input(const std::string& message = "Press Enter to continue...") {
+//     std::cout << message << std::flush;
+//     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+// }
+
 /**
  * @brief Convert quaternion to yaw angle (rotation around Z axis)
  * 
@@ -16,7 +21,8 @@ double quaternion_to_yaw(const std::array<double, 4>& quaternion, bool scalar_fi
     double z = scalar_first ? quaternion[3] : quaternion[2];
 
     // Extract yaw from quaternion using atan2
-    double siny_cosp = 2.0 * (w * z + x * y);
+    double siny_cosp = 2.0 * (w * z + x * 
+    y);
     double cosy_cosp = 1.0 - 2.0 * (y * y + z * z);
     return std::atan2(siny_cosp, cosy_cosp);
 };

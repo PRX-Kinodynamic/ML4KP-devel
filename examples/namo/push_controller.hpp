@@ -79,15 +79,19 @@ public:
                 MotionPrimitiveGenerator::PushState push_state;
                 push_state.edge_idx = step.edge_idx;
 
+                // auto current_robot_state = env.get_robot_state();
+
                 for (int i = 0; i < step.push_steps; i++) {
                     if (i == 0) {
                         env.set_robot_position(push_points[step.edge_idx]);
+                        // env.step_simulation();
                         push_state.edge_idx = step.edge_idx;
                     }
                     env.set_zero_velocity();
                     env.step_simulation();
                     for (int j = 0; j < control_steps; j++) {
                         auto current_object_state = env.get_object_state(object_name);
+                        // current_robot_state = env.get_robot_state();
                         auto current_push_points = MotionPrimitiveGenerator::transform_points(all_edge_points[object_name], current_object_state->position, current_object_state->quaternion);
                         auto current_mid_points = MotionPrimitiveGenerator::transform_points(all_mid_points[object_name], current_object_state->position, current_object_state->quaternion);
 
@@ -99,7 +103,7 @@ public:
                         control_point->at(0) = control[0];
                         control_point->at(1) = control[1];
                         env.step(control_point, 0.01);
-
+                        // current_robot_state = env.get_robot_state();
                         current_object_state = env.get_object_state(object_name);
                     }
                     env.set_zero_velocity();

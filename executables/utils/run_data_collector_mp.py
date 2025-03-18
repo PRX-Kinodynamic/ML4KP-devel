@@ -58,9 +58,9 @@ def main():
     # dirs = [("resources/models/cylinder_envs/1_static", (k-1)*(_len), k*(_len)), ("resources/models/cylinder_envs/1_movable", (k-1)*(_len), k*(_len)), ("resources/models/cylinder_envs/1_mixed", (k-1)*(_len), k*(_len))]
 
     
-    a = 4900
-    b = 5000
-    dirs = [("resources/models/cylinder_envs/many_mixed", a, b)]
+    a = 2250
+    b = 4500
+    dirs = [("resources/models/cylinders/single_arc", a, b)]
 
     # dirs = [("resources/models/cylinder_envs/1_mixed", 4000, 4500)] 
     for xml_dir, start_idx, end_idx in dirs:

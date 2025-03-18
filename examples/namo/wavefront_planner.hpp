@@ -71,6 +71,7 @@ private:
     int grid_height;
     std::vector<std::vector<int>> static_grid;  // Grid with only static obstacles
     std::vector<std::vector<int>> full_grid;    // Grid with all obstacles
+    std::vector<std::vector<int>> piecewise_grid;    // Grid with all obstacles
     std::vector<double> robot_size;
     
     // BFS directions for 8-connected grid
@@ -151,6 +152,7 @@ public:
         // Allocate memory for grids
         static_grid.resize(grid_width, std::vector<int>(grid_height, -1));
         full_grid.resize(grid_width, std::vector<int>(grid_height, -1));
+        piecewise_grid.resize(grid_width, std::vector<int>(grid_height, -1));
         
         // Precompute static obstacles grid
         for (int x = 0; x < grid_width; x++) {
@@ -167,6 +169,7 @@ public:
                     
                     if (is_point_in_rotated_object(world_x, world_y, inflated_obj)) {
                         static_grid[x][y] = -2;
+                        piecewise_grid[x][y] = -2;
                         break;
                     }
                 }
@@ -190,7 +193,7 @@ public:
     compute_wavefront(
         NAMOEnvironment& env,
         const std::vector<double>& start_pos,
-        const std::unordered_map<std::string, std::vector<std::array<double, 2>>>& goal_positions
+        const std::unordered_map<std::string, std::vector<std::array<double, 2>>>& goal_positions 
     ) {
         auto start_time = std::chrono::high_resolution_clock::now();
         
@@ -304,6 +307,244 @@ public:
         
         return {full_grid, reachable_points, reachability_flags};
     }
+
+
+    void reset_piecewise_grid(NAMOEnvironment& env) {
+        piecewise_grid = static_grid;
+
+        // Update grid with movable objects only
+        for (int x = 0; x < grid_width; x++) {
+            for (int y = 0; y < grid_height; y++) {
+                if (piecewise_grid[x][y] == -2) continue; // Skip cells that are already obstacles
+                
+                double world_x = bounds[0] + x * resolution;
+                double world_y = bounds[2] + y * resolution;
+                
+                // Check only movable objects
+                for (const auto& obj : env.get_movable_objects()) {
+                    NAMOEnvironment::ObjectInfo inflated_obj = obj;
+                    const NAMOEnvironment::ObjectState* inflated_obj_state = env.get_object_state(obj.name);
+                    inflated_obj.size[0] += robot_size[0];
+                    inflated_obj.size[1] += robot_size[0];
+                    
+                    if (is_point_in_rotated_object(world_x, world_y, inflated_obj, inflated_obj_state)) {
+                        piecewise_grid[x][y] = -2;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    std::tuple<
+        std::vector<std::vector<int>>, 
+        std::unordered_map<std::string, std::vector<std::array<double, 2>>>,
+        std::unordered_map<std::string, std::vector<int>>,
+        bool
+    > 
+    compute_piecewise_wavefront(
+        NAMOEnvironment& env,
+        const std::vector<double>& start_pos,
+        const std::unordered_map<std::string, std::vector<std::array<double, 2>>>& goal_positions,
+        int piece_number
+    ) {
+        auto start_time = std::chrono::high_resolution_clock::now();
+        
+        // Convert start to grid coordinates
+        int start_x = static_cast<int>((start_pos[0] - bounds[0]) / resolution);
+        int start_y = static_cast<int>((start_pos[1] - bounds[2]) / resolution);
+
+        if (piecewise_grid[start_x][start_y] != -1) {
+            return {piecewise_grid, {}, {}, false};
+        }
+        
+        // Reset grid values for BFS (keeping obstacles as -2)
+        // for (int x = 0; x < grid_width; x++) {
+        //     for (int y = 0; y < grid_height; y++) {
+        //         if (piecewise_grid[x][y] != -2) {
+        //             piecewise_grid[x][y] = -1;
+        //         }
+        //     }
+        // }
+        
+        // BFS queue
+        std::queue<std::pair<int, int>> q;
+        q.push({start_x, start_y});
+        piecewise_grid[start_x][start_y] = 0;
+        
+        // Initialize reachable points
+        std::unordered_map<std::string, std::set<std::pair<double, double>>> unique_points;
+        
+        // Check if start position is in any goal region
+        double start_world_x = bounds[0] + start_x * resolution;
+        double start_world_y = bounds[2] + start_y * resolution;
+        for (const auto& [obj_name, edge_points] : goal_positions) {
+            for (const auto& point : edge_points) {
+                if (is_point_in_goal_region(start_world_x, start_world_y, point)) {
+                    unique_points[obj_name].insert({point[0], point[1]});
+                }
+            }
+        }
+        
+        // Initialize reachability flags map
+        std::unordered_map<std::string, std::vector<int>> reachability_flags;
+        for (const auto& [obj_name, edge_points] : goal_positions) {
+            reachability_flags[obj_name] = std::vector<int>(12, 0);  // Initialize with 12 zeros
+        }
+        
+        // Complete BFS with goal checking
+        while (!q.empty()) {
+            auto [x, y] = q.front();
+            q.pop();
+            
+            for (const auto& [dx, dy] : dirs) {
+                int nx = x + dx;
+                int ny = y + dy;
+                
+                if (nx >= 0 && nx < grid_width && ny >= 0 && ny < grid_height && piecewise_grid[nx][ny] == -1) {
+                    double world_x = bounds[0] + nx * resolution;
+                    double world_y = bounds[2] + ny * resolution;
+                    
+                    bool is_goal = false;
+                    // Check if this point is in any goal region
+                    for (const auto& [obj_name, edge_points] : goal_positions) {
+                        for (size_t i = 0; i < edge_points.size(); i++) {
+                            const auto& point = edge_points[i];
+                            if (is_point_in_goal_region(world_x, world_y, point)) {
+                                unique_points[obj_name].insert({point[0], point[1]});
+                                reachability_flags[obj_name][i] = 1;  // Mark this edge point as reachable
+                                is_goal = true;
+                            }
+                        }
+                    }
+                    
+                    piecewise_grid[nx][ny] = piece_number;
+                    q.push({nx, ny});
+                }
+            }
+        }
+        
+        // Convert sets to vectors for the return value
+        std::unordered_map<std::string, std::vector<std::array<double, 2>>> reachable_points;
+        for (const auto& [obj_name, point_set] : unique_points) {
+            for (const auto& point : point_set) {
+                reachable_points[obj_name].push_back({point.first, point.second});
+            }
+        }
+        
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        // std::cout << "Wavefront computation took " << duration.count() << " milliseconds" << std::endl;
+        
+        return {piecewise_grid, reachable_points, reachability_flags, true};
+    }
+
+
+
+
+
+
+    void reset_grid(NAMOEnvironment& env) {
+
+        full_grid = static_grid;
+        
+        // Update grid with movable objects only
+        for (int x = 0; x < grid_width; x++) {
+            for (int y = 0; y < grid_height; y++) {
+                if (full_grid[x][y] == -2) continue; // Skip cells that are already obstacles
+                
+                double world_x = bounds[0] + x * resolution;
+                double world_y = bounds[2] + y * resolution;
+                
+                // Check only movable objects
+                for (const auto& obj : env.get_movable_objects()) {
+                    NAMOEnvironment::ObjectInfo inflated_obj = obj;
+                    const NAMOEnvironment::ObjectState* inflated_obj_state = env.get_object_state(obj.name);
+                    inflated_obj.size[0] += robot_size[0];
+                    inflated_obj.size[1] += robot_size[0];
+                    
+                    if (is_point_in_rotated_object(world_x, world_y, inflated_obj, inflated_obj_state)) {
+                        full_grid[x][y] = -2;
+                        break;
+                    }
+                }
+            }
+        }
+        
+    }
+
+    std::vector<std::vector<int>>
+    compute_wavefront_within_radius(
+        NAMOEnvironment& env,
+        const std::vector<double>& start_pos,
+        double radius
+    ) {
+        auto start_time = std::chrono::high_resolution_clock::now();
+        
+        // Copy static grid to full grid
+        // full_grid = static_grid;
+        
+        // reset_grid(env);
+        
+        // Convert start to grid coordinates
+        int start_x = static_cast<int>((start_pos[0] - bounds[0]) / resolution);
+        int start_y = static_cast<int>((start_pos[1] - bounds[2]) / resolution);
+        
+        // Reset grid values for BFS (keeping obstacles as -2)
+        for (int x = 0; x < grid_width; x++) {
+            for (int y = 0; y < grid_height; y++) {
+                if ((full_grid[x][y] == -2) || (full_grid[x][y] == 1)) {
+                    continue;
+                }
+                full_grid[x][y] = -1;
+            }
+        }
+        
+        // check if start position is in obstacle
+        if (full_grid[start_x][start_y] == -2) {
+            return full_grid;
+        }
+
+        // BFS queue
+        std::queue<std::tuple<int, int, int>> q;
+        q.push({start_x, start_y, 0});
+        full_grid[start_x][start_y] = 0;
+        
+        // Initialize reachable points
+        std::unordered_map<std::string, std::set<std::pair<double, double>>> unique_points;
+        
+        // Check if start position is in any goal region
+        double start_world_x = bounds[0] + start_x * resolution;
+        double start_world_y = bounds[2] + start_y * resolution;
+        
+        
+        // Complete BFS with goal checking
+        while (!q.empty()) {
+            auto [x, y, depth] = q.front();
+            if (depth > radius) {
+                break;
+            }
+            q.pop();
+            
+            for (const auto& [dx, dy] : dirs) {
+                int nx = x + dx;
+                int ny = y + dy;
+                
+                if (nx >= 0 && nx < grid_width && ny >= 0 && ny < grid_height && full_grid[nx][ny] == -1) {
+                    double world_x = bounds[0] + nx * resolution;
+                    double world_y = bounds[2] + ny * resolution;
+                    full_grid[nx][ny] = 1;
+                    q.push({nx, ny, depth + 1});
+                }
+            }
+        }
+        
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        // std::cout << "Wavefront computation took " << duration.count() << " milliseconds" << std::endl;
+        return full_grid;
+    }
+
     
     /**
      * @brief Check if a goal is reachable using the current grid
@@ -351,7 +592,7 @@ public:
                 // Convert grid coordinates to world coordinates
                 double world_x = bounds[0] + x * resolution;
                 double world_y = bounds[2] + y * resolution;
-                file << world_x << " " << world_y << " " << full_grid[x][y] << "\n";
+                file << world_x << " " << world_y << " " << piecewise_grid[x][y] << "\n";
             }
         }
         file.close();

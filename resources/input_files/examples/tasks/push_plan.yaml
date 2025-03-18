@@ -1,5 +1,5 @@
-data_path: /common/users/dm1487/ktamp_data_rename/cylinder_envs_large/1_mixed_push/discretized
-aggregate_data_path: /common/users/dm1487/ktamp_data_rename/cylinder_envs_large_aggregate_new_temp
+data_path: /common/users/dm1487/ktamp_data_rename/cylinders/single_arc
+aggregate_data_path: /common/users/dm1487/ktamp_data_rename/cylinders_aggregate
 step_duration: 0.01
 time_limit: 40
 controller_mode: push
@@ -12,11 +12,11 @@ push:
 # collision_check: true
 goal_radius: 0.1
 discretization: 0.2
-goal_sampling_mode: file
+goal_sampling_mode: discretized
 goals_file: predictions/radius1/simple_scene_radius_gnn/goal_lists/env_config_4512.txt
 num_random_goals: 300
 random_seed: 1
 visualize: false
 
 radius_step: 0.05
-xml_path: cylinder_envs/1_movable/env_config_1.xml
+xml_path: cylinder_envs/single_arc/env_config_1.xml

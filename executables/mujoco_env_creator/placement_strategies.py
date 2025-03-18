@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+
 from shapely.geometry import Polygon
 
 def check_collision(obj1, obj2):
@@ -62,13 +63,19 @@ def generate_edge_points(pos, size, rotation):
 
 def generate_random_size(gen_config):
     """Generate random size within configured bounds."""
-    return [
+    size = [
         np.random.uniform(gen_config['obstacles']['size']['width']['min'], 
                          gen_config['obstacles']['size']['width']['max']),
         np.random.uniform(gen_config['obstacles']['size']['depth']['min'], 
                          gen_config['obstacles']['size']['depth']['max']),
         0.3  # Fixed height
     ]
+
+    # check area is not too small
+    if size[0] * size[1] < 0.06:
+        return generate_random_size(gen_config)
+    
+    return size
 
 def create_obstacle(pos, size, rotation, is_movable, index, gen_config):
     """Create an obstacle with given properties."""
@@ -105,7 +112,7 @@ class PlacementStrategy(ABC):
         self.env_size = env_size
         self.robot_pos = robot_pos
         self.gen_config = gen_config
-        self.max_attempts = 500
+        self.max_attempts = 100
         self.min_robot_distance = 0.1
 
     def is_valid_distance_from_robot(self, pos):
@@ -171,21 +178,20 @@ class ArcBasedStrategy(PlacementStrategy):
         )
 
 class SinglePairArcPlacement(ArcBasedStrategy):
-    """Place one movable and one static object in 32 arcs, with static behind movable."""
+    """Place one movable and one static object in 16 arcs, with static behind movable."""
     def __init__(self, env_size, robot_pos, gen_config):
-        super().__init__(env_size, robot_pos, gen_config, num_arcs=32)
+        super().__init__(env_size, robot_pos, gen_config, num_arcs=16)
         
     def is_within_bounds(self, pos):
         """Check if position is within environment bounds."""
-        return (0 <= pos[0] <= self.env_size[0] and 
-                0 <= pos[1] <= self.env_size[1])
+        return (-self.env_size[0]/2 <= pos[0] <= self.env_size[0]/2 and 
+                -self.env_size[1]/2 <= pos[1] <= self.env_size[1]/2)
     
     def place_obstacles(self, existing_objects):
         for attempt in range(self.max_attempts):
             # 1. Randomly select an arc
             arc_index = np.random.randint(0, self.num_arcs)
-            arc_angle = arc_index * self.arc_size
-            angle = arc_angle + np.random.uniform(-self.arc_size/2, self.arc_size/2)
+            angle = np.random.uniform(arc_index * self.arc_size, (arc_index + 1) * self.arc_size)
             
             # 2. Place movable in the arc
             movable_size = generate_random_size(self.gen_config)
@@ -193,7 +199,8 @@ class SinglePairArcPlacement(ArcBasedStrategy):
             
             # Keep sampling until we get a valid movable position
             for _ in range(self.max_attempts):
-                distance = np.random.uniform(self.min_robot_distance, min(self.env_size)/2)
+                distance = np.random.uniform(self.min_robot_distance, min(self.env_size[0]/2, self.env_size[1]/2))
+                
                 movable_pos = [
                     self.robot_pos[0] + distance * np.cos(angle),
                     self.robot_pos[1] + distance * np.sin(angle),
@@ -202,6 +209,7 @@ class SinglePairArcPlacement(ArcBasedStrategy):
                 
                 if not self.is_within_bounds(movable_pos):
                     continue
+                
                 
                 movable = create_obstacle(
                     pos=movable_pos,
@@ -214,6 +222,7 @@ class SinglePairArcPlacement(ArcBasedStrategy):
                 
                 if is_valid_placement(movable, existing_objects):
                     break
+                # print("not valid placement")
                 movable = None
             
             if not movable:
@@ -221,14 +230,20 @@ class SinglePairArcPlacement(ArcBasedStrategy):
                 
             # 3. Place static in the same arc
             static_size = generate_random_size(self.gen_config)
+            min_distance = self.distance_to_robot(movable['pos'])
             
             for _ in range(self.max_attempts):
-                distance = np.random.uniform(self.min_robot_distance, min(self.env_size)/2)
+                distance = np.random.uniform(min_distance, min(self.env_size[0]/2, self.env_size[1]/2))
+                angle = np.random.uniform(arc_index * self.arc_size, (arc_index + 1) * self.arc_size)
+                
                 static_pos = [
                     self.robot_pos[0] + distance * np.cos(angle),
                     self.robot_pos[1] + distance * np.sin(angle),
                     static_size[2]
                 ]
+
+                # if static_pos[0] < movable_pos[0] and static_pos[1] < movable_pos[1]:
+                #     continue
                 
                 if not self.is_within_bounds(static_pos):
                     continue
@@ -241,17 +256,20 @@ class SinglePairArcPlacement(ArcBasedStrategy):
                     index=2,
                     gen_config=self.gen_config
                 )
-                
-                # Check if static is behind movable
-                movable_corners = self.get_corner_points(movable['pos'], movable['size'], movable['rotation'])
-                max_movable_distance = max(self.distance_to_robot(corner) for corner in movable_corners)
-                static_corners = self.get_corner_points(static['pos'], static['size'], static['rotation'])
-                
-                if any(self.distance_to_robot(corner) <= max_movable_distance for corner in static_corners):
-                    continue
-                    
+
                 if is_valid_placement(static, existing_objects + [movable]):
                     return [movable, static]
+                
+                # Check if static is behind movable
+                # movable_corners = self.get_corner_points(movable['pos'], movable['size'], movable['rotation'])
+                # max_movable_distance = max(self.distance_to_robot(corner) for corner in movable_corners)
+                # static_corners = self.get_corner_points(static['pos'], static['size'], static['rotation'])
+                
+                # if any(self.distance_to_robot(corner) <= max_movable_distance for corner in static_corners):
+                #     print("not behind movable")
+                #     continue
+                
+                # print("not valid placement")
                     
         return []
 

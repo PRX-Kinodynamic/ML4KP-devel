@@ -1,6 +1,6 @@
-num_configs: 10
-config_dir: 'resources/input_files/custom_walled_envs/empty'
-output_dir: 'resources/models/custom_walled_envs/empty'
+num_configs: 5000
+config_dir: 'resources/input_files/cylinders/single_arc'
+output_dir: 'resources/models/cylinders/single_arc'
 
 wall:
   thickness: 0.05
@@ -22,10 +22,10 @@ obstacles:
   # Common obstacle configurations
   size:
     width:
-      min: 0.3
+      min: 0.2
       max: 0.8
     depth:
-      min: 0.3
+      min: 0.2
       max: 0.8
   movable_mass: 0.1
   color:

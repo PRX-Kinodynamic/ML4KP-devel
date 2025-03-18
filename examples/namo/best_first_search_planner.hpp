@@ -116,13 +116,13 @@ public:
                     );
                 }
                 
-                std::ofstream outfile("search_states/search_states_final.txt");
-                outfile << std::setprecision(6);  // Set precision for floating point
-                outfile << " # goal: " << transformed_goal[0] << " " << transformed_goal[1] << " " << transformed_goal[2] << "\n";
-                for (auto state : all_states) {
-                    outfile << state->state[0] << " " << state->state[1] << " " << state->state[2] << "\n";
-                }
-                outfile.close();
+                // std::ofstream outfile("search_states/search_states_final.txt");
+                // outfile << std::setprecision(6);  // Set precision for floating point
+                // outfile << " # goal: " << transformed_goal[0] << " " << transformed_goal[1] << " " << transformed_goal[2] << "\n";
+                // for (auto state : all_states) {
+                //     outfile << state->state[0] << " " << state->state[1] << " " << state->state[2] << "\n";
+                // }
+                // outfile.close();
 
                 // Cleanup
                 for (auto state : all_states) {

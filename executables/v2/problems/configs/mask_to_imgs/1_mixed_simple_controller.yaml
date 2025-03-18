@@ -1,0 +1,8 @@
+# data_path: "/common/users/dm1487/ktamp_data_rename/cylinder_envs_large_aggregate_discretized"
+# test_data_path: "/common/users/dm1487/ktamp_data_rename/cylinder_envs_large_aggregate_discretized_test"
+data_path: "/common/users/dm1487/ktamp_data_rename/cylinders_aggregate"
+test_data_path: "/common/users/dm1487/ktamp_data_rename/cylinders_aggregate_test"
+
+problem_type: "0310/mask_to_imgs"
+scene_goals: 289
+balance_data: true

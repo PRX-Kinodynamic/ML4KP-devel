@@ -11,7 +11,7 @@ def process_xml_file(xml_details, params_template, push_plan_yaml, command_line_
     env_config_name = os.path.splitext(xml_file)[0]
     
     # Run 30 times with different random seeds
-    for seed in range(10):
+    for seed in range(30):
         # Create a unique log file for each environment and seed
         log_file = os.path.join(log_dir, f'data_collection_log_{env_config_name}_seed{seed}.txt')
         os.system(f'touch {log_file}')
@@ -24,7 +24,7 @@ def process_xml_file(xml_details, params_template, push_plan_yaml, command_line_
         # Set a unique random seed for each run
         params['random_seed'] = seed
         
-        # Create unique push plan yaml for this environment and seed
+        # Create unique push plan yaml for this environment and seedg
         process_yaml = f"{push_plan_yaml.split('.')[0]}_{env_config_name}_seed{seed}.yaml"
         with open(process_yaml, 'w') as file:
             yaml.dump(params, file)

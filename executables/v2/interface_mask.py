@@ -33,6 +33,10 @@ problem_map = {
     'simple_scene_simple_controller': {
         'class': MaskToImage,
         'config': 'executables/v2/problems/configs/mask_to_imgs/simple_scene_simple_controller.yaml'
+    },
+    '1_mixed_simple_controller': {
+        'class': MaskToImage,
+        'config': 'executables/v2/problems/configs/mask_to_imgs/1_mixed_simple_controller.yaml'
     }
 }
 
@@ -166,8 +170,8 @@ def run(problem, method, load_model, verbose):
 def arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--load_model', action='store_true')
-    parser.add_argument('--problem', type=str)
-    parser.add_argument('--method', type=str)
+    parser.add_argument('--problem', type=str, default="1_mixed_simple_controller")
+    parser.add_argument('--method', type=str, default="mlp")
     parser.add_argument('--verbose', action='store_true')
     return parser.parse_args()
 

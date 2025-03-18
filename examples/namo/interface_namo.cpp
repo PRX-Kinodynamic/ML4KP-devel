@@ -43,11 +43,7 @@ void print_object_info(const NAMOEnvironment::ObjectInfo& obj) {
     std::cout << "-------------------\n";
 }
 
-/**
- * @brief Print object pose information in local frame
- * 
- * @param local_pose Local pose [x, y, z, qw, qx, qy, qz]
- */
+
 void print_local_pose(const std::vector<double>& local_pose) {
     double local_yaw = quaternion_to_yaw({
         local_pose[3], local_pose[4], local_pose[5], local_pose[6]
@@ -249,8 +245,17 @@ int main(int argc, char* argv[]) {
             }
 
             auto robot_state = env.get_robot_state();
+
+
             robot_start[0] = robot_state->position[0];
             robot_start[1] = robot_state->position[1];
+
+            // auto random_state = env.get_random_state();
+
+            // robot_start[0] = random_state[0];
+            // robot_start[1] = random_state[1];
+
+            
             // std::cout << "robot start: " << robot_start[0] << " " << robot_start[1] << std::endl;
 
             // Use the wavefront planner instead of calling compute_wavefront_with_goals
@@ -264,17 +269,22 @@ int main(int argc, char* argv[]) {
             total_timing_stats["wavefront"] += wavefront_duration.count();
             // std::cout << "Wavefront computation took " << wavefront_duration.count() << " seconds" << std::endl;
             // Save wavefront to file using the planner's method
-            // std::string output_path = (wavefront_run_dir / ("wavefront_data_" + std::to_string(current_iter) + ".txt")).string();
-            // wavefront_planner.save_wavefront_to_file(output_path);
+            std::string output_path = (wavefront_run_dir / ("wavefront_data_" + std::to_string(current_iter) + ".txt")).string();
+            wavefront_planner.save_wavefront_to_file(output_path);
+
+            // current_iter += 1;
+            // continue;
+            env.increment_wavefront_id();
 
             // Check if the goal is reachable using the planner's method
             global_goal_reachable = wavefront_planner.is_goal_reachable(robot_global_goal, 0.3);
 
-            // std::cout << "global goal reachable: " << global_goal_reachable << std::endl;
 
             if (global_goal_reachable) {
+                for(int i = 0; i < 200; i++) {
+                    env.update_object_states();
+                }
                 // Record success and iterations to file
-                
                 break;
             }
 
@@ -299,7 +309,6 @@ int main(int argc, char* argv[]) {
             int random_index = idx_dis(gen);
             std::string random_object = reachable_objects[random_index];
             auto random_object_info = env.get_object_info(random_object);
-
             // For the selected object, get the allowed primitive indices
             std::vector<int> allowed_indices;
             for (size_t i = 0; i < reachability_flags[random_object].size(); i++) {
@@ -311,8 +320,7 @@ int main(int argc, char* argv[]) {
             // continuous decision of target location selection
             std::vector<double> start_state = {random_object_info->position[0], random_object_info->position[1], 0.0, random_object_info->quaternion[0], random_object_info->quaternion[1], random_object_info->quaternion[2], random_object_info->quaternion[3]};
             std::vector<double> goal_state = env.set_goal_configuration(random_object, 0.3, 0.6);
-            
-            // std::cout << "moving " << random_object << " from " << start_state[0] << " " << start_state[1] << " to " << goal_state[0] << " " << goal_state[1] << std::endl;
+        
 
             // controller functionality 
             std::chrono::high_resolution_clock::time_point controller_start_timer = std::chrono::high_resolution_clock::now();
@@ -332,12 +340,6 @@ int main(int argc, char* argv[]) {
             std::array<double, 4> final_quat = {final_object_state->quaternion[0], final_object_state->quaternion[1], final_object_state->quaternion[2], final_object_state->quaternion[3]};
             double error_quaternion = quaternion_distance_symmetric(goal_quat, final_quat, random_object_info->symmetry_rotations, true);
 
-            // print final pose and goal pose
-            // std::cout << "final pose: " << final_object_state->position[0] << " " << final_object_state->position[1] << std::endl;
-            // std::cout << "goal pose: " << goal_state[0] << " " << goal_state[1] << std::endl;
-            // std::cout << "error: " << error << std::endl;
-            // std::cout << "error_quaternion: " << error_quaternion << std::endl;
-
             // End iteration timer
             current_iter++;
             
@@ -346,11 +348,11 @@ int main(int argc, char* argv[]) {
                 break;
             }
         }
-
         // print total timing stats
-        std::cout << "Total timing stats:" << std::endl;
-        std::cout << "Wavefront: " << total_timing_stats["wavefront"] << " seconds" << std::endl;
-        std::cout << "Control: " << total_timing_stats["control"] << " seconds" << std::endl;
+        std::string total_timing_stats_path = (all_stats_dir / ("total_timing_stats.txt")).string();
+        std::ofstream total_timing_stats_file(total_timing_stats_path, std::ios::app);
+        total_timing_stats_file << total_timing_stats["wavefront"] << "," << total_timing_stats["control"] << "," << current_iter << "\n";
+        total_timing_stats_file.close();
         
     } catch (const std::exception& e) {
 

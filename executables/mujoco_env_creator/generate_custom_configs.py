@@ -125,16 +125,21 @@ def generate_env_config(env_size, robot_pos, gen_config, walls, robot, existing_
     strategy_name = gen_config['obstacles']['placement_strategy']
     strategies = {
         "single_pair_arc": SinglePairArcPlacement,
-        "multi_movable_arc": MultiMovableArcPlacement,
-        "quadrant_mixed": QuadrantMixedPlacement
+        # "multi_movable_arc": MultiMovableArcPlacement,
+        # "quadrant_mixed": QuadrantMixedPlacement
     }
     
     if strategy_name not in strategies:
         raise ValueError(f"Invalid placement strategy: {strategy_name}. "
                        f"Must be one of {list(strategies.keys())}")
     
-    strategy = strategies[strategy_name](env_size, robot_pos, gen_config)
-    obstacles = strategy.place_obstacles(existing_obstacles + [robot] + walls)
+    strategy = strategies[strategy_name](env_size, robot['pos'], gen_config)
+    for _ in range(10):
+        obstacles = strategy.place_obstacles(existing_obstacles + [robot] + walls)
+        if len(obstacles) > 0:
+            break
+    if len(obstacles) == 0:
+        return None
     
     # Create the properly structured config
     config = {
@@ -279,6 +284,7 @@ if __name__ == "__main__":
         ]
         
         config = generate_env_config(env_size, robot_pos, generator_config, walls, robot, [])
-        save_config(config, os.path.join(config_dir, f'env_config_{i+1}.yaml'))
+        if config is not None:
+            save_config(config, os.path.join(config_dir, f'env_config_{i+1}.yaml'))
 
     print(f"{num_configs} environment configurations generated and saved in the '{config_dir}' directory")

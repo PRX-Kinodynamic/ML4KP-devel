@@ -67,8 +67,8 @@ public:
    * @param xml_path Path to MuJoCo XML model file
    * @param visualize Whether to enable visualization
    */
-  NAMOEnvironment(const std::string& xml_path, bool visualize)
-    : sim(std::make_shared<mujoco_simulator_t>(xml_path, visualize))
+  NAMOEnvironment(const std::string& xml_path, bool visualize, bool enable_logging = true)
+    : sim(std::make_shared<mujoco_simulator_t>(xml_path, visualize)), logging_enabled(enable_logging)
   {
     sim->init_simulator();
     warm_up();
@@ -97,6 +97,9 @@ public:
 
     // Process and categorize objects in the environment
     process_environment_objects();
+    
+    // Save objects and their sizes to a file
+    save_objects_to_file("namo_objects.txt");
 
     // get the bounds of the environment
     std::vector<double> bounds = get_environment_bounds();
@@ -104,10 +107,10 @@ public:
     std::vector<double> lower_bounds = ss->get_lower_bounds();
     std::vector<double> upper_bounds = ss->get_upper_bounds();
 
-    lower_bounds[0] = bounds[0];
-    lower_bounds[1] = bounds[2];
-    upper_bounds[0] = bounds[1];
-    upper_bounds[1] = bounds[3];
+    lower_bounds[0] = -10; // bounds[0];
+    lower_bounds[1] = -10; // bounds[2];
+    upper_bounds[0] = 10; // bounds[1];
+    upper_bounds[1] = 10; // bounds[3];
     ss->set_bounds(lower_bounds, upper_bounds);
 
     
@@ -118,14 +121,22 @@ public:
     init_robot_pos = {sim->d->geom_xpos[3 * robot_id], sim->d->geom_xpos[3 * robot_id + 1], sim->d->geom_xpos[3 * robot_id + 2]};
     current_qpos = ss->make_point();
 
+    if (logging_enabled) {
+      // Open log file immediately instead of storing in memory
+      state_log_file.open("namo_state_log.csv");
+      if (!state_log_file.is_open()) {
+        std::cerr << "Warning: Could not open state log file. Logging disabled." << std::endl;
+        logging_enabled = false;
+      }
+    }
   }
 
   std::vector<double> get_random_state() {
     // returns a random x, y, yaw in the environment
     std::vector<double> bounds = get_environment_bounds();
     std::vector<double> state(3);
-    state[0] = uniform_random(bounds[0], bounds[1]);
-    state[1] = uniform_random(bounds[2], bounds[3]);
+    state[0] = uniform_random(-3, 3); //bounds[0], bounds[1]);
+    state[1] = uniform_random(-3, 3); //bounds[2], bounds[3]);
     state[2] = 0.0;
     return state;
   }
@@ -331,10 +342,10 @@ public:
 
     // Add some padding to the bounds
     const double PADDING = 0.5;  // 0.5 meters of padding
-    bounds[0] = -4.0;//-= PADDING;
-    bounds[1] = 4.0;//+= PADDING;
-    bounds[2] = -4.0;//-= PADDING;
-    bounds[3] = 4.0;//+= PADDING;
+    bounds[0] = -3.0;//-= PADDING;
+    bounds[1] = 3.0;//+= PADDING;
+    bounds[2] = -3.0;//-= PADDING;
+    bounds[3] = 3.0;//+= PADDING;
 
     return bounds;
   }
@@ -356,12 +367,13 @@ public:
     };
     sim->d->qpos[0] = robot_pos[0];
     sim->d->qpos[1] = robot_pos[1];
-    // sim->d->qpos[2] = robot_pos[2];
 
     for(int i = 0; i < sim->m->nv; i++) {
       sim->d->qvel[i] = 0.0;
     }
     mj_forward(sim->m, sim->d);
+    step_simulation();
+    update_object_states();
   }
 
   void set_zero_velocity() {
@@ -375,6 +387,8 @@ public:
   void set_goal(const MujocoGoal& goal) {
     sim->set_goal(goal);
   }
+
+
 
   /**
    * @brief Update the state of all objects after simulation step
@@ -415,6 +429,44 @@ public:
       for (int i = 0; i < 3; i++) {
         state.size[i] = sim->m->geom_size[obj.geom_id * 3 + i];
       }
+    }
+    
+    // Log the states directly to file instead of stringstream
+    if (logging_enabled) {
+      if (!header_written) {
+        // Write header row with column names directly to file
+        state_log_file << "frame,";
+        
+        // Robot header
+        state_log_file << "robot_x,robot_y,";
+        
+        // Movable objects header
+        for (const auto& obj : movable_objects) {
+          state_log_file << obj.name << "_x," << obj.name << "_y,";
+          state_log_file << obj.name << "_qw," << obj.name << "_qx," << obj.name << "_qy," << obj.name << "_qz,";
+        }
+
+        state_log_file << "wavefront_id\n";
+        
+        header_written = true;
+      }
+      
+      // Write frame data directly to file
+      state_log_file << frame_count << ",";
+      state_log_file << robot_state.position[0] << "," << robot_state.position[1] << ",";
+      
+      for (const auto& obj : movable_objects) {
+        const auto& state = object_states[obj.name];
+        state_log_file << state.position[0] << "," << state.position[1] << ",";
+        state_log_file << state.quaternion[0] << "," << state.quaternion[1] << "," << state.quaternion[2] << "," << state.quaternion[3] << ",";
+      }
+      
+      state_log_file << wavefront_id << "\n";
+      // Flush occasionally to ensure data is written even if program crashes
+      if (frame_count % 100 == 0) {
+        state_log_file.flush();
+      }
+      frame_count++;
     }
   }
 
@@ -506,6 +558,54 @@ public:
     };
     
     return goal_state;
+  }
+
+  /**
+   * @brief Save objects and their sizes to a text file
+   * 
+   * @param filename Name of the file to save object data
+   */
+  void save_objects_to_file(const std::string& filename) {
+    std::ofstream object_file(filename);
+    if (!object_file.is_open()) {
+      std::cerr << "Warning: Could not open object data file: " << filename << std::endl;
+      return;
+    }
+    
+    // Write header
+    object_file << "object_type,object_name,size_x,size_y\n";
+    
+    // Write robot information (type 2)
+    object_file << "2," << robot_info.name << "," 
+                << robot_info.size[0] << "," << robot_info.size[1] << "\n";
+    
+    // Write static objects (type 0)
+    for (const auto& obj : static_objects) {
+      object_file << "0," << obj.name << "," 
+                  << obj.size[0] << "," << obj.size[1] << "\n";
+    }
+    
+    // Write movable objects (type 1)
+    for (const auto& obj : movable_objects) {
+      object_file << "1," << obj.name << "," 
+                  << obj.size[0] << "," << obj.size[1] << "\n";
+    }
+    
+    object_file.close();
+  }
+
+  /**
+   * @brief Destructor that closes the log file
+   */
+  ~NAMOEnvironment() {
+    if (logging_enabled && state_log_file.is_open()) {
+      state_log_file.close();
+      std::cout << "State log file closed." << std::endl;
+    }
+  }
+
+  void increment_wavefront_id() {
+    wavefront_id++;
   }
 
 private:
@@ -606,6 +706,13 @@ private:
   // Object state tracking
   std::unordered_map<std::string, ObjectState> object_states;
   ObjectState robot_state;
+  
+  // State logging
+  std::ofstream state_log_file;
+  bool header_written = false;
+  unsigned long frame_count = 0;
+  bool logging_enabled;
+  int wavefront_id = -1;
 };
 
 }  // namespace prx 

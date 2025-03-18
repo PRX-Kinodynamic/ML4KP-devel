@@ -136,9 +136,9 @@ def create_robot(worldbody: Element, robot_config: Dict[str, Any]) -> None:
 
     # Define geometry for the ball robot
     robot_size = robot_config['size']
-    robot_size[0] = 0.1
-    robot_size[1] = 0.0
-    robot_size[2] = 0.0
+    # robot_size[0] = 0.1
+    # robot_size[1] = 0.0
+    # robot_size[2] = 0.0
     geom = SubElement(robot, 'geom')
     geom.set('name', robot_name)
     geom.set('type', robot_config['type'])
