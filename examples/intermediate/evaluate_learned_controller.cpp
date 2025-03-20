@@ -1,3 +1,6 @@
+#ifndef TORCH_NOT_BUILT
+#pragma once
+
 #include "prx/utilities/defs.hpp"
 #include "prx/planning/world_model.hpp"
 #include "prx/planning/planners/dirt.hpp"
@@ -35,7 +38,7 @@ int main(int argc, char* argv[])
     double diff2 = (point->at(0) - dirt_query.goal_state->at(0)) * (point->at(0) - dirt_query.goal_state->at(0)) +
                    (point->at(1) - dirt_query.goal_state->at(1)) * (point->at(1) - dirt_query.goal_state->at(1));
 
-    if (learned_controller_params["goal_indices"].as <std::vector<int>>().size() > 2)
+    if (learned_controller_params["goal_indices"].as<std::vector<int>>().size() > 2)
       diff2 += norm_angle_pi(point->at(2) - dirt_query.goal_state->at(2)) *
                norm_angle_pi(point->at(2) - dirt_query.goal_state->at(2));
 
@@ -73,3 +76,9 @@ int main(int argc, char* argv[])
   }
   std::cout << "Success rate: " << (double)num_successes / num_trials << std::endl;
 }
+#else
+int main(int argc, char* argv[])
+{
+  return 0;
+}
+#endif

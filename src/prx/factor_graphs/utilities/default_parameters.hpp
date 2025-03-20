@@ -5,6 +5,23 @@ namespace prx
 {
 namespace fg
 {
+struct levenberg_marquardt
+{
+  static prx::param_loader default_params()
+  {
+    prx::param_loader params;
+    params["verbosity"].set("SUMMARY");
+    params["lambda_upper_bound"].set(1e32);
+    params["use_fixed_lambda_factor"].set(false);
+    params["diagonal_damping"].set(true);
+    params["lambda_factor"].set(2);
+    params["lambda_initial"].set(1e-7);
+    params["relative_error_tolerance"].set(1e-6);
+    params["absolute_error_tolerance"].set(1e-6);
+    params["max_iterations"].set(10);
+    return params;
+  }
+};
 
 inline gtsam::LevenbergMarquardtParams default_levenberg_marquardt_parameters()
 {
@@ -22,7 +39,7 @@ inline gtsam::LevenbergMarquardtParams default_levenberg_marquardt_parameters()
 }
 
 inline gtsam::LevenbergMarquardtParams levenberg_marquardt_parameters(const prx::param_loader& params,
-                                                                      const bool verbose = true)
+                                                                      const bool verbose = false)
 {
   gtsam::LevenbergMarquardtParams lm_params;
   if (params.exists("verbosity"))

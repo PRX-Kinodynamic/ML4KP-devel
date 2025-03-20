@@ -10,12 +10,11 @@ set(CMAKE_CXX_STANDARD 17)
 cmake_policy(SET CMP0079 NEW)
 
 set(BUILD_FOR_PYTHON OFF CACHE BOOL "Set ON/TRUE for building Python Bindings")
-set(BUILD_FOR_TORCH  ON CACHE BOOL "Set ON/TRUE for building using Torch")
+set(BUILD_FOR_TORCH  OFF CACHE BOOL "Set ON/TRUE for building using Torch")
 set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
-set(BUILD_FOR_GTSAM OFF CACHE BOOL "Set ON/TRUE for building GTSAM factor graphs")
-
-set(PY_VERSION "3" )
+set(BUILD_FOR_GTSAM ON CACHE BOOL "Set ON/TRUE for building GTSAM factor graphs")
+set(BUILD_WITH_SIMD OFF CACHE BOOL "Set ON/TRUE for building with SIMD (vectorized) operations")
 
 set(${PROJECT_NAME}_VERSION 1.0)
 set(${PROJECT_NAME}_HEADERS "" CACHE STRING "Headers to be exported")
@@ -28,12 +27,28 @@ if( NOT CMAKE_BUILD_TYPE )
 endif()
 
 if (CMAKE_BUILD_TYPE MATCHES Release)
+	# -03 <- Turn on all optims
+	# -march=native <- Turn on eigen vectorization optimizations
+	# set(BUILD_FLAGS "-O3 -march=native")
 	set(BUILD_FLAGS "-O3")
     add_definitions(-DRELEASE_BUILD)
 elseif(CMAKE_BUILD_TYPE MATCHES Debug)
 	set(BUILD_FLAGS "-O0 -fno-inline -g")
+    # list(APPEND BUILD_FLAGS "-fsanitize=address")
     add_definitions(-DDEBUG_BUILD)
 endif()
+
+if(BUILD_WITH_SIMD)
+	list(APPEND BUILD_FLAGS "-march=native")
+endif(BUILD_WITH_SIMD)
+
+if (UNIX)
+	if (NOT APPLE)
+		# message(STATUS "Building with -fPIC")
+    list(APPEND BUILD_FLAGS "-fPIC")
+	endif ()
+endif (UNIX)
+
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
 add_definitions(${BUILD_FLAGS})
@@ -62,7 +77,15 @@ else()
     add_definitions(-DTORCH_NOT_BUILT)
 endif()
 
-
+if(BUILD_FOR_GTSAM)
+    # set(GTSAM_ALLOCATOR_TBB 1)
+	# add_definitions(GTSAM_ALLOCATOR_TBB)
+	find_package(GTSAM REQUIRED) # Uses installed package
+	if(GTSAM_USE_TBB)
+  	message(STATUS "GTSAM is using TBB")
+    find_package(TBB 4.4 COMPONENTS tbb tbbmalloc)
+	endif(GTSAM_USE_TBB)
+endif(BUILD_FOR_GTSAM)
 
 include_directories(src/prx/external)
 include_directories(src/prx/visualization)
@@ -93,6 +116,13 @@ endif()
 
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 
+# Create a single library, mostly for installing
+add_library(${PROJECT_NAME} INTERFACE )
+foreach(LIBRARY IN ITEMS ${${PROJECT_NAME}_LIBRARIES} )
+	add_dependencies(${PROJECT_NAME} ${LIBRARY})
+	target_link_libraries(${PROJECT_NAME} INTERFACE ${LIBRARY})
+endforeach()
+
 add_subdirectory(examples)
 add_subdirectory(executables)
 
@@ -106,12 +136,7 @@ endif(BUILD_TESTS)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-# Create a single library, mostly for installing
-add_library(${PROJECT_NAME} INTERFACE )
-foreach(LIBRARY IN ITEMS ${${PROJECT_NAME}_LIBRARIES} )
-	add_dependencies(${PROJECT_NAME} ${LIBRARY})
-	target_link_libraries(${PROJECT_NAME} INTERFACE ${LIBRARY})
-endforeach()
+
 
 set(CMAKE_INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/")
 message(STATUS "Installing ${PROJECT_NAME} in: ${CMAKE_INSTALL_PREFIX}")
