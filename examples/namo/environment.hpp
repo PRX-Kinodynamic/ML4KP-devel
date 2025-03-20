@@ -67,7 +67,7 @@ public:
    * @param xml_path Path to MuJoCo XML model file
    * @param visualize Whether to enable visualization
    */
-  NAMOEnvironment(const std::string& xml_path, bool visualize, bool enable_logging = true)
+  NAMOEnvironment(const std::string& xml_path, bool visualize, bool enable_logging = false)
     : sim(std::make_shared<mujoco_simulator_t>(xml_path, visualize)), logging_enabled(enable_logging)
   {
     sim->init_simulator();
@@ -123,7 +123,7 @@ public:
 
     if (logging_enabled) {
       // Open log file immediately instead of storing in memory
-      state_log_file.open("namo_state_log.csv");
+      state_log_file.open("namo_state_log" + std::to_string(state_log_idx) + ".csv");
       if (!state_log_file.is_open()) {
         std::cerr << "Warning: Could not open state log file. Logging disabled." << std::endl;
         logging_enabled = false;
@@ -164,65 +164,17 @@ public:
     return it != object_map.end() ? &(it->second) : nullptr;
   }
 
-  /**
-   * @brief Reset the environment to initial state
-   */
-  void reset()
-  {
-    sim->reset_simulation();
-    warm_up();
-    ss->copy_to(current_qpos);
-    
-    // Initialize object states after reset
-    update_object_states();
-  }
-
-  /**
-   * @brief Step the simulation with given control input
-   * 
-   * @param control Control input
-   * @param duration Duration to apply control
-   */
-  void step(const space_point_t& control, double duration)
-  {
-    trajectory_t traj(ss);
-    plan_t plan(cs);
-    traj.clear();
-    plan.clear();
-
-    plan.append_onto_back(duration);
-    plan.back().control = control;
-
-    ss->copy_to(current_qpos);
-
-    sg->propagate(current_qpos, plan, traj);
-    
-    ss->copy_from(traj.back());
-    
-    // Update object states after simulation step
-    update_object_states();
-  }
-
-  void step_simulation() {
-    sim->step_simulation();
-    
-    // Update object states after simulation step
-    update_object_states();
-  }
-
-  /**
-   * @brief Check if robot is in collision with any object
-   * @return bool True if collision detected
-   */
-  bool is_in_collision()
-  {
-    return sim->in_collision();
-  }
+  
 
   /**
    * @brief Get a point in state space
    * @return space_point_t State space point
    */
+
+  bool get_logging_enabled() {
+    return logging_enabled;
+  }
+
   space_point_t get_state_space_point()
   {
     return ss->make_point();
@@ -241,7 +193,7 @@ public:
    * @brief Get current state of the environment
    * @return space_point_t Current state
    */
-  space_point_t get_current_qpos()
+  space_point_t get_qpos()
   {
     return current_qpos;
   }
@@ -358,6 +310,99 @@ public:
 
   const std::array<double, 3>& get_robot_size() const { return robot_info.size; }
   
+  /**
+   * @brief Get the current state of an object
+   * 
+   * @param name Object name
+   * @return const ObjectState* Pointer to object state, nullptr if not found
+   */
+  const ObjectState* get_object_state(const std::string& name) const {
+    auto it = object_states.find(name);
+    return it != object_states.end() ? &(it->second) : nullptr;
+  }
+
+  const ObjectState* get_robot_state() const {
+    return &robot_state;
+  }
+
+  /**
+   * @brief Get all object states
+   * 
+   * @return const std::unordered_map<std::string, ObjectState>& Map of all object states
+   */
+  const std::unordered_map<std::string, ObjectState>& get_all_object_states() const {
+    return object_states;
+  }
+
+
+  //setters
+
+  /**
+   * @brief Sample a goal state for a specific object and set it as the environment goal
+   * 
+   * @param object_name Name of the object to sample goal for
+   * @param min_distance Minimum distance from current position
+   * @param max_distance Maximum distance from current position
+   * @return std::vector<double> Sampled goal state [x, y, z, qw, qx, qy, qz]
+   */
+  std::vector<double> set_goal_configuration(const std::string& object_name, 
+                                                        double min_distance = 0.5, 
+                                                        double max_distance = 2.0) {
+    // Get object information
+    auto object_info = get_object_info(object_name);
+    if (!object_info) {
+      throw std::runtime_error("Object not found: " + object_name);
+    }
+    
+    // Get environment bounds
+    std::vector<double> bounds = get_environment_bounds();
+    double x_min = bounds[0], x_max = bounds[1];
+    double y_min = bounds[2], y_max = bounds[3];
+    
+    // Sample a valid goal position
+    std::array<double, 3> goal_pose;
+    std::vector<double> random_state;
+    double distance;
+
+    bool within_bounds = false;
+    
+    // Keep sampling until we find a position within the desired distance range and environment bounds
+    do {
+      random_state = get_random_state();
+      goal_pose = {random_state[0], random_state[1], 0.0};
+      distance = std::sqrt(std::pow(object_info->position[0] - goal_pose[0], 2) + 
+                           std::pow(object_info->position[1] - goal_pose[1], 2));
+      
+      // Check if within environment bounds
+      within_bounds = goal_pose[0] >= x_min && goal_pose[0] <= x_max && 
+                          goal_pose[1] >= y_min && goal_pose[1] <= y_max;
+                          
+    } while (distance < min_distance || distance > max_distance || !within_bounds);
+    
+    // Sample a random orientation
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> angle_dis(-M_PI, M_PI);
+    double random_yaw = angle_dis(gen);
+    std::array<double, 4> goal_quaternion = yaw_to_quaternion(random_yaw, true);
+    
+    // Set the goal in the environment
+    MujocoGoal goal;
+    goal.position = goal_pose;
+    goal.orientation = goal_quaternion;
+    goal.size = object_info->size;
+    goal.geom_type = object_info->geom_type;
+    set_goal(goal);
+    
+    // Return the full goal state
+    std::vector<double> goal_state = {
+      goal_pose[0], goal_pose[1], 0.0,
+      goal_quaternion[0], goal_quaternion[1], goal_quaternion[2], goal_quaternion[3]
+    };
+    
+    return goal_state;
+  }
+
   void set_robot_position(const std::array<double, 2>& pos) {
     // Initial robot positioning
     std::array<double, 3> robot_pos = {
@@ -388,7 +433,147 @@ public:
     sim->set_goal(goal);
   }
 
+  void set_qpos(const std::vector<double>& qpos) {
 
+    ss->copy_from_vector(qpos);
+
+    // for(int i = 0; i < qpos.size(); i++) {
+    //   sim->d->qpos[i] = qpos[i];
+    // }
+    for(int i = 0; i < sim->m->nv; i++) {
+      sim->d->qvel[i] = 0.0;
+    }
+
+    mj_forward(sim->m, sim->d);
+    step_simulation();
+
+    ss->copy_to(current_qpos);
+    update_object_states();
+
+    // ss->copy_from(current_qpos);
+  }
+
+  void enable_logging() {
+    logging_enabled = true;
+  }
+
+  void disable_logging() {
+    std::cout << "State log file closed: namo_state_log_" + std::to_string(state_log_idx) + ".csv" << std::endl;
+    state_log_file.close();
+    logging_enabled = false;
+  }
+
+  /**
+   * @brief Save objects and their sizes to a text file
+   * 
+   * @param filename Name of the file to save object data
+   */
+  void save_objects_to_file(const std::string& filename) {
+    std::ofstream object_file(filename);
+    if (!object_file.is_open()) {
+      std::cerr << "Warning: Could not open object data file: " << filename << std::endl;
+      return;
+    }
+    
+    // Write header
+    object_file << "object_type,object_name,size_x,size_y\n";
+    
+    // Write robot information (type 2)
+    object_file << "2," << robot_info.name << "," 
+                << robot_info.size[0] << "," << robot_info.size[1] << "\n";
+    
+    // Write static objects (type 0)
+    for (const auto& obj : static_objects) {
+      object_file << "0," << obj.name << "," 
+                  << obj.size[0] << "," << obj.size[1] << "\n";
+    }
+    
+    // Write movable objects (type 1)
+    for (const auto& obj : movable_objects) {
+      object_file << "1," << obj.name << "," 
+                  << obj.size[0] << "," << obj.size[1] << "\n";
+    }
+    
+    object_file.close();
+  }
+
+  /**
+   * @brief Destructor that closes the log file
+   */
+  ~NAMOEnvironment() {
+    if (logging_enabled && state_log_file.is_open()) {
+      state_log_file.close();
+      std::cout << "State log file closed." << std::endl;
+    }
+  }
+
+  /**
+   * @brief Reset the environment to initial state
+   */
+  void reset()
+  {
+    sim->reset_simulation();
+    warm_up();
+    ss->copy_to(current_qpos);
+
+    if (logging_enabled) {
+      state_log_idx += 1;
+      header_written = false;
+      wavefront_id = -1;
+      frame_count = 0;
+      state_log_file.close();
+      state_log_file.open("namo_state_log_" + std::to_string(state_log_idx) + ".csv");
+      std::cout << "State log file opened: namo_state_log_" + std::to_string(state_log_idx) + ".csv" << std::endl;
+    }
+    // Initialize object states after reset
+    update_object_states();
+  }
+
+  /**
+   * @brief Step the simulation with given control input
+   * 
+   * @param control Control input
+   * @param duration Duration to apply control
+   */
+  void step(const space_point_t& control, double duration)
+  {
+    trajectory_t traj(ss);
+    plan_t plan(cs);
+    traj.clear();
+    plan.clear();
+
+    plan.append_onto_back(duration);
+    plan.back().control = control;
+
+    ss->copy_to(current_qpos);
+    sg->propagate(current_qpos, plan, traj);
+    
+    ss->copy_from(traj.back());
+    ss->copy_to(current_qpos);
+    
+    // Update object states after simulation step
+    update_object_states();
+  }
+
+  void step_simulation() {
+    sim->step_simulation();
+    
+    // Update object states after simulation step
+    update_object_states();
+  }
+
+  /**
+   * @brief Check if robot is in collision with any object
+   * @return bool True if collision detected
+   */
+  bool is_in_collision()
+  {
+    return sim->in_collision();
+  }
+  
+  void increment_wavefront_id() {
+    wavefront_id++;
+  }
 
   /**
    * @brief Update the state of all objects after simulation step
@@ -468,144 +653,6 @@ public:
       }
       frame_count++;
     }
-  }
-
-  /**
-   * @brief Get the current state of an object
-   * 
-   * @param name Object name
-   * @return const ObjectState* Pointer to object state, nullptr if not found
-   */
-  const ObjectState* get_object_state(const std::string& name) const {
-    auto it = object_states.find(name);
-    return it != object_states.end() ? &(it->second) : nullptr;
-  }
-
-  const ObjectState* get_robot_state() const {
-    return &robot_state;
-  }
-
-  /**
-   * @brief Get all object states
-   * 
-   * @return const std::unordered_map<std::string, ObjectState>& Map of all object states
-   */
-  const std::unordered_map<std::string, ObjectState>& get_all_object_states() const {
-    return object_states;
-  }
-
-  /**
-   * @brief Sample a goal state for a specific object and set it as the environment goal
-   * 
-   * @param object_name Name of the object to sample goal for
-   * @param min_distance Minimum distance from current position
-   * @param max_distance Maximum distance from current position
-   * @return std::vector<double> Sampled goal state [x, y, z, qw, qx, qy, qz]
-   */
-  std::vector<double> set_goal_configuration(const std::string& object_name, 
-                                                        double min_distance = 0.5, 
-                                                        double max_distance = 2.0) {
-    // Get object information
-    auto object_info = get_object_info(object_name);
-    if (!object_info) {
-      throw std::runtime_error("Object not found: " + object_name);
-    }
-    
-    // Get environment bounds
-    std::vector<double> bounds = get_environment_bounds();
-    double x_min = bounds[0], x_max = bounds[1];
-    double y_min = bounds[2], y_max = bounds[3];
-    
-    // Sample a valid goal position
-    std::array<double, 3> goal_pose;
-    std::vector<double> random_state;
-    double distance;
-
-    bool within_bounds = false;
-    
-    // Keep sampling until we find a position within the desired distance range and environment bounds
-    do {
-      random_state = get_random_state();
-      goal_pose = {random_state[0], random_state[1], 0.0};
-      distance = std::sqrt(std::pow(object_info->position[0] - goal_pose[0], 2) + 
-                           std::pow(object_info->position[1] - goal_pose[1], 2));
-      
-      // Check if within environment bounds
-      within_bounds = goal_pose[0] >= x_min && goal_pose[0] <= x_max && 
-                          goal_pose[1] >= y_min && goal_pose[1] <= y_max;
-                          
-    } while (distance < min_distance || distance > max_distance || !within_bounds);
-    
-    // Sample a random orientation
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> angle_dis(-M_PI, M_PI);
-    double random_yaw = angle_dis(gen);
-    std::array<double, 4> goal_quaternion = yaw_to_quaternion(random_yaw, true);
-    
-    // Set the goal in the environment
-    MujocoGoal goal;
-    goal.position = goal_pose;
-    goal.orientation = goal_quaternion;
-    goal.size = object_info->size;
-    goal.geom_type = object_info->geom_type;
-    set_goal(goal);
-    
-    // Return the full goal state
-    std::vector<double> goal_state = {
-      goal_pose[0], goal_pose[1], 0.0,
-      goal_quaternion[0], goal_quaternion[1], goal_quaternion[2], goal_quaternion[3]
-    };
-    
-    return goal_state;
-  }
-
-  /**
-   * @brief Save objects and their sizes to a text file
-   * 
-   * @param filename Name of the file to save object data
-   */
-  void save_objects_to_file(const std::string& filename) {
-    std::ofstream object_file(filename);
-    if (!object_file.is_open()) {
-      std::cerr << "Warning: Could not open object data file: " << filename << std::endl;
-      return;
-    }
-    
-    // Write header
-    object_file << "object_type,object_name,size_x,size_y\n";
-    
-    // Write robot information (type 2)
-    object_file << "2," << robot_info.name << "," 
-                << robot_info.size[0] << "," << robot_info.size[1] << "\n";
-    
-    // Write static objects (type 0)
-    for (const auto& obj : static_objects) {
-      object_file << "0," << obj.name << "," 
-                  << obj.size[0] << "," << obj.size[1] << "\n";
-    }
-    
-    // Write movable objects (type 1)
-    for (const auto& obj : movable_objects) {
-      object_file << "1," << obj.name << "," 
-                  << obj.size[0] << "," << obj.size[1] << "\n";
-    }
-    
-    object_file.close();
-  }
-
-  /**
-   * @brief Destructor that closes the log file
-   */
-  ~NAMOEnvironment() {
-    if (logging_enabled && state_log_file.is_open()) {
-      state_log_file.close();
-      std::cout << "State log file closed." << std::endl;
-    }
-  }
-
-  void increment_wavefront_id() {
-    wavefront_id++;
   }
 
 private:
@@ -713,6 +760,7 @@ private:
   unsigned long frame_count = 0;
   bool logging_enabled;
   int wavefront_id = -1;
+  int state_log_idx = 0;
 };
 
 }  // namespace prx 

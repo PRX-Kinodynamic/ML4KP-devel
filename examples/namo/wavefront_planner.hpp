@@ -592,7 +592,7 @@ public:
                 // Convert grid coordinates to world coordinates
                 double world_x = bounds[0] + x * resolution;
                 double world_y = bounds[2] + y * resolution;
-                file << world_x << " " << world_y << " " << piecewise_grid[x][y] << "\n";
+                file << world_x << " " << world_y << " " << full_grid[x][y] << "\n";
             }
         }
         file.close();

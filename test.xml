@@ -35,9 +35,9 @@
       <geom name="robot" size="0.1" pos="-5 -5 0.3" condim="4" mass="5"/>
       <site name="sensor_ball" pos="0 0 0"/>
     </body>
-    <body name="obstacle_2_movable">
+    <body name="obstacle_1_movable">
       <joint type="free" limited="false" actuatorfrclimited="false"/>
-      <geom name="obstacle_2_movable" size="0.470851 0.397899 0.3" pos="0 0 0.3" type="box" condim="4" friction="0 0.005 0.001" mass="0.1" rgba="1 1 0 1"/>
+      <geom name="obstacle_1_movable" size="0.693208 0.557154 0.3" pos="0 0 0.3" type="box" condim="4" friction="0 0.005 0.001" mass="0.1" rgba="1 1 0 1"/>
     </body>
   </worldbody>
 

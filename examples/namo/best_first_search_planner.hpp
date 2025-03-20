@@ -114,6 +114,8 @@ public:
                         state->push_steps,
                         global_pose
                     );
+
+                    
                 }
                 
                 // std::ofstream outfile("search_states/search_states_final.txt");
@@ -128,16 +130,18 @@ public:
                 for (auto state : all_states) {
                     delete state;
                 }
+
+                
                 
                 return plan_sequence;
             }
 
             // Update best node if this one is closer to the goal
             double current_heuristic = get_distance(current->state, transformed_goal, symmetry_rotations);
+
             if (current_heuristic < best_heuristic) {
                 best_node = current;
                 best_heuristic = current_heuristic;
-
             }
 
             // Expand current state using allowed primitives
@@ -165,16 +169,16 @@ public:
                 }
             }
 
-            if (iter % 2 == 0) {
-                std::ofstream outfile("search_states/search_states_" + std::to_string(iter) + ".txt");
-                outfile << std::setprecision(6);  // Set precision for floating point
-                // put goal state on top of the file
-                outfile << " # goal: " << transformed_goal[0] << " " << transformed_goal[1] << " " << transformed_goal[2] << "\n";
-                for (auto state : all_states) {
-                    outfile << state->state[0] << " " << state->state[1] << " " << state->state[2] << "\n";
-                }
-                outfile.close();
-            }
+            // if (iter % 2 == 0) {
+            //     std::ofstream outfile("search_states/search_states_" + std::to_string(iter) + ".txt");
+            //     outfile << std::setprecision(6);  // Set precision for floating point
+            //     // put goal state on top of the file
+            //     outfile << " # goal: " << transformed_goal[0] << " " << transformed_goal[1] << " " << transformed_goal[2] << "\n";
+            //     for (auto state : all_states) {
+            //         outfile << state->state[0] << " " << state->state[1] << " " << state->state[2] << "\n";
+            //     }
+            //     outfile.close();
+            // }
             iter++;
 
             if (iter > best_first_expansion_limit) {
@@ -213,6 +217,7 @@ public:
                 state->push_steps,
                 global_pose
             );
+
         }
         
         // Cleanup before returning
