@@ -53,6 +53,124 @@ public:
     }
 
     /**
+     * @brief Computes wavefront from current robot position and optionally saves it
+     * 
+     * @param transformed_edges Edge points to consider in computation
+     * @param output_path Optional path to save wavefront data
+     * @return Wavefront computation results
+     */
+    auto computeAndSaveWavefront(
+        const std::unordered_map<std::string, std::vector<std::array<double, 2>>>& transformed_edges,
+        const std::string& output_path = "") {
+        
+        // Get current robot position
+        auto robot_state = env.get_robot_state();
+        robot_position_buffer.clear();
+        robot_position_buffer.push_back(robot_state->position[0]);
+        robot_position_buffer.push_back(robot_state->position[1]);
+        
+        // Compute wavefront
+        auto wavefront_result = wavefront_planner.compute_wavefront(env, robot_position_buffer, transformed_edges);
+        
+        // Save to file if path is provided
+        if (!output_path.empty()) {
+            wavefront_planner.save_wavefront_to_file(output_path);
+            env.increment_wavefront_id();
+        }
+        
+        return wavefront_result;
+    }
+    
+    /**
+     * @brief Executes a primitive action if the edge is reachable
+     * 
+     * @param object_name Object to manipulate
+     * @param edge_idx Edge index to push from
+     * @param push_steps Number of push steps
+     * @return bool Whether action was executed
+     */
+    bool executeActionIfReachable(
+        const std::string& object_name,
+        int edge_idx,
+        int push_steps) {
+        
+        auto robot_state = env.get_robot_state();
+        robot_position_buffer.clear();
+        robot_position_buffer.push_back(robot_state->position[0]);
+        robot_position_buffer.push_back(robot_state->position[1]);
+
+        auto [all_edge_points, all_mid_points] = controller.get_object_edge_points_all();
+        auto edge_points = all_edge_points[object_name];
+        auto obj_info = env.get_object_info(object_name);
+        
+        transformed_edge_points_buffer.clear();
+        transformed_edge_points_buffer[object_name] = MotionPrimitiveGenerator::transform_points(
+            edge_points, obj_info->position, obj_info->quaternion);
+
+        auto [wavefront, reachable_points, reachability_flags] = 
+            wavefront_planner.compute_wavefront(env, robot_position_buffer, transformed_edge_points_buffer);
+
+        if (reachability_flags[object_name][edge_idx] == 1) {
+            qpos_buffer.clear();
+            env.get_state_space()->copy_vector_from_point(qpos_buffer, env.get_qpos());
+            controller.execute_primitive(qpos_buffer, object_name, push_steps, edge_idx);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @brief Creates a wavefront file path in the given directory
+     * 
+     * @param dir Directory to create path in
+     * @param iter Iteration number for filename
+     * @return Full file path
+     */
+    std::string createWavefrontFilePath(
+        const std::filesystem::path& dir,
+        int iter) {
+        
+        path_buffer.clear();
+        path_buffer = "wavefront_data_" + std::to_string(iter) + ".txt";
+        return (dir / path_buffer).string();
+    }
+
+    /**
+     * @brief Creates a new directory for outputs and returns its path
+     * 
+     * @param parent_dir Parent directory
+     * @param use_existing If true, will use existing folders, otherwise creates new one
+     * @param existing_folder Optional specific folder number to use
+     * @return New directory path
+     */
+    std::filesystem::path createOutputDirectory(
+        const std::filesystem::path& parent_dir,
+        bool use_existing = false,
+        int existing_folder = -1) {
+        
+        // Count existing folders
+        int folder_count = 0;
+        for (const auto& entry : std::filesystem::directory_iterator(parent_dir)) {
+            if (entry.is_directory()) {
+                folder_count++;
+            }
+        }
+        
+        int folder_number = use_existing ? 
+            (existing_folder >= 0 ? existing_folder : folder_count) : 
+            (folder_count + 1);
+            
+        std::filesystem::path output_dir = parent_dir / std::to_string(folder_number);
+        
+        // Create directory if it doesn't exist
+        if (!std::filesystem::exists(output_dir)) {
+            std::filesystem::create_directory(output_dir);
+        }
+        
+        return output_dir;
+    }
+
+    /**
      * @brief Performs the main planning loop to reach a global goal
      * 
      * @param robot_global_goal Target position for the robot
@@ -70,15 +188,8 @@ public:
         int current_iter = 0;
         bool global_goal_reachable = false;
         
-        // Create wavefront run directory
-        int folder_count = 0;
-        for (const auto& entry : std::filesystem::directory_iterator(wavefronts_dir)) {
-            if (entry.is_directory()) {
-                folder_count++;
-            }
-        }
-        std::filesystem::path wavefront_run_dir = wavefronts_dir / std::to_string(folder_count + 1);
-        std::filesystem::create_directory(wavefront_run_dir);
+        // Create wavefront run directory - USING OUR NEW HELPER
+        std::filesystem::path wavefront_run_dir = createOutputDirectory(wavefronts_dir);
         
         // Get edge points for all objects
         auto [all_edge_points, all_mid_points] = controller.get_object_edge_points_all();
@@ -93,23 +204,10 @@ public:
             // Update transformed edge points for current object states
             updateTransformedEdgePoints(all_edge_points, transformed_edge_points);
 
-            // Get current robot position - use our buffer
-            auto robot_state = env.get_robot_state();
-            robot_position_buffer.clear();
-            robot_position_buffer.push_back(robot_state->position[0]);
-            robot_position_buffer.push_back(robot_state->position[1]);
-
-            // Compute wavefront from current position - use our buffer
+            // Compute wavefront and save to file
+            std::string output_path = createWavefrontFilePath(wavefront_run_dir, current_iter);
             auto [wavefront, reachable_points, reachability_flags] = 
-                wavefront_planner.compute_wavefront(env, robot_position_buffer, transformed_edge_points);
-
-            // Save wavefront data for visualization - use path buffer
-            path_buffer.clear();
-            path_buffer = "wavefront_data_" + std::to_string(current_iter) + ".txt";
-            std::filesystem::path output_path = wavefront_run_dir / path_buffer;
-            wavefront_planner.save_wavefront_to_file(output_path.string());
-
-            env.increment_wavefront_id();
+                computeAndSaveWavefront(transformed_edge_points, output_path);
 
             // Check if goal is reachable
             global_goal_reachable = wavefront_planner.is_goal_reachable(robot_global_goal, 0.3);
@@ -122,7 +220,7 @@ public:
                 break;
             }
 
-            // Get reachable objects - already using our buffer
+            // Get reachable objects
             std::vector<std::string>& reachable_objects = getReachableObjects(reachable_points);
             if (reachable_objects.empty()) {
                 std::cout << "No reachable objects" << std::endl;
@@ -171,7 +269,6 @@ public:
         std::unordered_map<int, std::vector<std::unordered_set<int>>> len_idx_set_map;
         std::unordered_set<std::string> unique_action_seq;
         std::unordered_map<std::string, bool> goal_reachability_cache;
-        // goal_reachability_cache.reserve(1000);  // Reserve space for cache
         unique_action_seq.reserve(100);         // Reserve space for unique sequences
         
         env.reset();
@@ -229,7 +326,7 @@ public:
                 }
             }
 
-            // Check if goal is reachable with this action set - use our buffer
+            // Check if goal is reachable with this action set
             bool goal_reachable = checkGoalReachable(
                 cache_key_buffer, goal_reachability_cache, idx_set, max_set_size, 
                 action_steps, action_steps_size, robot_global_goal);
@@ -334,45 +431,16 @@ private:
             if (idx_set.count(i) > 0) {
                 continue;
             }
-            ActionStep* action_step = action_steps[i];
-            std::string object_name = action_step->object_name;
-
-            auto robot_state = env.get_robot_state();
-            // Use our buffer for robot position
-            robot_position_buffer.clear();
-            robot_position_buffer.push_back(robot_state->position[0]);
-            robot_position_buffer.push_back(robot_state->position[1]);
-
-            auto [all_edge_points, all_mid_points] = controller.get_object_edge_points_all();
-
-            auto edge_points = all_edge_points[object_name];
-            auto obj_info = env.get_object_info(object_name);
             
-            // Clear our transformed_edge_points_buffer
-            transformed_edge_points_buffer.clear();
-            transformed_edge_points_buffer[object_name] = MotionPrimitiveGenerator::transform_points(
-                edge_points, obj_info->position, obj_info->quaternion);
-
-            auto [wavefront, reachable_points, reachability_flags] = 
-                wavefront_planner.compute_wavefront(env, robot_position_buffer, transformed_edge_points_buffer);
-
-            if (reachability_flags[object_name][action_step->edge_idx] == 1) {
-                // Use our buffer for qpos
-                qpos_buffer.clear();
-                env.get_state_space()->copy_vector_from_point(qpos_buffer, env.get_qpos());
-                controller.execute_primitive(qpos_buffer, action_step->object_name, 
-                                            action_step->push_steps, action_step->edge_idx);
-            }
+            // USING OUR NEW HELPER - execute action if reachable
+            ActionStep* action_step = action_steps[i];
+            executeActionIfReachable(action_step->object_name, 
+                                   action_step->edge_idx,
+                                   action_step->push_steps);
         }
 
-        auto robot_state = env.get_robot_state();
-        // Use our buffer for final robot position check
-        robot_position_buffer.clear();
-        robot_position_buffer.push_back(robot_state->position[0]);
-        robot_position_buffer.push_back(robot_state->position[1]);
-
-        auto [wavefront, reachable_points, reachability_flags] = 
-            wavefront_planner.compute_wavefront(env, robot_position_buffer, {});
+        // USING OUR NEW HELPER - compute final wavefront to check goal reachability
+        auto [wavefront, reachable_points, reachability_flags] = computeAndSaveWavefront({});
         return wavefront_planner.is_goal_reachable(robot_global_goal, 0.3);
     }
 
@@ -422,87 +490,38 @@ private:
         env.enable_logging();
         env.reset();
 
-        // Count existing folders for output
+        // Start with the first folder
         int final_folder_count = 0;
-        for (const auto& entry : std::filesystem::directory_iterator(final_wavefronts_dir)) {
-            if (entry.is_directory()) {
-                final_folder_count++;
-            }
-        }
-
-        int action_seq_ctr = 0;
+        
         for(const auto& action_steps_indices: action_sequences) {
-            std::filesystem::path wavefront_run_dir = final_wavefronts_dir / std::to_string(final_folder_count);
-            std::filesystem::create_directory(wavefront_run_dir);
+            // Create output directory - USING OUR NEW HELPER
+            std::filesystem::path wavefront_run_dir = createOutputDirectory(
+                final_wavefronts_dir, true, final_folder_count);
+                
             int ctr = 0;
 
             for(int action_step_idx: action_steps_indices) {
                 ActionStep* action_step = action_steps[action_step_idx];
-                std::string object_name = action_step->object_name;
-
-                auto robot_state = env.get_robot_state();
-                // Use our buffer for robot position
-                robot_position_buffer.clear();
-                robot_position_buffer.push_back(robot_state->position[0]);
-                robot_position_buffer.push_back(robot_state->position[1]);
-
-                auto [all_edge_points, all_mid_points] = controller.get_object_edge_points_all();
-
-                auto edge_points = all_edge_points[object_name];
-                auto obj_info = env.get_object_info(object_name);
                 
-                // Clear and reuse our transformed_edge_points_buffer
-                transformed_edge_points_buffer.clear();
-                transformed_edge_points_buffer[object_name] = MotionPrimitiveGenerator::transform_points(
-                    edge_points, obj_info->position, obj_info->quaternion);
-
-                auto [wavefront, reachable_points, reachability_flags] = 
-                    wavefront_planner.compute_wavefront(env, robot_position_buffer, transformed_edge_points_buffer);
+                // Execute action if reachable
+                executeActionIfReachable(action_step->object_name, 
+                                      action_step->edge_idx,
+                                      action_step->push_steps);
                 
-                // Use path buffer for output path construction
-                path_buffer.clear();
-                path_buffer.append("wavefront_data_");
-                path_buffer.append(std::to_string(ctr));
-                path_buffer.append(".txt");
-                std::filesystem::path output_path = wavefront_run_dir / path_buffer;
-                wavefront_planner.save_wavefront_to_file(output_path.string());
+                // Save wavefront after action
+                std::string output_path = createWavefrontFilePath(wavefront_run_dir, ctr);
+                computeAndSaveWavefront({}, output_path);
                 ctr++;
-
-                env.increment_wavefront_id();
-
-                if (reachability_flags[object_name][action_step->edge_idx] == 1) {
-                    // Use our buffer for qpos
-                    qpos_buffer.clear();
-                    env.get_state_space()->copy_vector_from_point(qpos_buffer, env.get_qpos());
-                    controller.execute_primitive(qpos_buffer, action_step->object_name, 
-                                               action_step->push_steps, action_step->edge_idx);
-                }
             }
             
             // Final wavefront after all actions
-            auto robot_state = env.get_robot_state();
-            // Use our buffer for final position check
-            robot_position_buffer.clear();
-            robot_position_buffer.push_back(robot_state->position[0]);
-            robot_position_buffer.push_back(robot_state->position[1]);
-        
-            auto tmp = wavefront_planner.compute_wavefront(env, robot_position_buffer, {});
-            // Use path buffer again
-            path_buffer.clear();
-            path_buffer.append("wavefront_data_");
-            path_buffer.append(std::to_string(ctr));
-            path_buffer.append(".txt");
-            std::filesystem::path output_path = wavefront_run_dir / path_buffer;
-            wavefront_planner.save_wavefront_to_file(output_path.string());
-
-            ctr++;
-            env.increment_wavefront_id();
+            std::string output_path = createWavefrontFilePath(wavefront_run_dir, ctr);
+            computeAndSaveWavefront({}, output_path);
 
             for(int i = 0; i < 200; i++) {
                 env.update_object_states();
             }
 
-            action_seq_ctr++;
             final_folder_count++;
             env.reset();
         }
