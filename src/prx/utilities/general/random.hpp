@@ -60,6 +60,24 @@ double gaussian_random(const double mean = 0.0, const double stddev = 1.0);
 double uniform_random(double min, double max);
 
 /**
+ * Returns a random number from the uniform distribution within the
+ * given range.
+ *
+ * @brief Returns a random number from the uniform distribution within the given range.
+ * @param min The minimum random value to return.
+ * @param max The maximum random value to return.
+ * @author Zakary Littlefield, Edgar Granados
+ *
+ * @return A double precision random number in the given range.
+ */
+template <typename Type>
+double uniform_random(const Type min, const Type max)
+{
+  const double val{ ::prx::random::uniform_zero_one(global_generator) * (max - min) + min };
+  return val;
+}
+
+/**
  * Returns a random integer number from the uniform distribution within
  * the given closed range [min,max]. Both max and min are possible return values
  *

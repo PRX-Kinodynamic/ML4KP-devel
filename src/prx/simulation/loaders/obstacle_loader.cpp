@@ -2,13 +2,17 @@
 #include "prx/utilities/geometry/basic_geoms/box.hpp"
 #include "prx/utilities/geometry/basic_geoms/cylinder.hpp"
 #include "prx/utilities/geometry/basic_geoms/sphere.hpp"
-#include "prx/utilities/geometry/basic_geoms/obj.hpp"
 
 namespace prx
 {
+// #ifndef BULLET_NOT_BUILT
+//     std::pair<std::vector<std::string>,std::vector<std::shared_ptr<movable_object_t>>> load_obstacles(std::string
+//     obstacles_file, b3RobotSimulatorClientAPI* sim){
+// #else
 std::pair<std::vector<std::string>, std::vector<std::shared_ptr<movable_object_t>>>
 obstacle_loader_t::load_obstacles_from_file(const std::string obstacles_file)
 {
+  // #endif
 
   if (obstacles_file == "")
   {
@@ -57,12 +61,6 @@ obstacle_loader_t::load_obstacles_from_file(const std::string obstacles_file)
       obstacle_list.push_back(create_obstacle(new sphere_t(name, radius, obstacle_pose, color)));
       obstacle_names.push_back(name);
     }
-    else if (geom_type == "obj")
-    {
-      std::string obj_fname = obj_models_path + geom_params["filename"].as<std::string>();
-      obstacle_list.push_back(create_obstacle(new obj_t(name, obj_fname, obstacle_pose)));
-      obstacle_names.push_back(name);
-    }
     else
     {
       prx_throw("Obstacle loader can't load an obstacle of type: " << geom_type);
@@ -71,4 +69,25 @@ obstacle_loader_t::load_obstacles_from_file(const std::string obstacles_file)
 
   return std::make_pair(std::move(obstacle_names), std::move(obstacle_list));
 }
+
+EnvironmentBounds obstacle_loader_t::bounds_from_yaml(const std::string obstacles_file)
+{
+  constexpr double inf{ std::numeric_limits<double>::infinity() };
+  if (obstacles_file == "")
+  {
+    prx_warn("No bounds found for environment in: " << obstacles_file);
+    return std::make_pair<Eigen::Vector3d, Eigen::Vector3d>({ -inf, -inf, -inf }, { inf, inf, inf });
+  }
+  const param_loader obstacle_loader(obstacles_file);
+  const std::vector<double> min_vec = obstacle_loader["environment"]["bounds"]["min"].as<std::vector<double>>();
+  const std::vector<double> max_vec = obstacle_loader["environment"]["bounds"]["max"].as<std::vector<double>>();
+  if (min_vec.size() != 3 || max_vec.size() != 3)
+  {
+    prx_throw("Expected three elements for the minimum and maximum bounds.");
+  }
+  const Eigen::Vector3d min(min_vec[0], min_vec[1], min_vec[2]);
+  const Eigen::Vector3d max(max_vec[0], max_vec[1], max_vec[2]);
+  return std::make_pair(min, max);
+}
+
 }  // namespace prx

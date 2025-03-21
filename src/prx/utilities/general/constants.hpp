@@ -7,6 +7,7 @@
 #include <vector>
 #include <iomanip>
 #include <algorithm>
+#include <filesystem>
 
 #define PRX_PI 3.1415926535897932385
 #define PRX_EPSILON 1e-7
@@ -278,6 +279,30 @@ Block split_block(Block& block_in, ColumnsQuery columns)
     block_out.emplace_back(line_out);
   }
   return block_out;
+}
+
+template <typename Str>
+std::string to_upper(const Str& str)
+{
+  std::string upp{ "" };
+  for (auto ch : str)
+  {
+    upp += std::toupper(ch);
+  }
+  return upp;
+}
+
+template <typename... Strs>
+std::string check_which_file_exists(const Strs... strs)
+{
+  for (const auto file : { strs... })
+  {
+    if (std::filesystem::exists(file))
+    {
+      return file;
+    }
+  }
+  return "";
 }
 
 }  // namespace prx

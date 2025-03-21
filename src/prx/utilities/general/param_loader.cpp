@@ -1,41 +1,34 @@
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/utilities/general/string_manip.hpp"
-#include "prx/utilities/general/constants.hpp"
 
 namespace prx
 {
+
+param_loader::param_loader(const std::string filename, const std::string path)
+{
+  set_input_path(path);
+  add_file(filename);
+}
 
 param_loader::param_loader()
 {
   set_input_path(input_path);
 }
-param_loader::param_loader(std::string file_name)
-{
-  set_input_path(input_path);
-  add_file(file_name);
-}
 
-param_loader::param_loader(int argc, char* argv[]) : param_loader(std::vector<std::string>(argv, argv + argc))
-{
-}
+param_loader::param_loader(const std::string filename) : param_loader(filename, prx::input_path) {};
 
-param_loader::param_loader(std::vector<std::string> argv)
+param_loader::param_loader(int argc, char* argv[]) : param_loader(std::vector<std::string>(argv, argv + argc)) {};
+
+param_loader::param_loader(std::vector<std::string> argv) : param_loader()
 {
-  set_input_path(input_path);
-  // add_opts(argc, argv);
   add_opts(argv);
 }
 
-param_loader::param_loader(std::string file_name, int argc, char* argv[])
-  : param_loader(file_name, std::vector<std::string>(argv, argv + argc))
-{
-}
+param_loader::param_loader(std::string filename, int argc, char* argv[])
+  : param_loader(filename, std::vector<std::string>(argv, argv + argc)) {};
 
-param_loader::param_loader(std::string file_name, std::vector<std::string> argv)
+param_loader::param_loader(std::string filename, std::vector<std::string> argv) : param_loader(filename)
 {
-  set_input_path(input_path);
-  add_file(file_name);
-  // add_opts(argc, argv);
   add_opts(argv);
 }
 
@@ -60,7 +53,8 @@ void param_loader::add_file(std::string file_name)
 {
   try
   {
-    auto nn = YAML::LoadFile(pl_input_path + file_name);
+    const std::string filename{ prx::check_which_file_exists(file_name, pl_input_path + file_name) };
+    auto nn = YAML::LoadFile(filename);
     params = std::move(expand_file(nn));
   }
   catch (...)
@@ -127,7 +121,7 @@ void param_loader::add_opts(std::vector<std::string> argv)
   // Bool can be without value: "--/some/bool/param"
   const std::regex opt_regex_bool("--((\\/)?\\w)+=?");
   // Special case for the executable: "./executable_name"
-  const std::regex opt_regex_exec("\\.(\\/\\w+)+");
+  const std::regex opt_regex_exec("(.)+(\\/\\w+)+");
   const std::regex opt_regex_expy("(.)+\\.py");
 
   auto argc = argv.size();
@@ -162,8 +156,7 @@ void param_loader::add_opts(std::vector<std::string> argv)
       (*this)[opt.substr(2, pos_eq)] = YAML::Load("true");
     }
     else if (i == 0)
-    {
-      continue;
+    {  // Skip the first()
     }
     else
     {
@@ -234,22 +227,14 @@ param_loader param_loader::operator[](const std::string& key)
     // Tail recursive!
     return param_loader(new_node, key.substr(subkey_init, subkey_pos - subkey_init))[key.substr(subkey_pos)];
   }
-  // while (subkey_pos != std::string::npos)
-  // {
-  // subkey_init++;
-  // subkey_pos = key.find("/", subkey_init);
-  // std::cout << "\tsubkey: " << key.substr(subkey_init, subkey_pos - subkey_init) << " init: " << subkey_init << "
-  // pos: " << subkey_pos << std::endl; new_node = new_node[key.substr(subkey_init, subkey_pos - subkey_init)];
-  // subkey_init = subkey_pos + 1;
-  // }
 }
 
-void param_loader::print()
+void param_loader::print() const
 {
   print(params);
 }
 
-void param_loader::print(const YAML::Node& pl, std::string prepath)
+void param_loader::print(const YAML::Node& pl, std::string prepath) const
 {
   bool nf = false;
   switch (pl.Type())
@@ -286,6 +271,7 @@ void param_loader::print(const YAML::Node& pl, std::string prepath)
       prx_throw("Problem printing param_loader! Is there a new type?\n");
   }
 }
+
 void param_loader::replace_env_var(YAML::Node& node)
 {
   const std::regex env_var_regex("\\$\\{(.)+\\}");
@@ -315,4 +301,5 @@ void param_loader::replace_env_var(YAML::Node& node)
     }
   }
 }
+
 }  // namespace prx

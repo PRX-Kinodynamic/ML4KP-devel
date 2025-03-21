@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fstream>
 #include <regex>
 #include <string>
 #include <unordered_map>
@@ -7,6 +8,7 @@
 
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/general/prx_assert.hpp"
+#include "prx/utilities/general/constants.hpp"
 
 namespace prx
 {
@@ -20,7 +22,8 @@ public:
 
   param_loader();
   param_loader(int argc, char* argv[]);
-  param_loader(std::string file_name);
+  param_loader(const std::string file_name);
+  param_loader(const std::string file_name, const std::string path);
   param_loader(std::vector<std::string> argv);
   param_loader(std::string file_name, int argc, char* argv[]);
   param_loader(std::string file_name, std::vector<std::string> argv);
@@ -57,11 +60,19 @@ public:
     params = val;
   }
 
-  void print();
+  void print() const;
 
   inline bool exists(const std::string& key) const
   {
-    return !params[key].IsNull();
+    std::string::size_type subkey_pos{ key.find("/", 0) };
+    if (subkey_pos == std::string::npos and params[key])
+      return true;
+    if (params[key.substr(0, subkey_pos)])
+    {
+      return exists(key.substr(0, subkey_pos));
+    }
+
+    return false;
   }
 
   void replace_env_var(YAML::Node& node);
@@ -114,6 +125,18 @@ public:
     return params.end();
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const param_loader& obj)
+  {
+    os << obj.params;
+    return os;
+  }
+
+  void save(const std::string filename) const
+  {
+    std::ofstream ofs(filename.c_str());
+    ofs << params;
+  }
+
 protected:
   param_loader(YAML::Node input_params, std::string _p_key = "INVALID_KEY");
 
@@ -121,7 +144,7 @@ protected:
 
   YAML::Node find(const std::string& key, YAML::Node node);
 
-  void print(const YAML::Node& pl, std::string prepath = "");
+  void print(const YAML::Node& pl, std::string prepath = "") const;
 
   YAML::Node params;
 

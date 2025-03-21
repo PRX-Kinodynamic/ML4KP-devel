@@ -33,6 +33,21 @@ public:
    */
   static system_ptr_t create_system(const std::string& name, const std::string& path = "");
 
+  template <typename PlantType>
+  static std::shared_ptr<PlantType> create_system_as(const std::string& name, const std::string& path)
+  {
+    auto it = system_factory_t::get().system_generators.find(name);
+    if (it != system_factory_t::get().system_generators.end())
+    {
+      return std::dynamic_pointer_cast<PlantType>(create_system(name, path));
+    }
+
+    return nullptr;
+    // std::shared_ptr<PlantType> system_ptr{ };
+    // return std::make_shared<PlantType>(path, args...);
+    // return sys_ptr == nullptr ? nullptr : std::dynamic_pointer_cast<PlantType>(sys_ptr);
+  };
+
   /**
    * Register a system to the factory. (Preferably, use macro PRX_REGISTER_SYSTEM instead of this function)
    * @param  name Name of the system. Note that one can register multiple versions of the same system by assigning

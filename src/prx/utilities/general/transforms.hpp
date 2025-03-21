@@ -46,4 +46,33 @@ inline bool are_matrices_approx_equal(const ref_matrixXd_t m1, const ref_matrixX
   return true;
 }
 
+template <typename Rotation, typename Angles>
+inline Rotation euler_to_rotation(const Angles& angles, const std::string order)
+{
+  Eigen::Matrix3d R{ Eigen::Matrix3d::Identity() };
+  prx_assert(angles.size() == order.size(), "Mismatch on sizes");
+  const std::size_t size{ order.size() };
+
+  for (int i = 0; i < size; ++i)
+  {
+    const double angle{ angles[i] };
+    const char axis{ order[i] };
+    switch (axis)
+    {
+      case 'X':
+        R = R * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitX());
+        break;
+      case 'Y':
+        R = R * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
+        break;
+      case 'Z':
+        R = R * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
+        break;
+    }
+  }
+
+  const Rotation result{ R };
+  return result;
+}
+
 }  // namespace prx

@@ -70,5 +70,16 @@ struct is_iterable<T, std::void_t<decltype(std::begin(std::declval<T>())), declt
 {
 };
 
+template <typename T, typename = void>
+struct is_streamable : std::false_type
+{
+};
+
+template <typename T>
+struct is_streamable<T, std::enable_if_t<std::is_convertible_v<
+                            decltype(std::declval<std::ostream&>() << std::declval<T>()), std::ostream&>>>
+  : std::true_type
+{
+};
 }  // namespace utilities
 }  // namespace prx

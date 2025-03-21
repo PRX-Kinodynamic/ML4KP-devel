@@ -2,7 +2,7 @@
 #include "prx/planning/world_model.hpp"
 #include "prx/simulation/plants/plants.hpp"
 #include "prx/visualization/three_js_group.hpp"
-#include "prx/utilities/general/param_loader.hpp"   
+#include "prx/utilities/general/param_loader.hpp"
 #include "prx/utilities/general/csv_reader.hpp"
 #include <fstream>
 
@@ -20,8 +20,8 @@ int main(int argc, char* argv[])
   auto plant = prx::system_factory_t::create_system(plant_name, plant_path);
   prx_assert(plant != nullptr, "Plant is nullptr!");
 
-  world_model_t world_model({ plant }, {  });
-  world_model.create_context("rrt_context", { plant_name }, {  });
+  world_model_t world_model({ plant }, {});
+  world_model.create_context("rrt_context", { plant_name }, {});
   auto context = world_model.get_context("rrt_context");
 
   auto sg = context.first;
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
   auto cs_lb = params["control_space"]["lower_bound"].as<std::vector<double>>();
   auto cs_ub = params["control_space"]["upper_bound"].as<std::vector<double>>();
   cs->set_bounds(cs_lb, cs_ub);
-  auto param_values = params["parameter_space"]["values"].as<std::vector<double>>();\
+  auto param_values = params["parameter_space"]["values"].as<std::vector<double>>();
   ps->copy_from(param_values);
   PRX_DEBUG_VARS(ps->print_memory(8))
 
@@ -50,14 +50,13 @@ int main(int argc, char* argv[])
   using Line = std::vector<std::string>;
   plan_t plan(cs);
   trajectory_t traj(ss);
-  space_point_t start = ss -> make_point();
+  space_point_t start = ss->make_point();
   ss->copy(start, start_vec);
-
 
   while (reader.has_next_line())
   {
-    Line line { reader.next_line()};
-    double duration  = prx::utilities::convert_to<double>(line[2]);
+    Line line{ reader.next_line() };
+    double duration = prx::utilities::convert_to<double>(line[2]);
     plan.append_onto_back(duration);
     plan.back().control->at(0) = prx::utilities::convert_to<double>(line[0]);
     plan.back().control->at(1) = prx::utilities::convert_to<double>(line[1]);
@@ -72,7 +71,7 @@ int main(int argc, char* argv[])
   traj_file.close();
   // PRX_DEBUG_VARS(traj)
 
-  three_js_group_t* vis_group = new three_js_group_t({ plant }, {  });
+  three_js_group_t* vis_group = new three_js_group_t({ plant }, {});
   std::string body_name = params["name"].as<>() + "/" + params["vis_body"].as<>();
   vis_group->add_detailed_vis_infos(info_geometry_t::FULL_LINE, traj, body_name, ss);
   vis_group->add_animation(traj, ss, start);

@@ -37,7 +37,7 @@
 
 
 \**************************************************************************/
-
+// clang-format off
 #ifndef PQP_MATVEC_H
 #define PQP_MATVEC_H
 
@@ -138,6 +138,29 @@ Midentity(PQP_REAL M[3][3])
 
 inline
 void
+Mzero(PQP_REAL M[3][3])
+{
+  M[0][0] = M[1][1] = M[2][2] = 0.0;
+  M[0][1] = M[1][2] = M[2][0] = 0.0;
+  M[0][2] = M[1][0] = M[2][1] = 0.0;
+}
+
+inline
+void
+MijEv(PQP_REAL M[3][3], const int i, const int j, const PQP_REAL val) // M(i,j) = v
+{
+  M[i][j] = val;
+}
+
+inline
+PQP_REAL&
+Mij(PQP_REAL M[3][3], const int i, const int j) // M(i,j) = v
+{
+  return M[i][j];
+}
+
+inline
+void
 Videntity(PQP_REAL T[3])
 {
   T[0] = T[1] = T[2] = 0.0;
@@ -184,6 +207,12 @@ McolcMcol(PQP_REAL Mr[3][3], int cr, const PQP_REAL M[3][3], int c)
   Mr[0][cr] = M[0][c];
   Mr[1][cr] = M[1][c];
   Mr[2][cr] = M[2][c];
+}
+
+inline void McolcV(PQP_REAL Mr[3][3], int cr, const PQP_REAL V[3])
+{
+  VcV(Mr[cr], V);
+  // Mr.col(cr) = V;
 }
 
 inline
@@ -362,6 +391,12 @@ MxVpV(PQP_REAL Vr[3], const PQP_REAL M1[3][3], const PQP_REAL V1[3], const PQP_R
 	   V2[2]);
 }
 
+inline
+void
+MxVpV(PQP_REAL Vr[3][3], int c, const PQP_REAL M1[3][3], const PQP_REAL V1[3], const PQP_REAL V2[3])
+{
+  MxVpV(Vr[c], M1, V1, V2);
+}
 
 inline
 void
@@ -426,6 +461,10 @@ sMxV(PQP_REAL Vr[3], PQP_REAL s1, const PQP_REAL M1[3][3], const PQP_REAL V1[3])
 	      M1[2][2] * V1[2]); 
 }
 
+// inline void MatCmC(PQP_REAL Mr[3][3], int mrid, const PQP_REAL M[3][3], int mid1, int m2id)
+// {
+//   VmV(Mr[mrid], M[mid1], M[m2id]); 
+// }
 
 inline
 void
@@ -660,6 +699,14 @@ Mqinverse(PQP_REAL Mr[3][3], PQP_REAL m[3][3])
     }
 }
 
+inline
+void
+axis_placement(PQP_REAL Rr[3][3], PQP_REAL E[3][3], const int max, const int mid)
+{
+  Rr[0][2] = E[1][max] * E[2][mid] - E[1][mid] * E[2][max];
+  Rr[1][2] = E[0][mid] * E[2][max] - E[0][max] * E[2][mid];
+  Rr[2][2] = E[0][max] * E[1][mid] - E[0][mid] * E[1][max];
+}
 // Meigen from Numerical Recipes in C
 
 #if 0
@@ -783,7 +830,14 @@ Meigen(PQP_REAL vout[3][3], PQP_REAL dout[3], PQP_REAL a[3][3])
 
 
 
-#define ROTATE(a,i,j,k,l) g=a[i][j]; h=a[k][l]; a[i][j]=g-s*(h+g*tau); a[k][l]=h+s*(g-h*tau);
+// #define ROTATE(a,i,j,k,l) g=a[i][j]; h=a[k][l]; a[i][j]=g-s*(h+g*tau); a[k][l]=h+s*(g-h*tau);
+inline void ROTATE(PQP_REAL a[3][3], const int i,const int j,const int k,const int l, PQP_REAL& g,PQP_REAL& h,PQP_REAL& s,PQP_REAL& tau )
+{
+  g=a[i][j]; 
+  h=a[k][l];
+  a[i][j]=g-s*(h+g*tau); 
+  a[k][l]=h+s*(g-h*tau);
+}
 
 void
 inline
@@ -850,10 +904,10 @@ Meigen(PQP_REAL vout[3][3], PQP_REAL dout[3], PQP_REAL a[3][3])
 	      d[ip] -= h;
 	      d[iq] += h;
 	      a[ip][iq]=0.0;
-	      for(j=0;j<ip;j++) { ROTATE(a,j,ip,j,iq); } 
-	      for(j=ip+1;j<iq;j++) { ROTATE(a,ip,j,j,iq); } 
-	      for(j=iq+1;j<n;j++) { ROTATE(a,ip,j,iq,j); } 
-	      for(j=0;j<n;j++) { ROTATE(v,j,ip,j,iq); } 
+	      for(j=0;j<ip;j++) { ROTATE(a,j,ip,j,iq, g, h,s,tau); } 
+	      for(j=ip+1;j<iq;j++) { ROTATE(a,ip,j,j,iq, g, h,s,tau); } 
+	      for(j=iq+1;j<n;j++) { ROTATE(a,ip,j,iq,j, g, h,s,tau); } 
+	      for(j=0;j<n;j++) { ROTATE(v,j,ip,j,iq, g, h,s,tau); } 
 	      nrot++;
 	    }
 	}
