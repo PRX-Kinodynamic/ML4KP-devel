@@ -12,6 +12,10 @@
 #include <nlohmann/json.hpp>
 #include <unordered_set>
 #include <filesystem>
+#include <sstream>
+#include <cstring>
+#include <unistd.h>
+#include <iomanip>
 
 using namespace prx;
 using json = nlohmann::json;
@@ -112,6 +116,30 @@ void setupMotionPrimitives(
         controller.save_primitives_to_json(primitives_filename);
         std::cout << "Saved motion primitives to: " << primitives_filename << std::endl;
     }
+}
+
+/**
+ * @brief Generate a unique experiment ID based on timestamp and hostname
+ * 
+ * @return std::string Unique experiment ID
+ */
+std::string generateExperimentId() {
+    // Get current time
+    auto now = std::chrono::system_clock::now();
+    auto time_t_now = std::chrono::system_clock::to_time_t(now);
+    
+    // Format as string
+    std::stringstream timestamp;
+    timestamp << std::put_time(std::localtime(&time_t_now), "%Y%m%d_%H%M%S");
+    
+    // Get hostname
+    char hostname[256];
+    if (gethostname(hostname, sizeof(hostname)) != 0) {
+        strcpy(hostname, "unknown");
+    }
+    
+    // Create unique ID
+    return timestamp.str() + "_" + hostname;
 }
 
 /**
@@ -254,6 +282,34 @@ int main(int argc, char* argv[]) {
                 action_steps, robot_global_goal, final_wavefronts_dir);
             
             std::cout << "Found " << optimized_sequences.size() << " optimized action sequences." << std::endl;
+            
+            // Check if data collection is enabled in parameters
+            bool collect_data = params["data_collection"]["enabled"].as<bool>();  // Default to false if not specified
+            
+            if (collect_data) {
+                // Create data collection directory
+                std::filesystem::path data_dir = params["data_collection"]["output_dir"].as<std::string>();
+                if (!std::filesystem::exists(data_dir)) {
+                    std::filesystem::create_directories(data_dir);
+                }
+                
+                // Generate experiment ID with configurable prefix
+                std::string experiment_prefix = "";
+                
+                experiment_prefix = params["data_collection"]["run_id"].as<std::string>() + "_";
+                
+                // Combine prefix with unique process identifier
+                std::string experiment_id = experiment_prefix + generateExperimentId();
+                
+                // Collect and store state-action pairs
+                int collected_points = planner.collectStateActionPairs(
+                    optimized_sequences, action_steps, data_dir, experiment_id);
+                
+                std::cout << "Collected " << collected_points << " state-action pairs." << std::endl;
+                std::cout << "Data stored in " << data_dir << " with experiment ID: " << experiment_id << std::endl;
+            } else {
+                std::cout << "Data collection is disabled in configuration." << std::endl;
+            }
         } else {
             std::cout << "Could not find a plan to reach the goal within " << total_iter << " iterations." << std::endl;
         }

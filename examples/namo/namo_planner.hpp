@@ -5,8 +5,14 @@
 #include "wavefront_planner.hpp"
 #include <unordered_map>
 #include <unordered_set>
+#include <nlohmann/json.hpp>
+#include <fstream>  // For file operations
+#include <iomanip>  // For std::setw
 
 namespace prx {
+
+// Define json type alias
+using json = nlohmann::json;
 
 // Helper function for character conversion - MOVED HERE BEFORE THE CLASS
 inline int convert_ch_to_int(char ch) {
@@ -59,8 +65,9 @@ public:
      * @param output_path Optional path to save wavefront data
      * @return Wavefront computation results
      */
-    auto computeAndSaveWavefront(
+    auto computeWavefront(
         const std::unordered_map<std::string, std::vector<std::array<double, 2>>>& transformed_edges,
+        bool save_wavefront = false,
         const std::string& output_path = "") {
         
         // Get current robot position
@@ -73,7 +80,7 @@ public:
         auto wavefront_result = wavefront_planner.compute_wavefront(env, robot_position_buffer, transformed_edges);
         
         // Save to file if path is provided
-        if (!output_path.empty()) {
+        if (save_wavefront) {
             wavefront_planner.save_wavefront_to_file(output_path);
             env.increment_wavefront_id();
         }
@@ -92,13 +99,10 @@ public:
     bool executeActionIfReachable(
         const std::string& object_name,
         int edge_idx,
-        int push_steps) {
+        int push_steps,
+        bool save_wavefront = false, 
+        const std::string& output_path = "") {
         
-        auto robot_state = env.get_robot_state();
-        robot_position_buffer.clear();
-        robot_position_buffer.push_back(robot_state->position[0]);
-        robot_position_buffer.push_back(robot_state->position[1]);
-
         auto [all_edge_points, all_mid_points] = controller.get_object_edge_points_all();
         auto edge_points = all_edge_points[object_name];
         auto obj_info = env.get_object_info(object_name);
@@ -107,13 +111,13 @@ public:
         transformed_edge_points_buffer[object_name] = MotionPrimitiveGenerator::transform_points(
             edge_points, obj_info->position, obj_info->quaternion);
 
-        auto [wavefront, reachable_points, reachability_flags] = 
-            wavefront_planner.compute_wavefront(env, robot_position_buffer, transformed_edge_points_buffer);
+        auto [wavefront, reachable_points, reachability_flags] = computeWavefront(transformed_edge_points_buffer, save_wavefront, output_path);
 
         if (reachability_flags[object_name][edge_idx] == 1) {
             qpos_buffer.clear();
             env.get_state_space()->copy_vector_from_point(qpos_buffer, env.get_qpos());
             controller.execute_primitive(qpos_buffer, object_name, push_steps, edge_idx);
+            
             return true;
         }
         return false;
@@ -196,7 +200,7 @@ public:
         std::unordered_map<std::string, std::vector<std::array<double, 2>>> transformed_edge_points;
         
         // Enable logging and reset environment
-        env.enable_logging();
+        // env.enable_logging();
         env.reset();
         
         // Main planning loop
@@ -207,7 +211,7 @@ public:
             // Compute wavefront and save to file
             std::string output_path = createWavefrontFilePath(wavefront_run_dir, current_iter);
             auto [wavefront, reachable_points, reachability_flags] = 
-                computeAndSaveWavefront(transformed_edge_points, output_path);
+                computeWavefront(transformed_edge_points, true, output_path);
 
             // Check if goal is reachable
             global_goal_reachable = wavefront_planner.is_goal_reachable(robot_global_goal, 0.3);
@@ -234,7 +238,7 @@ public:
             std::vector<int>& allowed_indices = getAllowedPrimitiveIndices(reachability_flags, random_object);
             
             // Set goal for selected object
-            auto random_object_info = env.get_object_info(random_object);
+            // auto random_object_info = env.get_object_info(random_object);
             std::vector<double> goal_state = env.set_goal_configuration(random_object, 0.3, 0.6);
             
             // Execute push action
@@ -297,7 +301,7 @@ public:
                 break;
             }
             ps_ctr++;
-            if (ps_ctr % 5000 == 0) {
+            if (ps_ctr % 1000 == 0) {
                 std::cout << "ps_ctr: " << ps_ctr << " total_solns_max_set_size: " << total_solns_max_set_size << std::endl;
             }
             if (ps_ctr > total_ps_ctr) {
@@ -377,13 +381,136 @@ public:
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         std::cout << "Optimization time: " << duration.count() << " milliseconds" << std::endl;
 
-        // Convert and visualize action sequences
+        // Convert optimized action sequences
         std::vector<std::vector<int>> action_sequences = convertToActionSequences(
             unique_action_seq, action_steps, action_steps_size, max_set_size);
+        
+        // If no optimized sequences were found, use the original sequence
+        if (action_sequences.empty() && action_steps_size > 0) {
+            std::cout << "No optimized sequences found. Using original action sequence." << std::endl;
+            
+            // Create original sequence with indices 0 to action_steps_size-1
+            std::vector<int> original_sequence;
+            original_sequence.reserve(action_steps_size);
+            for (int i = 0; i < action_steps_size; i++) {
+                original_sequence.push_back(i);
+            }
+            
+            action_sequences.push_back(original_sequence);
+            
+            // Print the original sequence
+            std::cout << "Original action sequence: \n";
+            for (int idx : original_sequence) {
+                std::cout << action_steps[idx]->object_name 
+                          << " steps:" << action_steps[idx]->push_steps 
+                          << " edge:" << action_steps[idx]->edge_idx << std::endl;
+            }
+        }
 
-        visualizeActionSequences(action_sequences, action_steps, final_wavefronts_dir);
+        // visualizeActionSequences(action_sequences, action_steps, final_wavefronts_dir);
         
         return action_sequences;
+    }
+
+    /**
+     * @brief Collects and stores state-action pairs for all optimized sequences
+     * 
+     * @param action_sequences Vector of optimized action sequences
+     * @param action_steps Original action steps
+     * @param output_dir Directory to save the collected data
+     * @param experiment_id Unique identifier for this experiment run
+     * @return int Number of data points collected
+     */
+    int collectStateActionPairs(
+        const std::vector<std::vector<int>>& action_sequences,
+        const std::vector<ActionStep*>& action_steps,
+        const std::filesystem::path& output_dir,
+        const std::string& experiment_id) {
+        
+        // Make sure output directory exists
+        if (!std::filesystem::exists(output_dir)) {
+            std::filesystem::create_directory(output_dir);
+        }
+        
+        int data_point_count = 0;
+        
+        // For each optimized sequence
+        for (size_t seq_idx = 0; seq_idx < action_sequences.size(); seq_idx++) {
+            // Reset environment to initial state
+            env.reset();
+            
+            // Prepare sequence-specific output file
+            std::string sequence_filename = "sequence_" + experiment_id + "_" + std::to_string(seq_idx) + ".json";
+            std::filesystem::path sequence_file_path = output_dir / sequence_filename;
+            
+            // Create JSON structure for this sequence
+            json sequence_data;
+            sequence_data["experiment_id"] = experiment_id;
+            sequence_data["sequence_id"] = seq_idx;
+            sequence_data["data_points"] = json::array();
+            
+            // Execute each action in sequence and collect state-action pairs
+            for (size_t step_idx = 0; step_idx < action_sequences[seq_idx].size(); step_idx++) {
+                // Get current state before action
+                auto robot_state = env.get_robot_state();
+                
+                // Record object positions and orientations in state
+                json state_data;
+                state_data["robot"] = {
+                    {"position", {robot_state->position[0], robot_state->position[1], robot_state->position[2]}},
+                    {"quaternion", {robot_state->quaternion[0], robot_state->quaternion[1], 
+                                   robot_state->quaternion[2], robot_state->quaternion[3]}}
+                };
+                
+                // Get all object states and filter out non-movable ones (we only care about movable objects)
+                json objects_data = json::object();
+                const auto& all_object_states = env.get_all_object_states();
+                
+                for (const auto& [obj_name, obj_state] : all_object_states) {
+                    if (obj_name != "robot") {
+                        objects_data[obj_name] = {
+                            {"position", {obj_state.position[0], obj_state.position[1], obj_state.position[2]}},
+                            {"quaternion", {obj_state.quaternion[0], obj_state.quaternion[1], 
+                                           obj_state.quaternion[2], obj_state.quaternion[3]}}
+                        };
+                    }
+                }
+                state_data["objects"] = objects_data;
+                
+                // Get action
+                int action_step_idx = action_sequences[seq_idx][step_idx];
+                ActionStep* action_step = action_steps[action_step_idx];
+                
+                json action_data = {
+                    {"object_name", action_step->object_name},
+                    {"edge_idx", action_step->edge_idx},
+                    {"push_steps", action_step->push_steps}
+                };
+                
+                // Create the state-action pair data point
+                json data_point = {
+                    {"state", state_data},
+                    {"action", action_data},
+                    {"step_idx", step_idx}
+                };
+                
+                // Add to sequence data
+                sequence_data["data_points"].push_back(data_point);
+                data_point_count++;
+                
+                // Execute the action to advance to next state
+                executeActionIfReachable(action_step->object_name, 
+                                       action_step->edge_idx,
+                                       action_step->push_steps);
+            }
+            
+            // Save the sequence data to file
+            std::ofstream sequence_file(sequence_file_path);
+            sequence_file << std::setw(4) << sequence_data << std::endl;
+            sequence_file.close();
+        }
+        
+        return data_point_count;
     }
 
 private:
@@ -440,7 +567,7 @@ private:
         }
 
         // USING OUR NEW HELPER - compute final wavefront to check goal reachability
-        auto [wavefront, reachable_points, reachability_flags] = computeAndSaveWavefront({});
+        auto [wavefront, reachable_points, reachability_flags] = computeWavefront({}, false);
         return wavefront_planner.is_goal_reachable(robot_global_goal, 0.3);
     }
 
@@ -487,7 +614,7 @@ private:
         const std::vector<ActionStep*>& action_steps,
         const std::filesystem::path& final_wavefronts_dir) {
         
-        env.enable_logging();
+        // env.enable_logging();
         env.reset();
 
         // Start with the first folder
@@ -503,20 +630,20 @@ private:
             for(int action_step_idx: action_steps_indices) {
                 ActionStep* action_step = action_steps[action_step_idx];
                 
+                std::string output_path = createWavefrontFilePath(wavefront_run_dir, ctr);
                 // Execute action if reachable
                 executeActionIfReachable(action_step->object_name, 
                                       action_step->edge_idx,
-                                      action_step->push_steps);
+                                      action_step->push_steps, true, output_path);
                 
                 // Save wavefront after action
-                std::string output_path = createWavefrontFilePath(wavefront_run_dir, ctr);
-                computeAndSaveWavefront({}, output_path);
+                // computeWavefront({}, true, output_path);
                 ctr++;
             }
             
             // Final wavefront after all actions
             std::string output_path = createWavefrontFilePath(wavefront_run_dir, ctr);
-            computeAndSaveWavefront({}, output_path);
+            computeWavefront({}, true, output_path);
 
             for(int i = 0; i < 200; i++) {
                 env.update_object_states();

@@ -17,9 +17,14 @@ num_random_goals: 300
 random_seed: 0
 visualize: false
 radius_step: 0.05
-xml_path: custom_walled_envs/empty/env_config_1.xml
+xml_path: custom_walled_envs/empty/env_config_5.xml
 robot_goal: [2.5, 2.5]
-total_iter: 50
+total_iter: 25
+
+data_collection:
+  enabled: false
+  output_dir: /common/users/dm1487/namo_data/Mar20
+  run_id: 1
 
 wavefront_planner:
   resolution: 0.05

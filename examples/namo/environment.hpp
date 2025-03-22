@@ -350,6 +350,7 @@ public:
                                                         double max_distance = 2.0) {
     // Get object information
     auto object_info = get_object_info(object_name);
+    auto object_state = get_object_state(object_name);
     if (!object_info) {
       throw std::runtime_error("Object not found: " + object_name);
     }
@@ -370,8 +371,8 @@ public:
     do {
       random_state = get_random_state();
       goal_pose = {random_state[0], random_state[1], 0.0};
-      distance = std::sqrt(std::pow(object_info->position[0] - goal_pose[0], 2) + 
-                           std::pow(object_info->position[1] - goal_pose[1], 2));
+      distance = std::sqrt(std::pow(object_state->position[0] - goal_pose[0], 2) + 
+                           std::pow(object_state->position[1] - goal_pose[1], 2));
       
       // Check if within environment bounds
       within_bounds = goal_pose[0] >= x_min && goal_pose[0] <= x_max && 
@@ -458,8 +459,10 @@ public:
   }
 
   void disable_logging() {
-    std::cout << "State log file closed: namo_state_log_" + std::to_string(state_log_idx) + ".csv" << std::endl;
-    state_log_file.close();
+    if (state_log_file.is_open()) {
+      std::cout << "State log file closed: namo_state_log_" + std::to_string(state_log_idx) + ".csv" << std::endl;
+      state_log_file.close();
+    }
     logging_enabled = false;
   }
 
