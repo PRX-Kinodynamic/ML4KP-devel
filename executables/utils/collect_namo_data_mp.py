@@ -276,7 +276,7 @@ if __name__ == "__main__":
                        help="Directory to store log files")
     parser.add_argument("--iterations", type=int, default=1000,
                        help="Number of iterations to run (default: 1000)")
-    parser.add_argument("--num-processes", type=int, default=12, 
+    parser.add_argument("--num-processes", type=int, default=24, 
                        help="Maximum number of parallel processes (default: 1)")
     parser.add_argument("--executable", default="./bin/examples/namo/interface_namo", 
                        help="Path to the interface_namo executable")

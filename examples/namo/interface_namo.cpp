@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
     std::filesystem::path xml_file_path(xml_path);
     std::string xml_filename = xml_file_path.stem().string();
 
-    std::vector<ActionStep*> action_steps;
+    std::vector<std::unique_ptr<ActionStep>> action_steps;
     
     try {
         // Environment setup
@@ -277,7 +277,7 @@ int main(int argc, char* argv[]) {
         if (success) {
             std::cout << "Successfully found a plan to reach the goal!" << std::endl;
             
-            // Optimize action sequence
+            // Optimize action sequence`
             std::vector<std::vector<int>> optimized_sequences = planner.optimizeActionSequence(
                 action_steps, robot_global_goal, final_wavefronts_dir);
             
@@ -319,11 +319,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Clean up action steps
-    for (auto& step : action_steps) {
-        delete step;
-    }
-    
     return 0;
 }
 

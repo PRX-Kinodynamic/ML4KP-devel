@@ -97,22 +97,31 @@ public:
      * @return bool Whether action was executed
      */
     bool executeActionIfReachable(
-        const std::string& object_name,
-        int edge_idx,
-        int push_steps,
+        ActionStep* action_step,
         bool save_wavefront = false, 
         const std::string& output_path = "") {
+
+        const std::string& object_name = action_step->object_name;
+        int edge_idx = action_step->edge_idx;
+        int push_steps = action_step->push_steps;
         
         auto [all_edge_points, all_mid_points] = controller.get_object_edge_points_all();
         auto edge_points = all_edge_points[object_name];
-        auto obj_info = env.get_object_info(object_name);
+        auto obj_state = env.get_object_state(object_name);
         
         transformed_edge_points_buffer.clear();
         transformed_edge_points_buffer[object_name] = MotionPrimitiveGenerator::transform_points(
-            edge_points, obj_info->position, obj_info->quaternion);
+            edge_points, obj_state->position, obj_state->quaternion);
+
+        transformed_mid_points_buffer.clear();
+        transformed_mid_points_buffer[object_name] = MotionPrimitiveGenerator::transform_points(all_mid_points[object_name], obj_state->position, obj_state->quaternion);
+
+        action_step->push_state->initial_edge_point = transformed_edge_points_buffer[object_name][edge_idx];
+        action_step->push_state->initial_mid_point = transformed_mid_points_buffer[object_name][edge_idx];
 
         auto [wavefront, reachable_points, reachability_flags] = computeWavefront(transformed_edge_points_buffer, save_wavefront, output_path);
 
+        // std::cout << "reachability_flags: " << reachability_flags[object_name][edge_idx] << std::endl;
         if (reachability_flags[object_name][edge_idx] == 1) {
             qpos_buffer.clear();
             env.get_state_space()->copy_vector_from_point(qpos_buffer, env.get_qpos());
@@ -187,7 +196,7 @@ public:
         const std::vector<double>& robot_global_goal,
         int total_iter,
         const std::filesystem::path& wavefronts_dir,
-        std::vector<ActionStep*>& action_steps) {
+        std::vector<std::unique_ptr<ActionStep>>& action_steps) {
         
         int current_iter = 0;
         bool global_goal_reachable = false;
@@ -233,27 +242,32 @@ public:
 
             // Select random object
             std::string random_object = selectRandomObject(reachable_objects);
+            // selected random object as target object
             
             // Use our optimized function for allowed indices
             std::vector<int>& allowed_indices = getAllowedPrimitiveIndices(reachability_flags, random_object);
-            
+            // which push points are reachable for the selected object
+
             // Set goal for selected object
             // auto random_object_info = env.get_object_info(random_object);
-            std::vector<double> goal_state = env.set_goal_configuration(random_object, 0.3, 0.6);
+            std::vector<double> goal_state = set_goal_configuration(random_object, 0.3, 0.6);
             
             // Execute push action
-            auto [action_step, controller_success] = controller.execute_push_action(
+            auto [action_step_ptr, controller_success] = controller.execute_push_action(
                 random_object, allowed_indices, goal_state);
 
-            if (action_step != nullptr && action_step->push_steps > 0) {
-                action_steps.push_back(action_step);
+            if (action_step_ptr && action_step_ptr->push_steps > 0) {
+                action_steps.push_back(std::move(action_step_ptr));
             }
-
             current_iter++;
         }
         
         return global_goal_reachable;
     }
+
+
+
+    
 
     /**
      * @brief Optimizes the action sequence to find minimal steps
@@ -264,7 +278,7 @@ public:
      * @return std::vector<std::vector<int>> Optimized action sequences
      */
     std::vector<std::vector<int>> optimizeActionSequence(
-        const std::vector<ActionStep*>& action_steps,
+        const std::vector<std::unique_ptr<ActionStep>>& action_steps,
         const std::vector<double>& robot_global_goal,
         const std::filesystem::path& final_wavefronts_dir) {
         
@@ -277,7 +291,7 @@ public:
         
         env.reset();
         int action_steps_size = action_steps.size();
-        std::stack<std::tuple<std::unordered_set<int>, ActionStep*, std::vector<double>>> action_stack;
+        std::stack<std::tuple<std::unordered_set<int>, const ActionStep*, std::vector<double>>> action_stack;
         
         // Add action steps to stack in reverse order
         for(int i = action_steps_size - 1; i >= 0; i--) {
@@ -287,7 +301,7 @@ public:
             
             idx_set_buffer.clear();  // Clear our index set buffer
             idx_set_buffer.insert(i);
-            action_stack.push(std::make_tuple(idx_set_buffer, action_steps[i], qpos_buffer));
+            action_stack.push(std::make_tuple(idx_set_buffer, action_steps[i].get(), qpos_buffer));
         }
 
         int max_set_size = 0;
@@ -367,7 +381,7 @@ public:
                     env.get_state_space()->copy_vector_from_point(qpos_buffer, env.get_qpos());
 
                     idx_set_buffer.insert(i);
-                    action_stack.push(std::make_tuple(idx_set_buffer, action_steps[i], qpos_buffer));
+                    action_stack.push(std::make_tuple(idx_set_buffer, action_steps[i].get(), qpos_buffer));
                 }
 
                 goal_reachability_cache[cache_key_buffer] = true;
@@ -408,7 +422,6 @@ public:
         }
 
         // visualizeActionSequences(action_sequences, action_steps, final_wavefronts_dir);
-        
         return action_sequences;
     }
 
@@ -423,7 +436,7 @@ public:
      */
     int collectStateActionPairs(
         const std::vector<std::vector<int>>& action_sequences,
-        const std::vector<ActionStep*>& action_steps,
+        const std::vector<std::unique_ptr<ActionStep>>& action_steps,
         const std::filesystem::path& output_dir,
         const std::string& experiment_id) {
         
@@ -433,11 +446,14 @@ public:
         }
         
         int data_point_count = 0;
+
+        std::cout << "action_sequences.size(): " << action_sequences.size() << std::endl;
         
         // For each optimized sequence
         for (size_t seq_idx = 0; seq_idx < action_sequences.size(); seq_idx++) {
             // Reset environment to initial state
             env.reset();
+            env.step_simulation();
             
             // Prepare sequence-specific output file
             std::string sequence_filename = "sequence_" + experiment_id + "_" + std::to_string(seq_idx) + ".json";
@@ -479,7 +495,7 @@ public:
                 
                 // Get action
                 int action_step_idx = action_sequences[seq_idx][step_idx];
-                ActionStep* action_step = action_steps[action_step_idx];
+                ActionStep* action_step = action_steps[action_step_idx].get();
                 
                 json action_data = {
                     {"object_name", action_step->object_name},
@@ -487,29 +503,77 @@ public:
                     {"push_steps", action_step->push_steps}
                 };
                 
+                // // Add push state edge and mid points if available
+                // if (action_step->push_state) {
+                //     action_data["edge_point"] = {
+                //         action_step->push_state->initial_edge_point[0],
+                //         action_step->push_state->initial_edge_point[1]
+                //     };
+                    
+                //     action_data["mid_point"] = {
+                //         action_step->push_state->initial_mid_point[0],
+                //         action_step->push_state->initial_mid_point[1]
+                //     };
+                // }
+                
                 // Create the state-action pair data point
+                
+                // Add to sequence data
+                
+                // Execute the action to advance to next state
+                executeActionIfReachable(action_step);
+                action_data["edge_point"] = {
+                    action_step->push_state->initial_edge_point[0],
+                    action_step->push_state->initial_edge_point[1]
+                };
+                action_data["mid_point"] = {
+                    action_step->push_state->initial_mid_point[0],
+                    action_step->push_state->initial_mid_point[1]
+                };
                 json data_point = {
                     {"state", state_data},
                     {"action", action_data},
-                    {"step_idx", step_idx}
+                    {"step_idx", step_idx},
                 };
-                
-                // Add to sequence data
                 sequence_data["data_points"].push_back(data_point);
                 data_point_count++;
-                
-                // Execute the action to advance to next state
-                executeActionIfReachable(action_step->object_name, 
-                                       action_step->edge_idx,
-                                       action_step->push_steps);
             }
+
+            // Get current state before action
+            auto robot_state = env.get_robot_state();
+            
+            // Record object positions and orientations in state
+            json state_data;
+            state_data["robot"] = {
+                {"position", {robot_state->position[0], robot_state->position[1], robot_state->position[2]}},
+                {"quaternion", {robot_state->quaternion[0], robot_state->quaternion[1], 
+                                robot_state->quaternion[2], robot_state->quaternion[3]}}
+            };
+            
+            // Get all object states and filter out non-movable ones (we only care about movable objects)
+            json objects_data = json::object();
+            const auto& all_object_states = env.get_all_object_states();
+            
+            for (const auto& [obj_name, obj_state] : all_object_states) {
+                if (obj_name != "robot") {
+                    objects_data[obj_name] = {
+                        {"position", {obj_state.position[0], obj_state.position[1], obj_state.position[2]}},
+                        {"quaternion", {obj_state.quaternion[0], obj_state.quaternion[1], 
+                                        obj_state.quaternion[2], obj_state.quaternion[3]}}
+                    };
+                }
+            }
+            state_data["objects"] = objects_data;
+
+            sequence_data["data_points"].push_back({
+                {"state", state_data},
+            });
             
             // Save the sequence data to file
             std::ofstream sequence_file(sequence_file_path);
             sequence_file << std::setw(4) << sequence_data << std::endl;
             sequence_file.close();
         }
-        
         return data_point_count;
     }
 
@@ -527,9 +591,11 @@ private:
     std::vector<double> qpos_buffer;
     std::vector<int> action_indices_buffer;
     std::string cache_key_buffer;
-    std::unordered_map<std::string, std::vector<std::array<double, 2>>> transformed_edge_points_buffer;
     std::unordered_set<int> idx_set_buffer;
     std::string path_buffer;
+
+    std::unordered_map<std::string, std::vector<std::array<double, 2>>> transformed_edge_points_buffer;
+    std::unordered_map<std::string, std::vector<std::array<double, 2>>> transformed_mid_points_buffer;
 
     /**
      * @brief Checks if goal is reachable with a given set of actions
@@ -539,7 +605,7 @@ private:
         std::unordered_map<std::string, bool>& goal_reachability_cache,
         const std::unordered_set<int>& idx_set,
         int max_set_size,
-        const std::vector<ActionStep*>& action_steps,
+        const std::vector<std::unique_ptr<ActionStep>>& action_steps,
         int action_steps_size,
         const std::vector<double>& robot_global_goal) {
         
@@ -560,10 +626,8 @@ private:
             }
             
             // USING OUR NEW HELPER - execute action if reachable
-            ActionStep* action_step = action_steps[i];
-            executeActionIfReachable(action_step->object_name, 
-                                   action_step->edge_idx,
-                                   action_step->push_steps);
+            ActionStep* action_step = action_steps[i].get();
+            executeActionIfReachable(action_step);
         }
 
         // USING OUR NEW HELPER - compute final wavefront to check goal reachability
@@ -576,7 +640,7 @@ private:
      */
     std::vector<std::vector<int>> convertToActionSequences(
         const std::unordered_set<std::string>& unique_action_seq,
-        const std::vector<ActionStep*>& action_steps,
+        const std::vector<std::unique_ptr<ActionStep>>& action_steps,
         int action_steps_size,
         int max_set_size) {
         
@@ -611,7 +675,7 @@ private:
      */
     void visualizeActionSequences(
         const std::vector<std::vector<int>>& action_sequences,
-        const std::vector<ActionStep*>& action_steps,
+        const std::vector<std::unique_ptr<ActionStep>>& action_steps,
         const std::filesystem::path& final_wavefronts_dir) {
         
         // env.enable_logging();
@@ -628,13 +692,11 @@ private:
             int ctr = 0;
 
             for(int action_step_idx: action_steps_indices) {
-                ActionStep* action_step = action_steps[action_step_idx];
+                ActionStep* action_step = action_steps[action_step_idx].get();
                 
                 std::string output_path = createWavefrontFilePath(wavefront_run_dir, ctr);
                 // Execute action if reachable
-                executeActionIfReachable(action_step->object_name, 
-                                      action_step->edge_idx,
-                                      action_step->push_steps, true, output_path);
+                executeActionIfReachable(action_step, true, output_path);
                 
                 // Save wavefront after action
                 // computeWavefront({}, true, output_path);
@@ -718,6 +780,62 @@ private:
             }
         }
         return allowed_indices_buffer;
+    }
+
+    std::vector<double> set_goal_configuration(const std::string& object_name, 
+                                             double min_distance = 0.3, 
+                                             double max_distance = 0.6) {
+        // Get object information from environment
+        auto object_info = env.get_object_info(object_name);
+        auto object_state = env.get_object_state(object_name);
+        if (!object_info) {
+            throw std::runtime_error("Object not found: " + object_name);
+        }
+        
+        // Get environment bounds from environment
+        std::vector<double> bounds = env.get_environment_bounds();
+        double x_min = bounds[0], x_max = bounds[1];
+        double y_min = bounds[2], y_max = bounds[3];
+        
+        // Sample a valid goal position
+        std::array<double, 3> goal_pose;
+        std::vector<double> random_state;
+        double distance;
+        bool within_bounds = false;
+        
+        // Keep sampling until we find a position within the desired distance range and environment bounds
+        do {
+            random_state = env.get_random_state();
+            goal_pose = {random_state[0], random_state[1], 0.0};
+            distance = std::sqrt(std::pow(object_state->position[0] - goal_pose[0], 2) + 
+                               std::pow(object_state->position[1] - goal_pose[1], 2));
+            
+            // Check if within environment bounds
+            within_bounds = goal_pose[0] >= x_min && goal_pose[0] <= x_max && 
+                           goal_pose[1] >= y_min && goal_pose[1] <= y_max;
+                              
+        } while (distance < min_distance || distance > max_distance || !within_bounds);
+        
+        // Sample a random orientation
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<> angle_dis(-M_PI, M_PI);
+        double random_yaw = angle_dis(gen);
+        std::array<double, 4> goal_quaternion = yaw_to_quaternion(random_yaw, true);
+        
+        // Create goal and set it in environment
+        MujocoGoal goal;
+        goal.position = goal_pose;
+        goal.orientation = goal_quaternion;
+        goal.size = object_info->size;
+        goal.geom_type = object_info->geom_type;
+        env.set_goal(goal);
+        
+        // Return the full goal state
+        return {
+            goal_pose[0], goal_pose[1], 0.0,
+            goal_quaternion[0], goal_quaternion[1], goal_quaternion[2], goal_quaternion[3]
+        };
     }
 };
 

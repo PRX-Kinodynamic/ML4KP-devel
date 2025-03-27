@@ -45,3 +45,9 @@ meeting*/
 predictions*
 models/radius*
 *.mp4
+best_dino_heatmap_cross_entropy_lora/README.md
+best_dino_heatmap_lora/adapter_config.json
+best_dino_heatmap_lora/adapter_model.safetensors
+best_dino_heatmap_lora/README.md
+best_dino_heatmap_cross_entropy_lora/adapter_config.json
+best_dino_heatmap_cross_entropy_lora/adapter_model.safetensors

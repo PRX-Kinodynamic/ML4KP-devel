@@ -1,0 +1,16 @@
+device: cuda  # Will be converted to torch.device in code
+batch_size: 16
+epochs: 20
+loss_type: focal  # Choose from 'bce', 'dice', 'focal', 'combo', 'tversky'
+focal_alpha: 0.75    # Higher alpha penalizes false positives more
+focal_gamma: 2.0      # Higher beta penalizes false negatives more
+
+learning_rate: 0.001
+save_dir: saved_models/pixel_wise_binary
+model_name: unet_segmentation
+patience: 5
+factor: 0.5
+scheduler_patience: 5
+n_channels: 3
+n_classes: 1
+classification_threshold: 0.5

@@ -15,6 +15,7 @@ struct ActionStep {
     int edge_idx;
     int push_steps;
     std::vector<double> qpos;
+    std::unique_ptr<MotionPrimitiveGenerator::PushState> push_state;
 };
 
 using json = nlohmann::json;
@@ -39,22 +40,20 @@ public:
         
     }
 
-    void execute_primitive(std::vector<double> qpos_vec, const std::string& object_name, int push_steps, int edge_idx) {
+    std::unique_ptr<MotionPrimitiveGenerator::PushState> execute_primitive(std::vector<double> qpos_vec, const std::string& object_name, int push_steps, int edge_idx) {
         env.set_zero_velocity();
         env.set_qpos(qpos_vec);
-
         env.step_simulation();
         // set the qpos here
-
 
         auto object_state = env.get_object_state(object_name);
         auto [all_edge_points, all_mid_points] = get_object_edge_points_all();
         auto push_points = MotionPrimitiveGenerator::transform_points(all_edge_points[object_name], object_state->position, object_state->quaternion);
         auto mid_points = MotionPrimitiveGenerator::transform_points(all_mid_points[object_name], object_state->position, object_state->quaternion);
 
-
-        MotionPrimitiveGenerator::PushState push_state;
-        push_state.edge_idx = edge_idx;
+        // Create a smart pointer to PushState
+        auto push_state = std::make_unique<MotionPrimitiveGenerator::PushState>();
+        push_state->edge_idx = edge_idx;
 
         space_point_t control_point = env.get_control_space_point();
 
@@ -62,7 +61,7 @@ public:
             
             if (i == 0) { // at the first pust step, reset the robot position to the push point
                 env.set_robot_position(push_points[edge_idx]);
-                push_state.edge_idx = edge_idx;
+                push_state->edge_idx = edge_idx;
             }
             env.set_zero_velocity();
             env.step_simulation();
@@ -71,11 +70,12 @@ public:
                 auto current_push_points = MotionPrimitiveGenerator::transform_points(all_edge_points[object_name], current_object_state->position, current_object_state->quaternion);
                 auto current_mid_points = MotionPrimitiveGenerator::transform_points(all_mid_points[object_name], current_object_state->position, current_object_state->quaternion);
 
+                
                 // update the push_state and generate new control
-                push_state.current_edge_point = current_push_points[edge_idx]; // TODO: change to current robot position
-                push_state.current_mid_point = current_mid_points[edge_idx];
+                push_state->current_edge_point = current_push_points[edge_idx]; // TODO: change to current robot position
+                push_state->current_mid_point = current_mid_points[edge_idx];
 
-                auto control = MotionPrimitiveGenerator::compute_control1(push_state, scaling);
+                auto control = MotionPrimitiveGenerator::compute_control1(*push_state, scaling);
                 control_point->at(0) = control[0];
                 control_point->at(1) = control[1];
                 env.step(control_point, 0.01);
@@ -84,9 +84,10 @@ public:
             env.set_zero_velocity();
             env.step_simulation();
         }
+        return push_state;
     }
 
-    std::tuple<ActionStep*, bool> execute_push_action(const std::string& object_name, const std::vector<int>& allowed_primitive_indices, const std::vector<double>& goal_state) {
+    std::tuple<std::unique_ptr<ActionStep>, bool> execute_push_action(const std::string& object_name, const std::vector<int>& allowed_primitive_indices, const std::vector<double>& goal_state) {
         
         // get the current state of the object and call it start_state for the control planner
         const auto& object_info = env.get_object_info(object_name);
@@ -104,7 +105,7 @@ public:
                                                         goal_state[5], goal_state[6]}, true)};
         int num_steps = 0;
 
-        ActionStep* action_step = nullptr;
+        std::unique_ptr<ActionStep> action_step = nullptr;
         while(num_steps < mpc_steps_limit) {
 
             // generate the control plan which is a sequence of motion primitives
@@ -112,34 +113,32 @@ public:
             
             if (control_plan.empty()) {
                 std::cout << "No control plan found for object: " << object_name << std::endl;
-                return std::make_tuple(action_step, false);
+                return std::make_tuple(std::move(action_step), false);
             }
 
             // std::chrono::high_resolution_clock::time_point control_start_timer = std::chrono::high_resolution_clock::now();
             for (int plan_step = 0; plan_step < control_plan.size(); plan_step++) {
-
                 PlanStep& step = control_plan[plan_step];
-
 
                 space_point_t qpos = env.get_qpos();
                 std::vector<double> qpos_vec;
                 env.get_state_space()->copy_vector_from_point(qpos_vec, qpos); // destination vector, source point
 
-                execute_primitive(qpos_vec, object_name, step.push_steps, step.edge_idx);
+                // Execute primitive and get push state
+                auto push_state = execute_primitive(qpos_vec, object_name, step.push_steps, step.edge_idx);
+                
                 // execute the first non-zero push step from the control plan
                 if (step.push_steps != 0) {
-                    action_step = new ActionStep();
+                    action_step = std::make_unique<ActionStep>();
                     action_step->object_name = object_name;
                     action_step->edge_idx = step.edge_idx;
                     action_step->push_steps = step.push_steps;
                     action_step->qpos = qpos_vec;
+                    action_step->push_state = std::move(push_state);
                     break;
                 }
             }
-            // std::chrono::high_resolution_clock::time_point control_end_timer = std::chrono::high_resolution_clock::now();
-            // std::chrono::duration<double> control_duration = std::chrono::duration_cast<std::chrono::duration<double>>(control_end_timer - control_start_timer);
-            // std::cout << "Control execution took " << control_duration.count() << " seconds" << std::endl;
-
+            
             object_state = env.get_object_state(object_name);
             start_state = {object_state->position[0], object_state->position[1], 0.0, object_state->quaternion[0], object_state->quaternion[1], object_state->quaternion[2], object_state->quaternion[3]};
             start_pose = {start_state[0], start_state[1], quaternion_to_yaw({start_state[3], start_state[4], start_state[5], start_state[6]}, true)};
@@ -147,10 +146,10 @@ public:
             num_steps++;
 
             if (is_goal_reached_fn(start_pose, goal_pose, symmetry_rotations)) {
-                return std::make_tuple(action_step, true);
+                return std::make_tuple(std::move(action_step), true);
             }
         }
-        return std::make_tuple(action_step, false);
+        return std::make_tuple(std::move(action_step), false);
     }
 
     /**

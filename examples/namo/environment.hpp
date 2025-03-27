@@ -95,11 +95,15 @@ public:
       robot_info.quaternion[k] = sim->m->geom_quat[robot_id * 4 + k];
     }
 
+    // extract config name from xml path
+    config_name = xml_path.substr(xml_path.find_last_of('/') + 1);
+    config_name = config_name.substr(0, config_name.find_last_of('.'));
+
     // Process and categorize objects in the environment
     process_environment_objects();
     
     // Save objects and their sizes to a file
-    save_objects_to_file("namo_objects.txt");
+    save_objects_to_file("namo_objects_" + config_name + ".txt");
 
     // get the bounds of the environment
     std::vector<double> bounds = get_environment_bounds();
@@ -338,70 +342,12 @@ public:
   //setters
 
   /**
-   * @brief Sample a goal state for a specific object and set it as the environment goal
+   * @brief Set a goal for the environment
    * 
-   * @param object_name Name of the object to sample goal for
-   * @param min_distance Minimum distance from current position
-   * @param max_distance Maximum distance from current position
-   * @return std::vector<double> Sampled goal state [x, y, z, qw, qx, qy, qz]
+   * @param goal The goal to set
    */
-  std::vector<double> set_goal_configuration(const std::string& object_name, 
-                                                        double min_distance = 0.5, 
-                                                        double max_distance = 2.0) {
-    // Get object information
-    auto object_info = get_object_info(object_name);
-    auto object_state = get_object_state(object_name);
-    if (!object_info) {
-      throw std::runtime_error("Object not found: " + object_name);
-    }
-    
-    // Get environment bounds
-    std::vector<double> bounds = get_environment_bounds();
-    double x_min = bounds[0], x_max = bounds[1];
-    double y_min = bounds[2], y_max = bounds[3];
-    
-    // Sample a valid goal position
-    std::array<double, 3> goal_pose;
-    std::vector<double> random_state;
-    double distance;
-
-    bool within_bounds = false;
-    
-    // Keep sampling until we find a position within the desired distance range and environment bounds
-    do {
-      random_state = get_random_state();
-      goal_pose = {random_state[0], random_state[1], 0.0};
-      distance = std::sqrt(std::pow(object_state->position[0] - goal_pose[0], 2) + 
-                           std::pow(object_state->position[1] - goal_pose[1], 2));
-      
-      // Check if within environment bounds
-      within_bounds = goal_pose[0] >= x_min && goal_pose[0] <= x_max && 
-                          goal_pose[1] >= y_min && goal_pose[1] <= y_max;
-                          
-    } while (distance < min_distance || distance > max_distance || !within_bounds);
-    
-    // Sample a random orientation
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> angle_dis(-M_PI, M_PI);
-    double random_yaw = angle_dis(gen);
-    std::array<double, 4> goal_quaternion = yaw_to_quaternion(random_yaw, true);
-    
-    // Set the goal in the environment
-    MujocoGoal goal;
-    goal.position = goal_pose;
-    goal.orientation = goal_quaternion;
-    goal.size = object_info->size;
-    goal.geom_type = object_info->geom_type;
-    set_goal(goal);
-    
-    // Return the full goal state
-    std::vector<double> goal_state = {
-      goal_pose[0], goal_pose[1], 0.0,
-      goal_quaternion[0], goal_quaternion[1], goal_quaternion[2], goal_quaternion[3]
-    };
-    
-    return goal_state;
+  void set_goal(const MujocoGoal& goal) {
+    sim->set_goal(goal);
   }
 
   void set_robot_position(const std::array<double, 2>& pos) {
@@ -430,10 +376,6 @@ public:
     update_object_states();
   }
   
-  void set_goal(const MujocoGoal& goal) {
-    sim->set_goal(goal);
-  }
-
   void set_qpos(const std::vector<double>& qpos) {
 
     ss->copy_from_vector(qpos);
@@ -764,6 +706,7 @@ private:
   bool logging_enabled;
   int wavefront_id = -1;
   int state_log_idx = 0;
+  std::string config_name;
 };
 
 }  // namespace prx 

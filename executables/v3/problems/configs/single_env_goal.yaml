@@ -1,0 +1,3 @@
+data_path: "/common/users/dm1487/namo_data/binary_images/env_config_1"
+problem_type: "single_env_goal"
+train_test_split: 0.8
