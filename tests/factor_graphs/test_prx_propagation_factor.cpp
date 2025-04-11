@@ -63,7 +63,7 @@ PRX_REGISTER_SYSTEM(mock::linear_plant_t, mock_linear_plant)
 
 BOOST_AUTO_TEST_CASE(prx_factor_derivs)
 {
-  using PrxFactor = prx::fg::prx_propagation_factor_t<Eigen::Vector4d, Eigen::Vector4d, double>;
+  using PrxFactor = prx::fg::plant_propagation_StateStateCtrl_factor_t<Eigen::Vector4d, Eigen::Vector4d, double>;
   prx::simulation_step = 0.1;
 
   const Eigen::Vector4d x0{ Eigen::Vector4d(1, 2, 3, 4) };
@@ -99,5 +99,75 @@ BOOST_AUTO_TEST_CASE(prx_factor_derivs)
 
   BOOST_REQUIRE(Hx1_err.isZero());
   BOOST_REQUIRE(Hx0_err.isZero());
+  BOOST_REQUIRE(Hu_err.isZero());
+}
+
+BOOST_AUTO_TEST_CASE(prx_factor_StateCteCtrl_derivs)
+{
+  using PrxFactor = prx::fg::plant_propagation_StateCteCtrl_factor_t<Eigen::Vector4d, Eigen::Vector4d, double>;
+  prx::simulation_step = 0.1;
+
+  const Eigen::Vector4d x0{ Eigen::Vector4d(1, 2, 3, 4) };
+  const Eigen::Vector4d x1{ Eigen::Vector4d(2, 3, 4, 5) };
+  const Eigen::Vector4d u{ Eigen::Vector4d::Ones() };
+  const double dt{ 0.1 };
+
+  Eigen::MatrixXd Hx1{ Eigen::Matrix4d::Zero() };
+  Eigen::MatrixXd Hu{ Eigen::Matrix4d::Zero() };
+  Eigen::MatrixXd Hdt{ Eigen::Vector4d::Zero() };
+
+  PrxFactor factor(0, x0, 2, 3, nullptr, "mock_linear_plant");
+  factor.evaluateError(x1, u, dt, Hx1, Hu, Hdt);
+
+  Eigen::Matrix4d Hu_expected{ Eigen::Matrix4d::Zero() };
+
+  Hu_expected(0, 0) = dt * dt / 2.0;
+  Hu_expected(1, 1) = dt * dt / 2.0;
+  Hu_expected(2, 0) = dt;
+  Hu_expected(2, 1) = dt;
+
+  Eigen::Matrix4d Hx1_err{ Hx1 + Eigen::Matrix4d::Identity() };  // Hx1 - (-I)
+  Eigen::Matrix4d Hu_err{ Hu - Hu_expected };                    // Hx1 - (B)
+  // Eigen::Matrix4d Hdt_err{ Hdt - Hdt_expected };                 // Hx1 - (A)
+  PRX_DBG_VARS(Hu);
+  PRX_DBG_VARS(Hu_expected);
+  PRX_DBG_VARS(Hu_err);
+
+  PRX_DBG_VARS(Hx1);
+  PRX_DBG_VARS(Hx1_err);
+
+  BOOST_REQUIRE(Hx1_err.isZero());
+  BOOST_REQUIRE(Hu_err.isZero());
+}
+
+BOOST_AUTO_TEST_CASE(prx_factor_CteCteCtrl_derivs)
+{
+  using PrxFactor = prx::fg::plant_propagation_CteCteCtrl_factor_t<Eigen::Vector4d, Eigen::Vector4d, double>;
+  prx::simulation_step = 0.1;
+
+  const Eigen::Vector4d x0{ Eigen::Vector4d(1, 2, 3, 4) };
+  const Eigen::Vector4d x1{ Eigen::Vector4d(2, 3, 4, 5) };
+  const Eigen::Vector4d u{ Eigen::Vector4d::Ones() };
+  const double dt{ 0.1 };
+
+  Eigen::MatrixXd Hu{ Eigen::Matrix4d::Zero() };
+  Eigen::MatrixXd Hdt{ Eigen::Vector4d::Zero() };
+
+  PrxFactor factor(x1, x0, 2, 3, nullptr, "mock_linear_plant");
+  factor.evaluateError(u, dt, Hu, Hdt);
+
+  Eigen::Matrix4d Hu_expected{ Eigen::Matrix4d::Zero() };
+
+  Hu_expected(0, 0) = dt * dt / 2.0;
+  Hu_expected(1, 1) = dt * dt / 2.0;
+  Hu_expected(2, 0) = dt;
+  Hu_expected(2, 1) = dt;
+
+  Eigen::Matrix4d Hu_err{ Hu - Hu_expected };  // Hx1 - (B)
+  // Eigen::Matrix4d Hdt_err{ Hdt - Hdt_expected };                 // Hx1 - (A)
+  PRX_DBG_VARS(Hu);
+  PRX_DBG_VARS(Hu_expected);
+  PRX_DBG_VARS(Hu_err);
+
   BOOST_REQUIRE(Hu_err.isZero());
 }
