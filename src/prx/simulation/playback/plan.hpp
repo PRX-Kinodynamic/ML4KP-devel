@@ -299,6 +299,19 @@ public:
     return os;
   }
 
+  // Create a (uniform) random plan
+  void random(const std::size_t min_steps, const std::size_t max_steps, const double tmin, const double tmax)
+  {
+    const std::size_t tot_steps{ static_cast<std::size_t>(std::floor(uniform_random(min_steps, max_steps))) };
+
+    resize(tot_steps);
+    for (int i = 0; i < tot_steps; ++i)
+    {
+      control_space->sample((*this)[i].control);
+      (*this)[i].duration = uniform_random(tmin, tmax);
+    }
+  }
+
 private:
   void increase_buffer();
 

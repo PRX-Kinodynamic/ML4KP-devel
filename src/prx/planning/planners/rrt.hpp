@@ -279,6 +279,11 @@ public:
     return _tree;
   }
 
+  node_index_t root_index() const
+  {
+    return start_vertex;
+  }
+
   template <typename RootNode>
   std::shared_ptr<RootNode> root() const
   {

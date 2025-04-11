@@ -55,11 +55,11 @@ public:
 
   template <typename MatK>
   lqr_t(const MatK k)
-    : _A(MatrixA::Identity())
-    , _B(MatrixB::Identity())
-    , _Q(MatrixQ::Zero())
-    , _R(MatrixR::Zero())
-    , _K(k)
+    :  // _A(MatrixA::Identity(Xdim, Xdim))
+       // , _B(MatrixB::Identity(Xdim, Udim))
+       // , _Q(MatrixQ::Zero(Xdim, Xdim))
+       // , _R(MatrixR::Zero(Udim, Udim))
+    _K(k)
     , _diff(DefaultDiff)
   {
   }

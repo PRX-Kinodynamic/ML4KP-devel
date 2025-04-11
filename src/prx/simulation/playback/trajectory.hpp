@@ -94,11 +94,14 @@ public:
   space_point_t at(const double t, const bool normalized_input = true) const
   {
     double t01{ t };
+    double max{ 1.0 };
     if (not normalized_input)
     {
-      t01 = t / duration();  // current t \in [0,1]
+      max = duration();
+      t01 = t / max;  // current t \in [0,1]
     }
-    prx_assert(t01 <= 1.0, "Requested trajectory state at [" << t << "] out of range.");
+    prx_assert(t01 <= 1.0 + prx::constants::epsilon,
+               "Requested trajectory state at [" << t << "/" << max << "]  out of range.");
     return interpolate(t01);
   }
 

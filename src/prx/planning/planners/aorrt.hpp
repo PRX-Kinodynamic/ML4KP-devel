@@ -149,7 +149,7 @@ public:
 
   virtual std::shared_ptr<prx::tree_t> tree_of_solutions() override
   {
-    const double radius{ aorrt_query->goal_region_radius };
+    // const double radius{ aorrt_query->goal_region_radius };
     // _cost_state_space->copy(_cost_aux_pt, { Y_min_cost });
     // Y_state_space->point_union(aorrt_query->goal_state, _cost_aux_pt, Y_aux_pt);
     const std::size_t total_solutions = aorrt_query->total_solutions;
@@ -167,20 +167,23 @@ public:
       std::shared_ptr<tree_node_t> tree_node{ *iter };
       std::shared_ptr<Node> curr_node{ std::dynamic_pointer_cast<Node>(tree_node) };
       Y_state_space->split_point(curr_node->point, X_aux_pt, _cost_aux_pt);
-      const double dist{ distance_function(aorrt_query->goal_state, X_aux_pt) };
-      if (dist <= radius)
+      if (aorrt_query->goal_check(X_aux_pt))
       {
+        const double dist{ distance_function(aorrt_query->goal_state, X_aux_pt) };
         pq_nodes.push(std::make_pair(tree_node.get(), dist));
         // PRX_DBG_VARS(X_aux_pt);
         // goal_nodes.push_back(tree_node.get());
       }
     }
 
-    for (int i = 0; i < std::min(total_solutions, pq_nodes.size()); ++i)
+    // PRX_DBG_VARS(total_solutions, pq_nodes.size());
+    const std::size_t solutions{ std::min(total_solutions, pq_nodes.size()) };
+    for (int i = 0; i < solutions; ++i)
     {
       goal_nodes.push_back(pq_nodes.top().first);
       pq_nodes.pop();
     }
+    // PRX_DBG_VARS(goal_nodes.size());
 
     // const std::vector<prx::proximity_node_t*> goal_nodes{ metric->multi_query(Y_aux_pt, total_solutions) };
     return _tree_of_solutions<Node, Edge>(goal_nodes);

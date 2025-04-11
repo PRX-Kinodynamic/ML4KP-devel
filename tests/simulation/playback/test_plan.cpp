@@ -9,6 +9,7 @@ struct plan_space_test_t
 {
   plan_space_test_t() : u0(0), u1(0), address({ &u0, &u1 }), space("EE", address, "space_test")
   {
+    space.set_bounds({ -100, -200 }, { 100, 200 });
   }
   double u0, u1;
   std::vector<double*> address;
@@ -150,4 +151,29 @@ BOOST_AUTO_TEST_CASE(plan_split_test)
   BOOST_REQUIRE_MESSAGE(plan_1p1.size() == 3, EXPECTED_GOT(3, plan_1p1.size()));
 
   BOOST_REQUIRE_MESSAGE(plan_to_split.size() == 2, EXPECTED_GOT(2, plan_to_split.size()));
+}
+
+BOOST_AUTO_TEST_CASE(plan_random_test)
+{
+  // simple test: do 2 randoms and check that are different
+  mock::plan_space_test_t test;
+  prx::space_t& space(test.space);
+  prx::plan_t plan_r0(&space);
+  prx::plan_t plan_r1(&space);
+
+  const std::size_t min_steps{ 5 };
+  const std::size_t max_steps{ 20 };
+  const double tmin{ 1.0 };
+  const double tmax{ 5.0 };
+
+  plan_r0.random(min_steps, max_steps, tmin, tmax);
+  plan_r1.random(min_steps, max_steps, tmin, tmax);
+
+  const std::size_t min_size{ std::min(plan_r0.size(), plan_r1.size()) };
+
+  for (int i = 0; i < min_size; ++i)
+  {
+    BOOST_REQUIRE(plan_r0[i].duration != plan_r1[i].duration);
+    BOOST_REQUIRE(not(Vec(plan_r0[i].control) - Vec(plan_r1[i].control)).isZero());
+  }
 }
