@@ -9,28 +9,27 @@ namespace fg
 {
 using SF = prx::fg::symbol_factory_t;
 
-void indeterminant_linear_system_helper(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& values,
-                                        std::ostream& os = std::cout)
+template <typename LinearGraph>
+void indeterminant_linear_system_helper(const LinearGraph graph, std::ostream& os = std::cout)
 {
-  boost::shared_ptr<gtsam::GaussianFactorGraph> fgl{ graph.linearize(values) };
   os << "Keys:\n";
   int idx{ 0 };
-  for (auto k : fgl->keys())
+  for (auto k : graph->keys())
   {
     os << "[" << idx << "]: " << SF::formatter(k) << "\n";
     idx++;
   }
   os << "Use Matlab's 'sparse()':\n";
-  os << fgl->sparseJacobian_() << "\n";
+  os << graph->sparseJacobian_() << "\n";
 
   os << "Jacobian A|b':\n";
   os << "\tA:\n";
-  auto Ab = fgl->jacobian();
+  auto Ab = graph->jacobian();
   os << Ab.first << "\n";
   os << "\tb:\n";
   os << Ab.second << "\n";
 
-  auto H = fgl->hessian();
+  auto H = graph->hessian();
   os << "Hessian A|b':\n";
   os << "\tA:\n";
   os << H.first << "\n";
@@ -38,6 +37,11 @@ void indeterminant_linear_system_helper(const gtsam::NonlinearFactorGraph& graph
   os << H.second << "\n";
   // std::pair<Matrix, Vector>
 }
-
+void indeterminant_linear_system_helper(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& values,
+                                        std::ostream& os = std::cout)
+{
+  boost::shared_ptr<gtsam::GaussianFactorGraph> fgl{ graph.linearize(values) };
+  indeterminant_linear_system_helper(fgl, os);
+}
 }  // namespace fg
 }  // namespace prx
