@@ -471,7 +471,7 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True) # for randomly sampling from the dataset and batching
     validation_dataloader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False) # for randomly sampling from the dataset and batching
 
-    trainer = Trainer(model, train_dataloader) # setup the training process
+    trainer = Trainer(model, train_dataloader, device) # setup the training process
     trainer.train(epochs=int(args.epochs))
     trainer.validate(validation_dataloader)
 
