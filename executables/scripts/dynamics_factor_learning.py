@@ -22,31 +22,33 @@ class GaussianNormalization():
 
     @torch.jit.unused
     def normalize_data(self, data_in):
-        data = np.array(data_in).T
-        mean = torch.Tensor(np.mean(data, axis=1))
-        # print(data.shape)
-        sigma = np.cov(data)
-        # print(sigma.ndim)
-        if sigma.ndim == 0:
-            sigma = np.array([[sigma]])
-        print("Mean", mean)
-        print("Cov: ", sigma)
-        V,L,Vp = np.linalg.svd(sigma)
+        if self.A == None:
+            data = np.array(data_in).T
+            mean = torch.Tensor(np.mean(data, axis=1))
+            # print(data.shape)
+            sigma = np.cov(data)
+            # print(sigma.ndim)
+            if sigma.ndim == 0:
+                sigma = np.array([[sigma]])
+            print("Mean", mean)
+            print("Cov: ", sigma)
+            V,L,Vp = np.linalg.svd(sigma)
 
-        S = scipy.linalg.sqrtm(np.diag(L))
-        Sinv = scipy.linalg.sqrtm(np.diag(1/L))
-        T = V @ S
+            S = scipy.linalg.sqrtm(np.diag(L))
+            Sinv = scipy.linalg.sqrtm(np.diag(1/L))
+            T = V @ S
 
-        assert np.isclose(sigma, T @ T.T).all(), "[Normalization] Decomposition failed"
+            assert np.isclose(sigma, T @ T.T).all(), "[Normalization] Decomposition failed"
 
-        A = torch.Tensor(T)
-        Ainv = torch.Tensor(Sinv @ V.T)
+            A = torch.Tensor(T)
+            Ainv = torch.Tensor(Sinv @ V.T)
+        
+            self.A = A;
+            self.Ainv = Ainv;
+            self.mu = mean;
 
-        data_out = (Ainv @ (data_in - mean).T).T
-
-        self.A = A;
-        self.Ainv = Ainv;
-        self.mu = mean;
+        # data_out = (self.Ainv @ (data_in - self.mu).T).T
+        data_out = self.normalize(data_in);
         return data_out
 
     @torch.jit.export 
@@ -65,12 +67,20 @@ class UniformNormalization():
 
     @torch.jit.unused
     def normalize_data(self, inputs):
-        p = torch.amax(inputs.T, dim=1, keepdim=False)
-        m = torch.amin(inputs.T, dim=1, keepdim=False)
+        if self.max_vals is None:
+            # print(f"inputs {inputs[:10]}")
+            p = torch.amax(inputs[:,:,0].T, dim=1, keepdim=False)
+            m = torch.amin(inputs[:,:,0].T, dim=1, keepdim=False)
 
-        self.max_vals = torch.fmax(torch.abs(p), torch.abs(m))
+            self.max_vals = torch.fmax(torch.abs(p), torch.abs(m))
 
-        return torch.div(inputs, self.max_vals)
+        # print(f"inputs {inputs.shape}")
+        # print(f" max_vals: {self.max_vals}")
+
+        res = torch.zeros_like(inputs);
+        for idx in range(inputs.shape[2]):
+            res[:,:,idx] = torch.div(inputs[:,:,idx], self.max_vals);
+        return res
 
     @torch.jit.export 
     def normalize(self, x):
@@ -107,62 +117,10 @@ class CppModule(torch.nn.Module):
         # self.plant = dataset.plant
         self.model = copy.deepcopy(other.model)
 
-        # self.state_normalizer = Normalization.copy(dataset.state_normalizer)
-        # self.control_normalizer = Normalization.copy(dataset.control_normalizer)
-        # self.target_normalizer_ = Normalization.copy(dataset.target_normalizer)
-        
         self.state_normalizer = torch.jit.trace(dataset.state_normalizer.normalize, (torch.rand(dataset.plant.DimX)))
         self.control_normalizer = torch.jit.trace(dataset.control_normalizer.normalize, (torch.rand(dataset.plant.DimU)))
         self.target_unnormalizer = torch.jit.trace(dataset.target_normalizer.unnormalize, (torch.rand(dataset.plant.DimF)))
-        # 
-        # self.controls_method = Normalization.UNIFORM;
-        # if self.states_method == "gaussian":
-        #     self.states_method = Normalization.GUASSIAN;
-        # elif self.states_method == "uniform":
-            # self.states_method = Normalization.UNIFORM;
-
-        # print("self.states_method", self.states_method)
-    # @torch.jit.export 
-    # def normalize(self, x, method : Normalization, Ainv, mu, max_vals):
-        # return Ainv @ torch.sub(x, mu)
-        # if method == Normalization.GUASSIAN:
-        #     # z = A^-1 * (X - mu)
-        #     return Normalization.gaussian_normalize(x, Ainv, mu)
-        # elif method == Normalization.UNIFORM:
-        #     return Normalization.uniform_normalize(x, max_vals)
-        # else:
-        #     raise ValueError("Method not supported: ", method)
-
-    # @torch.jit.export 
-    # def gaussian_normalize(self, x, Ainv, mu, max_vals = None):
-    #     return Ainv @ (x - mu)
-
-    # @torch.jit.export 
-    # def uniform_normalize(self, x, max_vals, Ainv = None, mu = None):
-    #     return torch.div(x, max_vals)
-
-
-    # @torch.jit.export
-    # def unnormalize(self, z, method : int, A = None, mu = None, max_vals = None):
-    #     if method == 0:
-    #         # X = A * z + mu
-    #         return A @ z + mu
-    #     elif method == 1:
-    #         return torch.mul(z, max_vals)
-    #     else:
-    #         raise ValueError("Method not supported: ", method)
-
-    # @torch.jit.export 
-    # def normalize_input(self, xin):
-    #     return self.A_in_inv @ (xin - self.in_mean)
-
-    # @torch.jit.export 
-    # def normalize_output(self, xout):
-    #     return self.A_out_inv @ (xout - self.out_mean)
-    
-    # @torch.jit.export
-    # def unnormalize_output(self, xout):
-    #     return self.out_mean + self.A_out @ xout
+   
 
     def forward(self, x, u):
         x_norm = self.state_normalizer(x)
@@ -182,42 +140,56 @@ class CppModule(torch.nn.Module):
 # Assuming that the system is \dot{x}_{t+1} = \dot{x}_t + f(\dot{x}_t, u_t) \delta t
 # Separating data into state:=\dot{x}, controls:=u and targets:=f(\dot{x}_t, u_t)
 class TransitionDataset(Dataset):
-    def __init__(self, plant_name, filename = "",\
+    def __init__(self, plant_name="", filename = "",\
          states_norm = "gaussian", controls_norm = "uniform", targets_norm = "gaussian",\
-         dbg = True):
-        if plant_name == "mj_mushr":
-            self.plant = MjMushr()
-        elif plant_name == "pendulum":
-            self.plant = Pendulum()
+         dbg = True, other_dataset=None):
+        if other_dataset is not None:
+            self.plant = other_dataset.plant
+            self.states = torch.Tensor();
+            self.controls = torch.Tensor();
+            self.targets = torch.Tensor();
+        
+            self.state_normalizer = other_dataset.state_normalizer
+            self.control_normalizer = other_dataset.control_normalizer
+            self.target_normalizer = other_dataset.target_normalizer
+
+            self.dbg = other_dataset.dbg;
+            self.dbg_dir = other_dataset.dbg_dir
         else:
-            throw("Wrong plant ", plant);
-        self.states = torch.Tensor();
-        self.controls = torch.Tensor();
-        self.targets = torch.Tensor();
+            if plant_name == "mj_mushr":
+                self.plant = MjMushr()
+            elif plant_name == "pendulum":
+                self.plant = Pendulum()
+            else:
+                throw("Wrong plant ", plant);
+            self.states = torch.Tensor();
+            self.controls = torch.Tensor();
+            self.targets = torch.Tensor();
         
-        self.state_normalizer = Normalization.from_string(states_norm);
-        self.control_normalizer = Normalization.from_string(controls_norm);
-        self.target_normalizer = Normalization.from_string(targets_norm);
+            self.state_normalizer = Normalization.from_string(states_norm);
+            self.control_normalizer = Normalization.from_string(controls_norm);
+            self.target_normalizer = Normalization.from_string(targets_norm);
 
-        if dbg:
-            print("Normalization states method:", states_norm)
-            print("Normalization controls method:", controls_norm)
-            print("Normalization targets method:", targets_norm)
+            if dbg:
+                print("Normalization states method:", states_norm)
+                print("Normalization controls method:", controls_norm)
+                print("Normalization targets method:", targets_norm)
         
-        self.dbg = dbg;
-        self.dbg_dir = os.environ['DIRTMP_PATH'] + "/out/dbg/"
+            self.dbg = dbg;
+            self.dbg_dir = os.environ['DIRTMP_PATH'] + "/out/dbg/"
 
-        assert self.states.shape[0] == self.controls.shape[0], "States and controls must be the same shape[0]"
+            assert self.states.shape[0] == self.controls.shape[0], "States and controls must be the same shape[0]"
 
     def __len__(self):
         return self.states.shape[0]
 
     def __getitem__(self, idx):
         # return self.states[idx], self.controls[idx], self.targets[idx]
-        return np.hstack((self.states[idx], self.controls[idx])), self.targets[idx]
+        # return np.hstack((self.states[idx], self.controls[idx])), self.targets[idx]
+        return self.states[idx], self.controls[idx], self.targets[idx]
 
-    def from_file(self, filename):
-        states, controls, targets = self.plant.from_file(filename);        
+    def from_file(self, filename, horizon):
+        states, controls, targets = self.plant.from_file(filename, horizon);        
         self.states = torch.cat((self.states, states), 0)
         self.controls = torch.cat((self.controls, controls), 0)
         self.targets = torch.cat((self.targets, targets), 0)
@@ -307,15 +279,17 @@ def model_to_cpp_script(plant, model, out_filename):
     # example_weight = torch.rand(1, 1, 3, 3)
     # example_forward_input = torch.rand(1, 1, 3, 3)
 
+    print(f"output: {out_filename}")
     # sm = torch.jit.trace(modelcpp.forward, )
     sm.save(out_filename)
     # torch.save(sm.state_dict(), out_filename);
 
 class MLP(nn.Module):
-
-    def __init__(self, input_dim, hidden_sizes, output_dim, dropout_rate=0.05):
+    def __init__(self, input_dim, control_dim, hidden_sizes, output_dim, dropout_rate=0.05):
         super(MLP, self).__init__()
-        
+        self.input_dim = input_dim
+        self.control_dim = control_dim
+        self.output_dim = output_dim
         # Create list to hold all layers
         layers = []
         
@@ -326,7 +300,7 @@ class MLP(nn.Module):
         activation_function = nn.SiLU()
         # activation_function = nn.ReLU()
         # activation_function = nn.LeakyReLU()
-        layers.append(nn.Linear(input_dim, hidden_sizes[0]))
+        layers.append(nn.Linear(input_dim+control_dim, hidden_sizes[0]))
         layers.append(activation_function)
         layers.append(nn.Dropout(dropout_rate))
         
@@ -358,25 +332,71 @@ class MLP(nn.Module):
 
 class Trainer:
 
-    def __init__(self, model, dataloader, lr=1e-4, device='cpu'):
+    def __init__(self, model, dataloader, validation_data, filename, lr=1e-4, device='cpu', horizon=1):
         self.model = model.to(device)
         self.dataloader = dataloader
-        self.criterion = nn.MSELoss() # euclidean loss
+        self.MSELoss = nn.MSELoss() # euclidean loss
+        self.criterion = self.traj_loss
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr) # optimizer for learning
         self.device = device
+        self.horizon = horizon
+        self.validation_data = validation_data
+        self.file = open(filename, 'w')
+
+
+    def traj_loss(self, batch_inputs, batch_controls, batch_targets):
+
+        outputs = torch.zeros_like(batch_targets)
+        m_output = torch.zeros(batch_inputs.shape[0] , self.model.output_dim)
+        # print("batch_inputs", batch_inputs)
+        # print("batch_targets", batch_targets)
+        # print(batch_inputs.shape)
+        # print(batch_inputs)
+        # print(f"batch_inputs {batch_inputs[:10]}")
+        for idx in range(self.horizon):
+            # xidx = idx + self.model.input_dim
+            # uidx = idx + self.model.control_dim
+            xin = batch_inputs[:,:, idx]
+            uin = batch_controls[:,:, idx]
+            # xin = torch.reshape(xin, (batch_inputs.shape[0], self.model.input_dim) )
+            # print(f"xin {xin.shape} {xin[:10]}")
+            # print((xin, batch_controls))
+            # print("xin", xin)
+            # print("batch_controls", batch_controls)
+            # print("outputs", outputs)
+            m_input = torch.hstack( (xin, uin) );
+            # print("m_input: ", m_input.shape, m_input[:10])
+            m_output += self.model(m_input)
+            # print("m_output", m_output[:10])
+            # outputs = torch.hstack( (outputs, m_output));
+            outputs[:,:,idx] = m_output;
+
+        # print("outputs", outputs[:10])
+        # exit(1)
+        # print("xin", xin)
+        # exit(-1)
+        # print("batch_targets", batch_targets)
+        # return batch_inputs - batch_targets
+        return self.MSELoss(outputs, batch_targets )
+        # print(outputs)
+        # exit(1)
+        # print(outputs, batch_targets)
+
 
     def train(self, epochs=20):
         self.model.train()
         for epoch in range(1, epochs+1):
             total_loss = 0.0
-            for batch_inputs, batch_targets in self.dataloader:
+            for batch_inputs, batch_controls, batch_targets in self.dataloader:
                 # Move data to the desired device
                 batch_inputs = batch_inputs.to(self.device)
                 batch_targets = batch_targets.to(self.device)
+                batch_controls = batch_controls.to(self.device)
 
                 # Forward
-                outputs = self.model(batch_inputs)
-                loss = self.criterion(outputs, batch_targets)
+                # outputs = self.model(batch_inputs)
+                # loss = self.criterion(outputs, batch_targets)
+                loss = self.criterion(batch_inputs, batch_controls, batch_targets)
 
                 # Backprop
                 self.optimizer.zero_grad()
@@ -388,23 +408,31 @@ class Trainer:
                 total_loss += loss.item()
 
             avg_loss = total_loss / len(self.dataloader)
-            print(f"Epoch {epoch}/{epochs}, Loss: {avg_loss:.6f}")
+            avg_val_loss = self.validate(self.validation_data)
+
+            print(f"Epoch {epoch}/{epochs}, [Loss] Train: {avg_loss:.6f} Validate: {avg_val_loss: 0.6f}")
+            self.file.write(f"{epoch} {avg_loss:.6f} {avg_val_loss: 0.6f}\n");
+        self.file.close();
 
     def validate(self, dataloader):
         self.model.eval()
+        avg_loss = 0
         with torch.no_grad():
             total_loss = 0.0
-            for batch_inputs, batch_targets in dataloader:
+            for batch_inputs, batch_controls, batch_targets in dataloader:
                 batch_inputs = batch_inputs.to(self.device)
                 batch_targets = batch_targets.to(self.device)
+                batch_controls = batch_controls.to(self.device)
 
-                outputs = self.model(batch_inputs)
-                loss = self.criterion(outputs, batch_targets)
+                # outputs = self.model(batch_inputs)
+                # loss = self.criterion(outputs, batch_targets)
+                loss = self.criterion(batch_inputs, batch_controls, batch_targets)
 
                 # print(f"Validate Loss: {loss.item():.6f}") # just for show, you don't really need this
                 total_loss += loss.item()
             avg_loss = total_loss / len(self.dataloader)
-            print(f"Avg Validate Loss: {avg_loss:.6f}") # just for show, you don't really need this
+            # print(f"Avg Validate Loss: {avg_loss:.6f}") # just for show, you don't really need this
+        return avg_loss
 
     def predict(self, data):
         # your data has to be on the same device as the model
@@ -420,11 +448,14 @@ if __name__ == "__main__":
     # argparse.add_argument('-f', '--file', help='Gait file', required=True)
     argparse.add_argument('-d', '--dir', help='Gait file', required=True)
     argparse.add_argument('-f', '--files', help='Gait file', required=True, nargs='+')
+    # argparse.add_argument('-v', '--val', help='Gait file', required=True)
     argparse.add_argument('-v', '--val', help='Gait file', required=True)
-    argparse.add_argument('-o', '--out', help='Split validation at this rate', required=True)
+    argparse.add_argument('-o', '--out_dir', help='Split validation at this rate', required=True)
     argparse.add_argument('-e', '--epochs', help='Split validation at this rate', required=True)
     argparse.add_argument('-b', '--batch', help='Batch size', required=True)
     argparse.add_argument('-p', '--plant', help='plant', required=True)
+    argparse.add_argument('-T', '--horizon', help='plant', required=True)
+    argparse.add_argument('-l', '--lr', help='learning rate', required=True)
     argparse.add_argument('--x_norm', help='Normalization for states', required=True)
     argparse.add_argument('--u_norm', help='Normalization for controls', required=True)
     argparse.add_argument('--f_norm', help='Normalization for targets', required=True)
@@ -432,50 +463,65 @@ if __name__ == "__main__":
     argparse.add_argument('--hidden_size' , help='hidden size', required=True)
     args = argparse.parse_args()
 
+    plant = args.plant
+    batch_size = int(args.batch)
+    hidden_size = int(args.hidden_size)
+    horizon = int(args.horizon)
+    epochs = int(args.epochs)
+    lr = float(args.lr)
+    split = float(args.val);
+    out_dir = args.out_dir
+
+    str_lr=str(lr).replace(".", "p")
+    fid = f"df_{plant}_b{batch_size}_h{hidden_size}_e{epochs}_lr{str_lr}_T{horizon}";
+    loss_filename = out_dir + "/" + fid + ".txt";
+    nn_filename = out_dir + "/" + fid + ".pt";
     input_dir = args.dir;
     # train_dataset = TransitionDataset(args.plant)
     states_norm = args.x_norm;
     controls_norm = args.u_norm;
     targets_norm = args.f_norm;
 
-    train_dataset = TransitionDataset(args.plant, states_norm = states_norm, controls_norm = controls_norm, targets_norm = targets_norm)
-    validation_dataset = TransitionDataset(args.plant, states_norm = states_norm, controls_norm = controls_norm, targets_norm = targets_norm, dbg = False)
+    train_dataset = TransitionDataset(plant, states_norm = states_norm, controls_norm = controls_norm, targets_norm = targets_norm)
+    # validation_dataset = TransitionDataset(other_dataset=train_dataset)
 
 
     for f in args.files:
         filename = input_dir + "/" + f
         print(filename)
-        train_dataset.from_file(filename);
+        train_dataset.from_file(filename, horizon=horizon);
     
-    validation_dataset.from_file(input_dir + "/" + args.val);
+    # validation_dataset.from_file(input_dir + "/" + args.val, horizon=horizon);
 
     train_dataset.normalize();
-    validation_dataset.normalize();
+    # validation_dataset.normalize();
 
     # validation_dataset = TransitionDataset(args.plant,input_dir + "/" + args.val)
-    # split = float(args.split);
-    # validation_dataset, test_set = random_split(validation_dataset, [split, 1-split])
     # print(len(validation_dataset))
     # print(dataset[0])
     # dataset[0] # example
 
     # def __init__(self, input_dim=2, hidden_dim=16, output_dim=2):
-    DimIn = train_dataset.plant.DimX + train_dataset.plant.DimU
+    DimIn = train_dataset.plant.DimX
+    DimU = train_dataset.plant.DimU
     DimOut = train_dataset.plant.DimF
 
-    hidden_sizes = int(args.total_layers) * [int(args.hidden_size)]
-    model = MLP(input_dim=DimIn, hidden_sizes=hidden_sizes, output_dim=DimOut)
+    hs_list = int(args.total_layers) * [hidden_size]
+    model = MLP(input_dim=DimIn, control_dim=DimU, hidden_sizes=hs_list, output_dim=DimOut)
 
-    batch_size = int(args.batch)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    train_data, validation_data = random_split(train_dataset, [split, 1-split])
+    # print("TV shapes:", train_dataset.shape, validation_dataset.shape)
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True) # for randomly sampling from the dataset and batching
-    validation_dataloader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False) # for randomly sampling from the dataset and batching
+    validation_dataloader = DataLoader(validation_data, batch_size=batch_size, shuffle=True) # for randomly sampling from the dataset and batching
+    # validation_dataloader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False) # for randomly sampling from the dataset and batching
 
-    trainer = Trainer(model, train_dataloader, device) # setup the training process
-    trainer.train(epochs=int(args.epochs))
-    trainer.validate(validation_dataloader)
+    trainer = Trainer(model, train_dataloader, validation_data=validation_dataloader, filename=loss_filename, device=device, horizon=horizon, lr=lr) # setup the training process
+    trainer.train(epochs=epochs)
+    # trainer.validate(validation_dataloader)
 
-    model_to_cpp_script(train_dataset, model, args.out)
+    model_to_cpp_script(train_dataset, model, nn_filename)
 
     # for x,y in test_set:
     #     print(trainer.predict(x),y)
