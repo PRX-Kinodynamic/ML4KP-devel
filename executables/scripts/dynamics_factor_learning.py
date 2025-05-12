@@ -430,7 +430,7 @@ class Trainer:
 
                 # print(f"Validate Loss: {loss.item():.6f}") # just for show, you don't really need this
                 total_loss += loss.item()
-            avg_loss = total_loss / len(self.dataloader)
+            avg_loss = total_loss / len(dataloader)
             # print(f"Avg Validate Loss: {avg_loss:.6f}") # just for show, you don't really need this
         return avg_loss
 
