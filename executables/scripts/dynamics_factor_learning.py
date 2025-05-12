@@ -470,10 +470,11 @@ if __name__ == "__main__":
     epochs = int(args.epochs)
     lr = float(args.lr)
     split = float(args.val);
+    layers = int(args.total_layers);
     out_dir = args.out_dir
 
     str_lr=str(lr).replace(".", "p")
-    fid = f"df_{plant}_b{batch_size}_h{hidden_size}_e{epochs}_lr{str_lr}_T{horizon}";
+    fid = f"df_{plant}_b{batch_size}_h{hidden_size}_l{layers}_e{epochs}_lr{str_lr}_T{horizon}";
     loss_filename = out_dir + "/" + fid + ".txt";
     nn_filename = out_dir + "/" + fid + ".pt";
     input_dir = args.dir;
@@ -506,7 +507,7 @@ if __name__ == "__main__":
     DimU = train_dataset.plant.DimU
     DimOut = train_dataset.plant.DimF
 
-    hs_list = int(args.total_layers) * [hidden_size]
+    hs_list = layers * [hidden_size]
     model = MLP(input_dim=DimIn, control_dim=DimU, hidden_sizes=hs_list, output_dim=DimOut)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
