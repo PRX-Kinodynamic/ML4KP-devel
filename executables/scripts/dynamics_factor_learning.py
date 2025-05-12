@@ -511,7 +511,8 @@ if __name__ == "__main__":
     hs_list = layers * [hidden_size]
     model = MLP(input_dim=DimIn, control_dim=DimU, hidden_sizes=hs_list, output_dim=DimOut)
 
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    cuda_dev=f"cuda:{args.device}"
+    device = cuda_dev if torch.cuda.is_available() else 'cpu'
 
     train_data, validation_data = random_split(train_dataset, [split, 1-split])
     print(f"[Data] total: {len(train_dataset)} train: {len(train_data)} validation: {len(validation_data)}")
