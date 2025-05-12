@@ -461,6 +461,7 @@ if __name__ == "__main__":
     argparse.add_argument('--f_norm', help='Normalization for targets', required=True)
     argparse.add_argument('--total_layers', help='total hidden layers', required=True)
     argparse.add_argument('--hidden_size' , help='hidden size', required=True)
+    argparse.add_argument('--device' , help='Gpu device to use', required=False)
     args = argparse.parse_args()
 
     plant = args.plant
