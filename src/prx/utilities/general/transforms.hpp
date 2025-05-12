@@ -8,8 +8,9 @@
 
 #include <Eigen/Dense>
 #include <Eigen/Core>
-#include "prx/utilities/general/prx_assert.hpp"
 #include <yaml-cpp/yaml.h>
+#include "prx/utilities/general/prx_assert.hpp"
+
 namespace prx
 {
 /** @brief A column vector of dimension <i>N</i>. */
@@ -28,6 +29,16 @@ using axis_angle_t = Eigen::AngleAxis<double>;
 using transform_t = Eigen::Transform<double, 3, Eigen::AffineCompact>;
 
 using ref_matrixXd_t = Eigen::Ref<const Eigen::MatrixXd>;
+
+template <typename Derived>
+inline std::pair<Eigen::Index, Eigen::Index> get_dimension(const Eigen::MatrixBase<Derived>& mat)
+{
+  static constexpr Eigen::Index Rows{ Eigen::MatrixBase<Derived>::RowsAtCompileTime };
+  static constexpr Eigen::Index Cols{ Eigen::MatrixBase<Derived>::ColsAtCompileTime };
+  if constexpr (Rows > 0 and Cols > 0)
+    return { Rows, Cols };
+  return { mat.rows(), mat.cols() };
+}
 
 inline transform_t create_transform(const matrix_t rotation, const vector_t translation)
 {
@@ -55,24 +66,53 @@ inline bool are_matrices_approx_equal(const ref_matrixXd_t m1, const ref_matrixX
   return true;
 }
 
+inline double quaternion_to_angle(const quaternion_t& q, const char axis)
+{
+  switch (axis)
+  {
+    case 'x': {  // roll (x-axis rotation)
+      const double sinr_cosp{ 2 * (q.w() * q.x() + q.y() * q.z()) };
+      const double cosr_cosp{ 1 - 2 * (q.x() * q.x() + q.y() * q.y()) };
+      const double x{ std::atan2(sinr_cosp, cosr_cosp) };
+      return x;
+    }
+    case 'y': {
+      // pitch (y()-ax()is rotation)
+      const double sinp{ std::sqrt(1 + 2 * (q.w() * q.y() - q.x() * q.z())) };
+      const double cosp{ std::sqrt(1 - 2 * (q.w() * q.y() - q.x() * q.z())) };
+      const double y{ 2 * std::atan2(sinp, cosp) - M_PI / 2.0 };
+      return y;
+    }
+    case 'z': {
+      // yaw() (z-ax()is rotation)
+      const double siny_cosp{ 2 * (q.w() * q.z() + q.x() * q.y()) };
+      const double cosy_cosp{ 1 - 2 * (q.y() * q.y() + q.z() * q.z()) };
+      const double z{ std::atan2(siny_cosp, cosy_cosp) };
+      return z;
+    }
+    default:
+      prx_throw("Only x, y or z supported ");
+      return -1;
+  }
+}
+inline double quaternion_to_angle(const double qx, const double qy, const double qz, const double qw, const char axis)
+{
+  const quaternion_t q({ qw, qx, qy, qz });
+  return quaternion_to_angle(q, axis);
+}
+
 inline Eigen::Vector3d quaternion_to_euler(const quaternion_t& q)
 {
-  // roll (x-axis rotation)
-  const double sinr_cosp{ 2 * (q.w() * q.x() + q.y() * q.z()) };
-  const double cosr_cosp{ 1 - 2 * (q.x() * q.x() + q.y() * q.y()) };
-  const double x{ std::atan2(sinr_cosp, cosr_cosp) };
-
-  // pitch (y()-ax()is rotation)
-  const double sinp{ std::sqrt(1 + 2 * (q.w() * q.y() - q.x() * q.z())) };
-  const double cosp{ std::sqrt(1 - 2 * (q.w() * q.y() - q.x() * q.z())) };
-  const double y{ 2 * std::atan2(sinp, cosp) - M_PI / 2.0 };
-
-  // yaw() (z-ax()is rotation)
-  const double siny_cosp{ 2 * (q.w() * q.z() + q.x() * q.y()) };
-  const double cosy_cosp{ 1 - 2 * (q.y() * q.y() + q.z() * q.z()) };
-  const double z{ std::atan2(siny_cosp, cosy_cosp) };
-
+  const double x{ quaternion_to_angle(q, 'x') };
+  const double y{ quaternion_to_angle(q, 'y') };
+  const double z{ quaternion_to_angle(q, 'z') };
   return { x, y, z };
+}
+
+inline Eigen::Vector3d quaternion_to_euler(const double qx, const double qy, const double qz, const double qw)
+{
+  const quaternion_t q({ qw, qx, qy, qz });
+  return quaternion_to_euler(q);
 }
 
 template <typename Rotation, typename Angles>
@@ -111,7 +151,7 @@ namespace YAML
 {
 // struct convert<Eigen::Matrix<Scalar,  Rows,  Cols,  Align,  RowsAtCompileTime,  ColsAtCompileTime> >{
 // template <typename Type, Eigen::Index N>
-template<class Type, int Dim, int Align, int RowsAtCompileTime, int ColsAtCompileTime>
+template <class Type, int Dim, int Align, int RowsAtCompileTime, int ColsAtCompileTime>
 struct convert<Eigen::Matrix<Type, Dim, 1, Align, RowsAtCompileTime, ColsAtCompileTime>>
 {
   using Vector = Eigen::Matrix<Type, Dim, 1, Align, RowsAtCompileTime, ColsAtCompileTime>;
