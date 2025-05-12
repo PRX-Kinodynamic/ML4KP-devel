@@ -346,8 +346,8 @@ class Trainer:
 
     def traj_loss(self, batch_inputs, batch_controls, batch_targets):
 
-        outputs = torch.zeros_like(batch_targets)
-        m_output = torch.zeros(batch_inputs.shape[0] , self.model.output_dim)
+        outputs = torch.zeros_like(batch_targets).to(self.device)
+        m_output = torch.zeros(batch_inputs.shape[0] , self.model.output_dim).to(self.device)
         # print("batch_inputs", batch_inputs)
         # print("batch_targets", batch_targets)
         # print(batch_inputs.shape)
@@ -518,6 +518,7 @@ if __name__ == "__main__":
     validation_dataloader = DataLoader(validation_data, batch_size=batch_size, shuffle=True) # for randomly sampling from the dataset and batching
     # validation_dataloader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False) # for randomly sampling from the dataset and batching
 
+    print(f"[Device] {device}")
     trainer = Trainer(model, train_dataloader, validation_data=validation_dataloader, filename=loss_filename, device=device, horizon=horizon, lr=lr) # setup the training process
     trainer.train(epochs=epochs)
     # trainer.validate(validation_dataloader)
