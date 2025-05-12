@@ -332,7 +332,7 @@ class MLP(nn.Module):
 
 class Trainer:
 
-    def __init__(self, model, dataloader, validation_data, filename, lr=1e-4, device='cpu', horizon=1):
+    def __init__(self, model, dataloader, validation_data, filename, horizon, lr=1e-4, device='cpu'):
         self.model = model.to(device)
         self.dataloader = dataloader
         self.MSELoss = nn.MSELoss() # euclidean loss
@@ -384,8 +384,8 @@ class Trainer:
 
 
     def train(self, epochs=20):
-        self.model.train()
         for epoch in range(1, epochs+1):
+            self.model.train()
             total_loss = 0.0
             for batch_inputs, batch_controls, batch_targets in self.dataloader:
                 # Move data to the desired device
@@ -512,8 +512,9 @@ if __name__ == "__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     train_data, validation_data = random_split(train_dataset, [split, 1-split])
+    print(f"[Data] total: {len(train_dataset)} train: {len(train_data)} validation: {len(validation_data)}")
     # print("TV shapes:", train_dataset.shape, validation_dataset.shape)
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True) # for randomly sampling from the dataset and batching
+    train_dataloader = DataLoader(train_data, batch_size=batch_size, shuffle=True) # for randomly sampling from the dataset and batching
     validation_dataloader = DataLoader(validation_data, batch_size=batch_size, shuffle=True) # for randomly sampling from the dataset and batching
     # validation_dataloader = DataLoader(validation_dataset, batch_size=batch_size, shuffle=False) # for randomly sampling from the dataset and batching
 
