@@ -59,7 +59,7 @@ void rotation_with_noise(prx::param_loader& params)
   std::ofstream ofs(params["out"].as<>());
   for (int i = 0; i < total_rotations; ++i)
   {
-    R = prx::fg::random_SO3();
+    R = prx::fg::random_SO3<SO3>();
     noisy_rotation(Rhat, R, vec, stddev);
     ofs << "R " << R << Rhat << "\n";
   }
@@ -144,7 +144,7 @@ void forward_propagation(prx::param_loader& params)
   std::ofstream ofs(params["out"].as<>());
   for (int i = 0; i < total_rotations; ++i)
   {
-    x0 = prx::fg::random_SO3();
+    x0 = prx::fg::random_SO3<SO3>();
     random_tangent_vec(xdot, stddev);
     const SO3 x1{ Integrator::integrate(x0, xdot, dt) };
     ofs << x0 << xdot << x1 << "\n";
