@@ -34,7 +34,7 @@ double uniform_random()
 
 int uniform_int_random(int min, int max)
 {
-  return uniform_random(min, max);
+  return static_cast<int>(std::round(uniform_random(min, max)));
 }
 
 int roll_weighted_die(std::vector<double> const& weights)

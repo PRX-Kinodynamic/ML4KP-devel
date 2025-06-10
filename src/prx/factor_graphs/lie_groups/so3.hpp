@@ -2,7 +2,8 @@
 
 #include <Eigen/Dense>
 #include <Eigen/Core>
-// #include "prx/factor_graphs/factors/lie_operators.hpp"
+#include <prx/utilities/general/constants.hpp>
+#include <prx/utilities/general/random.hpp>
 
 inline std::ostream& operator<<(std::ostream& os, const gtsam::SO3& obj)
 {
@@ -88,7 +89,8 @@ void add_noise(Eigen::Quaterniond& quat, const Eigen::Vector<double, 3>& noise)
   quat = rot.toQuaternion();
 }
 
-gtsam::SO3 random_SO3()
+template <typename RotationOut>
+RotationOut random_SO3()
 {
   using RotationType = Eigen::Matrix3d;
   const double x1{ prx::uniform_random(0.0, 1.0) };
@@ -107,7 +109,7 @@ gtsam::SO3 random_SO3()
   RotationType R3{ RotationType::Identity() };
   R3.topLeftCorner<2, 2>() = R2.matrix();
   const RotationType M{ (2.0 * V * V.transpose() - RotationType::Identity()) * R3 };
-  return std::move(gtsam::SO3(M));
+  return std::move(RotationOut(M));
 }
 }  // namespace fg
 }  // namespace prx

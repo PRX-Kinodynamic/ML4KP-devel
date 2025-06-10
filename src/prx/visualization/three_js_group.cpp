@@ -186,7 +186,7 @@ void three_js_group_t::add_detailed_vis_infos(info_geometry_t info_type, const t
     for (double i = 0; i <= 1.0; i += step)
     {
       state_space->interpolate(pt1, pt2, i, pt);
-      state_space->copy_from_point(pt);
+      state_space->copy_from(pt);
       this->update_plants();
       positions.push_back(selected_info->position);
     }

@@ -67,6 +67,12 @@ public:
   {
   }
 
+  // TODO: Needs enable_if to diff from Vec() (An Eigen::Map).
+  // Takes Matrix version of SE(2) = [cth -sth x; sth cth y; 0 0 1];
+  // SE2_t(const Eigen::Matrix3d in_m) : SE2_t(in_m.col(2).head(2), in_m.block<2, 2>(0, 0))
+  // {
+  // }
+
   static SE2_t Zero()  // Equivalent to Eigen's Zero
   {
     return SE2_t(0, 0, 0);
@@ -265,6 +271,15 @@ public:
   inline Eigen::Vector3d vector() const
   {
     return std::move(Eigen::Vector3d(x(), y(), angle()));
+  }
+
+  inline Eigen::Matrix3d matrix() const
+  {
+    Eigen::Matrix3d m{ Eigen::Matrix3d::Identity() };
+    m.block<2, 2>(0, 0) = rotation<Eigen::Matrix2d>();
+    m(0, 2) = x();
+    m(1, 2) = y();
+    return m;
   }
 
   static inline SE2_t random(const Eigen::Vector3d& min_bound = -max, const Eigen::Vector3d max_bound = max)

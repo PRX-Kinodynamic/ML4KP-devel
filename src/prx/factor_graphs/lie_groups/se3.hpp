@@ -6,7 +6,7 @@
 #include <gtsam/geometry/SO3.h>
 #include <gtsam/geometry/Pose3.h>
 #include "prx/factor_graphs/lie_groups/lie_operators.hpp"
-// #include "prx/factor_graphs/lie_groups/screw_axis.hpp"
+#include "prx/factor_graphs/lie_groups/so3.hpp"
 
 namespace prx
 {
@@ -56,6 +56,14 @@ public:
   {
   }
 
+  // TODO: add limits
+  static se3_t random()
+  {
+    const Quaternion quat{ random_SO3<Quaternion>() };
+    const Position pos{ Position::Random() };
+    return std::move(se3_t(quat, pos));
+  }
+
   double& operator[](const std::size_t& idx)
   {
     switch (idx)
@@ -75,7 +83,7 @@ public:
       case 6:
         return _position[2];
       default:
-        prx_throw("Index [" << idx << "] out of range");
+        prx_throw("[se3_t] Index out of range");
     }
   }
 
@@ -98,7 +106,7 @@ public:
       case 6:
         return _position[2];
       default:
-        prx_throw("Index [" << idx << "] out of range");
+        prx_throw("[se3_t] Index out of range");
     }
   }
 
@@ -226,7 +234,7 @@ public:
     return _quaternion.toRotationMatrix();
   }
 
-  inline Quaternion quaternion() const
+  inline const Quaternion& quaternion() const
   {
     return _quaternion;
   }
@@ -236,7 +244,7 @@ public:
     return _quaternion;
   }
 
-  inline Position position() const
+  inline const Position& position() const
   {
     return _position;
   }

@@ -41,7 +41,8 @@ pendulum_t::pendulum_t(const std::string& path) : plant_t(path)
   configurations["ball"]->setIdentity();
 
   // set_integrator("rk4");
-  set_integrator(integrator_t::kRK4);
+  // set_integrator(integrator_t::kRK4);
+  set_integrator(integrator_t::kEULER);
 }
 
 pendulum_t::~pendulum_t()

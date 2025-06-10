@@ -9,49 +9,83 @@ class MjMushr():
         self.DimU = 2     # [u0,u1]
         self.DimF = 3    # [xdd,ydd,thdd]
 
-    def handle_horizon(self, horizon, states, controls, dt):
+    def handle_horizon(self, horizon, states, controls, dt, targets):
 
-        xi = torch.empty(len(states)-horizon, self.DimX, horizon);
-        us = torch.empty(len(controls)-horizon, self.DimU, horizon);
-        fhat = torch.empty(len(states)-horizon, self.DimF, horizon);
-        xH = torch.Tensor();
-         # = torch.Tensor();
-        # gr = torch.Tensor();
+        xi = torch.empty(len(states)-horizon-1, horizon+1, self.DimX);
+        us = torch.empty(len(controls)-horizon-1, horizon+1, self.DimU);
+        fhat = torch.empty(len(states)-horizon-1, horizon, self.DimF);
 
         # print(f"ctrls: {controls[:10]}")
-        for idx in range(horizon):
-            up  = torch.stack(controls[idx:-horizon+idx])
-            # up1  = torch.stack(controls[idx+1:-horizon+idx+1])
-
-            xip = torch.stack(  states[idx:-horizon+idx])
+        for idx in range(horizon + 1):
+            up  = torch.stack(controls[idx:-horizon-1+idx])
+            xip = torch.stack(states[idx:-horizon-1+idx])
             # xip1 = torch.stack(  states[idx+1:-horizon+idx+1])
             # xip2 = torch.stack(  states[idx+2:-horizon+idx+2])
 
             # print(f"us: {us[:10]}")
             # xi = torch.stack((xi, xip),2)
-            us[:,:,idx] = up
-            xi[:,:,idx] = xip
-        # print(f"xi: {xi[:10].shape} {xi[:10]}")
-        # exit(-1)
-        xH = torch.stack(states[horizon:])
-        
-        # xH = torch.hstack((xH0, xH1, xH2))
+            us[:,idx,:] = up
+            xi[:,idx,:] = xip
 
-        # gi = torch.zeros_like(gr[:,0:1]);
-        x0 = xi[:,:,0]
+        x0 = xi[:,0,:]
         # print(f"xi {xi.shape} ")
-        # print(f"x0 {x0.shape} {x0[:10]} ")
-        for h in range(horizon-1):
-            xT = xi[:,:,h+1]
-            xT0 = (xT - x0) / dt
-            fhat[:,:,h] = xT0
+        # print(f"x0 {x0.shape} ")
+        # print(f"x0 {x0} ")
+        # print(f"fhat {fhat.shape} ")
+        for idx in range(1,horizon+1):  
+            fip = (xi[:,idx,:] - x0 ) / dt
+            # fip_test = torch.stack(targets[idx:-horizon+idx])
+            fhat[:,idx-1,:] = fip
+                
+            # print(f"idx {idx} fip {fip} ")
+            # print(f"fip_test {fip_test} ")
+
+        # print(f"fhat {fhat} ")
+        # print(f"states {states[0:-horizon]} ")
+
+        # xi[:,-1,:] = torch.stack(states[horizon:-horizon])
+
+        # print(f"xi {xi.shape} ")
+        # print(f"us {us.shape} ")
+        # print(f"fhat {fhat.shape} ")
+        # print(f"xi {xi[5,:]} ")
+        # print(f"fhat {fhat[5,:]} ")
+        # for h in range(horizon-1):
+        #     # ha = -h-1
+        #     # print(f"h {h} fhat {fhat[:,:,h]} ")
+        #     # print(f"h {h} fhat-h {fhat[:,:,h]} ")
+        #     # print(f"h-1 {h} fhat-h-1 {fhat[:,:,h+1]} ")
+        #     fhat[:,h+1,:] += fhat[:,h,:]
+        #     # fhat[:,h,:] += fhat[:,h+1,:]
+        #     # print(f"h {h} fhat {fhat} ")
+        # # print(f"xi {xi} ")
+        # fhat = fhat * dt
+        # print(f"fhat {fhat[5,:]} ")
+        # xH = torch.stack(states[horizon:])
         
-        xT0 = (xH - x0) / dt
-        # gi = gi + gr[:,(horizon-1):horizon];
-        fhat[:,:,-1] = xT0;
-        # print(f"fhat {fhat[:10]} ")
+        # x0 = xi[:,:,0]
+        # for h in range(horizon-1):
+        #     xT = xi[:,:,h+1]
+        #     xT0 = (xT - x0) / dt
+        #     fhat[:,:,h] = xT0
+        
+        # xT0 = (xH - x0) / dt
+        # fhat[:,:,-1] = xT0;
+        # print(f"xi {xi.shape} fhat {fhat.shape}")
+        # print(f"xi {xi[:2]} ")
+        # print(f"xT0 {xT0[:,0]} ")
+        # xi_aux = xi + fhat * dt
+        # xz = xi[1:] - xi_aux[:-1]
+        # print(f"xi_aux {xi_aux} ")
+        # print(f"xz {xz} ")
+        # zt = torch.allclose(xz, torch.zeros_like(xz), rtol=1e-5, atol=1e-5)
+        # print(f"zt {zt}")
+        # print(f"xi {xi} fhat {fhat}")
+
         # exit(-1)
-  
+    
+        # print(f"xi {xi.shape} fhat {fhat.shape}")
+        # print(f"xi {xi[0,:,:]}")
         return xi, us, fhat
 
     @torch.jit.unused
@@ -61,9 +95,9 @@ class MjMushr():
         data_controls = []
         data_target = []
 
-        states = torch.empty(0, self.DimX, horizon);
-        controls = torch.empty(0, self.DimU, horizon);
-        targets = torch.empty(0, self.DimF, horizon);
+        states = torch.empty(0, horizon+1, self.DimX);
+        controls = torch.empty(0, horizon+1, self.DimU);
+        targets = torch.empty(0, horizon, self.DimF);
 
         # print(f"states {states}")
         for line in f:
@@ -71,12 +105,8 @@ class MjMushr():
             if len(ls) == 0:
                 if len(data_states) > 0:
                     
-                    xs, us, fs = self.handle_horizon(horizon, data_states, data_controls, dt)
+                    xs, us, fs = self.handle_horizon(horizon, data_states, data_controls, dt, data_target)
 
-                    # data_states_tensor = torch.stack(data_states)
-                    # data_controls_tensor = torch.stack(data_controls)
-                    # data_target_tensor = torch.stack(data_target)
-                    # print(f"xs {xs.shape}")
                     states = torch.vstack((states, xs))
                     controls = torch.vstack((controls, us))
                     targets = torch.vstack((targets, fs))
@@ -103,5 +133,6 @@ class MjMushr():
                 data_states.append(state)
                 data_controls.append(control)
                 data_target.append(target)
-                
+        
+        # print(f"states: {states.shape}")
         return states, controls, targets

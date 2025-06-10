@@ -20,14 +20,16 @@
 // using LearnedPendulum = prx::fg::learned_pendulum_t;
 using CsvReader = prx::utilities::csv_reader_t;
 
-bool read_trajectory(CsvReader& reader, prx::plan_t& plan, prx::trajectory_t& traj, const std::string plant_name)
+bool read_trajectory(CsvReader& reader, prx::plan_t& plan, prx::trajectory_t& traj, const std::string plant_name,
+                     std::vector<Eigen::Vector3d>& accel)
 {
   using prx::utilities::convert_to;
   //  xi[0], xi[1], ui, dt, Gt, accel
 
+  prx::fg::SE2_t x0;
   Eigen::VectorXd state;
   Eigen::VectorXd control;
-  double dt;
+  double dt{ 0 };
 
   bool trajs_eof{ true };
   while (reader.has_next_line())
@@ -59,13 +61,37 @@ bool read_trajectory(CsvReader& reader, prx::plan_t& plan, prx::trajectory_t& tr
       const double yd{ convert_to<double>(line[5]) };
       const double thd{ convert_to<double>(line[6]) };
 
+      const double xdd{ convert_to<double>(line[7]) };
+      const double ydd{ convert_to<double>(line[8]) };
+      const double thdd{ convert_to<double>(line[9]) };
+
       const double u0{ convert_to<double>(line[10]) };
       const double u1{ convert_to<double>(line[11]) };
 
-      dt = convert_to<double>(line[0]);
-
       state = Eigen::Vector<double, 6>(x, y, th, xd, yd, thd);
+      // state = Eigen::Vector<double, 6>::Zero();
       control = Eigen::Vector<double, 2>(u0, u1);
+
+      accel.push_back(Eigen::Vector3d(xdd, ydd, thdd));
+      if (dt == 0)
+      {
+        x0 = prx::fg::SE2_t(x, y, th).inverse();
+        // x0 = prx::euler_to_rotation<Eigen::Matrix3d>(Eigen::Vector<double, 1>(th), "Z");
+        // x0(0, 2) = x;
+        // x0(1, 2) = y;
+        // PRX_DBG_VARS(x0);
+        // x0 = x0.inverse().eval();
+        // PRX_DBG_VARS(x0);
+      }
+
+      // auto xp = x0 * prx::fg::SE2_t(state.head(3)).matrix();
+      // auto xp = x0 * prx::fg::SE2_t(x, y, th);
+      // state[0] = xp[0];
+      // state[1] = xp[1];
+      // state[2] = xp[2];
+      // PRX_DBG_VARS(xp, state.transpose());
+
+      dt = convert_to<double>(line[0]);
     }
 
     traj.push_back(state);
@@ -80,7 +106,17 @@ int main(int argc, char* argv[])
   params["plant"].add_file(plant_file);
   const std::string plant_name{ params["plant/name"].as<>() };  // const std::string torch_pt{ params["model"].as<>() };
   prx::simulation_step = params["/plant/simulation_step"].as<double>();
-  PRX_DBG_VARS(params);
+
+  if (params.exists("torch_file"))
+  {
+    params["plant/torch_file"] = params["torch_file"];
+  }
+
+  int initial_idx{ -1 };
+  if (params.exists("initial_idx"))
+  {
+    initial_idx = params["initial_idx"].as<int>();
+  }
   prx::system_ptr_t plant{ prx::system_factory_t::create_system(plant_name, plant_name) };
   // PRX_DBG_VARS(plant)
   // std::shared_ptr<LearnedPendulum> plant{ std::make_shared<LearnedPendulum>(plant_name, torch_pt) };
@@ -103,14 +139,20 @@ int main(int argc, char* argv[])
   const int tot_trajs{ params["total_trajs"].as<int>() };
   // const double inf{ std::numeric_limits<double>::infinity() };
   // ss->set_bounds({ -PRX_PI, -inf }, { PRX_PI, inf });
-
+  PRX_DBG_VARS(tot_trajs);
+  std::vector<Eigen::Vector3d> accel;
   for (int i = 0; i < tot_trajs; ++i)
   {
     prx::plan_t plan(cs);
     prx::trajectory_t traj_in(ss);
     prx::trajectory_t traj_out(ss);
 
-    const bool eof{ read_trajectory(reader, plan, traj_in, plant_name) };
+    prx::plan_t plan_sub(cs);
+    prx::trajectory_t traj_in_sub(ss);
+    // prx::trajectory_t traj_out_sub(ss);
+
+    PRX_DBG_VARS(i);
+    const bool eof{ read_trajectory(reader, plan, traj_in, plant_name, accel) };
     if (eof)  // No more data
     {
       break;
@@ -120,18 +162,34 @@ int main(int argc, char* argv[])
       i--;
       continue;
     }
-    // PRX_DBG_VARS(plan);
+    // PRX_DBG_VARS(traj_in.size(), accel.size(), plan.size());
+    // if (initial_idx < 0)
+    // {
+    initial_idx = prx::uniform_int_random(0, traj_in.size() - max_len);
+    // }
+    PRX_DBG_VARS(initial_idx);
 
-    sg->propagate(traj_in.front(), plan, traj_out);
+    for (int j = initial_idx; j < initial_idx + std::min(traj_in.size(), max_len); ++j)
+    {
+      auto step = plan[j];
+      plan_sub.copy_onto_back(step.control, step.duration);
+      traj_in_sub.push_back(Vec(traj_in[j]));
+      // traj_out_sub.push_back(traj_out[i]);
+    }
+    PRX_DBG_VARS(traj_in_sub.size());
+
+    sg->propagate(traj_in_sub.front(), plan_sub, traj_out);
 
     // The last state of trajin is not recorded in the data
     // PRX_DBG_VARS(traj_in.size(), traj_out.size());
-    PRX_DBG_VARS(traj_in.front(), traj_out.front());
-    prx_assert((1 + traj_in.size()) == traj_out.size(), "Trajs not the same size");
+    PRX_DBG_VARS(traj_in_sub.front(), traj_out.front());
+    PRX_DBG_VARS(traj_in_sub.size(), traj_out.size());
+    prx_assert((1 + traj_in_sub.size()) == traj_out.size(), "Trajs not the same size");
 
-    for (int i = 0; i < std::min(traj_in.size(), max_len); ++i)
+    // for (int i = 0; i < std::min(traj_in.size(), max_len); ++i)
+    for (int j = 0; j < max_len; ++j)
     {
-      ofs << traj_in[i] << " " << traj_out[i] << "\n";
+      ofs << traj_in_sub[j] << " " << traj_out[j] << "\n";
     }
     ofs << "\n";
   }

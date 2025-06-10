@@ -48,6 +48,10 @@ public:
    */
   bool check();
 
+  bool operator()()
+  {
+    return check();
+  }
   /**
    * @brief Get the time on the timer.
    * @details Get the time on the timer.

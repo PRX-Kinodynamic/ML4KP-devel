@@ -204,10 +204,10 @@ void trajectory_t::increase_buffer()
   }
 }
 
-void trajectory_t::to_file(const std::string file_name, const std::ios_base::openmode _mode) const
+void trajectory_t::to_file(const std::string filename, const std::ios_base::openmode _mode) const
 {
   std::ofstream ofs_map;
-  ofs_map.open(file_name.c_str(), _mode);
+  ofs_map.open(filename.c_str(), _mode);
 
   for (unsigned i = 0; i < num_states; ++i)
   {
@@ -218,9 +218,9 @@ void trajectory_t::to_file(const std::string file_name, const std::ios_base::ope
   ofs_map.close();
 }
 
-void trajectory_t::from_file(const std::string file_name)
+void trajectory_t::from_file(const std::string filename)
 {
-  std::ifstream ifs(file_name);
+  std::ifstream ifs(filename);
   std::string line;
 
   space_point_t aux = state_space->make_point();

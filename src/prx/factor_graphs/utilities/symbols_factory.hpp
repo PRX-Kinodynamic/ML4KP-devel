@@ -72,8 +72,19 @@ public:
 private:
   static inline std::unordered_map<gtsam::Key, std::string> symbols_map;
 
-  symbol_factory_t(){};
+  symbol_factory_t() {};
 };
 
 }  // namespace fg
 }  // namespace prx
+
+#define PRINT_KEYS(...)                                                                                                \
+  {                                                                                                                    \
+    const std::vector<gtsam::Key> _keys{ __VA_ARGS__ };                                                                \
+    std::vector<std::string> keys;                                                                                     \
+    for (auto _key : _keys)                                                                                            \
+    {                                                                                                                  \
+      keys.push_back(SF::formatter(_key));                                                                             \
+    }                                                                                                                  \
+    PRX_DBG_VARS(keys)                                                                                                 \
+  };

@@ -6,7 +6,7 @@ simulation_step: 0.1
 # torch_file: "${DIRTMP_PATH}/out/mushr_l10_h1000_250401_160839_e5k.pt"
 # torch_file: "${DIRTMP_PATH}/out/mushr_l5_h1000_250401_160839_e2p5k.pt"
 # torch_file: "${DIRTMP_PATH}/out/mushr_l3_h1000_250401_160839_e2p5k.pt"
-torch_file: "${DIRTMP_PATH}/out/df_mj_mushr_b50_h100_e10_lr0p0001_T2.pt"
+torch_file: "${DIRTMP_PATH}/out/df_mj_mushr_b100_h512_l5_e300_lr0p0001_T10_cpp.pt"
 
 steps:
   min: 1

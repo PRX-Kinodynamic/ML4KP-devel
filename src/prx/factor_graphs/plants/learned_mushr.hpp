@@ -60,8 +60,8 @@ public:
     prx_assert(_model_initialized, "Torch model has not been initialized");
     // _xdd = _nn(_xd, _u);
     _xdd = _nn(_xd, _u);
-    // _xdd[0] = xdd[1];
-    // _xdd[1] = -xdd[0];
+    // _xdd[0] = -xdd[1];
+    // _xdd[1] = xdd[0];
 
     _xd = EulerIntegrator::integrate(_xd, _xdd, simulation_step);
     _x = LieIntegrator::integrate(_x, _xd, simulation_step);

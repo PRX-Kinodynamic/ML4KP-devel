@@ -52,6 +52,13 @@ inline To convert_to(const From& value)
   return static_cast<To>(value);
 }
 
+template <typename To, typename From,
+          std::enable_if_t<std::is_integral<To>::value && std::is_floating_point<From>::value, bool> = true>
+inline To convert_to(const From& value)
+{
+  return static_cast<To>(value);
+}
+
 template <typename To, typename From, std::enable_if_t<std::is_same<To, From>::value, bool> = true>
 inline To convert_to(const From& value)
 {
@@ -76,5 +83,12 @@ inline StringType convert_to(const From& iterable)
   }
   return str;
 }
+
+template <typename Out, typename In>
+void auto_cast(Out& out, const In& in)
+{
+  out = convert_to<Out>(in);
+}
+
 }  // namespace utilities
 }  // namespace prx

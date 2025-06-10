@@ -7,6 +7,7 @@ import scipy
 from torch.utils.data import Dataset, DataLoader, random_split
 from pendulum_utils import Pendulum
 from mj_mushr_utils import MjMushr
+from models import MLP
 import os
 
 # from enum import Enum
@@ -64,31 +65,48 @@ class UniformNormalization():
 
     def __init__(self, max_vals):
         self.max_vals = max_vals;
+        print(f" max_vals: {self.max_vals}")
 
     @torch.jit.unused
     def normalize_data(self, inputs):
         if self.max_vals is None:
             # print(f"inputs {inputs[:10]}")
-            p = torch.amax(inputs[:,:,0].T, dim=1, keepdim=False)
-            m = torch.amin(inputs[:,:,0].T, dim=1, keepdim=False)
+            p = torch.amax(inputs[:,0,:].T, dim=1, keepdim=False)
+            m = torch.amin(inputs[:,0,:].T, dim=1, keepdim=False)
 
             self.max_vals = torch.fmax(torch.abs(p), torch.abs(m))
 
         # print(f"inputs {inputs.shape}")
-        # print(f" max_vals: {self.max_vals}")
+        print(f" max_vals: {self.max_vals}")
 
         res = torch.zeros_like(inputs);
-        for idx in range(inputs.shape[2]):
-            res[:,:,idx] = torch.div(inputs[:,:,idx], self.max_vals);
+        for idx in range(inputs.shape[1]):
+            res[:,idx,:] = torch.div(inputs[:,idx,:], self.max_vals);
         return res
 
     @torch.jit.export 
     def normalize(self, x):
+        print(f" x: {x.shape}")
         return torch.div(x, self.max_vals)
 
     @torch.jit.export 
     def unnormalize(self, z):
         return torch.mul(z, self.max_vals)
+
+@torch.jit.script
+class NoNormalization():
+
+    @torch.jit.unused
+    def normalize_data(self, inputs):
+        return inputs
+
+    @torch.jit.export 
+    def normalize(self, x):
+        return x
+
+    @torch.jit.export 
+    def unnormalize(self, z):
+        return z
 
 class Normalization():
     # GUASSIAN = 1
@@ -100,7 +118,9 @@ class Normalization():
             return GaussianNormalization(None, None, None);
         elif method.lower() == "uniform":
             return UniformNormalization(None);
-        raise ValueError("No normalization method")
+        elif method.lower() == "none":
+            return NoNormalization()
+        raise ValueError(f"No normalization method: {method}")
 
     @staticmethod
     def copy(obj):
@@ -110,6 +130,8 @@ class Normalization():
             return GaussianNormalization(obj.A, obj.Ainv, obj.mu)
         if isinstance(obj, UniformNormalization):
             return UniformNormalization(obj.max_vals)
+        if isinstance(obj, NoNormalization):
+            return NoNormalization();
 
 class CppModule(torch.nn.Module):
     def __init__(self, dataset, other):
@@ -251,7 +273,21 @@ class TransitionDataset(Dataset):
         # self.states, self.Ax, self.Ax_inv, self.x_mean, self.states_max_vals = self.apply_normalization(self.states_method, self.states)
         # self.controls, self.Au, self.Au_inv, self.u_mean, self.controls_max_vals = self.apply_normalization(self.controls_method, self.controls)
         # self.targets, self.Af, self.Af_inv, self.f_mean, self.targets_max_vals = self.apply_normalization(self.targets_method, self.targets)
-
+        
+        # print(f"states: {self.states.shape} targets: {self.targets.shape}");
+        # filename="/Users/Gary/pracsys/ML4KP-devel/out/torch_dbg.txt"
+        # f = open(filename, 'w')
+        # for x, t in zip(self.states, self.targets):
+        #     for xi, ti in zip(x,t):
+        #         xs = ""
+        #         ts = ""
+        #         for xii, tii in zip(xi,ti):
+        #             xs += f"{xii} "
+        #             ts += f"{tii} "        
+        #         f.write(xs + ts + "\n")
+        #     f.write("\n")
+        #     # break
+        # f.close();
         self.states = self.state_normalizer.normalize_data(self.states);
         self.controls = self.control_normalizer.normalize_data(self.controls);
         self.targets = self.target_normalizer.normalize_data(self.targets);
@@ -273,62 +309,21 @@ class TransitionDataset(Dataset):
 
 
 
-def model_to_cpp_script(plant, model, out_filename):
+def model_to_cpp_script(plant, model, out_cpp_filename, out_py_filename):
+
+    torch.save(model.state_dict(), out_py_filename)
+
     modelcpp = CppModule(plant, model)
     sm = torch.jit.script(modelcpp)
     # example_weight = torch.rand(1, 1, 3, 3)
     # example_forward_input = torch.rand(1, 1, 3, 3)
 
-    print(f"output: {out_filename}")
+    print(f"[C++Output] {out_cpp_filename}")
+    print(f"[PythonOutput] {out_py_filename}")
     # sm = torch.jit.trace(modelcpp.forward, )
-    sm.save(out_filename)
+    sm.save(out_cpp_filename)
     # torch.save(sm.state_dict(), out_filename);
 
-class MLP(nn.Module):
-    def __init__(self, input_dim, control_dim, hidden_sizes, output_dim, dropout_rate=0.05):
-        super(MLP, self).__init__()
-        self.input_dim = input_dim
-        self.control_dim = control_dim
-        self.output_dim = output_dim
-        # Create list to hold all layers
-        layers = []
-        
-        # Input layer
-        # SiLU
-        # Mish
-        # activation_function = nn.Mish()
-        activation_function = nn.SiLU()
-        # activation_function = nn.ReLU()
-        # activation_function = nn.LeakyReLU()
-        layers.append(nn.Linear(input_dim+control_dim, hidden_sizes[0]))
-        layers.append(activation_function)
-        layers.append(nn.Dropout(dropout_rate))
-        
-        # Hidden layers
-        for i in range(len(hidden_sizes)-1):
-            layers.append(nn.Linear(hidden_sizes[i], hidden_sizes[i+1]))
-            layers.append(activation_function)
-            layers.append(nn.Dropout(dropout_rate))
-        
-        # Output layer
-        layers.append(nn.Linear(hidden_sizes[-1], output_dim))
-        # layers.append(nn.Sigmoid())  # For binary classification
-        
-        # Combine all layers into a sequential model
-        self.model = nn.Sequential(*layers)
-    # def __init__(self, input_dim=2, hidden_dim=16, output_dim=2):
-    #     super(MLP, self).__init__()
-    #     self.fc1 = nn.Linear(input_dim, hidden_dim)
-    #     self.relu = nn.ReLU()
-    #     self.fc2 = nn.Linear(hidden_dim, output_dim)
-
-    def forward(self, x):
-        return self.model(x)
-    #     # x shape: [batch_size, 2]
-    #     x = self.fc1(x)
-    #     x = self.relu(x)
-    #     x = self.fc2(x)
-    #     return x
 
 class Trainer:
 
@@ -343,8 +338,57 @@ class Trainer:
         self.validation_data = validation_data
         self.file = open(filename, 'w')
 
+        print(f"[LossFilename] {filename}")
+
 
     def traj_loss(self, batch_inputs, batch_controls, batch_targets):
+        outputs = torch.zeros_like(batch_targets).to(self.device)
+
+        M, K, N = batch_inputs.shape
+        Trand = 1 + int(torch.rand(1)[0] * (K-1) )
+        # m_rand=3
+        # print(f"M {M} K {K} N {N} Trand {Trand}")
+
+        m_input = torch.cat( (batch_inputs, batch_controls), -1)[:,0:Trand,:];
+        nn_out = self.model(m_input)
+
+        # print(f"m_input: {m_input.shape}")
+        # print(f"m_input: {m_input}")
+        # print(f"x_in: {batch_inputs}")
+        # print(f"x0: {batch_inputs[:,0,:]}")
+        # print(f"xT: {batch_inputs[:,Trand,:]}")
+        # print(f"batch_targets: {batch_targets.shape}")
+        # print(f"batch_targets: {batch_targets}")
+        # print(f"nn_out: {nn_out.shape}")
+        # print(f"batch_targets: {batch_targets}")
+
+
+        # print(f"Trand {Trand} M {M} res: {np.floor(Trand)} ")
+        
+        # print(f"batch_targets: {batch_targets}")
+        # print(f"batch_targets: {batch_targets}")
+        targets_m = batch_targets[:,Trand-1,:];
+        # print(f"targets_m: {targets_m}")
+        # print(f"Trand {Trand} batch_inputs[:,0:Trand,:]:\n{batch_inputs[:,0:Trand,:]}")
+        # sum_in = torch.sum(batch_inputs[:,0:Trand,:], 1);
+        # print(f"sum_in {sum_in}")
+        # print(f"nn_out: {nn_out.shape}")
+        # print(f"nn_out: {nn_out}")
+        # sum_nn = torch.sum(nn_out[:,0:Trand,:], 1);
+        sum_nn = torch.sum(nn_out, 1);
+        # print(f"sum_nn: {sum_nn}")
+
+        # x0 = batch_inputs[:,0,:].unsqueeze(1).expand(M, K, N)
+
+        # # m_output = (self.model(m_input) - x0 ) / self.dt
+        # m_output = (self.model(m_input) - x0)[:,1:,:];
+        # # test = (batch_inputs - x0)[:,1:,:];
+        
+        # exit(-1)
+        return self.MSELoss(sum_nn, targets_m )
+        
+
+    def traj_loss_old(self, batch_inputs, batch_controls, batch_targets):
 
         outputs = torch.zeros_like(batch_targets).to(self.device)
         m_output = torch.zeros(batch_inputs.shape[0] , self.model.output_dim).to(self.device)
@@ -477,7 +521,8 @@ if __name__ == "__main__":
     str_lr=str(lr).replace(".", "p")
     fid = f"df_{plant}_b{batch_size}_h{hidden_size}_l{layers}_e{epochs}_lr{str_lr}_T{horizon}";
     loss_filename = out_dir + "/" + fid + ".txt";
-    nn_filename = out_dir + "/" + fid + ".pt";
+    nn_cpp_filename = out_dir + "/" + fid + "_cpp.pt";
+    nn_py_filename = out_dir + "/" + fid + "_py.pt";
     input_dir = args.dir;
     # train_dataset = TransitionDataset(args.plant)
     states_norm = args.x_norm;
@@ -509,7 +554,7 @@ if __name__ == "__main__":
     DimOut = train_dataset.plant.DimF
 
     hs_list = layers * [hidden_size]
-    model = MLP(input_dim=DimIn, control_dim=DimU, hidden_sizes=hs_list, output_dim=DimOut)
+    model = MLP.create(input_dim=DimIn, control_dim=DimU, hidden_sizes=hs_list, output_dim=DimOut)
 
     cuda_dev=f"cuda:{args.device}"
     device = cuda_dev if torch.cuda.is_available() else 'cpu'
@@ -526,7 +571,7 @@ if __name__ == "__main__":
     trainer.train(epochs=epochs)
     # trainer.validate(validation_dataloader)
 
-    model_to_cpp_script(train_dataset, model, nn_filename)
+    model_to_cpp_script(train_dataset, model, nn_cpp_filename, nn_py_filename)
 
     # for x,y in test_set:
     #     print(trainer.predict(x),y)

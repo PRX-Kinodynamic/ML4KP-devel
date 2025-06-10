@@ -80,3 +80,39 @@ BOOST_AUTO_TEST_CASE(container_to_string_convertion)
   const std::string result_ints{ convert_to<std::string>(vec_ints) };
   BOOST_CHECK_MESSAGE(expected_ints == result_ints, EXPECTED_GOT(expected_ints, result_ints));
 }
+
+BOOST_AUTO_TEST_CASE(auto_cast_test)
+{
+  const int int_const{ 1 };
+  const double double_const{ 2.0 };
+  const std::string str_const{ "3" };
+
+  int int_var{ 0 };
+  double double_var{ 0.0 };
+  std::string str_var{ "0" };
+
+  prx::utilities::auto_cast(int_var, int_const);
+  BOOST_REQUIRE(int_var == 1);
+  prx::utilities::auto_cast(int_var, double_const);
+  BOOST_REQUIRE(int_var == 2);
+  prx::utilities::auto_cast(int_var, str_const);
+  BOOST_REQUIRE(int_var == 3);
+
+  prx::utilities::auto_cast(double_var, int_const);
+  BOOST_REQUIRE(double_var == 1);
+  prx::utilities::auto_cast(double_var, double_const);
+  BOOST_REQUIRE(double_var == 2);
+  prx::utilities::auto_cast(double_var, str_const);
+  BOOST_REQUIRE(double_var == 3);
+
+  prx::utilities::auto_cast(str_var, int_const);
+  BOOST_REQUIRE(str_var == "1");
+
+  // Dbl to string is weird since it could be "2" or "2." or "2.0" or "2.00000..."
+  // So at least to test, convert it back to a double
+  prx::utilities::auto_cast(str_var, double_const);
+  prx::utilities::auto_cast(double_var, str_var);
+  BOOST_REQUIRE(double_var == 2.0);
+  prx::utilities::auto_cast(str_var, str_const);
+  BOOST_REQUIRE(str_var == "3");
+}

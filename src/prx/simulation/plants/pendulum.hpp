@@ -29,7 +29,7 @@ protected:
 
   virtual void compute_derivative() override final;
 
-  double _theta1, _theta2, _theta1dot, _theta2dot, _tau, _theta1dotdot, _theta2dotdot;
+  double _theta1, _theta1dot, _tau, _theta1dotdot;
 
   const double gravity = 9.81;
   double length = 0.5;

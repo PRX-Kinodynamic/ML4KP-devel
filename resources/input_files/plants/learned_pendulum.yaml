@@ -2,7 +2,7 @@ name: "learned_pendulum"
 simulation_step: 0.01
 
 # torch_file: "${DIRTMP_PATH}/out/pendulum_50.pt"
-torch_file: "${DIRTMP_PATH}/out//df_pendulum_b20_h10_e10_lr0.0001_T5.pt"
+torch_file: "${DIRTMP_PATH}/out//df_mj_mushr_b100_h512_l2_e300_lr0p0001_T5_cpp.pt"
 
 state_space:
   lower_bound:

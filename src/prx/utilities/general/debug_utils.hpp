@@ -1,11 +1,16 @@
 #pragma once
 #include <regex>
+// #include "prx/utilities/general/constants.hpp"
 #include "prx/utilities/general/template_utils.hpp"
 
 namespace prx
 {
 namespace dbg
 {
+constexpr std::string_view normal = "\033[0m";
+constexpr std::string_view red{ "\033[31m" };
+constexpr std::string_view green{ "\033[32m" };
+constexpr std::string_view yellow{ "\033[33m" };
 
 inline void print_variables(std::ostream& stream, const std::string& name)
 {
@@ -55,7 +60,7 @@ inline void print_variables(std::ostream& stream, const std::string& name, const
     other_names = name.substr(split_on + match.length());  // <-- also, skip the whole math
   }
 
-  stream << var_name << ": ";
+  stream << yellow << var_name << ": " << normal;
   print_value(stream, var);
   print_variables(stream, other_names, vars...);
 }

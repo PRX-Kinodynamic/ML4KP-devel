@@ -125,7 +125,7 @@ public:
 
   template <typename Dt>
   inline X integrate(const X& x, const Ctrl& u, const Dt& dt,  // no-lint
-                     OptDeriv Hx = boost::none, OptDeriv Hu = boost::none, OptDeriv Hdt = boost::none)
+                     OptDeriv Hx = boost::none, OptDeriv Hu = boost::none, OptDeriv Hdt = boost::none) const
   {
     return predict(x, u, dt, Hx, Hu, Hdt);
   }
@@ -183,6 +183,34 @@ public:
     }
     _prx_system->get_state_space()->copy_to(_state);
     return _state;
+  }
+
+  void print(const std::string& s,
+             const gtsam::KeyFormatter& keyFormatter = prx::fg::symbol_factory_t::formatter) const override
+  {
+    const std::string key_xt1{ keyFormatter(this->template key<1>()) };
+    const std::string key_xt0{ keyFormatter(this->template key<2>()) };
+    const std::string key_u{ { keyFormatter(this->template key<3>()) } };
+
+    const std::string plant_name{ _prx_system->get_pathname() };
+    std::cout << s << plant_name << " PropagationStateStateCtrl: ";
+    std::cout << "[ " << key_xt1 << " " << key_xt0 << " " << key_u;
+
+    if constexpr (0 == NumTypes)
+    {
+      std::cout << "]\n";
+      std::cout << " dt: " << _dt << "\n";
+    }
+    else
+    {
+      const std::string key_dt{ { keyFormatter(this->template key<4>()) } };
+      std::cout << " " << key_dt << "]\n";
+    }
+    if (this->noiseModel_)
+      this->noiseModel_->print("  noise model: ");
+    else
+      std::cout << "no noise model" << std::endl;
+    std::cout << "\n";
   }
 
 protected:
@@ -275,7 +303,7 @@ public:
   template <std::size_t Num = NumTypes, typename std::enable_if_t<(0 == Num), bool> = true>
   plant_propagation_StateCteCtrl_factor_t(const gtsam::Key key_xt1, const X x0, const gtsam::Key key_u, const double dt,
                                           const NoiseModel& cost_model, const std::string plant_name)
-    : Base(cost_model, key_xt1, key_u), _dt(dt), _x0(x0), _factor(plant_name, dt * dt)
+    : Base(cost_model, key_xt1, key_u), _dt(dt), _x0(x0), _factor(plant_name, dt * dt), _plant_name(plant_name)
   {
   }
 
@@ -283,7 +311,7 @@ public:
   plant_propagation_StateCteCtrl_factor_t(const gtsam::Key key_xt1, const X x0, const gtsam::Key key_u,
                                           const gtsam::Key key_dt, const NoiseModel& cost_model,
                                           const std::string plant_name, const double h = 0.01)
-    : Base(cost_model, key_xt1, key_u, key_dt), _dt(0.0), _x0(x0), _factor(plant_name, h)
+    : Base(cost_model, key_xt1, key_u, key_dt), _dt(0.0), _x0(x0), _factor(plant_name, h), _plant_name(plant_name)
   {
   }
 
@@ -330,9 +358,39 @@ public:
     }
   }
 
+  void print(const std::string& s,
+             const gtsam::KeyFormatter& keyFormatter = prx::fg::symbol_factory_t::formatter) const override
+  {
+    const std::string key_xt1{ keyFormatter(this->template key<1>()) };
+    const std::string key_u{ { keyFormatter(this->template key<2>()) } };
+
+    std::cout << s << _plant_name << " PropagationStateCteCtrl: ";
+
+    std::cout << "[ " << key_xt1 << " " << " " << key_u;
+    if constexpr (0 == NumTypes)
+    {
+      std::cout << "]\n";
+      std::cout << " dt: " << _dt << "\n";
+    }
+    else
+    {
+      const std::string key_dt{ { keyFormatter(this->template key<3>()) } };
+      std::cout << " " << key_dt;
+      std::cout << "]\n";
+    }
+    std::cout << " x0: " << _x0 << "\n";
+
+    if (this->noiseModel_)
+      this->noiseModel_->print("  noise model: ");
+    else
+      std::cout << "no noise model" << std::endl;
+    std::cout << "\n";
+  }
+
 protected:
   GeneralPropagation _factor;
 
+  const std::string _plant_name;
   const X _x0;
 
   const double _dt;
@@ -370,7 +428,7 @@ public:
   template <std::size_t Num = NumTypes, typename std::enable_if_t<(0 == Num), bool> = true>
   plant_propagation_CteStateCtrl_factor_t(const X x1, const gtsam::Key key_x0, const gtsam::Key key_u, const double dt,
                                           const NoiseModel& cost_model, const std::string plant_name)
-    : Base(cost_model, key_x0, key_u), _dt(dt), _x1(x1), _factor(plant_name, dt * dt)
+    : Base(cost_model, key_x0, key_u), _dt(dt), _x1(x1), _factor(plant_name, dt * dt), _plant_name(plant_name)
   {
   }
 
@@ -378,7 +436,7 @@ public:
   plant_propagation_CteStateCtrl_factor_t(const X x1, const gtsam::Key key_x0, const gtsam::Key key_u,
                                           const gtsam::Key key_dt, const NoiseModel& cost_model,
                                           const std::string plant_name, const double h = 0.01)
-    : Base(cost_model, key_x0, key_u, key_dt), _dt(0.0), _x1(x1), _factor(plant_name, h)
+    : Base(cost_model, key_x0, key_u, key_dt), _dt(0.0), _x1(x1), _factor(plant_name, h), _plant_name(plant_name)
   {
   }
 
@@ -425,9 +483,43 @@ public:
     }
   }
 
+  void print(const std::string& s,
+             const gtsam::KeyFormatter& keyFormatter = prx::fg::symbol_factory_t::formatter) const override
+  {
+    // const X x1, const gtsam::Key key_x0, const gtsam::Key key_u, const double dt,
+    //                                       const NoiseModel& cost_model,
+
+    // const std::string key_xt1{ keyFormatter(this->template key<1>()) };
+    const std::string key_x0{ keyFormatter(this->template key<1>()) };
+    const std::string key_u{ { keyFormatter(this->template key<2>()) } };
+
+    std::cout << s << _plant_name << " PropagationCteStateCtrl: ";
+
+    std::cout << "[ " << key_x0 << " " << " " << key_u;
+    if constexpr (0 == NumTypes)
+    {
+      std::cout << "]\n";
+      std::cout << " dt: " << _dt << "\n";
+    }
+    else
+    {
+      const std::string key_dt{ { keyFormatter(this->template key<3>()) } };
+      std::cout << " " << key_dt;
+      std::cout << "]\n";
+    }
+    std::cout << " x1: " << _x1 << "\n";
+
+    if (this->noiseModel_)
+      this->noiseModel_->print("  noise model: ");
+    else
+      std::cout << "no noise model" << std::endl;
+    std::cout << "\n";
+  }
+
 protected:
   GeneralPropagation _factor;
 
+  const std::string _plant_name;
   const X _x1;
 
   const double _dt;
@@ -465,7 +557,7 @@ public:
   template <std::size_t Num = NumTypes, typename std::enable_if_t<(0 == Num), bool> = true>
   plant_propagation_CteCteCtrl_factor_t(const X x1, const X x0, const gtsam::Key key_u, const double dt,
                                         const NoiseModel& cost_model, const std::string plant_name)
-    : Base(cost_model, key_u), _dt(dt), _x1(x1), _x0(x0), _factor(plant_name, dt * dt)
+    : Base(cost_model, key_u), _dt(dt), _x1(x1), _x0(x0), _factor(plant_name, dt * dt), _plant_name(plant_name)
   {
   }
 
@@ -473,7 +565,7 @@ public:
   plant_propagation_CteCteCtrl_factor_t(const X x1, const X x0, const gtsam::Key key_u, const gtsam::Key key_dt,
                                         const NoiseModel& cost_model, const std::string plant_name,
                                         const double h = 0.01)
-    : Base(cost_model, key_u, key_dt), _dt(0.0), _x1(x1), _x0(x0), _factor(plant_name, h)
+    : Base(cost_model, key_u, key_dt), _dt(0.0), _x1(x1), _x0(x0), _factor(plant_name, h), _plant_name(plant_name)
   {
   }
 
@@ -519,11 +611,294 @@ public:
     }
   }
 
+  void print(const std::string& s,
+             const gtsam::KeyFormatter& keyFormatter = prx::fg::symbol_factory_t::formatter) const override
+  {
+    // const X x1, const X x0, const gtsam::Key key_u, const gtsam::Key key_dt,
+    //                                         const NoiseModel& cost_model,
+
+    const std::string key_u{ { keyFormatter(this->template key<1>()) } };
+
+    std::cout << s << _plant_name << " PropagationCteCteCtrl: ";
+
+    std::cout << "[ " << key_u;
+    if constexpr (0 == NumTypes)
+    {
+      std::cout << "]\n";
+      std::cout << " dt: " << _dt << "\n";
+    }
+    else
+    {
+      const std::string key_dt{ { keyFormatter(this->template key<2>()) } };
+      std::cout << " " << key_dt;
+      std::cout << "]\n";
+    }
+    std::cout << " x1: " << _x1 << "\n";
+    std::cout << " x0: " << _x0 << "\n";
+
+    if (this->noiseModel_)
+      this->noiseModel_->print("  noise model: ");
+    else
+      std::cout << "no noise model" << std::endl;
+    std::cout << "\n";
+  }
+
 protected:
   GeneralPropagation _factor;
 
+  const std::string _plant_name;
   const X _x0;
   const X _x1;
+
+  const double _dt;
+};
+
+template <typename X, typename Ctrl, typename... Types>
+class plant_propagation_StateStateCte_factor_t : public gtsam::NoiseModelFactorN<Ctrl, Types...>
+{
+  using GeneralPropagation = plant_propagation_StateStateCtrl_factor_t<X, Ctrl, Types...>;
+  using Base = gtsam::NoiseModelFactorN<Ctrl, Types...>;
+  using Derived = plant_propagation_StateStateCte_factor_t<X, Ctrl, Types...>;
+
+  using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
+
+  static constexpr Eigen::Index DimX{ gtsam::traits<X>::dimension };
+  static constexpr Eigen::Index DimU{ gtsam::traits<Ctrl>::dimension };
+  static constexpr std::size_t NumTypes{ sizeof...(Types) };
+
+  using OptDeriv = boost::optional<Eigen::MatrixXd&>;
+  template <typename T>
+  using OptionalMatrix = boost::optional<Eigen::MatrixXd&>;
+
+  using Error = Eigen::Vector<double, DimX>;
+  template <typename Input>
+  using Partial = std::function<Error(const Input&)>;
+  template <typename Input>
+  using FirstOrderDerivative = prx::math::first_order_derivative_t<Partial<Input>, Input, 4>;
+
+  plant_propagation_StateStateCte_factor_t() = delete;
+
+public:
+  plant_propagation_StateStateCte_factor_t(const plant_propagation_StateStateCte_factor_t& other) = delete;
+
+  // TODO: Initialize system from copy / init?
+  template <std::size_t Num = NumTypes, typename std::enable_if_t<(0 == Num), bool> = true>
+  plant_propagation_StateStateCte_factor_t(const gtsam::Key key_x1, const gtsam::Key key_x0, const Ctrl u,
+                                           const double dt, const NoiseModel& cost_model, const std::string plant_name)
+    : Base(cost_model, key_x1, key_x0), _dt(dt), _u(u), _factor(plant_name, dt * dt), _plant_name(plant_name)
+  {
+  }
+
+  template <std::size_t Num = NumTypes, typename std::enable_if_t<(1 == Num), bool> = true>
+  plant_propagation_StateStateCte_factor_t(const gtsam::Key key_x1, const gtsam::Key key_x0, const Ctrl u,
+                                           const gtsam::Key key_dt, const NoiseModel& cost_model,
+                                           const std::string plant_name, const double h = 0.01)
+    : Base(cost_model, key_x1, key_x0, key_dt), _u(u), _dt(0.0), _factor(plant_name, h), _plant_name(plant_name)
+  {
+  }
+
+  ~plant_propagation_StateStateCte_factor_t() override
+  {
+  }
+
+  template <typename Dt>
+  inline X integrate(const X& x0, const Dt& dt,  // no-lint
+                     OptDeriv Hx0 = boost::none, OptDeriv Hdt = boost::none)
+  {
+    // return predict(x, u, dt, Hx, Hu, Hdt);
+    return _factor.integrate(x0, _u, dt, Hx0, boost::none, Hdt);
+  }
+
+  template <typename Dt>
+  inline X predict(const X& x0, const Dt& dt,  // no-lint
+                   OptDeriv Hx0 = boost::none, OptDeriv Hdt = boost::none) const
+  {
+    return _factor.predict(x0, _u, dt, Hx0, boost::none, Hdt);
+  }
+
+  template <typename Dt>
+  X error(const X& x1, const X& x0, const Dt& dt,  // no-lint
+          OptDeriv Hx1 = boost::none, OptDeriv Hx0 = boost::none, OptDeriv Hdt = boost::none) const
+  {
+    return _factor.error(x1, x0, _u, dt, Hx1, Hx0, boost::none, Hdt);
+  }
+
+  // template <std::enable_if_t<not DtKey, bool> = true>
+  virtual Eigen::VectorXd evaluateError(const X& x1, const X& x0, const Types&... dt,  // no-lint
+                                        OptDeriv Hx1 = boost::none, OptDeriv Hx0 = boost::none,
+                                        OptionalMatrix<Types>... H) const override
+  {
+    if constexpr (0 == NumTypes)
+    {
+      // return _factor.error(x1, _x0, u, _dt, H1, boost::none, Hu);
+      return error(x1, x0, _dt, Hx1, Hx0);
+    }
+    else
+    {
+      // return _factor.error(x1, _x0, u, dt..., H1, boost::none, Hu, H...);
+      return error(x1, x0, dt..., Hx1, Hx0, H...);
+    }
+  }
+
+  void print(const std::string& s,
+             const gtsam::KeyFormatter& keyFormatter = prx::fg::symbol_factory_t::formatter) const override
+  {
+    const std::string key_x1{ { keyFormatter(this->template key<1>()) } };
+    const std::string key_x0{ { keyFormatter(this->template key<2>()) } };
+
+    std::cout << s << _plant_name << " PropagationCteCteCtrl: ";
+
+    std::cout << "[ " << key_x1 << " " << key_x0;
+    if constexpr (0 == NumTypes)
+    {
+      std::cout << "]\n";
+      std::cout << " dt: " << _dt << "\n";
+    }
+    else
+    {
+      const std::string key_dt{ { keyFormatter(this->template key<3>()) } };
+      std::cout << " " << key_dt;
+      std::cout << "]\n";
+    }
+    std::cout << " u: " << _u << "\n";
+
+    if (this->noiseModel_)
+      this->noiseModel_->print("  noise model: ");
+    else
+      std::cout << "no noise model" << std::endl;
+    std::cout << "\n";
+  }
+
+protected:
+  GeneralPropagation _factor;
+
+  const std::string _plant_name;
+  const Ctrl _u;
+
+  const double _dt;
+};
+
+template <typename X, typename Ctrl, typename... Types>
+class plant_propagation_CteStateCte_factor_t : public gtsam::NoiseModelFactorN<X, Types...>
+{
+  using GeneralPropagation = plant_propagation_StateStateCtrl_factor_t<X, Ctrl, Types...>;
+  using Base = gtsam::NoiseModelFactorN<X, Types...>;
+  using Derived = plant_propagation_CteStateCte_factor_t<X, Ctrl, Types...>;
+
+  using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
+
+  static constexpr Eigen::Index DimX{ gtsam::traits<X>::dimension };
+  static constexpr Eigen::Index DimU{ gtsam::traits<Ctrl>::dimension };
+  static constexpr std::size_t NumTypes{ sizeof...(Types) };
+
+  using OptDeriv = boost::optional<Eigen::MatrixXd&>;
+  template <typename T>
+  using OptionalMatrix = boost::optional<Eigen::MatrixXd&>;
+
+  using Error = Eigen::Vector<double, DimX>;
+  template <typename Input>
+  using Partial = std::function<Error(const Input&)>;
+  template <typename Input>
+  using FirstOrderDerivative = prx::math::first_order_derivative_t<Partial<Input>, Input, 4>;
+
+  plant_propagation_CteStateCte_factor_t() = delete;
+
+public:
+  plant_propagation_CteStateCte_factor_t(const plant_propagation_CteStateCte_factor_t& other) = delete;
+
+  // TODO: Initialize system from copy / init?
+  template <std::size_t Num = NumTypes, typename std::enable_if_t<(0 == Num), bool> = true>
+  plant_propagation_CteStateCte_factor_t(const X x1, const gtsam::Key key_x0, const Ctrl u, const double dt,
+                                         const NoiseModel& cost_model, const std::string plant_name)
+    : Base(cost_model, key_x0), _dt(dt), _x1(x1), _u(u), _factor(plant_name, dt * dt), _plant_name(plant_name)
+  {
+  }
+
+  template <std::size_t Num = NumTypes, typename std::enable_if_t<(1 == Num), bool> = true>
+  plant_propagation_CteStateCte_factor_t(const X x1, const gtsam::Key key_x0, const Ctrl u, const gtsam::Key key_dt,
+                                         const NoiseModel& cost_model, const std::string plant_name,
+                                         const double h = 0.01)
+    : Base(cost_model, key_x0, key_dt), _x1(x1), _u(u), _dt(0.0), _factor(plant_name, h), _plant_name(plant_name)
+  {
+  }
+
+  ~plant_propagation_CteStateCte_factor_t() override
+  {
+  }
+
+  template <typename Dt>
+  inline X integrate(const X& x0, const Dt& dt,  // no-lint
+                     OptDeriv Hx0 = boost::none, OptDeriv Hdt = boost::none)
+  {
+    // return predict(x, u, dt, Hx, Hu, Hdt);
+    return _factor.integrate(x0, _u, dt, Hx0, boost::none, Hdt);
+  }
+
+  template <typename Dt>
+  inline X predict(const X& x0, const Dt& dt,  // no-lint
+                   OptDeriv Hx0 = boost::none, OptDeriv Hdt = boost::none) const
+  {
+    return _factor.predict(x0, _u, dt, Hx0, boost::none, Hdt);
+  }
+
+  template <typename Dt>
+  X error(const X& x0, const Dt& dt,  // no-lint
+          OptDeriv Hx0 = boost::none, OptDeriv Hdt = boost::none) const
+  {
+    return _factor.error(_x1, x0, _u, dt, boost::none, Hx0, boost::none, Hdt);
+  }
+
+  // template <std::enable_if_t<not DtKey, bool> = true>
+  virtual Eigen::VectorXd evaluateError(const X& x0, const Types&... dt,  // no-lint
+                                        OptDeriv Hx0 = boost::none, OptionalMatrix<Types>... H) const override
+  {
+    if constexpr (0 == NumTypes)
+    {
+      // return _factor.error(x1, _x0, u, _dt, H1, boost::none, Hu);
+      return error(x0, _dt, Hx0);
+    }
+    else
+    {
+      // return _factor.error(x1, _x0, u, dt..., H1, boost::none, Hu, H...);
+      return error(x0, dt..., Hx0, H...);
+    }
+  }
+
+  void print(const std::string& s,
+             const gtsam::KeyFormatter& keyFormatter = prx::fg::symbol_factory_t::formatter) const override
+  {
+    // const std::string key_x1{ { keyFormatter(this->template key<1>()) } };
+    const std::string key_x0{ { keyFormatter(this->template key<1>()) } };
+
+    std::cout << s << _plant_name << " PropagationCteStateCte: ";
+
+    std::cout << "[ " << key_x0;
+    if constexpr (0 == NumTypes)
+    {
+      std::cout << "]\n";
+      std::cout << " dt: " << _dt << "\n";
+    }
+    else
+    {
+      const std::string key_dt{ { keyFormatter(this->template key<2>()) } };
+      std::cout << " " << key_dt;
+      std::cout << "]\n";
+    }
+    std::cout << " u: " << _u << "\n";
+
+    if (this->noiseModel_)
+      this->noiseModel_->print("  noise model: ");
+    else
+      std::cout << "no noise model" << std::endl;
+    std::cout << "\n";
+  }
+
+protected:
+  GeneralPropagation _factor;
+
+  const std::string _plant_name;
+  const X _x1;
+  const Ctrl _u;
 
   const double _dt;
 };

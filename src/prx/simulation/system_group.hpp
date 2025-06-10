@@ -26,6 +26,24 @@ public:
 
   void propagate(int steps, space_point_t control = nullptr, trajectory_t* traj = nullptr);
 
+  template <typename Start, typename Ctrl, typename Check, typename Result,
+            std::enable_if_t<not prx::utilities::is_any_ptr<Start>::value, bool> = true,
+            std::enable_if_t<not prx::utilities::is_any_ptr<Ctrl>::value, bool> = true,
+            std::enable_if_t<not prx::utilities::is_any_ptr<Check>::value, bool> = true,
+            std::enable_if_t<not prx::utilities::is_any_ptr<Result>::value, bool> = true>
+  void propagate(const Start& start_state, Ctrl& ctrl, Check& check, Result& result)
+  {
+    state_space->copy_from(start_state);
+
+    do
+    {
+      ctrl();
+      propagate_once(nullptr);
+    } while (not check());
+
+    state_space->copy_to(result);
+  }
+
   void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, space_point_t result);
 
   void propagate(space_point_t start_state, controller_ptr_t ctrl, condition_check_t& cond_check, trajectory_t& result);

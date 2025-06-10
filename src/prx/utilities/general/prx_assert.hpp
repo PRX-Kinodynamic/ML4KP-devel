@@ -139,7 +139,8 @@ public:
   }
 #define prx_throw(MESSAGE)                                                                                             \
   {                                                                                                                    \
-    throw prx::prx_assert_t("", __FILE__, __LINE__, (prx::prx_assert_t::stream_t() << MESSAGE));                       \
+    throw prx::prx_assert_t((prx::prx_assert_t::stream_t()                                                             \
+                             << "[" << __FILE__ << ":" << __PRETTY_FUNCTION__ << ":" << __LINE__ << "] " << MESSAGE)); \
   }
 #define prx_throw_quiet(MESSAGE)                                                                                       \
   {                                                                                                                    \
