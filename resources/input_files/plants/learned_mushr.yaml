@@ -18,8 +18,8 @@ goal:
   state: [20,20,1.5707963268,0,0,0]
   radius: 0.2
 state_space:
-  lower_bound: [-5, -5, -3.14159, -5000,-5000, -5000] # forest & simple obs
-  upper_bound: [25, 25,  3.14159,  5000, 5000,  5000] # forest & simple obs
+  lower_bound: [-500, -500, -3.14159, -5000,-5000, -5000] # forest & simple obs
+  upper_bound: [+500, +500,  3.14159,  5000, 5000,  5000] # forest & simple obs
   values:
     - 0
     - 0
