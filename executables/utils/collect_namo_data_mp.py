@@ -11,7 +11,17 @@ import traceback
 import shutil
 import random
 import logging
+import mujoco
 from datetime import datetime
+from tqdm import tqdm
+'''
+run with: python executables/utils/collect_namo_data_mp.py --xml-path resources/models/custom_walled_envs/empty/env_config_1.xml --iterations 1000 --output-dir /common/users/dm1487/namo_data/env_config_1
+run with: python executables/utils/collect_namo_data_mp.py --one-env --xml-path resources/models/custom_walled_envs/apr18_25/random_start_fixed_goal_one_env_1 --iterations 2 --output-dir /common/users/dm1487/namo_data/apr19/random_start_fixed_goal_one_env_1_v2
+
+run with: python executables/utils/collect_namo_data_mp.py --xml-path resources/models/custom_walled_envs/apr27_25/random_start_fixed_goal_many_env_config_2 --iterations 25 --output-dir /common/users/dm1487/namo_data/apr27/random_start_fixed_goal_many_env_config_2 --one-env
+
+run with: python executables/utils/collect_namo_data_mp.py --xml-path resources/models/custom_walled_envs/may5/random_start_random_goal_many_env --iterations 10 --output-dir /common/users/dm1487/namo_data/jun2/random_start_random_goal_many_env
+'''
 
 # Global variables for cleanup
 temp_config_dir = None
@@ -27,7 +37,6 @@ def setup_temp_directory():
 def cleanup():
     """Clean up temporary config files and directory"""
     global temp_config_dir, config_files
-    
     print("\nCleaning up temporary files...")
     
     # Remove individual config files
@@ -53,50 +62,79 @@ def signal_handler(sig, frame):
     cleanup()
     sys.exit(1)
 
-def generate_configs(base_config_path, num_iterations, output_dir, xml_path, temp_dir):
+def generate_configs(base_config_path, num_iterations, output_dir, xml_paths, one_env, temp_dir):
     """Generate configuration files for multiple iterations of a single environment"""
     global config_files
     
-    # Load base configuration
-    with open(base_config_path, 'r') as f:
-        base_config = yaml.safe_load(f)
     
-    # Create a single run ID for this batch of processes
-    timestamp = time.strftime("%Y%m%d_%H%M%S")
-    batch_id = f"{timestamp}_{str(uuid.uuid4())[:6]}"
-    config_paths = []
+    config_paths = []   
+    # print(sorted(xml_paths, key=lambda x: int(x.split('/')[-1].split('.xml')[0].split('_')[-1]))[:5])
+    sorted_xml_paths = sorted(xml_paths, key=lambda x: int(x.split('/')[-1].split('.xml')[0].split('_')[-1]))
     
-    # Extract environment name from XML path
-    env_id = os.path.splitext(os.path.basename(xml_path))[0]
-    
-    # Create a config file for each iteration
-    for iteration in range(num_iterations):
-        # Clone the base config
-        process_config = base_config.copy()
+    # print(sorted_xml_paths[:10])
+    # exit()
+    # print(sorted_xml_paths[10:11])
+    # exit()
+    for xml_path in tqdm(sorted_xml_paths, desc="Generating configs"):
+        # Load base configuration
+        with open(base_config_path, 'r') as f:
+            base_config = yaml.safe_load(f)
         
-        # Update XML path
-        process_config['xml_path'] = '/'.join(xml_path.split('/')[2:])
+        # Create a single run ID for this batch of processes
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        batch_id = f"{timestamp}_{str(uuid.uuid4())[:6]}"
         
-        # Ensure data collection section exists
-        if 'data_collection' not in process_config:
-            process_config['data_collection'] = {}
+        # Extract environment name from XML path
+        env_id = os.path.splitext(os.path.basename(xml_path))[0]
+        # robot_goal = [2.5, 2.5]
+        model = mujoco.MjModel.from_xml_path(xml_path)
+        data = mujoco.MjData(model)
+        # check if model has a goal site within worldbody
+        # Retrieve the site ID
+        site_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'goal')
+        # Access the position of the site
+        if site_id != -1:
+            robot_goal = model.site_pos[site_id][:2].tolist()
+        del model, data
         
-        # Set data collection parameters
-        process_config['data_collection']['enabled'] = True
-        process_config['data_collection']['output_dir'] = output_dir
-        process_config['data_collection']['run_id'] = f"{batch_id}_{env_id}_iter{iteration}"
+        # print(robot_goal)\
         
-        # Set a unique random seed for each iteration
-        process_config['random_seed'] = random.randint(1, 1000000)
+        # Create a config file for each iteration
+        for iteration in range(num_iterations):
+            # Clone the base config
+            process_config = base_config.copy()
+            
+            # Update XML path
+            process_config['one_env'] = one_env # for refering to same primitive for all .xml environments
+            process_config['xml_path'] = '/'.join(xml_path.split('/')[2:])
+            
+            # Ensure data collection section exists
+            if 'data_collection' not in process_config:
+                process_config['data_collection'] = {}
+                
+            process_config['smoothing_enabled'] = True
+            
+            # Set data collection parameters
+            process_config['data_collection']['enabled'] = True
+            process_config['data_collection']['output_dir'] = output_dir
+            process_config['data_collection']['run_id'] = f"{batch_id}_{env_id}_iter{iteration}"
+            
+            # set goal
+            process_config['robot_goal'] = robot_goal
+            
+            # Set a unique random seed for each iteration
+            process_config['random_seed'] = random.randint(1, 1000000)
+            
+            process_config['object_strategy'] = 0
+            process_config['visualize'] = False
+            
+            # Write config to file in temporary directory
+            config_path = os.path.join(temp_dir, f"config_{batch_id}_iter{iteration}.yaml")
+            
+            with open(config_path, 'w') as f:
+                yaml.dump(process_config, f, default_flow_style=False)
+            config_paths.append('/'.join(config_path.split("/")[2:]))
         
-        # Write config to file in temporary directory
-        config_path = os.path.join(temp_dir, f"config_{batch_id}_iter{iteration}.yaml")
-
-        
-        with open(config_path, 'w') as f:
-            yaml.dump(process_config, f, default_flow_style=False)
-        config_paths.append('/'.join(config_path.split("/")[2:]))
-    
     # Store config paths for cleanup
     config_files = config_paths
     
@@ -128,6 +166,7 @@ def run_parallel_data_collection(executable_path, config_paths, log_dir, timesta
     
     logging.info(f"Running {len(config_paths)} iterations using {max_processes} parallel processes")
     
+    random.shuffle(config_paths)
     # Create a logs subdirectory for this batch
     batch_log_dir = os.path.join(log_dir, f"batch_{timestamp}")
     os.makedirs(batch_log_dir, exist_ok=True)
@@ -282,6 +321,7 @@ if __name__ == "__main__":
                        help="Path to the interface_namo executable")
     parser.add_argument("--seed", type=int, default=None,
                        help="Random seed for generating run seeds (default: current time)")
+    parser.add_argument("--one-env", action="store_true", help="Run NAMO for a single environment")
     args = parser.parse_args()
     
     # Set random seed for reproducibility
@@ -296,9 +336,23 @@ if __name__ == "__main__":
         print(f"Using temporary directory for configs: {temp_config_dir}")
         
         # Verify XML file exists
-        if not os.path.exists(args.xml_path):
-            print(f"Error: XML file {args.xml_path} not found")
-            exit(1)
+        # if not os.path.exists(args.xml_path):
+        #     print(f"Error: XML file {args.xml_path} not found")
+        #     exit(1)
+        
+        # check if xml_path is a directory
+        if os.path.isdir(args.xml_path):
+            # get all xml files in the directory
+            xml_files = [f for f in os.listdir(args.xml_path) if f.endswith('.xml')]
+            xml_paths = [os.path.join(args.xml_path, f) for f in xml_files]
+        else:
+            xml_paths = [args.xml_path]
+            
+        # sort xml_paths env_config_name
+        # env_config_name = args.xml_path.split("/")[-1].split("_")[4:7]
+        # env_config_name = "_".join(env_config_name)
+        # xml_paths = sorted(xml_paths, key=lambda x: x.split("/")[-1].split("_")[4:7])
+            
         
         print(f"Using environment: {args.xml_path}")
         print(f"Will run {args.iterations} iterations")
@@ -311,7 +365,8 @@ if __name__ == "__main__":
             args.base_config, 
             args.iterations, 
             args.output_dir, 
-            args.xml_path,
+            xml_paths,
+            args.one_env,
             temp_config_dir
         )
         
@@ -332,6 +387,6 @@ if __name__ == "__main__":
         print(f"Error: {e}")
         traceback.print_exc()
     
-    finally:
-        # Clean up temporary files
-        cleanup()
+    # finally:
+    #     # Clean up temporary files
+    #     cleanup()

@@ -230,6 +230,15 @@ void mujoco_simulator_t::step_simulation(const int step_type)
 
   if (_vis)
   {
+
+    cam.lookat[0] = 0.0;
+    cam.lookat[1] = 0.0;
+    cam.lookat[2] = 0.0;
+
+    cam.distance = 3.0;
+    // cam.elevation = -60;
+    cam.azimuth = 90.0;
+
     glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
     mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
 

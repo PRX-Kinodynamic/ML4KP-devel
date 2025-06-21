@@ -12,6 +12,7 @@ namespace prx {
 
 struct ActionStep {
     std::string object_name;
+    std::vector<double> goal_state;
     int edge_idx;
     int push_steps;
     std::vector<double> qpos;
@@ -66,10 +67,10 @@ public:
             env.set_zero_velocity();
             env.step_simulation();
             for (int j = 0; j < control_steps; j++) {
+                // TODO: add the states to the push_state for refined data collection.
                 auto current_object_state = env.get_object_state(object_name);
                 auto current_push_points = MotionPrimitiveGenerator::transform_points(all_edge_points[object_name], current_object_state->position, current_object_state->quaternion);
                 auto current_mid_points = MotionPrimitiveGenerator::transform_points(all_mid_points[object_name], current_object_state->position, current_object_state->quaternion);
-
                 
                 // update the push_state and generate new control
                 push_state->current_edge_point = current_push_points[edge_idx]; // TODO: change to current robot position
@@ -87,7 +88,82 @@ public:
         return push_state;
     }
 
+    // bool execute_push_action(const std::string& object_name, const std::vector<int>& allowed_primitive_indices, const std::vector<double>& goal_state) {
+    //     // Get the current state of the object and call it start_state for the control planner
+    //     const auto& object_info = env.get_object_info(object_name);
+    //     const int symmetry_rotations = object_info->symmetry_rotations;
+
+    //     auto object_state = env.get_object_state(object_name);
+    //     std::vector<double> start_state = {
+    //         object_state->position[0], object_state->position[1], 0.0, 
+    //         object_state->quaternion[0], object_state->quaternion[1], 
+    //         object_state->quaternion[2], object_state->quaternion[3]
+    //     };
+
+    //     std::vector<double> start_pose = {
+    //         start_state[0], start_state[1], 
+    //         quaternion_to_yaw({start_state[3], start_state[4], start_state[5], start_state[6]}, true)
+    //     };
+        
+    //     std::vector<double> goal_pose = {
+    //         goal_state[0], goal_state[1], 
+    //         quaternion_to_yaw({goal_state[3], goal_state[4], goal_state[5], goal_state[6]}, true)
+    //     };
+        
+    //     int num_steps = 0;
+
+    //     while(num_steps < mpc_steps_limit) {
+    //         // Generate the control plan which is a sequence of motion primitives
+    //         std::vector<PlanStep> control_plan = compute_control_plan(
+    //             object_name, start_pose, goal_pose, allowed_primitive_indices, symmetry_rotations);
+            
+    //         if (control_plan.empty()) {
+    //             std::cout << "No control plan found for object: " << object_name << std::endl;
+    //             return false;
+    //         }
+
+    //         for (int plan_step = 0; plan_step < control_plan.size(); plan_step++) {
+    //             PlanStep& step = control_plan[plan_step];
+
+    //             if (step.push_steps == 0) {
+    //                 continue;
+    //             }
+
+    //             space_point_t qpos = env.get_qpos();
+    //             std::vector<double> qpos_vec;
+    //             env.get_state_space()->copy_vector_from_point(qpos_vec, qpos);
+
+    //             // Execute primitive without storing the push state
+    //             execute_primitive(qpos_vec, object_name, step.push_steps, step.edge_idx);
+    //             break;  // Execute only the first non-zero push step
+    //         }
+            
+    //         // Update object state after execution
+    //         object_state = env.get_object_state(object_name);
+    //         start_state = {
+    //             object_state->position[0], object_state->position[1], 0.0, 
+    //             object_state->quaternion[0], object_state->quaternion[1], 
+    //             object_state->quaternion[2], object_state->quaternion[3]
+    //         };
+    //         start_pose = {
+    //             start_state[0], start_state[1], 
+    //             quaternion_to_yaw({start_state[3], start_state[4], start_state[5], start_state[6]}, true)
+    //         };
+            
+    //         num_steps++;
+
+    //         if (is_goal_reached_fn(start_pose, goal_pose, symmetry_rotations)) {
+    //             return true;
+    //         }
+    //     }
+        
+    //     return false;
+    // }
+
     std::tuple<std::unique_ptr<ActionStep>, bool> execute_push_action(const std::string& object_name, const std::vector<int>& allowed_primitive_indices, const std::vector<double>& goal_state) {
+
+
+        // my skill is parameterized by the object name, allowed push points, and goal_state.
         
         // get the current state of the object and call it start_state for the control planner
         const auto& object_info = env.get_object_info(object_name);
@@ -116,6 +192,9 @@ public:
                 return std::make_tuple(std::move(action_step), false);
             }
 
+
+            // std::cout << "Control plan: " << control_plan.size() << std::endl;
+
             // std::chrono::high_resolution_clock::time_point control_start_timer = std::chrono::high_resolution_clock::now();
             for (int plan_step = 0; plan_step < control_plan.size(); plan_step++) {
                 PlanStep& step = control_plan[plan_step];
@@ -127,15 +206,18 @@ public:
                 // Execute primitive and get push state
                 auto push_state = execute_primitive(qpos_vec, object_name, step.push_steps, step.edge_idx);
                 
+                // std::cout <<  "Plan steps: " << plan_step << " " << step.push_steps << "\n";
                 // execute the first non-zero push step from the control plan
                 if (step.push_steps != 0) {
                     action_step = std::make_unique<ActionStep>();
                     action_step->object_name = object_name;
+                    // action_step->allowed_primitive_indices = *allowed_primitive_indices;
+                    action_step->goal_state = std::vector<double>(goal_state);
                     action_step->edge_idx = step.edge_idx;
                     action_step->push_steps = step.push_steps;
                     action_step->qpos = qpos_vec;
                     action_step->push_state = std::move(push_state);
-                    break;
+                    break; // this is what forces the control plan to be executed only once;
                 }
             }
             
@@ -175,16 +257,29 @@ public:
             robot_size[1] = robot_size[0];
         }
 
+        
+        // NAMOEnvironment::ObjectInfo generic_object;
+        // generic_object.name = "generic";
+        // generic_object.position = {0.0, 0.0, 0.0};
+        // generic_object.size = {0.35, 0.35, 0.2};
+        // generic_object.quaternion = {1.0, 0.0, 0.0, 0.0};
+        
+
         for (const auto& obj : movable_objects) {
             auto primitives = MotionPrimitiveGenerator::generate_primitives(
-                obj, robot_size, base_config_path, visualize_primitives, push_steps, control_steps, scaling);
+                robot_size, base_config_path, visualize_primitives, push_steps, control_steps, scaling);
             
-            if (!primitives.empty()) {
-                all_primitives[obj.name] = primitives;
+            if (generic_primitive.empty()) {
+                generic_primitive = primitives;
+                break;
             }
+
+            // if (!primitives.empty()) {
+            //     all_primitives[obj.name] = primitives;
+            // }
         }
 
-        std::cout << "Preprocessed motion primitives for " << all_primitives.size() << " objects" << std::endl;
+        // std::cout << "Preprocessed motion primitives for " << all_primitives.size() << " objects" << std::endl;
     }
 
     
@@ -213,7 +308,7 @@ public:
         const int& symmetry_rotations) {
         
         // Get the motion primitives for the object
-        auto primitives = all_primitives[object_name];
+        auto primitives = generic_primitive; // all_primitives[object_name];
 
         // Use motion planner to find sequence of primitives
         return GreedyBestFirstSearchPlanner::plan_push_sequence(
@@ -228,9 +323,9 @@ public:
         );
     }
 
-    std::unordered_map<std::string, std::vector<MotionPrimitive>> get_all_primitives() {
-        return all_primitives;
-    }
+    // std::unordered_map<std::string, std::vector<MotionPrimitive>> get_all_primitives() {
+    //     return all_primitives;
+    // }
 
     /**
      * @brief Save all motion primitives to a JSON file
@@ -375,6 +470,7 @@ public:
 private:
     bool visualize;
     std::unordered_map<std::string, std::vector<MotionPrimitive>> all_primitives;
+    std::vector<MotionPrimitive> generic_primitive;
     std::vector<NAMOEnvironment::ObjectInfo> movable_objects;
     int control_steps;
     double scaling;

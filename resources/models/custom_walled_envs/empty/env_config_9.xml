@@ -80,6 +80,7 @@
       <geom name="obstacle_15_movable" condim="4" pos="-1.9842205424722605 -0.43946515938421493 0.3" euler="0 0 185.66031664090602" friction="0.0 0.005 0.001" rgba="1 1 0 1" size="0.425944287683285 0.3430910419728806 0.3" type="box" mass="0.1"/>
       <joint type="free"/>
     </body>
+    <site name="goal" type="sphere" pos = "2.5 2.5 0.0" size="0.25" rgba="0 1 0 0.5"/>
   </worldbody>
   <actuator>
     <motor name="actuator_x" joint="joint_x" gear="1" ctrlrange="-1 1"/>

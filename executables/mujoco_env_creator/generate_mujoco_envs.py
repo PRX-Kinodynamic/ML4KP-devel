@@ -59,7 +59,7 @@ def create_mujoco_xml(config):
     create_walls(worldbody, config['worldbody']['walls'])
     create_robot(worldbody, config['worldbody']['robot'])
     create_obstacles(worldbody, config['worldbody']['obstacles'])
-
+    create_goal(worldbody, config['worldbody']['goal'])
     # Add actuators to the Mujoco XML
     create_actuators(mujoco)
 
@@ -119,7 +119,23 @@ def create_walls(worldbody: Element, walls_config: List[Dict[str, Any]]) -> None
                     wall_geom.set(key, ' '.join(map(str, value)))
                 else:
                     wall_geom.set(key, str(value))
-
+                    
+def create_goal(worldbody: Element, goal_config: Dict[str, Any]) -> None:
+    goal_name = goal_config[NAME]
+    site = SubElement(worldbody, 'site')
+    site.set('name', goal_name)
+    site.set('type', 'sphere')
+    site.set('size', ' '.join(map(str, goal_config['size'])))
+    site.set('rgba', ' '.join(map(str, goal_config['rgba'])))
+    site.set('pos', ' '.join(map(str, goal_config['pos'])))
+    
+    # for key, value in goal_config.items():
+    #     if key not in [NAME, POS, 'type', 'size', 'rgba']:
+    #         if isinstance(value, list):
+    #             site.set(key, ' '.join(map(str, value)))
+    #         else:
+    #             site.set(key, str(value))
+                
 def create_robot(worldbody: Element, robot_config: Dict[str, Any]) -> None:
     robot_name = robot_config[NAME]
     robot = SubElement(worldbody, 'body')

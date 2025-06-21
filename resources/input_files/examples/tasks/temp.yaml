@@ -1,0 +1,51 @@
+aggregate_data_path: /common/users/dm1487/ktamp_data_rename/cylinder_envs_large_aggregate_new_temp
+control_planner:
+  angle_threshold: 0.1
+  best_first_expansion_limit: 200
+  distance_threshold: 0.05
+  mpc_steps_limit: 1
+controller_mode: push
+data_collection:
+  enabled: false
+  output_dir: /common/users/dm1487/namo_data/Mar29_1
+  run_id: 1
+data_path: /common/users/dm1487/ktamp_data_rename/cylinder_envs_large/1_mixed_push/discretized
+diffusion:
+  enabled: false
+  goal_enabled: false
+discretization: 0.2
+evaluate: true
+goal_radius: 0.1
+goal_sampling_mode: file
+goals_file: predictions/radius1/simple_scene_radiusgnn/goal_lists/env_config_4512.txt
+motion_primitives:
+  base_config_path: resources/models/mujoco_envs_search_push/env_config_base.xml
+  control_scale: 1.0
+  control_steps: 250
+  primitives_path: resources/input_files/examples/namo/motion_primitives
+  push_steps: 10
+  reprocess_primitives: false
+  visualize: false
+nav:
+  allow_collision: false
+  control_scale: 0.3
+num_random_goals: 300
+object_strategy: 0
+one_env: true
+push:
+  allow_collision: true
+  control_scale: 1.0
+radius_step: 0.05
+random_seed: 0
+results_folder: out/namo_results/one_scene/random/env_config_1
+robot_goal:
+- 2.5
+- 2.5
+smoothing_enabled: true
+step_duration: 0.01
+time_limit: 40
+total_iter: 10
+visualize: false
+wavefront_planner:
+  resolution: 0.025
+xml_path: custom_walled_envs/apr18_25/random_start_fixed_goal_one_env_1/env_config_1.xml

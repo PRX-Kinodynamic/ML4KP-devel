@@ -1,0 +1,14 @@
+
+file(GLOB_RECURSE EXAMPLES_TRIPODS_FILES
+	*.cpp)
+
+set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/tripods )
+	
+foreach(f ${EXAMPLES_TRIPODS_FILES})
+	GET_FILENAME_COMPONENT(F_EXEC ${f} NAME_WE )
+	add_executable(${F_EXEC} ${f})
+	target_link_libraries(${F_EXEC} ${PROJECT_NAME})
+	if (BUILD_FOR_TORCH)
+		target_link_libraries(${F_EXEC} ${TORCH_LIBRARIES})
+	endif(BUILD_FOR_TORCH)
+endforeach()

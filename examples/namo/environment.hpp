@@ -5,6 +5,7 @@
 #include <memory>
 #include <iostream>
 #include <limits>
+#include <filesystem>
 #include "namo_utility.hpp"
 
 namespace prx
@@ -71,6 +72,10 @@ public:
     : sim(std::make_shared<mujoco_simulator_t>(xml_path, visualize)), logging_enabled(enable_logging)
   {
     sim->init_simulator();
+    sim->set_cam_lookat({0.0, 0.0, 0.0});
+    sim->set_cam_distance(3.0);
+    sim->set_cam_azimuth(90.0);
+
     warm_up();
 
     auto context = sim->get_context("mujoco");
@@ -98,12 +103,17 @@ public:
     // extract config name from xml path
     config_name = xml_path.substr(xml_path.find_last_of('/') + 1);
     config_name = config_name.substr(0, config_name.find_last_of('.'));
-
+    std::string parent_dir = xml_path.substr(0, xml_path.find_last_of('/'));
+    std::cout << "parent_dir: " << parent_dir << std::endl;
+    std::filesystem::path data_dir = parent_dir;
+    if (!std::filesystem::exists(data_dir)) {
+        std::filesystem::create_directories(data_dir);
+    }
     // Process and categorize objects in the environment
     process_environment_objects();
-    
     // Save objects and their sizes to a file
-    save_objects_to_file("namo_objects_" + config_name + ".txt");
+    std::cout << "saving objects to file: " << data_dir.string() + "/namo_objects_" + config_name + ".txt" << std::endl;
+    save_objects_to_file(data_dir.string() + "/namo_objects_" + config_name + ".txt");
 
     // get the bounds of the environment
     std::vector<double> bounds = get_environment_bounds();
@@ -220,6 +230,10 @@ public:
     return cs;
   }
 
+  std::array<double, 2> get_robot_goal() const {
+    return robot_goal;
+  }
+
   /**
    * @brief Get the bounds of the environment
    * @return std::vector<double> Bounds as [x_min, x_max, y_min, y_max]
@@ -312,6 +326,8 @@ public:
    */
   const ObjectInfo& get_robot_info() const { return robot_info; }
 
+  const std::string& get_config_name() const { return config_name; }
+
   const std::array<double, 3>& get_robot_size() const { return robot_info.size; }
   
   /**
@@ -348,6 +364,11 @@ public:
    */
   void set_goal(const MujocoGoal& goal) {
     sim->set_goal(goal);
+  }
+
+  void set_robot_goal(const std::array<double, 2>& goal) {
+    robot_goal[0] = goal[0];
+    robot_goal[1] = goal[1];
   }
 
   void set_robot_position(const std::array<double, 2>& pos) {
@@ -707,6 +728,7 @@ private:
   int wavefront_id = -1;
   int state_log_idx = 0;
   std::string config_name;
+  std::array<double, 2> robot_goal = {0.0, 0.0};
 };
 
 }  // namespace prx 

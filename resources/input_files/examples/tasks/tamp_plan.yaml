@@ -15,19 +15,36 @@ goal_sampling_mode: file
 goals_file: predictions/radius1/simple_scene_radiusgnn/goal_lists/env_config_4512.txt
 num_random_goals: 300
 random_seed: 0
-visualize: false
+visualize: true
 radius_step: 0.05
-xml_path: custom_walled_envs/empty/env_config_1.xml
-robot_goal: [2.5, 2.5]
-total_iter: 25
+
+
+one_env: true # for refering to same primitive for all .xml environments
+env_type: "many_scenes" # "one_scene" or "many_scenes"
+smoothing_enabled: true
+
+# for evaluating the results, set evaluate to true
+evaluate: false # results
+results_folder: out/namo_results/one_scene
+# apr20_25/fixed_start_fixed_goal_many_env
+xml_path: custom_walled_envs/may5/random_start_random_goal_many_env/env_config_8.xml
+# xml_path: custom_walled_envs/empty/env_config_1.xml
+robot_goal: [2.7093476437110007, -0.9867592876638411]
+
+total_iter: 10
+object_strategy: 1 # 0: random, 1: mcr, 2: random with 90% chance to use mcr, 3: diffusion
+
+diffusion: 
+  enabled: false # allow diffusion to make a decision about the object to push
+  goal_enabled: false # allow diffusion to make a decision about the goal location of the object
 
 data_collection:
-  enabled: true
-  output_dir: /common/users/dm1487/namo_data/Mar20
+  enabled: true # allow data collection of the optimized action sequences
+  output_dir: /common/users/dm1487/namo_data/test
   run_id: 1
 
 wavefront_planner:
-  resolution: 0.05
+  resolution: 0.025
 
 motion_primitives:
   base_config_path: resources/models/mujoco_envs_search_push/env_config_base.xml
@@ -42,4 +59,4 @@ control_planner:
   distance_threshold: 0.05
   angle_threshold: 0.1
   mpc_steps_limit: 1
-  best_first_expansion_limit: 20
+  best_first_expansion_limit: 200

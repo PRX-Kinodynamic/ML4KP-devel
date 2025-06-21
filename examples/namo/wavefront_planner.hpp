@@ -54,7 +54,7 @@ void save_wavefront_to_file(
 
 bool is_goal_reachable(
     const std::vector<std::vector<int>>& grid,
-    const std::vector<double>& goal_pos,
+    const std::array<double, 2>& goal_pos,
     NAMOEnvironment& env,
     double resolution,
     double goal_size = 0.05
@@ -198,7 +198,7 @@ public:
         auto start_time = std::chrono::high_resolution_clock::now();
         
         // Copy static grid to full grid
-        full_grid = static_grid;
+        full_grid = std::vector<std::vector<int>>(static_grid);
         
         // Update grid with movable objects only
         for (int x = 0; x < grid_width; x++) {
@@ -212,8 +212,8 @@ public:
                 for (const auto& obj : env.get_movable_objects()) {
                     NAMOEnvironment::ObjectInfo inflated_obj = obj;
                     const NAMOEnvironment::ObjectState* inflated_obj_state = env.get_object_state(obj.name);
-                    inflated_obj.size[0] += robot_size[0];
-                    inflated_obj.size[1] += robot_size[0];
+                    inflated_obj.size[0] += (robot_size[0]);
+                    inflated_obj.size[1] += (robot_size[0]);
                     
                     if (is_point_in_rotated_object(world_x, world_y, inflated_obj, inflated_obj_state)) {
                         full_grid[x][y] = -2;
@@ -312,10 +312,29 @@ public:
     void reset_piecewise_grid(NAMOEnvironment& env) {
         piecewise_grid = static_grid;
 
+        // get goal region
+        std::array<double, 2> robot_goal = env.get_robot_goal();
+
+
+        for (int x = 0; x < grid_width; x++) {
+            for (int y = 0; y < grid_height; y++) {
+
+                if (piecewise_grid[x][y] == -2) continue;
+
+                double world_x = bounds[0] + x * resolution;
+                double world_y = bounds[2] + y * resolution;
+
+                if (is_point_in_goal_region(world_x, world_y, robot_goal, 0.25)) {
+                    piecewise_grid[x][y] = 0;
+                }
+            }
+        }
+
         // Update grid with movable objects only
         for (int x = 0; x < grid_width; x++) {
             for (int y = 0; y < grid_height; y++) {
-                if (piecewise_grid[x][y] == -2) continue; // Skip cells that are already obstacles
+
+                if (piecewise_grid[x][y] == -2 || piecewise_grid[x][y] == 0) continue; // Skip cells that are already obstacles
                 
                 double world_x = bounds[0] + x * resolution;
                 double world_y = bounds[2] + y * resolution;
@@ -370,7 +389,7 @@ public:
         // BFS queue
         std::queue<std::pair<int, int>> q;
         q.push({start_x, start_y});
-        piecewise_grid[start_x][start_y] = 0;
+        // piecewise_grid[start_x][start_y] = 0;
         
         // Initialize reachable points
         std::unordered_map<std::string, std::set<std::pair<double, double>>> unique_points;
@@ -402,6 +421,7 @@ public:
                 int ny = y + dy;
                 
                 if (nx >= 0 && nx < grid_width && ny >= 0 && ny < grid_height && piecewise_grid[nx][ny] == -1) {
+                    
                     double world_x = bounds[0] + nx * resolution;
                     double world_y = bounds[2] + ny * resolution;
                     
@@ -438,11 +458,6 @@ public:
         
         return {piecewise_grid, reachable_points, reachability_flags, true};
     }
-
-
-
-
-
 
     void reset_grid(NAMOEnvironment& env) {
 
@@ -544,13 +559,12 @@ public:
         // std::cout << "Wavefront computation took " << duration.count() << " milliseconds" << std::endl;
         return full_grid;
     }
-
     
     /**
      * @brief Check if a goal is reachable using the current grid
      */
     bool is_goal_reachable(
-        const std::vector<double>& goal_pos,
+        const std::array<double, 2>& goal_pos,
         double goal_size = 0.05
     ) {
         // Calculate the grid bounds for the goal region
@@ -604,6 +618,41 @@ public:
     const std::vector<std::vector<int>>& get_grid() const {
         return full_grid;
     }
+
+    /**
+     * @brief Get the grid width
+     */
+    int get_grid_width() const { return grid_width; }
+
+    /**
+     * @brief Get the grid height
+     */
+    int get_grid_height() const { return grid_height; }
+
+    /**
+     * @brief Get environment bounds
+     */
+    const std::vector<double>& get_bounds() const { return bounds; }
+
+    /**
+     * @brief Get grid resolution
+     */
+    double get_resolution() const { return resolution; }
+
+    /**
+     * @brief Get robot size
+     */
+    const std::vector<double>& get_robot_size() const { return robot_size; }
+
+    /**
+     * @brief Get piecewise grid (read-only)
+     */
+    const std::vector<std::vector<int>>& get_piecewise_grid() const { return piecewise_grid; }
+
+    /**
+     * @brief Get mutable reference to piecewise grid
+     */
+    std::vector<std::vector<int>>& get_mutable_piecewise_grid() { return piecewise_grid; }
 };
 
 // Keep the global functions for backward compatibility

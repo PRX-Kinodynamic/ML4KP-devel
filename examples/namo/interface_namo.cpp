@@ -7,6 +7,7 @@
 #include <chrono>
 #include "namo_utility.hpp"
 #include "motion_primitive_generator.hpp"
+
 #include "wavefront_planner.hpp"
 #include "namo_planner.hpp"
 #include <nlohmann/json.hpp>
@@ -15,7 +16,6 @@
 #include <sstream>
 #include <cstring>
 #include <unistd.h>
-#include <iomanip>
 
 using namespace prx;
 using json = nlohmann::json;
@@ -68,9 +68,9 @@ void print_local_pose(const std::vector<double>& local_pose) {
  * @brief Create directories helper function
  */
 void createDirectories(const std::vector<std::filesystem::path>& paths) {
-    for (auto& path : paths) {
-        if (!std::filesystem::exists(path)) {
-            std::filesystem::create_directory(path);
+        for (auto& path : paths) {
+            if (!std::filesystem::exists(path)) {
+            std::filesystem::create_directories(path);
         }
     }
 }
@@ -99,23 +99,30 @@ void setupMotionPrimitives(
     std::string primitives_filename = primitives_path + "/" + xml_filename + ".json";
     
     // Try to load existing primitives
-    bool primitives_loaded = false;
-    if (std::filesystem::exists(primitives_filename)) {
-        primitives_loaded = controller.load_primitives_from_json(primitives_filename);
-    }
 
-    bool reprocess_primitives = params["motion_primitives"]["reprocess_primitives"].as<bool>();
-    // Generate primitives if needed
-    if (!primitives_loaded || reprocess_primitives) {
-        std::cout << "Generating new motion primitives..." << std::endl;
+    
+
+    // bool primitives_loaded = false;
+    // if (std::filesystem::exists(primitives_filename)) {
+    //     primitives_loaded = controller.load_primitives_from_json(primitives_filename);
+    // }
+
+    // bool reprocess_primitives = params["motion_primitives"]["reprocess_primitives"].as<bool>();
+    // // Generate primitives if needed
+    // if (!primitives_loaded || reprocess_primitives) {
+    //     std::cout << "Generating new motion primitives..." << std::endl;
         
-        // Preprocess environment to generate motion primitives
-        controller.preprocess_all_motion_primitives(base_config_path, push_steps, visualize_primitives); 
+    //     // Preprocess environment to generate motion primitives
+    //     controller.preprocess_all_motion_primitives(base_config_path, push_steps, visualize_primitives); 
         
-        // Save motion primitives to JSON file
-        controller.save_primitives_to_json(primitives_filename);
-        std::cout << "Saved motion primitives to: " << primitives_filename << std::endl;
-    }
+    //     // Save motion primitives to JSON file
+    //     controller.save_primitives_to_json(primitives_filename);
+    //     std::cout << "Saved motion primitives to: " << primitives_filename << std::endl;
+    // }
+
+    std::cout << "Generating new motion primitives..." << std::endl;
+    controller.preprocess_all_motion_primitives(base_config_path, push_steps, visualize_primitives); 
+    std::cout << "Done generating motion primitives" << std::endl;
 }
 
 /**
@@ -180,16 +187,34 @@ int main(int argc, char* argv[]) {
     // Initialize random seed if provided
     init_random(params["random_seed"].as<int>());
 
+    bool diffusion_enabled = params["diffusion"]["enabled"].as<bool>();
+    bool diffusion_goal_enabled = params["diffusion"]["goal_enabled"].as<bool>();
+    bool evaluate_mode = params["evaluate"].as<bool>();
+    int object_strategy = params["object_strategy"].as<int>();
+    bool smoothing_enabled = params["smoothing_enabled"].as<bool>();
+
     // Create necessary directories
     std::filesystem::path all_stats_dir("all_stats");
     std::filesystem::path wavefronts_dir("wavefronts");
     std::filesystem::path final_wavefronts_dir("sol_wavefronts");
-    createDirectories({all_stats_dir, wavefronts_dir, final_wavefronts_dir});
+    std::filesystem::path results_folder(params["results_folder"].as<std::string>());
+    std::filesystem::path results_dir(results_folder);
+    createDirectories({all_stats_dir, wavefronts_dir, final_wavefronts_dir, results_dir});
+    std::string results_file_name = "results_" + std::string(diffusion_enabled ? "diffusion_object" : "random") + std::string(diffusion_goal_enabled ? "goal" : "") + ".txt";
+    std::filesystem::path results_file = results_dir / results_file_name;
+    std::ofstream file;
+    if (evaluate_mode) {
+        file.open(results_file.string(), std::ios::app);
+    }
     
     // Extract XML filename for use in both try and catch blocks
     std::string xml_path = params["xml_path"].as<std::string>();
     std::filesystem::path xml_file_path(xml_path);
     std::string xml_filename = xml_file_path.stem().string();
+    std::string parent_xml_filename = xml_file_path.parent_path().stem().string();
+    bool is_one_env = params["one_env"].as<bool>();
+
+
 
     std::vector<std::unique_ptr<ActionStep>> action_steps;
     
@@ -197,7 +222,7 @@ int main(int argc, char* argv[]) {
         // Environment setup
         bool visualize = params["visualize"].as<bool>();
         NAMOEnvironment env(xml_path, visualize);
-        
+
         // Control parameters
         double distance_threshold = params["control_planner"]["distance_threshold"].as<double>();
         double angle_threshold = params["control_planner"]["angle_threshold"].as<double>();
@@ -258,35 +283,74 @@ int main(int argc, char* argv[]) {
         env.reset();
         
         // Load or generate motion primitives
-        setupMotionPrimitives(params, env, controller, xml_filename);
+        if (is_one_env) {
+            setupMotionPrimitives(params, env, controller, parent_xml_filename);
+        }
+        else {
+            setupMotionPrimitives(params, env, controller, parent_xml_filename + "_" + xml_filename);
+        }
         
         // Initialize wavefront planner
         double resolution = params["wavefront_planner"]["resolution"].as<double>();
         WavefrontPlanner wavefront_planner(resolution, env, robot_size);
+
+        // wavefront_planner.save_wavefront_to_file("test.txt");
         
         // Get robot goal position
-        std::vector<double> robot_global_goal = params["robot_goal"].as<std::vector<double>>();
+        std::array<double, 2> robot_global_goal = params["robot_goal"].as<std::array<double, 2>>();
+        env.set_robot_goal(robot_global_goal);
         
         // Create the NAMO planner
-        NAMOPlanner planner(env, controller, wavefront_planner);
+        NAMOPlanner planner(env, controller, wavefront_planner, object_strategy, diffusion_enabled, diffusion_goal_enabled);
         
         // Run the main planning loop
         int total_iter = params["total_iter"].as<int>();
         bool success = planner.performPlanningLoop(robot_global_goal, total_iter, wavefronts_dir, action_steps);
         
         if (success) {
+            
             std::cout << "Successfully found a plan to reach the goal!" << std::endl;
-            
-            // Optimize action sequence`
-            std::vector<std::vector<int>> optimized_sequences = planner.optimizeActionSequence(
-                action_steps, robot_global_goal, final_wavefronts_dir);
-            
-            std::cout << "Found " << optimized_sequences.size() << " optimized action sequences." << std::endl;
+            if (evaluate_mode) {
+                std::string buffer = xml_filename + "," + "1" + "," + std::to_string(action_steps.size());
+                file << buffer;
+            }
+            // Optimize action sequence
+            std::vector<std::vector<int>> optimized_sequences;
+            if (smoothing_enabled) {
+                optimized_sequences = planner.optimizeActionSequence(action_steps, robot_global_goal, final_wavefronts_dir);
+
+                if (optimized_sequences.size() == 0) {
+                    std::cout << "No optimized action sequences found." << std::endl;
+                    if (evaluate_mode) {
+                        std::string buffer = "," + std::to_string(action_steps.size()) + "\n";
+                        file << buffer;
+                    }
+                    file.close();
+                    return 0;
+                }
+                
+                std::cout << "Found " << optimized_sequences.size() << " optimized action sequences." << std::endl;
+
+                if (evaluate_mode) {
+                    for (const auto& seq : optimized_sequences) {
+                        std::string buffer = "," + std::to_string(seq.size());
+                        file << buffer;
+                    }
+                    file << "\n";
+                }
+            }
+            else{
+                std::string buffer = ",\n";
+                file << buffer;
+            }
+            // else{
+            //     optimized_sequences = action_steps;
+            // }
             
             // Check if data collection is enabled in parameters
             bool collect_data = params["data_collection"]["enabled"].as<bool>();  // Default to false if not specified
             
-            if (collect_data) {
+            if (smoothing_enabled && collect_data) {
                 // Create data collection directory
                 std::filesystem::path data_dir = params["data_collection"]["output_dir"].as<std::string>();
                 if (!std::filesystem::exists(data_dir)) {
@@ -312,15 +376,17 @@ int main(int argc, char* argv[]) {
             }
         } else {
             std::cout << "Could not find a plan to reach the goal within " << total_iter << " iterations." << std::endl;
+            if (evaluate_mode) {    
+                std::string buffer = xml_filename + ",0,-1,-1\n";
+                file << buffer;
+            }
         }
         
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
+        file.close();
         return 1;
     }
-
+    file.close();
     return 0;
 }
-
-
-

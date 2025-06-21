@@ -51,11 +51,11 @@ public:
         // These functions are now passed as parameters with default values of nullptr
 
         // clean up search_states folder
-        std::string search_states_folder = "search_states";
-        if (std::filesystem::exists(search_states_folder)) {
-            std::filesystem::remove_all(search_states_folder);
-        }
-        std::filesystem::create_directory(search_states_folder);
+        // std::string search_states_folder = "search_states";
+        // if (std::filesystem::exists(search_states_folder)) {
+        //     std::filesystem::remove_all(search_states_folder);
+        // }
+        // std::filesystem::create_directory(search_states_folder);
 
         // Get object info from first primitive (they should all be the same)
         // Transform goal state relative to start state
@@ -82,6 +82,7 @@ public:
 
             // Check if we reached the goal
             if (is_goal_reached_fn(current->state, transformed_goal, symmetry_rotations)) {
+                std::cout << "goal reached" << std::endl;
                 std::vector<PlanStep> plan_sequence;
                 std::vector<SearchState*> path;
                 
@@ -89,6 +90,7 @@ public:
                 SearchState* trace = current;
                 while (trace != nullptr) {
                     if (trace->parent == nullptr) {
+                        // std::cout << "trace->push_steps: " << trace->push_steps << std::endl;
                         trace->push_steps = 0;
                     }
                     path.push_back(trace);
@@ -101,7 +103,6 @@ public:
                 // Transform local coordinates back to global
                 for (auto state : path) {
                     // Find the primitive that was used
-                    
                     // Get the global pose by transforming from local frame
                     std::vector<double> global_pose = transform_to_global_frame(
                         start_state, 
@@ -114,8 +115,6 @@ public:
                         state->push_steps,
                         global_pose
                     );
-
-                    
                 }
                 
                 // std::ofstream outfile("search_states/search_states_final.txt");
@@ -130,8 +129,6 @@ public:
                 for (auto state : all_states) {
                     delete state;
                 }
-
-                
                 
                 return plan_sequence;
             }
@@ -196,6 +193,7 @@ public:
         SearchState* trace = best_node;
         while (trace != nullptr) {
             if (trace->parent == nullptr) {
+                // std::cout << "trace->push_steps: " << trace->push_steps << std::endl;
                 trace->push_steps = 0;
             }
             path.push_back(trace);

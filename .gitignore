@@ -21,7 +21,7 @@ resources/input_files/bottleneck/*
 *.html
 *.out
 *.pyc
-*.txt
+# *.txt
 *.pth
 .vscode/
 **/.DS_Store
@@ -35,6 +35,8 @@ install/
 saved_models/
 resources/temp/
 *.pth
+*.pt
+*.safetensors
 models/*.pth
 .git_backup/
 fpr_predictions*/
@@ -44,10 +46,12 @@ resources/models/cylinder_envs*/
 meeting*/
 predictions*
 models/radius*
-*.mp4
 best_dino_heatmap_cross_entropy_lora/README.md
 best_dino_heatmap_lora/adapter_config.json
 best_dino_heatmap_lora/adapter_model.safetensors
 best_dino_heatmap_lora/README.md
 best_dino_heatmap_cross_entropy_lora/adapter_config.json
 best_dino_heatmap_cross_entropy_lora/adapter_model.safetensors
+wavefronts/
+sol_wavefronts/
+resources/models/custom_walled_envs/*

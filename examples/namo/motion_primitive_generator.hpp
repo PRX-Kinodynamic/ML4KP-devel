@@ -43,7 +43,6 @@ public:
      * @return std::vector<MotionPrimitive> Vector of generated motion primitives
      */
     static std::vector<MotionPrimitive> generate_primitives(
-        const NAMOEnvironment::ObjectInfo& obj,
         const std::array<double, 3>& robot_size,
         const std::string& base_config_path,
         bool visualize = false,
@@ -58,13 +57,13 @@ public:
         }
         
         // Create simulation environment
-        auto sim = setup_simulation(obj, base_config_path, visualize);
+        auto sim = setup_simulation(base_config_path, visualize);
         if (!sim) return {};
         std::array<double, 3> base_robot_pos;
         sim->getBodyPosition("robot", base_robot_pos);
         
         std::array<double, 3> base_pos;
-        sim->getBodyPosition(obj.name, base_pos);
+        sim->getBodyPosition("obstacle_1_movable", base_pos);
 
         sim->setZeroVelocity();
         for (int i = 0; i < 5; i++) {
@@ -72,12 +71,12 @@ public:
         }
 
         sim->getBodyPosition("robot", base_robot_pos);
-        sim->getBodyPosition(obj.name, base_pos);
+        sim->getBodyPosition("obstacle_1_movable", base_pos);
         for (int i = 0; i < 1; i++) {
             sim->step();
         }
         // Generate primitives
-        return generate_primitives_for_object(sim, obj, robot_size, push_steps, control_steps, scaling, base_robot_pos, temp_folder);
+        return generate_primitives_for_object(sim, robot_size, push_steps, control_steps, scaling, base_robot_pos, temp_folder);
     }
 
 
@@ -134,7 +133,6 @@ public:
      * @brief Create and setup simulation environment
      */
     static std::unique_ptr<MujocoWrapper> setup_simulation(
-        const NAMOEnvironment::ObjectInfo& obj,
         const std::string& base_config_path,
         bool visualize) {
         
@@ -153,16 +151,20 @@ public:
             // Add object body and geom
             mjsBody* obj_body = mjs_findBody(spec, "obstacle_1_movable");
             mjsGeom* obj_geom = mjs_asGeom(mjs_findElement(spec, mjOBJ_GEOM, "obstacle_1_movable"));
-            mjs_setString(obj_body->name, obj.name.c_str());
-            mjs_setString(obj_geom->name, obj.name.c_str());
+            // mjs_setString(obj_body->name, obj.name.c_str());
+            // mjs_setString(obj_geom->name, obj.name.c_str());
 
             obj_geom->pos[0] = 0.0;
             obj_geom->pos[1] = 0.0;
-            obj_geom->pos[2] = obj.position[2];
-            for (int i = 0; i < 3; i++) {
-                obj_geom->size[i] = obj.size[i];
-            }
-         
+            obj_geom->pos[2] = 0.2;
+
+            obj_geom->size[0] = 0.35;
+            obj_geom->size[1] = 0.35;
+            obj_geom->size[2] = 0.2;
+            
+            // for (int i = 0; i < 3; i++) {
+            //     obj_geom->size[i] = obj.size[i];
+            // }
            
             mjModel* m = mj_compile(spec, nullptr);
            
@@ -172,9 +174,9 @@ public:
                 
                 return nullptr;
             }
-            int error_sz;
-            char error_buffer[1000];
-            mj_saveXML(spec, "test.xml", error_buffer, error_sz);
+            // int error_sz;
+            // char error_buffer[1000];
+            // mj_saveXML(spec, "test.xml", error_buffer, error_sz);
 
             // Create wrapper with compiled model
             return std::make_unique<MujocoWrapper>(m, visualize);
@@ -190,7 +192,6 @@ public:
      */
     static std::vector<MotionPrimitive> generate_primitives_for_object(
         std::unique_ptr<MujocoWrapper>& sim,
-        const NAMOEnvironment::ObjectInfo& obj,
         const std::array<double, 3>& robot_size,
         int push_steps,
         int control_steps,
@@ -200,11 +201,16 @@ public:
         
         std::vector<MotionPrimitive> primitives;
         std::array<double, 3> obj_pos;
+        std::array<double, 3> obj_size;
         std::array<double, 4> obj_quat;
-        sim->getBodyPosition(obj.name, obj_pos);
-        sim->getBodyQuaternion(obj.name, obj_quat);
+        sim->getBodyPosition("obstacle_1_movable", obj_pos);
+        sim->getBodyQuaternion("obstacle_1_movable", obj_quat);
 
-        auto [edge_points, mid_points] = generate_edge_points(obj_pos, obj.size, obj_quat, robot_size);
+        obj_size[0] = 0.35;
+        obj_size[1] = 0.35;
+        obj_size[2] = 0.2;
+
+        auto [edge_points, mid_points] = generate_edge_points(obj_pos, obj_size, obj_quat, robot_size);
 
         for (int edge_idx = 0; edge_idx < edge_points.size(); edge_idx++) {
             PushState initial_state{
@@ -215,13 +221,13 @@ public:
                 mid_points[edge_idx]
             };
             
-            auto trajectory = simulate_push(sim, obj, initial_state, 
+            auto trajectory = simulate_push(sim, initial_state, 
                                          push_steps, control_steps, scaling, base_robot_pos, robot_size);
             
             // Save trajectory to file
-            std::string filename = temp_folder + "/" + obj.name + "_edge" + 
-                                 std::to_string(edge_idx) + ".txt";
-            save_trajectory(trajectory, filename);
+            // std::string filename = temp_folder + "/" + obj.name + "_edge" + 
+            //                      std::to_string(edge_idx) + ".txt";
+            // save_trajectory(trajectory, filename);
             
             primitives.insert(primitives.end(), trajectory.begin(), trajectory.end());
             sim->reset();
@@ -235,7 +241,6 @@ public:
      */
     static std::vector<MotionPrimitive> simulate_push(
         std::unique_ptr<MujocoWrapper>& sim,
-        const NAMOEnvironment::ObjectInfo& obj,
         const PushState& initial_state,
         int push_steps,
         int control_steps,
@@ -251,7 +256,7 @@ public:
         std::array<double, 3> robot_pos = {
             current_state.current_edge_point[0] - base_robot_pos[0], 
             current_state.current_edge_point[1] - base_robot_pos[1], 
-            obj.size[2]
+            0.2
         };
         sim->setRobotVelocity({0, 0});
         sim->setRobotPosition(robot_pos);
@@ -263,10 +268,16 @@ public:
             sim->setZeroControl();
             sim->step();
             std::array<double, 3> obj_pos;
+            std::array<double, 3> obj_size;
             std::array<double, 4> obj_quat;
-            sim->getBodyPosition(obj.name, obj_pos);
-            sim->getBodyQuaternion(obj.name, obj_quat);
-            update_push_state(current_state, obj_pos, obj.size, obj_quat, robot_size);
+            sim->getBodyPosition("obstacle_1_movable", obj_pos);
+            sim->getBodyQuaternion("obstacle_1_movable", obj_quat);
+
+            obj_size[0] = 0.35;
+            obj_size[1] = 0.35;
+            obj_size[2] = 0.2;
+
+            update_push_state(current_state, obj_pos, obj_size, obj_quat, robot_size);
             
             for (int i = 0; i < control_steps; i++) {
                 // Get current object state
@@ -278,9 +289,9 @@ public:
                 
                 // Step simulation
                 sim->step();
-                sim->getBodyPosition(obj.name, obj_pos);
-                sim->getBodyQuaternion(obj.name, obj_quat);
-                update_push_state(current_state, obj_pos, obj.size, obj_quat, robot_size);
+                sim->getBodyPosition("obstacle_1_movable", obj_pos);
+                sim->getBodyQuaternion("obstacle_1_movable", obj_quat);
+                update_push_state(current_state, obj_pos, obj_size, obj_quat, robot_size);
             }
             // Record state
             MotionPrimitive primitive;
@@ -293,6 +304,8 @@ public:
             primitive.scaling = scaling;
             primitive.edge_idx = current_state.edge_idx;
             trajectory.push_back(primitive);
+
+            // std::cout << "primitive: " <<  primitive.edge_idx << x" " << primitive.push_steps << std::endl;
         }
 
         return trajectory;
