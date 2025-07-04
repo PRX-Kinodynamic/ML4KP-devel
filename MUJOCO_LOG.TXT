@@ -1,0 +1,6 @@
+Thu Jun 26 01:00:36 2025
+WARNING: Linesearch objective is not convex
+
+Fri Jul  4 14:49:09 2025
+WARNING: Nan, Inf or huge value in QPOS at DOF 5. The simulation is unstable. Time = 101.9600.
+

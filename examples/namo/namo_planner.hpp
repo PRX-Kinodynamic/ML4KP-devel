@@ -45,7 +45,8 @@ public:
                WavefrontPlanner& wavefront_planner,
                int object_strategy,
                bool diffusion_enabled, 
-               bool diffusion_goal_enabled)
+               bool diffusion_goal_enabled,
+               const std::string endpoint)
         : env(env), 
           controller(controller), 
           wavefront_planner(wavefront_planner),
@@ -66,7 +67,7 @@ public:
 
 
         // // Initialize as REQ socket (client)
-        std::string endpoint = "tcp://arrakis.cs.rutgers.edu:5555";
+        // std::string endpoint = "tcp://arrakis.cs.rutgers.edu:5555";
         if (!client.initialize_socket(zmq_communication_t::socket_type::REQ, endpoint, false)) {
             std::cerr << "Failed to initialize client socket" << std::endl;
             communication_enabled = false;
@@ -273,7 +274,9 @@ public:
             }
 
             getReachableObjects(reachable_points, true);
-            // std::cout << "reachable_objects_buffer.size(): " << reachable_objects_buffer.size() << std::endl;
+            for (const auto& obj : reachable_objects_buffer){
+                std::cout << "reachable_object: " << obj << std::endl;
+            }
 
             if (reachable_objects_buffer.empty()){
                 // std::cout << "No reachable objects" << std::endl;
@@ -321,15 +324,14 @@ public:
                 std::vector<double> goal_state;
                 while(goal_iter < max_goal_iter){
                 
-                    goal_state = set_goal_configuration(random_object, 0.3, 0.6);
+                    goal_state = set_goal_configuration(random_object, 0.3, 1.0);
 
                     // wait for user input
                     // Execute push action
+                    //
                     auto [action_step_ptr, controller_success] = controller.execute_push_action(
                         random_object, allowed_indices_buffer, goal_state);
 
-                    
-                    
 
                     if (action_step_ptr && action_step_ptr->push_steps > 0) {
                         action_steps.push_back(std::move(action_step_ptr));
@@ -354,9 +356,13 @@ public:
 
                 if (client.send_message(state_json_str)) {
                     std::string response = client.receive_message();
-
                     std::cout << "response: " << response << std::endl;
                     json response_json = json::parse(response);
+                    if (response_json["error"]){
+                        global_goal_reachable = false;
+                        current_iter++;
+                        break;
+                    }
                     random_object = response_json["object"];
                     std::vector<double> goal_center = response_json["goal_center"];
                     std::vector<double> goal_quat = response_json["final_quat"];
@@ -687,6 +693,9 @@ public:
             std::array<double, 2> robot_goal = env.get_robot_goal();
             sequence_data["robot_goal"] = {robot_goal[0], robot_goal[1]};
             sequence_data["data_points"] = json::array();
+            sequence_data["unoptimized_sequence_size"] = action_steps.size(); // record the original size of the sequence
+            sequence_data["optimized_sequence_size"] = action_sequences[seq_idx].size(); // record the size of the optimized sequence
+            sequence_data["control_sequence"] = json::array();
 
             if (action_sequences[seq_idx].size() == 0) {
                 continue;
@@ -768,8 +777,12 @@ public:
                     qpos_buffer.clear();
                     env.get_state_space()->copy_vector_from_point(qpos_buffer, env.get_qpos());
                     // controller.execute_push_action(object_name, action_step->allowed_primitive_indices, action_step->goal_state);
-                    controller.execute_primitive(qpos_buffer, action_step->object_name, action_step->push_steps, action_step->edge_idx);
+                    auto [push_state, control_sequence] = controller.execute_primitive(qpos_buffer, action_step->object_name, action_step->push_steps, action_step->edge_idx);
+
+                    sequence_data["control_sequence"].push_back(control_sequence);
                 }
+
+
                 
                 // // Add push state edge and mid points if available
                 // if (action_step->push_state) {
@@ -857,6 +870,7 @@ public:
             sequence_data["data_points"].push_back({
                 {"state", state_data},
             });
+
             
             // Save the sequence data to file
             std::ofstream sequence_file(sequence_file_path);

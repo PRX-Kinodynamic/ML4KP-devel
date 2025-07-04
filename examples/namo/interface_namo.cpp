@@ -192,6 +192,7 @@ int main(int argc, char* argv[]) {
     bool evaluate_mode = params["evaluate"].as<bool>();
     int object_strategy = params["object_strategy"].as<int>();
     bool smoothing_enabled = params["smoothing_enabled"].as<bool>();
+    std::string endpoint = params["endpoint"].as<std::string>();
 
     // Create necessary directories
     std::filesystem::path all_stats_dir("all_stats");
@@ -301,7 +302,7 @@ int main(int argc, char* argv[]) {
         env.set_robot_goal(robot_global_goal);
         
         // Create the NAMO planner
-        NAMOPlanner planner(env, controller, wavefront_planner, object_strategy, diffusion_enabled, diffusion_goal_enabled);
+        NAMOPlanner planner(env, controller, wavefront_planner, object_strategy, diffusion_enabled, diffusion_goal_enabled, endpoint);
         
         // Run the main planning loop
         int total_iter = params["total_iter"].as<int>();

@@ -21,6 +21,8 @@ import random
 from collections import deque
 from shapely.geometry import Polygon, Point
 from shapely.affinity import scale
+import multiprocessing as mp
+from functools import partial
 
 from matplotlib import pyplot as plt
 
@@ -499,9 +501,63 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='executables/mujoco_env_creator/generator_config.yaml')
     parser.add_argument('--model_path', type=str, default='resources/models/custom/benchmark_room_2.xml')
-    # parser.add_argument('--model_path', type=str, default='resources/models/custom_walled_envs/apr20_25/fixed_start_fixed_goal_many_env/env_config_2.xml')
+    parser.add_argument('--num_processes', type=int, default=None, help='Number of parallel processes (default: CPU count)')
     args = parser.parse_args()
     return args
+
+# Add new function for parallel processing
+def generate_single_env_config(env_index, shared_data):
+    """
+    Generate a single environment configuration.
+    This function will be called in parallel for each environment.
+    """
+    env_size, generator_config, walls, pre_existing_obstacles, config_dir, wavefront_resolution, enable_connectivity_check = shared_data
+    
+    # Set random seed for reproducibility
+    np.random.seed(env_index + 1)
+    
+    new_obstacles = None
+    
+    robot_size = generator_config['robot']['size']
+    min_distance = max(robot_size[0], robot_size[1]) / 2 + 0.1
+    
+    robot_pos = [
+        np.random.uniform(-env_size[0]/2 + min_distance, env_size[0]/2 - min_distance),
+        np.random.uniform(-env_size[1]/2 + min_distance, env_size[1]/2 - min_distance),
+        robot_size[2]
+    ]
+    
+    # Handle pre-existing obstacles
+    processed_pre_existing_obstacles = pre_existing_obstacles
+    if processed_pre_existing_obstacles is not None and len(processed_pre_existing_obstacles) == 0:
+        processed_pre_existing_obstacles = None
+    
+    config, new_obstacles, distance_bool = generate_env_config(
+        env_size, generator_config, walls, processed_pre_existing_obstacles, new_obstacles
+    )
+    
+    if not distance_bool:
+        return env_index, False, "Distance constraint not satisfied"
+    
+    # Check robot-goal connectivity if enabled
+    is_robot_goal_connected = True
+    if enable_connectivity_check:
+        robot_obj = config['worldbody']['robot']
+        goal_obj = config['worldbody']['goal']
+        all_obstacles = config['worldbody']['obstacles']
+        walls_obj = config['worldbody']['walls']
+        is_robot_goal_connected = check_robot_goal_connectivity(
+            env_size, robot_obj, goal_obj, walls_obj, all_obstacles, wavefront_resolution, env_index
+        )
+    
+    if is_robot_goal_connected:
+        return env_index, False, "Robot-goal connectivity check failed"
+    
+    # Save the configuration
+    output_path = os.path.join(config_dir, f'env_config_{env_index+1}.yaml')
+    save_config(config, output_path)
+    
+    return env_index, True, "Success"
 
 if __name__ == "__main__":
     args = parse_args()
@@ -510,6 +566,11 @@ if __name__ == "__main__":
     num_configs = generator_config['num_configs']
     config_dir = generator_config.get('config_dir', 'env_configs')
     os.makedirs(config_dir, exist_ok=True)
+    
+    # Determine number of processes
+    num_processes = args.num_processes
+    if num_processes is None:
+        num_processes = mp.cpu_count()
     
     # Add wavefront parameters to generator config if not present
     wavefront_resolution = generator_config.get('wavefront_resolution', 0.03)
@@ -555,7 +616,6 @@ if __name__ == "__main__":
         if model.geom(i).name.startswith('obstacle_'):
             is_movable = any(joint_type in model.geom(i).name for joint_type in ['movable'])
             
-            
             obstacle = {
                 'name': model.geom(i).name,
                 'type':['plane', 'hfield', 'sphere', 'capsule', 'ellipsoid', 'cylinder', 'box'][int(model.geom(i).type)],
@@ -573,54 +633,54 @@ if __name__ == "__main__":
                 obstacle['mass'] = generator_config['obstacles']['movable_mass']
             
             pre_existing_obstacles.append(obstacle)
-            
-    new_obstacles = None
     
     env_size = [max(x_limits) - min(x_limits), max(y_limits) - min(y_limits), 0.3]
     
+    # Prepare shared data for parallel processing
+    shared_data = (
+        env_size, 
+        generator_config, 
+        walls, 
+        pre_existing_obstacles, 
+        config_dir, 
+        wavefront_resolution, 
+        enable_connectivity_check
+    )
     
-    for i in tqdm(range(num_configs), desc="Generating environment configs"):
-        np.random.seed(i+1)
-        preprocessed_obstacles = obstacles.copy()
-        # env_size = [
-        #     np.random.uniform(generator_config['env_size']['width']['min'], generator_config['env_size']['width']['max']),
-        #     np.random.uniform(generator_config['env_size']['depth']['min'], generator_config['env_size']['depth']['max']),
-        #     np.random.uniform(generator_config['env_size']['height']['min'], generator_config['env_size']['height']['max'])
-        # ]
-        # env_size[0] = max(x_limits) - min(x_limits)
-        # env_size[1] = max(y_limits) - min(y_limits)
+    print(f"Generating {num_configs} environment configurations using {num_processes} processes...")
+    
+    # Use multiprocessing to generate environments in parallel
+    with mp.Pool(processes=num_processes) as pool:
+        # Create partial function with shared data
+        worker_func = partial(generate_single_env_config, shared_data=shared_data)
         
+        # Use imap for progress tracking
+        results = []
+        successful_configs = 0
         
-        robot_size = generator_config['robot']['size']
+        with tqdm(total=num_configs, desc="Generating environment configs") as pbar:
+            for result in pool.imap(worker_func, range(num_configs)):
+                env_index, success, message = result
+                results.append(result)
+                if success:
+                    successful_configs += 1
+                pbar.update(1)
+                pbar.set_postfix({
+                    'successful': successful_configs,
+                    'failed': len(results) - successful_configs
+                })
+    
+    print(f"\nGeneration complete!")
+    print(f"Successfully generated: {successful_configs}/{num_configs} configurations")
+    print(f"Configurations saved in the '{config_dir}' directory")
+    
+    # Print failure summary if needed
+    failed_results = [(idx, msg) for idx, success, msg in results if not success]
+    if failed_results:
+        print(f"\nFailed configurations:")
+        failure_reasons = {}
+        for idx, msg in failed_results:
+            failure_reasons[msg] = failure_reasons.get(msg, 0) + 1
         
-        min_distance = max(robot_size[0], robot_size[1]) / 2 + 0.1 # Calculate the minimum distance from the wall
-        
-        robot_pos = [
-            np.random.uniform(-env_size[0]/2 + min_distance, env_size[0]/2 - min_distance),
-            np.random.uniform(-env_size[1]/2 + min_distance, env_size[1]/2 - min_distance),
-            robot_size[2] # + 0.05
-        ]
-        
-        if pre_existing_obstacles is not None and len(pre_existing_obstacles) == 0:
-            pre_existing_obstacles = None
-        config, new_obstacles, distance_bool = generate_env_config(env_size, generator_config, walls, pre_existing_obstacles, new_obstacles)
-        
-        if not distance_bool:
-            continue
-        
-        
-        is_robot_goal_connected = True
-        if enable_connectivity_check:
-            robot_obj = config['worldbody']['robot']
-            goal_obj = config['worldbody']['goal']
-            all_obstacles = config['worldbody']['obstacles']
-            walls = config['worldbody']['walls']
-            is_robot_goal_connected = check_robot_goal_connectivity(env_size, robot_obj, goal_obj, walls, all_obstacles, wavefront_resolution, i)
-            
-
-        if is_robot_goal_connected:
-            continue
-        
-        save_config(config, os.path.join(config_dir, f'env_config_{i+1}.yaml'))
-        
-    print(f"{num_configs} environment configurations generated and saved in the '{config_dir}' directory")
+        for reason, count in failure_reasons.items():
+            print(f"  {reason}: {count} configs")

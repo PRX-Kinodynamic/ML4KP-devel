@@ -12,14 +12,14 @@ python executables/utils/eval_namo.py --eval_type one_scene --object_strategy 1 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--eval_type", type=str, default="one_scene", choices=["one_scene", "many_scenes"])
+    # parser.add_argument("--eval_type", type=str, default="one_scene", choices=["one_scene", "many_scenes"])
     # parser.add_argument("--diffusion", type=bool, default=False)
     # parser.add_argument("--diffusion_goal", type=bool, default=False)
-    parser.add_argument("--object_strategy", type=int, default=1, choices=[0, 1, 2, 3])
-    parser.add_argument("--env_type", type=str, choices=["fixed", "random"])
+    # parser.add_argument("--object_strategy", type=int, default=1, choices=[0, 1, 2, 3])
+    # parser.add_argument("--env_type", type=str, choices=["fixed", "random"])
     parser.add_argument("--model", type=str, default="custom_walled_envs/apr18_25/random_start_fixed_goal_one_env_1")
     parser.add_argument("--num_trials", type=int, default=50)
-    parser.add_argument("--num_configs", type=int, default=1)
+    # parser.add_argument("--num_configs", type=int, default=1)
     parser.add_argument("--num_processes", type=int, default=1)
     args = parser.parse_args()
     return args
@@ -64,7 +64,7 @@ def process_xml(args_tuple):
 def run_namo_eval(args):
     
     import multiprocessing as mp
-    num_processes = 24
+    num_processes = 1
     
     execution_cmd = "./bin/examples/namo/interface_namo"
     base_folder = "resources"
@@ -85,6 +85,8 @@ def run_namo_eval(args):
     yaml_params["object_strategy"] = 1
     yaml_params["smoothing_enabled"] = False
     yaml_params["total_iter"] = 10
+    
+    yaml_params["endpoint"] = "tcp://arrakis.cs.rutgers.edu:5556"
 
     # if args.eval_type == "one_scene":
     #     yaml_params["robot_goal"] = [2.5, 2.5]
@@ -98,17 +100,36 @@ def run_namo_eval(args):
     else:
         model_xml.append(args.model)
     
-    num_configs = args.num_configs
+    # num_configs = args.num_configs
+    
+    # ('env_config_302', 24), ('env_config_381', 22), ('env_config_188', 30)
+    # set_xml_files = [('env_config_321', 26), ('env_config_230', 22)]
+    set_xml_files =[('env_config_355', 13), ('env_config_259', 18), ('env_config_312', 15), ('env_config_17', 18), ('env_config_239', 16)]
+    # set_xml_files = [('env_config_27', 5), ('env_config_367', 7), ('env_config_47', 5), ('env_config_216', 1), ('env_config_142', 4)] # hard
+    # set_xml_files = [('env_config_216', 1), ('env_config_142', 4)]
+    
+    # ood
+    # set_xml_files = [('env_config_182976', 21), ('env_config_182863', 30), ('env_config_182904', 30), ('env_config_183176', 29), ('env_config_183171', 27)]
+    # set_xml_files = [('env_config_182936', 13), ('env_config_182884', 14), ('env_config_183030', 19), ('env_config_183036', 20), ('env_config_183010', 19)]
+    # set_xml_files = [('env_config_183016', 10), ('env_config_183230', 8), ('env_config_183101', 7), ('env_config_183132', 2), ('env_config_182959', 4)]
+    
+    # medium_xml_files = []
+    # hard_xml_files = []
     
     ## add multiprocessing here for this loop
-    xml_files = sorted(model_xml, key=lambda x: int(x.split('/')[-1].split('.')[0].split('_')[-1]))[11:num_configs]
+    xml_files = sorted(model_xml, key=lambda x: int(x.split('/')[-1].split('.')[0].split('_')[-1]))
     
-    args_list = [(xml_path, yaml_params, base_folder, yaml_parent, yaml_folder, execution_cmd, args.num_trials) for xml_path in xml_files]
+    final_xml_files = []
+    for set_name, _ in set_xml_files:
+        for xml_file in xml_files:
+            if set_name + '.xml' in xml_file:
+                final_xml_files.append(xml_file)
+    
+    args_list = [(xml_path, yaml_params, base_folder, yaml_parent, yaml_folder, execution_cmd, args.num_trials) for xml_path in final_xml_files]
     
     with mp.Pool(args.num_processes) as pool:
         pool.map(process_xml, args_list)
     
-
 if __name__ == "__main__":
     args = parse_args() 
     run_namo_eval(args)

@@ -55,3 +55,6 @@ best_dino_heatmap_cross_entropy_lora/adapter_model.safetensors
 wavefronts/
 sol_wavefronts/
 resources/models/custom_walled_envs/*
+resources/input_files/custom_walled_envs/*
+resources/input_files/temp_namo*
+temp_env*.yaml

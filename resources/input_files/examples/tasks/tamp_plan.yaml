@@ -19,20 +19,21 @@ visualize: true
 radius_step: 0.05
 
 
+
 one_env: true # for refering to same primitive for all .xml environments
 env_type: "many_scenes" # "one_scene" or "many_scenes"
 smoothing_enabled: true
+endpoint: "tcp://arrakis.cs.rutgers.edu:5556"
 
 # for evaluating the results, set evaluate to true
 evaluate: false # results
 results_folder: out/namo_results/one_scene
 # apr20_25/fixed_start_fixed_goal_many_env
-xml_path: custom_walled_envs/may5/random_start_random_goal_many_env/env_config_8.xml
+xml_path: custom_walled_envs/jun21/random_start_random_goal_single_obstacle_room_2_50k_halfrad/env_config_153.xml
 # xml_path: custom_walled_envs/empty/env_config_1.xml
-robot_goal: [2.7093476437110007, -0.9867592876638411]
-
-total_iter: 10
-object_strategy: 1 # 0: random, 1: mcr, 2: random with 90% chance to use mcr, 3: diffusion
+robot_goal: [0.9567318603240329, 2.057299185025484]
+total_iter: 15
+object_strategy: 0 # 0: random, 1: mcr, 2: random with 90% chance to use mcr, 3: diffusion
 
 diffusion: 
   enabled: false # allow diffusion to make a decision about the object to push

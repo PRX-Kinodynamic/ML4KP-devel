@@ -112,8 +112,8 @@ public:
     // Process and categorize objects in the environment
     process_environment_objects();
     // Save objects and their sizes to a file
-    std::cout << "saving objects to file: " << data_dir.string() + "/namo_objects_" + config_name + ".txt" << std::endl;
-    save_objects_to_file(data_dir.string() + "/namo_objects_" + config_name + ".txt");
+    // std::cout << "saving objects to file: " << data_dir.string() + "/namo_objects_" + config_name + ".txt" << std::endl;
+    // save_objects_to_file(data_dir.string() + "/namo_objects_" + config_name + ".txt");
 
     // get the bounds of the environment
     std::vector<double> bounds = get_environment_bounds();

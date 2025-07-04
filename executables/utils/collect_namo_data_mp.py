@@ -14,13 +14,16 @@ import logging
 import mujoco
 from datetime import datetime
 from tqdm import tqdm
+import glob
+import json
+from collections import defaultdict
 '''
 run with: python executables/utils/collect_namo_data_mp.py --xml-path resources/models/custom_walled_envs/empty/env_config_1.xml --iterations 1000 --output-dir /common/users/dm1487/namo_data/env_config_1
 run with: python executables/utils/collect_namo_data_mp.py --one-env --xml-path resources/models/custom_walled_envs/apr18_25/random_start_fixed_goal_one_env_1 --iterations 2 --output-dir /common/users/dm1487/namo_data/apr19/random_start_fixed_goal_one_env_1_v2
 
 run with: python executables/utils/collect_namo_data_mp.py --xml-path resources/models/custom_walled_envs/apr27_25/random_start_fixed_goal_many_env_config_2 --iterations 25 --output-dir /common/users/dm1487/namo_data/apr27/random_start_fixed_goal_many_env_config_2 --one-env
 
-run with: python executables/utils/collect_namo_data_mp.py --xml-path resources/models/custom_walled_envs/may5/random_start_random_goal_many_env --iterations 10 --output-dir /common/users/dm1487/namo_data/jun2/random_start_random_goal_many_env
+run with: python executables/utils/collect_namo_data_mp.py --xml-path resources/models/custom_walled_envs/jun22/random_start_random_goal_single_obstacle_room_2_200k_halfrad --iterations 10 --output-dir /common/users/dm1487/namo_data/jun22/random_start_random_goal_single_obstacle_room_2_200k --start 26666 --end 40000
 '''
 
 # Global variables for cleanup
@@ -34,8 +37,8 @@ def setup_temp_directory():
     os.makedirs(temp_dir, exist_ok=True)
     return temp_dir
 
-def cleanup():
-    """Clean up temporary config files and directory"""
+def cleanup(output_dir=None):
+    """Clean up temporary config files and directory, and optionally iteration attempts"""
     global temp_config_dir, config_files
     print("\nCleaning up temporary files...")
     
@@ -54,6 +57,16 @@ def cleanup():
         except Exception as e:
             print(f"Warning: Could not remove temporary directory {temp_config_dir}: {e}")
     
+    # Remove iteration attempts directory if output_dir is provided
+    if output_dir:
+        attempts_dir = os.path.join(output_dir, "iteration_attempts")
+        if os.path.exists(attempts_dir):
+            try:
+                shutil.rmtree(attempts_dir)
+                print(f"Removed iteration attempts directory: {attempts_dir}")
+            except Exception as e:
+                print(f"Warning: Could not remove iteration attempts directory {attempts_dir}: {e}")
+    
     print("Cleanup complete")
 
 def signal_handler(sig, frame):
@@ -62,83 +75,206 @@ def signal_handler(sig, frame):
     cleanup()
     sys.exit(1)
 
-def generate_configs(base_config_path, num_iterations, output_dir, xml_paths, one_env, temp_dir):
-    """Generate configuration files for multiple iterations of a single environment"""
+def track_iteration_attempt(output_dir, env_id, iteration_id, batch_id):
+    """Track that we attempted an iteration for an environment"""
+    attempts_dir = os.path.join(output_dir, "iteration_attempts")
+    os.makedirs(attempts_dir, exist_ok=True)
+    
+    # Create a simple tracking file for this attempt
+    attempt_file = os.path.join(attempts_dir, f"{env_id}_iter_{iteration_id}_{batch_id}.txt")
+    with open(attempt_file, 'w') as f:
+        f.write(f"Environment: {env_id}\n")
+        f.write(f"Iteration: {iteration_id}\n")
+        f.write(f"Batch: {batch_id}\n")
+        f.write(f"Timestamp: {datetime.now().isoformat()}\n")
+
+def count_existing_sequences_per_env(output_dir):
+    """Count sequences and iterations for each environment configuration"""
+    env_sequence_counts = defaultdict(int)
+    env_iteration_counts = defaultdict(int)
+    
+    # Count sequences from JSON files (unchanged)
+    pattern = os.path.join(output_dir, "sequence_*.json")
+    sequence_files = glob.glob(pattern)
+    
+    for file_path in sequence_files:
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+                config_name = data.get('config_name', '')
+                if config_name:
+                    env_sequence_counts[config_name] += 1
+        except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
+            print(f"Warning: Could not process sequence file {file_path}: {e}")
+            continue
+    
+    # Count iterations from attempt tracking files
+    attempts_dir = os.path.join(output_dir, "iteration_attempts")
+    if os.path.exists(attempts_dir):
+        attempt_files = glob.glob(os.path.join(attempts_dir, "*.txt"))
+        
+        for file_path in attempt_files:
+            try:
+                filename = os.path.basename(file_path)
+                # Format: {env_id}_iter_{iteration_id}_{batch_id}.txt
+                env_id = filename.split('_iter_')[0]
+                env_iteration_counts[env_id] += 1
+            except Exception as e:
+                print(f"Warning: Could not process attempt file {file_path}: {e}")
+                continue
+    
+    return dict(env_sequence_counts), dict(env_iteration_counts)
+
+def filter_environments_needing_data(xml_paths, output_dir, target_sequences=30, max_iterations_per_env=50):
+    """Filter environments that still need more sequences and haven't exceeded iteration limits"""
+    env_counts, iter_counts = count_existing_sequences_per_env(output_dir)
+    
+    environments_needing_data = []
+    
+    for xml_path in xml_paths:
+        env_id = os.path.splitext(os.path.basename(xml_path))[0]
+        current_sequences = env_counts.get(env_id, 0)
+        current_iterations = iter_counts.get(env_id, 0)
+        
+        # Only include if:
+        # 1. Haven't reached target sequences AND
+        # 2. Haven't exceeded maximum iterations
+        if current_sequences < target_sequences and current_iterations < max_iterations_per_env:
+            environments_needing_data.append({
+                'xml_path': xml_path,
+                'env_id': env_id,
+                'current_sequences': current_sequences,
+                'current_iterations': current_iterations,
+                'sequences_needed': target_sequences - current_sequences,
+                'iterations_remaining': max_iterations_per_env - current_iterations
+            })
+    
+    return environments_needing_data
+
+def generate_configs_batch_aggressive(base_config_path, batch_size, output_dir, environments_needing_data, 
+                                    temp_dir, batch_num, one_env=True, max_iterations_per_env=50):
+    """Generate configuration files that aggressively fill the entire batch"""
     global config_files
     
+    config_paths = []
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    batch_id = f"{timestamp}_batch{batch_num}_{str(uuid.uuid4())[:6]}"
     
-    config_paths = []   
-    # print(sorted(xml_paths, key=lambda x: int(x.split('/')[-1].split('.xml')[0].split('_')[-1]))[:5])
-    sorted_xml_paths = sorted(xml_paths, key=lambda x: int(x.split('/')[-1].split('.xml')[0].split('_')[-1]))
+    if not environments_needing_data:
+        return []
     
-    # print(sorted_xml_paths[:10])
-    # exit()
-    # print(sorted_xml_paths[10:11])
-    # exit()
-    for xml_path in tqdm(sorted_xml_paths, desc="Generating configs"):
-        # Load base configuration
-        with open(base_config_path, 'r') as f:
-            base_config = yaml.safe_load(f)
+    configs_generated = 0
+    round_number = 0
+    
+    print(f"Filling batch of {batch_size} configs across {len(environments_needing_data)} environments...")
+    
+    # Keep cycling through environments until batch is full
+    while configs_generated < batch_size:
+        envs_used_this_round = 0
         
-        # Create a single run ID for this batch of processes
-        timestamp = time.strftime("%Y%m%d_%H%M%S")
-        batch_id = f"{timestamp}_{str(uuid.uuid4())[:6]}"
-        
-        # Extract environment name from XML path
-        env_id = os.path.splitext(os.path.basename(xml_path))[0]
-        # robot_goal = [2.5, 2.5]
-        model = mujoco.MjModel.from_xml_path(xml_path)
-        data = mujoco.MjData(model)
-        # check if model has a goal site within worldbody
-        # Retrieve the site ID
-        site_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'goal')
-        # Access the position of the site
-        if site_id != -1:
-            robot_goal = model.site_pos[site_id][:2].tolist()
-        del model, data
-        
-        # print(robot_goal)\
-        
-        # Create a config file for each iteration
-        for iteration in range(num_iterations):
-            # Clone the base config
-            process_config = base_config.copy()
-            
-            # Update XML path
-            process_config['one_env'] = one_env # for refering to same primitive for all .xml environments
-            process_config['xml_path'] = '/'.join(xml_path.split('/')[2:])
-            
-            # Ensure data collection section exists
-            if 'data_collection' not in process_config:
-                process_config['data_collection'] = {}
+        for env_info in environments_needing_data[:2]:
+            if configs_generated >= batch_size:
+                break
                 
-            process_config['smoothing_enabled'] = True
+            xml_path = env_info['xml_path']
+            env_id = env_info['env_id']
+            current_iterations = env_info['current_iterations']
+            sequences_needed = env_info['sequences_needed']
+            iterations_remaining = env_info['iterations_remaining']
             
-            # Set data collection parameters
-            process_config['data_collection']['enabled'] = True
-            process_config['data_collection']['output_dir'] = output_dir
-            process_config['data_collection']['run_id'] = f"{batch_id}_{env_id}_iter{iteration}"
+            # Skip if this environment has reached its iteration limit
+            if current_iterations + round_number >= max_iterations_per_env:
+                continue
             
-            # set goal
-            process_config['robot_goal'] = robot_goal
-            
-            # Set a unique random seed for each iteration
-            process_config['random_seed'] = random.randint(1, 1000000)
-            
-            process_config['object_strategy'] = 0
-            process_config['visualize'] = False
-            
-            # Write config to file in temporary directory
-            config_path = os.path.join(temp_dir, f"config_{batch_id}_iter{iteration}.yaml")
-            
-            with open(config_path, 'w') as f:
-                yaml.dump(process_config, f, default_flow_style=False)
-            config_paths.append('/'.join(config_path.split("/")[2:]))
+            try:
+                # Load base configuration
+                with open(base_config_path, 'r') as f:
+                    base_config = yaml.safe_load(f)
+                
+                # Get robot goal from XML
+                model = mujoco.MjModel.from_xml_path(xml_path)
+                data = mujoco.MjData(model)
+                site_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, 'goal')
+                if site_id != -1:
+                    robot_goal = model.site_pos[site_id][:2].tolist()
+                else:
+                    robot_goal = [2.5, 2.5]  # default
+                del model, data
+                
+                # Generate config
+                process_config = base_config.copy()
+                process_config['xml_path'] = '/'.join(xml_path.split('/')[2:])
+                
+                if 'data_collection' not in process_config:
+                    process_config['data_collection'] = {}
+                    
+                process_config['smoothing_enabled'] = True
+                process_config['total_iter'] = 10
+                process_config['data_collection']['enabled'] = True
+                process_config['data_collection']['output_dir'] = output_dir
+                
+                # Calculate actual iteration number for this attempt
+                iteration_id = current_iterations + round_number
+                process_config['data_collection']['run_id'] = f"{batch_id}_{env_id}_iter{iteration_id}"
+                process_config['robot_goal'] = robot_goal
+                process_config['random_seed'] = random.randint(1, 1000000)
+                process_config['object_strategy'] = 0
+                process_config['visualize'] = False
+                
+                # Write config to file
+                config_path = os.path.join(temp_dir, f"config_batch{batch_num}_{env_id}_iter{iteration_id}_round{round_number}.yaml")
+                with open(config_path, 'w') as f:
+                    yaml.dump(process_config, f, default_flow_style=False)
+                
+                # TRACK THIS ITERATION ATTEMPT IMMEDIATELY
+                track_iteration_attempt(output_dir, env_id, iteration_id, batch_id)
+                
+                config_paths.append('/'.join(config_path.split("/")[2:]))
+                configs_generated += 1
+                envs_used_this_round += 1
+                
+            except Exception as e:
+                print(f"Warning: Could not generate config for {env_id}: {e}")
+                continue
         
-    # Store config paths for cleanup
-    config_files = config_paths
+        if envs_used_this_round == 0:
+            print(f"Warning: Could not generate configs for any environment in round {round_number}")
+            break
+            
+        round_number += 1
+        
+        if round_number > 100:
+            print(f"Warning: Reached maximum rounds ({round_number}), stopping config generation")
+            break
     
-    return config_paths, batch_id
+    # Report distribution (fix the env_id extraction)
+    env_config_counts = {}
+    for config_path in config_paths:
+        filename = config_path.split('/')[-1]
+        # Format: config_batch{N}_{env_id}_iter{N}_round{N}.yaml
+        # Extract env_id properly (it might contain underscores)
+        parts = filename.split('_')
+        
+        # Find batch and iter positions
+        batch_idx = -1
+        iter_idx = -1
+        for i, part in enumerate(parts):
+            if part.startswith('batch'):
+                batch_idx = i
+            elif part.startswith('iter'):
+                iter_idx = i
+                break
+        
+        if batch_idx != -1 and iter_idx != -1:
+            env_id = '_'.join(parts[batch_idx + 1:iter_idx])
+            env_config_counts[env_id] = env_config_counts.get(env_id, 0) + 1
+    
+    print(f"Generated {configs_generated} configs distributed as:")
+    for env_id, count in sorted(env_config_counts.items()):
+        print(f"  {env_id}: {count} configs")
+    
+    config_files.extend(config_paths)
+    return config_paths
 
 def setup_logging(log_dir):
     """Set up logging configuration for the main process"""
@@ -300,28 +436,207 @@ def run_parallel_data_collection(executable_path, config_paths, log_dir, timesta
         logging.info(f"  Success rate: {success_rate:.2f}%")
         logging.info(f"  Process logs directory: {batch_log_dir}")
 
+def run_adaptive_data_collection(executable_path, base_config_path, output_dir, xml_paths, 
+                                temp_dir, log_dir, max_processes=24, batch_size=50, 
+                                target_sequences=30, max_iterations_per_env=50, one_env=True):
+    """Run data collection in adaptive batches until target sequences are reached"""
+    
+    print(f"Starting adaptive data collection:")
+    print(f"- Target: {target_sequences} sequences per environment")
+    print(f"- Max iterations per environment: {max_iterations_per_env}")
+    print(f"- Batch size: {batch_size} configs per batch")
+    print(f"- Max parallel processes: {max_processes}")
+    print(f"- Total environments: {len(xml_paths)}")
+    
+    batch_num = 0
+    total_iterations = 0
+    
+    while True:
+        batch_num += 1
+        print(f"\n{'='*60}")
+        print(f"BATCH {batch_num}")
+        print(f"{'='*60}")
+        
+        # Check current status
+        environments_needing_data = filter_environments_needing_data(
+            xml_paths, output_dir, target_sequences, max_iterations_per_env)
+        
+        if not environments_needing_data:
+            print("🎉 All environments have either reached the target sequences or iteration limits!")
+            break
+        
+        print(f"Environments still needing data: {len(environments_needing_data)}")
+        
+        # Show progress for first few environments
+        for i, env_info in enumerate(environments_needing_data[:5]):
+            print(f"  {env_info['env_id']}: {env_info['current_sequences']}/{target_sequences} sequences "
+                  f"({env_info['current_iterations']}/{max_iterations_per_env} iterations)")
+        if len(environments_needing_data) > 5:
+            print(f"  ... and {len(environments_needing_data) - 5} more environments")
+        
+        # Generate configs for this batch
+        config_paths = generate_configs_batch_aggressive(
+            base_config_path, batch_size, output_dir, 
+            environments_needing_data, temp_dir, batch_num, one_env, max_iterations_per_env
+        )
+        
+        if not config_paths:
+            print("No more configs to generate. Stopping.")
+            break
+        
+        print(f"Generated {len(config_paths)} configs for batch {batch_num}")
+        total_iterations += len(config_paths)
+        
+        # Run this batch
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        setup_logging(log_dir)  # Set up logging for this batch
+        
+        print(f"Running batch {batch_num} with {len(config_paths)} processes...")
+        run_parallel_data_collection(executable_path, config_paths, log_dir, 
+                                    f"{timestamp}_batch{batch_num}", max_processes)
+        
+        # Brief pause between batches
+        time.sleep(2)
+    
+    # Final summary with detailed analysis
+    print(f"\n{'='*60}")
+    print("FINAL SUMMARY")
+    print(f"{'='*60}")
+    
+    final_counts, final_iterations = count_existing_sequences_per_env(output_dir)
+    
+    print(f"Total iterations executed: {total_iterations}")
+    print(f"Total batches: {batch_num}")
+    print(f"Max iterations per environment: {max_iterations_per_env}")
+    print("\nPer-environment results:")
+    
+    # Categorize results
+    successful_envs = []
+    failed_envs = []
+    partial_envs = []
+    
+    for xml_path in sorted(xml_paths, key=lambda x: os.path.basename(x)):
+        env_id = os.path.splitext(os.path.basename(xml_path))[0]
+        sequences = final_counts.get(env_id, 0)
+        iterations = final_iterations.get(env_id, 0)
+        efficiency = sequences / iterations if iterations > 0 else 0
+        
+        status = ""
+        if sequences >= target_sequences:
+            status = "✅ SUCCESS"
+            successful_envs.append(env_id)
+        elif iterations >= max_iterations_per_env:
+            status = "❌ ITERATION_LIMIT"
+            failed_envs.append(env_id)
+        else:
+            status = "⚠️  PARTIAL"
+            partial_envs.append(env_id)
+        
+        print(f"  {env_id}: {sequences}/{target_sequences} sequences, {iterations}/{max_iterations_per_env} iterations "
+              f"(efficiency: {efficiency:.2f}) {status}")
+    
+    # Summary statistics
+    print(f"\n{'='*60}")
+    print("SUMMARY STATISTICS")
+    print(f"{'='*60}")
+    print(f"✅ Successful environments: {len(successful_envs)}/{len(xml_paths)} ({len(successful_envs)/len(xml_paths)*100:.1f}%)")
+    print(f"❌ Hit iteration limit: {len(failed_envs)}/{len(xml_paths)} ({len(failed_envs)/len(xml_paths)*100:.1f}%)")
+    print(f"⚠️  Partial completion: {len(partial_envs)}/{len(xml_paths)} ({len(partial_envs)/len(xml_paths)*100:.1f}%)")
+    
+    if failed_envs:
+        print(f"\nEnvironments that hit iteration limit ({max_iterations_per_env} iterations):")
+        for env_id in failed_envs[:10]:  # Show first 10
+            sequences = final_counts.get(env_id, 0)
+            iterations = final_iterations.get(env_id, 0)
+            efficiency = sequences / iterations if iterations > 0 else 0
+            print(f"  {env_id}: {sequences}/{target_sequences} sequences (efficiency: {efficiency:.2f})")
+        if len(failed_envs) > 10:
+            print(f"  ... and {len(failed_envs) - 10} more")
+    
+    # Create summary file
+    summary_file = os.path.join(output_dir, f"collection_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+    summary_data = {
+        "total_iterations": total_iterations,
+        "total_batches": batch_num,
+        "target_sequences_per_env": target_sequences,
+        "max_iterations_per_env": max_iterations_per_env,
+        "completion_timestamp": datetime.now().isoformat(),
+        "summary_stats": {
+            "total_environments": len(xml_paths),
+            "successful_environments": len(successful_envs),
+            "failed_environments": len(failed_envs),
+            "partial_environments": len(partial_envs),
+            "success_rate": len(successful_envs) / len(xml_paths) if xml_paths else 0
+        },
+        "environments": {}
+    }
+    
+    for xml_path in xml_paths:
+        env_id = os.path.splitext(os.path.basename(xml_path))[0]
+        sequences = final_counts.get(env_id, 0)
+        iterations = final_iterations.get(env_id, 0)
+        
+        status = "success" if sequences >= target_sequences else \
+                "iteration_limit" if iterations >= max_iterations_per_env else \
+                "partial"
+        
+        summary_data["environments"][env_id] = {
+            "sequences_collected": sequences,
+            "iterations_executed": iterations,
+            "efficiency": sequences / iterations if iterations > 0 else 0,
+            "target_reached": sequences >= target_sequences,
+            "status": status
+        }
+    
+    with open(summary_file, 'w') as f:
+        json.dump(summary_data, f, indent=2)
+    
+    print(f"\nSummary saved to: {summary_file}")
+    
+    # Clean up iteration attempts directory at the end
+    cleanup_iteration_attempts(output_dir)
+
+def cleanup_iteration_attempts(output_dir):
+    """Clean up the iteration attempts directory after data collection is complete"""
+    attempts_dir = os.path.join(output_dir, "iteration_attempts")
+    if os.path.exists(attempts_dir):
+        try:
+            shutil.rmtree(attempts_dir)
+            print(f"Cleaned up iteration attempts directory: {attempts_dir}")
+        except Exception as e:
+            print(f"Warning: Could not remove iteration attempts directory {attempts_dir}: {e}")
+
 if __name__ == "__main__":
     # Set up signal handler for keyboard interrupt
     signal.signal(signal.SIGINT, signal_handler)
     
-    parser = argparse.ArgumentParser(description="Run NAMO data collection in parallel for a single environment")
+    parser = argparse.ArgumentParser(description="Run NAMO data collection in adaptive batches")
     parser.add_argument("--base-config", default="resources/input_files/examples/tasks/tamp_plan.yaml", 
                        help="Path to base YAML configuration file")
     parser.add_argument("--xml-path", required=True, 
-                       help="Path to the environment XML file")
-    parser.add_argument("--output-dir", default="/common/users/dm1487/namo_data/single_env_run", 
+                       help="Path to the environment XML file or directory")
+    parser.add_argument("--output-dir", default="/common/users/dm1487/namo_data/adaptive_run", 
                        help="Directory to store collected data")
     parser.add_argument("--log-dir", default="/common/users/dm1487/namo_data/logs", 
                        help="Directory to store log files")
-    parser.add_argument("--iterations", type=int, default=1000,
-                       help="Number of iterations to run (default: 1000)")
     parser.add_argument("--num-processes", type=int, default=24, 
-                       help="Maximum number of parallel processes (default: 1)")
+                       help="Maximum number of parallel processes (default: 24)")
+    parser.add_argument("--batch-size", type=int, default=50,
+                       help="Number of configs per batch (default: 50)")
+    parser.add_argument("--target-sequences", type=int, default=30,
+                       help="Target number of sequences per environment (default: 30)")
     parser.add_argument("--executable", default="./bin/examples/namo/interface_namo", 
                        help="Path to the interface_namo executable")
+    parser.add_argument("--start", type=int, default=0,
+                       help="Start index for the xml paths (default: 0)")
+    parser.add_argument("--end", type=int, default=None,
+                       help="End index for the xml paths (default: None)")
     parser.add_argument("--seed", type=int, default=None,
                        help="Random seed for generating run seeds (default: current time)")
-    parser.add_argument("--one-env", action="store_true", help="Run NAMO for a single environment")
+    parser.add_argument("--one-env", action="store_true", 
+                       help="Use one-env mode for primitive sharing")
+    parser.add_argument("--max-iterations-per-env", type=int, default=300,
+                       help="Maximum number of iterations per environment before giving up (default: 50)")
     args = parser.parse_args()
     
     # Set random seed for reproducibility
@@ -335,50 +650,46 @@ if __name__ == "__main__":
         temp_config_dir = setup_temp_directory()
         print(f"Using temporary directory for configs: {temp_config_dir}")
         
-        # Verify XML file exists
-        # if not os.path.exists(args.xml_path):
-        #     print(f"Error: XML file {args.xml_path} not found")
-        #     exit(1)
-        
-        # check if xml_path is a directory
+        # Get XML paths
         if os.path.isdir(args.xml_path):
-            # get all xml files in the directory
             xml_files = [f for f in os.listdir(args.xml_path) if f.endswith('.xml')]
             xml_paths = [os.path.join(args.xml_path, f) for f in xml_files]
         else:
             xml_paths = [args.xml_path]
-            
-        # sort xml_paths env_config_name
-        # env_config_name = args.xml_path.split("/")[-1].split("_")[4:7]
-        # env_config_name = "_".join(env_config_name)
-        # xml_paths = sorted(xml_paths, key=lambda x: x.split("/")[-1].split("_")[4:7])
-            
         
-        print(f"Using environment: {args.xml_path}")
-        print(f"Will run {args.iterations} iterations")
+        # Sort XML paths by numeric suffix if present
+        try:
+            sorted_xml_paths = sorted(xml_paths, key=lambda x: int(x.split('/')[-1].split('.xml')[0].split('_')[-1]))
+        except (ValueError, IndexError):
+            sorted_xml_paths = sorted(xml_paths)
+        
+        if args.end is None:
+            args.end = len(sorted_xml_paths)
+        
+        selected_xml_paths = sorted_xml_paths[args.start:args.end]
+        
+        print(f"Processing {len(selected_xml_paths)} environments (indices {args.start} to {args.end-1})")
+        print(f"Target: {args.target_sequences} sequences per environment")
         
         # Make sure output directory exists
         os.makedirs(args.output_dir, exist_ok=True)
         
-        # Generate configs for all iterations
-        configs, batch_id = generate_configs(
-            args.base_config, 
-            args.iterations, 
-            args.output_dir, 
-            xml_paths,
-            args.one_env,
-            temp_config_dir
+        # Run adaptive data collection
+        run_adaptive_data_collection(
+            executable_path=args.executable,
+            base_config_path=args.base_config,
+            output_dir=args.output_dir,
+            xml_paths=selected_xml_paths,
+            temp_dir=temp_config_dir,
+            log_dir=args.log_dir,
+            max_processes=args.num_processes,
+            batch_size=args.batch_size,
+            target_sequences=args.target_sequences,
+            max_iterations_per_env=args.max_iterations_per_env,
+            one_env=args.one_env
         )
         
-        print(f"Generated {len(configs)} configuration files with batch ID: {batch_id}")
-        
-        # Set up logging - returns log file path and timestamp for naming
-        main_log_file, run_timestamp = setup_logging(args.log_dir)
-        
-        # Run the processes
-        run_parallel_data_collection(args.executable, configs, args.log_dir, run_timestamp, args.num_processes)
-        
-        print(f"Data collection complete for batch {batch_id}")
+        print(f"Data collection complete!")
     
     except KeyboardInterrupt:
         print("\nOperation was cancelled by user")
@@ -387,6 +698,6 @@ if __name__ == "__main__":
         print(f"Error: {e}")
         traceback.print_exc()
     
-    # finally:
-    #     # Clean up temporary files
-    #     cleanup()
+    finally:
+        # Clean up temporary files
+        cleanup(args.output_dir)

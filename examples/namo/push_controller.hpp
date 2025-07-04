@@ -41,7 +41,7 @@ public:
         
     }
 
-    std::unique_ptr<MotionPrimitiveGenerator::PushState> execute_primitive(std::vector<double> qpos_vec, const std::string& object_name, int push_steps, int edge_idx) {
+    std::tuple<std::unique_ptr<MotionPrimitiveGenerator::PushState>, json> execute_primitive(std::vector<double> qpos_vec, const std::string& object_name, int push_steps, int edge_idx) {
         env.set_zero_velocity();
         env.set_qpos(qpos_vec);
         env.step_simulation();
@@ -58,6 +58,8 @@ public:
 
         space_point_t control_point = env.get_control_space_point();
 
+        json control_sequence = json::array();
+
         for (int i = 0; i < push_steps; i++) {
             
             if (i == 0) { // at the first pust step, reset the robot position to the push point
@@ -71,6 +73,12 @@ public:
                 auto current_object_state = env.get_object_state(object_name);
                 auto current_push_points = MotionPrimitiveGenerator::transform_points(all_edge_points[object_name], current_object_state->position, current_object_state->quaternion);
                 auto current_mid_points = MotionPrimitiveGenerator::transform_points(all_mid_points[object_name], current_object_state->position, current_object_state->quaternion);
+
+
+                auto robot_state = env.get_robot_state();
+                control_sequence.push_back({
+                    {"position", {robot_state->position[0], robot_state->position[1]}},
+                });
                 
                 // update the push_state and generate new control
                 push_state->current_edge_point = current_push_points[edge_idx]; // TODO: change to current robot position
@@ -84,8 +92,13 @@ public:
             }
             env.set_zero_velocity();
             env.step_simulation();
+
+            auto robot_state = env.get_robot_state();
+            control_sequence.push_back({
+                {"position", {robot_state->position[0], robot_state->position[1]}},
+            });
         }
-        return push_state;
+        return std::make_tuple(std::move(push_state), control_sequence);
     }
 
     // bool execute_push_action(const std::string& object_name, const std::vector<int>& allowed_primitive_indices, const std::vector<double>& goal_state) {
@@ -184,6 +197,9 @@ public:
         std::unique_ptr<ActionStep> action_step = nullptr;
         while(num_steps < mpc_steps_limit) {
 
+
+            
+
             // generate the control plan which is a sequence of motion primitives
             std::vector<PlanStep> control_plan = compute_control_plan(object_name, start_pose, goal_pose, allowed_primitive_indices, symmetry_rotations);
             
@@ -204,7 +220,7 @@ public:
                 env.get_state_space()->copy_vector_from_point(qpos_vec, qpos); // destination vector, source point
 
                 // Execute primitive and get push state
-                auto push_state = execute_primitive(qpos_vec, object_name, step.push_steps, step.edge_idx);
+                auto [push_state, control_sequence] = execute_primitive(qpos_vec, object_name, step.push_steps, step.edge_idx);
                 
                 // std::cout <<  "Plan steps: " << plan_step << " " << step.push_steps << "\n";
                 // execute the first non-zero push step from the control plan
