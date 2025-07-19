@@ -82,7 +82,7 @@ public:
 
             // Check if we reached the goal
             if (is_goal_reached_fn(current->state, transformed_goal, symmetry_rotations)) {
-                std::cout << "goal reached" << std::endl;
+                // std::cout << "goal reached" << std::endl;
                 std::vector<PlanStep> plan_sequence;
                 std::vector<SearchState*> path;
                 

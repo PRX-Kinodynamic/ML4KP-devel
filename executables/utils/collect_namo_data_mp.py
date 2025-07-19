@@ -92,18 +92,27 @@ def count_existing_sequences_per_env(output_dir):
     """Count sequences and iterations for each environment configuration"""
     env_sequence_counts = defaultdict(int)
     env_iteration_counts = defaultdict(int)
+    env_single_no_action = defaultdict(bool)  # Track environments with single datapoint, no action
     
-    # Count sequences from JSON files (unchanged)
+    # Count sequences from JSON files and check for single datapoint with no action
     pattern = os.path.join(output_dir, "sequence_*.json")
     sequence_files = glob.glob(pattern)
     
     for file_path in sequence_files:
+        if 'final_state' not in file_path:
+            continue
         try:
             with open(file_path, 'r') as f:
                 data = json.load(f)
                 config_name = data.get('config_name', '')
                 if config_name:
                     env_sequence_counts[config_name] += 1
+                    
+                    # Check if this sequence has single datapoint with no action
+                    data_points = data.get('data_points', [])
+                    if len(data_points) == 1 and 'action' not in data_points[0]:
+                        env_single_no_action[config_name] = True
+                        
         except (json.JSONDecodeError, KeyError, FileNotFoundError) as e:
             print(f"Warning: Could not process sequence file {file_path}: {e}")
             continue
@@ -123,11 +132,11 @@ def count_existing_sequences_per_env(output_dir):
                 print(f"Warning: Could not process attempt file {file_path}: {e}")
                 continue
     
-    return dict(env_sequence_counts), dict(env_iteration_counts)
+    return dict(env_sequence_counts), dict(env_iteration_counts), dict(env_single_no_action)
 
 def filter_environments_needing_data(xml_paths, output_dir, target_sequences=30, max_iterations_per_env=50):
     """Filter environments that still need more sequences and haven't exceeded iteration limits"""
-    env_counts, iter_counts = count_existing_sequences_per_env(output_dir)
+    env_counts, iter_counts, single_no_action = count_existing_sequences_per_env(output_dir)
     
     environments_needing_data = []
     
@@ -135,6 +144,12 @@ def filter_environments_needing_data(xml_paths, output_dir, target_sequences=30,
         env_id = os.path.splitext(os.path.basename(xml_path))[0]
         current_sequences = env_counts.get(env_id, 0)
         current_iterations = iter_counts.get(env_id, 0)
+        has_single_no_action = single_no_action.get(env_id, False)
+        
+        # Skip environment if it has a sequence with single datapoint and no action
+        if has_single_no_action:
+            print(f"Skipping {env_id}: has sequence with single datapoint and no action key")
+            continue
         
         # Only include if:
         # 1. Haven't reached target sequences AND
@@ -172,7 +187,7 @@ def generate_configs_batch_aggressive(base_config_path, batch_size, output_dir, 
     while configs_generated < batch_size:
         envs_used_this_round = 0
         
-        for env_info in environments_needing_data[:2]:
+        for env_info in environments_needing_data[:1]:
             if configs_generated >= batch_size:
                 break
                 
@@ -503,7 +518,7 @@ def run_adaptive_data_collection(executable_path, base_config_path, output_dir, 
     print("FINAL SUMMARY")
     print(f"{'='*60}")
     
-    final_counts, final_iterations = count_existing_sequences_per_env(output_dir)
+    final_counts, final_iterations, final_single_no_action = count_existing_sequences_per_env(output_dir)
     
     print(f"Total iterations executed: {total_iterations}")
     print(f"Total batches: {batch_num}")
@@ -520,6 +535,7 @@ def run_adaptive_data_collection(executable_path, base_config_path, output_dir, 
         sequences = final_counts.get(env_id, 0)
         iterations = final_iterations.get(env_id, 0)
         efficiency = sequences / iterations if iterations > 0 else 0
+        has_single_no_action = final_single_no_action.get(env_id, False)
         
         status = ""
         if sequences >= target_sequences:
@@ -527,6 +543,9 @@ def run_adaptive_data_collection(executable_path, base_config_path, output_dir, 
             successful_envs.append(env_id)
         elif iterations >= max_iterations_per_env:
             status = "❌ ITERATION_LIMIT"
+            failed_envs.append(env_id)
+        elif has_single_no_action:
+            status = "❌ SINGLE_NO_ACTION"
             failed_envs.append(env_id)
         else:
             status = "⚠️  PARTIAL"
@@ -575,6 +594,7 @@ def run_adaptive_data_collection(executable_path, base_config_path, output_dir, 
         env_id = os.path.splitext(os.path.basename(xml_path))[0]
         sequences = final_counts.get(env_id, 0)
         iterations = final_iterations.get(env_id, 0)
+        has_single_no_action = final_single_no_action.get(env_id, False)
         
         status = "success" if sequences >= target_sequences else \
                 "iteration_limit" if iterations >= max_iterations_per_env else \
@@ -585,7 +605,8 @@ def run_adaptive_data_collection(executable_path, base_config_path, output_dir, 
             "iterations_executed": iterations,
             "efficiency": sequences / iterations if iterations > 0 else 0,
             "target_reached": sequences >= target_sequences,
-            "status": status
+            "status": status,
+            "has_single_no_action": has_single_no_action
         }
     
     with open(summary_file, 'w') as f:
@@ -619,13 +640,13 @@ if __name__ == "__main__":
                        help="Directory to store collected data")
     parser.add_argument("--log-dir", default="/common/users/dm1487/namo_data/logs", 
                        help="Directory to store log files")
-    parser.add_argument("--num-processes", type=int, default=24, 
+    parser.add_argument("--num-processes", type=int, default=25, 
                        help="Maximum number of parallel processes (default: 24)")
     parser.add_argument("--batch-size", type=int, default=50,
                        help="Number of configs per batch (default: 50)")
     parser.add_argument("--target-sequences", type=int, default=30,
                        help="Target number of sequences per environment (default: 30)")
-    parser.add_argument("--executable", default="./bin/examples/namo/interface_namo", 
+    parser.add_argument("--executable", default="./bin/examples/namo_v2/interface_namo", 
                        help="Path to the interface_namo executable")
     parser.add_argument("--start", type=int, default=0,
                        help="Start index for the xml paths (default: 0)")

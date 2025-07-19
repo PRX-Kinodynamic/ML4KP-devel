@@ -66,7 +66,7 @@ def run_namo_eval(args):
     import multiprocessing as mp
     num_processes = 1
     
-    execution_cmd = "./bin/examples/namo/interface_namo"
+    execution_cmd = "./bin/examples/namo_v2/interface_namo"
     base_folder = "resources"
     yaml_parent = "input_files"
     yaml_folder = "examples/tasks"
@@ -86,7 +86,7 @@ def run_namo_eval(args):
     yaml_params["smoothing_enabled"] = False
     yaml_params["total_iter"] = 10
     
-    yaml_params["endpoint"] = "tcp://arrakis.cs.rutgers.edu:5556"
+    yaml_params["endpoint"] = "tcp://arrakis.cs.rutgers.edu:5557"
 
     # if args.eval_type == "one_scene":
     #     yaml_params["robot_goal"] = [2.5, 2.5]
@@ -104,23 +104,27 @@ def run_namo_eval(args):
     
     # ('env_config_302', 24), ('env_config_381', 22), ('env_config_188', 30)
     # set_xml_files = [('env_config_321', 26), ('env_config_230', 22)]
-    set_xml_files =[('env_config_355', 13), ('env_config_259', 18), ('env_config_312', 15), ('env_config_17', 18), ('env_config_239', 16)]
-    # set_xml_files = [('env_config_27', 5), ('env_config_367', 7), ('env_config_47', 5), ('env_config_216', 1), ('env_config_142', 4)] # hard
+    # set_xml_files =[('env_config_355', 13), ('env_config_259', 18), ('env_config_312', 15), ('env_config_17', 18), ('env_config_239', 16)]
+    # set_xml_files = [('env_config_367', 7), ('env_config_47', 5), ('env_config_216', 1), ('env_config_142', 4)] # hard
     # set_xml_files = [('env_config_216', 1), ('env_config_142', 4)]
     
     # ood
     # set_xml_files = [('env_config_182976', 21), ('env_config_182863', 30), ('env_config_182904', 30), ('env_config_183176', 29), ('env_config_183171', 27)]
     # set_xml_files = [('env_config_182936', 13), ('env_config_182884', 14), ('env_config_183030', 19), ('env_config_183036', 20), ('env_config_183010', 19)]
-    # set_xml_files = [('env_config_183016', 10), ('env_config_183230', 8), ('env_config_183101', 7), ('env_config_183132', 2), ('env_config_182959', 4)]
+    # set_xml_files = [('env_config_70645', 10), ('env_config_70643', 8), ('env_config_70618', 7), ('env_config_70605', 2), ('env_config_70602', 4)]
+    # set_xml_files = [('env_config_95234', 10), ('env_config_95252', 8), ('env_config_92907', 7), ('env_config_88964', 2), ('env_config_85408', 4)]
     
     # medium_xml_files = []
     # hard_xml_files = []
+    # set_xml_files = ['env_config_182863', 'env_config_182904', 'env_config_182815', 'env_config_182794', 'env_config_182739', 'env_config_182796', 'env_config_182860', 'env_config_182926', 'env_config_182900', 'env_config_182933', 'env_config_182841', 'env_config_182791', 'env_config_182934', 'env_config_182955', 'env_config_182807', 'env_config_182883', 'env_config_182903', 'env_config_182773']
+    # set_xml_files = ['env_config_182766', 'env_config_182976', 'env_config_182816', 'env_config_182850', 'env_config_182879', 'env_config_182967', 'env_config_182927', 'env_config_182896', 'env_config_182847', 'env_config_182736', 'env_config_182965', 'env_config_182821']
+    set_xml_files = ['env_config_182936', 'env_config_182741', 'env_config_182884', 'env_config_182782', 'env_config_182930', 'env_config_182945', 'env_config_182959', 'env_config_182799', 'env_config_182788']
     
     ## add multiprocessing here for this loop
     xml_files = sorted(model_xml, key=lambda x: int(x.split('/')[-1].split('.')[0].split('_')[-1]))
     
     final_xml_files = []
-    for set_name, _ in set_xml_files:
+    for set_name in set_xml_files:
         for xml_file in xml_files:
             if set_name + '.xml' in xml_file:
                 final_xml_files.append(xml_file)

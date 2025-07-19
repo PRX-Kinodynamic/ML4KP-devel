@@ -14,8 +14,8 @@ discretization: 0.2
 goal_sampling_mode: file
 goals_file: predictions/radius1/simple_scene_radiusgnn/goal_lists/env_config_4512.txt
 num_random_goals: 300
-random_seed: 0
-visualize: true
+random_seed: 10
+visualize: false
 radius_step: 0.05
 
 
@@ -29,10 +29,10 @@ endpoint: "tcp://arrakis.cs.rutgers.edu:5556"
 evaluate: false # results
 results_folder: out/namo_results/one_scene
 # apr20_25/fixed_start_fixed_goal_many_env
-xml_path: custom_walled_envs/jun21/random_start_random_goal_single_obstacle_room_2_50k_halfrad/env_config_153.xml
+xml_path: custom_walled_envs/jun22/random_start_random_goal_single_obstacle_room_2_200k_halfrad/env_config_367.xml
 # xml_path: custom_walled_envs/empty/env_config_1.xml
-robot_goal: [0.9567318603240329, 2.057299185025484]
-total_iter: 15
+robot_goal: [-0.0358347110841688, -1.6520417108041452]
+total_iter: 10
 object_strategy: 0 # 0: random, 1: mcr, 2: random with 90% chance to use mcr, 3: diffusion
 
 diffusion: 
@@ -45,7 +45,8 @@ data_collection:
   run_id: 1
 
 wavefront_planner:
-  resolution: 0.025
+  resolution: 0.02
+
 
 motion_primitives:
   base_config_path: resources/models/mujoco_envs_search_push/env_config_base.xml

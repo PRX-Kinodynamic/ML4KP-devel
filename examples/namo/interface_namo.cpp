@@ -217,7 +217,7 @@ int main(int argc, char* argv[]) {
 
 
 
-    std::vector<std::unique_ptr<ActionStep>> action_steps;
+    std::vector<std::unique_ptr<ActionStepMPC>> action_steps;
     
     try {
         // Environment setup
@@ -316,24 +316,64 @@ int main(int argc, char* argv[]) {
                 file << buffer;
             }
             // Optimize action sequence
-            std::vector<std::vector<int>> optimized_sequences;
-            if (smoothing_enabled) {
-                optimized_sequences = planner.optimizeActionSequence(action_steps, robot_global_goal, final_wavefronts_dir);
 
-                if (optimized_sequences.size() == 0) {
+    
+            std::vector<std::vector<int>> optimized_sequences_final_state;
+            std::vector<std::vector<int>> optimized_sequences_goal_state;
+            if (smoothing_enabled) {
+                // action_steps > 5, then only use the last 5 actions to optimize the final state
+                if (action_steps.size() > 5) {
+                    std::vector<std::unique_ptr<ActionStepMPC>> action_steps_last_5;
+                    for (int i = action_steps.size() - 5; i < action_steps.size(); i++) {
+                        std::unique_ptr<ActionStepMPC> action_step_ptr = std::make_unique<ActionStepMPC>();
+                        action_step_ptr->object_name = action_steps[i]->object_name;
+                        action_step_ptr->goal_state = action_steps[i]->goal_state;
+                        action_step_ptr->final_state = action_steps[i]->final_state;
+                        action_steps_last_5.push_back(std::move(action_step_ptr));
+                    }
+                    auto subset_sequences = planner.optimizeActionSequence2(action_steps_last_5, robot_global_goal, final_wavefronts_dir);
+                    
+                    // Map indices back to original action_steps
+                    for (auto& seq : subset_sequences) {
+                        for (auto& idx : seq) {
+                            idx += (action_steps.size() - 5);  // Adjust to original indices
+                        }
+                    }
+                    optimized_sequences_final_state = subset_sequences;
+                }
+                else{
+                    optimized_sequences_final_state = planner.optimizeActionSequence2(action_steps, robot_global_goal, final_wavefronts_dir);
+                }
+
+                if (optimized_sequences_final_state.size() == 0) {
                     std::cout << "No optimized action sequences found." << std::endl;
                     if (evaluate_mode) {
-                        std::string buffer = "," + std::to_string(action_steps.size()) + "\n";
+                        std::string buffer = "," + std::to_string(action_steps.size());
                         file << buffer;
                     }
-                    file.close();
-                    return 0;
                 }
+                std::cout << "Found " << optimized_sequences_final_state.size() << " optimized final state action sequences." << std::endl;
+            
                 
-                std::cout << "Found " << optimized_sequences.size() << " optimized action sequences." << std::endl;
+                optimized_sequences_goal_state = planner.optimizeActionSequence(action_steps, robot_global_goal, final_wavefronts_dir);
+
+                if (optimized_sequences_goal_state.size() == 0) {
+                    std::cout << "No optimized action sequences found." << std::endl;
+                    if (evaluate_mode) {
+                        std::string buffer = "," + std::to_string(action_steps.size());
+                        file << buffer;
+                    }
+                }   
+
+                std::cout << "Found " << optimized_sequences_goal_state.size() << " optimized goal state action sequences." << std::endl;
+                
 
                 if (evaluate_mode) {
-                    for (const auto& seq : optimized_sequences) {
+                    for (const auto& seq : optimized_sequences_final_state) {
+                        std::string buffer = "," + std::to_string(seq.size());
+                        file << buffer;
+                    }
+                    for (const auto& seq : optimized_sequences_goal_state) {
                         std::string buffer = "," + std::to_string(seq.size());
                         file << buffer;
                     }
@@ -347,6 +387,15 @@ int main(int argc, char* argv[]) {
             // else{
             //     optimized_sequences = action_steps;
             // }
+
+
+            if (optimized_sequences_final_state.size() == 0 && optimized_sequences_goal_state.size() == 0) {
+                std::cout << "No optimized action sequences found." << std::endl;
+                if (evaluate_mode) {
+                    std::string buffer = "," + std::to_string(action_steps.size());
+                    file << buffer;
+                }
+            }
             
             // Check if data collection is enabled in parameters
             bool collect_data = params["data_collection"]["enabled"].as<bool>();  // Default to false if not specified
@@ -364,11 +413,16 @@ int main(int argc, char* argv[]) {
                 experiment_prefix = params["data_collection"]["run_id"].as<std::string>() + "_";
                 
                 // Combine prefix with unique process identifier
-                std::string experiment_id = experiment_prefix + generateExperimentId();
+                std::string experiment_id = experiment_prefix + "final_state_" + generateExperimentId();
                 
                 // Collect and store state-action pairs
                 int collected_points = planner.collectStateActionPairs(
-                    optimized_sequences, action_steps, data_dir, experiment_id);
+                    optimized_sequences_final_state, action_steps, data_dir, experiment_id, true);
+
+                experiment_id = experiment_prefix + "goal_state_" + generateExperimentId();
+
+                collected_points += planner.collectStateActionPairs(
+                    optimized_sequences_goal_state, action_steps, data_dir, experiment_id, false);
                 
                 std::cout << "Collected " << collected_points << " state-action pairs." << std::endl;
                 std::cout << "Data stored in " << data_dir << " with experiment ID: " << experiment_id << std::endl;

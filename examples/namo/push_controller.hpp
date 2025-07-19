@@ -19,6 +19,12 @@ struct ActionStep {
     std::unique_ptr<MotionPrimitiveGenerator::PushState> push_state;
 };
 
+struct ActionStepMPC {
+    std::string object_name;
+    std::vector<double> goal_state;
+    std::vector<double> final_state;
+};
+
 using json = nlohmann::json;
 
 /**

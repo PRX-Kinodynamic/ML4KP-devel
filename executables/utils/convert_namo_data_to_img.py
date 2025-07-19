@@ -120,6 +120,8 @@ class ImageConverter:
             
             # Goal mask
             goal_state = data_point['action']['goal_state']
+            if data_point['action']['which_state'] == 'final': # this is to deal with the "final" state data, where final means use of next state as goal and it works
+                goal_state = data_point['action']['final_state']
             rotation = R.from_quat(goal_state['quaternion'], scalar_first=True).as_euler('xyz', degrees=True)[2]
             self._draw_rotated_rectangle(goal_mask,
                                       (goal_state['position'][0], goal_state['position'][1]),
@@ -194,8 +196,8 @@ def main():
     
     model_folder = "resources/models/custom_walled_envs/jun22"
     model_type = "random_start_random_goal_single_obstacle_room_2_200k_halfrad"
-    data_dir = f"/common/users/dm1487/namo_data/jul3/random_start_random_goal_single_obstacle_room_2_200k"    
-    save_dir = f"/common/users/dm1487/namo_data/images/jul3/random_start_random_goal_single_obstacle_room_2_big"
+    data_dir = f"/common/users/dm1487/namo_data/jul5/random_start_random_goal_single_obstacle_room_2_200k"    
+    save_dir = f"/common/users/dm1487/namo_data/images/jul11/random_start_random_goal_single_obstacle_room_2_200k"
     os.makedirs(save_dir, exist_ok=True)
     
     # Collect all json files
@@ -231,7 +233,7 @@ def main():
     # Optionally print error details
     # if failed > 0:
     #     print("\nError details:")
-    #     for result in results:
+    #     for result in results:e
     #         if "Error processing" in result:
     #             print(f"  {result}")
 
