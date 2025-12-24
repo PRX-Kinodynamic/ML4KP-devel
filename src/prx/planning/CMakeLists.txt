@@ -5,7 +5,11 @@ file(GLOB_RECURSE SRC_PRX_LIB_PLANNING  ./*.cpp)
 
 set(${PROJECT_NAME}_HEADERS "${${PROJECT_NAME}_HEADERS};${HEADER_PRX_LIB_PLANNING}" PARENT_SCOPE)
 
-add_library(Planning  ${SRC_PRX_LIB_PLANNING})
+if (${BUILD_STATIC_LIBRARY})
+	add_library(Planning STATIC ${SRC_PRX_LIB_PLANNING})
+else()
+	add_library(Planning ${SRC_PRX_LIB_PLANNING})
+endif()
 
 target_include_directories(Planning PUBLIC 
 														PUBLIC

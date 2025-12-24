@@ -5,7 +5,11 @@ file(GLOB_RECURSE SRC_PRX_LIB_VISUALIZATION  ./*.cpp)
 
 set(${PROJECT_NAME}_HEADERS "${${PROJECT_NAME}_HEADERS};${HEADER_PRX_LIB_VISUALIZATION}" PARENT_SCOPE)
 
-add_library(Visualization ${SRC_PRX_LIB_VISUALIZATION})
+if (${BUILD_STATIC_LIBRARY})
+	add_library(Visualization STATIC ${SRC_PRX_LIB_VISUALIZATION})
+else()
+	add_library(Visualization ${SRC_PRX_LIB_VISUALIZATION})
+endif()
 
 target_include_directories(Visualization 	
 														PUBLIC

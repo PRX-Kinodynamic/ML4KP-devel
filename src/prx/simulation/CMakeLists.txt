@@ -5,7 +5,11 @@ file(GLOB_RECURSE SRC_PRX_LIB_SIMULATION  ./*.cpp)
 
 set(${PROJECT_NAME}_HEADERS "${${PROJECT_NAME}_HEADERS};${HEADER_PRX_LIB_SIMULATION}" PARENT_SCOPE)
 
-add_library(Simulation ${SRC_PRX_LIB_SIMULATION})
+if (${BUILD_STATIC_LIBRARY})
+	add_library(Simulation STATIC ${SRC_PRX_LIB_SIMULATION})
+else()
+	add_library(Simulation ${SRC_PRX_LIB_SIMULATION})
+endif()
 
 target_include_directories(Simulation
 														PUBLIC

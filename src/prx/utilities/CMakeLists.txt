@@ -8,7 +8,11 @@ file(GLOB_RECURSE SRC_PRX_LIB_UTILITIES  ./*.cpp)
 
 set(${PROJECT_NAME}_HEADERS "${${PROJECT_NAME}_HEADERS};${HEADER_PRX_LIB_UTILITIES}" PARENT_SCOPE)
 
-add_library(Utilities ${SRC_PRX_LIB_UTILITIES})
+if (${BUILD_STATIC_LIBRARY})
+	add_library(Utilities STATIC ${SRC_PRX_LIB_UTILITIES})
+else()
+	add_library(Utilities ${SRC_PRX_LIB_UTILITIES})
+endif()
 
 target_include_directories(Utilities PUBLIC
 														PUBLIC

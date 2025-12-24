@@ -12,6 +12,7 @@ if(BUILD_FOR_GTSAM)
 	# add_library(FactorGraphs INTERFACE ${HDS_PRX_LIB_FACTOR_GRAPHS})
 	# add_library(FactorGraphs INTERFACE IMPORTED ${HDS_PRX_LIB_FACTOR_GRAPHS} GLOBAL)
 	add_library(FactorGraphs INTERFACE  ${HDS_PRX_LIB_FACTOR_GRAPHS})
+	
 	set_target_properties(FactorGraphs PROPERTIES LINKER_LANGUAGE CXX)
 
 	get_target_property(GTSAM_INCLUDE_DIRECTORIES gtsam INTERFACE_INCLUDE_DIRECTORIES)

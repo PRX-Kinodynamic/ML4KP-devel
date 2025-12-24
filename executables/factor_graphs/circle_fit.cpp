@@ -186,6 +186,7 @@ int main(int argc, char* argv[])
   const double beta{ std::asin(L / (2.0 * radius_result)) };
   const double delta{ std::atan(2.0 * std::tan(beta)) };
 
+  // PRINT_KEYS();
   std::ofstream ofs_out(params["out"].as<>());
   ofs_out << "# radius center(x,y) error\n";
   ofs_out << radius_result << " ";

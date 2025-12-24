@@ -16,8 +16,11 @@ set(${PROJECT_NAME}_HEADERS "${${PROJECT_NAME}_HEADERS};${HEADER_PRX_LIB_EXTERNA
 
 # endif(BUILD_FOR_GTSAM)
 
-add_library(External ${SRC_PRX_LIB_EXTERNAL_PQP} ) 
-
+if (${BUILD_STATIC_LIBRARY})
+	add_library(External STATIC ${SRC_PRX_LIB_EXTERNAL_PQP} ) 
+else()
+	add_library(External ${SRC_PRX_LIB_EXTERNAL_PQP} ) 
+endif()
 
 target_include_directories(External 
 														PUBLIC
@@ -32,7 +35,7 @@ if(BUILD_FOR_TORCH AND DEFINED ENV{Torch_DIR})
 	message(STATUS "Linking Torch: ${TORCH_LIBRARIES}")
 	target_link_libraries(External PUBLIC ${TORCH_LIBRARIES})
 endif()
-target_link_libraries(External PUBLIC Boost::filesystem Boost::system Threads::Threads)
+target_link_libraries(External PUBLIC Boost::filesystem Boost::system Boost::serialization Threads::Threads)
 
 # if(BUILD_FOR_GTSAM)
 	# target_link_libraries(External PUBLIC gtsam)

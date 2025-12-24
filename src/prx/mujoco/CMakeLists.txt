@@ -12,7 +12,11 @@ file(GLOB_RECURSE HEADER_PRX_LIB_MJSIM RELATIVE ${CMAKE_SOURCE_DIR}/src ./*.hpp)
 
 # set(${PROJECT_NAME}_HEADERS "${${PROJECT_NAME}_HEADERS};${HEADER_PRX_LIB_MJSIM}" PARENT_SCOPE)
 
-add_library(${PROJECT_NAME}_mjsim STATIC ${SRC_PRX_LIB_MJSIM})
+if (${BUILD_STATIC_LIBRARY})
+    add_library(${PROJECT_NAME}_mjsim STATIC ${SRC_PRX_LIB_MJSIM})
+else()
+    add_library(${PROJECT_NAME}_mjsim ${SRC_PRX_LIB_MJSIM})
+endif()
 
 target_compile_definitions(${PROJECT_NAME}_mjsim PUBLIC -DMJ_PATH="$ENV{MJ_PATH}")
 target_include_directories(${PROJECT_NAME}_mjsim PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

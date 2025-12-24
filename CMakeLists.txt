@@ -15,6 +15,7 @@ set(BUILD_FOR_MUJOCO ON CACHE BOOL "Set ON/TRUE for building using MuJoCo")
 set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
 set(BUILD_FOR_GTSAM ON CACHE BOOL "Set ON/TRUE for building GTSAM factor graphs")
 set(BUILD_WITH_SIMD OFF CACHE BOOL "Set ON/TRUE for building with SIMD (vectorized) operations")
+set(BUILD_STATIC_LIBRARY OFF CACHE BOOL "Set ON/TRUE for building static library")
 
 set(${PROJECT_NAME}_VERSION 1.0)
 set(${PROJECT_NAME}_HEADERS "" CACHE STRING "Headers to be exported")
@@ -53,7 +54,7 @@ message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 
 add_definitions(${BUILD_FLAGS})
 
-find_package(Boost COMPONENTS system filesystem unit_test_framework  REQUIRED)
+find_package(Boost COMPONENTS system filesystem unit_test_framework serialization REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(Eigen3 CONFIG REQUIRED)
