@@ -124,6 +124,22 @@ public:
     return gtsam::Pose2(gtsam::Rot2(_angle), translation());
   }
 
+  static SE2_t interpolate(const SE2_t& x0, const SE2_t& x1, const double ti)
+  {
+    // This is not a *linear* interpolation: ti==0.5 may not be *exactly* the mid point due to theta
+    // R1 = R0 * Expmap(r0);
+    // R0^{-1} * R1 = Expmap(r0)
+    // Logmap(R0^{-1} * R1) = r0
+    // Ri = R0 * Expmap(r0 * ti)
+    prx_assert(0.0 <= ti and ti <= 1.0, "[SE2_t::interpolate] ti needs to be \\in [0,1]");
+
+    const gtsam::Pose2 P0{ gtsam::Pose2(gtsam::Rot2(x0.angle()), x0.translation()) };
+    const gtsam::Pose2 P1{ gtsam::Pose2(gtsam::Rot2(x1.angle()), x1.translation()) };
+    const Eigen::Vector<double, 3> p0{ gtsam::Pose2::Logmap(P0.inverse() * P1) };
+    const gtsam::Pose2 Pi{ P0 * gtsam::Pose2::Expmap(p0 * ti) };
+    return SE2_t(Pi);
+  }
+
   template <typename ScrewAxis>
   static SE2_t Expmap(const ScrewAxis& s, gtsam::OptionalJacobian<3, 3> H = boost::none)
   {

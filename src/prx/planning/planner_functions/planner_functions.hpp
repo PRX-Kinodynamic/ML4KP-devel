@@ -31,7 +31,7 @@ typedef std::function<std::set<std::pair<std::shared_ptr<plan_t>, std::shared_pt
 
 // RRT*
 typedef std::function<void(trajectory_t&, const space_point_t, const space_point_t, const double)> steer_function_t;
-
+typedef std::function<void(space_point_t&, double&)> stopping_control_t;
 class planner_functions_t
 {
 public:
@@ -64,9 +64,9 @@ void default_sample_plan(plan_t&, space_t*, int min_steps, int max_steps);
 bool default_valid_trajectory(trajectory_t&, valid_state_t);
 // bool default_valid_trajectory(trajectory_t&,space_t*,std::shared_ptr<collision_group_t>);
 
-bool default_valid_stop(space_point_t start_state, plan_t* stopping_plan, trajectory_t* stopping_traj,
-                        std::shared_ptr<system_group_t> sg,
-                        std::shared_ptr<collision_group_t> cg);  // replanning: inevitable collision state check
+// bool default_valid_stop(space_point_t start_state, plan_t* stopping_plan, trajectory_t* stopping_traj,
+//                         std::shared_ptr<system_group_t> sg,
+//                         std::shared_ptr<collision_group_t> cg);  // replanning: inevitable collision state check
 
 bool default_valid_state(space_point_t&, space_t*, std::shared_ptr<collision_group_t>);
 
@@ -94,5 +94,7 @@ default_expand_set(space_point_t& start_state, std::set<std::pair<space_point_t,
                    std::shared_ptr<system_group_t> sg, propagate_t prop);
 
 custom_check_t create_default_goal_check(const space_t*, const space_point_t, const double);
+
+void default_stopping_control(space_point_t&, std::shared_ptr<system_group_t>, double&);
 
 }  // namespace prx

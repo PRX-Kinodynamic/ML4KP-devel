@@ -72,6 +72,16 @@ inline void print_variables(std::ostream& stream, const std::string& name, const
 #define PRX_DBG_VARS(...) prx::dbg::print_variables(std::cout, #__VA_ARGS__, __VA_ARGS__);
 #define PRX_MSG(MSG)                                                                                                   \
   {                                                                                                                    \
-    const std::string msg{ MSG };                                                                                      \
+    std::stringstream strstr;                                                                                          \
+    strstr << MSG;                                                                                                     \
+    std::string msg{ strstr.str() };                                                                                   \
     PRX_DBG_VARS(msg)                                                                                                  \
+  };
+
+#define PRX_MSG_VARS(MSG, ...)                                                                                         \
+  {                                                                                                                    \
+    std::stringstream strstr;                                                                                          \
+    strstr << MSG;                                                                                                     \
+    std::string msg{ strstr.str() };                                                                                   \
+    PRX_DBG_VARS(msg, __VA_ARGS__)                                                                                     \
   };

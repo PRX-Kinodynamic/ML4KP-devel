@@ -114,6 +114,8 @@ class dirt_t : public rrt_t
 public:
   using Node = dirt_node_t;
   using Edge = rrt_edge_t;
+  using EdgePtr = std::shared_ptr<Edge>;
+  using NodePtr = std::shared_ptr<Node>;
 
   dirt_t(const std::string& new_name);
   virtual ~dirt_t();

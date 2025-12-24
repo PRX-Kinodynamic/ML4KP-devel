@@ -132,7 +132,7 @@ int main()
   // hole.push_back(Point(8.5, 11.5));
   // hole.push_back(Point(11.5, 11.5));
   // hole.push_back(Point(11.5, 8.5));
-  SsPtr iss = CGAL::create_interior_straight_skeleton_2(poly);
+  auto iss = CGAL::create_interior_straight_skeleton_2(poly);
   // CGAL::Straight_skeletons_2::IO::print_straight_skeleton(*iss);
   // vertices_begin ()
   std::ofstream ofs(prx::out_path + "/cgal_skw.txt");

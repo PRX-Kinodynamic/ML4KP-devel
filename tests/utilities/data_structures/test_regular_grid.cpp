@@ -209,3 +209,31 @@ BOOST_AUTO_TEST_CASE(cube_cell_3D_grid_with_custom_cell_constructor)
     BOOST_REQUIRE(cell->element() == init_element);
   }
 }
+
+BOOST_AUTO_TEST_CASE(regular_grid_2D_neighbors)
+{
+  constexpr std::size_t Dimension{ 2 };
+  using Cell = prx::utilities::cube_cell_t<double, Dimension>;
+  using Grid = prx::utilities::regular_grid_t<Cell, Dimension>;
+
+  const Cell::Coordinate min(0.0, 1.0);
+  const Cell::Coordinate max(1.0, 2.0);
+  const Cell::Coordinate cell_length(0.1, 0.1);
+
+  Grid grid(min, max, cell_length);
+
+  const Cell::Coordinate md_pt(0.55, 1.55);
+  const std::vector<std::size_t> neighbors{ grid.neighbors(md_pt) };
+
+  BOOST_REQUIRE(neighbors.size() == 4);
+
+  const Cell::Coordinate n0(0.6, 1.5);  //  (+1,+0) * cell_length
+  const Cell::Coordinate n1(0.5, 1.6);  //  (+0,+1) * cell_length
+  const Cell::Coordinate n2(0.4, 1.5);  //  (-1,+0) * cell_length
+  const Cell::Coordinate n3(0.5, 1.4);  //  (+0,-1) * cell_length
+
+  BOOST_REQUIRE((grid[neighbors[0]]->vertex(0) - n0).isZero());
+  BOOST_REQUIRE((grid[neighbors[1]]->vertex(0) - n1).isZero());
+  BOOST_REQUIRE((grid[neighbors[2]]->vertex(0) - n2).isZero());
+  BOOST_REQUIRE((grid[neighbors[3]]->vertex(0) - n3).isZero());
+};

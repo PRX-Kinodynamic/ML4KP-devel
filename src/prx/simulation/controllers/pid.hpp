@@ -21,7 +21,14 @@ public:
 
   template <typename Gains>
   pid_t(const Gains kp, const Gains ki, const Gains kd, const Vector ref, const Diff diff = DefaultDiff)
-    : _kp(kp), _ki(ki), _kd(kd), _diff(diff), _ref(ref)
+    : _kp(kp)
+    , _ki(ki)
+    , _kd(kd)
+    , _diff(diff)
+    , _ref(ref)
+    , _integral(Vector::Zero())
+    , _deriv(Vector::Zero())
+    , _error(Vector::Zero())
   {
   }
 

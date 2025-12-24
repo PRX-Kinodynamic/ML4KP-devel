@@ -483,6 +483,30 @@ public:
     return _invalid_nodes.count(idx) == 0;
   }
 
+  friend void swap(tree_t& lhs, tree_t& rhs)
+  {
+    // std::cout << "swap(" << lhs << ", " << rhs << ")\n";
+    // std::swap(lhs.id, rhs.id);
+    std::swap(lhs.vertex_list, rhs.vertex_list);
+    std::swap(lhs.edge_list, rhs.edge_list);
+    std::swap(lhs.v_iter, rhs.v_iter);
+    std::swap(lhs.e_iter, rhs.e_iter);
+    std::swap(lhs.const_v_iter, rhs.const_v_iter);
+    std::swap(lhs.const_e_iter, rhs.const_e_iter);
+    std::swap(lhs.vertex_count, rhs.vertex_count);
+    std::swap(lhs.edge_count, rhs.edge_count);
+    std::swap(lhs.max_count, rhs.max_count);
+    std::swap(lhs.edge_id_counter, rhs.edge_id_counter);
+    std::swap(lhs.nodes_to_remove, rhs.nodes_to_remove);
+
+    std::swap(lhs.v_index_map, rhs.v_index_map);
+    std::swap(lhs.e_index_map, rhs.e_index_map);
+
+    std::swap(lhs._invalid_nodes, rhs._invalid_nodes);
+
+    std::swap(lhs.vertex_id_counter, rhs.vertex_id_counter);
+  }
+
   uint64_t vertex_id_counter;
 
 protected:

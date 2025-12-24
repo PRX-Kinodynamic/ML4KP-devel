@@ -9,7 +9,6 @@ class MLP(nn.Module):
         self.load_state_dict(torch.load(path, weights_only=True))
         self.eval()
 
-
     @staticmethod
     def create(input_dim, control_dim, hidden_sizes, output_dim, dropout_rate=0.05):    
         mlp = MLP()

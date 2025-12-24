@@ -186,6 +186,8 @@ void tree_t::clear()
   edge_id_counter = 0;
   vertex_id_counter = 0;
   max_count = 0;
+  edge_list.clear();
+  vertex_list.clear();
   v_iter = vertex_list.begin();
   e_iter = edge_list.begin();
   const_v_iter = vertex_list.begin();

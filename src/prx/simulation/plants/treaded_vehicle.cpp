@@ -36,25 +36,25 @@ treaded_vehicle_t::~treaded_vehicle_t()
 {
 }
 
-void treaded_vehicle_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times,
-                                                  std::vector<double>& ctrls)  //, std::vector<double> * controls)
-{
-  double stop_l = fabs(start_state->at(3) / 0.2);
-  double stop_r = fabs(start_state->at(4) / 0.2);
-  times.push_back(stop_l);
-  times.push_back(stop_r);
-  if (start_state->at(3) < 0)
-    ctrls.push_back(0.2);
-  else
-    ctrls.push_back(-0.2);
-  if (start_state->at(4) < 0)
-    ctrls.push_back(0.2);
-  else
-    ctrls.push_back(-0.2);
-  // std::cout << "time Left: " << stop_l << "\tRight: " << stop_r << std::endl;
-  // std::cout << "control Left: " << (*ctrls)[0] << "\tRight: " << (*ctrls)[1] << std::endl;
-  // std::cout << "Acc Left: " << al << "\tRight: " << ar << std::endl;
-}
+// void treaded_vehicle_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times,
+//                                                   std::vector<double>& ctrls)  //, std::vector<double> * controls)
+// {
+//   double stop_l = fabs(start_state->at(3) / 0.2);
+//   double stop_r = fabs(start_state->at(4) / 0.2);
+//   times.push_back(stop_l);
+//   times.push_back(stop_r);
+//   if (start_state->at(3) < 0)
+//     ctrls.push_back(0.2);
+//   else
+//     ctrls.push_back(-0.2);
+//   if (start_state->at(4) < 0)
+//     ctrls.push_back(0.2);
+//   else
+//     ctrls.push_back(-0.2);
+//   // std::cout << "time Left: " << stop_l << "\tRight: " << stop_r << std::endl;
+//   // std::cout << "control Left: " << (*ctrls)[0] << "\tRight: " << (*ctrls)[1] << std::endl;
+//   // std::cout << "Acc Left: " << al << "\tRight: " << ar << std::endl;
+// }
 
 void treaded_vehicle_t::set_cost_map(double** c_map, double d_x, double d_y, int g_h, int g_w, double c_size)
 {
@@ -115,8 +115,8 @@ void treaded_vehicle_t::compute_derivative()
     traversability = 1 - cost_map[x_val][y_val];
   }
   _xicr = (traversability > .5 ? 0 : .6 * (.5 - traversability) * 2);
-  _yicrL = -((traversability)*.3 + (1.0 - traversability) * 2.0);
-  _yicrR = ((traversability)*.3 + (1.0 - traversability) * 2.0);
+  _yicrL = -((traversability) * .3 + (1.0 - traversability) * 2.0);
+  _yicrR = ((traversability) * .3 + (1.0 - traversability) * 2.0);
 
   const double divisor = 1.0 / (_yicrL - _yicrR);
   double _vforward = (vr * _yicrL - vl * _yicrR) * divisor;

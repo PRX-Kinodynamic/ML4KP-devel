@@ -81,6 +81,48 @@ struct _2D_model_test
 };
 
 template <Eigen::Index Dim>
+struct _2D_model_multiple_inputs_test
+{
+  using VectorIn = Eigen::Vector<double, Dim>;
+  using VectorIn1 = Eigen::Vector<double, Dim + 1>;
+  using VectorIn2 = Eigen::Vector<double, Dim + 2>;
+  using VectorOut = Eigen::Vector<double, Dim>;
+  // Could be a Vector, but lets make it explicit that in general, J is a matrix
+  using Jacobian = Eigen::Matrix<double, Dim, Dim>;
+
+  VectorOut operator()(const VectorIn& vector, const VectorIn1& vector1, const VectorIn2& vector2) const
+  {
+    const double x = vector[0];
+    const double y = vector[1];
+    VectorOut out{ VectorOut::Zero() };
+    out[0] = x * x * y;
+    out[1] = 5.0 * x + std::sin(y);
+    return out;
+  }
+
+  static Jacobian analytical(const VectorIn& vector)
+  {
+    const double x = vector[0];
+    const double y = vector[1];
+    Jacobian out{ Eigen::Matrix2d::Zero() };
+
+    out(0, 0) = 2.0 * x * y;
+    out(0, 1) = x * x;
+    out(1, 0) = 5.0;
+    out(1, 1) = std::cos(y);
+    return out;
+  }
+  inline static VectorIn Zero(const Eigen::Index& dim)
+  {
+    return VectorIn::Zero(dim);
+  }
+  inline static VectorIn Random(const Eigen::Index& dim)
+  {
+    return VectorIn::Random(dim);
+  }
+};
+
+template <Eigen::Index Dim>
 struct _4D_2D_model_test
 {
   using VectorIn = Eigen::Vector<double, Dim + 1>;
@@ -258,4 +300,43 @@ BOOST_AUTO_TEST_CASE(distance_derivative_test)
   using Model = distance_model_test<DimIn>;
 
   run_full_derivative_table<Model>(DimIn, DimOut);
+}
+
+BOOST_AUTO_TEST_CASE(model_multiple_inputs_test)
+{
+  const int DimIn{ 2 };
+  const int DimOut{ 2 };
+  using Model = _2D_model_multiple_inputs_test<DimIn>;
+  // run_full_derivative_table<Model>(DimIn, DimOut);
+
+  const prx::math::S s{ 3 };
+  const prx::math::I_min i_min{ -1 };
+  const double h{ 0.01 };
+
+  using Jacobian = typename Model::Jacobian;
+  using Derivative =
+      prx::math::first_order_derivative_t<Model, Model::VectorIn, s, i_min, Model::VectorIn1, Model::VectorIn2>;
+  // Error is: O(h^{s-1}). Obviously, the actual error might be a somewhat higher...
+  // so we test using tolerance = C*h^{s-1}
+  const double tolerance{ std::pow(h, s - 1) };
+  const int total_evaluations{ 1 };
+
+  Model::VectorIn x_in{ Model::Zero(DimIn) };
+  Model::VectorIn1 x1_in{ Model::VectorIn1::Zero() };
+  Model::VectorIn2 x2_in{ Model::VectorIn2::Zero() };
+
+  Derivative derivative(h, DimIn, DimOut);
+
+  for (int i = 0; i < total_evaluations; ++i)
+  {
+    x_in = 100 * Model::Random(DimIn);
+    x1_in = 100 * Model::VectorIn1::Random();
+    x2_in = 100 * Model::VectorIn2::Random();
+    Jacobian numerical_derivative = derivative(x_in, x1_in, x2_in);
+    Jacobian analytical_derivative = Model::analytical(x_in);
+
+    std::stringstream ss;
+    ss << "Numerical: \n:" << numerical_derivative << "\nAnalytical:\n" << analytical_derivative << std::endl;
+    BOOST_CHECK_MESSAGE(numerical_derivative.isApprox(analytical_derivative, tolerance), ss.str());
+  }
 }

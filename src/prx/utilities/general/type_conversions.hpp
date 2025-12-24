@@ -33,7 +33,15 @@ template <
     std::enable_if_t<std::is_floating_point<T>::value && std::is_same<StringType, std::string>::value, bool> = true>
 inline T convert_to(const StringType& str)
 {
-  return std::stod(str);
+  try
+  {
+    return std::stod(str);
+  }
+  catch (std::invalid_argument e)
+  {
+    PRX_MSG_VARS("[StrToFloatingType] Invalid conversion", str)
+  }
+  return 0.0;
 }
 
 template <typename To, typename From,

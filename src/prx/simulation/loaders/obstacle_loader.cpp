@@ -30,7 +30,7 @@ obstacle_loader_t::load_obstacles_from_file(const std::string obstacles_file)
     auto geom_transform = geom["config"];
     auto geom_position = geom_transform["position"].as<std::vector<double>>();
     auto geom_orientation = geom_transform["orientation"].as<std::vector<double>>();
-    transform_t obstacle_pose;
+    Eigen::Transform<double, 3, Eigen::Isometry> obstacle_pose;
     obstacle_pose.linear() =
         quaternion_t(geom_orientation[3], geom_orientation[0], geom_orientation[1], geom_orientation[2])
             .toRotationMatrix();

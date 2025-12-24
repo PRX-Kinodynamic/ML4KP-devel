@@ -6,12 +6,16 @@
 #include <gtsam/nonlinear/Expression.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
+#include "prx/factor_graphs/lie_groups/se3.hpp"
+#include "prx/factor_graphs/utilities/symbols_factory.hpp"
+
 namespace prx
 {
 namespace fg
 {
 class SE3_observation_factor_t : public gtsam::NoiseModelFactor1<se3_t>
 {
+public:
   using SE3 = prx::fg::se3_t;
   using Translation = Eigen::Vector<double, 3>;
   using Rotation = Eigen::Matrix<double, 3, 3>;
@@ -22,7 +26,6 @@ class SE3_observation_factor_t : public gtsam::NoiseModelFactor1<se3_t>
 
   // using Vector = Eigen::Vector<double, Dim>;
 
-public:
   SE3_observation_factor_t(const gtsam::Key key, const Translation offset, const Translation z,
                            const NoiseModel& cost_model)
     : Base(cost_model, key)
@@ -51,6 +54,16 @@ public:
       H0->rightCols<3>() = R;
     }
     return error;
+  }
+
+  void print(const std::string& s,
+             const gtsam::KeyFormatter& keyFormatter = prx::fg::symbol_factory_t::formatter) const override
+  {
+    const std::string key_x{ keyFormatter(this->template key<1>()) };
+
+    std::cout << "SE3 Observation Factor: [" << key_x << "]\n";
+    std::cout << "\t Offset: " << _offset.transpose() << "\n";
+    std::cout << "\t Observation: " << _z.transpose() << "\n";
   }
 
 private:

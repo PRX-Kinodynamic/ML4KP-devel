@@ -68,6 +68,30 @@ public:
     return all_vertices;
   }
 
+  // ToDo: consider topology
+  Coordinate center()
+  {
+    const std::vector<Coordinate> vs{ vertices() };
+    Coordinate c{ Coordinate::Zero() };
+    for (auto v : vs)
+    {
+      c += v;
+    }
+    c = c / vs.size();
+    return c;
+  }
+
+  // std::vector<Coordinate> neighbors()
+  // {
+  //   std::vector<Coordinate> all_neighbors;
+  //   for (int i = 0; i < Dimension * Dimension; ++i)
+  //   {
+  //     const Coordinate ci{ vertex(i) };
+  //     all_neighbors.emplace_back();
+  //   }
+  //   return all_neighbors;
+  // }
+
 protected:
   Element _element;
   const Coordinate _min_vertex;
@@ -185,46 +209,55 @@ public:
     allocate_all(args...);
   }
 
+  std::vector<std::size_t> neighbors(const Coordinate x) const
+  {
+    const Coordinate xp{ x - _min };
+
+    // PRX_DBG_VARS(x, xp);
+
+    std::vector<std::size_t> ns;
+    const Coordinate k{ xp.array() * _cell_length_inv };
+    // PRX_DBG_VARS(k.transpose());
+    for (int j = 0; j < Dimension * Dimension; ++j)
+    {
+      bool in_bounds{ true };
+      std::size_t idx{ 0 };
+      for (int i = 0; i < Dimension; ++i)
+      {
+        const int ki{ static_cast<int>(std::floor(k[i] + 1e-10)) };
+
+        const int offset_p{ i == j ? 1 : 0 };
+        const int offset_p2{ (Dimension + i) == j ? -1 : 0 };
+
+        const int kn{ ki + offset_p + offset_p2 };
+        in_bounds = kn >= 0;
+        idx += _2power[i] * kn;
+
+        // PRX_DBG_VARS(idx, _2power[i], ki, offset_p, offset_p2);
+      }
+      if (in_bounds and idx < _grid.size())
+      {
+        ns.push_back(idx);
+      }
+      // PRX_DBG_VARS(_grid[idx]->vertex(0).transpose());
+    }
+
+    return ns;
+  }
+
   std::size_t index(const Coordinate x) const
   {
     std::size_t idx{ 0 };
     const Coordinate xp{ x - _min };
 
     const Coordinate k{ xp.array() * _cell_length_inv };
-    // PRX_DBG_VARS("----------------")
     for (int i = 0; i < Dimension; ++i)
     {
-      // const double kin{ std::nextafter(k[i], k[i] + 1) };
       const int ki{ static_cast<int>(std::floor(k[i] + 1e-10)) };
 
-      // std::cout << std::setprecision(56) << "  k[i]: " << k[i] << std::hexfloat << "  (" << k[i] << ")\n";
-      // std::cout << std::defaultfloat << std::setprecision(prx::constants::precision) << "  ki: " << ki << "\n";
-
       idx += _2power[i] * ki;
-      // PRX_DBG_VARS(idx, _2power[i], ki);
     }
-    // const Coordinate num{ _2power.array() * k.array().rint() };
-    // idx = std::nearbyint(num.sum());
-    // PRX_DBG_VARS(x.transpose(), _min.transpose(), xp.transpose());
-    // PRX_DBG_VARS(_2power.transpose(), _cell_length_inv.transpose());
-    // PRX_DBG_VARS(k.transpose());
-    // PRX_DBG_VARS(num.transpose());
-    // PRX_DBG_VARS(idx);
-    // for (int i = 0; i < Dimension; ++i)
-    // {
-    //   const double& li{ (*_cell_length)[i] };
-    //   const std::size_t k{ static_cast<std::size_t>(std::floor(xp[i] / li)) };
 
-    //   if (i > 0)
-    //   {
-    //     idx = idx + (_total_cells[i - 1]) * k;
-    //   }
-    //   else
-    //   {
-    //     idx = k;
-    //   }
-    //   PRX_DBG_VARS(k, idx, xp[i], li);
-    // }
     return idx;
   }
 
@@ -240,6 +273,11 @@ public:
       }
     }
     return true;
+  }
+
+  CellPtr& operator[](const std::size_t idx)
+  {
+    return _grid[idx];
   }
 
   CellPtr& at(const Coordinate x)

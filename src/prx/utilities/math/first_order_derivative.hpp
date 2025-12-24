@@ -106,12 +106,12 @@ struct derivative_output_types<OutputState, std::enable_if_t<std::is_floating_po
   static constexpr Eigen::Index NOutputs{ 1 };
 };
 
-template <class Function, typename InputState, S Evaluations, I_min MinDifference = -1,
-          typename Delta = derivative_input_types<InputState>>
+template <class Function, typename InputState, S Evaluations, I_min MinDifference = -1, class... OtherInputs>
 class first_order_derivative_t
 {
+  using Delta = derivative_input_types<InputState>;
   using Scalar = typename derivative_input_types<InputState>::Scalar;
-  using OutputState = typename std::invoke_result<Function, InputState>::type;
+  using OutputState = typename std::invoke_result<Function, InputState, OtherInputs...>::type;
 
   static constexpr Eigen::Index NInputs{ derivative_input_types<InputState>::NInputs };
   static constexpr Eigen::Index NOutputs{ derivative_output_types<OutputState>::NOutputs };
@@ -119,7 +119,7 @@ class first_order_derivative_t
   using output_matrix_t = Eigen::Matrix<Scalar, NOutputs, NInputs>;
   using epsilon_matrix_t = Eigen::Matrix<Scalar, NInputs, NInputs>;
 
-  using FirstOrderDerivative = first_order_derivative_t<Function, InputState, Evaluations, MinDifference>;
+  // using FirstOrderDerivative = first_order_derivative_t<Function, InputState, Evaluations, MinDifference>;
 
   // using Operations = derivative_input_types<InputState>;
 
@@ -153,10 +153,10 @@ public:
   {
   }
 
-  output_matrix_t operator()(const InputState& state) const
+  output_matrix_t operator()(const InputState& state, const OtherInputs&... other_inputs) const
   {
     output_matrix_t derivative{ _zero_matrix };
-    iterate_columns<0>(state, derivative);
+    iterate_columns<0>(state, derivative, other_inputs...);
 
     return derivative;
   }
@@ -168,62 +168,59 @@ private:
       Evaluations, MinDifference) };
 
   template <N_i n_i, int i, std::enable_if_t<(n_i != 0), bool> = true>
-  inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative) const
+  inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative,
+                       const OtherInputs&... other_inputs) const
   {
     const auto epsilon_column{ i * _epsilon_matrix.col(col_i) };
     const InputState delta{ Delta::Plus(input, epsilon_column) };
-    const OutputState Fi{ _model(delta) };
+    const OutputState Fi{ _model(delta, other_inputs...) };
     // const OutputState Fnew{ Delta::plus(f1, derivative.col(col_i)) };
     derivative.col(col_i) = derivative.col(col_i) + n_i * Delta::Log(Fi);
     // derivative.col(col_i) = Delta::plus(n_i * _model(delta), derivative.col(col_i));
   }
 
-  // template <N_i n_i, int i, std::enable_if_t<(n_i < 0), bool> = true>
-  // inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative) const
-  // {
-  //   const auto epsilon_column{ i * _epsilon_matrix.col(col_i) };
-  //   const InputState delta{ Delta::plus(input, epsilon_column) };
-  //   derivative.col(col_i) = Delta::minus(n_i * _model(delta), derivative.col(col_i));
-  // }
-
   template <N_i n_i, int i, std::enable_if_t<(n_i == 0), bool> = true>
-  inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative) const
+  inline void evaluate(const InputState& input, const int col_i, output_matrix_t& derivative,
+                       const OtherInputs&... other_inputs) const
   {
   }
 
   template <Eigen::Index I, std::enable_if_t<(NInputs != Eigen::Dynamic) && (I == NInputs), bool> = true>
-  inline void iterate_columns(const InputState& state, output_matrix_t& derivative) const
+  inline void iterate_columns(const InputState& state, output_matrix_t& derivative,
+                              const OtherInputs&... other_inputs) const
   {
   }
   // If the vector size is known at compile time, avoid a for and rely on compiler/templates optimization
   template <Eigen::Index I, std::enable_if_t<(NInputs != Eigen::Dynamic) && (I < NInputs), bool> = true>
-  inline void iterate_columns(const InputState& state, output_matrix_t& derivative) const
+  inline void iterate_columns(const InputState& state, output_matrix_t& derivative,
+                              const OtherInputs&... other_inputs) const
   {
-    compute_column(I, state, derivative);
-    iterate_columns<I + 1>(state, derivative);
+    compute_column(I, state, derivative, other_inputs...);
+    iterate_columns<I + 1>(state, derivative, other_inputs...);
   }
 
   // When the vector size is not known at compilation time. Compiler won't be able to optimize the for (unwrap)
   template <Eigen::Index I, std::enable_if_t<(NInputs == Eigen::Dynamic) && (I >= 0), bool> = true>
-  void iterate_columns(const InputState& state, output_matrix_t& derivative) const
+  void iterate_columns(const InputState& state, output_matrix_t& derivative, const OtherInputs&... other_inputs) const
   {
     for (std::size_t i = 0; i < _n_inputs; ++i)
     {
-      compute_column(i, state, derivative);
+      compute_column(i, state, derivative, other_inputs...);
     }
   }
 
-  inline void compute_column(const std::size_t col_i, const InputState& state, output_matrix_t& derivative) const
+  inline void compute_column(const std::size_t col_i, const InputState& state, output_matrix_t& derivative,
+                             const OtherInputs&... other_inputs) const
   {
-    evaluate<_n1, 1 - 5>(state, col_i, derivative);
-    evaluate<_n2, 2 - 5>(state, col_i, derivative);
-    evaluate<_n3, 3 - 5>(state, col_i, derivative);
-    evaluate<_n4, 4 - 5>(state, col_i, derivative);
-    evaluate<_n5, 5 - 5>(state, col_i, derivative);
-    evaluate<_n6, 6 - 5>(state, col_i, derivative);
-    evaluate<_n7, 7 - 5>(state, col_i, derivative);
-    evaluate<_n8, 8 - 5>(state, col_i, derivative);
-    evaluate<_n9, 9 - 5>(state, col_i, derivative);
+    evaluate<_n1, 1 - 5>(state, col_i, derivative, other_inputs...);
+    evaluate<_n2, 2 - 5>(state, col_i, derivative, other_inputs...);
+    evaluate<_n3, 3 - 5>(state, col_i, derivative, other_inputs...);
+    evaluate<_n4, 4 - 5>(state, col_i, derivative, other_inputs...);
+    evaluate<_n5, 5 - 5>(state, col_i, derivative, other_inputs...);
+    evaluate<_n6, 6 - 5>(state, col_i, derivative, other_inputs...);
+    evaluate<_n7, 7 - 5>(state, col_i, derivative, other_inputs...);
+    evaluate<_n8, 8 - 5>(state, col_i, derivative, other_inputs...);
+    evaluate<_n9, 9 - 5>(state, col_i, derivative, other_inputs...);
 
     derivative.col(col_i) /= _dh;
   }
@@ -250,9 +247,9 @@ public:
   const epsilon_matrix_t _epsilon_matrix;
 };
 
-template <class Function, typename InputState, S Evaluations, I_min MinDifference, typename Delta>
+template <class Function, typename InputState, S Evaluations, I_min MinDifference, class... OtherInputs>
 constexpr approximation_row_t
-    first_order_derivative_t<Function, InputState, Evaluations, MinDifference, Delta>::approximation_row;
+    first_order_derivative_t<Function, InputState, Evaluations, MinDifference, OtherInputs...>::approximation_row;
 
 }  // namespace math
 }  // namespace prx

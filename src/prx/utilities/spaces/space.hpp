@@ -665,16 +665,25 @@ public:
 
   virtual void init(const prx::param_loader& params)
   {
-    std::vector<double> lower_bound{ params.exists("lower_bound") ? params["lower_bound"].as<std::vector<double>>() :
-                                                                    std::vector<double>{} };
-    std::vector<double> upper_bound{ params.exists("upper_bound") ? params["upper_bound"].as<std::vector<double>>() :
-                                                                    std::vector<double>{} };
+    const bool lower_bound_exists{ params.exists("lower_bound") };
+    const bool upper_bound_exists{ params.exists("upper_bound") };
+
     std::vector<double> values{ params.exists("values") ? params["values"].as<std::vector<double>>() :
                                                           std::vector<double>{} };
 
-    if (lower_bound.size() == dimension and upper_bound.size() == dimension)
+    if (lower_bound_exists and upper_bound_exists)
     {
-      set_bounds(lower_bound, upper_bound);
+      std::vector<double> lower_bound{ params["lower_bound"].as<std::vector<double>>() };
+      std::vector<double> upper_bound{ params["upper_bound"].as<std::vector<double>>() };
+      if (lower_bound.size() == dimension and upper_bound.size() == dimension)
+      {
+        set_bounds(lower_bound, upper_bound);
+      }
+    }
+    else
+    {
+      PRX_MSG("[prx::space_t] Bounds not set. Lower bound: " << lower_bound_exists
+                                                             << ", upper bound: " << upper_bound_exists);
     }
     if (values.size() == dimension)
     {

@@ -11,8 +11,7 @@ namespace prx
 namespace simulation
 {
 using namespace std::placeholders;
-template <uint8_t Evaluations = 5, int8_t MinDifference = -1,
-          typename Delta = math::derivative_input_types<Eigen::VectorXd>>
+template <uint8_t Evaluations = 5, int8_t MinDifference = -1>
 class lqr_controller_t : public controller_t
 {
 public:
@@ -29,8 +28,8 @@ public:
   using DynamicFunctionX = std::function<VectorX(const VectorX&)>;
   using DynamicFunctionU = std::function<VectorX(const VectorU&)>;
 
-  using DerivA = prx::math::first_order_derivative_t<DynamicFunctionX, VectorX, Evaluations, MinDifference, Delta>;
-  using DerivB = prx::math::first_order_derivative_t<DynamicFunctionU, VectorU, Evaluations, MinDifference, Delta>;
+  using DerivA = prx::math::first_order_derivative_t<DynamicFunctionX, VectorX, Evaluations, MinDifference>;
+  using DerivB = prx::math::first_order_derivative_t<DynamicFunctionU, VectorU, Evaluations, MinDifference>;
 
   using Diff = LQR::Diff;
   // inline static Diff DefaultDiff = [](const VectorX& a, const VectorX& b) { return a - b; };

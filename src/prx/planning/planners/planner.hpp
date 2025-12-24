@@ -99,9 +99,9 @@ public:
 
   friend std::ostream& operator<<(std::ostream& os, const planner_query_t& obj)
   {
-    os << "start_state: " << obj.start_state;
-    os << "goal_state: " << obj.goal_state;
-    os << "get_visualization: " << obj.get_visualization;
+    os << "start_state: " << obj.start_state << "\n";
+    os << "goal_state: " << obj.goal_state << "\n";
+    os << "get_visualization: " << obj.get_visualization << "\n";
 
     return os;
   }

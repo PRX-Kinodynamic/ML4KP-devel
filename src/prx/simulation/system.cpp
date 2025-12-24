@@ -46,9 +46,4 @@ system_t::~system_t()
   parent_system.reset();
 }
 
-void system_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times,
-                                         std::vector<double>& ctrls)
-{
-  // the control should have already been set in the vehicle space
-}
 }  // namespace prx

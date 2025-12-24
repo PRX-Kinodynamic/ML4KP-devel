@@ -23,5 +23,27 @@ boost::optional<Type&> check_optional(Type& matrix, const CheckType& check, Chec
   return boost::none;
 }
 
+template <typename MatrixType, typename CheckType>
+gtsam::OptionalJacobian<MatrixType::RowsAtCompileTime, MatrixType::ColsAtCompileTime>
+init_optional_jacobian(MatrixType& matrix, const CheckType& check)
+{
+  const Eigen::Index DimOut{ MatrixType::RowsAtCompileTime };
+  const Eigen::Index DimIn{ MatrixType::ColsAtCompileTime };
+  if (check)
+  {
+    return gtsam::OptionalJacobian<DimOut, DimIn>(matrix);
+  }
+  return gtsam::OptionalJacobian<DimOut, DimIn>(boost::none);
+}
+
+template <typename MatrixType, typename CheckType, typename... CheckTypes>
+gtsam::OptionalJacobian<MatrixType::RowsAtCompileTime, MatrixType::ColsAtCompileTime>
+init_optional_jacobian(MatrixType& matrix, const CheckType& check, CheckTypes... checks)
+{
+  if (check)
+    return init_optional_jacobian(matrix, checks...);
+  return boost::none;
+}
+
 }  // namespace fg
 }  // namespace prx

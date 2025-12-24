@@ -56,7 +56,14 @@ public:
 
   void steer_once(const space_point_t, const space_point_t, const double);
 
-  void compute_stopping_maneuver(space_point_t start_state, std::vector<double>&, std::vector<double>&);
+  // void system_group_t::compute_stopping_maneuver(space_point_t start_state, double& time)
+  void compute_stopping_maneuver(space_point_t start_state, double& time)
+  {
+    prx_assert(group.size() == 1,
+               "[system_group_t::compute_stopping_maneuver] Expected group of size 1 but got " << group.size());
+    group[0]->compute_stopping_maneuver(start_state, time);
+  }
+  // void compute_stopping_maneuver(space_point_t start_state, std::vector<double>&, std::vector<double>&);
 
   inline space_t* get_state_space()
   {

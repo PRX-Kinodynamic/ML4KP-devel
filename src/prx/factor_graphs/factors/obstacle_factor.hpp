@@ -7,6 +7,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
+#include "prx/external/PQP/MatVecEigen.hpp"
 #include "prx/external/PQP/PQP_Eigen.hpp"
 #include "prx/utilities/geometry/geometry.hpp"
 #include "prx/utilities/geometry/movable_object.hpp"
@@ -168,10 +169,10 @@ public:
     config_from_state(robot_rot, robot_info->pose.position(), x0);
     PQP_REAL Mr[3][3], Tr[3];
     PQP_REAL Mo[3][3], To[3];
-    copy(Mr, robot_rot);
-    copy(Mo, obstacle_rot);
-    copy(Tr, robot_info->pose.position());
-    copy(To, obstacle_info->pose.position());
+    ::copy(Mr, robot_rot);
+    ::copy(Mo, obstacle_rot);
+    ::copy(Tr, robot_info->pose.position());
+    ::copy(To, obstacle_info->pose.position());
 
     PQP_Collide(&result,                             // no-lint
                 Mr, Tr, robot_info->model.get(),     // no-lint
@@ -257,8 +258,8 @@ public:
     {
       const int tri_1{ result.Id1(0) };
       const int tri_2{ result.Id2(0) };
-      copy(p1, robot_info->model->tris[tri_1].p1);
-      copy(p2, obstacle_info->model->tris[tri_2].p1);
+      ::copy(p1, robot_info->model->tris[tri_1].p1);
+      ::copy(p2, obstacle_info->model->tris[tri_2].p1);
 
       p1 = (robot_info->pose) * p1;
       p2 = (obstacle_info->pose) * p2;
@@ -278,10 +279,10 @@ public:
     // PRX_DBG_VARS(robot_rot);
     robot_info->pose.quaternion() = robot_rot;
 
-    copy(Mr, robot_rot);
-    copy(Mo, obstacle_rot);
-    copy(Tr, robot_info->pose.position());
-    copy(To, obstacle_info->pose.position());
+    ::copy(Mr, robot_rot);
+    ::copy(Mo, obstacle_rot);
+    ::copy(Tr, robot_info->pose.position());
+    ::copy(To, obstacle_info->pose.position());
 
     PQP_Distance(&result,                             // no-lint
                  Mr, Tr, robot_info->model.get(),     // no-lint
@@ -333,10 +334,10 @@ public:
     PQP_REAL Mo[3][3], To[3];
     config_from_state(robot_rot, robot_info->pose.position(), x0);
 
-    copy(Mr, robot_rot);
-    copy(Mo, obstacle_rot);
-    copy(Tr, robot_info->pose.position());
-    copy(To, obstacle_info->pose.position());
+    ::copy(Mr, robot_rot);
+    ::copy(Mo, obstacle_rot);
+    ::copy(Tr, robot_info->pose.position());
+    ::copy(To, obstacle_info->pose.position());
 
     PQP_Tolerance(&result,                             // no-lint
                   Mr, Tr, robot_info->model.get(),     // no-lint

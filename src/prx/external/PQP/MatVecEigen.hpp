@@ -45,7 +45,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <iostream>
-// #include "PQP_Compile.h"
+#include "PQP_Compile.h"
 
 #include <Eigen/Dense>
 #include <Eigen/Core>

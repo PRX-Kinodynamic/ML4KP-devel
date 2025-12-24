@@ -15,7 +15,7 @@ param_loader::param_loader()
   set_input_path(input_path);
 }
 
-param_loader::param_loader(const std::string filename) : param_loader(filename, prx::input_path) {};
+param_loader::param_loader(const std::string filename) : param_loader(filename, "") {};
 
 param_loader::param_loader(int argc, char* argv[]) : param_loader(std::vector<std::string>(argv, argv + argc)) {};
 
@@ -51,17 +51,26 @@ void param_loader::add(const param_loader& pl)
 
 void param_loader::add_file(std::string file_name)
 {
+  std::string filename;
+  YAML::Node nn;
   try
   {
-    const std::string filename{ prx::check_which_file_exists(file_name, pl_input_path + file_name) };
-    auto nn = YAML::LoadFile(filename);
-    params = std::move(expand_file(nn));
+    filename = prx::check_which_file_exists(file_name, pl_input_path + file_name);
+    nn = YAML::LoadFile(filename);
   }
   catch (...)
   {
     if (params.IsNull())
-      prx_throw("Bad filename to param_loader '" << pl_input_path << file_name << "'");
+      prx_throw("Bad filename to param_loader '" << file_name << "'");
   }
+  // try
+  // {
+  params = std::move(expand_file(nn));
+  // }
+  // catch (...)
+  // {
+  //   prx_throw("[param_loader] expand_file failed");
+  // }
 }
 
 YAML::Node param_loader::expand_file(YAML::Node& node)
@@ -73,7 +82,16 @@ YAML::Node param_loader::expand_file(YAML::Node& node)
 
   if (node.Tag() == "!file")
   {
-    new_node = param_loader(node.as<std::string>()).params;
+    try
+    {
+      replace_env_var(node);
+      new_node = param_loader(node.as<std::string>()).params;
+    }
+    catch (...)
+    {
+      const std::string yaml_string{ YAML::Dump(node) };
+      prx_throw("[param_loader] Failed to load '!file' " << yaml_string);
+    }
   }
   else
   {

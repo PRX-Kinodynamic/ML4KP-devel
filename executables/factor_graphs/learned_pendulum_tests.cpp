@@ -107,6 +107,13 @@ int main(int argc, char* argv[])
   const std::string plant_name{ params["plant/name"].as<>() };  // const std::string torch_pt{ params["model"].as<>() };
   prx::simulation_step = params["/plant/simulation_step"].as<double>();
 
+  int seed{ 112392 };
+  if (params.exists("random_seed"))
+  {
+    seed = params["random_seed"].as<int>();
+  }
+  prx::init_random(seed);
+
   if (params.exists("torch_file"))
   {
     params["plant/torch_file"] = params["torch_file"];
@@ -157,19 +164,21 @@ int main(int argc, char* argv[])
     {
       break;
     }
-    if (traj_in.size() == 0)  // More than 1 empty lines between trajs
+
+    int curr_idx{ initial_idx };
+    if (initial_idx < 0)
+    {
+      curr_idx = prx::uniform_int_random(0, traj_in.size() - max_len);
+    }
+    PRX_DBG_VARS(curr_idx, plan.size());
+
+    if (traj_in.size() == 0 or curr_idx + max_len > plan.size())  // More than 1 empty lines between trajs
     {
       i--;
       continue;
     }
-    // PRX_DBG_VARS(traj_in.size(), accel.size(), plan.size());
-    // if (initial_idx < 0)
-    // {
-    initial_idx = prx::uniform_int_random(0, traj_in.size() - max_len);
-    // }
-    PRX_DBG_VARS(initial_idx);
 
-    for (int j = initial_idx; j < initial_idx + std::min(traj_in.size(), max_len); ++j)
+    for (int j = curr_idx; j < curr_idx + std::min(traj_in.size(), max_len); ++j)
     {
       auto step = plan[j];
       plan_sub.copy_onto_back(step.control, step.duration);

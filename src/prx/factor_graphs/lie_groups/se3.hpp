@@ -64,6 +64,12 @@ public:
     return std::move(se3_t(quat, pos));
   }
 
+  // Element e such that e * v = v
+  static se3_t identity()
+  {
+    return se3_t(Quaternion::Identity(), Position::Zero());
+  }
+
   double& operator[](const std::size_t& idx)
   {
     switch (idx)

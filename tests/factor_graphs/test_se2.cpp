@@ -102,3 +102,36 @@ BOOST_AUTO_TEST_CASE(test_adjoint_with_derivs)
   BOOST_REQUIRE_MESSAGE(expectedH2.isApprox(actualH2, tolerance), EXPECTED_GOT(expectedH2, actualH2));
   // Check evaluation sanity check
 }
+
+BOOST_AUTO_TEST_CASE(test_interpolate)
+{
+  const SE2 T0{ 1.0, 2.0, 3.0 };
+  const SE2 T1{ 2.0, 3.0, -2.2831853072 };
+
+  const SE2 T0p5{ 1.5, 1.5, -2.7123889804 };
+
+  const double t0{ 0.0 };
+  const double t1{ 1.0 };
+
+  const SE2 T0_i{ SE2::interpolate(T0, T1, t0) };
+  const SE2 T1_i{ SE2::interpolate(T0, T1, t1) };
+
+  BOOST_REQUIRE_MESSAGE(T0.equals(T0_i), EXPECTED_GOT(T0, T0_i));
+  BOOST_REQUIRE_MESSAGE(T1.equals(T1_i), EXPECTED_GOT(T1, T1_i));
+
+  // PRX_DBG_VARS(T0, T0_i)
+  // PRX_DBG_VARS(T0p5, T0p5_i)
+  // PRX_DBG_VARS(T1, T1_i)
+
+  // PRX_DBG_VARS(SE2::interpolate(T0, T1, 0.0));
+  // PRX_DBG_VARS(SE2::interpolate(T0, T1, 0.1));
+  // PRX_DBG_VARS(SE2::interpolate(T0, T1, 0.2));
+  // PRX_DBG_VARS(SE2::interpolate(T0, T1, 0.3));
+  // PRX_DBG_VARS(SE2::interpolate(T0, T1, 0.4));
+  // PRX_DBG_VARS(SE2::interpolate(T0, T1, 0.5));
+  // PRX_DBG_VARS(SE2::interpolate(T0, T1, 0.6));
+  // PRX_DBG_VARS(SE2::interpolate(T0, T1, 0.7));
+  // PRX_DBG_VARS(SE2::interpolate(T0, T1, 0.8));
+  // PRX_DBG_VARS(SE2::interpolate(T0, T1, 0.9));
+  // PRX_DBG_VARS(SE2::interpolate(T0, T1, 1.0));
+}

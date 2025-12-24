@@ -165,13 +165,13 @@ void system_group_t::propagate_once(space_point_t control)
   sim->step_simulation();
 }
 
-void system_group_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times,
-                                               std::vector<double>& ctrls)
-{
-  prx_assert(group.size() == 1,
-             "[system_group_t::compute_stopping_maneuver] Expected group of size 1 but got " << group.size());
-  group[0]->compute_stopping_maneuver(start_state, times, ctrls);
-}
+// void system_group_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times,
+//                                                std::vector<double>& ctrls)
+// {
+//   prx_assert(group.size() == 1,
+//              "[system_group_t::compute_stopping_maneuver] Expected group of size 1 but got " << group.size());
+//   group[0]->compute_stopping_maneuver(start_state, times, ctrls);
+// }
 
 void system_group_t::steer(space_point_t x_new, const space_point_t x_nearest, const space_point_t x_rand,
                            const double eta, distance_function_t distance_function)

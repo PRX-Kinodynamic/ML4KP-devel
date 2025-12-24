@@ -24,9 +24,9 @@ planner_functions_t::planner_functions_t(std::string context_name, world_model_c
   { default_sample_plan(p, control_space, min_steps, max_steps); };
   valid_state = [state_space, cg](space_point_t& s) { return default_valid_state(s, state_space, cg); };
   valid_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
-  valid_stop_check = [sg, cg](space_point_t start_state, plan_t* stopping_plan, trajectory_t* stopping_traj) {
-    return default_valid_stop(start_state, stopping_plan, stopping_traj, sg, cg);
-  };
+  // valid_stop_check = [sg, cg](space_point_t start_state, plan_t* stopping_plan, trajectory_t* stopping_traj) {
+  //   return default_valid_stop(start_state, stopping_plan, stopping_traj, sg, cg);
+  // };
   propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj) {
     default_propagate(start_state, plan, out_traj, sg);
   };
@@ -82,42 +82,42 @@ bool default_valid_trajectory(trajectory_t& traj, valid_state_t valid_state)
 //   	return true;
 // }
 
-bool default_valid_stop(space_point_t start_state, plan_t* stopping_plan, trajectory_t* stopping_traj,
-                        std::shared_ptr<system_group_t> sg, std::shared_ptr<collision_group_t> cg)
-{
-  space_t* ss = sg->get_state_space();
-  space_t* cs = sg->get_control_space();
-  std::vector<double> times;
-  std::vector<double> ctrls;
-  sg->compute_stopping_maneuver(start_state, times, ctrls);
-  // Get plan
-  while (*std::max_element(times.begin(), times.end()) != 0)
-  {
-    space_point_t ctrl = cs->make_point();
-    cs->copy_point_from_vector(ctrl, ctrls);
-    int j = 0;
-    double pos = std::numeric_limits<double>::max();
-    for (; j < times.size(); j++)
-    {
-      pos = pos > times[j] && times[j] != 0 ? times[j] : pos;
-    }
-    stopping_plan->copy_onto_back(ctrl, pos);
-    ctrls[std::min_element(times.begin(), times.end()) - times.begin()] = 0;
-    for (int i = 0; i < times.size(); i++)
-    {
-      times[i] -= pos;
-      if (times[i] < 0.01)
-        times[i] = 0;
-    }
-  }
-  // std::cout << stopping_plan->print() << std::endl;
-  // Get trajectory
-  sg->propagate(start_state, *stopping_plan, *stopping_traj);
+// bool default_valid_stop(space_point_t start_state, plan_t* stopping_plan, trajectory_t* stopping_traj,
+//                         std::shared_ptr<system_group_t> sg, std::shared_ptr<collision_group_t> cg)
+// {
+//   space_t* ss = sg->get_state_space();
+//   space_t* cs = sg->get_control_space();
+//   std::vector<double> times;
+//   std::vector<double> ctrls;
+//   sg->compute_stopping_maneuver(start_state, times, ctrls);
+//   // Get plan
+//   while (*std::max_element(times.begin(), times.end()) != 0)
+//   {
+//     space_point_t ctrl = cs->make_point();
+//     cs->copy_point_from_vector(ctrl, ctrls);
+//     int j = 0;
+//     double pos = std::numeric_limits<double>::max();
+//     for (; j < times.size(); j++)
+//     {
+//       pos = pos > times[j] && times[j] != 0 ? times[j] : pos;
+//     }
+//     stopping_plan->copy_onto_back(ctrl, pos);
+//     ctrls[std::min_element(times.begin(), times.end()) - times.begin()] = 0;
+//     for (int i = 0; i < times.size(); i++)
+//     {
+//       times[i] -= pos;
+//       if (times[i] < 0.01)
+//         times[i] = 0;
+//     }
+//   }
+//   // std::cout << stopping_plan->print() << std::endl;
+//   // Get trajectory
+//   sg->propagate(start_state, *stopping_plan, *stopping_traj);
 
-  valid_state_t vs = [&](space_point_t& s) { return default_valid_state(s, ss, cg); };
+//   valid_state_t vs = [&](space_point_t& s) { return default_valid_state(s, ss, cg); };
 
-  return default_valid_trajectory(*stopping_traj, vs);
-}
+//   return default_valid_trajectory(*stopping_traj, vs);
+// }
 
 bool default_valid_state(space_point_t& s, space_t* ss, std::shared_ptr<collision_group_t> cg)
 {
@@ -212,6 +212,11 @@ custom_check_t create_default_goal_check(const space_t* space, const space_point
 {
   custom_check_t f = [space, goal, rad]() { return prx::space_t::euclidean_distance(space, goal) < rad; };
   return f;
+}
+
+void default_stopping_control(space_point_t& s, std::shared_ptr<system_group_t> sg, double& t)
+{
+  sg->compute_stopping_maneuver(s, t);
 }
 
 }  // namespace prx
