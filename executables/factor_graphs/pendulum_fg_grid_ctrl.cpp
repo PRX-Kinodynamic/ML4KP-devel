@@ -164,7 +164,7 @@ Eigen::MatrixXd lqr_to_neighbor(const std::string plant_name, const State& xT, c
   gtsam::GaussianFactorGraph linearized_graph{ *(graph_to_eliminate.linearize(result)) };
 
   // linearized_graph.print("Linear Graph", SF::formatter);
-  PRINT_KEYS(ordering);
+  // PRINT_KEYS(ordering);
   Eigen::MatrixXd S, K, R;
   // for (auto ki : ordering)
   // {

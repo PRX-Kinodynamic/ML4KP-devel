@@ -9,16 +9,21 @@
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/planning/planner_functions/tree_fix_time_discretization.hpp"
 
+#if defined(__llvm__)
+
+int main(){}
+#else
+
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polygon_with_holes_2.h>
-#include <CGAL/create_straight_skeleton_from_polygon_with_holes_2.h>
-#include <CGAL/Straight_skeleton_2/IO/print.h>
+//#include <CGAL/create_straight_skeleton_from_polygon_with_holes_2.h>
+//#include <CGAL/Straight_skeleton_2/IO/print.h>
 #include <boost/shared_ptr.hpp>
 #include <cassert>
 
 #include <CGAL/Polygon_2.h>
 #include <CGAL/create_straight_skeleton_2.h>
-#include <CGAL/draw_straight_skeleton_2.h>
+//#include <CGAL/draw_straight_skeleton_2.h>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef K::Point_2 Point;
@@ -169,3 +174,4 @@ int main()
 
   return EXIT_SUCCESS;
 }
+#endif

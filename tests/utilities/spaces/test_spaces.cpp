@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(topology_quaternion_enforce_bounds)
 
   const double norm{ std::sqrt(std::pow(space[0], 2) + std::pow(space[1], 2) + std::pow(space[2], 2) +
                                std::pow(space[3], 2)) };
-  BOOST_REQUIRE_CLOSE(norm, 1, 1e-5);
+  BOOST_REQUIRE_CLOSE(norm, 1.0, 1e-5);
 
   pt->at(0) = 10;
   pt->at(1) = 100;
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(topology_quaternion_enforce_bounds)
   pt->at(3) = 500;
 
   space.enforce_bounds(pt);
-  BOOST_REQUIRE_CLOSE(Vec(pt).norm(), 1, 1e-5);
+  BOOST_REQUIRE_CLOSE(Vec(pt).norm(), 1.0, 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(integration_of_topology_quaternion_rotate_on_x)
@@ -305,11 +305,11 @@ BOOST_AUTO_TEST_CASE(integration_of_topology_quaternion_rotate_on_x)
     space.integrate(&dt_space, dt);
   }
   space.copy_to(pt);
-  BOOST_REQUIRE_CLOSE(Vec(pt).norm(), 1, 1e-5);
+  BOOST_REQUIRE_CLOSE(Vec(pt).norm(), 1.0, 1e-5);
   BOOST_REQUIRE(pt->at(0) > 0);
   BOOST_REQUIRE(pt->at(1) > 0);
-  BOOST_REQUIRE_CLOSE(pt->at(2), 0, 1e-5);
-  BOOST_REQUIRE_CLOSE(pt->at(3), 0, 1e-5);
+  BOOST_REQUIRE_CLOSE(pt->at(2), 0.0, 1e-5);
+  BOOST_REQUIRE_CLOSE(pt->at(3), 0.0, 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(integration_of_topology_quaternion_rotate_on_y)
@@ -338,11 +338,11 @@ BOOST_AUTO_TEST_CASE(integration_of_topology_quaternion_rotate_on_y)
     space.integrate(&dt_space, dt);
   }
   space.copy_to(pt);
-  BOOST_REQUIRE_CLOSE(Vec(pt).norm(), 1, 1e-5);
-  BOOST_REQUIRE(pt->at(0) > 0);
-  BOOST_REQUIRE_CLOSE(pt->at(1), 0, 1e-5);
-  BOOST_REQUIRE(pt->at(2) > 0);
-  BOOST_REQUIRE_CLOSE(pt->at(3), 0, 1e-5);
+  BOOST_REQUIRE_CLOSE(Vec(pt).norm(), 1.0, 1e-5);
+  BOOST_REQUIRE(pt->at(0) > 0.0);
+  BOOST_REQUIRE_CLOSE(pt->at(1), 0.0, 1e-5);
+  BOOST_REQUIRE(pt->at(2) > 0.0);
+  BOOST_REQUIRE_CLOSE(pt->at(3), 0.0, 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(integration_of_topology_quaternion_rotate_on_z)
@@ -371,11 +371,11 @@ BOOST_AUTO_TEST_CASE(integration_of_topology_quaternion_rotate_on_z)
     space.integrate(&dt_space, dt);
   }
   space.copy_to(pt);
-  BOOST_REQUIRE_CLOSE(Vec(pt).norm(), 1, 1e-5);
-  BOOST_REQUIRE(pt->at(0) > 0);
-  BOOST_REQUIRE_CLOSE(pt->at(1), 0, 1e-5);
-  BOOST_REQUIRE_CLOSE(pt->at(2), 0, 1e-5);
-  BOOST_REQUIRE(pt->at(3) > 0);
+  BOOST_REQUIRE_CLOSE(Vec(pt).norm(), 1.0, 1e-5);
+  BOOST_REQUIRE(pt->at(0) > 0.0);
+  BOOST_REQUIRE_CLOSE(pt->at(1), 0.0, 1e-5);
+  BOOST_REQUIRE_CLOSE(pt->at(2), 0.0, 1e-5);
+  BOOST_REQUIRE(pt->at(3) > 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(interpolate_euclidean_and_rotational_topology)
