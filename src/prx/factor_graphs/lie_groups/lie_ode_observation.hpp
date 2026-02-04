@@ -26,6 +26,8 @@ class lie_ode_observation_factor_t : public gtsam::NoiseModelFactorN<X, Xdot>
   using OptDeriv = boost::optional<Eigen::MatrixXd&>;
   using LieIntegrator = lie_integrator_t<X, Xdot>;
 
+  using SF = prx::fg::symbol_factory_t;
+
   static constexpr Eigen::Index DimX{ gtsam::traits<X>::dimension };
   static constexpr Eigen::Index DimXdot{ gtsam::traits<Xdot>::dimension };
 
@@ -103,6 +105,23 @@ public:
     os << symbol_factory_t::formatter(kxdot) << " " << xdot << sp;
     os << "Z: " << _xte << " dt:" << _dt << sp;
     os << "\n";
+  }
+
+  void print(const std::string& s, const gtsam::KeyFormatter& keyFormatter = SF::formatter) const override
+  {
+    const char sp{ prx::constants::separating_value };
+
+    const gtsam::Key kx{ this->template key<1>() };
+    const gtsam::Key kxdot{ this->template key<2>() };
+
+    // const X x{ values.at<X>(kx) };
+    // const Xdot xdot{ values.at<Xdot>(kxdot) };
+
+    std::cout << _label << sp;
+    std::cout << keyFormatter(kx) << sp;
+    std::cout << keyFormatter(kxdot) << sp;
+    std::cout << "Z: " << _xte << " dt:" << _dt << sp;
+    std::cout << "\n";
   }
 
 private:

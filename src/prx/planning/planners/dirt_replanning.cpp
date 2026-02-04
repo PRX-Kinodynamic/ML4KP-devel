@@ -40,6 +40,12 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
   prx_assert(rrt_query != nullptr, "DIRT received an incorrect query type.");
   dirt_replan_query = dynamic_cast<dirt_replan_query_t*>(query);
   prx_assert(dirt_replan_query != nullptr, "DIRT received an incorrect query type.");
+
+  if (not dirt_spec->valid_state(rrt_query->start_state))
+  {
+    prx_warn("[dirt_replanning] Start state is not valid! " << (*(rrt_query->start_state)));
+  }
+
   if (tree().num_vertices() == 0 ||
       !state_space->equal_points(tree().get_vertex_as<rrt_node_t>(start_vertex)->point, rrt_query->start_state))
   {

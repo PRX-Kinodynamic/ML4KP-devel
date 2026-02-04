@@ -6,6 +6,7 @@
 #include <numeric>
 
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/general/debug_utils.hpp"
 #include "prx/utilities/general/template_utils.hpp"
 #include "prx/utilities/general/type_conversions.hpp"
 #include "prx/utilities/spaces/space_snapshot.hpp"
@@ -682,8 +683,8 @@ public:
     }
     else
     {
-      PRX_MSG("[prx::space_t] Bounds not set. Lower bound: " << lower_bound_exists
-                                                             << ", upper bound: " << upper_bound_exists);
+      PRX_MSG("[prx::space_t] Bounds not set")
+      // PRX_DBG_VARS(lower_bound_exists, upper_bound_exists)
     }
     if (values.size() == dimension)
     {

@@ -1,4 +1,5 @@
 #pragma once
+#include <ostream>
 #include <regex>
 // #include "prx/utilities/general/constants.hpp"
 #include "prx/utilities/general/template_utils.hpp"
