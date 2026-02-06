@@ -1,3 +1,4 @@
+#ifndef TORCH_NOT_BUILT
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/general/type_conversions.hpp"
 #include "prx/factor_graphs/lie_groups/se3.hpp"
@@ -206,3 +207,8 @@ int main(int argc, char* argv[])
 
   return 0;
 }
+#else
+int main()
+{
+}
+#endif

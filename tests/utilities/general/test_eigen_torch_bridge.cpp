@@ -1,5 +1,8 @@
-#define BOOST_AUTO_TEST_MAIN quaternion_test
+#define BOOST_AUTO_TEST_MAIN eigen_torch_test
 #include <boost/test/unit_test.hpp>
+
+#ifndef TORCH_NOT_BUILT
+
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/general/torch_eigen_bridge.hpp"
 
@@ -44,3 +47,10 @@ BOOST_AUTO_TEST_CASE(torch_tensor_to_eigen_vec)
   BOOST_REQUIRE(vec[0] == 1.0);
   BOOST_REQUIRE(vec[1] == 2.0);
 }
+#else
+
+BOOST_AUTO_TEST_CASE(torch_eigen_not_built)
+{
+  std::cout << "TORCH_NOT_BUILT" << std::endl;
+}
+#endif

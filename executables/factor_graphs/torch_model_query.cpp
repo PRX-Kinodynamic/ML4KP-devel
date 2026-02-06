@@ -1,3 +1,4 @@
+#ifndef TORCH_NOT_BUILT
 #include <torch/script.h>  // One-stop header.
 
 #include <iostream>
@@ -44,3 +45,8 @@ int main(int argc, char* argv[])
   // std::cout << "ok\n";
   return 0;
 }
+#else
+int main()
+{
+}
+#endif

@@ -1,7 +1,7 @@
-#ifndef TORCH_NOT_BUILT
 #define BOOST_AUTO_TEST_MAIN torch_interface_test
-#include <string>
 #include <boost/test/unit_test.hpp>
+#ifndef TORCH_NOT_BUILT
+#include <string>
 #include "prx/utilities/general/torch_interface.hpp"
 #include "prx/utilities/general/debug_utils.hpp"
 #include "prx/utilities/defs.hpp"
@@ -230,5 +230,10 @@ BOOST_AUTO_TEST_CASE(eval311_with_deriv_test)
   BOOST_CHECK(y_expected.isApprox(y, 1e-3));
   BOOST_CHECK(expected_deriv0.isApprox(deriv0, 1e-3));
   BOOST_CHECK(expected_deriv1.isApprox(deriv1, 1e-3));
+}
+#else
+BOOST_AUTO_TEST_CASE(torch_interface_not_built)
+{
+  std::cout << "TORCH_NOT_BUILT" << std::endl;
 }
 #endif

@@ -1,3 +1,5 @@
+#include "lie_groups/lie_integrator.hpp"
+#include "lie_groups/se2.hpp"
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/general/type_conversions.hpp"
 #include "prx/factor_graphs/lie_groups/se3.hpp"
@@ -14,7 +16,7 @@
 #include "prx/simulation/plants/first_order_free_body.hpp"
 #include "prx/factor_graphs/plants/learned_pendulum.hpp"
 #include "prx/factor_graphs/plants/learned_mushr.hpp"
-
+#include "prx/factor_graphs/factors/euler_integration_factor.hpp"
 // using State = Eigen::Vector<double, 2>;
 // using Control = Eigen::Vector<double, 1>;
 // using LearnedPendulum = prx::fg::learned_pendulum_t;

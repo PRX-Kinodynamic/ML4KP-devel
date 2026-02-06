@@ -1,3 +1,5 @@
+#ifndef TORCH_NOT_BUILT
+
 #pragma once
 #include <torch/script.h>  // One-stop header.
 
@@ -128,3 +130,4 @@ protected:
 }  // namespace prx
 
 PRX_REGISTER_SYSTEM(fg::learned_pendulum_t, learned_pendulum)
+#endif

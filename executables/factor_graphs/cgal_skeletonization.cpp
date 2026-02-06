@@ -1,29 +1,26 @@
-#include "prx/factor_graphs/factors/obstacle_factor.hpp"
 #include "prx/utilities/defs.hpp"
-#include "prx/planning/world_model.hpp"
-#include "prx/planning/planners/aorrt.hpp"
 #include "prx/simulation/plants/plants.hpp"
-#include "prx/planning/planners/planner.hpp"
-#include "prx/visualization/three_js_group.hpp"
-#include "prx/utilities/general/param_loader.hpp"
-#include "prx/simulation/loaders/obstacle_loader.hpp"
-#include "prx/planning/planner_functions/tree_fix_time_discretization.hpp"
 
 #if defined(__llvm__)
 
-int main(){}
+int main()
+{
+}
 #else
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polygon_with_holes_2.h>
-//#include <CGAL/create_straight_skeleton_from_polygon_with_holes_2.h>
-//#include <CGAL/Straight_skeleton_2/IO/print.h>
+#include <CGAL/create_straight_skeleton_from_polygon_with_holes_2.h>
+// #include <CGAL/Straight_skeleton_2/IO/print.h>
 #include <boost/shared_ptr.hpp>
 #include <cassert>
 
 #include <CGAL/Polygon_2.h>
 #include <CGAL/create_straight_skeleton_2.h>
-//#include <CGAL/draw_straight_skeleton_2.h>
+
+#include "prx/factor_graphs/factors/obstacle_factor.hpp"
+#include "prx/simulation/loaders/obstacle_loader.hpp"
+// #include <CGAL/draw_straight_skeleton_2.h>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef K::Point_2 Point;
@@ -142,8 +139,8 @@ int main()
   // vertices_begin ()
   std::ofstream ofs(prx::out_path + "/cgal_skw.txt");
 
-  std::vector<std::pair<int, int>> edges;
-  std::vector<std::pair<int, Point>> points;
+  std::vector<std::pair<int, int> > edges;
+  std::vector<std::pair<int, Point> > points;
   std::set<int> valid_ids;
   // Vertex_iterator   vertices_end ()
   for (auto iter = iss->halfedges_begin(); iter != iss->halfedges_end(); iter++)

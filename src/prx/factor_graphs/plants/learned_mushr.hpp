@@ -1,6 +1,6 @@
+#ifndef TORCH_NOT_BUILT
 #pragma once
 #include <torch/script.h>  // One-stop header.
-
 #include "prx/simulation/plant.hpp"
 #include "prx/factor_graphs/factors/euler_integration_factor.hpp"
 #include "prx/factor_graphs/lie_groups/lie_integrator.hpp"
@@ -113,3 +113,4 @@ protected:
 }  // namespace prx
 
 PRX_REGISTER_SYSTEM(fg::learned_mushr_t, learned_mushr)
+#endif

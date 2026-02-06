@@ -1,14 +1,12 @@
 #include <fstream>
 #include "prx/utilities/defs.hpp"
 #include "prx/planning/world_model.hpp"
-#include "prx/planning/planners/aorrt.hpp"
 #include "prx/simulation/plants/plants.hpp"
-#include "prx/factor_graphs/plants/plants.hpp"
-#include "prx/planning/planners/planner.hpp"
 #include "prx/visualization/three_js_group.hpp"
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
-#include "prx/planning/planner_functions/tree_fix_time_discretization.hpp"
+#include "prx/factor_graphs/lie_groups/se2.hpp"
+#include "prx/utilities/general/csv_reader.hpp"
 
 using CsvReader = prx::utilities::csv_reader_t;
 
