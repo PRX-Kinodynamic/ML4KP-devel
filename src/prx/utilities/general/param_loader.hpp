@@ -34,6 +34,10 @@ public:
   void add_opts(int argc, char* argv[]);
   void add_opts(std::vector<std::string> argv);
 
+  // Load parameters from a string (NOT from a file)
+  // As in str <- content of a file
+  void from_string(const std::string str);
+
   inline const std::string get_input_path() const
   {
     return pl_input_path;

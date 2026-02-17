@@ -1,4 +1,5 @@
 #include "prx/utilities/general/param_loader.hpp"
+#include "general/debug_utils.hpp"
 #include "prx/utilities/general/string_manip.hpp"
 
 namespace prx
@@ -47,6 +48,22 @@ param_loader::param_loader(YAML::Node input_params, std::string _p_key)
 void param_loader::add(const param_loader& pl)
 {
   params.push_back(std::move(pl.params));
+}
+
+void param_loader::from_string(const std::string str)
+{
+  YAML::Node nn;
+  try
+  {
+    // PRX_DBG_VARS(str);
+    std::istringstream istrstr(str);
+    nn = YAML::Load(istrstr);
+  }
+  catch (...)
+  {
+    prx_throw("[param_loader::from_string] Couldn't load string: " << str);
+  }
+  params = std::move(expand_file(nn));
 }
 
 void param_loader::add_file(std::string file_name)
