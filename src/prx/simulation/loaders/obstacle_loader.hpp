@@ -21,9 +21,11 @@ using EnvironmentBounds = std::pair<Eigen::Vector3d, Eigen::Vector3d>;
 class obstacle_loader_t
 {
 public:
-  static std::pair<std::vector<std::string>, std::vector<std::shared_ptr<movable_object_t>>>
-  load_obstacles_from_file(const std::string obstacles_file);
-  static EnvironmentBounds bounds_from_yaml(const std::string obstacles_file);
+  static PairNameObstacles load_obstacles_from_file(const std::string);
+  static PairNameObstacles load_obstacles_from_file(const param_loader&);
+
+  static EnvironmentBounds bounds_from_yaml(const std::string);
+  static EnvironmentBounds bounds_from_yaml(const param_loader&);
 
   obstacle_loader_t(const std::string obstacles_file)
   {
@@ -31,6 +33,14 @@ public:
     names = loaded_obst.first;
     obstacles = loaded_obst.second;
     _bounds = obstacle_loader_t::bounds_from_yaml(obstacles_file);
+  }
+
+  obstacle_loader_t(const param_loader& obstacles_params)
+  {
+    auto loaded_obst = obstacle_loader_t::load_obstacles_from_file(obstacles_params);
+    names = loaded_obst.first;
+    obstacles = loaded_obst.second;
+    _bounds = obstacle_loader_t::bounds_from_yaml(obstacles_params);
   }
 
   std::vector<std::string> get_names() const

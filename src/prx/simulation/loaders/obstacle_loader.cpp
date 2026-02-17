@@ -1,4 +1,5 @@
 #include "prx/simulation/loaders/obstacle_loader.hpp"
+#include "general/param_loader.hpp"
 #include "prx/utilities/geometry/basic_geoms/box.hpp"
 #include "prx/utilities/geometry/basic_geoms/cylinder.hpp"
 #include "prx/utilities/geometry/basic_geoms/sphere.hpp"
@@ -20,7 +21,13 @@ obstacle_loader_t::load_obstacles_from_file(const std::string obstacles_file)
     return std::make_pair<std::vector<std::string>, std::vector<std::shared_ptr<movable_object_t>>>({}, {});
   }
   param_loader obstacle_loader(obstacles_file);
-  auto geometries_list = obstacle_loader["environment"]["geometries"];
+  return load_obstacles_from_file(obstacle_loader);
+}
+
+std::pair<std::vector<std::string>, std::vector<std::shared_ptr<movable_object_t>>>
+obstacle_loader_t::load_obstacles_from_file(const param_loader& obstacles)
+{
+  auto geometries_list = obstacles["environment"]["geometries"];
 
   std::vector<std::shared_ptr<movable_object_t>> obstacle_list;
   std::vector<std::string> obstacle_names;
@@ -79,6 +86,12 @@ EnvironmentBounds obstacle_loader_t::bounds_from_yaml(const std::string obstacle
     return std::make_pair<Eigen::Vector3d, Eigen::Vector3d>({ -inf, -inf, -inf }, { inf, inf, inf });
   }
   const param_loader obstacle_loader(obstacles_file);
+
+  return bounds_from_yaml(obstacle_loader);
+}
+
+EnvironmentBounds obstacle_loader_t::bounds_from_yaml(const param_loader& obstacle_loader)
+{
   const Eigen::Vector3d min{ obstacle_loader["environment"]["bounds"]["min"].as<Eigen::Vector3d>() };
   const Eigen::Vector3d max{ obstacle_loader["environment"]["bounds"]["max"].as<Eigen::Vector3d>() };
   return std::make_pair(min, max);
