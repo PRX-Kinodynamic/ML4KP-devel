@@ -1,6 +1,7 @@
 #define BOOST_AUTO_TEST_MAIN constants_test
 #include <string>
 #include <boost/test/unit_test.hpp>
+#include "prx/simulation/system.hpp"
 #include "prx/simulation/playback/plan.hpp"
 
 namespace mock
@@ -176,4 +177,87 @@ BOOST_AUTO_TEST_CASE(plan_random_test)
     BOOST_REQUIRE(plan_r0[i].duration != plan_r1[i].duration);
     BOOST_REQUIRE(not(Vec(plan_r0[i].control) - Vec(plan_r1[i].control)).isZero());
   }
+}
+
+BOOST_AUTO_TEST_CASE(plan_expand_test)
+{
+  prx::simulation_step = 0.1;
+  mock::plan_space_test_t test;
+  prx::space_t& space(test.space);
+  prx::plan_t plan(&space);
+
+  plan.copy_onto_back(Eigen::Vector2d(0, 0), 1);
+  plan.copy_onto_back(Eigen::Vector2d(1, 1), 1);
+  plan.copy_onto_back(Eigen::Vector2d(2, 2), 1);
+
+  const prx::plan_t expanded_plan{ prx::plan_t::expand(plan) };
+
+  const double original_plan_duration{ plan.duration() };
+  const double expected_expanded_size{ original_plan_duration / prx::simulation_step };
+
+  BOOST_REQUIRE_MESSAGE(std::fabs(original_plan_duration - expanded_plan.duration()) < 0.01,
+                        EXPECTED_GOT(original_plan_duration, expanded_plan.duration()));
+  BOOST_REQUIRE_MESSAGE(expanded_plan.size() == expected_expanded_size,
+                        EXPECTED_GOT(expected_expanded_size, expanded_plan.size()));
+}
+
+BOOST_AUTO_TEST_CASE(plan_expand_unexpandable_test)
+{
+  prx::simulation_step = 0.1;
+  mock::plan_space_test_t test;
+  prx::space_t& space(test.space);
+  prx::plan_t plan(&space);
+
+  plan.copy_onto_back(Eigen::Vector2d(0, 0), 0.1);
+
+  const prx::plan_t expanded_plan{ prx::plan_t::expand(plan) };
+
+  const double original_plan_duration{ plan.duration() };
+  const double expected_expanded_size{ original_plan_duration / prx::simulation_step };
+
+  BOOST_REQUIRE_MESSAGE(std::fabs(original_plan_duration - expanded_plan.duration()) < 0.01,
+                        EXPECTED_GOT(original_plan_duration, expanded_plan.duration()));
+  BOOST_REQUIRE_MESSAGE(expanded_plan.size() == expected_expanded_size,
+                        EXPECTED_GOT(expected_expanded_size, expanded_plan.size()));
+}
+
+BOOST_AUTO_TEST_CASE(plan_self_expand_test)
+{
+  prx::simulation_step = 0.1;
+  mock::plan_space_test_t test;
+  prx::space_t& space(test.space);
+  prx::plan_t plan(&space);
+
+  plan.copy_onto_back(Eigen::Vector2d(0, 0), 1);
+  plan.copy_onto_back(Eigen::Vector2d(1, 1), 1);
+  plan.copy_onto_back(Eigen::Vector2d(2, 2), 1);
+
+  const double original_plan_duration{ plan.duration() };
+  const double expected_expanded_size{ original_plan_duration / prx::simulation_step };
+
+  plan.expand();
+
+  BOOST_REQUIRE_MESSAGE(std::fabs(original_plan_duration - plan.duration()) < 0.01,
+                        EXPECTED_GOT(original_plan_duration, plan.duration()));
+  BOOST_REQUIRE_MESSAGE(plan.size() == expected_expanded_size, EXPECTED_GOT(expected_expanded_size, plan.size()));
+}
+
+BOOST_AUTO_TEST_CASE(plan_expand_long_test)
+{
+  prx::simulation_step = 0.1;
+  mock::plan_space_test_t test;
+  prx::space_t& space(test.space);
+  prx::plan_t plan(&space);
+
+  plan.copy_onto_back(Eigen::Vector2d(0, 0), 10);
+
+  const prx::plan_t expanded_plan{ prx::plan_t::expand(plan) };
+
+  const double original_plan_duration{ plan.duration() };
+  const double expected_expanded_size{ original_plan_duration / prx::simulation_step };
+
+  BOOST_REQUIRE_MESSAGE(std::fabs(original_plan_duration - expanded_plan.duration()) < 0.01,
+                        EXPECTED_GOT(original_plan_duration, expanded_plan.duration()));
+  BOOST_REQUIRE_MESSAGE(expanded_plan.size() == expected_expanded_size,
+                        EXPECTED_GOT(expected_expanded_size, expanded_plan.size()));
 }

@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iterator>
 
+// #include "prx/utilities/general/debug_utils.hpp"
 #include "prx/utilities/spaces/space.hpp"
 #include "prx/utilities/defs.hpp"
 
@@ -51,6 +52,13 @@ public:
   plan_t(const plan_t& other);
 
   ~plan_t();
+
+  // Given a plan, make a new plan where every plan_step_t duration is prx::simulation_step
+  // This is, the new plan is the same as the old one but its size is other.size() / prx::simulation_step
+  static plan_t expand(const plan_t& other);
+
+  // Expand in place
+  void expand();
 
   /**
    * @brief Returns the number of steps in the plan.

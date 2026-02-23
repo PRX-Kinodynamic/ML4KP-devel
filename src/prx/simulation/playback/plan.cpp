@@ -1,4 +1,5 @@
 #include "prx/simulation/playback/plan.hpp"
+#include "prx/simulation/system.hpp"
 
 namespace prx
 {
@@ -65,6 +66,29 @@ plan_t& plan_t::operator=(const plan_t& t)
     }
   }
   return *this;
+}
+
+plan_t plan_t::expand(const plan_t& other)
+{
+  plan_t plan(other.control_space);
+  for (auto& step : other)
+  {
+    const int total_steps{ static_cast<int>(step.duration / prx::simulation_step) };
+    // for (double ti = prx::simulation_step; ti < step.duration; ti += prx::simulation_step)
+    for (int i = 0; i < total_steps; ++i)
+    {
+      // PRX_DBG_VARS(ti)
+      plan.copy_onto_back(step.control, prx::simulation_step);
+    }
+  }
+  // PRX_DBG_VARS(other)
+  // PRX_DBG_VARS(plan)
+  return plan;
+}
+
+void plan_t::expand()
+{
+  (*this) = plan_t::expand(*this);
 }
 
 plan_t& plan_t::operator+=(const plan_t& t)
