@@ -1,6 +1,5 @@
 #pragma once
 
-#include "general/prx_assert.hpp"
 #include "prx/planning/planners/rrt.hpp"
 
 namespace prx
