@@ -1,5 +1,6 @@
 #pragma once
 
+#include "general/prx_assert.hpp"
 #include "prx/planning/planners/rrt.hpp"
 
 namespace prx
@@ -82,16 +83,68 @@ public:
 class dirt_replan_query_t : public rrt_query_t
 {
 public:
+  enum solution_type_t
+  {
+    TREE_TRAJECTORY = 0,
+    WAVEFRONT
+  };
+
   dirt_replan_query_t(space_t* state_space, space_t* control_space) : rrt_query_t(state_space, control_space)
   {
     start_time = 0.0;
   }
+
   virtual ~dirt_replan_query_t()
   {
   }
 
+  virtual void init(const prx::param_loader& params) override
+  {
+    rrt_query_t::init(params);
+
+    if (params.exists("solution_type"))
+    {
+      const std::string sln_type{ params["solution_type"].as<>() };
+      if (sln_type == "TREE_TRAJECTORY")
+      {
+        _sln_type = solution_type_t::TREE_TRAJECTORY;
+      }
+      else if (sln_type == "WAVEFRONT")
+      {
+        _sln_type = solution_type_t::WAVEFRONT;
+      }
+      else
+      {
+        prx_throw("[dirt_replan_query_t::init] invalid solution_type: {TREE_TRAJECTORY, WAVEFRONT}")
+      }
+    }
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const dirt_replan_query_t& obj)
+  {
+    std::string sln_str{ "??" };
+    if (obj._sln_type == solution_type_t::WAVEFRONT)
+    {
+      sln_str = "WAVEFRONT";
+    }
+    else if (obj._sln_type == solution_type_t::TREE_TRAJECTORY)
+    {
+      sln_str = "TREE_TRAJECTORY";
+    }
+
+    os << static_cast<rrt_query_t>(obj);
+    os << "start_time: " << obj.start_time << "\n";
+    os << "previous_contingency: " << obj.previous_contingency << "\n";
+
+    os << "solution_type: " << sln_str << "\n";
+
+    return os;
+  }
+
   double start_time;
   bool previous_contingency;
+
+  solution_type_t _sln_type;
 };
 
 class dirt_replan_t : public rrt_t
@@ -147,6 +200,9 @@ private:
   double max_radius;
   bool child_extension;
   node_index_t previous_child;
+
+  bool tree_solution();
+  bool wavefront_solution();
 
   void add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_replan_node_t* closest_node,
                         std::vector<dirt_replan_node_t*> dir_updates, double new_node_dir_radius);

@@ -484,7 +484,7 @@ void dirt_replan_t::update_goal(node_index_t node_index)
       std::cout << " cost:" << new_tree_node->cost_to_come;
       std::cout << " time:" << current_solution_time;
       std::cout << " iter:" << current_solution_iters;
-      std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
+      std::cout << " nodes:" << metric->get_nr_nodes() << "\n";
       bnb(start_vertex, current_solution);
     }
   }
@@ -514,70 +514,80 @@ void dirt_replan_t::_reset()
   }
 }
 
+bool dirt_replan_t::tree_solution()
+{
+  if (goal_vertex == start_vertex)
+    return false;
+
+  rrt_query->solution_cost = tree().get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come;
+  std::deque<node_index_t> node_indices;
+  node_index_t current_index = goal_vertex;
+  while (current_index != start_vertex)
+  {
+    auto node = get_vertex(current_index);
+    node_indices.push_front(current_index);
+    current_index = tree()[current_index]->get_parent();
+  }
+
+  rrt_query->solution_plan = *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[0]]->get_parent_edge())->plan);
+  rrt_query->solution_traj = *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[0]]->get_parent_edge())->traj);
+
+  for (int i = 1; i < node_indices.size(); i++)
+  {
+    rrt_query->solution_traj.resize(rrt_query->solution_traj.size() - 1);
+    rrt_query->solution_plan += *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[i]]->get_parent_edge())->plan);
+    rrt_query->solution_traj += *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[i]]->get_parent_edge())->traj);
+  }
+  return true;
+}
+
+bool dirt_replan_t::wavefront_solution()
+{
+  if (best_node == start_vertex)
+    return false;
+
+  rrt_query->solution_cost = tree().get_vertex_as<rrt_node_t>(best_node)->cost_to_come;
+  std::deque<node_index_t> node_indices;
+  node_index_t current_index = best_node;
+  while (current_index != start_vertex)
+  {
+    auto node = get_vertex(current_index);
+    node_indices.push_front(current_index);
+    current_index = tree()[current_index]->get_parent();
+  }
+
+  rrt_query->solution_plan = *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[0]]->get_parent_edge())->plan);
+  rrt_query->solution_traj = *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[0]]->get_parent_edge())->traj);
+
+  for (int i = 1; i < node_indices.size(); i++)
+  {
+    rrt_query->solution_traj.resize(rrt_query->solution_traj.size() - 1);
+    rrt_query->solution_plan += *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[i]]->get_parent_edge())->plan);
+    rrt_query->solution_traj += *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[i]]->get_parent_edge())->traj);
+  }
+  return true;
+}
+
 void dirt_replan_t::_fulfill_query()
 {
-  // PRX_DBG_VARS(goal_vertex, start_vertex, best_node)
-  // PRX_DBG_VARS(goal_vertex != start_vertex, best_node != start_vertex)
-  if (goal_vertex != start_vertex)
+  // if (obj._sln_type == solution_type_t::WAVEFRONT)
+  bool solution_found{ false };
+  if (dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::TREE_TRAJECTORY)
   {
-    // PRX_MSG("Solution Found")
-    // backtrack to get the plan and trajectory
-    rrt_query->solution_cost = tree().get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come;
-    std::deque<node_index_t> node_indices;
-    node_index_t current_index = goal_vertex;
-    while (current_index != start_vertex)
-    {
-      auto node = get_vertex(current_index);
-      // std::cout << current_index << " " << state_space->print_point(node->point, 4) << " " << node->is_safe << " "
-      //           << " " << node->checkpoint_time << std::endl;
-      node_indices.push_front(current_index);
-      current_index = tree()[current_index]->get_parent();
-    }
-
-    rrt_query->solution_plan = *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[0]]->get_parent_edge())->plan);
-    rrt_query->solution_traj = *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[0]]->get_parent_edge())->traj);
-
-    for (int i = 1; i < node_indices.size(); i++)
-    {
-      rrt_query->solution_traj.resize(rrt_query->solution_traj.size() - 1);
-      rrt_query->solution_plan += *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[i]]->get_parent_edge())->plan);
-      rrt_query->solution_traj += *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[i]]->get_parent_edge())->traj);
-    }
+    solution_found = tree_solution();
+  }
+  if (not solution_found or dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::WAVEFRONT)
+  {
+    solution_found = wavefront_solution();
     // if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
     //   rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
   }
-  else if (best_node != start_vertex)
-  {
-    rrt_query->solution_cost = tree().get_vertex_as<rrt_node_t>(best_node)->cost_to_come;
-    std::deque<node_index_t> node_indices;
-    node_index_t current_index = best_node;
-    while (current_index != start_vertex)
-    {
-      auto node = get_vertex(current_index);
-      // std::cout << current_index << " " << state_space->print_point(node->point, 4) << " " << node->is_safe << " "
-      //           << " " << node->checkpoint_time << std::endl;
-      node_indices.push_front(current_index);
-      current_index = tree()[current_index]->get_parent();
-    }
-
-    rrt_query->solution_plan = *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[0]]->get_parent_edge())->plan);
-    rrt_query->solution_traj = *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[0]]->get_parent_edge())->traj);
-
-    for (int i = 1; i < node_indices.size(); i++)
-    {
-      rrt_query->solution_traj.resize(rrt_query->solution_traj.size() - 1);
-      rrt_query->solution_plan += *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[i]]->get_parent_edge())->plan);
-      rrt_query->solution_traj += *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[i]]->get_parent_edge())->traj);
-    }
-    // if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
-    //   rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
-  }
-  else
+  if (not solution_found)
   {
     std::cout << "No solution found during planning cycle. # of nodes: " << metric->get_nr_nodes() << std::endl;
     rrt_query->solution_cost = 0;
   }
-  auto node = get_vertex(start_vertex);
+  // auto node = get_vertex(start_vertex);
   // std::cout << start_vertex << " " << state_space->print_point(node->point, 4) << " " << node->is_safe << " " << " "
   //           << node->checkpoint_time << std::endl;
   if (rrt_query->get_visualization)
