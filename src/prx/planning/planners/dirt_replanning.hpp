@@ -88,7 +88,8 @@ public:
     WAVEFRONT
   };
 
-  dirt_replan_query_t(space_t* state_space, space_t* control_space) : rrt_query_t(state_space, control_space)
+  dirt_replan_query_t(space_t* state_space, space_t* control_space)
+    : rrt_query_t(state_space, control_space), _sln_type(solution_type_t::TREE_TRAJECTORY)
   {
     start_time = 0.0;
   }
