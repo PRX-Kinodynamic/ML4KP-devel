@@ -64,8 +64,9 @@ bool dirt_t::_link_and_setup_query(planner_query_t* query)
   current_solution_time = 0;
 
   // Removed by BNB, Removed by pruning, Removed by collision check, Final
-  random_edges_counter = { 0, 0, 0, 0 };
-  blossom_edges_counter = { 0, 0, 0, 0 };
+
+  // random_edges_counter = { 0, 0, 0, 0 };
+  // blossom_edges_counter = { 0, 0, 0, 0 };
 
   return true;
 }
@@ -180,7 +181,7 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       // This can happen if you are not using default expand (like curate).
       // Essentially, that procedure fails for some reason, and you end up adding no edge to the tree.
       // So we increment the counter for blossom expand collisions.
-      blossom_edges_counter.at(2) += dirt_spec->blossom_number;
+      _blossom_edges_counter.collision_check += dirt_spec->blossom_number;
     }
 
     while (closest_node->indices.size() != 0)
@@ -199,11 +200,11 @@ void dirt_t::_resolve_query(condition_check_t* condition)
         eg = std::make_pair(nullptr, nullptr);
         if (is_blossom_expand)
         {
-          blossom_edges_counter.at(0)++;
+          _blossom_edges_counter.bnb++;
         }
         else
         {
-          random_edges_counter.at(0)++;
+          _random_edges_counter.bnb++;
         }
         continue;
       }
@@ -243,11 +244,11 @@ void dirt_t::_resolve_query(condition_check_t* condition)
           eg = std::make_pair(nullptr, nullptr);
           if (is_blossom_expand)
           {
-            blossom_edges_counter.at(1)++;
+            _blossom_edges_counter.prunning++;
           }
           else
           {
-            random_edges_counter.at(1)++;
+            _random_edges_counter.prunning++;
           }
           continue;
         }
@@ -265,11 +266,11 @@ void dirt_t::_resolve_query(condition_check_t* condition)
         eg = std::make_pair(nullptr, nullptr);
         if (is_blossom_expand)
         {
-          blossom_edges_counter.at(2)++;
+          _blossom_edges_counter.collision_check++;
         }
         else
         {
-          random_edges_counter.at(2)++;
+          _random_edges_counter.collision_check++;
         }
         continue;
       }
@@ -277,11 +278,11 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       {
         if (is_blossom_expand)
         {
-          blossom_edges_counter.at(3)++;
+          _blossom_edges_counter.final++;
         }
         else
         {
-          random_edges_counter.at(3)++;
+          _random_edges_counter.final++;
         }
       }
 
@@ -395,8 +396,16 @@ std::vector<double> dirt_t::get_statistics()
 {
   // time, iters, nodes, solution quality, first_time, first_iters, current_solution,
   std::vector<double> rrt_statistics = rrt_t::get_statistics();
-  std::vector<double> rand_counts(random_edges_counter.begin(), random_edges_counter.end());
-  std::vector<double> blossom_counts(blossom_edges_counter.begin(), blossom_edges_counter.end());
+  std::vector<double> rand_counts(
+      { static_cast<double>(_random_edges_counter.bnb), static_cast<double>(_random_edges_counter.prunning),
+        static_cast<double>(_random_edges_counter.collision_check), static_cast<double>(_random_edges_counter.final) });
+
+  std::vector<double> blossom_counts({ static_cast<double>(_blossom_edges_counter.bnb),
+                                       static_cast<double>(_blossom_edges_counter.prunning),
+                                       static_cast<double>(_blossom_edges_counter.collision_check),
+                                       static_cast<double>(_blossom_edges_counter.final) });
+  // std::vector<double> rand_counts(random_edges_counter.begin(), random_edges_counter.end());
+  // std::vector<double> blossom_counts(blossom_edges_counter.begin(), blossom_edges_counter.end());
   rrt_statistics.insert(rrt_statistics.end(), std::make_move_iterator(rand_counts.begin()),
                         std::make_move_iterator(rand_counts.end()));
   rrt_statistics.insert(rrt_statistics.end(), std::make_move_iterator(blossom_counts.begin()),

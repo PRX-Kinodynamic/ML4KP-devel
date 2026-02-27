@@ -117,10 +117,39 @@ public:
   using EdgePtr = std::shared_ptr<Edge>;
   using NodePtr = std::shared_ptr<Node>;
 
+  struct dirt_counter_t
+  {
+    dirt_counter_t() : bnb(0), prunning(0), collision_check(0), final(0) {};
+
+    std::size_t bnb;
+    std::size_t prunning;
+    std::size_t collision_check;
+    std::size_t final;
+    // Removed by BNB, Removed by pruning, Removed by collision check, Final
+  };
+
+  struct statistics_t : public planner_t::statistics_t
+  {
+    statistics_t(const planner_t::statistics_t& planner_stats_, const dirt_counter_t random_edges_counter_,
+                 const dirt_counter_t blossom_edges_counter_)
+      : planner_t::statistics_t(planner_stats_)
+      , random_edges_counter(random_edges_counter_)
+      , blossom_edges_counter(blossom_edges_counter_)
+    {
+    }
+    const dirt_counter_t random_edges_counter;
+    const dirt_counter_t blossom_edges_counter;
+  };
+
   dirt_t(const std::string& new_name);
   virtual ~dirt_t();
 
-  std::vector<long unsigned> random_edges_counter, blossom_edges_counter;
+  virtual planner_t::statistics_t statistics() override
+  {
+    const planner_t::statistics_t planner_stats{ rrt_t::statistics() };
+    return statistics_t(planner_stats, _random_edges_counter, _blossom_edges_counter);
+  }
+  // std::vector<long unsigned> random_edges_counter, blossom_edges_counter;
 
   virtual std::shared_ptr<prx::tree_t> tree_of_solutions() override
   {
@@ -148,6 +177,8 @@ protected:
   virtual void bnb(node_index_t v, double cost_bound, bool delete_flag = false) override;
 
 private:
+  dirt_counter_t _random_edges_counter, _blossom_edges_counter;
+
   int replanning_iteration;
   double ri_step;  // Time during a replanning cycle
 

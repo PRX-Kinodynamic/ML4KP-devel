@@ -683,12 +683,16 @@ public:
     }
     else
     {
-      PRX_MSG("[prx::space_t] Bounds not set")
+      PRX_MSG("[prx::space_t::init] Bounds not set")
       // PRX_DBG_VARS(lower_bound_exists, upper_bound_exists)
     }
     if (values.size() == dimension)
     {
       copy_from(values);
+    }
+    else
+    {
+      PRX_MSG("[prx::space_t::init] Wrong 'values' size")
     }
   }
 

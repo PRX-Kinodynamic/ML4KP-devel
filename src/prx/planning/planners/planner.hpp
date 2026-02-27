@@ -2,6 +2,7 @@
 
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/general/condition_check.hpp"
+// #include "prx/utilities/general/statistics.hpp"
 
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
@@ -150,6 +151,29 @@ public:
 class planner_t : public std::enable_shared_from_this<planner_t>
 {
 public:
+  struct statistics_t
+  {
+    statistics_t() : statistics_t(-1., 0, 0, -1., -1., 0) {};
+
+    statistics_t(const double planned_duration_, const std::size_t iteration_count_, const std::size_t total_nodes_,
+                 const double cost_current_solution_, const double time_current_solution_,
+                 const std::size_t iters_current_solution_)
+      : planned_duration(planned_duration_)
+      , iteration_count(iteration_count_)
+      , total_nodes(total_nodes_)
+      , cost_current_solution(cost_current_solution_)
+      , time_current_solution(time_current_solution_)
+      , iters_current_solution(iters_current_solution_)
+    {
+    }
+    const double planned_duration;      // timer.measure()};
+    const std::size_t iteration_count;  // static_cast<double>(iteration_count);
+    const std::size_t total_nodes;      // static_cast<double>(metric->get_nr_nodes());
+    const double cost_current_solution;
+    const double time_current_solution;
+    const std::size_t iters_current_solution;
+  };
+
   planner_t(const std::string& new_name);
   virtual ~planner_t();
 
@@ -188,6 +212,11 @@ public:
   virtual std::vector<std::string> get_statistics_header()
   {
     return {};
+  }
+
+  virtual statistics_t statistics()
+  {
+    return statistics_t();
   }
 
   virtual std::vector<double> get_statistics()

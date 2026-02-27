@@ -258,12 +258,20 @@ public:
   using EdgePtr = std::shared_ptr<Edge>;
   using NodePtr = std::shared_ptr<Node>;
 
+  virtual statistics_t statistics() override
+  {
+    return statistics_t(timer.measure(), iteration_count, metric->get_nr_nodes(), current_solution,
+                        current_solution_time, current_solution_iters);
+  }
+
   rrt_t(const std::string& new_name);
   virtual ~rrt_t();
 
   virtual void print_statistics();
 
   virtual std::vector<std::string> get_statistics_header() override;
+
+  // virtual
   virtual std::vector<double> get_statistics() override;
 
   graph_nearest_neighbors_t* graph_nearest_neighbors() const
