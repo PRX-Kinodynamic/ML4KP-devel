@@ -669,8 +669,9 @@ public:
     const bool lower_bound_exists{ params.exists("lower_bound") };
     const bool upper_bound_exists{ params.exists("upper_bound") };
 
-    std::vector<double> values{ params.exists("values") ? params["values"].as<std::vector<double>>() :
-                                                          std::vector<double>{} };
+    const bool values_exists{ params.exists("values") };
+    const std::vector<double> values{ values_exists ? params["values"].as<std::vector<double>>() :
+                                                      std::vector<double>{} };
 
     if (lower_bound_exists and upper_bound_exists)
     {
@@ -686,13 +687,16 @@ public:
       PRX_MSG("[prx::space_t::init] Bounds not set")
       // PRX_DBG_VARS(lower_bound_exists, upper_bound_exists)
     }
-    if (values.size() == dimension)
+    if (values_exists)
     {
-      copy_from(values);
-    }
-    else
-    {
-      PRX_MSG("[prx::space_t::init] Wrong 'values' size")
+      if (values.size() == dimension)
+      {
+        copy_from(values);
+      }
+      else
+      {
+        PRX_MSG("[prx::space_t::init] Wrong 'values' size")
+      }
     }
   }
 
