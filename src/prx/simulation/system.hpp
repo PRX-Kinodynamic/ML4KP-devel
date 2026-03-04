@@ -45,11 +45,18 @@ public:
   {
     return parameter_space;
   }
+  inline space_t* get_sensor_space() const
+  {
+    return _sensor_space;
+  }
 
   virtual void add_system(system_ptr_t&) = 0;
 
   // Keeping this for analytical plants.
   virtual void propagate(const double simulation_step) = 0;
+
+  // Only update sensor_space when this function is called
+  virtual void sense() {};
 
   virtual void compute_control() = 0;
 
@@ -116,6 +123,7 @@ public:
     os << "\tUpper Bound: " << prx::utilities::convert_to<std::string>(obj.input_control_space->get_upper_bounds())
        << "\n";
     os << "Parameter Space: " << *obj.parameter_space << "\n";  // No bounds for parameter
+    os << "Sensor Space: " << *obj._sensor_space << "\n";       // No bounds for parameter
     return os;
   }
 
@@ -131,6 +139,7 @@ public:
     params["state_space"] = state_space->init();
     params["control_space"] = input_control_space->init();
     params["parameter_space"] = parameter_space->init();
+    params["_sensor_space"] = _sensor_space->init();
 
     return params;
   }
@@ -149,16 +158,22 @@ public:
     {
       parameter_space->init(params["parameter_space"]);
     }
+    if (_sensor_space and params.exists("_sensor_space"))
+    {
+      _sensor_space->init(params["_sensor_space"]);
+    }
   }
 
 protected:
   space_t* state_space;
   space_t* input_control_space;
   space_t* parameter_space;
+  space_t* _sensor_space;
 
   system_t(const system_ptr_t other)
   {
     state_space = other->state_space;
+    _sensor_space = other->_sensor_space;
     input_control_space = other->input_control_space;
     parameter_space = other->parameter_space;
     parent_system = other->parent_system;
@@ -186,6 +201,7 @@ protected:
   std::vector<double*> state_memory;
   std::vector<double*> control_memory;
   std::vector<double*> parameter_memory;
+  std::vector<double*> _sensor_memory;
 
   bool owned_values;
 

@@ -37,16 +37,19 @@ system_group_t::system_group_t(const std::vector<system_ptr_t>& sys_group, plant
   std::vector<const space_t*> state_spaces;
   std::vector<const space_t*> control_spaces;
   std::vector<const space_t*> parameter_spaces;
+  std::vector<const space_t*> sensor_spaces;
 
   for (auto g1 : group)
   {
     state_spaces.push_back(g1->get_state_space());
     control_spaces.push_back(g1->get_control_space());
     parameter_spaces.push_back(g1->get_parameter_space());
+    sensor_spaces.push_back(g1->get_sensor_space());
   }
   state_space = new space_t(state_spaces);
   control_space = new space_t(control_spaces);
   _parameter_space = new space_t(parameter_spaces);
+  _sensor_space = new space_t(sensor_spaces);
 }
 
 system_group_t::~system_group_t()
@@ -164,14 +167,6 @@ void system_group_t::propagate_once(space_point_t control)
   // }
   sim->step_simulation();
 }
-
-// void system_group_t::compute_stopping_maneuver(space_point_t start_state, std::vector<double>& times,
-//                                                std::vector<double>& ctrls)
-// {
-//   prx_assert(group.size() == 1,
-//              "[system_group_t::compute_stopping_maneuver] Expected group of size 1 but got " << group.size());
-//   group[0]->compute_stopping_maneuver(start_state, times, ctrls);
-// }
 
 void system_group_t::steer(space_point_t x_new, const space_point_t x_nearest, const space_point_t x_rand,
                            const double eta, distance_function_t distance_function)

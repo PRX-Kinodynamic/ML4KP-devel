@@ -1,4 +1,5 @@
 #include "prx/utilities/general/param_loader.hpp"
+#include <ostream>
 #include "general/debug_utils.hpp"
 #include "prx/utilities/general/string_manip.hpp"
 
@@ -310,6 +311,8 @@ void param_loader::print(const YAML::Node& pl, std::string prepath) const
 void param_loader::replace_env_var(YAML::Node& node)
 {
   const std::regex env_var_regex("\\$\\{(.)+\\}");
+  // std::cout << "Map:" << node.IsMap() << std::endl;
+  // std::cout << "Sequence:" << node.IsSequence() << std::endl;
   if (!node.IsSequence() && !node.IsMap())
   {
     const std::string node_str{ node.as<std::string>() };
@@ -333,6 +336,13 @@ void param_loader::replace_env_var(YAML::Node& node)
     for (auto n : node)
     {
       replace_env_var(n);
+    }
+  }
+  else if (node.IsMap())
+  {
+    for (auto n : node)
+    {
+      replace_env_var(n.second);
     }
   }
 }

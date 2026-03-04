@@ -81,6 +81,14 @@ public:
 
   void replace_env_var(YAML::Node& node);
 
+  void replace_environment_variables()
+  {
+    // for (auto p : params)
+    // {
+    replace_env_var(params);
+    // }
+  }
+
   template <typename T = std::string>
   T as() const
   {
@@ -139,6 +147,12 @@ public:
   {
     std::ofstream ofs(filename.c_str());
     ofs << params;
+  }
+
+  void merge(const param_loader& other)
+  {
+    merge(other.params);
+    replace_environment_variables();
   }
 
 protected:

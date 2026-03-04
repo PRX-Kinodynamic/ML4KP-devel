@@ -100,3 +100,47 @@ BOOST_AUTO_TEST_CASE(param_loader_from_string)
   BOOST_CHECK(pl["p_multi/vec"].as<std::vector<int>>()[0] == 1);
   BOOST_CHECK(pl["p_multi/vec"].as<std::vector<int>>()[1] == 2);
 }
+
+BOOST_AUTO_TEST_CASE(param_loader_merge)
+{
+  prx::param_loader pl0{};
+  prx::param_loader pl1{};
+
+  const std::string t0{ "test_str_0" };
+  const int t1{ 1 };
+  const std::string t2{ "test_str_2" };
+  const double t3{ 3.14 };
+  pl0["test0"].set(t0);
+  pl0["test1"].set(t1);
+  pl1["test2"].set(t2);
+  pl1["test3"].set(t3);
+
+  pl0.merge(pl1);
+
+  BOOST_CHECK(pl0["test0"].as<std::string>() == t0);
+  BOOST_CHECK(pl0["test1"].as<int>() == t1);
+  BOOST_CHECK(pl0["test2"].as<std::string>() == t2);
+  BOOST_CHECK(pl0["test3"].as<double>() == t3);
+  // BOOST_CHECK(pl["p1"].as<int>() == 1);
+  // BOOST_CHECK(pl["p_multi/zero"].as<int>() == 0);
+  // BOOST_CHECK(pl["p_multi/vec"].as<std::vector<int>>()[0] == 1);
+  // BOOST_CHECK(pl["p_multi/vec"].as<std::vector<int>>()[1] == 2);
+}
+
+BOOST_AUTO_TEST_CASE(param_loader_replace_env_vars)
+{
+  prx::param_loader pl0{};
+
+  const std::string t0{ "${DIRTMP_PATH}" };
+  pl0["test0"].set(t0);
+
+  // PRX_DBG_VARS(pl0)
+  pl0.replace_environment_variables();
+  // PRX_DBG_VARS(pl0)
+  // pl0.merge(pl1);
+
+  BOOST_CHECK(pl0["test0"].as<std::string>() != t0);
+  // BOOST_CHECK(pl0["test1"].as<int>() == t1);
+  // BOOST_CHECK(pl0["test2"].as<std::string>() == t2);
+  // BOOST_CHECK(pl0["test3"].as<double>() == t3);
+}

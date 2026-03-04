@@ -56,6 +56,14 @@ public:
 
   void steer_once(const space_point_t, const space_point_t, const double);
 
+  void sense()
+  {
+    for (auto& s : group)
+    {
+      s->sense();
+    }
+  }
+
   // void system_group_t::compute_stopping_maneuver(space_point_t start_state, double& time)
   void compute_stopping_maneuver(space_point_t start_state, double& time)
   {
@@ -80,6 +88,11 @@ public:
     return _parameter_space;
   }
 
+  inline space_t* get_sensor_space()
+  {
+    return _sensor_space;
+  }
+
   void propagate_once(space_point_t control = nullptr);
 
   std::vector<system_ptr_t>::iterator begin()
@@ -97,6 +110,7 @@ protected:
   space_t* state_space;
   space_t* control_space;
   space_t* _parameter_space;
+  space_t* _sensor_space;
   simulator_t* sim;
 
   friend system_group_manager_t;
