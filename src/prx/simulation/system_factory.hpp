@@ -34,13 +34,7 @@ public:
    */
   static system_ptr_t create_system(const std::string& name, const std::string& path = "");
 
-  static system_ptr_t create_system(const prx::param_loader params)
-  {
-    const std::string plant_name{ params["name"].as<std::string>() };
-    const std::string plant_path{ params["path"].as<std::string>() };
-
-    return create_system(plant_name, plant_path);
-  }
+  static system_ptr_t create_system(const prx::param_loader params);
 
   static prx::param_loader initialization_parameters(const std::string& plant_name);
 

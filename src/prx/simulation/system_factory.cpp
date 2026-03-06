@@ -70,6 +70,16 @@ prx::param_loader system_factory_t::initialization_parameters(const std::string&
   return params;
 }
 
+system_ptr_t system_factory_t::create_system(const prx::param_loader params)
+{
+  const std::string plant_name{ params["name"].as<std::string>() };
+  const std::string plant_path{ params["path"].as<std::string>() };
+
+  system_ptr_t plant{ create_system(plant_name, plant_path) };
+  plant->init(params);
+  return plant;
+}
+
 std::vector<std::string> system_factory_t::available_velocity_functions()
 {
   std::vector<std::string> r;
