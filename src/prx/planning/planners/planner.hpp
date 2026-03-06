@@ -32,6 +32,7 @@ param_loader init()
   params["PlannerSpec"] = PlannerSpec::init();
   params["PlannerQuery"] = PlannerQuery::init();
   params["Planner"] = Planner::init();
+  return params;
 }
 
 class planner_specification_t
