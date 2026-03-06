@@ -36,12 +36,14 @@ public:
 
   static void reset(TimeProfilerPtr profiler)
   {
-    profiler->reset();
+    if (profiler)
+      profiler->reset();
   }
 
   static void measure(TimeProfilerPtr profiler)
   {
-    profiler->measure();
+    if (profiler)
+      profiler->measure();
   }
 
 protected:

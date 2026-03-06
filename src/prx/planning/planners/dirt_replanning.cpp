@@ -152,7 +152,7 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
   // run for a certain amount of time
   do
   {
-    _resolve_profiler.reset();
+    prx::time_profiler_t::reset(_resolve_profiler);
 
     if (!child_extension)
     {
@@ -211,6 +211,9 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       // std::cout << "Node selected for expansion: " << state_space->print_point(get_vertex(previous_child)->point) <<
       // std::endl;
     }
+
+    prx::time_profiler_t::measure(_resolve_profiler);  // no child extension
+
     child_extension = false;
 
     auto closest_node = get_vertex(previous_child);
@@ -245,6 +248,7 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       std::sort(closest_node->indices.begin(), closest_node->indices.end(),
                 [this, pred_values](const int& a, const int& b) { return pred_values[a] > pred_values[b]; });
     }
+    prx::time_profiler_t::measure(_resolve_profiler);  // blossom
 
     // is_blossom_expand = (closest_node->edge_generators.size() > 1);
     is_blossom_expand = (closest_node->is_blossom_expand_done) && !closest_node->random_expand;
@@ -261,6 +265,8 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       // So we increment the counter for blossom expand collisions.
       _blossom_edges_counter.collision_check += dirt_spec->blossom_number;
     }
+
+    prx::time_profiler_t::measure(_resolve_profiler);  // expand
 
     while (closest_node->indices.size() != 0)
     {
@@ -597,6 +603,8 @@ bool dirt_replan_t::wavefront_solution()
 
 void dirt_replan_t::_fulfill_query()
 {
+  prx::time_profiler_t::reset(_fulfill_profiler);
+
   // if (obj._sln_type == solution_type_t::WAVEFRONT)
   bool solution_found{ false };
   if (dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::TREE_TRAJECTORY)
@@ -604,6 +612,8 @@ void dirt_replan_t::_fulfill_query()
     solution_found = tree_solution();
     _current_solution_type = dirt_replan_query_t::solution_type_t::TREE_TRAJECTORY;
   }
+  prx::time_profiler_t::measure(_fulfill_profiler);  // best trajector
+
   if (not solution_found or dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::WAVEFRONT)
   {
     solution_found = wavefront_solution();
@@ -611,6 +621,8 @@ void dirt_replan_t::_fulfill_query()
     // if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
     //   rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
   }
+  prx::time_profiler_t::measure(_fulfill_profiler);  // best node
+
   if (not solution_found)
   {
     std::cout << "No solution found during planning cycle. # of nodes: " << metric->get_nr_nodes() << std::endl;
