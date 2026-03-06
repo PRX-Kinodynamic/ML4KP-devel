@@ -667,6 +667,14 @@ void dirt_replan_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
     }
     for (int man_index = 0; man_index < node->indices.size(); man_index++)
     {
+      if (node->random_expand)
+      {
+        _random_edges_counter.bnb++;
+      }
+      else
+      {
+        _blossom_edges_counter.bnb++;
+      }
       delete node->edge_generators[node->indices[man_index]].first;
       delete node->edge_generators[node->indices[man_index]].second;
     }
