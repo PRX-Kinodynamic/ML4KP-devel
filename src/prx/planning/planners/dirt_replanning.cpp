@@ -1,5 +1,6 @@
 #include "prx/planning/planners/dirt_replanning.hpp"
 #include <memory>
+#include "general/debug_utils.hpp"
 namespace prx
 {
 
@@ -444,8 +445,8 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
   {
     best_cost = wavefront_val;
     best_node = new_tree_node->get_index();
-    // std::cout << "Updated best node to: " << state_space->print_point(closest_node->point,4) << " " <<
-    // closest_node->is_safe << std::endl;
+    std::cout << "Updated best node to: " << best_cost << " " << state_space->print_point(closest_node->point, 4) << " "
+              << closest_node->is_safe << "\n";
   }
 
   max_radius = std::max(max_radius, new_node_dir_radius);
@@ -616,9 +617,10 @@ void dirt_replan_t::_fulfill_query()
   }
   prx::time_profiler_t::measure(_fulfill_profiler);  // best trajector
 
+  std::cout << "solution_found" << solution_found << "\n";
   if (not solution_found or dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::WAVEFRONT)
   {
-    // solution_found = wavefront_solution();
+    std::cout << "Computing wavefront_solution" << "\n";
     goal_vertex = best_node;
     solution_found = tree_solution();
     _current_solution_type = dirt_replan_query_t::solution_type_t::WAVEFRONT;
