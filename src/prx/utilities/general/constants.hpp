@@ -298,4 +298,13 @@ std::string check_which_file_exists(const Strs... strs)
   return "";
 }
 
+inline std::string timestamp()
+{
+  // Example of the very popular RFC 3339 format UTC time
+  std::time_t time{ std::time({}) };
+  char timeString[std::size("yymmddhhmmss")];
+  std::strftime(std::data(timeString), std::size(timeString), "%FT%TZ", std::gmtime(&time));
+  return timeString;
+}
+
 }  // namespace prx

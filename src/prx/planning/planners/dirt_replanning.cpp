@@ -38,8 +38,8 @@ void dirt_replan_t::_link_and_setup_spec(planner_specification_t* spec)
   if (dirt_spec->profile)
   {
     const std::string prefix{ dirt_spec->output_path + "/" + _planner_name };
-    _resolve_profiler = std::make_shared<time_profiler_t>(prefix + "_resolve_query.txt");
-    _fulfill_profiler = std::make_shared<time_profiler_t>(prefix + "_fulfill_query.txt");
+    _resolve_profiler = std::make_shared<time_profiler_t>(prefix + "_resolve_query" + timestamp() + ".txt");
+    _fulfill_profiler = std::make_shared<time_profiler_t>(prefix + "_fulfill_query" + timestamp() + ".txt");
   }
 }
 bool dirt_replan_t::_preprocess()
