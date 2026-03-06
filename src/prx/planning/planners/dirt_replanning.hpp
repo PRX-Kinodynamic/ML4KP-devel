@@ -243,12 +243,12 @@ public:
     return best_node;
   }
 
-  virtual planner_t::statistics_t statistics() override
+  virtual planner_t::StatisticsPtr statistics() override
   {
-    return statistics_t(rrt_t::statistics(),     // no-lint
-                        _random_edges_counter,   // no-lint
-                        _blossom_edges_counter,  // no-lint
-                        _current_solution_type);
+    return std::make_shared<dirt_replan_t::statistics_t>(*rrt_t::statistics(),    // no-lint
+                                                         _random_edges_counter,   // no-lint
+                                                         _blossom_edges_counter,  // no-lint
+                                                         _current_solution_type);
   }
 
 protected:

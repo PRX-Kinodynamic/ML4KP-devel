@@ -204,6 +204,7 @@ public:
     }
   };
 
+  using StatisticsPtr = std::shared_ptr<planner_t::statistics_t>;
   planner_t(const std::string& new_name);
   virtual ~planner_t();
 
@@ -251,9 +252,10 @@ public:
     return {};
   }
 
-  virtual statistics_t statistics()
+  // virtual statistics_t statistics()
+  virtual StatisticsPtr statistics()
   {
-    return statistics_t();
+    return nullptr;
   }
 
   virtual std::vector<double> get_statistics()

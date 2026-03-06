@@ -268,10 +268,10 @@ public:
   using EdgePtr = std::shared_ptr<Edge>;
   using NodePtr = std::shared_ptr<Node>;
 
-  virtual statistics_t statistics() override
+  virtual planner_t::StatisticsPtr statistics() override
   {
-    return statistics_t(timer.measure(), iteration_count, metric->get_nr_nodes(), current_solution,
-                        current_solution_time, current_solution_iters);
+    return std::make_shared<rrt_t::statistics_t>(timer.measure(), iteration_count, metric->get_nr_nodes(),
+                                                 current_solution, current_solution_time, current_solution_iters);
   }
 
   rrt_t(const std::string& new_name);

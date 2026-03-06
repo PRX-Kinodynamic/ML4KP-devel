@@ -181,10 +181,13 @@ public:
   dirt_t(const std::string& new_name);
   virtual ~dirt_t();
 
-  virtual planner_t::statistics_t statistics() override
+  virtual planner_t::StatisticsPtr statistics() override
   {
-    const planner_t::statistics_t planner_stats{ rrt_t::statistics() };
-    return statistics_t(planner_stats, _random_edges_counter, _blossom_edges_counter);
+    return std::make_shared<dirt_t::statistics_t>(*rrt_t::statistics(),   // no-lint
+                                                  _random_edges_counter,  // no-lint
+                                                  _blossom_edges_counter);
+    // const planner_t::statistics_t planner_stats{ rrt_t::statistics() };
+    // return statistics_t(planner_stats, _random_edges_counter, _blossom_edges_counter);
   }
   // std::vector<long unsigned> random_edges_counter, blossom_edges_counter;
 
