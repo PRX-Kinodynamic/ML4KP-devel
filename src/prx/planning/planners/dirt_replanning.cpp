@@ -648,6 +648,9 @@ void dirt_replan_t::_fulfill_query()
 
 void dirt_replan_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
 {
+  if (not dirt_spec->bnb)
+    return;
+
   auto node = get_vertex(v);
   bool res = delete_flag || node->cost_to_come + node->cost_to_go > cost_bound;
   if (v == goal_vertex)
