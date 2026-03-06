@@ -278,7 +278,7 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       const double f_value{ _f_function(g_value, h_value) };
       closest_node->indices.pop_back();
 
-      // bnb
+      // bnb: Do not add a new node if f(node) > f(current_sln)
       if ((goal_vertex != start_vertex &&  // no-lint
            f_value > current_solution))
       {
@@ -287,11 +287,11 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
         eg = std::make_pair(nullptr, nullptr);
         if (is_blossom_expand)
         {
-          _blossom_edges_counter.bnb++;
+          _blossom_edges_counter.f_rejected++;
         }
         else
         {
-          _random_edges_counter.bnb++;
+          _random_edges_counter.f_rejected++;
         }
         continue;
       }
@@ -311,7 +311,7 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
         }
       });
 
-      if (dirt_spec->use_pruning)
+      if (dirt_spec->use_pruning)  // dirt-pruning
       {
         bool delete_node = false;
         std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_replan_node_t* node) {
@@ -330,11 +330,11 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
           eg = std::make_pair(nullptr, nullptr);
           if (is_blossom_expand)
           {
-            _blossom_edges_counter.prunning++;
+            _blossom_edges_counter.pruning++;
           }
           else
           {
-            _random_edges_counter.prunning++;
+            _random_edges_counter.pruning++;
           }
           continue;
         }
@@ -362,11 +362,11 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       {
         if (is_blossom_expand)
         {
-          _blossom_edges_counter.final++;
+          _blossom_edges_counter.accepted++;
         }
         else
         {
-          _random_edges_counter.final++;
+          _random_edges_counter.accepted++;
         }
       }
 
@@ -522,13 +522,15 @@ std::vector<double> dirt_replan_t::get_statistics()
   // time, iters, nodes, solution quality, first_time, first_iters, current_solution,
   std::vector<double> rrt_statistics = rrt_t::get_statistics();
   std::vector<double> rand_counts(
-      { static_cast<double>(_random_edges_counter.bnb), static_cast<double>(_random_edges_counter.prunning),
-        static_cast<double>(_random_edges_counter.collision_check), static_cast<double>(_random_edges_counter.final) });
+      { static_cast<double>(_random_edges_counter.bnb), static_cast<double>(_random_edges_counter.f_rejected),
+        static_cast<double>(_random_edges_counter.pruning), static_cast<double>(_random_edges_counter.collision_check),
+        static_cast<double>(_random_edges_counter.accepted) });
 
   std::vector<double> blossom_counts({ static_cast<double>(_blossom_edges_counter.bnb),
-                                       static_cast<double>(_blossom_edges_counter.prunning),
+                                       static_cast<double>(_blossom_edges_counter.f_rejected),
+                                       static_cast<double>(_blossom_edges_counter.pruning),
                                        static_cast<double>(_blossom_edges_counter.collision_check),
-                                       static_cast<double>(_blossom_edges_counter.final) });
+                                       static_cast<double>(_blossom_edges_counter.accepted) });
   rrt_statistics.insert(rrt_statistics.end(), std::make_move_iterator(rand_counts.begin()),
                         std::make_move_iterator(rand_counts.end()));
   rrt_statistics.insert(rrt_statistics.end(), std::make_move_iterator(blossom_counts.begin()),

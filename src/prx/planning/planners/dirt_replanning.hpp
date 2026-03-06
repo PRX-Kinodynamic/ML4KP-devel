@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iterator>
 #include "prx/planning/planners/dirt.hpp"
 #include "prx/planning/planners/rrt.hpp"
 #include "prx/utilities/general/time_profiler.hpp"
@@ -199,19 +200,20 @@ public:
   using SolutionType = dirt_replan_query_t::solution_type_t;
   struct dirt_counter_t
   {
-    dirt_counter_t() : bnb(0), prunning(0), collision_check(0), final(0) {};
+    dirt_counter_t() : bnb(0), pruning(0), collision_check(0), accepted(0), f_rejected(0) {};
     void reset()
     {
-      bnb = 0;
-      prunning = 0;
+      f_rejected = 0;
+      pruning = 0;
       collision_check = 0;
-      final = 0;
+      bnb = 0;
+      accepted = 0;
     }
-    std::size_t bnb;
-    std::size_t prunning;
-    std::size_t collision_check;
-    std::size_t final;
-    // Removed by BNB, Removed by pruning, Removed by collision check, Final
+    std::size_t f_rejected;       // New nodes not added due to f(new_node) > f(current_sln)
+    std::size_t pruning;          // New nodes not added due to dirt-pruning (using dir_radius)
+    std::size_t collision_check;  // New nodes not added due to being in collision
+    std::size_t accepted;         // New nodes accepted to be added to the tree (could be removed later)
+    std::size_t bnb;              // Nodes deleted in a BNB operation when a new solution is found
   };
 
   struct statistics_t : public planner_t::statistics_t
