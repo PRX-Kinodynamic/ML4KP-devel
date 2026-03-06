@@ -8,15 +8,6 @@ space_snapshot_t::space_snapshot_t(const space_t* const in_parent, const std::si
 {
 }
 
-prx::param_loader space_snapshot_t::init()
-{
-  std::vector<double> values(_memory.size(), 0.0);
-  _parent->copy(values, *this);
-  prx::param_loader params{};
-  params.set(values);
-  return params;
-}
-
 void space_snapshot_t::init(const prx::param_loader& params)
 {
   const std::vector<double> values{ params.as<std::vector<double>>() };

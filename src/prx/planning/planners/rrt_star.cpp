@@ -5,7 +5,7 @@ namespace prx
 rrt_star_t::rrt_star_t(const std::string& new_name) : planner_t(new_name)
 {
   _metric = nullptr;
-  _planner_name = new_name;
+  // _planner_name = new_name;
 }
 rrt_star_t::~rrt_star_t()
 {
@@ -294,7 +294,7 @@ void rrt_star_t::update_goal(const node_index_t goal_index)
 
 void rrt_star_t::print_statistics()
 {
-  std::cout << "[" + planner_name + "]";
+  std::cout << "[" + _planner_name + "]";
   std::cout << " time:" << _timer.measure();
   std::cout << " iter:" << _iteration_count;
   std::cout << " nodes:" << _metric->get_nr_nodes() << std::endl;

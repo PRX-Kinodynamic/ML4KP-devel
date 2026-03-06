@@ -10,6 +10,7 @@
 #include <string>
 
 #include "prx/utilities/general/timer.hpp"
+#include "prx/utilities/general/param_loader.hpp"
 
 namespace prx
 {
@@ -112,7 +113,7 @@ public:
     }
   }
 
-  virtual prx::param_loader init()
+  virtual prx::param_loader initialization_parameters()
   {
     prx::param_loader params{};
 
@@ -122,6 +123,14 @@ public:
         params["type"].set(type.first);
     }
     params["value"].set(condition_check);
+    return params;
+  }
+
+  static prx::param_loader init()
+  {
+    prx::param_loader params;
+    params["type"].set("iterations | time | sim_time | custom");
+    params["value"].set(0.0);
     return params;
   }
 

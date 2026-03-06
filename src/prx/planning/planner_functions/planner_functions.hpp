@@ -21,6 +21,7 @@ typedef std::function<void(space_point_t&, std::vector<plan_t*>&, std::vector<tr
 
 typedef std::function<double(const trajectory_t&, const plan_t&)> cost_function_t;
 typedef std::function<double(const space_point_t&, const space_point_t&)> heuristic_function_t;
+typedef std::function<double(const double&, const double&)> f_value_function_t;  // f=g+h
 typedef std::function<collision_group_t::pqp_distance_t(const space_point_t&)> obstacle_distance_function_t;
 
 // GLC-related functions
@@ -97,4 +98,8 @@ custom_check_t create_default_goal_check(const space_t*, const space_point_t, co
 
 void default_stopping_control(space_point_t&, std::shared_ptr<system_group_t>, double&);
 
+inline double default_f_value_function(const double& g, const double& h)
+{
+  return g + h;
+}
 }  // namespace prx

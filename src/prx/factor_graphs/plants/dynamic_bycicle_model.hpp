@@ -124,10 +124,10 @@ public:
     }
   }
 
-  virtual prx::param_loader init() override
+  static prx::param_loader init()
   {
     prx::param_loader params{ prx::plant_t::init() };
-    params["torch_file"].set("");
+    params["torch_file"].set("path_to_file");
     params["static_params"].set(std::vector<double>({ 3.5, 0.155, 0.155 }));
 
     std::vector<double> bike_params(BikeDynamics::DimParams, 1.0);

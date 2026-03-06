@@ -16,6 +16,8 @@ class system_group_manager_t;
 class system_group_t
 {
 public:
+  using SystemGroupPtr = std::shared_ptr<system_group_t>;
+
   // system_group_t(const std::vector<system_ptr_t>& sys_group);
   system_group_t(const std::vector<system_ptr_t>& sys_group, plant_type p_type = plant_type::ANALYTICAL);
   ~system_group_t();

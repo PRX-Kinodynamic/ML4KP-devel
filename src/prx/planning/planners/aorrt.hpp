@@ -70,7 +70,7 @@ public:
     , w_x(1.0)
     , w_c(1.0)
   {
-    state_space = sg->get_state_space();
+    // state_space = sg->get_state_space();
 
     //// Create the Y space = X U Cost
   }
@@ -78,13 +78,13 @@ public:
   {
   }
 
-  virtual prx::param_loader init() override
+  static prx::param_loader init()
   {
     prx::param_loader params{ rrt_specification_t::init() };
 
-    params["cost_multiplier"].set(cost_multiplier);
-    params["w_c"].set(w_c);
-    params["w_x"].set(w_x);
+    params["cost_multiplier"].set(decltype(cost_multiplier){});
+    params["w_c"].set(decltype(w_c){});
+    params["w_x"].set(decltype(w_x){});
     return params;
   }
 
@@ -107,12 +107,12 @@ public:
     return os;
   }
 
-  space_t* state_space;
+  // space_t* state_space;
 
-  double c_max;
+  double c_max;  // Cost space will be sampled in [0, c_max * cost_multiplier]
   double w_c;
   double w_x;
-  double cost_multiplier;  // Cost space will be sampled in [0, c_max * cost_multiplier]
+  double cost_multiplier;
 };
 
 class aorrt_query_t : public rrt_query_t

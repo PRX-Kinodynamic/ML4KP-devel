@@ -92,10 +92,10 @@ public:
     }
   }
 
-  virtual prx::param_loader init() override
+  static prx::param_loader init()
   {
     prx::param_loader params{ prx::plant_t::init() };
-    params["torch_file"].set("");
+    params["torch_file"].set("path_to_file");
 
     return params;
   }

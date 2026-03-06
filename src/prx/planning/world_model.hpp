@@ -1,9 +1,12 @@
 #pragma once
 
+#include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/simulation/simulator.hpp"
 #include "prx/simulation/system_group_manager.hpp"
 #include "prx/simulation/collision_checking/collision_checker.hpp"
+#include "prx/utilities/general/param_loader.hpp"
 
+#include <memory>
 #include <unordered_map>
 
 namespace prx
@@ -13,6 +16,30 @@ typedef std::pair<std::shared_ptr<system_group_t>, std::shared_ptr<collision_gro
 class world_model_t : public simulator_t
 {
 public:
+  using WorldModelPtr = std::shared_ptr<world_model_t>;
+  using SystemGroupPtr = std::shared_ptr<system_group_t>;
+  using CollisionGroupPtr = std::shared_ptr<collision_group_t>;
+  using WorldGroupsTuple = std::tuple<WorldModelPtr, SystemGroupPtr, CollisionGroupPtr>;
+  //
+  // std::shared_ptr<prx::system_group_t> _system_group;
+  // std::shared_ptr<prx::collision_group_t> _collision_group;
+
+  static WorldGroupsTuple create(const prx::param_loader& params, prx::system_ptr_t plant)
+  {
+    prx::obstacle_loader_t obstacle_loader{ prx::obstacle_loader_t(params) };
+    auto obstacle_list = obstacle_loader.get_obstacles();
+    auto obstacle_names = obstacle_loader.get_names();
+
+    const std::vector<prx::system_ptr_t> all_systems{ { plant } };
+    const std::vector<std::shared_ptr<prx::movable_object_t>> all_obstacles{ { obstacle_list } };
+    WorldModelPtr world_ptr{ std::make_shared<prx::world_model_t>(all_systems, all_obstacles) };
+
+    world_ptr->create_context("planner_context", { plant->get_pathname() }, { obstacle_names });
+    auto planning_context = world_ptr->get_context("planner_context");
+
+    return { world_ptr, prx::system_group(planning_context), prx::collision_group(planning_context) };
+  }
+
   // template<typename SGM = system_group_manager_t, typename CC = collision_checker_t>
   explicit world_model_t(const std::vector<system_ptr_t>& all_systems,
                          const std::vector<std::shared_ptr<movable_object_t>>& all_obstacles)
@@ -37,7 +64,7 @@ public:
     collision_groups->get_collision_group(context_name)->add_new_obstacle(obstacle_ptr);
   }
 
-  ~world_model_t(){};
+  ~world_model_t() {};
 
   inline world_model_context get_context(const std::string& context_name)
   {

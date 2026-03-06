@@ -17,8 +17,8 @@ class param_loader
 public:
   // typedef std::unordered_map<std::string, std::string>::iterator iterator;
   // typedef std::unordered_map<std::string, std::string>::const_iterator const_iterator;
-  typedef YAML::Node::iterator iterator;
-  typedef YAML::Node::const_iterator const_iterator;
+  using iterator = YAML::Node::iterator;
+  using const_iterator = YAML::Node::const_iterator;
 
   param_loader();
   param_loader(int argc, char* argv[]);
@@ -147,12 +147,37 @@ public:
   {
     std::ofstream ofs(filename.c_str());
     ofs << params;
+    ofs.close();
   }
 
   void merge(const param_loader& other)
   {
     merge(other.params);
     replace_environment_variables();
+  }
+
+  template <typename Type>
+  static void copy(Type& variable, const param_loader& params, const std::string& variable_name)
+  {
+    variable = params.exists(variable_name) ? params[variable_name].as<Type>() : variable;
+  }
+
+  template <typename T, std::enable_if_t<not prx::utilities::is_any_ptr<T>::value, bool> = true>
+  static void create_file(const std::string filename, const T& type)
+  {
+    type.initialization_parameters().save(filename);
+    ;
+  }
+  template <typename T, typename... Ts, std::enable_if_t<prx::utilities::is_any_ptr<T>::value, bool> = true>
+  static void create_file(const std::string filename, const T type)
+  {
+    create_file(filename, *type);
+  }
+
+  template <typename Type>
+  static void create_file(const std::string filename)
+  {
+    Type::init().save(filename);
   }
 
 protected:
@@ -176,4 +201,6 @@ protected:
   // std::unordered_map<std::string, param_loader> params;
   std::string pl_input_path;
 };
+
 }  // namespace prx
+#define SET_VARIABLE(PARAM_LOADER, VARIABLE) prx::param_loader::copy(VARIABLE, PARAM_LOADER, #VARIABLE);

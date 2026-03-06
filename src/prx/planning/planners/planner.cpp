@@ -3,13 +3,13 @@
 namespace prx
 {
 // CONSTRUCTION, LINK_SPECIFICATION, PREPROCESS, LINK_QUERY, RESOLVE_QUERY, FULFILL_QUERY
-planner_t::planner_t(const std::string& new_name)
+planner_t::planner_t(const std::string& new_name) : _planner_name(new_name)
 {
-  planner_name = new_name;
 }
 planner_t::~planner_t()
 {
 }
+
 void planner_t::link_and_setup_spec(planner_specification_t* spec)
 {
   if (planner_state != planner_stage_t::CONSTRUCTION)

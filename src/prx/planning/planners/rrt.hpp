@@ -109,17 +109,20 @@ public:
 
 class rrt_specification_t : public planner_specification_t
 {
-public:
-  rrt_specification_t(std::shared_ptr<system_group_t> sg, std::shared_ptr<collision_group_t> cg)
+  rrt_specification_t() : bnb(true), use_replanning(false), blossom_number(1)
   {
-    _sg = sg;
-    bnb = true;
-    use_replanning = false;
-    state_space = sg->get_state_space();
-    control_space = sg->get_control_space();
-    double multiplier = simulation_step >= 1 ? simulation_step : 1. / simulation_step;
+    const double multiplier{ simulation_step >= 1 ? simulation_step : 1. / simulation_step };
     min_control_steps = 0.5 * multiplier;
     max_control_steps = 5 * multiplier;
+  }
+
+public:
+  rrt_specification_t(std::shared_ptr<system_group_t> sg, std::shared_ptr<collision_group_t> cg) : rrt_specification_t()
+  {
+    _sg = sg;
+    // bnb = true;
+    state_space = sg->get_state_space();
+    control_space = sg->get_control_space();
 
     cost_function = [](const trajectory_t& t, const plan_t& plan) { return default_cost_function(t, plan); };
     distance_function = [](const space_point_t& s1, const space_point_t& s2) { return space_t::euclidean_2d(s1, s2); };
@@ -140,25 +143,24 @@ public:
     expand = [sg, this](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn,
                         bool blossom_expand) { default_expand(s, plans, trajs, bn, sg, sample_plan, propagate); };
     stopping_control = [sg, this](space_point_t& s, double& t) { default_stopping_control(s, sg, t); };
-
-    blossom_number = 1;
   }
   virtual ~rrt_specification_t()
   {
   }
 
-  virtual prx::param_loader init() override
+  static prx::param_loader init()
   {
-    prx::param_loader params;
+    rrt_specification_t aux;
+    prx::param_loader params{ planner_specification_t::init() };
 
-    params["bnb"].set(bnb);
-    params["use_replanning"].set(use_replanning);
+    params["bnb"].set(aux.bnb);
+    params["use_replanning"].set(aux.use_replanning);
 
     params["control_steps"] = prx::param_loader();
-    params["control_steps/min"] = min_control_steps;
-    params["control_steps/max"] = max_control_steps;
+    params["control_steps/min"] = aux.min_control_steps;
+    params["control_steps/max"] = aux.max_control_steps;
 
-    params["blossom_number"].set(blossom_number);
+    params["blossom_number"].set(aux.blossom_number);
 
     return params;
   }
@@ -223,6 +225,14 @@ public:
   }
   virtual ~rrt_query_t()
   {
+  }
+
+  static prx::param_loader init()
+  {
+    prx::param_loader params{ planner_query_t::init() };
+    params["goal/radius"].set(double{});
+    params["total_solutions"].set(double{});
+    return params;
   }
 
   virtual void init(const prx::param_loader& params) override

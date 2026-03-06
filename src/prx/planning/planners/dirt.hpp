@@ -126,6 +126,26 @@ public:
     std::size_t collision_check;
     std::size_t final;
     // Removed by BNB, Removed by pruning, Removed by collision check, Final
+
+    static std::string header(const std::string prefix = "")
+    {
+      std::stringstream strstr;
+      const std::string sep{ prefix == "" ? "" : "_" };
+      strstr << prefix << sep << "bnb ";
+      strstr << prefix << sep << "prunning ";
+      strstr << prefix << sep << "collision_check ";
+      strstr << prefix << sep << "final ";
+      return strstr.str();
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const dirt_counter_t& obj)
+    {
+      os << obj.bnb << " ";
+      os << obj.prunning << " ";
+      os << obj.collision_check << " ";
+      os << obj.final << " ";
+      return os;
+    }
   };
 
   struct statistics_t : public planner_t::statistics_t
@@ -139,6 +159,23 @@ public:
     }
     const dirt_counter_t random_edges_counter;
     const dirt_counter_t blossom_edges_counter;
+
+    static std::string header()
+    {
+      std::stringstream strstr;
+      strstr << planner_t::statistics_t::header();
+      strstr << dirt_counter_t::header("random_edges");
+      strstr << dirt_counter_t::header("blossom_edges");
+      return strstr.str();
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const statistics_t& obj)
+    {
+      os << static_cast<planner_t::statistics_t>(obj);
+      os << obj.random_edges_counter << " ";
+      os << obj.blossom_edges_counter << " ";
+      return os;
+    }
   };
 
   dirt_t(const std::string& new_name);

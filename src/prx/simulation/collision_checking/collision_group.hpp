@@ -31,6 +31,7 @@ namespace prx
 class collision_group_t
 {
 public:
+  using CollisionGroupPtr = std::shared_ptr<collision_group_t>;
   /**
    * @brief Initializes the collision group.
    * @param in_plants A vector of plants that are to be included for collision checking
@@ -127,6 +128,6 @@ protected:
   std::vector<std::shared_ptr<pqp_info_t>> plant_infos;
 
   // private:
-  collision_group_t(){};
+  collision_group_t() {};
 };  // namespace prx
 }  // namespace prx

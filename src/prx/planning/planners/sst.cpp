@@ -7,7 +7,7 @@ sst_t::sst_t(const std::string& new_name) : rrt_t(new_name)
 {
   metric = nullptr;
   witnesses = nullptr;
-  planner_name = "SST";
+  // planner_name = "SST";
 }
 sst_t::~sst_t()
 {

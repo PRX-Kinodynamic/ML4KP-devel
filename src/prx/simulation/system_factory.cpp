@@ -1,4 +1,6 @@
 #include "prx/simulation/system_factory.hpp"
+#include "general/param_loader.hpp"
+#include "general/prx_assert.hpp"
 
 namespace prx
 {
@@ -56,6 +58,17 @@ system_ptr_t system_factory_t::create_system(const std::string& name, const std:
 
   return nullptr;
 };
+
+prx::param_loader system_factory_t::initialization_parameters(const std::string& plant_name)
+{
+  auto plant = create_system(plant_name, plant_name);
+  prx_assert(plant != nullptr, "Plant name '" << plant_name << "' not found.");
+  prx::param_loader params{ plant->initialization_parameters() };
+
+  params["name"].set(plant_name);
+  params["path"].set(plant_name);
+  return params;
+}
 
 std::vector<std::string> system_factory_t::available_velocity_functions()
 {

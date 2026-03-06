@@ -12,7 +12,6 @@
 
 #include "prx/simulation/observer.hpp"
 
-#define PLANNER_NAME "RRT*"
 namespace prx
 {
 
@@ -165,8 +164,6 @@ protected:
 
   rrt_star_specification_t* _rrt_star_spec;
   rrt_star_query_t* _rrt_star_query;
-
-  std::string _planner_name;
 
   node_index_t _start_vertex;
   node_index_t _goal_vertex;

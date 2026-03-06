@@ -1,6 +1,8 @@
 #pragma once
 
+#include "prx/planning/planners/dirt.hpp"
 #include "prx/planning/planners/rrt.hpp"
+#include "prx/utilities/general/time_profiler.hpp"
 
 namespace prx
 {
@@ -54,29 +56,60 @@ class dirt_replan_specification_t : public rrt_specification_t
 public:
   dirt_replan_specification_t(std::shared_ptr<system_group_t> sg, std::shared_ptr<collision_group_t> cg)
     : rrt_specification_t(sg, cg)
+    , profile(false)
+    , output_path(out_path)
+    , use_pruning(true)
+    , use_contingency(true)
+    , planning_cycle_duration(1.0)
   {
-    h = [this](const space_point_t& s, const space_point_t& s2) {
+    blossom_number = 5;
+    f_function = [this](const double& g, const double& h) { return default_f_value_function(g, h); };
+
+    heuristic = [this](const space_point_t& s, const space_point_t& s2) {
       return default_heuristic_function(s, s2, distance_function);
     };
-    wavefront_h = h;
+    wavefront_h = heuristic;
     contingency_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
     plan_safety_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
-    blossom_number = 5;
-    use_pruning = true;
-    use_contingency = true;
-    planning_cycle_duration = 1.0;
   }
   virtual ~dirt_replan_specification_t()
   {
   }
 
-  int blossom_number;
+  static prx::param_loader init()
+  {
+    prx::param_loader params{ rrt_specification_t::init() };
+
+    params["planning_cycle_duration"].set(decltype(planning_cycle_duration){});
+    params["use_pruning"].set(decltype(use_pruning){});
+    params["use_contingency"].set(decltype(use_contingency){});
+    params["profile"].set(decltype(profile){});
+    params["output_path"].set(decltype(output_path){});
+    return params;
+  }
+
+  virtual void init(const prx::param_loader& params) override
+  {
+    rrt_specification_t::init(params);
+
+    SET_VARIABLE(params, planning_cycle_duration)
+    SET_VARIABLE(params, use_pruning)
+    SET_VARIABLE(params, use_contingency)
+    SET_VARIABLE(params, profile)
+    SET_VARIABLE(params, output_path)
+  }
+
+  // int blossom_number;
   double planning_cycle_duration;
 
   bool use_pruning, use_contingency;
-  heuristic_function_t h, wavefront_h;
+  f_value_function_t f_function;
+  heuristic_function_t heuristic, wavefront_h;
   valid_trajectory_t contingency_check;
   valid_trajectory_t plan_safety_check;
+
+  bool profile;
+  std::string output_path;
 };
 
 class dirt_replan_query_t : public rrt_query_t
@@ -85,7 +118,8 @@ public:
   enum solution_type_t
   {
     TREE_TRAJECTORY = 0,
-    WAVEFRONT
+    WAVEFRONT,
+    NONE
   };
 
   dirt_replan_query_t(space_t* state_space, space_t* control_space)
@@ -96,6 +130,14 @@ public:
 
   virtual ~dirt_replan_query_t()
   {
+  }
+
+  static prx::param_loader init()
+  {
+    prx::param_loader params{ rrt_query_t::init() };
+    params["solution_type"].set("TREE_TRAJECTORY | WAVEFRONT");
+
+    return params;
   }
 
   virtual void init(const prx::param_loader& params) override
@@ -134,7 +176,7 @@ public:
 
     os << static_cast<rrt_query_t>(obj);
     os << "start_time: " << obj.start_time << "\n";
-    os << "previous_contingency: " << obj.previous_contingency << "\n";
+    // os << "previous_contingency: " << obj.previous_contingency << "\n";
 
     os << "solution_type: " << sln_str << "\n";
 
@@ -142,7 +184,7 @@ public:
   }
 
   double start_time;
-  bool previous_contingency;
+  // bool previous_contingency;
 
   solution_type_t _sln_type;
 };
@@ -154,15 +196,57 @@ public:
   using Edge = rrt_edge_t;
   using EdgePtr = std::shared_ptr<Edge>;
   using NodePtr = std::shared_ptr<Node>;
+  using SolutionType = dirt_replan_query_t::solution_type_t;
+  struct dirt_counter_t
+  {
+    dirt_counter_t() : bnb(0), prunning(0), collision_check(0), final(0) {};
+    void reset()
+    {
+      bnb = 0;
+      prunning = 0;
+      collision_check = 0;
+      final = 0;
+    }
+    std::size_t bnb;
+    std::size_t prunning;
+    std::size_t collision_check;
+    std::size_t final;
+    // Removed by BNB, Removed by pruning, Removed by collision check, Final
+  };
+
+  struct statistics_t : public planner_t::statistics_t
+  {
+    statistics_t(const planner_t::statistics_t& planner_stats_, const dirt_counter_t random_edges_counter_,
+                 const dirt_counter_t blossom_edges_counter_, const SolutionType solution_type_)
+      : planner_t::statistics_t(planner_stats_)
+      , random_edges_counter(random_edges_counter_)
+      , blossom_edges_counter(blossom_edges_counter_)
+      , solution_type(solution_type_)
+    {
+    }
+    virtual ~statistics_t() {};
+
+    const dirt_counter_t random_edges_counter;
+    const dirt_counter_t blossom_edges_counter;
+    const SolutionType solution_type;
+  };
 
   dirt_replan_t(const std::string& new_name);
   virtual ~dirt_replan_t();
 
-  std::vector<long unsigned> random_edges_counter, blossom_edges_counter;
+  dirt_counter_t _random_edges_counter, _blossom_edges_counter;
 
   node_index_t get_best_node_index()
   {
     return best_node;
+  }
+
+  virtual planner_t::statistics_t statistics() override
+  {
+    return statistics_t(rrt_t::statistics(),     // no-lint
+                        _random_edges_counter,   // no-lint
+                        _blossom_edges_counter,  // no-lint
+                        _current_solution_type);
   }
 
 protected:
@@ -187,7 +271,12 @@ protected:
   virtual void bnb(node_index_t v, double cost_bound, bool delete_flag = false) override;
 
 private:
-  heuristic_function_t h, wavefront_h;
+  std::shared_ptr<time_profiler_t> _resolve_profiler;
+  std::shared_ptr<time_profiler_t> _fulfill_profiler;
+
+  dirt_replan_query_t::solution_type_t _current_solution_type;
+  f_value_function_t _f_function;
+  heuristic_function_t _heuristic, wavefront_h;
   expand_t expand;
   valid_trajectory_t contingency_check;
   valid_trajectory_t plan_safety_check;

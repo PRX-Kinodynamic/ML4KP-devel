@@ -1,5 +1,9 @@
 #pragma once
 
+// #include "general/param_loader.hpp"
+#include <sstream>
+// #include "general/statistics.hpp"
+#include "prx/utilities/general/param_loader.hpp"
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/general/condition_check.hpp"
 // #include "prx/utilities/general/statistics.hpp"
@@ -17,6 +21,19 @@ namespace prx
 // TODO: Don't like this being here and not in planner_functions... ideas?
 typedef std::function<bool(space_point_t&)> goal_check_t;
 
+template <typename PlannerSpec, typename PlannerQuery, typename Planner>
+param_loader init()
+{
+  param_loader params;
+  // params["PlannerSpec"] = prx::param_loader();
+  // params["PlannerQuery"] = prx::param_loader();
+  // params["Planner"] = prx::param_loader();
+
+  params["PlannerSpec"] = PlannerSpec::init();
+  params["PlannerQuery"] = PlannerQuery::init();
+  params["Planner"] = Planner::init();
+}
+
 class planner_specification_t
 {
 public:
@@ -26,7 +43,7 @@ public:
   virtual ~planner_specification_t()
   {
   }
-  virtual prx::param_loader init()
+  static prx::param_loader init()
   {
     return prx::param_loader();
   };
@@ -56,28 +73,15 @@ public:
     tree_visualization.clear();
   }
 
-  virtual prx::param_loader init()
+  static prx::param_loader init()
   {
     prx::param_loader params;
-    if (start_state)
-    {
-      params["start_state"] = start_state->init();
-    }
-    else
-    {
-      params["start_state"].set(std::vector<double>({}));
-    }
+    // param_loader params;
+    params["start_state"] = space_snapshot_t::init();
 
     params["goal"] = prx::param_loader();
-    if (goal_state)
-    {
-      params["goal/state"] = goal_state->init();
-    }
-    else
-    {
-      params["goal/state"].set(std::vector<double>({}));
-    }
-    params["visualize"].set(get_visualization);
+    params["goal/state"] = space_snapshot_t::init();
+    params["visualize"].set(decltype(get_visualization){});
     return params;
   }
 
@@ -166,16 +170,48 @@ public:
       , iters_current_solution(iters_current_solution_)
     {
     }
+    virtual ~statistics_t() {};
+
     const double planned_duration;      // timer.measure()};
     const std::size_t iteration_count;  // static_cast<double>(iteration_count);
     const std::size_t total_nodes;      // static_cast<double>(metric->get_nr_nodes());
     const double cost_current_solution;
     const double time_current_solution;
     const std::size_t iters_current_solution;
+
+    static std::string header()
+    {
+      std::stringstream strstr;
+      strstr << "planned_duration ";
+      strstr << "iteration_count ";
+      strstr << "total_nodes ";
+      strstr << "cost_current_solution ";
+      strstr << "time_current_solution ";
+      strstr << "iters_current_solution ";
+      return strstr.str();
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const statistics_t& obj)
+    {
+      os << obj.planned_duration << " ";
+      os << obj.iteration_count << " ";
+      os << obj.total_nodes << " ";
+      os << obj.cost_current_solution << " ";
+      os << obj.time_current_solution << " ";
+      os << obj.iters_current_solution << " ";
+      return os;
+    }
   };
 
   planner_t(const std::string& new_name);
   virtual ~planner_t();
+
+  static prx::param_loader init()
+  {
+    param_loader params;
+    params["name"].set(decltype(_planner_name){});
+    return params;
+  }
 
   /**
    *	Previous Function: Any function (Reset will be called)
@@ -234,7 +270,7 @@ protected:
 
   // virtual void _link_and_setup_spec_shared(std::shared_ptr<planner_specification_t> spec)=0;
   // virtual bool _link_and_setup_query_shared(std::shared_ptr<planner_query_t> query)=0;
-  std::string planner_name;
+  std::string _planner_name;
 
 private:
   std::string get_current_stage_name();

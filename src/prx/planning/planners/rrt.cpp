@@ -2,10 +2,8 @@
 
 namespace prx
 {
-rrt_t::rrt_t(const std::string& new_name) : planner_t(new_name), _bnb(false)
+rrt_t::rrt_t(const std::string& new_name) : planner_t(new_name), _bnb(false), metric(nullptr)
 {
-  metric = nullptr;
-  planner_name = new_name;
 }
 rrt_t::~rrt_t()
 {
@@ -236,7 +234,7 @@ void rrt_t::update_goal(node_index_t node_index)
       goal_vertex = node_index;
       // std::cout<<"Found new goal: "<<state_space->print_point(new_tree_node->point,3)<<"
       // "<<new_tree_node->cost_to_come<<std::endl;
-      std::cout << "[" + planner_name + "] Found new goal:" << state_space->print_point(new_tree_node->point, 3);
+      std::cout << "[" + _planner_name + "] Found new goal:" << state_space->print_point(new_tree_node->point, 3);
       std::cout << " cost:" << new_tree_node->cost_to_come;
       std::cout << " time:" << current_solution_time;
       std::cout << " iter:" << current_solution_iters;
@@ -271,10 +269,10 @@ void rrt_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
 
 void rrt_t::print_statistics()
 {
-  std::cout << "[" + planner_name + "]";
+  std::cout << "[" + _planner_name + "]";
   std::cout << " time:" << timer.measure();
   std::cout << " iter:" << iteration_count;
-  std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
+  std::cout << " nodes:" << metric->get_nr_nodes() << "\n";
 }
 
 }  // namespace prx

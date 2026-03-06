@@ -700,14 +700,27 @@ public:
     }
   }
 
-  virtual prx::param_loader init()
+  virtual prx::param_loader initialization_parameters()
   {
     prx::param_loader params{};
-    std::vector<double> aux(dimension, 0.0);
-    copy_to(aux);
+    std::vector<double> values(dimension);
+    copy_to(values);
+
     params["lower_bound"].set(get_lower_bounds());
     params["upper_bound"].set(get_upper_bounds());
-    params["values"].set(aux);
+    params["values"].set(values);
+
+    return params;
+  }
+
+  static prx::param_loader init()
+  {
+    prx::param_loader params{};
+    // std::vector<double> aux(dimension, 0.0);
+    // copy_to(aux);
+    params["lower_bound"].set(std::vector<double>{});
+    params["upper_bound"].set(std::vector<double>{});
+    params["values"].set(std::vector<double>{});
 
     return params;
   }

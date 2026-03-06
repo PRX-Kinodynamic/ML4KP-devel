@@ -133,13 +133,27 @@ public:
     return os;
   }
 
-  virtual prx::param_loader init()
+  virtual prx::param_loader initialization_parameters()
   {
     prx::param_loader params{};
-    params["state_space"] = state_space->init();
-    params["control_space"] = input_control_space->init();
-    params["parameter_space"] = parameter_space->init();
-    params["_sensor_space"] = _sensor_space->init();
+    if (state_space)
+      params["state_space"] = state_space->initialization_parameters();
+    if (input_control_space)
+      params["control_space"] = input_control_space->initialization_parameters();
+    if (parameter_space)
+      params["parameter_space"] = parameter_space->initialization_parameters();
+    if (_sensor_space)
+      params["sensor_space"] = _sensor_space->initialization_parameters();
+    return params;
+  }
+
+  static prx::param_loader init()
+  {
+    prx::param_loader params{};
+    params["state_space"] = space_t::init();
+    params["control_space"] = space_t::init();
+    params["parameter_space"] = space_t::init();
+    params["sensor_space"] = space_t::init();
 
     return params;
   }
@@ -158,9 +172,9 @@ public:
     {
       parameter_space->init(params["parameter_space"]);
     }
-    if (_sensor_space and params.exists("_sensor_space"))
+    if (_sensor_space and params.exists("sensor_space"))
     {
-      _sensor_space->init(params["_sensor_space"]);
+      _sensor_space->init(params["sensor_space"]);
     }
   }
 

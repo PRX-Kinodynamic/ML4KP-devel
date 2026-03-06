@@ -189,7 +189,21 @@ public:
     return space_snapshot._map_vector;
   }
 
-  virtual prx::param_loader init();
+  virtual prx::param_loader initialization_parameters()
+  {
+    prx::param_loader params{};
+    params.set(_memory);
+    return params;
+  }
+
+  static prx::param_loader init()
+  {
+    // std::vector<double> values(_memory.size(), 0.0);
+    // _parent->copy(values, *this);
+    prx::param_loader params{};
+    params.set(std::vector<double>{});
+    return params;
+  }
 
   virtual void init(const prx::param_loader& params);
 

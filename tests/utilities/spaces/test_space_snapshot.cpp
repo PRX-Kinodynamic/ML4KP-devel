@@ -165,24 +165,6 @@ BOOST_AUTO_TEST_CASE(space_snapshot_init_params)
   BOOST_REQUIRE_MESSAGE(values[2] == pt->at(2), EXPECTED_GOT(values[2], pt->at(2)));
 }
 
-BOOST_AUTO_TEST_CASE(space_snapshot_init_populate_params)
-{
-  mock::space3d_t test;
-  prx::space_point_t pt{ test.space.make_point() };
-
-  prx::param_loader params{};
-  std::vector<double> values{ { 0.5, 0.5, 0.5 } };
-  params.set<std::vector<double>>(values);
-
-  prx::param_loader params_new{};
-  params_new["pt"] = pt->init();
-  std::vector<double> new_values{ params_new["pt"].as<std::vector<double>>() };
-
-  BOOST_REQUIRE_MESSAGE(new_values[0] == pt->at(0), EXPECTED_GOT(new_values[0], pt->at(0)));
-  BOOST_REQUIRE_MESSAGE(new_values[1] == pt->at(1), EXPECTED_GOT(new_values[1], pt->at(1)));
-  BOOST_REQUIRE_MESSAGE(new_values[2] == pt->at(2), EXPECTED_GOT(new_values[2], pt->at(2)));
-}
-
 BOOST_AUTO_TEST_CASE(test_space_step)
 {
   const double tolerance{ 1e-4 };

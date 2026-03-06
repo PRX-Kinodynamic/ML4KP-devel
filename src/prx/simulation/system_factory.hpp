@@ -5,6 +5,7 @@
 #include <string>
 
 #include "prx/simulation/system.hpp"
+#include "prx/utilities/general/param_loader.hpp"
 
 namespace prx
 {
@@ -32,6 +33,16 @@ public:
    * @return      The instance of the system or nullptr if the system is not registred.
    */
   static system_ptr_t create_system(const std::string& name, const std::string& path = "");
+
+  static system_ptr_t create_system(const prx::param_loader params)
+  {
+    const std::string plant_name{ params["name"].as<std::string>() };
+    const std::string plant_path{ params["path"].as<std::string>() };
+
+    return create_system(plant_name, plant_path);
+  }
+
+  static prx::param_loader initialization_parameters(const std::string& plant_name);
 
   template <typename PlantType>
   static std::shared_ptr<PlantType> create_system_as(const std::string& name, const std::string& path)

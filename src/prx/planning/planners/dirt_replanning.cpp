@@ -1,18 +1,23 @@
 #include "prx/planning/planners/dirt_replanning.hpp"
+#include <memory>
 namespace prx
 {
 
-dirt_replan_t::dirt_replan_t(const std::string& new_name) : rrt_t(new_name)
+dirt_replan_t::dirt_replan_t(const std::string& new_name)
+  : rrt_t(new_name)
+  , _current_solution_type(dirt_replan_query_t::solution_type_t::NONE)
+  , child_extension(true)
+  , max_radius(0)
+  , _resolve_profiler(nullptr)
 {
-  metric = nullptr;
-  child_extension = true;
-  max_radius = 0;
-  planner_name = "DIRT";
+  // , metric(nullptr)
 }
+
 dirt_replan_t::~dirt_replan_t()
 {
   _reset();
 }
+
 void dirt_replan_t::_link_and_setup_spec(planner_specification_t* spec)
 {
   rrt_t::_link_and_setup_spec(spec);
@@ -21,19 +26,28 @@ void dirt_replan_t::_link_and_setup_spec(planner_specification_t* spec)
   prx_assert(dirt_spec != nullptr, "DIRT received an incorrect specification.");
 
   expand = dirt_spec->expand;
-  h = dirt_spec->h;
+  _heuristic = dirt_spec->heuristic;
+  _f_function = dirt_spec->f_function;
   wavefront_h = dirt_spec->wavefront_h;
   contingency_check = dirt_spec->contingency_check;
   plan_safety_check = dirt_spec->plan_safety_check;
 
   planning_cycle_duration = dirt_spec->planning_cycle_duration;
   multiplier = 1.0 / simulation_step;
+
+  if (dirt_spec->profile)
+  {
+    const std::string prefix{ dirt_spec->output_path + "/" + _planner_name };
+    _resolve_profiler = std::make_shared<time_profiler_t>(prefix + "_resolve_query.txt");
+    _fulfill_profiler = std::make_shared<time_profiler_t>(prefix + "_fulfill_query.txt");
+  }
 }
 bool dirt_replan_t::_preprocess()
 {
   tree().allocate_memory<dirt_replan_node_t, rrt_edge_t>(1000);
   return true;
 }
+
 bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
 {
   rrt_query = dynamic_cast<rrt_query_t*>(query);
@@ -61,7 +75,7 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
     start_node->cost_to_come = 0;
     start_node->dir_radius = 0;
     start_node->checkpoint_time = dirt_replan_query->start_time;
-    start_node->cost_to_go = h(start_node->point, dirt_replan_query->goal_state);
+    start_node->cost_to_go = _heuristic(start_node->point, dirt_replan_query->goal_state);
     start_node->blossom_number = dirt_spec->blossom_number;
     start_node->is_safe = false;
     metric->add_node(start_node.get());
@@ -95,15 +109,17 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
       // Add the edge to the tree
       eg = std::make_pair(new plan_t(edge_plan), new trajectory_t(edge_traj));
       double new_node_dir_radius = distance_function(edge_traj.back(), current_node->point);
-      double edge_cost = cost_function(edge_traj, edge_plan);
-      double end_heuristic = h(edge_traj.back(), dirt_replan_query->goal_state);
+      const double cost_edge{ cost_function(edge_traj, edge_plan) };
+      const double g_value{ current_node->cost_to_come + cost_edge };
+      const double h_value{ _heuristic(edge_traj.back(), dirt_replan_query->goal_state) };
+      const double f_value{ _f_function(g_value, h_value) };
 
       auto prox_nodes = metric->radius_and_closest_query(edge_traj.back(), std::max(new_node_dir_radius, max_radius));
       std::vector<dirt_replan_node_t*> dir_updates;
       std::transform(prox_nodes.begin(), prox_nodes.end(), std::back_inserter(dir_updates),
                      [](proximity_node_t* prox_node) { return static_cast<dirt_replan_node_t*>(prox_node); });
       std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_replan_node_t* node) {
-        if (current_node->cost_to_come + edge_cost + end_heuristic > node->cost_to_come + node->cost_to_go)
+        if (f_value > node->cost_to_come + node->cost_to_go)
         {
           new_node_dir_radius = std::min(new_node_dir_radius, distance_function(edge_traj.back(), node->point));
         }
@@ -124,8 +140,9 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
   current_solution_time = 0;
 
   // Removed by BNB, Removed by pruning, Removed by collision check, Final
-  random_edges_counter = { 0, 0, 0, 0 };
-  blossom_edges_counter = { 0, 0, 0, 0 };
+  _random_edges_counter.reset();   // = { 0, 0, 0, 0 };
+  _blossom_edges_counter.reset();  // = { 0, 0, 0, 0 };
+  _current_solution_type = dirt_replan_query_t::solution_type_t::NONE;
 
   return true;
 }
@@ -135,6 +152,8 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
   // run for a certain amount of time
   do
   {
+    _resolve_profiler.reset();
+
     if (!child_extension)
     {
       // sample state
@@ -220,7 +239,7 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       int index = 0;
       for (auto& temp_eg : closest_node->edge_generators)
       {
-        pred_values.push_back(h(temp_eg.second->back(), dirt_replan_query->goal_state));
+        pred_values.push_back(_heuristic(temp_eg.second->back(), dirt_replan_query->goal_state));
         closest_node->indices.push_back(index++);
       }
       std::sort(closest_node->indices.begin(), closest_node->indices.end(),
@@ -230,8 +249,8 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
     // is_blossom_expand = (closest_node->edge_generators.size() > 1);
     is_blossom_expand = (closest_node->is_blossom_expand_done) && !closest_node->random_expand;
     std::pair<plan_t*, trajectory_t*> eg = std::make_pair(nullptr, nullptr);
-    double edge_cost;
-    double end_heuristic;
+    // double edge_cost;
+    // double end_heuristic;
     double new_node_dir_radius;
     std::vector<dirt_replan_node_t*> dir_updates;
 
@@ -240,30 +259,33 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       // This can happen if you are not using default expand (like curate).
       // Essentially, that procedure fails for some reason, and you end up adding no edge to the tree.
       // So we increment the counter for blossom expand collisions.
-      blossom_edges_counter.at(2) += dirt_spec->blossom_number;
+      _blossom_edges_counter.collision_check += dirt_spec->blossom_number;
     }
 
     while (closest_node->indices.size() != 0)
     {
       eg = closest_node->edge_generators[closest_node->indices.back()];
       closest_node->edge_generators[closest_node->indices.back()] = std::make_pair(nullptr, nullptr);
-      edge_cost = cost_function(*eg.second, *eg.first);
-      end_heuristic = h(eg.second->back(), dirt_replan_query->goal_state);
+      const double cost_edge{ cost_function(*eg.second, *eg.first) };
+      const double g_value{ closest_node->cost_to_come + cost_edge };
+      const double h_value{ _heuristic(eg.second->back(), dirt_replan_query->goal_state) };
+      const double f_value{ _f_function(g_value, h_value) };
       closest_node->indices.pop_back();
 
       // bnb
-      if ((goal_vertex != start_vertex && closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
+      if ((goal_vertex != start_vertex &&  // no-lint
+           f_value > current_solution))
       {
         delete eg.first;
         delete eg.second;
         eg = std::make_pair(nullptr, nullptr);
         if (is_blossom_expand)
         {
-          blossom_edges_counter.at(0)++;
+          _blossom_edges_counter.bnb++;
         }
         else
         {
-          random_edges_counter.at(0)++;
+          _random_edges_counter.bnb++;
         }
         continue;
       }
@@ -277,7 +299,7 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       std::transform(prox_nodes.begin(), prox_nodes.end(), std::back_inserter(dir_updates),
                      [](proximity_node_t* prox_node) { return static_cast<dirt_replan_node_t*>(prox_node); });
       std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_replan_node_t* node) {
-        if (closest_node->cost_to_come + edge_cost + end_heuristic > node->cost_to_come + node->cost_to_go)
+        if (f_value > node->cost_to_come + node->cost_to_go)
         {
           new_node_dir_radius = std::min(new_node_dir_radius, distance_function(eg.second->back(), node->point));
         }
@@ -287,8 +309,7 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       {
         bool delete_node = false;
         std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_replan_node_t* node) {
-          if (!delete_node &&
-              closest_node->cost_to_come + edge_cost + end_heuristic > node->cost_to_come + node->cost_to_go)
+          if (!delete_node && f_value > node->cost_to_come + node->cost_to_go)
           {
             if (new_node_dir_radius + distance_function(node->point, eg.second->back()) < node->dir_radius)
             {
@@ -303,11 +324,11 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
           eg = std::make_pair(nullptr, nullptr);
           if (is_blossom_expand)
           {
-            blossom_edges_counter.at(1)++;
+            _blossom_edges_counter.prunning++;
           }
           else
           {
-            random_edges_counter.at(1)++;
+            _random_edges_counter.prunning++;
           }
           continue;
         }
@@ -323,11 +344,11 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
         eg = std::make_pair(nullptr, nullptr);
         if (is_blossom_expand)
         {
-          blossom_edges_counter.at(2)++;
+          _blossom_edges_counter.collision_check++;
         }
         else
         {
-          random_edges_counter.at(2)++;
+          _random_edges_counter.collision_check++;
         }
         continue;
       }
@@ -335,11 +356,11 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       {
         if (is_blossom_expand)
         {
-          blossom_edges_counter.at(3)++;
+          _blossom_edges_counter.final++;
         }
         else
         {
-          random_edges_counter.at(3)++;
+          _random_edges_counter.final++;
         }
       }
 
@@ -404,7 +425,7 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
   new_edge->edge_cost = cost_function(*eg.second, *eg.first);
 
   new_tree_node->cost_to_come = closest_node->cost_to_come + new_edge->edge_cost;
-  new_tree_node->cost_to_go = h(eg.second->back(), dirt_replan_query->goal_state);
+  new_tree_node->cost_to_go = _heuristic(eg.second->back(), dirt_replan_query->goal_state);
 
   new_tree_node->blossom_number = dirt_spec->blossom_number;
   new_tree_node->dir_radius = new_node_dir_radius;
@@ -494,8 +515,14 @@ std::vector<double> dirt_replan_t::get_statistics()
 {
   // time, iters, nodes, solution quality, first_time, first_iters, current_solution,
   std::vector<double> rrt_statistics = rrt_t::get_statistics();
-  std::vector<double> rand_counts(random_edges_counter.begin(), random_edges_counter.end());
-  std::vector<double> blossom_counts(blossom_edges_counter.begin(), blossom_edges_counter.end());
+  std::vector<double> rand_counts(
+      { static_cast<double>(_random_edges_counter.bnb), static_cast<double>(_random_edges_counter.prunning),
+        static_cast<double>(_random_edges_counter.collision_check), static_cast<double>(_random_edges_counter.final) });
+
+  std::vector<double> blossom_counts({ static_cast<double>(_blossom_edges_counter.bnb),
+                                       static_cast<double>(_blossom_edges_counter.prunning),
+                                       static_cast<double>(_blossom_edges_counter.collision_check),
+                                       static_cast<double>(_blossom_edges_counter.final) });
   rrt_statistics.insert(rrt_statistics.end(), std::make_move_iterator(rand_counts.begin()),
                         std::make_move_iterator(rand_counts.end()));
   rrt_statistics.insert(rrt_statistics.end(), std::make_move_iterator(blossom_counts.begin()),
@@ -575,10 +602,12 @@ void dirt_replan_t::_fulfill_query()
   if (dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::TREE_TRAJECTORY)
   {
     solution_found = tree_solution();
+    _current_solution_type = dirt_replan_query_t::solution_type_t::TREE_TRAJECTORY;
   }
   if (not solution_found or dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::WAVEFRONT)
   {
     solution_found = wavefront_solution();
+    _current_solution_type = dirt_replan_query_t::solution_type_t::WAVEFRONT;
     // if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
     //   rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
   }
@@ -586,6 +615,7 @@ void dirt_replan_t::_fulfill_query()
   {
     std::cout << "No solution found during planning cycle. # of nodes: " << metric->get_nr_nodes() << std::endl;
     rrt_query->solution_cost = 0;
+    _current_solution_type = dirt_replan_query_t::solution_type_t::NONE;
   }
   // auto node = get_vertex(start_vertex);
   // std::cout << start_vertex << " " << state_space->print_point(node->point, 4) << " " << node->is_safe << " " << " "

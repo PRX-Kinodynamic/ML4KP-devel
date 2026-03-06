@@ -55,16 +55,21 @@ public:
 
   virtual void compute_derivative() = 0;
 
+  virtual prx::param_loader initialization_parameters() override
+  {
+    prx::param_loader params{ prx::system_t::initialization_parameters() };
+    return params;
+  }
+
+  static prx::param_loader init()
+  {
+    prx::param_loader params{ prx::system_t::init() };
+    return params;
+  }
+
   virtual void init(const prx::param_loader& params) override
   {
     prx::system_t::init(params);
-  }
-
-  virtual prx::param_loader init() override
-  {
-    prx::param_loader params{ prx::system_t::init() };
-
-    return params;
   }
 
 protected:
