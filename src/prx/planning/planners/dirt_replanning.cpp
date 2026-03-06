@@ -618,7 +618,9 @@ void dirt_replan_t::_fulfill_query()
 
   if (not solution_found or dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::WAVEFRONT)
   {
-    solution_found = wavefront_solution();
+    // solution_found = wavefront_solution();
+    goal_vertex = best_node;
+    solution_found = tree_solution();
     _current_solution_type = dirt_replan_query_t::solution_type_t::WAVEFRONT;
     // if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
     //   rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
@@ -627,7 +629,7 @@ void dirt_replan_t::_fulfill_query()
 
   if (not solution_found)
   {
-    std::cout << "No solution found during planning cycle. # of nodes: " << metric->get_nr_nodes() << std::endl;
+    std::cout << "No solution found during planning cycle. # of nodes: " << metric->get_nr_nodes() << "\n";
     rrt_query->solution_cost = 0;
     _current_solution_type = dirt_replan_query_t::solution_type_t::NONE;
   }
