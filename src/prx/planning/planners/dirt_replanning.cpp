@@ -441,12 +441,14 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
   new_tree_node->safety_time = safety_time;
 
   double wavefront_val = wavefront_h(eg.second->back(), dirt_replan_query->goal_state);
+  // PRX_DBG_VARS(eg.second->back(), dirt_replan_query->goal_state);
+  // PRX_DBG_VARS(closest_node->is_safe, wavefront_val, best_cost);
   if (closest_node->is_safe && wavefront_val < best_cost)
   {
     best_cost = wavefront_val;
     best_node = new_tree_node->get_index();
-    std::cout << "Updated best node to: " << best_cost << " " << state_space->print_point(closest_node->point, 4) << " "
-              << closest_node->is_safe << "\n";
+    // std::cout << "Updated best node to: " << best_cost << " " << state_space->print_point(closest_node->point, 4) <<
+    // " "  << closest_node->is_safe << "\n";
   }
 
   max_radius = std::max(max_radius, new_node_dir_radius);
@@ -617,7 +619,7 @@ void dirt_replan_t::_fulfill_query()
   }
   prx::time_profiler_t::measure(_fulfill_profiler);  // best trajector
 
-  std::cout << "solution_found" << solution_found << "\n";
+  std::cout << "solution_found: " << solution_found << "\n";
   if (not solution_found or dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::WAVEFRONT)
   {
     std::cout << "Computing wavefront_solution" << "\n";

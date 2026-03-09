@@ -1,11 +1,11 @@
 #pragma once
 
-#include <Eigen/Dense>
-#include <Eigen/Core>
-#include <gtsam/base/OptionalJacobian.h>
-#include "prx/factor_graphs/lie_groups/lie_operators.hpp"
 #include "prx/factor_graphs/factors/noise_model_factors.hpp"
+#include "prx/factor_graphs/lie_groups/lie_operators.hpp"
 #include "prx/utilities/math/first_order_derivative.hpp"
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <gtsam/base/OptionalJacobian.h>
 
 namespace prx
 {
@@ -38,7 +38,8 @@ public:
                      gtsam::OptionalJacobian<DimX, DimXdot> Hxdot = boost::none,
                      gtsam::OptionalJacobian<DimX, 1> Hdt = boost::none)
   {
-    // gtsam::OptionalJacobian<DimXdot, DimXdot> tau_H_qdot{ init_optional_jacobian(Hxdot, dt * MatXdotXdot::Identity())
+    // gtsam::OptionalJacobian<DimXdot, DimXdot> tau_H_qdot{
+    // init_optional_jacobian(Hxdot, dt * MatXdotXdot::Identity())
     // };
     Eigen::Matrix<double, DimXdot, DimXdot> tau_H_qdot;
     Eigen::Matrix<double, DimXdot, 1> tau_H_dt;
@@ -117,9 +118,11 @@ public:
     : Base(cost_model, key_xt1, key_xt0, key_xdot, key_dt), _h(0.0), _label(label)
   {
   }
-  // lie_integration_factor_t(const gtsam::Key key_xt1, const gtsam::Key key_xt0, const gtsam::Key key_xdot,
+  // lie_integration_factor_t(const gtsam::Key key_xt1, const gtsam::Key
+  // key_xt0, const gtsam::Key key_xdot,
   //                          const NoiseModel& cost_model, const double h)
-  //   : Base(cost_model, key_xt1, key_xt0, key_xdot), _h(h), _negative_identity(-1 * DerivativeX::Identity())
+  //   : Base(cost_model, key_xt1, key_xt0, key_xdot), _h(h),
+  //   _negative_identity(-1 * DerivativeX::Identity())
   // {
   // }
   ~lie_integration_factor_t() override
@@ -156,7 +159,8 @@ public:
                                 Hx0 ? &qp_H_q0 : nullptr,      // no-lint
                                 Hxdot ? &qp_H_qdot : nullptr,  // no-lint
                                 Hdt ? &qp_H_qdt : nullptr) };
-    // X1_p (-) x1 => Eq. 26 from "A micro Lie theory [...]" https://arxiv.org/pdf/1812.01537.pdf
+    // X1_p (-) x1 => Eq. 26 from "A micro Lie theory [...]"
+    // https://arxiv.org/pdf/1812.01537.pdf
     const X between{ x1.between(prediction,                                 // no-lint
                                 (Hx0 or Hxdot or Hdt) ? &b_H_q1 : nullptr,  // no-lint
                                 (Hx0 or Hxdot or Hdt) ? &b_H_qp : nullptr) };
