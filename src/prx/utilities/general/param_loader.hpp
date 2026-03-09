@@ -28,7 +28,6 @@ public:
   param_loader(std::string file_name, int argc, char* argv[]);
   param_loader(std::string file_name, std::vector<std::string> argv);
   param_loader(const param_loader& other);
-  param_loader(YAML::Node& input_params);
 
   void add_file(std::string file_name);
 

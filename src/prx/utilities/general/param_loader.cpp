@@ -5,10 +5,6 @@
 
 namespace prx
 {
-param_loader::param_loader(YAML::Node& input_params)
-{
-  params = std::move(input_params);
-}
 
 param_loader::param_loader(const std::string filename, const std::string path)
 {
