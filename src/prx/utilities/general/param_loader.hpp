@@ -4,6 +4,7 @@
 #include <regex>
 #include <string>
 #include <unordered_map>
+#include <yaml-cpp/node/node.h>
 #include <yaml-cpp/yaml.h>
 
 #include "prx/utilities/defs.hpp"
@@ -180,9 +181,9 @@ public:
     Type::init().save(filename);
   }
 
-protected:
-  param_loader(YAML::Node input_params, std::string _p_key = "INVALID_KEY");
+  param_loader(YAML::Node input_params, std::string _p_key = "");
 
+protected:
   YAML::Node expand_file(YAML::Node& node);
 
   YAML::Node find(const std::string& key, YAML::Node node);
