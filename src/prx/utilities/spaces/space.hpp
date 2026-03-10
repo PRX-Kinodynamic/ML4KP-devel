@@ -754,7 +754,7 @@ protected:
   std::string space_name;
   bool owned_values;
 
-  space_t() {};
+  space_t(){};
 
   inline void assert_point_space_name(const space_point_t& point) const
   {

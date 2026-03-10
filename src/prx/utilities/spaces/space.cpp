@@ -3,6 +3,7 @@
 #include <limits>
 #include <sstream>
 #include <iomanip>
+#include "spaces/space_snapshot.hpp"
 
 namespace prx
 {
@@ -101,20 +102,27 @@ space_t::space_t(const std::vector<const space_t*>& spaces) : dimension{ 0 }
 
 space_t::~space_t()
 {
-  // std::cout << "space_name: " << space_name << std::endl;
-  // PRX_DEBUG_PRINT
+  std::cout << "space_name: " << space_name << std::endl;
   if (owned_values)
   {
     for (auto d : lower_bounds)
     {
-      delete d;
+      if (d != nullptr)  // Not necessary...
+        delete d;
     }
     for (auto d : upper_bounds)
     {
-      delete d;
+      if (d != nullptr)
+        delete d;
     }
+    for (auto d : addresses)
+    {
+      // if (d != nullptr)
+      //   delete d;
+      // d = nullptr;
+    }
+    // addresses.clear();
   }
-  // PRX_DEBUG_PRINT
 }
 
 void space_t::set_bounds(const std::vector<double>& lower, const std::vector<double>& upper)
