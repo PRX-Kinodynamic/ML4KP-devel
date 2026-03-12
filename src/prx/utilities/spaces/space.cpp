@@ -102,7 +102,7 @@ space_t::space_t(const std::vector<const space_t*>& spaces) : dimension{ 0 }
 
 space_t::~space_t()
 {
-  std::cout << "space_name: " << space_name << std::endl;
+  //std::cout << "space_name: " << space_name << std::endl;
   if (owned_values)
   {
     for (auto d : lower_bounds)
@@ -119,9 +119,9 @@ space_t::~space_t()
     {
       // if (d != nullptr)
       //   delete d;
-      // d = nullptr;
+      d = nullptr;
     }
-    // addresses.clear();
+    addresses.clear();
   }
 }
 
