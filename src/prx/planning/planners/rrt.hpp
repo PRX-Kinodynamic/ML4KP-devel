@@ -270,8 +270,9 @@ public:
 
   virtual planner_t::StatisticsPtr statistics() override
   {
-    return std::make_shared<rrt_t::statistics_t>(timer.measure(), iteration_count, metric->get_nr_nodes(),
-                                                 current_solution, current_solution_time, current_solution_iters);
+    _stats.total_nodes = metric->get_nr_nodes();
+    _stats.total_planning_time = _timer.measure();
+    return std::make_shared<rrt_t::statistics_t>(_stats);
   }
 
   rrt_t(const std::string& new_name);
@@ -482,12 +483,13 @@ protected:
 
   space_point_t sample_point;
 
-  long unsigned iteration_count;
-  timer_t timer;
+  timer_t _timer;
 
-  double current_solution;
-  long unsigned current_solution_iters;
-  double current_solution_time;
+  planner_t::statistics_t _stats;
+  // long unsigned iteration_count;
+  // double current_solution;
+  // long unsigned current_solution_iters;
+  // double current_solution_time;
 
   bool use_replanning;
 

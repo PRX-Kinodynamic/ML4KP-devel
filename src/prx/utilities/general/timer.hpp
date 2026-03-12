@@ -29,9 +29,9 @@ protected:
   TimePoint _finish;
 
   /** @brief When the timer was started */
-  struct timeval start;
+  // struct timeval start;
   /** @brief When the timer finished */
-  struct timeval finish;
+  // struct timeval finish;
   /** @brief How much time has elapsed since start */
   double elapsed;
 

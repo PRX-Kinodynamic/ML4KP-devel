@@ -39,6 +39,19 @@ public:
 
     return { world_ptr, prx::system_group(planning_context), prx::collision_group(planning_context) };
   }
+  static WorldGroupsTuple create(prx::system_ptr_t plant)  // empty world
+  {
+    // std::vector<std::shared_ptr<movable_object_t>> obstacle_list;
+    // std::vector<std::string> obstacle_names;
+    const std::vector<std::shared_ptr<prx::movable_object_t>> all_obstacles;
+    const std::vector<prx::system_ptr_t> all_systems{ { plant } };
+    WorldModelPtr world_ptr{ std::make_shared<prx::world_model_t>(all_systems, all_obstacles) };
+
+    world_ptr->create_context("planner_context", { plant->get_pathname() }, {});
+    auto planning_context = world_ptr->get_context("planner_context");
+
+    return { world_ptr, prx::system_group(planning_context), prx::collision_group(planning_context) };
+  }
 
   // template<typename SGM = system_group_manager_t, typename CC = collision_checker_t>
   explicit world_model_t(const std::vector<system_ptr_t>& all_systems,

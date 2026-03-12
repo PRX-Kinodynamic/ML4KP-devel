@@ -57,11 +57,12 @@ bool dirt_t::_link_and_setup_query(planner_query_t* query)
     previous_child = start_vertex;
     child_extension = true;
   }
-  timer.reset();
-  iteration_count = 0;
-  current_solution = 0;
-  current_solution_iters = 0;
-  current_solution_time = 0;
+  _timer.reset();
+  _stats.reset();
+  // iteration_count = 0;
+  // current_solution = 0;
+  // current_solution_iters = 0;
+  // current_solution_time = 0;
 
   // Removed by BNB, Removed by pruning, Removed by collision check, Final
 
@@ -193,7 +194,8 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       closest_node->indices.pop_back();
 
       // bnb
-      if ((goal_vertex != start_vertex && closest_node->cost_to_come + edge_cost + end_heuristic > current_solution))
+      if ((goal_vertex != start_vertex &&
+           closest_node->cost_to_come + edge_cost + end_heuristic > _stats.current_solution_cost))
       {
         delete eg.first;
         delete eg.second;
@@ -295,7 +297,7 @@ void dirt_t::_resolve_query(condition_check_t* condition)
       delete eg.second;
     }
 
-    iteration_count++;
+    _stats.total_iterations++;
   } while (!condition->check());
   // print_statistics();
 }
@@ -374,18 +376,20 @@ void dirt_t::update_goal(node_index_t node_index)
     if (goal_vertex == start_vertex ||
         _tree.get_vertex_as<dirt_node_t>(goal_vertex)->cost_to_come > new_tree_node->cost_to_come)
     {
-      current_solution = new_tree_node->cost_to_come;
-      current_solution_time = timer.measure();
-      current_solution_iters = iteration_count;
+      // current_solution = new_tree_node->cost_to_come;
+      // current_solution_time = _timer.measure();
+      // current_solution_iters = iteration_count;
       goal_vertex = node_index;
+      _stats.update_solution(new_tree_node->cost_to_come, _timer.measure());
+
       std::cout << "[dirt] Found new goal: " << state_space->print_point(new_tree_node->point, 3);
-      std::cout << " cost:" << new_tree_node->cost_to_come;
-      std::cout << " time:" << current_solution_time;
-      std::cout << " iter:" << current_solution_iters;
+      std::cout << " cost:" << _stats.current_solution_cost;
+      std::cout << " time:" << _stats.current_solution_time;
+      std::cout << " iter:" << _stats.current_solution_iterations;
       std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
       if (_bnb)
       {
-        bnb(start_vertex, current_solution);
+        bnb(start_vertex, _stats.current_solution_cost);
         _tree.remove_vertices();
       }
     }

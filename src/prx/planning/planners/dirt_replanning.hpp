@@ -200,16 +200,16 @@ public:
   using SolutionType = dirt_replan_query_t::solution_type_t;
   struct dirt_counter_t
   {
-    dirt_counter_t() : bnb(0), pruning(0), collision_check(0), accepted(0), f_rejected(0) {};
+    dirt_counter_t() : bnb(0), pruning(0), collision_check(0), accepted(0), g_rejected(0) {};
     void reset()
     {
-      f_rejected = 0;
+      g_rejected = 0;
       pruning = 0;
       collision_check = 0;
       bnb = 0;
       accepted = 0;
     }
-    std::size_t f_rejected;       // New nodes not added due to f(new_node) > f(current_sln)
+    std::size_t g_rejected;       // New nodes not added due to g(new_node) > g(current_sln)
     std::size_t pruning;          // New nodes not added due to dirt-pruning (using dir_radius)
     std::size_t collision_check;  // New nodes not added due to being in collision
     std::size_t accepted;         // New nodes accepted to be added to the tree (could be removed later)
@@ -240,12 +240,12 @@ public:
 
   node_index_t get_best_node_index()
   {
-    return best_node;
+    return _best_f_node;
   }
 
   virtual planner_t::StatisticsPtr statistics() override
   {
-    return std::make_shared<dirt_replan_t::statistics_t>(*rrt_t::statistics(),    // no-lint
+    return std::make_shared<dirt_replan_t::statistics_t>(_stats,                  // no-lint
                                                          _random_edges_counter,   // no-lint
                                                          _blossom_edges_counter,  // no-lint
                                                          _current_solution_type);
@@ -285,15 +285,14 @@ private:
 
   double planning_cycle_duration;
   double multiplier;
-  node_index_t best_node;
-  double best_cost;
+  node_index_t _best_f_node;
+  double _best_f_value;
 
   double max_radius;
   bool child_extension;
   node_index_t previous_child;
 
-  bool tree_solution();
-  bool wavefront_solution();
+  bool tree_solution(const node_index_t goal_node_idx);
 
   void add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_replan_node_t* closest_node,
                         std::vector<dirt_replan_node_t*> dir_updates, double new_node_dir_radius);

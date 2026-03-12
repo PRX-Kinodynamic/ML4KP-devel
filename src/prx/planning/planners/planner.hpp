@@ -158,50 +158,85 @@ class planner_t : public std::enable_shared_from_this<planner_t>
 public:
   struct statistics_t
   {
-    statistics_t() : statistics_t(-1., 0, 0, -1., -1., 0) {};
-
-    statistics_t(const double planned_duration_, const std::size_t iteration_count_, const std::size_t total_nodes_,
-                 const double cost_current_solution_, const double time_current_solution_,
-                 const std::size_t iters_current_solution_)
-      : planned_duration(planned_duration_)
-      , iteration_count(iteration_count_)
-      , total_nodes(total_nodes_)
-      , cost_current_solution(cost_current_solution_)
-      , time_current_solution(time_current_solution_)
-      , iters_current_solution(iters_current_solution_)
+    statistics_t()
     {
+      reset();
     }
-    virtual ~statistics_t() {};
 
-    const double planned_duration;      // timer.measure()};
-    const std::size_t iteration_count;  // static_cast<double>(iteration_count);
-    const std::size_t total_nodes;      // static_cast<double>(metric->get_nr_nodes());
-    const double cost_current_solution;
-    const double time_current_solution;
-    const std::size_t iters_current_solution;
+    statistics_t(const statistics_t& other) = default;
+
+    virtual ~statistics_t() {};
 
     static std::string header()
     {
       std::stringstream strstr;
-      strstr << "planned_duration ";
-      strstr << "iteration_count ";
+      strstr << "total_planning_time ";
+      strstr << "total_iterations ";
       strstr << "total_nodes ";
-      strstr << "cost_current_solution ";
-      strstr << "time_current_solution ";
-      strstr << "iters_current_solution ";
+      strstr << "solution_found ";
+      strstr << "current_solution_cost ";
+      strstr << "current_solution_time ";
+      strstr << "current_solution_iterations ";
+      strstr << "first_solution_cost ";
+      strstr << "first_solution_time ";
+      strstr << "first_solution_iterations ";
       return strstr.str();
     }
 
     friend std::ostream& operator<<(std::ostream& os, const statistics_t& obj)
     {
-      os << obj.planned_duration << " ";
-      os << obj.iteration_count << " ";
+      os << obj.total_planning_time << " ";
+      os << obj.total_iterations << " ";
       os << obj.total_nodes << " ";
-      os << obj.cost_current_solution << " ";
-      os << obj.time_current_solution << " ";
-      os << obj.iters_current_solution << " ";
+      os << (obj.solution_found ? "true" : "false") << " ";
+      os << obj.current_solution_cost << " ";
+      os << obj.current_solution_time << " ";
+      os << obj.current_solution_iterations << " ";
+      os << obj.first_solution_cost << " ";
+      os << obj.first_solution_time << " ";
+      os << obj.first_solution_iterations << " ";
       return os;
     }
+
+    virtual void update_solution(const double current_solution_cost_, const double current_solution_time_)
+    {
+      current_solution_cost = current_solution_cost_;
+      current_solution_time = current_solution_time_;
+      current_solution_iterations = total_iterations;
+      if (not solution_found)
+      {
+        first_solution_cost = current_solution_cost_;
+        first_solution_time = current_solution_time_;
+        first_solution_iterations = total_iterations;
+        solution_found = true;
+      }
+    }
+
+    virtual void reset()
+    {
+      solution_found = false;
+      total_planning_time = std::numeric_limits<double>::max();
+      current_solution_cost = std::numeric_limits<double>::max();
+      current_solution_time = std::numeric_limits<double>::max();
+      first_solution_cost = std::numeric_limits<double>::max();
+      first_solution_time = std::numeric_limits<double>::max();
+      current_solution_iterations = std::numeric_limits<std::size_t>::max();
+      first_solution_iterations = std::numeric_limits<std::size_t>::max();
+    }
+
+    // Planner stats
+    double total_planning_time;
+    std::size_t total_iterations;
+    std::size_t total_nodes;
+
+    // Solution-specific stats
+    bool solution_found;
+    double current_solution_cost;
+    double current_solution_time;
+    std::size_t current_solution_iterations;
+    double first_solution_cost;
+    double first_solution_time;
+    std::size_t first_solution_iterations;
   };
 
   using StatisticsPtr = std::shared_ptr<planner_t::statistics_t>;

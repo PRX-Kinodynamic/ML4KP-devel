@@ -56,7 +56,7 @@ void aorrt_t::_link_and_setup_spec(planner_specification_t* spec)
   // Min pt
   Y_min = Y_state_space->make_point();
 
-  Y_min_cost = aorrt_spec->c_max;
+  _stats.current_solution_cost = aorrt_spec->c_max;
 }
 bool aorrt_t::_preprocess()
 {
@@ -85,10 +85,11 @@ bool aorrt_t::_link_and_setup_query(planner_query_t* query)
     start_node->cost_to_come = 0;
     metric->add_node(start_node.get());
   }
-  timer.reset();
-  iteration_count = 0;
-  current_solution_iters = 0;
-  current_solution_time = 0;
+  _timer.reset();
+  _stats.reset();
+  // iteration_count = 0;
+  // current_solution_iters = 0;
+  // current_solution_time = 0;
 
   return true;
 }
@@ -124,7 +125,7 @@ void aorrt_t::_resolve_query(condition_check_t* condition)
 
     _c_new = _cost_aux_pt->at(0) + cost_function(traj, plan);
 
-    if (_c_new < (Y_min_cost) and valid_check(traj))
+    if (_c_new < _stats.current_solution_cost and valid_check(traj))
     {
       // The new cost is higher than the max in the tree but lower than min found to the goal
       // This happens when no solution has been found or if it is allowed to explore higher costs than the current goal
@@ -153,7 +154,7 @@ void aorrt_t::_resolve_query(condition_check_t* condition)
 
       update_goal(node_index);
     }
-    iteration_count++;
+    _stats.total_iterations++;
   } while (!condition->check());
 }
 
@@ -162,7 +163,7 @@ void aorrt_t::_fulfill_query()
   if (goal_vertex != start_vertex && !use_replanning)
   {
     // backtrack to get the plan and trajectory
-    aorrt_query->solution_cost = Y_min_cost;
+    aorrt_query->solution_cost = _stats.current_solution_cost;
     std::deque<node_index_t> node_indices;
     node_index_t current_index = goal_vertex;
 
@@ -211,12 +212,12 @@ void aorrt_t::_fulfill_query()
 std::vector<double> aorrt_t::get_statistics()
 {
   // time, iters, nodes, solution quality, first_time, first_iters, current_solution
-  return { timer.measure(),
-           static_cast<double>(iteration_count),
+  return { _timer.measure(),
+           static_cast<double>(_stats.total_iterations),
            static_cast<double>(metric->get_nr_nodes()),
-           Y_min_cost,
-           current_solution_time,
-           static_cast<double>(current_solution_iters) };
+           _stats.current_solution_cost,
+           _stats.current_solution_time,
+           static_cast<double>(_stats.current_solution_iterations) };
 }
 
 void aorrt_t::_reset()
@@ -237,27 +238,30 @@ void aorrt_t::update_goal(node_index_t node_index)
 
   space_point_t pt = tree_edge->traj->back();
   // if(distance_function(aorrt_query->goal_state, traj.back()) < aorrt_query->goal_region_radius
-  if (aorrt_query->goal_check(pt) && _c_new < Y_min_cost)
+  if (aorrt_query->goal_check(pt) && _c_new < _stats.current_solution_cost)
   {
     // statics
-    current_solution = _c_new;
-    current_solution_time = timer.measure();
-    current_solution_iters = iteration_count;
+    // current_solution = _c_new;
+    // current_solution_time = _timer.measure();
+    // current_solution_iters = iteration_count;
 
     // Update the solution
     Y_state_space->copy(Y_min, Y_aux_pt);
-    Y_min_cost = _c_new;
+    _stats.current_solution_cost = _c_new;
     goal_vertex = node_index;
+
+    _stats.update_solution(_c_new, _timer.measure());
 
     aorrt_spec->c_max = _c_new;
     aorrt_spec->w_x = _w_x_bk;
     aorrt_spec->w_c = _w_c_bk;
 
     std::cout << "[" + planner_name + "] Found new goal:( " << pt << ")";
-    std::cout << " cost:" << current_solution;
-    std::cout << " time:" << current_solution_time;
-    std::cout << " iter:" << current_solution_iters;
-    std::cout << " nodes:" << metric->get_nr_nodes() << std::endl;
+    std::cout << " cost:" << _stats.current_solution_cost;
+    std::cout << " time:" << _stats.current_solution_time;
+    std::cout << " iter:" << _stats.current_solution_iterations;
+    std::cout << " nodes:" << metric->get_nr_nodes();
+    std::cout << "\n";
 
     _cost_state_space->set_bounds({ 0.0 }, { aorrt_spec->c_max });
     if (_bnb)

@@ -142,7 +142,7 @@ public:
 
   double get_sln_cost()
   {
-    return Y_min_cost;
+    return _stats.current_solution_cost;
   };
 
   void print_statics();
@@ -283,7 +283,7 @@ protected:
   space_point_t Y_aux_pt;
   space_point_t _X_aux1, _X_aux2;
 
-  double Y_min_cost;
+  // double Y_min_cost;
   double Y_min_g;
   space_point_t Y_min;
 

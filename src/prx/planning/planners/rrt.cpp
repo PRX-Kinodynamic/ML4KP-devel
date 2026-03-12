@@ -55,11 +55,12 @@ bool rrt_t::_link_and_setup_query(planner_query_t* query)
     start_node->cost_to_come = 0;
     metric->add_node(start_node.get());
   }
-  timer.reset();
-  iteration_count = 0;
-  current_solution = 0;
-  current_solution_iters = 0;
-  current_solution_time = 0;
+  _timer.reset();
+  _stats.reset();
+  // iteration_count = 0;
+  // current_solution = 0;
+  // current_solution_iters = 0;
+  // current_solution_time = 0;
   return true;
 }
 
@@ -87,13 +88,15 @@ void rrt_t::_resolve_query(condition_check_t* condition)
     edge_cost = cost_function(traj, plan);
 
     new_cost = closest_node->cost_to_come + edge_cost;
-    // collision check && bnb && glc_conds
-    if ((goal_vertex == start_vertex || closest_node->cost_to_come + edge_cost < current_solution) && valid_check(traj))
+
+    if ((goal_vertex == start_vertex ||                                             // no-lint
+         closest_node->cost_to_come + edge_cost < _stats.current_solution_cost) &&  // no-lint
+        valid_check(traj))
     {
       const node_index_t node_index{ add_to_tree(traj, closest_node, edge_cost, plan) };
       update_goal(node_index);
     }
-    iteration_count++;
+    _stats.total_iterations++;
   } while (!condition->check());
 }
 
@@ -200,12 +203,12 @@ std::vector<std::string> rrt_t::get_statistics_header()
 std::vector<double> rrt_t::get_statistics()
 {
   // time, iters, nodes, solution quality, first_time, first_iters, current_solution
-  return { timer.measure(),
-           static_cast<double>(iteration_count),
+  return { _timer.measure(),
+           static_cast<double>(_stats.total_iterations),
            static_cast<double>(metric->get_nr_nodes()),
-           current_solution,
-           current_solution_time,
-           static_cast<double>(current_solution_iters) };
+           _stats.current_solution_cost,
+           _stats.current_solution_time,
+           static_cast<double>(_stats.current_solution_iterations) };
 }
 
 void rrt_t::_reset()
@@ -228,20 +231,22 @@ void rrt_t::update_goal(node_index_t node_index)
     if (goal_vertex == start_vertex ||
         _tree.get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come > new_tree_node->cost_to_come)
     {
-      current_solution = new_tree_node->cost_to_come;
-      current_solution_time = timer.measure();
-      current_solution_iters = iteration_count;
+      const double& solution_cost{ new_tree_node->cost_to_come };
+      const double solution_time{ _timer.measure() };
       goal_vertex = node_index;
+      _stats.update_solution(solution_cost, solution_time);
       // std::cout<<"Found new goal: "<<state_space->print_point(new_tree_node->point,3)<<"
       // "<<new_tree_node->cost_to_come<<std::endl;
-      std::cout << "[" + _planner_name + "] Found new goal:" << state_space->print_point(new_tree_node->point, 3);
-      std::cout << " cost:" << new_tree_node->cost_to_come;
-      std::cout << " time:" << current_solution_time;
-      std::cout << " iter:" << current_solution_iters;
-      std::cout << " nodes:" << metric->get_nr_nodes() << "\n";
+      std::cout << "[" + _planner_name + "] ";
+      std::cout << "New Goal:" << state_space->print_point(new_tree_node->point, 3);
+      std::cout << " cost:" << solution_cost;
+      std::cout << " time:" << solution_time;
+      std::cout << " iter:" << _stats.current_solution_iterations;
+      std::cout << " nodes:" << metric->get_nr_nodes();
+      std::cout << "\n";
       if (_bnb)
       {
-        bnb(start_vertex, current_solution);
+        bnb(start_vertex, solution_cost);
       }
       _tree.remove_vertices();
     }
@@ -269,10 +274,14 @@ void rrt_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
 
 void rrt_t::print_statistics()
 {
-  std::cout << "[" + _planner_name + "]";
-  std::cout << " time:" << timer.measure();
-  std::cout << " iter:" << iteration_count;
-  std::cout << " nodes:" << metric->get_nr_nodes() << "\n";
+  _stats.total_planning_time = _timer.measure();
+  _stats.total_nodes = metric->get_nr_nodes();
+  std::cout << "[" + _planner_name + "]\n";
+  std::cout << _stats.header() << "\n";
+  std::cout << _stats << "\n";
+  // std::cout << " time:" << timer.measure();
+  // std::cout << " iter:" << iteration_count;
+  // std::cout << " nodes:" << metric->get_nr_nodes() << "\n";
 }
 
 }  // namespace prx

@@ -81,8 +81,8 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
     start_node->is_safe = false;
     metric->add_node(start_node.get());
     previous_child = start_vertex;
-    best_node = start_vertex;
-    best_cost = wavefront_h(start_node->point, dirt_replan_query->goal_state);
+    _best_f_node = start_vertex;
+    _best_f_value = wavefront_h(start_node->point, dirt_replan_query->goal_state);
     // best_cost = PRX_INFINITY;
     child_extension = true;
   }
@@ -134,11 +134,8 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
     }
   }
 
-  timer.reset();
-  iteration_count = 0;
-  current_solution = 0;
-  current_solution_iters = 0;
-  current_solution_time = 0;
+  _timer.reset();
+  _stats.reset();
 
   // Removed by BNB, Removed by pruning, Removed by collision check, Final
   _random_edges_counter.reset();   // = { 0, 0, 0, 0 };
@@ -279,20 +276,19 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       const double f_value{ _f_function(g_value, h_value) };
       closest_node->indices.pop_back();
 
-      // bnb: Do not add a new node if f(node) > f(current_sln)
-      if ((goal_vertex != start_vertex &&  // no-lint
-           f_value > current_solution))
+      // bnb (based on g): Do not add a new node if g(node) > g(current_sln)
+      if ((goal_vertex != start_vertex && g_value > _stats.current_solution_cost))
       {
         delete eg.first;
         delete eg.second;
         eg = std::make_pair(nullptr, nullptr);
         if (is_blossom_expand)
         {
-          _blossom_edges_counter.f_rejected++;
+          _blossom_edges_counter.g_rejected++;
         }
         else
         {
-          _random_edges_counter.f_rejected++;
+          _random_edges_counter.g_rejected++;
         }
         continue;
       }
@@ -380,7 +376,7 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       delete eg.second;
     }
 
-    iteration_count++;
+    _stats.total_iterations++;
   } while (!condition->check());
   print_statistics();
 }
@@ -443,10 +439,10 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
   double wavefront_val = wavefront_h(eg.second->back(), dirt_replan_query->goal_state);
   // PRX_DBG_VARS(eg.second->back(), dirt_replan_query->goal_state);
   // PRX_DBG_VARS(closest_node->is_safe, wavefront_val, best_cost);
-  if (closest_node->is_safe && wavefront_val < best_cost)
+  if (closest_node->is_safe && wavefront_val < _best_f_value)
   {
-    best_cost = wavefront_val;
-    best_node = new_tree_node->get_index();
+    _best_f_value = wavefront_val;
+    _best_f_node = new_tree_node->get_index();
     // std::cout << "Updated best node to: " << best_cost << " " << state_space->print_point(closest_node->point, 4) <<
     // " "  << closest_node->is_safe << "\n";
   }
@@ -502,21 +498,22 @@ void dirt_replan_t::update_goal(node_index_t node_index)
   // if(distance_function(dirt_replan_query->goal_state,new_tree_node->point)<dirt_replan_query->goal_region_radius)
   if (dirt_replan_query->goal_check(new_tree_node->point))
   {
-    if (goal_vertex == start_vertex ||
-        tree().get_vertex_as<dirt_replan_node_t>(goal_vertex)->cost_to_come > new_tree_node->cost_to_come)
-    {
-      current_solution = new_tree_node->cost_to_come;
-      current_solution_time = timer.measure();
-      current_solution_iters = iteration_count;
-      goal_vertex = node_index;
-      best_node = goal_vertex;
-      std::cout << "[dirt] Found new goal: " << state_space->print_point(new_tree_node->point, 3);
-      std::cout << " cost:" << new_tree_node->cost_to_come;
-      std::cout << " time:" << current_solution_time;
-      std::cout << " iter:" << current_solution_iters;
-      std::cout << " nodes:" << metric->get_nr_nodes() << "\n";
-      bnb(start_vertex, current_solution);
-    }
+    // if (goal_vertex == start_vertex ||
+    //     tree().get_vertex_as<dirt_replan_node_t>(goal_vertex)->cost_to_come > new_tree_node->cost_to_come)
+    // {
+    // current_solution = new_tree_node->cost_to_come;
+    // current_solution_time = _timer.measure();
+    // current_solution_iters = iteration_count;
+    _stats.update_solution(new_tree_node->cost_to_come, _timer.measure());
+
+    // best_node = goal_vertex;
+    std::cout << "[dirt] Found new goal: " << state_space->print_point(new_tree_node->point, 3);
+    std::cout << " cost:" << _stats.current_solution_cost;
+    std::cout << " time:" << _stats.current_solution_time;
+    std::cout << " iter:" << _stats.current_solution_iterations;
+    std::cout << " nodes:" << metric->get_nr_nodes() << "\n";
+    bnb(start_vertex, _stats.current_solution_cost);
+    // }
   }
 }
 
@@ -525,12 +522,12 @@ std::vector<double> dirt_replan_t::get_statistics()
   // time, iters, nodes, solution quality, first_time, first_iters, current_solution,
   std::vector<double> rrt_statistics = rrt_t::get_statistics();
   std::vector<double> rand_counts(
-      { static_cast<double>(_random_edges_counter.bnb), static_cast<double>(_random_edges_counter.f_rejected),
+      { static_cast<double>(_random_edges_counter.bnb), static_cast<double>(_random_edges_counter.g_rejected),
         static_cast<double>(_random_edges_counter.pruning), static_cast<double>(_random_edges_counter.collision_check),
         static_cast<double>(_random_edges_counter.accepted) });
 
   std::vector<double> blossom_counts({ static_cast<double>(_blossom_edges_counter.bnb),
-                                       static_cast<double>(_blossom_edges_counter.f_rejected),
+                                       static_cast<double>(_blossom_edges_counter.g_rejected),
                                        static_cast<double>(_blossom_edges_counter.pruning),
                                        static_cast<double>(_blossom_edges_counter.collision_check),
                                        static_cast<double>(_blossom_edges_counter.accepted) });
@@ -552,41 +549,14 @@ void dirt_replan_t::_reset()
   }
 }
 
-bool dirt_replan_t::tree_solution()
+bool dirt_replan_t::tree_solution(const node_index_t goal_node_idx)
 {
-  if (goal_vertex == start_vertex)
+  if (goal_node_idx == start_vertex)
     return false;
 
-  rrt_query->solution_cost = tree().get_vertex_as<rrt_node_t>(goal_vertex)->cost_to_come;
+  rrt_query->solution_cost = tree().get_vertex_as<rrt_node_t>(goal_node_idx)->cost_to_come;
   std::deque<node_index_t> node_indices;
-  node_index_t current_index = goal_vertex;
-  while (current_index != start_vertex)
-  {
-    auto node = get_vertex(current_index);
-    node_indices.push_front(current_index);
-    current_index = tree()[current_index]->get_parent();
-  }
-
-  rrt_query->solution_plan = *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[0]]->get_parent_edge())->plan);
-  rrt_query->solution_traj = *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[0]]->get_parent_edge())->traj);
-
-  for (int i = 1; i < node_indices.size(); i++)
-  {
-    rrt_query->solution_traj.resize(rrt_query->solution_traj.size() - 1);
-    rrt_query->solution_plan += *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[i]]->get_parent_edge())->plan);
-    rrt_query->solution_traj += *(tree().get_edge_as<rrt_edge_t>(tree()[node_indices[i]]->get_parent_edge())->traj);
-  }
-  return true;
-}
-
-bool dirt_replan_t::wavefront_solution()
-{
-  if (best_node == start_vertex)
-    return false;
-
-  rrt_query->solution_cost = tree().get_vertex_as<rrt_node_t>(best_node)->cost_to_come;
-  std::deque<node_index_t> node_indices;
-  node_index_t current_index = best_node;
+  node_index_t current_index = goal_node_idx;
   while (current_index != start_vertex)
   {
     auto node = get_vertex(current_index);
@@ -611,24 +581,24 @@ void dirt_replan_t::_fulfill_query()
   prx::time_profiler_t::reset(_fulfill_profiler);
 
   // if (obj._sln_type == solution_type_t::WAVEFRONT)
-  bool solution_found{ false };
-  if (dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::TREE_TRAJECTORY)
-  {
-    solution_found = tree_solution();
-    _current_solution_type = dirt_replan_query_t::solution_type_t::TREE_TRAJECTORY;
-  }
-  prx::time_profiler_t::measure(_fulfill_profiler);  // best trajector
+  bool solution_found{ tree_solution(_best_f_node) };
+  // if (dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::TREE_TRAJECTORY)
+  // {
+  //   solution_found = tree_solution();
+  //   _current_solution_type = dirt_replan_query_t::solution_type_t::TREE_TRAJECTORY;
+  // }
+  // prx::time_profiler_t::measure(_fulfill_profiler);  // best trajector
 
-  std::cout << "solution_found: " << solution_found << "\n";
-  if (not solution_found or dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::WAVEFRONT)
-  {
-    std::cout << "Computing wavefront_solution" << "\n";
-    goal_vertex = best_node;
-    solution_found = tree_solution();
-    _current_solution_type = dirt_replan_query_t::solution_type_t::WAVEFRONT;
-    // if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
-    //   rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
-  }
+  // std::cout << "solution_found: " << solution_found << "\n";
+  // if (not solution_found or dirt_replan_query->_sln_type == dirt_replan_query_t::solution_type_t::WAVEFRONT)
+  // {
+  //   std::cout << "Computing wavefront_solution" << "\n";
+  //   goal_vertex = best_node;
+  //   solution_found = tree_solution();
+  //   _current_solution_type = dirt_replan_query_t::solution_type_t::WAVEFRONT;
+  //   // if (dirt_spec->use_contingency && rrt_query->solution_traj.size() > planning_cycle_duration / simulation_step)
+  //   //   rrt_query->solution_traj.resize(1 + planning_cycle_duration / simulation_step);
+  // }
   prx::time_profiler_t::measure(_fulfill_profiler);  // best node
 
   if (not solution_found)

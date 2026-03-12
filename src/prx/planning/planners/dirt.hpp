@@ -148,44 +148,42 @@ public:
     }
   };
 
-  struct statistics_t : public planner_t::statistics_t
-  {
-    statistics_t(const planner_t::statistics_t& planner_stats_, const dirt_counter_t random_edges_counter_,
-                 const dirt_counter_t blossom_edges_counter_)
-      : planner_t::statistics_t(planner_stats_)
-      , random_edges_counter(random_edges_counter_)
-      , blossom_edges_counter(blossom_edges_counter_)
-    {
-    }
-    const dirt_counter_t random_edges_counter;
-    const dirt_counter_t blossom_edges_counter;
+  // struct statistics_t : public planner_t::statistics_t
+  // {
+  //   statistics_t(const planner_t::statistics_t& planner_stats_, const dirt_counter_t random_edges_counter_,
+  //                const dirt_counter_t blossom_edges_counter_)
+  //     : planner_t::statistics_t(planner_stats_)
+  //     , random_edges_counter(random_edges_counter_)
+  //     , blossom_edges_counter(blossom_edges_counter_)
+  //   {
+  //   }
+  //   const dirt_counter_t random_edges_counter;
+  //   const dirt_counter_t blossom_edges_counter;
 
-    static std::string header()
-    {
-      std::stringstream strstr;
-      strstr << planner_t::statistics_t::header();
-      strstr << dirt_counter_t::header("random_edges");
-      strstr << dirt_counter_t::header("blossom_edges");
-      return strstr.str();
-    }
+  //   static std::string header()
+  //   {
+  //     std::stringstream strstr;
+  //     strstr << planner_t::statistics_t::header();
+  //     strstr << dirt_counter_t::header("random_edges");
+  //     strstr << dirt_counter_t::header("blossom_edges");
+  //     return strstr.str();
+  //   }
 
-    friend std::ostream& operator<<(std::ostream& os, const statistics_t& obj)
-    {
-      os << static_cast<planner_t::statistics_t>(obj);
-      os << obj.random_edges_counter << " ";
-      os << obj.blossom_edges_counter << " ";
-      return os;
-    }
-  };
+  //   friend std::ostream& operator<<(std::ostream& os, const statistics_t& obj)
+  //   {
+  //     os << static_cast<planner_t::statistics_t>(obj);
+  //     os << obj.random_edges_counter << " ";
+  //     os << obj.blossom_edges_counter << " ";
+  //     return os;
+  //   }
+  // };
 
   dirt_t(const std::string& new_name);
   virtual ~dirt_t();
 
   virtual planner_t::StatisticsPtr statistics() override
   {
-    return std::make_shared<dirt_t::statistics_t>(*rrt_t::statistics(),   // no-lint
-                                                  _random_edges_counter,  // no-lint
-                                                  _blossom_edges_counter);
+    return std::make_shared<planner_t::statistics_t>(_stats);
     // const planner_t::statistics_t planner_stats{ rrt_t::statistics() };
     // return statistics_t(planner_stats, _random_edges_counter, _blossom_edges_counter);
   }

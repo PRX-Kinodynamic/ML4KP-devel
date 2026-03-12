@@ -56,11 +56,9 @@ bool sst_t::_link_and_setup_query(planner_query_t* query)
 
     start_node->witness_index = closest_witness->get_index();
   }
-  timer.reset();
-  iteration_count = 0;
-  current_solution = 0;
-  current_solution_iters = 0;
-  current_solution_time = 0;
+  _timer.reset();
+  _stats.reset();
+
   return true;
 }
 void sst_t::_resolve_query(condition_check_t* condition)
@@ -87,7 +85,7 @@ void sst_t::_resolve_query(condition_check_t* condition)
     double edge_cost = cost_function(traj, plan);
 
     // bnb check
-    if ((goal_vertex == start_vertex || closest_node->cost_to_come + edge_cost < current_solution))
+    if ((goal_vertex == start_vertex || closest_node->cost_to_come + edge_cost < _stats.current_solution_cost))
     {
       // check for closest witness
       auto closest_witness_index = find_closest_witness(traj.back());
@@ -133,7 +131,7 @@ void sst_t::_resolve_query(condition_check_t* condition)
         metric->add_node(new_tree_node.get());
       }
     }
-    iteration_count++;
+    _stats.total_iterations++;
   } while (!condition->check());
 }
 

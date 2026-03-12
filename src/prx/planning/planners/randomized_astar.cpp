@@ -54,11 +54,8 @@ bool randomized_astar_t::_link_and_setup_query(planner_query_t* query)
     start_node->astar_node = astar_node;
     open_set.insert(astar_node);
   }
-  timer.reset();
-  iteration_count = 0;
-  current_solution = 0;
-  current_solution_iters = 0;
-  current_solution_time = 0;
+  _timer.reset();
+  _stats.reset();
 
   random_edges_counter = { 0, 0, 0, 0 };
   blossom_edges_counter = { 0, 0, 0, 0 };
@@ -110,7 +107,7 @@ void randomized_astar_t::_resolve_query(condition_check_t* condition)
 
         // bnb
         if ((goal_vertex != start_vertex &&
-             closest_node->cost_to_come + edge_cost + closest_node->cost_to_go > current_solution))
+             closest_node->cost_to_come + edge_cost + closest_node->cost_to_go > _stats.current_solution_cost))
         {
           delete eg.first;
           delete eg.second;
@@ -163,7 +160,7 @@ void randomized_astar_t::_resolve_query(condition_check_t* condition)
         closest_node->expanded = true;
       }
     }
-    iteration_count++;
+    _stats.total_iterations++;
   } while (!condition->check());
 }
 
