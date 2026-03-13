@@ -79,6 +79,15 @@ inline void print_variables(std::ostream& stream, const std::string& name, const
     PRX_DBG_VARS(msg)                                                                                                  \
   };
 
+#define PRX_WARNING(MSG)                                                                                               \
+  {                                                                                                                    \
+    std::stringstream strstr;                                                                                          \
+    strstr << "WARNING - [" << __PRETTY_FUNCTION__ << "] ";                                                            \
+    strstr << MSG;                                                                                                     \
+    std::string msg{ strstr.str() };                                                                                   \
+    PRX_DBG_VARS(msg)                                                                                                  \
+  };
+
 #define PRX_MSG_VARS(MSG, ...)                                                                                         \
   {                                                                                                                    \
     std::stringstream strstr;                                                                                          \

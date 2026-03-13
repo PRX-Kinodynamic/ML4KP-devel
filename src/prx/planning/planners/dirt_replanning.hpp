@@ -17,7 +17,6 @@ public:
     is_blossom_expand_done = false;
     random_expand = false;
     is_safe = false;
-    safety_time = 0;
   }
   virtual ~dirt_replan_node_t()
   {
@@ -46,8 +45,6 @@ public:
   std::vector<std::pair<plan_t*, trajectory_t*>> edge_generators;
 
   std::vector<int> indices;
-
-  double checkpoint_time, safety_time;
 
   bool is_safe;
 };
@@ -116,15 +113,14 @@ public:
 class dirt_replan_query_t : public rrt_query_t
 {
 public:
-  enum solution_type_t
-  {
-    TREE_TRAJECTORY = 0,
-    WAVEFRONT,
-    NONE
-  };
+  // enum solution_type_t
+  // {
+  //   TREE_TRAJECTORY = 0,
+  //   WAVEFRONT,
+  //   NONE
+  // };
 
-  dirt_replan_query_t(space_t* state_space, space_t* control_space)
-    : rrt_query_t(state_space, control_space), _sln_type(solution_type_t::TREE_TRAJECTORY)
+  dirt_replan_query_t(space_t* state_space, space_t* control_space) : rrt_query_t(state_space, control_space)
   {
     start_time = 0.0;
   }
@@ -136,7 +132,7 @@ public:
   static prx::param_loader init()
   {
     prx::param_loader params{ rrt_query_t::init() };
-    params["solution_type"].set("TREE_TRAJECTORY | WAVEFRONT");
+    // params["solution_type"].set("TREE_TRAJECTORY | WAVEFRONT");
 
     return params;
   }
@@ -145,41 +141,41 @@ public:
   {
     rrt_query_t::init(params);
 
-    if (params.exists("solution_type"))
-    {
-      const std::string sln_type{ params["solution_type"].as<>() };
-      if (sln_type == "TREE_TRAJECTORY")
-      {
-        _sln_type = solution_type_t::TREE_TRAJECTORY;
-      }
-      else if (sln_type == "WAVEFRONT")
-      {
-        _sln_type = solution_type_t::WAVEFRONT;
-      }
-      else
-      {
-        prx_throw("[dirt_replan_query_t::init] invalid solution_type: {TREE_TRAJECTORY, WAVEFRONT}")
-      }
-    }
+    // if (params.exists("solution_type"))
+    // {
+    //   const std::string sln_type{ params["solution_type"].as<>() };
+    //   if (sln_type == "TREE_TRAJECTORY")
+    //   {
+    //     _sln_type = solution_type_t::TREE_TRAJECTORY;
+    //   }
+    //   else if (sln_type == "WAVEFRONT")
+    //   {
+    //     _sln_type = solution_type_t::WAVEFRONT;
+    //   }
+    //   else
+    //   {
+    //     prx_throw("[dirt_replan_query_t::init] invalid solution_type: {TREE_TRAJECTORY, WAVEFRONT}")
+    //   }
+    // }
   }
 
   friend std::ostream& operator<<(std::ostream& os, const dirt_replan_query_t& obj)
   {
     std::string sln_str{ "??" };
-    if (obj._sln_type == solution_type_t::WAVEFRONT)
-    {
-      sln_str = "WAVEFRONT";
-    }
-    else if (obj._sln_type == solution_type_t::TREE_TRAJECTORY)
-    {
-      sln_str = "TREE_TRAJECTORY";
-    }
+    // if (obj._sln_type == solution_type_t::WAVEFRONT)
+    // {
+    //   sln_str = "WAVEFRONT";
+    // }
+    // else if (obj._sln_type == solution_type_t::TREE_TRAJECTORY)
+    // {
+    //   sln_str = "TREE_TRAJECTORY";
+    // }
 
     os << static_cast<rrt_query_t>(obj);
-    os << "start_time: " << obj.start_time << "\n";
+    // os << "start_time: " << obj.start_time << "\n";
     // os << "previous_contingency: " << obj.previous_contingency << "\n";
 
-    os << "solution_type: " << sln_str << "\n";
+    // os << "solution_type: " << sln_str << "\n";
 
     return os;
   }
@@ -187,7 +183,7 @@ public:
   double start_time;
   // bool previous_contingency;
 
-  solution_type_t _sln_type;
+  // solution_type_t _sln_type;
 };
 
 class dirt_replan_t : public rrt_t
@@ -197,7 +193,7 @@ public:
   using Edge = rrt_edge_t;
   using EdgePtr = std::shared_ptr<Edge>;
   using NodePtr = std::shared_ptr<Node>;
-  using SolutionType = dirt_replan_query_t::solution_type_t;
+  // using SolutionType = dirt_replan_query_t::solution_type_t;
   struct dirt_counter_t
   {
     dirt_counter_t() : bnb(0), pruning(0), collision_check(0), accepted(0), g_rejected(0) {};
@@ -219,18 +215,18 @@ public:
   struct statistics_t : public planner_t::statistics_t
   {
     statistics_t(const planner_t::statistics_t& planner_stats_, const dirt_counter_t random_edges_counter_,
-                 const dirt_counter_t blossom_edges_counter_, const SolutionType solution_type_)
+                 const dirt_counter_t blossom_edges_counter_, const double best_f_value_)
       : planner_t::statistics_t(planner_stats_)
       , random_edges_counter(random_edges_counter_)
       , blossom_edges_counter(blossom_edges_counter_)
-      , solution_type(solution_type_)
+      , best_f_value(best_f_value_)
     {
     }
     virtual ~statistics_t() {};
 
     const dirt_counter_t random_edges_counter;
     const dirt_counter_t blossom_edges_counter;
-    const SolutionType solution_type;
+    const double best_f_value;
   };
 
   dirt_replan_t(const std::string& new_name);
@@ -248,7 +244,7 @@ public:
     return std::make_shared<dirt_replan_t::statistics_t>(_stats,                  // no-lint
                                                          _random_edges_counter,   // no-lint
                                                          _blossom_edges_counter,  // no-lint
-                                                         _current_solution_type);
+                                                         _best_f_value);
   }
 
 protected:
@@ -276,9 +272,9 @@ private:
   std::shared_ptr<time_profiler_t> _resolve_profiler;
   std::shared_ptr<time_profiler_t> _fulfill_profiler;
 
-  dirt_replan_query_t::solution_type_t _current_solution_type;
+  // dirt_replan_query_t::solution_type_t _current_solution_type;
   f_value_function_t _f_function;
-  heuristic_function_t _heuristic, wavefront_h;
+  heuristic_function_t _heuristic;  // wavefront_h;
   expand_t expand;
   valid_trajectory_t contingency_check;
   valid_trajectory_t plan_safety_check;
@@ -296,6 +292,8 @@ private:
 
   void add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_replan_node_t* closest_node,
                         std::vector<dirt_replan_node_t*> dir_updates, double new_node_dir_radius);
+
+  void add_contingency();
 
   dirt_replan_node_t* get_vertex(node_index_t v) const
   {

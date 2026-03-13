@@ -1,12 +1,13 @@
 #include "prx/planning/planners/dirt_replanning.hpp"
 #include <memory>
+#include "dirt_replanning.hpp"
 #include "general/debug_utils.hpp"
 namespace prx
 {
 
 dirt_replan_t::dirt_replan_t(const std::string& new_name)
   : rrt_t(new_name)
-  , _current_solution_type(dirt_replan_query_t::solution_type_t::NONE)
+  // , _current_solution_type(dirt_replan_query_t::solution_type_t::NONE)
   , child_extension(true)
   , max_radius(0)
   , _resolve_profiler(nullptr)
@@ -29,7 +30,7 @@ void dirt_replan_t::_link_and_setup_spec(planner_specification_t* spec)
   expand = dirt_spec->expand;
   _heuristic = dirt_spec->heuristic;
   _f_function = dirt_spec->f_function;
-  wavefront_h = dirt_spec->wavefront_h;
+  // wavefront_h = dirt_spec->wavefront_h;
   contingency_check = dirt_spec->contingency_check;
   plan_safety_check = dirt_spec->plan_safety_check;
 
@@ -75,63 +76,19 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
     start_node->point = state_space->clone_point(rrt_query->start_state);
     start_node->cost_to_come = 0;
     start_node->dir_radius = 0;
-    start_node->checkpoint_time = dirt_replan_query->start_time;
     start_node->cost_to_go = _heuristic(start_node->point, dirt_replan_query->goal_state);
     start_node->blossom_number = dirt_spec->blossom_number;
     start_node->is_safe = false;
     metric->add_node(start_node.get());
     previous_child = start_vertex;
     _best_f_node = start_vertex;
-    _best_f_value = wavefront_h(start_node->point, dirt_replan_query->goal_state);
+    _best_f_value = _heuristic(start_node->point, dirt_replan_query->goal_state);
     // best_cost = PRX_INFINITY;
     child_extension = true;
   }
 
   if (query->solution_plan.duration() > 0)
   {
-    std::pair<plan_t*, trajectory_t*> eg = std::make_pair(nullptr, nullptr);
-    node_index_t current_node_idx = start_vertex;
-    dirt_replan_node_t* current_node = get_vertex(current_node_idx);
-
-    for (unsigned i = 0; i < query->solution_plan.size(); i++)
-    {
-      // Get the first solution plan
-      trajectory_t edge_traj(state_space);
-      plan_t edge_plan(control_space);
-      edge_plan.append_onto_back(query->solution_plan[i].duration);
-      control_space->copy(edge_plan.back().control, query->solution_plan[i].control);
-      propagate(current_node->point, edge_plan, edge_traj);
-
-      // Check if the edge is valid
-      bool valid = valid_check(edge_traj);
-      if (!valid)
-        break;
-
-      // Add the edge to the tree
-      eg = std::make_pair(new plan_t(edge_plan), new trajectory_t(edge_traj));
-      double new_node_dir_radius = distance_function(edge_traj.back(), current_node->point);
-      const double cost_edge{ cost_function(edge_traj, edge_plan) };
-      const double g_value{ current_node->cost_to_come + cost_edge };
-      const double h_value{ _heuristic(edge_traj.back(), dirt_replan_query->goal_state) };
-      const double f_value{ _f_function(g_value, h_value) };
-
-      auto prox_nodes = metric->radius_and_closest_query(edge_traj.back(), std::max(new_node_dir_radius, max_radius));
-      std::vector<dirt_replan_node_t*> dir_updates;
-      std::transform(prox_nodes.begin(), prox_nodes.end(), std::back_inserter(dir_updates),
-                     [](proximity_node_t* prox_node) { return static_cast<dirt_replan_node_t*>(prox_node); });
-      std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_replan_node_t* node) {
-        if (f_value > node->cost_to_come + node->cost_to_go)
-        {
-          new_node_dir_radius = std::min(new_node_dir_radius, distance_function(edge_traj.back(), node->point));
-        }
-      });
-
-      add_edge_to_tree(eg, current_node, dir_updates, new_node_dir_radius);
-      if (tree().get_vertex_as<dirt_replan_node_t>(current_node_idx)->get_children().empty())
-        break;
-      current_node_idx = tree().get_vertex_as<dirt_replan_node_t>(current_node_idx)->get_children().front();
-      current_node = get_vertex(current_node_idx);
-    }
   }
 
   _timer.reset();
@@ -140,8 +97,6 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
   // Removed by BNB, Removed by pruning, Removed by collision check, Final
   _random_edges_counter.reset();   // = { 0, 0, 0, 0 };
   _blossom_edges_counter.reset();  // = { 0, 0, 0, 0 };
-  _current_solution_type = dirt_replan_query_t::solution_type_t::NONE;
-
   return true;
 }
 
@@ -152,8 +107,9 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
   {
     prx::time_profiler_t::reset(_resolve_profiler);
 
-    if (!child_extension)
+    if (not child_extension)
     {
+      // Regular propagation
       // sample state
       sample_state(sample_point);
 
@@ -217,9 +173,9 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
     auto closest_node = get_vertex(previous_child);
 
     bool is_blossom_expand = false;
+    // if no maneuvers, get some
     if (closest_node->indices.size() == 0)
     {
-      // if no maneuvers, get some
       closest_node->edge_generators.clear();
       std::vector<plan_t*> plans;
       std::vector<trajectory_t*> trajs;
@@ -251,8 +207,7 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
     // is_blossom_expand = (closest_node->edge_generators.size() > 1);
     is_blossom_expand = (closest_node->is_blossom_expand_done) && !closest_node->random_expand;
     std::pair<plan_t*, trajectory_t*> eg = std::make_pair(nullptr, nullptr);
-    // double edge_cost;
-    // double end_heuristic;
+
     double new_node_dir_radius;
     std::vector<dirt_replan_node_t*> dir_updates;
 
@@ -271,13 +226,13 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       eg = closest_node->edge_generators[closest_node->indices.back()];
       closest_node->edge_generators[closest_node->indices.back()] = std::make_pair(nullptr, nullptr);
       const double cost_edge{ cost_function(*eg.second, *eg.first) };
-      const double g_value{ closest_node->cost_to_come + cost_edge };
-      const double h_value{ _heuristic(eg.second->back(), dirt_replan_query->goal_state) };
-      const double f_value{ _f_function(g_value, h_value) };
+      const double g_closest{ closest_node->cost_to_come + cost_edge };
+      const double h_closest{ _heuristic(eg.second->back(), dirt_replan_query->goal_state) };
+      const double f_closest{ _f_function(g_closest, h_closest) };
       closest_node->indices.pop_back();
 
       // bnb (based on g): Do not add a new node if g(node) > g(current_sln)
-      if ((goal_vertex != start_vertex && g_value > _stats.current_solution_cost))
+      if ((goal_vertex != start_vertex && g_closest > _stats.current_solution_cost))
       {
         delete eg.first;
         delete eg.second;
@@ -302,17 +257,20 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
       std::transform(prox_nodes.begin(), prox_nodes.end(), std::back_inserter(dir_updates),
                      [](proximity_node_t* prox_node) { return static_cast<dirt_replan_node_t*>(prox_node); });
       std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_replan_node_t* node) {
-        if (f_value > node->cost_to_come + node->cost_to_go)
+        const double f_node{ _f_function(node->cost_to_come, node->cost_to_go) };
+        if (f_value > f_node)
         {
           new_node_dir_radius = std::min(new_node_dir_radius, distance_function(eg.second->back(), node->point));
         }
       });
 
-      if (dirt_spec->use_pruning)  // dirt-pruning
+      // dirt-pruning
+      if (dirt_spec->use_pruning)
       {
         bool delete_node = false;
         std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_replan_node_t* node) {
-          if (!delete_node && f_value > node->cost_to_come + node->cost_to_go)
+          const double f_node{ _f_function(node->cost_to_come, node->cost_to_go) };
+          if (!delete_node && f_value > f_node)
           {
             if (new_node_dir_radius + distance_function(node->point, eg.second->back()) < node->dir_radius)
             {
@@ -381,42 +339,17 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
   print_statistics();
 }
 
+void dirt_replan_t::add_contingency()
+{
+  if (dirt_spec->use_contingency)
+  {
+    PRX_NOT_IMPLEMENTED
+  }
+}
+
 void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_replan_node_t* closest_node,
                                      std::vector<dirt_replan_node_t*> dir_updates, double new_node_dir_radius)
 {
-  double safety_time = simulation_step;
-  if (closest_node->checkpoint_time < dirt_replan_query->start_time + planning_cycle_duration &&
-      closest_node->checkpoint_time + eg.first->duration() >= dirt_replan_query->start_time + planning_cycle_duration)
-  {
-    if (dirt_spec->use_contingency)
-    {
-      stopping_traj = new trajectory_t(state_space);
-      stopping_plan = new plan_t(control_space);
-      unsigned last_safe_state_index = std::round(
-          multiplier * (dirt_replan_query->start_time + planning_cycle_duration - closest_node->checkpoint_time));
-      last_safe_state = state_space->clone_point(eg.second->at(last_safe_state_index));
-      // Compute the stopping maneuver.
-      dirt_spec->stopping_control(last_safe_state, safety_time);
-      stopping_plan->append_onto_back(safety_time);
-      control_space->copy_to_point(stopping_plan->back().control);
-      control_space->enforce_bounds(stopping_plan->back().control);
-      propagate(last_safe_state, *stopping_plan, *stopping_traj);
-      bool valid = false;
-      valid = plan_safety_check(*stopping_traj);
-      delete stopping_traj;
-      delete stopping_plan;
-      if (!valid)
-        return;
-      if (!closest_node->is_safe)
-      {
-        closest_node->is_safe = true;
-      }
-    }
-  }
-  if (!dirt_spec->use_contingency)
-  {
-    closest_node->is_safe = true;
-  }
   auto node_index = tree().add_vertex<dirt_replan_node_t, rrt_edge_t>();
   auto new_tree_node = tree().get_vertex_as<dirt_replan_node_t>(node_index);
   new_tree_node->point = state_space->clone_point(eg.second->back());
@@ -429,23 +362,10 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
 
   new_tree_node->cost_to_come = closest_node->cost_to_come + new_edge->edge_cost;
   new_tree_node->cost_to_go = _heuristic(eg.second->back(), dirt_replan_query->goal_state);
+  const double f_new_node{ _f_function(new_tree_node->cost_to_come, new_tree_node->cost_to_go) };
 
   new_tree_node->blossom_number = dirt_spec->blossom_number;
   new_tree_node->dir_radius = new_node_dir_radius;
-  new_tree_node->checkpoint_time = closest_node->checkpoint_time + eg.first->duration();
-  new_tree_node->is_safe = false;
-  new_tree_node->safety_time = safety_time;
-
-  double wavefront_val = wavefront_h(eg.second->back(), dirt_replan_query->goal_state);
-  // PRX_DBG_VARS(eg.second->back(), dirt_replan_query->goal_state);
-  // PRX_DBG_VARS(closest_node->is_safe, wavefront_val, best_cost);
-  if (closest_node->is_safe && wavefront_val < _best_f_value)
-  {
-    _best_f_value = wavefront_val;
-    _best_f_node = new_tree_node->get_index();
-    // std::cout << "Updated best node to: " << best_cost << " " << state_space->print_point(closest_node->point, 4) <<
-    // " "  << closest_node->is_safe << "\n";
-  }
 
   max_radius = std::max(max_radius, new_node_dir_radius);
   // EXPERIMENTAL: Try commenting this line out. Behavior seems reasonable, but need to consider theoretical effects
@@ -453,7 +373,8 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
 
   std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_replan_node_t* node) {
     const double sibling_distance = distance_function(node->point, new_tree_node->point);
-    if (new_tree_node->cost_to_come + new_tree_node->cost_to_go < node->cost_to_come + node->cost_to_go)
+    const double f_node{ _f_function(node->cost_to_come, node->cost_to_go) };
+    if (f_new_node < f_node)
     {
       node->dir_radius = std::min(node->dir_radius, sibling_distance);
       if (dirt_spec->use_pruning && node->dir_radius + sibling_distance < new_node_dir_radius && !node->is_safe)
@@ -495,25 +416,25 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
 void dirt_replan_t::update_goal(node_index_t node_index)
 {
   auto new_tree_node = tree().get_vertex_as<dirt_replan_node_t>(node_index);
-  // if(distance_function(dirt_replan_query->goal_state,new_tree_node->point)<dirt_replan_query->goal_region_radius)
-  if (dirt_replan_query->goal_check(new_tree_node->point))
-  {
-    // if (goal_vertex == start_vertex ||
-    //     tree().get_vertex_as<dirt_replan_node_t>(goal_vertex)->cost_to_come > new_tree_node->cost_to_come)
-    // {
-    // current_solution = new_tree_node->cost_to_come;
-    // current_solution_time = _timer.measure();
-    // current_solution_iters = iteration_count;
-    _stats.update_solution(new_tree_node->cost_to_come, _timer.measure());
+  const double f_new_node{ _f_function(new_tree_node->cost_to_come, new_tree_node->cost_to_go) };
 
-    // best_node = goal_vertex;
-    std::cout << "[dirt] Found new goal: " << state_space->print_point(new_tree_node->point, 3);
-    std::cout << " cost:" << _stats.current_solution_cost;
-    std::cout << " time:" << _stats.current_solution_time;
-    std::cout << " iter:" << _stats.current_solution_iterations;
-    std::cout << " nodes:" << metric->get_nr_nodes() << "\n";
-    bnb(start_vertex, _stats.current_solution_cost);
-    // }
+  if (_best_f_value > f_new_node)
+  {
+    _best_f_node = node_index;
+    _best_f_value = f_new_node;
+    if (dirt_replan_query->goal_check(new_tree_node->point))
+    {
+      // if (goal_vertex == start_vertex || _stats.current_solution_cost > f_new_node)
+      // {
+      _stats.update_solution(f_new_node, _timer.measure());
+      std::cout << "[dirt] Found new goal: " << state_space->print_point(new_tree_node->point, 3);
+      std::cout << " cost:" << _stats.current_solution_cost;
+      std::cout << " time:" << _stats.current_solution_time;
+      std::cout << " iter:" << _stats.current_solution_iterations;
+      std::cout << " nodes:" << metric->get_nr_nodes() << "\n";
+      bnb(start_vertex, _stats.current_solution_cost);
+      // }
+    }
   }
 }
 
@@ -605,7 +526,7 @@ void dirt_replan_t::_fulfill_query()
   {
     std::cout << "No solution found during planning cycle. # of nodes: " << metric->get_nr_nodes() << "\n";
     rrt_query->solution_cost = 0;
-    _current_solution_type = dirt_replan_query_t::solution_type_t::NONE;
+    // _current_solution_type = dirt_replan_query_t::solution_type_t::NONE;
   }
   // auto node = get_vertex(start_vertex);
   // std::cout << start_vertex << " " << state_space->print_point(node->point, 4) << " " << node->is_safe << " " << " "
@@ -628,7 +549,8 @@ void dirt_replan_t::bnb(node_index_t v, double cost_bound, bool delete_flag)
     return;
 
   auto node = get_vertex(v);
-  bool res = delete_flag || node->cost_to_come + node->cost_to_go > cost_bound;
+  const double f_value{ _f_function(node->cost_to_come, node->cost_to_go) };
+  bool res = delete_flag || f_value > cost_bound;
   if (v == goal_vertex)
     res = false;
   std::list<node_index_t> children = node->get_children();

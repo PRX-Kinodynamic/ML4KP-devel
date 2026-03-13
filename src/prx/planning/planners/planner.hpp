@@ -215,13 +215,13 @@ public:
     virtual void reset()
     {
       solution_found = false;
-      total_planning_time = std::numeric_limits<double>::max();
-      current_solution_cost = std::numeric_limits<double>::max();
-      current_solution_time = std::numeric_limits<double>::max();
-      first_solution_cost = std::numeric_limits<double>::max();
-      first_solution_time = std::numeric_limits<double>::max();
-      current_solution_iterations = std::numeric_limits<std::size_t>::max();
-      first_solution_iterations = std::numeric_limits<std::size_t>::max();
+      total_planning_time = std::numeric_limits<double>::infinity();
+      current_solution_cost = std::numeric_limits<double>::infinity();
+      current_solution_time = std::numeric_limits<double>::infinity();
+      first_solution_cost = std::numeric_limits<double>::infinity();
+      first_solution_time = std::numeric_limits<double>::infinity();
+      current_solution_iterations = 0;
+      first_solution_iterations = 0;
     }
 
     // Planner stats
