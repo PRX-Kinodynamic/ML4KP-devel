@@ -1,9 +1,11 @@
 #pragma once
 
 #include <iterator>
+#include <memory>
 #include "prx/planning/planners/dirt.hpp"
 #include "prx/planning/planners/rrt.hpp"
 #include "prx/utilities/general/time_profiler.hpp"
+#include "spaces/space_snapshot.hpp"
 
 namespace prx
 {
@@ -120,7 +122,8 @@ public:
   //   NONE
   // };
 
-  dirt_replan_query_t(space_t* state_space, space_t* control_space) : rrt_query_t(state_space, control_space)
+  dirt_replan_query_t(space_t* state_space, space_t* control_space)
+    : rrt_query_t(state_space, control_space), retained_plan(control_space)
   {
     start_time = 0.0;
   }
@@ -179,6 +182,9 @@ public:
 
     return os;
   }
+
+  bool retainment;
+  prx::plan_t retained_plan;
 
   double start_time;
   // bool previous_contingency;
@@ -279,6 +285,8 @@ private:
   valid_trajectory_t contingency_check;
   valid_trajectory_t plan_safety_check;
 
+  std::shared_ptr<prx::trajectory_t> _retainment_traj;
+
   double planning_cycle_duration;
   double multiplier;
   node_index_t _best_f_node;
@@ -290,8 +298,8 @@ private:
 
   bool tree_solution(const node_index_t goal_node_idx);
 
-  void add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_replan_node_t* closest_node,
-                        std::vector<dirt_replan_node_t*> dir_updates, double new_node_dir_radius);
+  node_index_t add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_replan_node_t* closest_node,
+                                std::vector<dirt_replan_node_t*> dir_updates, double new_node_dir_radius);
 
   void add_contingency();
 

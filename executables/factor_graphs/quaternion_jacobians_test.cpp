@@ -8,6 +8,7 @@
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/planning/planner_functions/tree_fix_time_discretization.hpp"
+#include "prx/utilities/math/first_order_derivative.hpp"
 
 template <typename Matrix>
 void matrix_to_file(std::ofstream& ofs, const Matrix& mat)
@@ -21,6 +22,21 @@ void matrix_to_file(std::ofstream& ofs, const Matrix& mat)
   }
   ofs << "\n";
 }
+struct naive_quat_diff_t
+{
+  gtsam::Rot3 qfix;
+  Eigen::Vector4d operator()(const Eigen::Vector4d& qv) const
+  {
+    const gtsam::Rot3 x0{ qv[0], qv[1], qv[2], qv[3] };
+    const gtsam::Rot3 between{ gtsam::traits<gtsam::Rot3>::Between(x0, qfix) };
+    return quat_to_vec(between.toQuaternion());
+  }
+
+  static Eigen::Vector4d quat_to_vec(const Eigen::Quaterniond& q)
+  {
+    return Eigen::Vector4d(q.w(), q.x(), q.y(), q.z());
+  }
+};
 
 template <typename Element, typename Matrix>
 Eigen::VectorXd compute_error(const Element& x0, const Element& x1, Matrix& err_H_x0, Matrix& err_H_x1)
@@ -36,8 +52,9 @@ Eigen::VectorXd compute_error(const Element& x0, const Element& x1, Matrix& err_
 
 int main(int argc, char* argv[])
 {
-  gtsam::Rot3 r_fix(1., 0., 0., 0.);
-  Eigen::Vector4d v_fix(1., 0., 0., 0.);
+  using Derivative = prx::math::first_order_derivative_t<naive_quat_diff_t, Eigen::Vector4d, 5, -2>;
+
+  const gtsam::Rot3 r_fix(1., 0., 0., 0.);
 
   Eigen::Matrix3d H_rfix, H_ri;
   Eigen::Matrix4d H_vfix, H_vi;
@@ -51,6 +68,10 @@ int main(int argc, char* argv[])
   std::ofstream ofs_quat(prx::out_path + "/quat.txt");
   double step{ 0.1 };
   gtsam::Rot3 ri(1, 0, 0, 0);
+  naive_quat_diff_t naive;
+  naive.qfix = r_fix;
+  Derivative derivative(0.001);
+
   for (double x = -1. * prx::constants::pi; x < 1. * prx::constants::pi; x += step)
   {
     for (double y = -1. * prx::constants::pi; y < 1. * prx::constants::pi; y += step)
@@ -59,16 +80,15 @@ int main(int argc, char* argv[])
       {
         const Eigen::Vector3d delta{ step * std::sin(x), step * std::sin(y), step * std::sin(z) };
 
-        // for (double i = -1. * prx::constants::pi; i < 1. * prx::constants::pi; i += step)
-        // {
         const Eigen::Quaterniond q{ ri.toQuaternion() };
         const Eigen::Vector4d vi(q.w(), q.x(), q.y(), q.z());
         const Eigen::Vector3d rot_error{ compute_error(r_fix, ri, H_rfix, H_ri) };
-        const Eigen::Vector4d vec_error{ compute_error(v_fix, vi, H_vfix, H_vi) };
+        const Eigen::Vector4d vec_error{ naive(vi) };
+        H_vi = derivative(vi);
 
         matrix_to_file(ofs_hrfix, H_rfix);
         matrix_to_file(ofs_hri, H_ri);
-        matrix_to_file(ofs_hvfix, H_vfix);
+        // matrix_to_file(ofs_hvfix, H_vfix);
         matrix_to_file(ofs_hvi, H_vi);
         ofs_r_error << rot_error.transpose() << "\n";
         ofs_v_error << vec_error.transpose() << "\n";
@@ -77,19 +97,8 @@ int main(int argc, char* argv[])
         // ofs_quat << delta[0] << " " << delta[1] << " " << delta[2] << "\n";
 
         ri = gtsam::traits<gtsam::Rot3>::Compose(ri, gtsam::traits<gtsam::Rot3>::Expmap(delta));
-        // }
-        // ofs_quat << "\n\n";
-        // z_step = delta[2] == 0.1 ? -z_step : z_step;
-        // z_step = delta[2] == -0.1 ? -z_step : z_step;
-        // delta[2] += z_step
       }
-      // y_step = delta[1] == 0.1 ? -y_step : y_step;
-      // y_step = delta[1] == -0.1 ? -y_step : y_step;
-      // y_step = delta[1] == 0.1 ? -y_step : y_step;
-      // delta[1] += y_step;
-      // delta[1] = delta[1] > step ? -step : delta[1];
     }
-    // delta[0] += step;
   }
 
   ofs_hrfix.close();

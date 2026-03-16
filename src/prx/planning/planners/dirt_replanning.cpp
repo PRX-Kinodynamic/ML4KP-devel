@@ -1,7 +1,12 @@
 #include "prx/planning/planners/dirt_replanning.hpp"
+#include <cstddef>
 #include <memory>
+#include "data_structures/abstract_node.hpp"
 #include "dirt_replanning.hpp"
 #include "general/debug_utils.hpp"
+#include "general/random.hpp"
+#include "playback/trajectory.hpp"
+#include "spaces/space_snapshot.hpp"
 namespace prx
 {
 
@@ -85,10 +90,61 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
     _best_f_value = _heuristic(start_node->point, dirt_replan_query->goal_state);
     // best_cost = PRX_INFINITY;
     child_extension = true;
+
+    _retainment_traj = std::make_shared<prx::trajectory_t>(state_space);
   }
 
-  if (query->solution_plan.duration() > 0)
+  if (dirt_replan_query->retainment)
   {
+    space_point_t x0{ dirt_replan_query->start_state };
+    _retainment_traj->clear();
+    rrt_spec->_sg->propagate(x0, dirt_replan_query->retained_plan, *_retainment_traj);
+
+    const std::size_t total_states{ _retainment_traj->size() };
+    auto current_node = tree().get_vertex_as<dirt_replan_node_t>(start_vertex);
+    std::shared_ptr<plan_t> edge_plan{ std::make_shared<plan_t>(control_space) };
+    std::shared_ptr<trajectory_t> edge_traj{ std::make_shared<trajectory_t>(state_space) };
+    double new_node_dir_radius{ 0.0 };
+
+    for (int i = 0; i < total_states;)
+    {
+      const int edge_duration_prop{ prx::uniform_int_random(dirt_spec->min_control_steps,
+                                                            dirt_spec->max_control_steps) };
+      const int edge_duration = i + edge_duration_prop > total_states ? total_states - i : edge_duration_prop;
+
+      edge_plan->clear();
+      edge_traj->clear();
+      for (int step = 0; step < edge_duration; ++step)
+      {
+        int step_i{ i + step };
+        auto ctrl = dirt_replan_query->retained_plan[step_i].control;
+        auto duration = dirt_replan_query->retained_plan[step_i].duration;
+        edge_plan->copy_onto_back(ctrl, duration);
+        edge_traj->push_back(_retainment_traj->at(step_i));
+      }
+      edge_traj->push_back(_retainment_traj->at(i + edge_duration));
+      if (valid_check(*edge_traj))
+      {
+        new_node_dir_radius = distance_function(edge_traj->back(), current_node->point);
+
+        std::pair<plan_t*, trajectory_t*> pair = { edge_plan.get(), edge_traj.get() };
+        node_index_t new_node_idx{ add_edge_to_tree(pair, current_node.get(), {}, new_node_dir_radius) };
+
+        current_node = tree().get_vertex_as<dirt_replan_node_t>(new_node_idx);
+        i += edge_duration;
+      }
+      else
+      {
+        break;  // trajectory is in collision -> stop
+      }
+    }
+    // std::pair<plan_t*, trajectory_t*> pair{ { dirt_replan_query->retained_plan.get(), _retainment_traj.get() } };
+    // auto current_node
+
+    // for (auto state : *_retainment_traj)
+    // {
+
+    // }
   }
 
   _timer.reset();
@@ -258,7 +314,7 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
                      [](proximity_node_t* prox_node) { return static_cast<dirt_replan_node_t*>(prox_node); });
       std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_replan_node_t* node) {
         const double f_node{ _f_function(node->cost_to_come, node->cost_to_go) };
-        if (f_value > f_node)
+        if (f_closest > f_node)
         {
           new_node_dir_radius = std::min(new_node_dir_radius, distance_function(eg.second->back(), node->point));
         }
@@ -270,7 +326,7 @@ void dirt_replan_t::_resolve_query(condition_check_t* condition)
         bool delete_node = false;
         std::for_each(dir_updates.begin(), dir_updates.end(), [&, this](dirt_replan_node_t* node) {
           const double f_node{ _f_function(node->cost_to_come, node->cost_to_go) };
-          if (!delete_node && f_value > f_node)
+          if (!delete_node && f_closest > f_node)
           {
             if (new_node_dir_radius + distance_function(node->point, eg.second->back()) < node->dir_radius)
             {
@@ -347,8 +403,8 @@ void dirt_replan_t::add_contingency()
   }
 }
 
-void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_replan_node_t* closest_node,
-                                     std::vector<dirt_replan_node_t*> dir_updates, double new_node_dir_radius)
+node_index_t dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_replan_node_t* closest_node,
+                                             std::vector<dirt_replan_node_t*> dir_updates, double new_node_dir_radius)
 {
   auto node_index = tree().add_vertex<dirt_replan_node_t, rrt_edge_t>();
   auto new_tree_node = tree().get_vertex_as<dirt_replan_node_t>(node_index);
@@ -411,6 +467,7 @@ void dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_
   metric->add_node(new_tree_node.get());
   new_tree_node->bridge = false;
   update_goal(node_index);
+  return node_index;
 }
 
 void dirt_replan_t::update_goal(node_index_t node_index)

@@ -19,7 +19,7 @@ public:
 
 protected:
   SpacePoint _state;
-}
+};
 
 template <typename StateSpace, typename Node, typename NearestNeighbors>
 class planner_memory_t
@@ -27,7 +27,6 @@ class planner_memory_t
 public:
   using StateSpacePtr = std::shared_ptr<StateSpace>;
   using NearestNeighborsPtr = std::shared_ptr<NearestNeighbors>;
-  using NodePtr = std::shared_ptr<Node>;
 
   planner_memory_t() {};
 
@@ -41,17 +40,9 @@ public:
     return _nearest_neighbors;
   }
 
-  NodePtr next_node_to_expand()
-  {
-    NodePtr next_node{ _nodes_to_expand.front() };
-    _nodes_to_expand.pop();
-    return next_node;
-  }
-
 protected:
   StateSpacePtr _state_space;
   NearestNeighborsPtr _nearest_neighbors;
-  std::queue<NodePtr> _nodes_to_expand;
 };
 
 // Example of PlannerFunctions: The functions need to exist to use replanner_t but
@@ -88,7 +79,7 @@ protected:
 };
 
 template <typename PlannerFunctions, typename PlannerMemory>
-class replanner_t
+class motion_planner_t
 {
 public:
   using PlannerFunctionsPtr = std::shared_ptr<PlannerFunctions>;
@@ -105,13 +96,13 @@ public:
     POSTPROCESS
   };
 
-  replanner_t(const std::string planner_name) : _planner_name(planner_name), _current_stage(stage_t::IDLE)
+  motion_planner_t(const std::string planner_name) : _planner_name(planner_name), _current_stage(stage_t::IDLE)
   {
     _planner_memory = std::make_shared<PlannerMemory>();
     _planner_functions = std::make_shared<PlannerFunctionsPtr>();
   }
 
-  virtual ~replanner_t() {};
+  virtual ~motion_planner_t() {};
 
   template <typename PlannerSpec>
   void set_specification(const std::shared_ptr<PlannerSpec> spec)
@@ -127,7 +118,7 @@ public:
   {
     check_stage(stage_t::SET_SPECIFICATION);
 
-    _current_stage = planner_stage_t::PREPROCESS;
+    _current_stage = stage_t::PREPROCESS;
   }
 
   template <typename PlannerQuery>
@@ -135,13 +126,13 @@ public:
   {
     check_stage(stage_t::PREPROCESS);
     _planner_functions->set_query(query);
-    _current_stage = planner_stage_t::SET_QUERY;
+    _current_stage = stage_t::SET_QUERY;
   }
 
   void plan()
   {
     check_stage(stage_t::SET_QUERY);
-    _current_stage = planner_stage_t::PLAN;
+    _current_stage = stage_t::PLAN;
 
     while (_planner_functions->condition_check(_planner_memory))
     {
@@ -166,7 +157,7 @@ public:
     check_stage(stage_t::PLAN);
 
     _planner_functions->answer_query(_planner_memory);
-    _current_stage = planner_stage_t::POSTPROCESS;
+    _current_stage = stage_t::POSTPROCESS;
   }
 
   void postprocess()
@@ -174,19 +165,19 @@ public:
     check_stage(stage_t::POSTPROCESS);
 
     _planner_functions->postprocess(_planner_memory);
-    _current_stage = planner_stage_t::IDLE;
+    _current_stage = stage_t::IDLE;
   }
 
   void reset()
   {
     _planner_functions->reset(_planner_memory);
-    _current_stage = planner_stage_t::IDLE;
+    _current_stage = stage_t::IDLE;
   }
 
 protected:
   // template <std::size_t I, typename... Tp, std::enable_if_t<(I == sizeof...(Tp) - 1), bool> = true>
-  template <typename... Stages, std::enable_if_t<(0 == sizeof...(others)), bool> = true>
-  void check_stage(const stage_t& expected, const Stages...& others)
+  template <typename... Stages, std::enable_if_t<(0 == sizeof...(Stages)), bool> = true>
+  void check_stage(const stage_t& expected, const Stages&... others)
   {
     if (_current_stage == expected)
       return;
@@ -194,12 +185,12 @@ protected:
     reset();
   }
 
-  template <typename... Stages, std::enable_if_t<(1 >= sizeof...(others)), bool> = true>
-  void check_stage(const stage_t& expected, const Stages...& others)
+  template <typename... Stages, std::enable_if_t<(1 >= sizeof...(Stages)), bool> = true>
+  void check_stage(const stage_t& expected, const Stages&... others)
   {
     if (_current_stage == expected)
       return;
-    check_stage(others);
+    check_stage(others...);
   }
 
   PlannerMemoryPtr _planner_memory;
