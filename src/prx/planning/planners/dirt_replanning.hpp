@@ -2,10 +2,10 @@
 
 #include <iterator>
 #include <memory>
-#include "prx/planning/planners/dirt.hpp"
+// #include "prx/planning/planners/dirt.hpp"
 #include "prx/planning/planners/rrt.hpp"
 #include "prx/utilities/general/time_profiler.hpp"
-#include "spaces/space_snapshot.hpp"
+#include "prx/utilities/spaces/space_snapshot.hpp"
 
 namespace prx
 {
