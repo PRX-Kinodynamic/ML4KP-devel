@@ -1,12 +1,11 @@
 #include "prx/planning/planners/dirt_replanning.hpp"
 #include <cstddef>
 #include <memory>
-#include "data_structures/abstract_node.hpp"
-#include "dirt_replanning.hpp"
-#include "general/debug_utils.hpp"
-#include "general/random.hpp"
-#include "playback/trajectory.hpp"
-#include "spaces/space_snapshot.hpp"
+#include "prx/utilities/data_structures/abstract_node.hpp"
+// #include "prx/utilities/general/debug_utils.hpp"
+#include "prx/utilities/general/random.hpp"
+#include "prx/simulation/playback/trajectory.hpp"
+#include "prx/utilities/spaces/space_snapshot.hpp"
 namespace prx
 {
 

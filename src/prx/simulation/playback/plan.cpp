@@ -122,7 +122,7 @@ void plan_t::clear()
   num_steps = 0;
 }
 
-void plan_t::copy_to(const double start_time, const double duration, plan_t& t)
+void plan_t::copy_to(const double start_time, const double duration, plan_t& t) const
 {
   prx_assert(control_space->get_space_name() == t.control_space->get_space_name(),
              "Copying a plan that doesn't have a matching control space.");
@@ -156,7 +156,6 @@ void plan_t::copy_to(const double start_time, const double duration, plan_t& t)
     d -= step->duration;
     step++;
   }
-  // std::cout<<duration<<" Copy to: "<<t.duration()<<std::endl;
 }
 
 void plan_t::append_onto_front(double time)

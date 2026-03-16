@@ -213,7 +213,7 @@ public:
    */
   void clear();
 
-  void copy_to(const double start_time, const double duration, plan_t& t);
+  void copy_to(const double start_time, const double duration, plan_t& t) const;
 
   template <typename Control>
   void copy_onto_back(const Control& control, const double duration)
