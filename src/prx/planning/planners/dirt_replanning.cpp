@@ -92,58 +92,59 @@ bool dirt_replan_t::_link_and_setup_query(planner_query_t* query)
 
     _retainment_traj = std::make_shared<prx::trajectory_t>(state_space);
   }
+  // _best_f_node = start_vertex;
+  // _best_f_value = _heuristic(start_node->point, dirt_replan_query->goal_state);
 
   if (dirt_replan_query->retainment)
   {
-    space_point_t x0{ dirt_replan_query->start_state };
-    _retainment_traj->clear();
-    rrt_spec->_sg->propagate(x0, dirt_replan_query->retained_plan, *_retainment_traj);
-
-    const std::size_t total_states{ _retainment_traj->size() };
-    auto current_node = tree().get_vertex_as<dirt_replan_node_t>(start_vertex);
-    std::shared_ptr<plan_t> edge_plan{ std::make_shared<plan_t>(control_space) };
-    std::shared_ptr<trajectory_t> edge_traj{ std::make_shared<trajectory_t>(state_space) };
-    double new_node_dir_radius{ 0.0 };
-
-    for (int i = 0; i < total_states;)
+    const double retainment_duration{ dirt_replan_query->retained_plan.duration() };
+    if (retainment_duration > prx::simulation_step)
     {
-      const int edge_duration_prop{ prx::uniform_int_random(dirt_spec->min_control_steps,
-                                                            dirt_spec->max_control_steps) };
-      const int edge_duration = i + edge_duration_prop > total_states ? total_states - i : edge_duration_prop;
+      PRX_MSG("[DIRT-Replanning] Using retainment!")
+      space_point_t x0{ dirt_replan_query->start_state };
+      // _retainment_traj->clear();
+      // rrt_spec->_sg->propagate(x0, dirt_replan_query->retained_plan, *_retainment_traj);
 
-      edge_plan->clear();
-      edge_traj->clear();
-      for (int step = 0; step < edge_duration; ++step)
-      {
-        int step_i{ i + step };
-        auto ctrl = dirt_replan_query->retained_plan[step_i].control;
-        auto duration = dirt_replan_query->retained_plan[step_i].duration;
-        edge_plan->copy_onto_back(ctrl, duration);
-        edge_traj->push_back(_retainment_traj->at(step_i));
-      }
-      edge_traj->push_back(_retainment_traj->at(i + edge_duration));
-      if (valid_check(*edge_traj))
-      {
-        new_node_dir_radius = distance_function(edge_traj->back(), current_node->point);
+      // const std::size_t total_states{ _retainment_traj->size() };
+      auto current_node = tree().get_vertex_as<dirt_replan_node_t>(start_vertex);
+      std::shared_ptr<plan_t> edge_plan{ std::make_shared<plan_t>(control_space) };
+      std::shared_ptr<trajectory_t> edge_traj{ std::make_shared<trajectory_t>(state_space) };
+      double new_node_dir_radius{ 0.0 };
 
-        std::pair<plan_t*, trajectory_t*> pair = { edge_plan.get(), edge_traj.get() };
-        node_index_t new_node_idx{ add_edge_to_tree(pair, current_node.get(), {}, new_node_dir_radius) };
-
-        current_node = tree().get_vertex_as<dirt_replan_node_t>(new_node_idx);
-        i += edge_duration;
-      }
-      else
+      // dirt_replan_query->retained_plan.expand();
+      // PRX_DBG_VARS(total_states, retainment_duration, dirt_replan_query->retained_plan.size())
+      for (auto& step : dirt_replan_query->retained_plan)
       {
-        break;  // trajectory is in collision -> stop
+        edge_plan->clear();
+        edge_traj->clear();
+
+        edge_plan->copy_onto_back(step.control, step.duration);
+
+        rrt_spec->_sg->propagate(x0, *edge_plan, *edge_traj);
+
+        if (valid_check(*edge_traj))
+        {
+          new_node_dir_radius = distance_function(edge_traj->back(), current_node->point);
+
+          std::pair<plan_t*, trajectory_t*> pair = { edge_plan.get(), edge_traj.get() };
+          node_index_t new_node_idx{ add_edge_to_tree(pair, current_node.get(), {}, new_node_dir_radius) };
+
+          current_node = tree().get_vertex_as<dirt_replan_node_t>(new_node_idx);
+
+          update_goal(new_node_idx);
+          x0 = edge_traj->back();
+          // PRX_DBG_VARS(_best_f_node, _best_f_value);
+        }
+        else
+        {
+          PRX_MSG("[DIRT-Replanning] Retainment collided!")
+
+          break;  // trajectory is in collision -> stop
+        }
       }
+
+      PRX_MSG("[DIRT-Replanning] Retainment done!")
     }
-    // std::pair<plan_t*, trajectory_t*> pair{ { dirt_replan_query->retained_plan.get(), _retainment_traj.get() } };
-    // auto current_node
-
-    // for (auto state : *_retainment_traj)
-    // {
-
-    // }
   }
 
   _timer.reset();
@@ -472,12 +473,16 @@ node_index_t dirt_replan_t::add_edge_to_tree(std::pair<plan_t*, trajectory_t*> e
 void dirt_replan_t::update_goal(node_index_t node_index)
 {
   auto new_tree_node = tree().get_vertex_as<dirt_replan_node_t>(node_index);
-  const double f_new_node{ _f_function(new_tree_node->cost_to_come, new_tree_node->cost_to_go) };
+  const double g_value{ new_tree_node->cost_to_come };
+  const double h_value{ new_tree_node->cost_to_go };
+  const double f_new_node{ _f_function(g_value, h_value) };
 
   if (_best_f_value > f_new_node)
   {
     _best_f_node = node_index;
     _best_f_value = f_new_node;
+    // PRX_DBG_VARS(new_tree_node->point);
+    // PRX_DBG_VARS(g_value, h_value, f_new_node, _best_f_node, _best_f_value);
     if (dirt_replan_query->goal_check(new_tree_node->point))
     {
       // if (goal_vertex == start_vertex || _stats.current_solution_cost > f_new_node)

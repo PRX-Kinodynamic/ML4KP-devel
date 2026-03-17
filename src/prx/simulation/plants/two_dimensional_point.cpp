@@ -26,7 +26,7 @@ two_dimensional_point_t::two_dimensional_point_t(const std::string& path) : plan
   derivative_space = new space_t("EE", derivative_memory, "XdotYdot");
 
   const std::string shape = "cylinder";
-  const double tdpt_size = 0.5;
+  const double tdpt_size = 0.125;
   if (shape == "sphere")
   {
     geometries["body"] = std::make_shared<geometry_t>(geometry_type_t::SPHERE);

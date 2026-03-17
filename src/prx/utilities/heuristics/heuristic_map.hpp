@@ -55,13 +55,14 @@ public:
   void set_heuristic_grid(space_point_t goal)
   {
     heuristic_grid.resize(rows, std::vector<double>(cols, -1));
+    const double max_value{ std::numeric_limits<double>::infinity() };
     for (int i = 0; i < rows; i++)
     {
       for (int j = 0; j < cols; j++)
       {
         _context.first->get_state_space()->at(0) = _x_min + j * _x_step;
         _context.first->get_state_space()->at(1) = _y_min + i * _y_step;
-        heuristic_grid[i][j] = _context.second->in_collision() ? 0 : get_euclidean_distance(goal);
+        heuristic_grid[i][j] = _context.second->in_collision() ? max_value : get_euclidean_distance(goal);
       }
     }
     _heuristic_map_initialized = true;
@@ -100,11 +101,18 @@ public:
       }
     }
   }
-  
-  double get_cost(space_point_t point) const
+
+  template <typename T, std::enable_if_t<prx::utilities::is_any_ptr<T>::value, bool> = true>  // no-lint
+  inline double get_cost(T point) const
   {
-    int row = (point->at(1) - _y_min) / _y_step;
-    int col = (point->at(0) - _x_min) / _x_step;
+    return get_cost(*point);
+  }
+
+  template <typename T, std::enable_if_t<not prx::utilities::is_any_ptr<T>::value, bool> = true>  // no-lint
+  inline double get_cost(T point) const
+  {
+    int row = (point[1] - _y_min) / _y_step;
+    int col = (point[0] - _x_min) / _x_step;
     return get_cost(row, col);
   }
 
@@ -132,6 +140,32 @@ public:
     }
     return _u_att_coeff * heuristic_grid[row][col] + _u_rep_coeff * (1.0 / brushfire_grid[row][col]);
     // return heuristic_grid[row][col] - brushfire_grid[row][col];
+  }
+
+  void to_csv(std::ostream& ofs)
+  {
+    if (!_obstacle_map_initialized || !_heuristic_map_initialized)
+    {
+      ofs << "Obstacle map not initialized!" << std::endl;
+      // return os;
+    }
+    // rows = (int)((_y_max - _y_min) / _y_step);
+    // cols = (int)((_x_max - _x_min) / _x_step);
+    Eigen::Vector2d pt;
+    // PRX_DBG_VARS(_x_min, _x_max, _y_min, _y_max, _x_step, _y_step)
+    for (double x = _x_min; x < _x_max; x += _x_step)
+    {
+      for (double y = _y_min; y < _y_max; y += _y_step)
+      {
+        pt = { x, y };
+        const double h{ get_cost(pt) };
+        ofs << x << " ";
+        ofs << y << " ";
+        ofs << h << " ";
+        ofs << "\n";
+      }
+    }
+    PRX_MSG("CSV done")
   }
 
   friend std::ostream& operator<<(std::ostream& os, const heuristic_map_t& map)
