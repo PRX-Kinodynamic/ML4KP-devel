@@ -8,19 +8,23 @@ A library for integrating machine learning tools with state-of-the-art sampling-
 * Yaml-Cpp
 * Boost
 * Boost-python
-### _(Optional)_ Bullet Physics
+* GTSAM
 
-1. Add the ML4KP directory to `$DIRTMP_PATH`.
+### GTSAM
 
-2. Clone Bullet:
-git clone https://github.com/aravindsiv/bullet3.git
+1. Download gtsam
 
-3. Build Bullet:
+2. Build gtsam
 ```
-cmake .. && make -j4 && make install
+cd PATH_TO_GTSAM
+mkdir build
+cd build
+cmake -DBUILD_SHARED_LIBS=ON -DGTSAM_USE_SYSTEM_EIGEN=ON ..
+make -j4
+# Optional: make check -j4
+make install
+export GTSAM_DIR=PATH_TO_GTSAM/install/lib/cmake/GTSAM/ # <- add to your bashrc
 ```
-
-4. Add the Bullet directory to `$BULLET_PHYSICS_PATH`.
 
 
 ### _(Optional)_ LibTorch
