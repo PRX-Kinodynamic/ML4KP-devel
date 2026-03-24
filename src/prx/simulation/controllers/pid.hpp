@@ -82,7 +82,7 @@ public:
   }
 
   // Computes the control u = -K * X;
-  inline Vector operator()(const Vector& x) const
+  inline Vector operator()(const Vector& x)
   {
     return this->operator()(x, _ref);
   }
