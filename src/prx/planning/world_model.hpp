@@ -20,6 +20,7 @@ public:
   using SystemGroupPtr = std::shared_ptr<system_group_t>;
   using CollisionGroupPtr = std::shared_ptr<collision_group_t>;
   using WorldGroupsTuple = std::tuple<WorldModelPtr, SystemGroupPtr, CollisionGroupPtr>;
+  using EnvironmentBounds = std::pair<Eigen::Vector3d, Eigen::Vector3d>;
   //
   // std::shared_ptr<prx::system_group_t> _system_group;
   // std::shared_ptr<prx::collision_group_t> _collision_group;
@@ -29,7 +30,9 @@ public:
     prx::obstacle_loader_t obstacle_loader{ prx::obstacle_loader_t(params) };
     auto obstacle_list = obstacle_loader.get_obstacles();
     auto obstacle_names = obstacle_loader.get_names();
+    auto environment_bounds = obstacle_loader.bounds();
 
+    plant->environment_bounds(environment_bounds);
     const std::vector<prx::system_ptr_t> all_systems{ { plant } };
     const std::vector<std::shared_ptr<prx::movable_object_t>> all_obstacles{ { obstacle_list } };
     WorldModelPtr world_ptr{ std::make_shared<prx::world_model_t>(all_systems, all_obstacles) };
@@ -52,8 +55,6 @@ public:
 
     return { world_ptr, prx::system_group(planning_context), prx::collision_group(planning_context) };
   }
-
-  // template<typename SGM = system_group_manager_t, typename CC = collision_checker_t>
   explicit world_model_t(const std::vector<system_ptr_t>& all_systems,
                          const std::vector<std::shared_ptr<movable_object_t>>& all_obstacles)
     : simulator_t(plant_type::ANALYTICAL)
@@ -67,7 +68,6 @@ public:
       obstacles[o->get_object_name()] = o;
     }
   }
-
   template <typename Obstacle, typename... Args>
   void emplace_obstacle(const std::string context_name, Args... args)
   {
