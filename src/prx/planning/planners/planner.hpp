@@ -222,6 +222,7 @@ public:
       first_solution_time = std::numeric_limits<double>::infinity();
       current_solution_iterations = 0;
       first_solution_iterations = 0;
+      total_iterations = 0;
     }
 
     // Planner stats

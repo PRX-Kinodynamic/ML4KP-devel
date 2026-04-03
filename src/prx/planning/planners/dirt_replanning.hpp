@@ -97,6 +97,7 @@ public:
     SET_VARIABLE(params, use_contingency)
     SET_VARIABLE(params, profile)
     SET_VARIABLE(params, output_path)
+    SET_VARIABLE(params, contingency_radius)
   }
 
   // int blossom_number;
@@ -110,17 +111,19 @@ public:
 
   bool profile;
   std::string output_path;
+
+  double contingency_radius;
 };
 
 class dirt_replan_query_t : public rrt_query_t
 {
 public:
-  // enum solution_type_t
-  // {
-  //   TREE_TRAJECTORY = 0,
-  //   WAVEFRONT,
-  //   NONE
-  // };
+  enum solution_type_t
+  {
+    TREE_TRAJECTORY = 0,
+    MIN_F_VALUE,
+    NONE
+  };
 
   dirt_replan_query_t(space_t* state_space, space_t* control_space)
     : rrt_query_t(state_space, control_space), retained_plan(control_space)
@@ -144,41 +147,43 @@ public:
   {
     rrt_query_t::init(params);
 
-    // if (params.exists("solution_type"))
-    // {
-    //   const std::string sln_type{ params["solution_type"].as<>() };
-    //   if (sln_type == "TREE_TRAJECTORY")
-    //   {
-    //     _sln_type = solution_type_t::TREE_TRAJECTORY;
-    //   }
-    //   else if (sln_type == "WAVEFRONT")
-    //   {
-    //     _sln_type = solution_type_t::WAVEFRONT;
-    //   }
-    //   else
-    //   {
-    //     prx_throw("[dirt_replan_query_t::init] invalid solution_type: {TREE_TRAJECTORY, WAVEFRONT}")
-    //   }
-    // }
+    sln_type = solution_type_t::MIN_F_VALUE;  // default value
+    if (params.exists("solution_type"))
+    {
+      const std::string sln_type_str{ params["solution_type"].as<>() };
+      if (sln_type_str == "TREE_TRAJECTORY")
+      {
+        sln_type = solution_type_t::TREE_TRAJECTORY;
+      }
+      else if (sln_type_str == "MIN_F_VALUE")
+      {
+        sln_type = solution_type_t::MIN_F_VALUE;
+      }
+      else
+      {
+        prx_throw("[dirt_replan_query_t::init] invalid solution_type: {TREE_TRAJECTORY, WAVEFRONT}")
+      }
+    }
   }
 
   friend std::ostream& operator<<(std::ostream& os, const dirt_replan_query_t& obj)
   {
     std::string sln_str{ "??" };
-    // if (obj._sln_type == solution_type_t::WAVEFRONT)
-    // {
-    //   sln_str = "WAVEFRONT";
-    // }
-    // else if (obj._sln_type == solution_type_t::TREE_TRAJECTORY)
-    // {
-    //   sln_str = "TREE_TRAJECTORY";
-    // }
+    if (obj.sln_type == solution_type_t::MIN_F_VALUE)
+    {
+      sln_str = "WAVEFRONT";
+    }
+    else if (obj.sln_type == solution_type_t::TREE_TRAJECTORY)
+    {
+      sln_str = "TREE_TRAJECTORY";
+    }
 
     os << static_cast<rrt_query_t>(obj);
     // os << "start_time: " << obj.start_time << "\n";
     // os << "previous_contingency: " << obj.previous_contingency << "\n";
 
-    // os << "solution_type: " << sln_str << "\n";
+    os << "retainment: " << (obj.retainment ? "true" : "false") << "\n";
+    os << "solution_type: " << sln_str << "\n";
 
     return os;
   }
@@ -189,7 +194,7 @@ public:
   double start_time;
   // bool previous_contingency;
 
-  // solution_type_t _sln_type;
+  solution_type_t sln_type;
 };
 
 class dirt_replan_t : public rrt_t
@@ -278,7 +283,7 @@ private:
   std::shared_ptr<time_profiler_t> _resolve_profiler;
   std::shared_ptr<time_profiler_t> _fulfill_profiler;
 
-  // dirt_replan_query_t::solution_type_t _current_solution_type;
+  dirt_replan_query_t::solution_type_t _current_solution_type;
   f_value_function_t _f_function;
   heuristic_function_t _heuristic;  // wavefront_h;
   expand_t expand;
@@ -298,10 +303,14 @@ private:
 
   bool tree_solution(const node_index_t goal_node_idx);
 
+  node_index_t add_contingency(std::pair<plan_t*, trajectory_t*> eg, dirt_replan_node_t* closest_node,
+                               std::vector<dirt_replan_node_t*> dir_updates, double new_node_dir_radius);
+
+  node_index_t update_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_replan_node_t* closest_node,
+                           std::vector<dirt_replan_node_t*> dir_updates, double new_node_dir_radius);
+
   node_index_t add_edge_to_tree(std::pair<plan_t*, trajectory_t*> eg, dirt_replan_node_t* closest_node,
                                 std::vector<dirt_replan_node_t*> dir_updates, double new_node_dir_radius);
-
-  void add_contingency();
 
   dirt_replan_node_t* get_vertex(node_index_t v) const
   {
