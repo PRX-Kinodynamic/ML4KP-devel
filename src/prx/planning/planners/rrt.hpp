@@ -231,7 +231,7 @@ public:
   {
     prx::param_loader params{ planner_query_t::init() };
     params["goal/radius"].set(double{});
-    params["total_solutions"].set(double{});
+    params["total_solutions"].set(int{});
     return params;
   }
 

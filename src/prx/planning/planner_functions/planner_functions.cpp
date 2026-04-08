@@ -71,19 +71,6 @@ bool default_valid_trajectory(trajectory_t& traj, valid_state_t valid_state)
   return true;
 }
 
-// bool default_valid_trajectory(trajectory_t& traj, space_t* ss,std::shared_ptr<collision_group_t> cg )
-// {
-
-//   	for(auto&& s : traj)
-//     {
-//       	if (!default_valid_state(s,ss,cg))
-// 		{
-// 	  		return false;
-// 		}
-//     }
-//   	return true;
-// }
-
 // bool default_valid_stop(space_point_t start_state, plan_t* stopping_plan, trajectory_t* stopping_traj,
 //                         std::shared_ptr<system_group_t> sg, std::shared_ptr<collision_group_t> cg)
 // {
@@ -123,7 +110,7 @@ bool default_valid_trajectory(trajectory_t& traj, valid_state_t valid_state)
 
 bool default_valid_state(space_point_t& s, space_t* ss, std::shared_ptr<collision_group_t> cg)
 {
-  ss->copy_from_point(s);
+  ss->copy_from(s);
   // For TRIPODS ackermann_lc
   if (cg->in_collision())
   // if(cg->in_collision() || !ss->satisfies_bounds(s))
@@ -136,7 +123,7 @@ bool default_valid_state(space_point_t& s, space_t* ss, std::shared_ptr<collisio
 collision_group_t::pqp_distance_t default_obstacle_distance_function(const space_point_t& s, space_t* ss,
                                                                      std::shared_ptr<collision_group_t> cg)
 {
-  ss->copy_from_point(s);
+  ss->copy_from(s);
   return cg->get_distances();
 }
 
