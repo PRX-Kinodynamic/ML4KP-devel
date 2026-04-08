@@ -1,5 +1,8 @@
 environment:
     type: obstacle
+    bounds:
+      min: [ -5, -5, -1]
+      max: [ 25, 25,  1]
     root_configuration:
       position: [0,0,0]
       orientation: [0,0,0,1]

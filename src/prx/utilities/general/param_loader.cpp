@@ -16,6 +16,22 @@ param_loader::param_loader()
 {
   set_input_path(input_path);
 }
+param_loader::param_loader(iterator first, iterator last)
+{
+  while (first != last)
+  {
+    params.push_back(*first);
+    first++;
+  }
+}
+param_loader::param_loader(const_iterator first, const_iterator last)
+{
+  while (first != last)
+  {
+    params.push_back(*first);
+    first++;
+  }
+}
 
 param_loader::param_loader(const std::string filename) : param_loader(filename, "") {};
 

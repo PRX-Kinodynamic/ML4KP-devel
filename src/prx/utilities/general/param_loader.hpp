@@ -29,6 +29,9 @@ public:
   param_loader(std::string file_name, int argc, char* argv[]);
   param_loader(std::string file_name, std::vector<std::string> argv);
   param_loader(const param_loader& other);
+  param_loader(YAML::Node input_params, std::string _p_key = "");
+  param_loader(iterator first, iterator last);
+  param_loader(const_iterator first, const_iterator last);
 
   void add_file(std::string file_name);
 
@@ -180,8 +183,6 @@ public:
   {
     Type::init().save(filename);
   }
-
-  param_loader(YAML::Node input_params, std::string _p_key = "");
 
 protected:
   YAML::Node expand_file(YAML::Node& node);

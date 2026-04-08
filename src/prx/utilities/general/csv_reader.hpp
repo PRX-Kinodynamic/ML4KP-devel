@@ -154,6 +154,32 @@ public:
     return block;
   }
 
+  template <typename T = std::string>
+  std::optional<Line<T>> next_valid_line(const char comment_char = '#')
+  {
+    if (not has_next_line())
+      return {};
+
+    const auto line = next_line<T>();
+    if (line.size() == 0)
+      return next_valid_line<T>(comment_char);
+    if (line[0][0] == comment_char)  // #steering velocity_desired duration
+      return next_valid_line<T>(comment_char);
+    return line;
+  }
+
+  template <typename T = std::string>
+  bool next_valid_line(Line<T>& line, const char comment_char = '#')
+  {
+    auto l = next_valid_line<T>(comment_char);
+    if (l)
+    {
+      line = *l;
+      return true;
+    }
+    return false;
+  }
+
   template <typename T>
   Line<T> read_column(const std::size_t idx)
   {

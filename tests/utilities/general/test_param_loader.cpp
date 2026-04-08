@@ -144,3 +144,30 @@ BOOST_AUTO_TEST_CASE(param_loader_replace_env_vars)
   // BOOST_CHECK(pl0["test2"].as<std::string>() == t2);
   // BOOST_CHECK(pl0["test3"].as<double>() == t3);
 }
+
+BOOST_AUTO_TEST_CASE(param_loader_list_array)
+{
+  std::string yaml =
+      "bounds:\n"
+      "  - \n"
+      "    min: [0.0, 0.0]\n"
+      "    max: [1.0, 1.0]\n"
+      "  - \n"
+      "    min: [1.0, 1.0]\n"
+      "    max: [2.0, 2.0]\n"
+      "  - \n"
+      "    min: [2.0, 2.0]\n"
+      "    max: [3.0, 3.0]\n";
+
+  prx::param_loader pl0;
+  pl0.from_string(yaml);
+
+  prx::param_loader pl1(pl0["bounds"].begin(), pl0["bounds"].end());
+  // auto iter = pl0["bounds"].begin();
+  // // auto second = *(pl0["bounds"].begin()++);
+  PRX_DBG_VARS(pl1)
+  // iter++;
+  // PRX_DBG_VARS(*iter)
+  // pl0.print();
+  // BOOST_CHECK(pl0["test0"].as<std::string>() != t0);
+}
