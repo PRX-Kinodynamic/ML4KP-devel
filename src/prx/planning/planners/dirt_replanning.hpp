@@ -68,7 +68,7 @@ public:
     heuristic = [this](const space_point_t& s, const space_point_t& s2) {
       return default_heuristic_function(s, s2, distance_function);
     };
-    wavefront_h = heuristic;
+    // wavefront_h = heuristic;
     contingency_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
     plan_safety_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
   }
@@ -105,7 +105,7 @@ public:
 
   bool use_pruning, use_contingency;
   f_value_function_t f_function;
-  heuristic_function_t heuristic, wavefront_h;
+  heuristic_function_t heuristic;  //, wavefront_h;
   valid_trajectory_t contingency_check;
   valid_trajectory_t plan_safety_check;
 
