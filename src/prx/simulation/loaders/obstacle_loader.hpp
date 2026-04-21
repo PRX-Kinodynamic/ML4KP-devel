@@ -27,7 +27,10 @@ public:
   static EnvironmentBounds bounds_from_yaml(const std::string);
   static EnvironmentBounds bounds_from_yaml(const param_loader&);
 
-  obstacle_loader_t(const std::string obstacles_file)
+  obstacle_loader_t() : _bounds({ 100 * Eigen::Vector3d::Ones(), 100 * Eigen::Vector3d::Ones() })
+  {
+  }
+  obstacle_loader_t(const std::string obstacles_file) : obstacle_loader_t()
   {
     auto loaded_obst = obstacle_loader_t::load_obstacles_from_file(obstacles_file);
     names = loaded_obst.first;
@@ -35,7 +38,7 @@ public:
     _bounds = obstacle_loader_t::bounds_from_yaml(obstacles_file);
   }
 
-  obstacle_loader_t(const param_loader& obstacles_params)
+  obstacle_loader_t(const param_loader& obstacles_params) : obstacle_loader_t()
   {
     auto loaded_obst = obstacle_loader_t::load_obstacles_from_file(obstacles_params);
     names = loaded_obst.first;

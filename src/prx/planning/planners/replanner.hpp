@@ -4,10 +4,14 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include "loaders/obstacle_loader.hpp"
+#include "prx/utilities/general/param_loader.hpp"
+#include "prx/planning/planners/planner_statistics.hpp"
 
 namespace prx
 {
-
+namespace planners
+{
 template <typename SpacePoint>
 class node_t
 {
@@ -21,18 +25,69 @@ protected:
   SpacePoint _state;
 };
 
-template <typename StateSpace, typename Node, typename NearestNeighbors>
+template <typename Derived>
+struct planner_specification_t
+{
+  // using System = typename Derived::DynamicalSystem;
+};
+
+template <typename Derived>
 class planner_memory_t
 {
 public:
+  using System = typename planner_specification_t<Derived>::System;
+  using SystemPtr = std::shared_ptr<System>;
+  using State = typename System::State;
+  using StateSpace = typename System::StateSpace;
   using StateSpacePtr = std::shared_ptr<StateSpace>;
+  using NearestNeighbors = typename planner_specification_t<Derived>::NearestNeighbors;
   using NearestNeighborsPtr = std::shared_ptr<NearestNeighbors>;
+  using CollisionChecker = typename planner_specification_t<Derived>::CollisionChecker;
+  using CollisionCheckerPtr = std::shared_ptr<CollisionChecker>;
+  using GoalChecker = typename planner_specification_t<Derived>::GoalChecker;
 
-  planner_memory_t() {};
+  using Node = typename planner_specification_t<Derived>::Node;
+  using NodePtr = std::shared_ptr<Node>;
+  using Tree = typename planner_specification_t<Derived>::Tree;
+  using TreePtr = std::shared_ptr<Tree>;
+  using TreeStatistics = prx::planner_statistics::tree_statistics_t;
+  using TreeStatisticsPtr = std::shared_ptr<TreeStatistics>;
+
+  planner_memory_t()
+    : _system(std::make_shared<System>(System::default_params()))
+    , _obstacles()
+    , _nearest_neighbors(std::make_shared<NearestNeighbors>())
+    , _collision_checker(system, _obstacles)
+    , _tree(std::make_shared<Tree>())
+    , _goal_checker()
+    , _goal_node(nullptr)
+    , _root_node(nullptr)
+  {
+  }
+
+  planner_memory_t(prx::param_loader params, prx::param_loader environment)
+    : _system(std::make_shared<System>(params["System"]))
+    , _obstacles(environment)
+    , _nearest_neighbors(std::make_shared<NearestNeighbors>(params["NearestNeighbors"]))
+    , _collision_checker(std::make_shared<CollisionChecker>(_system, _obstacles))
+    , _tree(std::make_shared<Tree>())
+    , _goal_checker(params["GoalChecker"])
+    , _goal_node(nullptr)
+    , _root_node(nullptr)
+  {
+    _system->environment(_obstacles);
+  }
+
+  virtual void initialize(prx::param_loader) = 0;
+
+  SystemPtr system()
+  {
+    return _system;
+  }
 
   StateSpacePtr state_space()
   {
-    return _state_space;
+    return _system->state_space();
   }
 
   NearestNeighborsPtr nearest_neighbors()
@@ -40,98 +95,163 @@ public:
     return _nearest_neighbors;
   }
 
+  TreeStatisticsPtr statistics()
+  {
+    return _stats;
+  }
+
+  CollisionCheckerPtr collision_checker()
+  {
+    return _collision_checker;
+  }
+
+  TreePtr tree()
+  {
+    return _tree;
+  }
+
+  bool goal_check(const State& state)
+  {
+    return _goal_checker(state);
+  }
+
+  void goal_node(const NodePtr node)
+  {
+    _goal_node = node;
+  }
+
+  NodePtr goal_node()
+  {
+    return _goal_node;
+  }
+
+  void root_node(const NodePtr node)
+  {
+    _root_node = node;
+  }
+
+  NodePtr root_node()
+  {
+    return _root_node;
+  }
+
 protected:
-  StateSpacePtr _state_space;
+  // StateSpacePtr _state_space;
+  SystemPtr _system;
+  prx::obstacle_loader_t _obstacles;
+  TreeStatisticsPtr _stats;
+  NodePtr _goal_node;
+  NodePtr _root_node;
+
+  TreePtr _tree;
   NearestNeighborsPtr _nearest_neighbors;
+  CollisionCheckerPtr _collision_checker;
+  GoalChecker _goal_checker;
 };
 
 // Example of PlannerFunctions: The functions need to exist to use replanner_t but
 // it is not required to derive from this specific class.
-template <typename PlannerSpec, typename PlannerQuery, typename PlannerMemory>
+template <typename PlannerMemory>
 class planner_functions_t
 {
 public:
-  using PlannerSpecPtr = std::shared_ptr<PlannerSpec>;
-  using PlannerQueryPtr = std::shared_ptr<PlannerQuery>;
+  // using PlannerSpecPtr = std::shared_ptr<PlannerSpec>;
+  // using PlannerQueryPtr = std::shared_ptr<PlannerQuery>;
   using PlannerMemoryPtr = std::shared_ptr<PlannerMemory>;
-  virtual void set_specification(const PlannerSpecPtr spec)
+
+  planner_functions_t() {};
+
+  planner_functions_t(prx::param_loader params)
   {
-    _planner_spec = std::make_shared<PlannerSpec>(*spec);
   }
-  virtual void set_query(PlannerQueryPtr query)
-  {
-    _planner_query = query;
-  }
-  virtual void condition_check(PlannerMemoryPtr) = 0;
+
+  // SETUP
+  virtual void initialize(prx::param_loader, PlannerMemoryPtr) = 0;
+  virtual void preprocess(PlannerMemoryPtr) = 0;
+
+  // PLANNING
+  virtual bool condition_check(PlannerMemoryPtr) = 0;
   virtual void node_selection(PlannerMemoryPtr) = 0;
   virtual void expand(PlannerMemoryPtr) = 0;
   virtual void node_validation(PlannerMemoryPtr) = 0;
   virtual void update_graph(PlannerMemoryPtr) = 0;
   virtual void update_solution(PlannerMemoryPtr) = 0;
   virtual void update_stats(PlannerMemoryPtr) = 0;
-  virtual void answer_query(PlannerMemoryPtr) = 0;
+
+  // AFTER PLANNING
   virtual void postprocess(PlannerMemoryPtr) = 0;
   virtual void reset(PlannerMemoryPtr) = 0;
 
 protected:
-  PlannerSpecPtr _planner_spec;
-  PlannerQueryPtr _planner_query;
+  // PlannerSpecPtr _planner_spec;
+  // PlannerQueryPtr _planner_query;
 };
 
-template <typename PlannerFunctions, typename PlannerMemory>
+template <typename PlannerMemory, typename PlannerFunctions>
 class motion_planner_t
 {
 public:
-  using PlannerFunctionsPtr = std::shared_ptr<PlannerFunctions>;
   using PlannerMemoryPtr = std::shared_ptr<PlannerMemory>;
+  using PlannerFunctionsPtr = std::shared_ptr<PlannerFunctions>;
 
   enum stage_t
   {
     IDLE = 0,
-    SET_SPECIFICATION,
+    INITIALIZE,
     PREPROCESS,
     SET_QUERY,
     PLAN,  // Resolve query
-    ANSWER_QUERY,
+    // ANSWER_QUERY,
     POSTPROCESS
   };
 
-  motion_planner_t(const std::string planner_name) : _planner_name(planner_name), _current_stage(stage_t::IDLE)
+  motion_planner_t(const std::string planner_name)
+    : _planner_name(planner_name)
+    , _current_stage(stage_t::IDLE)
+    , _planner_memory(std::make_shared<PlannerMemory>())
+    , _planner_functions(std::make_shared<PlannerFunctions>())
   {
-    _planner_memory = std::make_shared<PlannerMemory>();
-    _planner_functions = std::make_shared<PlannerFunctionsPtr>();
+  }
+
+  motion_planner_t(prx::param_loader params, prx::param_loader environment)
+    : _current_stage(stage_t::IDLE)
+    , _planner_name(params.get_or_default("name", std::string("MotionPlanner")))
+    , _planner_memory(std::make_shared<PlannerMemory>(params["memory"], environment))
+    , _planner_functions(std::make_shared<PlannerFunctions>(params["functions"]))
+  {
+    // _planner_memory = std::make_shared<PlannerMemory>(params["memory"]);
   }
 
   virtual ~motion_planner_t() {};
 
-  template <typename PlannerSpec>
-  void set_specification(const std::shared_ptr<PlannerSpec> spec)
+  void initialize(prx::param_loader params)
   {
     check_stage(stage_t::IDLE, stage_t::POSTPROCESS);
 
     // _planner_query
-    _planner_functions->set_specification(spec, _planner_memory);
-    _current_stage = stage_t::SET_SPECIFICATION;
+    _planner_functions->initialize(params, _planner_memory);
+    _current_stage = stage_t::INITIALIZE;
   }
 
   void preprocess()
   {
-    check_stage(stage_t::SET_SPECIFICATION);
+    check_stage(stage_t::INITIALIZE);
+    _planner_functions->preprocess(_planner_memory);
 
     _current_stage = stage_t::PREPROCESS;
   }
 
-  template <typename PlannerQuery>
-  void set_query(std::shared_ptr<PlannerQuery> query)
-  {
-    check_stage(stage_t::PREPROCESS);
-    _planner_functions->set_query(query);
-    _current_stage = stage_t::SET_QUERY;
-  }
+  // template <typename PlannerQuery>
+  // void set_query(std::shared_ptr<PlannerQuery> query)
+  // {
+  //   check_stage(stage_t::PREPROCESS);
+  //   _planner_functions->set_query(query);
+  //   _current_stage = stage_t::SET_QUERY;
+  // }
 
   void plan()
   {
-    check_stage(stage_t::SET_QUERY);
+    check_stage(stage_t::PREPROCESS);
     _current_stage = stage_t::PLAN;
 
     while (_planner_functions->condition_check(_planner_memory))
@@ -152,17 +272,17 @@ public:
     // std::static_pointer_cast<Planner>(this)->plan_impl();
   }
 
-  void answer_query()
-  {
-    check_stage(stage_t::PLAN);
+  // void answer_query()
+  // {
+  //   check_stage(stage_t::PLAN);
 
-    _planner_functions->answer_query(_planner_memory);
-    _current_stage = stage_t::POSTPROCESS;
-  }
+  //   _planner_functions->answer_query(_planner_memory);
+  //   _current_stage = stage_t::POSTPROCESS;
+  // }
 
   void postprocess()
   {
-    check_stage(stage_t::POSTPROCESS);
+    check_stage(stage_t::PLAN);
 
     _planner_functions->postprocess(_planner_memory);
     _current_stage = stage_t::IDLE;
@@ -199,5 +319,6 @@ protected:
   std::string _planner_name;
   stage_t _current_stage;
 };
+}  // namespace planners
 }  // namespace prx
 // #include <prx/planning/planners/replanner-inl.hpp>

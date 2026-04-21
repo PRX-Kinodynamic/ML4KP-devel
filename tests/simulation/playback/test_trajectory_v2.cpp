@@ -1,0 +1,192 @@
+#include "general/debug_utils.hpp"
+#define BOOST_AUTO_TEST_MAIN constants_test
+#include <string>
+#include <boost/test/unit_test.hpp>
+#include "prx/simulation/playback/trajectory_v2.hpp"
+
+namespace mock
+{
+struct space_t
+{
+  using State = Eigen::Vector<double, 2>;
+
+  State interpolator(State x, State y)
+  {
+    return (x + y) / 2.0;
+  }
+};
+}  // namespace mock
+
+BOOST_AUTO_TEST_CASE(trajectory_construction_test)
+{
+  prx::experimental::trajectory_t<mock::space_t, double> traj;
+  traj.push_back(mock::space_t::State(0, 0), 0.0);
+  traj.push_back(mock::space_t::State(1, 0), 0.5);
+
+  BOOST_REQUIRE(traj.size() == 2);
+}
+BOOST_AUTO_TEST_CASE(test_trajectory_at)
+{
+  // prx::experimental::trajectory_t<mock::space_t, double> traj;
+  // traj.push_back(mock::space_t::State(0, 0), 0.0);
+  // traj.push_back(mock::space_t::State(1, 0), 1.0);
+  // traj.push_back(mock::space_t::State(2, 0), 2.0);
+  // traj.push_back(mock::space_t::State(3, 0), 3.0);
+
+  // mock::space_t::State x0{ traj.at(0.0) };
+  // mock::space_t::State x1{ traj.at(1.0) };
+  // mock::space_t::State x12{ traj.at(1.5) };
+  // BOOST_REQUIRE(x0.norm() < 0.001);
+  // BOOST_REQUIRE(std::fabs(x1.norm() - 1.0) < 0.0001);
+  // BOOST_REQUIRE(std::fabs(x12.norm() - 1.5) < 0.0001);
+}
+BOOST_AUTO_TEST_CASE(test_trajectory_merge)
+{
+  prx::experimental::trajectory_t<mock::space_t, double> traj0;
+  prx::experimental::trajectory_t<mock::space_t, double> traj1;
+
+  traj0.push_back(mock::space_t::State(0, 0), 0.0);
+  traj0.push_back(mock::space_t::State(1, 0), 0.5);
+
+  traj1.push_back(mock::space_t::State(1, 0), 0.0);
+  traj1.push_back(mock::space_t::State(2, 0), 0.25);
+  traj1.push_back(mock::space_t::State(3, 0), 0.5);
+
+  prx::merge(traj0, traj1);
+  PRX_DBG_VARS(traj0);
+}
+
+// BOOST_AUTO_TEST_CASE(trajectory_resize_test)
+// {
+//   mock::trajectory_space_test_t test;
+//   prx::space_t& space(test.space);
+//   prx::trajectory_t traj(&space);
+
+//   BOOST_REQUIRE(traj.size() == 0);
+
+//   traj.resize(5);
+
+//   BOOST_REQUIRE(traj.size() == 5);
+// }
+
+// BOOST_AUTO_TEST_CASE(trajectory_duration_test)
+// {
+//   mock::trajectory_space_test_t test;
+//   prx::space_t& space(test.space);
+//   prx::trajectory_t traj(&space);
+
+//   for (int i = 0; i < 51; ++i)
+//   {
+//     traj.push_back(Eigen::Vector2d(0, i));
+//   }
+//   const double expected_duration{ 5 };
+//   BOOST_REQUIRE_MESSAGE(traj.duration() == expected_duration, EXPECTED_GOT(expected_duration, traj.duration()));
+// }
+
+// BOOST_AUTO_TEST_CASE(trajectory_at_unormalized_test)
+// {
+//   mock::trajectory_space_test_t test;
+//   prx::space_t& space(test.space);
+//   prx::trajectory_t traj(&space);
+
+//   const double expected_duration{ 2 };
+//   double ti = 0;
+//   for (; ti <= expected_duration; ti += prx::simulation_step)
+//   {
+//     traj.push_back(Eigen::Vector2d(ti, ti));
+//   }
+//   traj.push_back(Eigen::Vector2d(ti, ti));
+
+//   prx::space_point_t expected_0p0{ space.make_point() };
+//   prx::space_point_t expected_0p5{ space.make_point() };
+//   prx::space_point_t expected_1p0{ space.make_point() };
+//   prx::space_point_t expected_1p5{ space.make_point() };
+//   prx::space_point_t expected_2p0{ space.make_point() };
+
+//   space.copy(expected_0p0, Eigen::Vector2d::Zero());
+//   space.copy(expected_0p5, Eigen::Vector2d(0.5, 0.5));
+//   space.copy(expected_1p0, Eigen::Vector2d(1.0, 1.0));
+//   space.copy(expected_1p5, Eigen::Vector2d(1.5, 1.5));
+//   space.copy(expected_2p0, Eigen::Vector2d(2.0, 2.0));
+
+//   const prx::space_point_t result_0p0{ traj.at(0.0, false) };
+//   const prx::space_point_t result_0p5{ traj.at(0.5, false) };
+//   const prx::space_point_t result_1p0{ traj.at(1.0, false) };
+//   const prx::space_point_t result_1p5{ traj.at(1.5, false) };
+//   const prx::space_point_t result_2p0{ traj.at(2.0, false) };
+
+//   BOOST_REQUIRE_MESSAGE(space.equal_points(expected_0p0, result_0p0), EXPECTED_GOT(expected_0p0, result_0p0));
+//   BOOST_REQUIRE_MESSAGE(space.equal_points(expected_0p5, result_0p5), EXPECTED_GOT(expected_0p5, result_0p5));
+//   BOOST_REQUIRE_MESSAGE(space.equal_points(expected_1p0, result_1p0), EXPECTED_GOT(expected_1p0, result_1p0));
+//   BOOST_REQUIRE_MESSAGE(space.equal_points(expected_1p5, result_1p5), EXPECTED_GOT(expected_1p5, result_1p5));
+//   BOOST_REQUIRE_MESSAGE(space.equal_points(expected_2p0, result_2p0), EXPECTED_GOT(expected_2p0, result_2p0));
+// }
+
+// BOOST_AUTO_TEST_CASE(trajectory_index_at_time)
+// {
+//   mock::trajectory_space_test_t test;
+//   prx::space_t& space(test.space);
+//   prx::trajectory_t traj(&space);
+
+//   traj.push_back(Eigen::Vector2d(0.0, 0.0));  // 0.0
+//   traj.push_back(Eigen::Vector2d(1.0, 1.0));  // 0.1
+//   traj.push_back(Eigen::Vector2d(2.0, 2.0));  // 0.2
+
+//   // prx::simulation_step is 0.1;
+//   const double query_t0{ 0.0 };                               // 0.0
+//   const double query_t1{ prx::simulation_step / 3.0 };        // t=0.3 between (0,0) and (1,1)
+//   const double query_t2{ prx::simulation_step / 2.0 };        // t=0.5 between (0,0) and (1,1)
+//   const double query_t3{ 3.0 * prx::simulation_step / 4.0 };  // t=0.75 between (0,0) and (1,1)
+//   const double query_t4{ prx::simulation_step };              // t=0.25 between (1,1) and (2,2)
+//   const double query_t5{ 5.0 * prx::simulation_step / 4.0 };  // t=0.25 between (1,1) and (2,2)
+
+//   const std::size_t res_idx0{ traj.index_at_time(query_t0) };
+//   const std::size_t res_idx1{ traj.index_at_time(query_t1) };
+//   const std::size_t res_idx2{ traj.index_at_time(query_t2) };
+//   const std::size_t res_idx3{ traj.index_at_time(query_t3) };
+//   const std::size_t res_idx4{ traj.index_at_time(query_t4) };
+//   const std::size_t res_idx5{ traj.index_at_time(query_t5) };
+
+//   const std::size_t expected_0123{ 0 };
+//   const std::size_t expected_45{ 1 };
+
+//   BOOST_REQUIRE_MESSAGE(expected_0123 == res_idx0, EXPECTED_GOT(expected_0123, res_idx0));
+//   BOOST_REQUIRE_MESSAGE(expected_0123 == res_idx1, EXPECTED_GOT(expected_0123, res_idx1));
+//   BOOST_REQUIRE_MESSAGE(expected_0123 == res_idx2, EXPECTED_GOT(expected_0123, res_idx2));
+//   BOOST_REQUIRE_MESSAGE(expected_0123 == res_idx3, EXPECTED_GOT(expected_0123, res_idx3));
+//   BOOST_REQUIRE_MESSAGE(expected_45 == res_idx4, EXPECTED_GOT(expected_45, res_idx4));
+//   BOOST_REQUIRE_MESSAGE(expected_45 == res_idx5, EXPECTED_GOT(expected_45, res_idx5));
+// }
+
+// BOOST_AUTO_TEST_CASE(trajectory_split)
+// {
+//   mock::trajectory_space_test_t test;
+//   prx::space_t& space(test.space);
+//   prx::trajectory_t traj(&space);
+
+//   traj.push_back(Eigen::Vector2d(0.0, 0.0));  // 0.0
+//   traj.push_back(Eigen::Vector2d(1.0, 1.0));  // 0.1
+//   traj.push_back(Eigen::Vector2d(2.0, 2.0));  // 0.2
+//   traj.push_back(Eigen::Vector2d(3.0, 3.0));  // 0.3
+//   traj.push_back(Eigen::Vector2d(4.0, 4.0));  // 0.4
+
+//   // prx::simulation_step is 0.1;
+//   const double query{ 0.2 };  // 0.0
+
+//   const prx::trajectory_t res_traj{ traj.split(query) };
+
+//   const std::size_t expected_old_traj_size{ 3 };
+//   const std::size_t expected_new_traj_size{ 2 };
+
+//   BOOST_REQUIRE_MESSAGE(expected_old_traj_size == traj.size(), EXPECTED_GOT(expected_old_traj_size, traj.size()));
+//   BOOST_REQUIRE_MESSAGE(expected_new_traj_size == res_traj.size(),
+//                         EXPECTED_GOT(expected_new_traj_size, res_traj.size()));
+
+//   const double epsilon{ 0.00001 };
+
+//   BOOST_REQUIRE_CLOSE(0.0, traj[0]->at(0), epsilon);
+//   BOOST_REQUIRE_CLOSE(1.0, traj[1]->at(0), epsilon);
+//   BOOST_REQUIRE_CLOSE(2.0, traj[2]->at(0), epsilon);
+//   BOOST_REQUIRE_CLOSE(3.0, res_traj[0]->at(0), epsilon);
+//   BOOST_REQUIRE_CLOSE(4.0, res_traj[1]->at(0), epsilon);
+// }

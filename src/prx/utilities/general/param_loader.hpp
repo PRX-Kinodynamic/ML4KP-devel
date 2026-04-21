@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <memory>
 #include <regex>
 #include <string>
 #include <unordered_map>
@@ -10,9 +11,14 @@
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/general/prx_assert.hpp"
 #include "prx/utilities/general/constants.hpp"
+#include "prx/utilities/general/gtsam_bridge.hpp"
 
 namespace prx
 {
+
+// TODO: treat this class as a wrapper for the internal YAML::NODE
+// aka: when a param_loader is returned (param[key]), it encapsulates the node so a change to the new
+// param_loader (which is really a change to the node), changes the original param_loader.
 class param_loader
 {
 public:
@@ -29,7 +35,7 @@ public:
   param_loader(std::string file_name, int argc, char* argv[]);
   param_loader(std::string file_name, std::vector<std::string> argv);
   param_loader(const param_loader& other);
-  param_loader(YAML::Node input_params, std::string _p_key = "");
+  param_loader(YAML::Node params, std::string _p_key = "");
   param_loader(iterator first, iterator last);
   param_loader(const_iterator first, const_iterator last);
 
@@ -56,7 +62,7 @@ public:
     }
   }
 
-  const param_loader operator[](const std::string& key) const;
+  param_loader operator[](const std::string& key) const;
 
   param_loader operator[](const std::string& key);
 
@@ -65,7 +71,7 @@ public:
   template <typename T>
   void set(T val)
   {
-    params = val;
+    *_params = val;
   }
 
   void print() const;
@@ -73,9 +79,9 @@ public:
   inline bool exists(const std::string& key) const
   {
     std::string::size_type subkey_pos{ key.find("/", 0) };
-    if (subkey_pos == std::string::npos and params[key])
+    if (subkey_pos == std::string::npos and (*_params)[key])
       return true;
-    if (params[key.substr(0, subkey_pos)])
+    if ((*_params)[key.substr(0, subkey_pos)])
     {
       return exists(key.substr(0, subkey_pos));
     }
@@ -85,12 +91,29 @@ public:
 
   void replace_env_var(YAML::Node& node);
 
+  void replace_env_var(std::shared_ptr<YAML::Node> node)
+  {
+    replace_env_var(*node);
+  }
+
   void replace_environment_variables()
   {
     // for (auto p : params)
     // {
-    replace_env_var(params);
+    replace_env_var(_params);
     // }
+  }
+
+  template <typename Type>
+  Type get_or_default(const std::string key, Type default_value)
+  {
+    if (exists(key))
+    {
+      return this->operator[](key).as<Type>();
+    }
+    this->operator[](key).set(default_value);
+
+    return default_value;
   }
 
   template <typename T = std::string>
@@ -99,11 +122,11 @@ public:
     T val;
     try
     {
-      val = params.as<T>();
+      val = _params->as<T>();
     }
     catch (...)
     {
-      if (!params.IsDefined())
+      if (!_params->IsDefined())
       {
         // params.EnsureNodeExists();
         prx_throw("Param loader - problem using " << p_key);
@@ -117,46 +140,46 @@ public:
   template <typename T>
   param_loader& operator=(const T& rhs)
   {
-    this->params = rhs;
+    *(this->_params) = rhs;
     return *this;
   }
 
   inline iterator begin()
   {
-    return params.begin();
+    return _params->begin();
   }
 
   inline iterator end()
   {
-    return params.end();
+    return _params->end();
   }
 
   inline const_iterator begin() const
   {
-    return params.begin();
+    return _params->begin();
   }
 
   inline const_iterator end() const
   {
-    return params.end();
+    return _params->end();
   }
 
   friend std::ostream& operator<<(std::ostream& os, const param_loader& obj)
   {
-    os << obj.params;
+    os << *(obj._params);
     return os;
   }
 
   void save(const std::string filename) const
   {
     std::ofstream ofs(filename.c_str());
-    ofs << params;
+    ofs << *_params;
     ofs.close();
   }
 
   void merge(const param_loader& other)
   {
-    merge(other.params);
+    merge(*(other._params));
     replace_environment_variables();
   }
 
@@ -191,8 +214,7 @@ protected:
 
   void print(const YAML::Node& pl, std::string prepath = "") const;
 
-  YAML::Node params;
-
+  std::shared_ptr<YAML::Node> _params;
   // Needed to check if the key has been defined. YAML implementation
   // assumes that you check before calling as<>()...
   // Which produces verbose code and is not really intuitive.
@@ -200,7 +222,7 @@ protected:
 
   void merge(const YAML::Node& other);
 
-  // std::unordered_map<std::string, param_loader> params;
+  // std::unordered_map<std::string, param_loader> _*params;
   std::string pl_input_path;
 };
 

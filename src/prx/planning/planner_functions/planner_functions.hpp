@@ -33,30 +33,30 @@ typedef std::function<std::set<std::pair<std::shared_ptr<plan_t>, std::shared_pt
 // RRT*
 typedef std::function<void(trajectory_t&, const space_point_t, const space_point_t, const double)> steer_function_t;
 typedef std::function<void(space_point_t&, double&)> stopping_control_t;
-class planner_functions_t
-{
-public:
-  sample_state_t sample_state;
-  sample_plan_t sample_plan;
-  valid_state_t valid_state;
-  valid_trajectory_t valid_check;
-  valid_stop_t valid_stop_check;
-  propagate_t propagate;
-  expand_t expand;
-  cost_function_t cost_function;
-  heuristic_function_t h;
-  distance_function_t distance_function;
-  horizon_function_t horizon_function;
-  eta_function_t eta_function;
-  obstacle_distance_function_t obstacle_distance_function;
+// class planner_functions_t
+// {
+// public:
+//   sample_state_t sample_state;
+//   sample_plan_t sample_plan;
+//   valid_state_t valid_state;
+//   valid_trajectory_t valid_check;
+//   valid_stop_t valid_stop_check;
+//   propagate_t propagate;
+//   expand_t expand;
+//   cost_function_t cost_function;
+//   heuristic_function_t h;
+//   distance_function_t distance_function;
+//   horizon_function_t horizon_function;
+//   eta_function_t eta_function;
+//   obstacle_distance_function_t obstacle_distance_function;
 
-  planner_functions_t(std::string context_name, world_model_context context, param_loader pl);
+//   planner_functions_t(std::string context_name, world_model_context context, param_loader pl);
 
-protected:
-  planner_functions_t()
-  {
-  }
-};
+// protected:
+//   planner_functions_t()
+//   {
+//   }
+// };
 
 void default_sample_state(space_point_t&, space_t*);
 

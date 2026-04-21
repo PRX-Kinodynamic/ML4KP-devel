@@ -149,9 +149,6 @@ public:
 
   virtual std::shared_ptr<prx::tree_t> tree_of_solutions() override
   {
-    // const double radius{ aorrt_query->goal_region_radius };
-    // _cost_state_space->copy(_cost_aux_pt, { Y_min_cost });
-    // Y_state_space->point_union(aorrt_query->goal_state, _cost_aux_pt, Y_aux_pt);
     const std::size_t total_solutions = aorrt_query->total_solutions;
 
     std::vector<prx::proximity_node_t*> goal_nodes{};

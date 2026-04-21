@@ -3,43 +3,45 @@
 namespace prx
 {
 
-planner_functions_t::planner_functions_t(std::string context_name, world_model_context context, param_loader pl)
-{
-  // auto context = wm->get_context(context_name);
-  auto sg = context.first;
-  auto cg = context.second;
-  auto state_space = sg->get_state_space();
-  auto control_space = sg->get_control_space();
+// planner_functions_t::planner_functions_t(std::string context_name, world_model_context context, param_loader pl)
+// {
+//   // auto context = wm->get_context(context_name);
+//   auto sg = context.first;
+//   auto cg = context.second;
+//   auto state_space = sg->get_state_space();
+//   auto control_space = sg->get_control_space();
 
-  int min_steps = pl["control_min"].as<int>();
-  int max_steps = pl["control_max"].as<int>();
+//   int min_steps = pl["control_min"].as<int>();
+//   int max_steps = pl["control_max"].as<int>();
 
-  cost_function = [](const trajectory_t& t, const plan_t& plan) { return default_cost_function(t, plan); };
-  distance_function = [](const space_point_t& s1, const space_point_t& s2) {
-    return sqrt((s1->at(0) - s2->at(0)) * (s1->at(0) - s2->at(0)) + (s1->at(1) - s2->at(1)) * (s1->at(1) - s2->at(1)));
-  };
-  sample_state = [state_space](space_point_t& s) { default_sample_state(s, state_space); };
-  sample_plan = [control_space, min_steps,
-                 max_steps](plan_t& p, space_point_t current)  // TODO: incorporate ctrl here instead of space_point_t!!
-  { default_sample_plan(p, control_space, min_steps, max_steps); };
-  valid_state = [state_space, cg](space_point_t& s) { return default_valid_state(s, state_space, cg); };
-  valid_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
-  // valid_stop_check = [sg, cg](space_point_t start_state, plan_t* stopping_plan, trajectory_t* stopping_traj) {
-  //   return default_valid_stop(start_state, stopping_plan, stopping_traj, sg, cg);
-  // };
-  propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj) {
-    default_propagate(start_state, plan, out_traj, sg);
-  };
+//   cost_function = [](const trajectory_t& t, const plan_t& plan) { return default_cost_function(t, plan); };
+//   distance_function = [](const space_point_t& s1, const space_point_t& s2) {
+//     return sqrt((s1->at(0) - s2->at(0)) * (s1->at(0) - s2->at(0)) + (s1->at(1) - s2->at(1)) * (s1->at(1) -
+//     s2->at(1)));
+//   };
+//   sample_state = [state_space](space_point_t& s) { default_sample_state(s, state_space); };
+//   sample_plan = [control_space, min_steps,
+//                  max_steps](plan_t& p, space_point_t current)  // TODO: incorporate ctrl here instead of
+//                  space_point_t!!
+//   { default_sample_plan(p, control_space, min_steps, max_steps); };
+//   valid_state = [state_space, cg](space_point_t& s) { return default_valid_state(s, state_space, cg); };
+//   valid_check = [&](trajectory_t& traj) { return default_valid_trajectory(traj, valid_state); };
+//   // valid_stop_check = [sg, cg](space_point_t start_state, plan_t* stopping_plan, trajectory_t* stopping_traj) {
+//   //   return default_valid_stop(start_state, stopping_plan, stopping_traj, sg, cg);
+//   // };
+//   propagate = [sg](space_point_t& start_state, plan_t& plan, trajectory_t& out_traj) {
+//     default_propagate(start_state, plan, out_traj, sg);
+//   };
 
-  h = [this](const space_point_t& s, const space_point_t& s2) {
-    return default_heuristic_function(s, s2, distance_function);
-  };
-  expand = [sg, this](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn,
-                      bool blossom_expand) { default_expand(s, plans, trajs, bn, sg, sample_plan, propagate); };
-  obstacle_distance_function = [state_space, cg, this](const space_point_t& s) {
-    return default_obstacle_distance_function(s, state_space, cg);
-  };
-}
+//   h = [this](const space_point_t& s, const space_point_t& s2) {
+//     return default_heuristic_function(s, s2, distance_function);
+//   };
+//   expand = [sg, this](space_point_t& s, std::vector<plan_t*>& plans, std::vector<trajectory_t*>& trajs, int bn,
+//                       bool blossom_expand) { default_expand(s, plans, trajs, bn, sg, sample_plan, propagate); };
+//   obstacle_distance_function = [state_space, cg, this](const space_point_t& s) {
+//     return default_obstacle_distance_function(s, state_space, cg);
+//   };
+// }
 
 void default_sample_state(space_point_t& s, space_t* ss)
 {

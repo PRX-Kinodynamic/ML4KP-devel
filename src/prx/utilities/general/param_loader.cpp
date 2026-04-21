@@ -1,4 +1,5 @@
 #include "prx/utilities/general/param_loader.hpp"
+#include <memory>
 #include <ostream>
 #include "general/debug_utils.hpp"
 #include "prx/utilities/general/string_manip.hpp"
@@ -12,23 +13,23 @@ param_loader::param_loader(const std::string filename, const std::string path)
   add_file(filename);
 }
 
-param_loader::param_loader()
+param_loader::param_loader() : _params(std::make_shared<YAML::Node>())
 {
   set_input_path(input_path);
 }
-param_loader::param_loader(iterator first, iterator last)
+param_loader::param_loader(iterator first, iterator last) : param_loader()
 {
   while (first != last)
   {
-    params.push_back(*first);
+    _params->push_back(*first);
     first++;
   }
 }
-param_loader::param_loader(const_iterator first, const_iterator last)
+param_loader::param_loader(const_iterator first, const_iterator last) : param_loader()
 {
   while (first != last)
   {
-    params.push_back(*first);
+    _params->push_back(*first);
     first++;
   }
 }
@@ -53,18 +54,25 @@ param_loader::param_loader(std::string filename, std::vector<std::string> argv) 
 param_loader::param_loader(const param_loader& pl)
 {
   set_input_path(input_path);
-  params = std::move(pl.params);
+  _params = pl._params;
 }
 
 param_loader::param_loader(YAML::Node input_params, std::string _p_key)
 {
   p_key = _p_key;
-  params = std::move(input_params);
+  if (_params)
+  {
+    *_params = input_params;
+  }
+  else
+  {
+    _params = std::make_shared<YAML::Node>(input_params);
+  }
 }
 
 void param_loader::add(const param_loader& pl)
 {
-  params.push_back(std::move(pl.params));
+  _params->push_back(*(pl._params));
 }
 
 void param_loader::from_string(const std::string str)
@@ -80,7 +88,7 @@ void param_loader::from_string(const std::string str)
   {
     prx_throw("[param_loader::from_string] Couldn't load string: " << str);
   }
-  params = std::move(expand_file(nn));
+  _params = std::make_shared<YAML::Node>(expand_file(nn));
 }
 
 void param_loader::add_file(std::string file_name)
@@ -94,12 +102,12 @@ void param_loader::add_file(std::string file_name)
   }
   catch (...)
   {
-    if (params.IsNull())
+    if (_params->IsNull())
       prx_throw("Bad filename to param_loader '" << file_name << "'");
   }
   // try
   // {
-  params = std::move(expand_file(nn));
+  _params = std::make_shared<YAML::Node>(expand_file(nn));
   // }
   // catch (...)
   // {
@@ -119,7 +127,7 @@ YAML::Node param_loader::expand_file(YAML::Node& node)
     try
     {
       replace_env_var(node);
-      new_node = param_loader(node.as<std::string>()).params;
+      new_node = *(param_loader(node.as<std::string>())._params);
     }
     catch (...)
     {
@@ -221,11 +229,11 @@ void param_loader::merge(const YAML::Node& other)
 {
   for (auto p : other)
   {
-    params[p.first.as<std::string>()] = std::move(p.second);
+    (*_params)[p.first.as<std::string>()] = std::move(p.second);
   }
 }
 
-const param_loader param_loader::operator[](const std::string& key) const
+param_loader param_loader::operator[](const std::string& key) const
 {
   std::string::size_type subkey_init = key[0] == '/' ? 1 : 0;
   std::string::size_type subkey_pos = 0;  // = key.find("/", subkey_init);
@@ -237,7 +245,7 @@ const param_loader param_loader::operator[](const std::string& key) const
   // }
   //
   // YAML::Node new_node;// = params[key.substr(subkey_init, subkey_pos - subkey_init)];
-  auto new_node = params[key.substr(subkey_init, subkey_pos - subkey_init)];
+  auto new_node = (*_params)[key.substr(subkey_init, subkey_pos - subkey_init)];
   // p_key = key.substr(subkey_init, subkey_pos - subkey_init);
   if (subkey_pos == std::string::npos)
   {
@@ -267,23 +275,24 @@ param_loader param_loader::operator[](const std::string& key)
   subkey_pos = key.find("/", subkey_init);
   // std::cout << "\tsubkey: " << key.substr(subkey_init, subkey_pos - subkey_init) << " init: " << subkey_init << "
   // pos: " << subkey_pos << std::endl;
-  auto new_node = params[key.substr(subkey_init, subkey_pos - subkey_init)];
+  const std::string subkey{ key.substr(subkey_init, subkey_pos - subkey_init) };
+  auto new_node = (*_params)[subkey];
 
   p_key = key.substr(subkey_init, subkey_pos - subkey_init);
   if (subkey_pos == std::string::npos)
   {
-    return param_loader(new_node, key.substr(subkey_init, subkey_pos - subkey_init));
+    return param_loader(new_node, subkey);
   }
   else
   {
     // Tail recursive!
-    return param_loader(new_node, key.substr(subkey_init, subkey_pos - subkey_init))[key.substr(subkey_pos)];
+    return param_loader(new_node, subkey)[key.substr(subkey_pos)];
   }
 }
 
 void param_loader::print() const
 {
-  print(params);
+  print(*_params);
 }
 
 void param_loader::print(const YAML::Node& pl, std::string prepath) const

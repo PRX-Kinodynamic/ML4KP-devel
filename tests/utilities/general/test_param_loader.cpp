@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(param_loader_replace_env_vars)
   // BOOST_CHECK(pl0["test3"].as<double>() == t3);
 }
 
-BOOST_AUTO_TEST_CASE(param_loader_list_array)
+BOOST_AUTO_TEST_CASE(param_loader_from_iterators)
 {
   std::string yaml =
       "bounds:\n"

@@ -17,6 +17,6 @@ target_include_directories(Planning PUBLIC
                             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 														)
 
-target_link_libraries(Planning INTERFACE Simulation )
+target_link_libraries(Planning PUBLIC Simulation External )
 
 set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};Planning" PARENT_SCOPE)

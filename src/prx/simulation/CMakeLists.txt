@@ -17,7 +17,7 @@ target_include_directories(Simulation
                             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 														)
 
-target_link_libraries(Simulation INTERFACE Utilities )
+target_link_libraries(Simulation PUBLIC External Utilities )
 # target_link_libraries(Simulation INTERFACE Planning )
 # target_link_libraries(Simulation INTERFACE ${PROJECT_NAME}_external )
 set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};Simulation" PARENT_SCOPE)

@@ -8,6 +8,7 @@
 #include "prx/utilities/general/zipped_iter.hpp"
 #include "prx/utilities/general/progress_bar.hpp"
 #include "prx/utilities/general/template_utils.hpp"
+#include "prx/utilities/general/merge.hpp"
 
 #define PRX_DEBUG_PRINT std::cout << __PRETTY_FUNCTION__ << ": " << __LINE__ << std::endl;
 

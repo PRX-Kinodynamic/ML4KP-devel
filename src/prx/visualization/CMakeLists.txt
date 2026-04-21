@@ -17,6 +17,7 @@ target_include_directories(Visualization
                             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 														)
 
-target_link_libraries(Visualization Simulation )
-target_link_libraries(Visualization Utilities )
+target_link_libraries(Visualization PUBLIC External )
+target_link_libraries(Visualization PUBLIC Simulation )
+target_link_libraries(Visualization PUBLIC Utilities )
 set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};Visualization" PARENT_SCOPE)

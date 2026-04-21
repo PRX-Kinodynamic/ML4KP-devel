@@ -65,6 +65,11 @@ public:
 
   std::weak_ptr<PQP_Model> get_collision_geometry();
 
+  std::shared_ptr<PQP_Model> collision_geometry()
+  {
+    return _collision_geometry;
+  }
+
   geometry_type_t get_geometry_type();
 
   std::vector<double> get_geometry_params();
@@ -149,7 +154,7 @@ public:
   }
 
 private:
-  std::shared_ptr<PQP_Model> collision_geometry;
+  std::shared_ptr<PQP_Model> _collision_geometry;
 
   std::string vis_color;
 

@@ -1,34 +1,15 @@
 #include <memory>
 #include <queue>
+#include "general/debug_utils.hpp"
 #include "general/prx_assert.hpp"
 namespace prx
 {
 namespace solution_update
 {
-template <typename Node, typename Plan, typename Trajectory>
-class interface_out_t
+struct interface_out_t
 {
-  using NodePtr = std::shared_ptr<Node>;
-  using PlanPtr = std::shared_ptr<Plan>;
-  using TrajectoryPtr = std::shared_ptr<Trajectory>;
-  using CandidateEdge = std::tuple<NodePtr, Plan, Trajectory>;
-
-  static NodePtr node(CandidateEdge& candidate)
-  {
-    return std::get<0>(candidate);
-  }
-
-  static PlanPtr plan(CandidateEdge& candidate)
-  {
-    return std::get<1>(candidate);
-  }
-
-  static TrajectoryPtr trajectory(CandidateEdge& candidate)
-  {
-    return std::get<1>(candidate);
-  }
-  // FIFO -  Expanded nodes
-  std::queue<CandidateEdge> candidate_edges;
+  bool goal_updated;
+  std::size_t goal_index;
 };
 
 // Create a single edge out of a single control-duration
@@ -36,36 +17,39 @@ template <typename Output, typename Input, typename PlannerMemory>
 void update_solution_if_goal_found(std::shared_ptr<Output> output, std::shared_ptr<Input> input,
                                    std::shared_ptr<PlannerMemory> memory)
 {
-  // auto new_tree_node = _tree.get_vertex_as<rrt_node_t>(node_index);
-  typename Input::NodePtr node{ Input::node(input.new_node_index) };
+  output->goal_updated = false;
+  typename Input::NodePtr node{ memory->tree()->node(input->new_node_index) };
   if (memory->goal_check(node->state()))
   {
-    const bool solution_found{ memory->statistics()->solution_found() };
-    const double previous_cost{ memory->statistics()->current_solution_cost() };
+    const bool solution_found{ memory->statistics()->solution_found };
+    const double previous_cost{ memory->statistics()->current_solution_cost };
     const double new_cost{ node->cost_to_come() };
 
     if (solution_found and new_cost < previous_cost)
     {
-      memory->update_goal(node);
-      memory->statistics()->update_cost(new_cost);
+      memory->goal_node(node);
+      memory->statistics()->update_solution(new_cost);
 
-      ///////////
-      const double& solution_cost{ new_tree_node->cost_to_come };
-
-      if (_bnb)
-      {
-        bnb(start_vertex, solution_cost);
-      }
-      _tree.remove_vertices();
+      output->goal_updated = true;
+      output->goal_index = node->index();
     }
   }
 }
 
-template <typename Output, typename Input, typename PlannerMemory>
-void tree_branch_and_bound(std::shared_ptr<Output> output, std::shared_ptr<Input> input,
-                           std::shared_ptr<PlannerMemory> memory)
+template <typename Node>
+struct tree_bnb_input
 {
-  typename Input::NodePtr node{ Input::node(input->node_index) };
+  using NodePtr = std::shared_ptr<Node>;
+  std::size_t node_index;
+  bool delete_branch;
+  double cost_bound;
+};
+
+template <typename Input, typename PlannerMemory>
+void tree_branch_and_bound(std::shared_ptr<Input> input, std::shared_ptr<PlannerMemory> memory)
+{
+  const auto node_index = input->node_index;
+  typename Input::NodePtr node{ memory->tree()->node(node_index) };
 
   const bool delete_branch{ input->delete_branch };
   const double cost_bound{ input->cost_bound };
@@ -75,15 +59,16 @@ void tree_branch_and_bound(std::shared_ptr<Output> output, std::shared_ptr<Input
   for (auto& child : node->children())
   {
     input->node_index = child;
-    tree_branch_and_bound(output, input, memory);
+    tree_branch_and_bound(input, memory);
   }
 
-  if (delete_branch)
+  if (input->delete_branch)
   {
     prx_assert(node->children().size() == 0, "Cannot BnB if node has children.");
-    memory->nearest_neighbors()->remove_node(node);
-    memory->tree()->remove_node(node);
+    memory->nearest_neighbors()->remove_node(node_index);
+    memory->tree()->remove_node(node_index);
   }
+  input->node_index = node_index;
   input->delete_branch = delete_branch;
 }
 

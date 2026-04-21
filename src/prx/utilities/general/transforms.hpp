@@ -115,8 +115,26 @@ inline Eigen::Vector3d quaternion_to_euler(const double qx, const double qy, con
   return quaternion_to_euler(q);
 }
 
+inline Eigen::Matrix3d axis_to_rotation_matrix(const double& angle, const char axis)
+{
+  Eigen::Matrix3d R;
+  switch (axis)
+  {
+    case 'X':
+      R = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitX());
+      break;
+    case 'Y':
+      R = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
+      break;
+    case 'Z':
+      R = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
+      break;
+  }
+  return R;
+}
+
 template <typename Rotation, typename Angles>
-inline Rotation euler_to_rotation(const Angles& angles, const std::string order)
+inline Rotation euler_to_rotation(const Angles angles, const std::string order)
 {
   Eigen::Matrix3d R{ Eigen::Matrix3d::Identity() };
   prx_assert(angles.size() == order.size(), "Mismatch on sizes");
@@ -126,18 +144,7 @@ inline Rotation euler_to_rotation(const Angles& angles, const std::string order)
   {
     const double angle{ angles[i] };
     const char axis{ order[i] };
-    switch (axis)
-    {
-      case 'X':
-        R = R * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitX());
-        break;
-      case 'Y':
-        R = R * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
-        break;
-      case 'Z':
-        R = R * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
-        break;
-    }
+    R = R * axis_to_rotation_matrix(angle, axis);
   }
 
   const Rotation result{ R };

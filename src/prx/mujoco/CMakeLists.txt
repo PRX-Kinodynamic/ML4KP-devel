@@ -44,6 +44,7 @@ else()
 endif()
 
 # TODO: Take care of this for Linux
+target_link_libraries(${PROJECT_NAME}_mjsim PUBLIC External )
 
 link_directories(${PROJECT_NAME}_mjsim PUBLIC ${MJ_LIB_DIR})
 # set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};${PROJECT_NAME}_mjsim" PARENT_SCOPE)

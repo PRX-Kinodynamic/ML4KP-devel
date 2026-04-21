@@ -1,7 +1,4 @@
 ## Utilities library of DirtMP
-find_package(YAMLCPP NAMES Yaml-cpp YamlCpp yaml-cpp)
-message(STATUS "yaml: ${YAMLCPP_INCLUDE_DIR} ${YAML_CPP_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIR}")
-include_directories(${YAMLCPP_INCLUDE_DIR} ${YAML_CPP_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIR})
 
 file(GLOB_RECURSE HEADER_PRX_LIB_UTILITIES RELATIVE ${CMAKE_SOURCE_DIR}/src ./*.hpp)
 file(GLOB_RECURSE SRC_PRX_LIB_UTILITIES  ./*.cpp)
@@ -22,17 +19,6 @@ target_include_directories(Utilities PUBLIC
 
 set_target_properties(Utilities PROPERTIES COMPILE_FLAGS "-Wno-deprecated")
 
-# if (APPLE)
-# 	list(APPEND YAML_CPP_LIBRARIES yaml-cpp)
-# endif(APPLE)
-
-if(TARGET yaml-cpp )
-	target_link_libraries(Utilities PUBLIC yaml-cpp)
-elseif(TARGET yaml-cpp::yaml-cpp )
-	target_link_libraries(Utilities PUBLIC yaml-cpp::yaml-cpp)
-
-endif()
-
-target_link_libraries(Utilities INTERFACE External )
+target_link_libraries(Utilities PUBLIC External )
 
 set(${PROJECT_NAME}_LIBRARIES "${${PROJECT_NAME}_LIBRARIES};Utilities" PARENT_SCOPE)
