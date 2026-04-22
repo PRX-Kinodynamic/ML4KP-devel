@@ -1,5 +1,6 @@
 #pragma once
 #include <fstream>
+#include <optional>
 
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/general/type_conversions.hpp"

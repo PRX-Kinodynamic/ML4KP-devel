@@ -72,7 +72,7 @@ public:
 private:
   static inline std::unordered_map<gtsam::Key, std::string> symbols_map;
 
-  symbol_factory_t() {};
+  symbol_factory_t(){};
 };
 
 }  // namespace fg

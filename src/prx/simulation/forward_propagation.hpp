@@ -1,6 +1,5 @@
 #pragma once
 
-#include <__utility/piecewise_construct.h>
 #include <memory>
 #include "prx/utilities/general/param_loader.hpp"
 #include "prx/simulation/playback/trajectory_v2.hpp"
