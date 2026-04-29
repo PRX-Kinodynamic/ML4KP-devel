@@ -127,7 +127,7 @@ prx::fg::SE2_t fwd_prop(prx::fg::SE2_t xi, std::shared_ptr<prx::system_group_t> 
     // PRX_DBG_VARS(tau.transpose(), ui.transpose());
     cs->copy_from(ui);
 
-    sg->propagate_once(nullptr);
+    sg->propagate_once();
     // result.copy_onto_back(state_space);
   } while (!checker.check());
 

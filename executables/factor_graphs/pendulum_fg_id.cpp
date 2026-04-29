@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
       ofs_trajs << x0 << " ";
       ctrl->compute_controls();
       cs->copy_to(ut);
-      sg->propagate_once(nullptr);
+      sg->propagate_once();
       ss->copy_to(x0);
       ofs_trajs << ut << " " << x0 << "\n";
     } while (!checker.check());

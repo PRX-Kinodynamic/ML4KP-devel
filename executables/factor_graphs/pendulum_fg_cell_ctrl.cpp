@@ -97,7 +97,7 @@ std::set<std::size_t> propagate(const Start x0, SystemGroup sg, Check& check, pr
     // }
 
     // ctrl();
-    sg->propagate_once(nullptr);
+    sg->propagate_once();
     traj.copy_onto_back(ss);
     xi = Vec(traj.back());
 
@@ -181,7 +181,7 @@ Eigen::MatrixXd lqr_to_neighbor(const std::string plant_name, const State& xT, c
   ordering.insert(ordering.end(), ordering_xs.begin(), ordering_xs.end() - 1);
   // ordering.insert(ordering.end(), ordering_us.begin(), ordering_us.end());
   // ordering.push_back(uT_k);
-  //PRINT_KEYS(ordering);
+  // PRINT_KEYS(ordering);
 
   gtsam::LevenbergMarquardtParams lm_params{ prx::fg::default_levenberg_marquardt_parameters() };
   lm_params.setMaxIterations(10);
@@ -336,7 +336,7 @@ Eigen::MatrixXd simple_lqr(const std::string plant_name, const State& xT, const 
   // ordering.insert(ordering.end(), ordering_xs.begin(), ordering_xs.end() - 1);
   // ordering.insert(ordering.end(), ordering_us.begin(), ordering_us.end());
   // ordering.push_back(uT_k);
-  //PRINT_KEYS(ordering);
+  // PRINT_KEYS(ordering);
 
   gtsam::LevenbergMarquardtParams lm_params{ prx::fg::default_levenberg_marquardt_parameters() };
   lm_params.setMaxIterations(10);

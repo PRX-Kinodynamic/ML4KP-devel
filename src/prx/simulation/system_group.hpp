@@ -8,6 +8,7 @@
 #include "prx/simulation/playback/plan.hpp"
 #include "prx/simulation/playback/trajectory.hpp"
 #include "prx/simulation/collision_checking/collision_checker.hpp"
+
 namespace prx
 {
 class simulator_t;
@@ -26,7 +27,25 @@ public:
 
   void propagate(space_point_t start_state, const plan_t& plan, trajectory_t& traj);
 
-  void propagate(int steps, space_point_t control = nullptr, trajectory_t* traj = nullptr);
+  // void propagate(int steps, space_point_t control, trajectory_t* traj);
+
+  // propagate control for steps (using prx::simulation_step)
+  template <typename Control>
+  void propagate(const std::size_t steps, const Control control, trajectory_t* traj = nullptr)
+  {
+    for (int i = 0; i < steps; i++)
+    {
+      propagate_once(control);
+      if (traj != nullptr)
+        traj->push_back(state_space);
+    }
+  }
+
+  // template <typename Control>
+  // void propagate(const std::size_t steps, const Control control)
+  // {
+  //   propagate(steps, control, nullptr);
+  // }
 
   template <typename Start, typename Ctrl, typename Check, typename Result,
             std::enable_if_t<not prx::utilities::is_any_ptr<Start>::value, bool> = true,
@@ -95,7 +114,14 @@ public:
     return _sensor_space;
   }
 
-  void propagate_once(space_point_t control = nullptr);
+  void propagate_once();
+
+  template <typename Control>
+  void propagate_once(const Control control)
+  {
+    control_space->copy_from(control);
+    propagate_once();
+  }
 
   std::vector<system_ptr_t>::iterator begin()
   {

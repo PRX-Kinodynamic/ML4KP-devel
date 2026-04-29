@@ -179,7 +179,7 @@ std::size_t propagate(const State& x0, SystemGroup sg, Check& check, prx::trajec
     const Control ut{ u(xi) };
     cs->copy_from(ut);
     // PRX_DBG_VARS(ut.transpose());
-    sg->propagate_once(nullptr);
+    sg->propagate_once();
     traj.copy_onto_back(ss);
     xi = Vec(traj.back());
 

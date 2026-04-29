@@ -91,7 +91,7 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
   do
   {
     ctrl->compute_controls();
-    propagate_once(nullptr);
+    propagate_once();
   } while (!cond_check.check());
 
   state_space->copy_to(result);
@@ -105,7 +105,7 @@ void system_group_t::propagate(space_point_t start_state, controller_ptr_t ctrl,
   do
   {
     ctrl->compute_controls();
-    propagate_once(nullptr);
+    propagate_once();
     result.copy_onto_back(state_space);
   } while (!cond_check.check());
 
@@ -138,35 +138,14 @@ void system_group_t::propagate(space_point_t start_state, const plan_t& plan, tr
   }
 }
 
-void system_group_t::propagate(int steps, space_point_t control, trajectory_t* traj)
-{
-  for (int i = 0; i < steps; i++)
-  {
-    propagate_once(control);
-    if (traj != nullptr)
-    {
-      traj->copy_onto_back(state_space);
-    }
-  }
-}
-
-void system_group_t::propagate_once(space_point_t control)
-{
-  if (control != nullptr)
-  {
-    control_space->copy_from(control);
-  }
-  for (auto s : group)
-  {
-    s->compute_control();
-    s->get_control_space()->enforce_bounds();
-  }
-  // for(auto s : group)
-  // {
-  // 	s->propagate(simulation_step, step);
-  // }
-  sim->step_simulation();
-}
+// void system_group_t::propagate(int steps, space_point_t control, trajectory_t* traj)
+// {
+//   propagate(steps, control);
+//   if (traj != nullptr)
+//   {
+//     traj->push_back(state_space);
+//   }
+// }
 
 void system_group_t::steer(space_point_t x_new, const space_point_t x_nearest, const space_point_t x_rand,
                            const double eta, distance_function_t distance_function)
@@ -183,6 +162,15 @@ void system_group_t::steer(space_point_t x_new, const space_point_t x_nearest, c
       break;
   }
   state_space->copy_to(x_new);
+}
+void system_group_t::propagate_once()
+{
+  for (auto s : group)
+  {
+    s->compute_control();
+    s->get_control_space()->enforce_bounds();
+  }
+  sim->step_simulation();
 }
 
 void system_group_t::steer(trajectory_t& traj_out, const space_point_t x_nearest, const space_point_t x_rand,

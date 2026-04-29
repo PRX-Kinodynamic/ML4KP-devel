@@ -46,9 +46,19 @@ public:
   }
   static prx::param_loader init()
   {
-    return prx::param_loader();
+    prx::param_loader params;
+    params["verbose"].set(false);
+    return params;
   };
-  virtual void init(const prx::param_loader& params) {};
+  virtual void init(const prx::param_loader& params)
+  {
+    if (params.exists("verbose"))
+    {
+      verbose = params["verbose"].as<bool>();
+    }
+  }
+
+  bool verbose;
 };
 
 class planner_query_t
