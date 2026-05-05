@@ -349,9 +349,8 @@ void geometry_t::initialize_geometry(const std::vector<double>& geom_params)
 void geometry_t::generate_collision_geometry()
 {
   prx_assert(params_set, "Geometry params have not been provided, so a collision geometry cannot be generated.");
-  // prx_assert(collision_geometry == nullptr,
-  //            "Trying to recreate collision geometries when they have already been created.");
-  // if (collision_geometry == nullptr)
-  _collision_geometry = create_collision_geometry<PQP_Model>(geom_type, params);
+
+  if (_collision_geometry == nullptr)
+    _collision_geometry = create_collision_geometry<PQP_Model>(geom_type, params);
 }
 }  // namespace prx

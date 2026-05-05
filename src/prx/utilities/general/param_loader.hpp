@@ -48,6 +48,13 @@ public:
   // As in str <- content of a file
   void from_string(const std::string str);
 
+  operator std::string() const
+  {
+    std::stringstream strstr;
+    strstr << *this;
+    return strstr.str();
+  }
+
   inline const std::string get_input_path() const
   {
     return pl_input_path;
@@ -193,7 +200,6 @@ public:
   static void create_file(const std::string filename, const T& type)
   {
     type.initialization_parameters().save(filename);
-    ;
   }
   template <typename T, typename... Ts, std::enable_if_t<prx::utilities::is_any_ptr<T>::value, bool> = true>
   static void create_file(const std::string filename, const T type)
@@ -207,6 +213,8 @@ public:
     Type::init().save(filename);
   }
 
+  std::vector<std::string> keys() const;
+
 protected:
   YAML::Node expand_file(YAML::Node& node);
 
@@ -215,6 +223,7 @@ protected:
   void print(const YAML::Node& pl, std::string prepath = "") const;
 
   std::shared_ptr<YAML::Node> _params;
+
   // Needed to check if the key has been defined. YAML implementation
   // assumes that you check before calling as<>()...
   // Which produces verbose code and is not really intuitive.

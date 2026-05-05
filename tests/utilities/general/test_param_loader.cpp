@@ -171,3 +171,23 @@ BOOST_AUTO_TEST_CASE(param_loader_from_iterators)
   // pl0.print();
   // BOOST_CHECK(pl0["test0"].as<std::string>() != t0);
 }
+
+BOOST_AUTO_TEST_CASE(param_loader_keys)
+{
+  prx::param_loader pl{};
+  pl["test/0"].set(1);
+  pl["test/1"].set(1);
+  pl["test/2"].set(1);
+
+  std::vector<std::string> keys{ pl.keys() };
+
+  BOOST_REQUIRE(keys.size() == 1);
+  BOOST_REQUIRE(keys[0] == "test");
+
+  prx::param_loader pl1 = pl["test"];
+  std::vector<std::string> keys_1{ pl1.keys() };
+  BOOST_REQUIRE(keys_1.size() == 3);
+  BOOST_REQUIRE(keys_1[0] == "0");
+  BOOST_REQUIRE(keys_1[1] == "1");
+  BOOST_REQUIRE(keys_1[2] == "2");
+}

@@ -372,4 +372,30 @@ void param_loader::replace_env_var(YAML::Node& node)
   }
 }
 
+std::vector<std::string> param_loader::keys() const
+{
+  std::vector<std::string> ks;
+  switch (_params->Type())
+  {
+    case YAML::NodeType::Null:
+      break;
+    case YAML::NodeType::Scalar:
+      ks.push_back(p_key);
+      break;
+    case YAML::NodeType::Sequence:
+      ks.push_back(p_key);
+      break;
+    case YAML::NodeType::Map:
+      for (auto it = _params->begin(); it != _params->end(); ++it)
+      {
+        auto key = it->first;
+        ks.push_back(key.as<std::string>());
+      }
+      break;
+    case YAML::NodeType::Undefined:  // ...
+      prx_throw("[param_loader::keys] Undefined label")
+  }
+  return ks;
+}
+
 }  // namespace prx
