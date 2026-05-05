@@ -29,7 +29,7 @@ set_and_check(@CMAKE_PROJECT_NAME@_LIBRARY_DIR "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
 check_required_components(@CMAKE_PROJECT_NAME@)
 
 
-find_package(YAMLCPP NAMES Yaml-cpp YamlCpp)
+find_package(YAMLCPP NAMES Yaml-cpp YamlCpp yaml-cpp)
 
 # ToDo: GTSAM overrides a bunch of cmake variables (i.e. CMAKE_CURRENT_LIST_DIR), so it has to be at the end. At least for now.
 if(@BUILD_FOR_GTSAM@)
