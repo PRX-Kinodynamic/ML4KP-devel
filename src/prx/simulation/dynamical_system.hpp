@@ -1,8 +1,8 @@
 #pragma once
 
 #include <memory>
-#include "general/param_loader.hpp"
-#include "loaders/obstacle_loader.hpp"
+#include "prx/utilities/general/param_loader.hpp"
+#include "prx/simulation/loaders/obstacle_loader.hpp"
 #include "prx/utilities/defs.hpp"
 #include "prx/utilities/spaces/space_v2.hpp"
 #include "prx/utilities/geometry/geometry.hpp"
@@ -13,17 +13,29 @@ namespace prx
 template <typename Derived>
 struct dynamical_system_traits
 {
+  // clang-format off
+  // enum {StateDimension = 6}; 
+  // enum {ControlDimension = 3}; 
+  // enum {ParametersDimension = 3}; 
+  // enum {ObservationDimension = 3};
+  // clang-format on
+
+  using DerivedSystem = Derived;
   // using State = typename Derived::State;
   // using Control = typename Derived::Control;
   // using Parameters = typename Derived::Parameters;
   // using Observation = typename Derived::Observation;
 };
-// {
-// }
 
-// template <typename StateSpace, typename ControlSpace, typename ParameterSpace, typename SensorSpace>
+// struct dynamical_system_base_t
+// {
+//   virtual std::string name() const = 0;
+
+//   // virtual std::string cast() const = 0;
+// };
+
 template <typename Derived>
-class dynamical_system_t
+class dynamical_system_t  // : dynamical_system_base_t
 {
 public:
   using DerivedDynamicalSystem = dynamical_system_t<Derived>;
@@ -45,19 +57,24 @@ public:
   using ObservationSpacePtr = std::shared_ptr<ObservationSpace>;
 
   dynamical_system_t(prx::param_loader params)
-    : _name(params["name"].as<>())
-    , _state_space(std::make_shared<StateSpace>(params["state_space"]))
+    : _state_space(std::make_shared<StateSpace>(params["state_space"]))
     , _control_space(std::make_shared<ControlSpace>(params["control_space"]))
     , _parameter_space(std::make_shared<ParametersSpace>(params["parameter_space"]))
     , _sensor_space(std::make_shared<ObservationSpace>(params["sensor_space"]))
   {
   }
 
-  dynamical_system_t(const std::string name)
-    : _name(name), _state_space(nullptr), _control_space(nullptr), _parameter_space(nullptr), _sensor_space(nullptr)
+  dynamical_system_t()
+    : _state_space(nullptr), _control_space(nullptr), _parameter_space(nullptr), _sensor_space(nullptr)
   {
     static_cast<Derived*>(this)->initialize();
   }
+
+  // template <typename... Args>
+  // static DerivedDynamicalSystemPtr create(Args... args)
+  // {
+  //   return std::make_shared<DerivedDynamicalSystem>(args...);
+  // }
 
   static double distance(const State& a, const State& b)
   {
@@ -87,11 +104,15 @@ public:
     return _sensor_space;
   }
 
+  Observation sense(const State& x0)
+  {
+    return static_cast<Derived*>(this)->sense(x0);
+  }
+
   State propagate(const State& x0, const Control& u0, const double& dt)
   {
     return static_cast<Derived*>(this)->propagate(x0, u0, dt);
   }
-  // virtual void sense(const State& x0, const Control& u0, const double& dt, const Parameters& params) = 0;
 
   std::vector<std::pair<Eigen::Matrix3d, Eigen::Vector3d>> configuration(const State& state)
   {
@@ -100,6 +121,12 @@ public:
 
   std::vector<std::shared_ptr<prx::geometry_t>> geometries()
   {
+    if (not _geometries_initialized)
+    {
+      static_cast<Derived*>(this)->initialize_geometries();
+      _geometries_initialized = true;
+    }
+
     return _geometries;
   }
 
@@ -110,7 +137,7 @@ public:
 
   inline std::string name() const
   {
-    return _name;
+    return Derived::Name;
   }
 
   friend std::ostream& operator<<(std::ostream& os, const DerivedDynamicalSystem& obj)
@@ -126,8 +153,6 @@ public:
   }
 
 protected:
-  const std::string _name;
-
   // Parameters _parameters;
 
   StateSpacePtr _state_space;
@@ -135,6 +160,7 @@ protected:
   ParametersSpacePtr _parameter_space;
   ObservationSpacePtr _sensor_space;
 
+  bool _geometries_initialized;
   std::vector<std::shared_ptr<prx::geometry_t>> _geometries;
 };
 }  // namespace prx

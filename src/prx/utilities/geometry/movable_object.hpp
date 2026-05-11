@@ -43,9 +43,29 @@ public:
     return *(configurations[name]);
   }
 
+  std::shared_ptr<geometry_t> geometry(const std::string name)
+  {
+    return geometries[name];
+  }
+
+  // std::shared_ptr<transform_t> configuration(const std::string& name)
+  // {
+  //   return configurations[name];
+  // }
+
   inline std::string get_object_name()
   {
     return object_name;
+  }
+
+  std::vector<std::string> keys() const
+  {
+    std::vector<std::string> current_keys;
+    for (auto pair : geometries)
+    {
+      current_keys.push_back(pair.first);
+    }
+    return current_keys;
   }
 
 protected:

@@ -3,7 +3,7 @@
 #pragma once
 
 #include <memory>
-#include "general/param_loader.hpp"
+#include "prx/utilities/general/param_loader.hpp"
 #include "prx/utilities/defs.hpp"
 #include <gtsam/geometry/Pose2.h>
 #include "prx/utilities/spaces/space_v2.hpp"
@@ -25,12 +25,13 @@ struct dynamical_system_traits<SE2_holonomic_system_t>
   using State = gtsam::ProductLieGroup<gtsam::Pose2, Eigen::Vector3d>;
   using Control = Eigen::Vector<double, ControlDimension>;
   using Parameters = Eigen::Vector<double, ParametersDimension>;
-  using Observation = Eigen::Vector<double, ObservationDimension>;
+  using Observation = gtsam::Pose2;
 };
 
 class SE2_holonomic_system_t : public prx::dynamical_system_t<SE2_holonomic_system_t>
 {
 public:
+  const std::string Name = "SE2HolonomicSystem";
   using Base = prx::dynamical_system_t<SE2_holonomic_system_t>;
   using Derived = SE2_holonomic_system_t;
 
@@ -49,8 +50,7 @@ public:
   using ParametersSpacePtr = std::shared_ptr<ParametersSpace>;
   using ObservationSpacePtr = std::shared_ptr<ObservationSpace>;
 
-  SE2_holonomic_system_t() : Base("SE2_holonomic_system") {};
-  SE2_holonomic_system_t(const std::string name) : Base(name) {};
+  SE2_holonomic_system_t() : Base() {};
   SE2_holonomic_system_t(prx::param_loader params) : Base(params) {};
 
   static prx::param_loader default_params()
@@ -111,6 +111,11 @@ public:
     const State between{ a.between(b) };
     const ErrorVector error{ State::Logmap(between) };
     return error.norm();
+  }
+
+  Observation sense(const State& x0)
+  {
+    return x0.first;
   }
 
   State propagate(const State& x0, const Control& u0, const double& dt)

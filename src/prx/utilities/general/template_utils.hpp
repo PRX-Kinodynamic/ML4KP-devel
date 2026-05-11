@@ -1,4 +1,5 @@
 #pragma once
+#include <filesystem>
 #include <memory>
 #include <type_traits>
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -87,12 +88,25 @@ struct is_iterable : std::false_type
 {
 };
 
+template <>
+struct is_iterable<std::string> : std::false_type
+{
+};
+
+template <>
+struct is_iterable<std::filesystem::path> : std::false_type
+{
+};
 // this gets used only when we can call std::begin() and std::end() on that type
+// std::enable_if<                                          // no-lint
+//     not std::is_same<std::string, T>::value>::value and  // no-lint
 template <typename T>
 struct is_iterable<T, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
   : std::true_type
 {
 };
+
+// (not std::is_same<std::string, T>::value) and
 
 template <typename T, typename = void>
 struct is_streamable : std::false_type

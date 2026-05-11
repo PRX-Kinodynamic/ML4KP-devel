@@ -6,6 +6,7 @@
 
 #include "prx/simulation/system.hpp"
 #include "prx/utilities/general/param_loader.hpp"
+#include "prx/simulation/dynamical_system.hpp"
 
 namespace prx
 {
@@ -15,6 +16,8 @@ class system_t;
 typedef std::shared_ptr<system_t> system_ptr_t;
 
 typedef std::function<system_ptr_t(std::string)> system_gen_fn;
+// typedef std::function<dynamical_system_base_t(std::string)> dyn_system_gen_fn;
+
 typedef std::function<double(system_ptr_t)> velocity_gen_fn;
 // typedef system_ptr_t (*system_gen_fn) (std::string, ...);
 class system_factory_t

@@ -49,6 +49,11 @@ public:
     _max = max;
   }
 
+  std::pair<Bounds, Bounds> bounds() const
+  {
+    return { _min, _max };
+  }
+
   friend std::ostream& operator<<(std::ostream& os, const Sampler& obj)
   {
     os << "min: ";
@@ -143,8 +148,8 @@ private:
   sampler_t<double> _sampler;
 };
 
-template <typename Type>            // primary template
-class sampler_t<std::vector<Type>>  //: std::false_type
+template <typename Type>
+class sampler_t<std::vector<Type>>
 {
   using TypeSampler = sampler_t<Type>;
 
@@ -191,10 +196,6 @@ public:
       _samplers.emplace_back(min[i], max[i]);
     }
   }
-  // std::pair<Element, Element> bounds() const
-  // {
-  //   return { _min, _max };
-  // }
 
   friend std::ostream& operator<<(std::ostream& os, const Sampler& obj)
   {
@@ -260,6 +261,50 @@ protected:
   Element _min;
   Element _max;
   Element _diff;
+};
+
+template <>                   // explicit specialization for T = void
+class sampler_t<gtsam::Rot2>  //: std::true_type
+{
+public:
+  using Sampler = sampler_t<gtsam::Rot2>;
+  using Bounds = double;
+
+  sampler_t(const Bounds min, const Bounds max) : _aux_sampler(min, max)
+  {
+  }
+
+  sampler_t() : sampler_t(-prx::constants::pi, prx::constants::pi)
+  {
+  }
+
+  sampler_t(prx::param_loader params)
+    : sampler_t(params.get_or_default("min", -prx::constants::pi), params.get_or_default("max", prx::constants::pi))
+  {
+  }
+
+  gtsam::Rot2 operator()()
+  {
+    return std::move(gtsam::Rot2(_aux_sampler()));
+  }
+  void bounds(const Bounds min, const Bounds max)
+  {
+    _aux_sampler.bounds(min, max);
+  }
+
+  std::pair<Bounds, Bounds> bounds() const
+  {
+    return _aux_sampler.bounds();
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const Sampler& obj)
+  {
+    os << obj._aux_sampler;
+    return os;
+  }
+
+protected:
+  sampler_t<Bounds> _aux_sampler;
 };
 
 template <>                    // explicit specialization for T = void

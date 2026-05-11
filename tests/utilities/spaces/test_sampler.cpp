@@ -121,3 +121,27 @@ BOOST_AUTO_TEST_CASE(test_std_vector_sampler)
     BOOST_REQUIRE(+1.0 < sample[2] and sample[2] <= 2.0);
   }
 }
+
+BOOST_AUTO_TEST_CASE(test_Rot2_sampler)
+{
+  prx::param_loader pl;
+  const double _pi{ prx::constants::pi };
+  prx::sampler_t<gtsam::Rot2> s0{};
+  prx::sampler_t<gtsam::Rot2> s1(-1., 1.);
+  prx::sampler_t<gtsam::Rot2> s2(pl);
+  pl["min"].set(0.1);
+  pl["max"].set(0.2);
+  prx::sampler_t<gtsam::Rot2> s3(pl);
+  for (int i = 0; i < 1000; ++i)
+  {
+    gtsam::Rot2 sample0{ s0() };
+    gtsam::Rot2 sample1{ s1() };
+    gtsam::Rot2 sample2{ s2() };
+    gtsam::Rot2 sample3{ s3() };
+
+    BOOST_REQUIRE(-_pi <= sample0.theta() and sample0.theta() <= _pi);
+    BOOST_REQUIRE(-1. <= sample1.theta() and sample1.theta() <= 1.);
+    BOOST_REQUIRE(-_pi <= sample2.theta() and sample2.theta() <= _pi);
+    BOOST_REQUIRE(0.1 <= sample3.theta() and sample3.theta() <= 0.2);
+  }
+}

@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(test_empty_environment)
   std::vector<std::string> obstacles_names{ obstacle_loader.get_names() };
   std::vector<std::shared_ptr<prx::movable_object_t>> obstacles{ obstacle_loader.get_obstacles() };
 
-  prx::collision_checking::pqp_checker_t<mock::plant_t> checker(plant, obstacles);
+  prx::collision_checking::pqp::system_checker_t<mock::plant_t> checker(plant, obstacles);
 
   for (int i = 0; i < 100; ++i)
   {
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(test_simple_obstacle)
   obstacle_pose.translation() = Eigen::Vector3d(0, 0, 0);
   obstacles.push_back(std::make_shared<prx::sphere_t>("o1", 0.5, obstacle_pose));
   // obstacles.back()->generate_collision_geometry();
-  prx::collision_checking::pqp_checker_t<mock::plant_t> checker(plant, obstacles);
+  prx::collision_checking::pqp::system_checker_t<mock::plant_t> checker(plant, obstacles);
 
   mock::State x0{ 0.1, 0., 0. };
   BOOST_REQUIRE(checker.collision(x0));
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(test_multiple_obstacles)
   obstacle_pose.translation() = Eigen::Vector3d(1.0, 0, 0);
   obstacles.push_back(std::make_shared<prx::box_t>("o1", 0.5, 0.5, 0.5, obstacle_pose));
   // obstacles.back()->generate_collision_geometry();
-  prx::collision_checking::pqp_checker_t<mock::plant_t> checker(plant, obstacles);
+  prx::collision_checking::pqp::system_checker_t<mock::plant_t> checker(plant, obstacles);
 
   mock::State x0{ 0.1, 0., 0. };
   BOOST_REQUIRE(checker.collision(x0));

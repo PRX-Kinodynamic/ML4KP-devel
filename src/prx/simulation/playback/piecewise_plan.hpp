@@ -11,14 +11,13 @@
 
 namespace prx
 {
-namespace experimental
-{
 
 template <typename ControlType, typename DurationType>
 struct piecewise_step_t
 {
   using PiecewiseStep = piecewise_step_t<ControlType, DurationType>;
-  piecewise_step_t(ControlType control, const DurationType duration) : control(control), duration(duration)
+  piecewise_step_t() : control(ControlType()), duration(DurationType()) {};
+  piecewise_step_t(const ControlType control_, const DurationType duration_) : control(control_), duration(duration_)
   {
   }
 
@@ -216,11 +215,18 @@ private:
   double _total_duration;
   std::deque<PiecewiseStep> _steps;
 };
+namespace experimental
+{
+// To avoid some refactoring for now
+template <typename ControlType, typename DurationType>
+using piecewise_step_t = prx::piecewise_step_t<ControlType, DurationType>;
+
+template <typename ControlType, typename DurationType>
+using piecewise_plan_t = prx::piecewise_plan_t<ControlType, DurationType>;
 }  // namespace experimental
 
 template <typename ControlType, typename TimeType>
-void merge(experimental::piecewise_plan_t<ControlType, TimeType>& plan,
-           const experimental::piecewise_plan_t<ControlType, TimeType> other)
+void merge(piecewise_plan_t<ControlType, TimeType>& plan, const piecewise_plan_t<ControlType, TimeType> other)
 {
   for (auto&& step : other)
   {

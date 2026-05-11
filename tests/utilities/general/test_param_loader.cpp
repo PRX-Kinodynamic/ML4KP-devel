@@ -165,7 +165,11 @@ BOOST_AUTO_TEST_CASE(param_loader_from_iterators)
   prx::param_loader pl1(pl0["bounds"].begin(), pl0["bounds"].end());
   // auto iter = pl0["bounds"].begin();
   // // auto second = *(pl0["bounds"].begin()++);
-  PRX_DBG_VARS(pl1)
+  PRX_DBG_VARS(pl0)
+  for (auto p : pl0["bounds"])
+  {
+    PRX_DBG_VARS(p)
+  }
   // iter++;
   // PRX_DBG_VARS(*iter)
   // pl0.print();
@@ -190,4 +194,13 @@ BOOST_AUTO_TEST_CASE(param_loader_keys)
   BOOST_REQUIRE(keys_1[0] == "0");
   BOOST_REQUIRE(keys_1[1] == "1");
   BOOST_REQUIRE(keys_1[2] == "2");
+}
+
+BOOST_AUTO_TEST_CASE(param_loader_get_or_default)
+{
+  prx::param_loader pl{};
+
+  BOOST_REQUIRE(pl.get_or_default("test", 1) == 1);
+  pl["test"].set(1);
+  BOOST_REQUIRE(pl.get_or_default("test", 1) == 1);
 }

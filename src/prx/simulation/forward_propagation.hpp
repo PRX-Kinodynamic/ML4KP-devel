@@ -10,23 +10,29 @@
 namespace prx
 {
 // template <typename System, typename Controller>
-// template <typename Trajectory, typename System, typename Controller>
-// class forward_propagation_t
-// {
-// };
-
-// template <typename DynamicalSystem, typename Trajectory, typename Controller>  // primary template
-template <typename DerivedSystem, typename ControlType>
-class forward_propagation_t  //<prx::experimental::trajectory_t<typename DerivedSystem::StateSpace, double>,
-//                            dynamical_system_t<DerivedSystem>, prx::experimental::piecewise_step_t<ControlType,
-//                            double>>
+template <typename DerivedSystem, typename Trajectory, typename ControlType>
+class forward_propagation_t
 {
 public:
-  using Trajectory = prx::experimental::trajectory_t<typename DerivedSystem::StateSpace, double>;
   using DynamicalSystemPtr = std::shared_ptr<dynamical_system_t<DerivedSystem>>;
-  // using PiecewisePlan = prx::experimental::piecewise_step_t<ControlType, double>;
-  using Controller = prx::experimental::piecewise_plan_t<ControlType, double>;
-  using State = typename dynamical_system_t<DerivedSystem>::State;
+  forward_propagation_t(DynamicalSystemPtr dyn_sys) = delete;
+};
+
+// template <typename DynamicalSystem, typename Trajectory, typename Controller>  // primary template
+// template <typename DerivedSystem, typename ControlType>
+template <typename DynamicalSystem>
+class forward_propagation_t<
+    DynamicalSystem,  // no-lint
+    prx::experimental::trajectory_t<typename dynamical_system_t<DynamicalSystem>::StateSpace, double>,
+    prx::experimental::piecewise_plan_t<typename dynamical_system_t<DynamicalSystem>::Control, double>>
+{
+public:
+  // using DynamicalSystem = dynamical_system_t<DerivedSystemType>;
+  using DynamicalSystemPtr = std::shared_ptr<DynamicalSystem>;
+  using Trajectory = prx::experimental::trajectory_t<typename DynamicalSystem::StateSpace, double>;
+  using Controller = prx::experimental::piecewise_plan_t<typename DynamicalSystem::Control, double>;
+  using State = typename DynamicalSystem::State;
+
   forward_propagation_t(DynamicalSystemPtr dyn_sys) : _f(dyn_sys)
   {
   }

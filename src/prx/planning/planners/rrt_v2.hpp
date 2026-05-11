@@ -128,11 +128,11 @@ struct planner_specification_t<rrt_memory_t<DynamicalSystem>>
   using Edge = rrt_edge_t<Controller, Trajectory>;
   using DistanceFunction = std::function<double(const NodePtr&, const NodePtr&)>;
   using NearestNeighbors = prx::data_structures::graph_nearest_neighbors_t<NodePtr, DistanceFunction>;
-  using CollisionChecker = typename prx::collision_checking::pqp_checker_t<DynamicalSystem>;
+  using CollisionChecker = typename prx::collision_checking::pqp::system_checker_t<DynamicalSystem>;
   using GoalChecker = typename prx::goal_radius_checker_t<State>;
   using Tree = prx::fast_tree_t<Node, Edge>;
 
-  using ForwardPropagation = prx::forward_propagation_t<System, Control>;
+  using ForwardPropagation = prx::forward_propagation_t<System, Trajectory, Controller>;
 };
 
 // class

@@ -13,6 +13,7 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/base/ProductLieGroup.h>
 #include "prx/utilities/general/transforms.hpp"
+#include "prx/utilities/spaces/product_lie_group.hpp"
 // Eigen::Matrix<double, 3, 1>
 // Conversions to/from YAML
 namespace YAML
@@ -155,6 +156,28 @@ struct convert<gtsam::ProductLieGroup<G, H>>
   {
     const G g{ node["first"].as<G>() };
     const H t{ node["second"].as<H>() };
+
+    lhs = Type(g, t);
+    return true;
+  }
+};
+
+template <typename G, typename H>
+struct convert<gtsam::ProductLieGroupV43<G, H>>
+{
+  using Type = gtsam::ProductLieGroupV43<G, H>;
+  static Node encode(const Type& rhs)
+  {
+    Node node;
+    node.push_back(convert<G>::encode(rhs.first));
+    node.push_back(convert<H>::encode(rhs.second));
+    return node;
+  }
+
+  static bool decode(const Node& node, Type& lhs)
+  {
+    const G g{ node.begin()->as<G>() };
+    const H t{ (node.begin()++)->as<H>() };
 
     lhs = Type(g, t);
     return true;

@@ -24,7 +24,7 @@ public:
   using SpacePtr = std::shared_ptr<Space>;
   using Sampler = prx::sampler_t<Element>;
 
-  space_t(prx::param_loader params) : sampler(params["bounds"])
+  space_t(prx::param_loader params) : sampler(params.exists("bounds") ? params["bounds"] : prx::param_loader())
   {
   }
   template <typename SamplerBounds>

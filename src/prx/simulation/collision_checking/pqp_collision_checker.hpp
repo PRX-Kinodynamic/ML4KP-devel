@@ -14,124 +14,116 @@ namespace prx
 {
 namespace collision_checking
 {
-struct pqp_distance_t
-{
-  /**
-   * @brief A vector of distances between each collision pair in the collision cache.
-   * */
-  std::vector<double> distances;
-  /**
-   * @brief A vector of the closest point for each collision pair in the collision cache.
-   *
-   * For every element of the collision pair, the closest point corresponds to the point on the
-   * first element of the collision pair that is closest to the second element of the collision pair.
-   * By convention, when constructing the collision cache, the second element of each pair typically
-   * corresponds to a rigid body on a robot, while the first element corresponds to a rigid body that is
-   * considered to be an obstacle.
-   *
-   * As a result, this is a vector of the closest point on each obstacle for each rigid body present on the robot.
-   * */
-  std::vector<Eigen::Vector3d> closest_points;
-};
 
-struct pqp_info_t
+namespace pqp
 {
-  /** @brief The (x,y,z) position of the center of mass. */
-  // double position[3];
+
+// Representation of a rigid body: SE3 + pqp_model
+struct rigid_body_t
+{
+  // Ideally would be an SE3. Eigen::Transform gets complicated to use .data() for going back and forth with PQP
+  // Its easier to have it in separate objects
   Eigen::Vector3d position;
-  /** @brief The rotation matrix of the center of mass. */
-  // double rotation[3][3];
   Eigen::Matrix3d rotation;
-  // std::weak_ptr<transform_t> transform;
-  std::weak_ptr<PQP_Model> model;
-
-  /** @brief Updates the poses for the geometry. */
-  template <typename MovableObjectPlant,
-            std::enable_if_t<std::is_base_of_v<MovableObjectPlant, prx::movable_object_t>, bool> = true>
-  static std::vector<std::shared_ptr<pqp_info_t>>
-  from_obstacles(const std::vector<std::shared_ptr<MovableObjectPlant>> obstacles)
-  {
-    std::vector<std::shared_ptr<pqp_info_t>> obstacles_pqp_infos;
-    for (auto&& object : obstacles)
-    {
-      auto geoms = object->get_geometries();
-      auto configs = object->get_configurations();
-      for (int i = 0; i < geoms.size(); i++)
-      {
-        prx_assert(geoms[i].first == configs[i].first,
-                   "Geometry and configuration lists don't match in " << object->get_object_name());
-        auto g = geoms[i].second;
-        auto config = configs[i].second;
-        auto g_ptr = g.lock();
-        auto info = std::make_shared<pqp_info_t>();
-        info->model = g_ptr->get_collision_geometry();
-        // info->transform = config;
-        info->rotation = config.lock()->linear();
-        info->position = config.lock()->translation();
-        obstacles_pqp_infos.push_back(info);
-      }
-    }
-    return obstacles_pqp_infos;
-  }
+  std::shared_ptr<PQP_Model> model;
 };
 
-struct system_pqp_info_t
+/** @brief Updates the poses for the geometry. */
+template <typename MovableObjectPlant,
+          std::enable_if_t<std::is_base_of_v<MovableObjectPlant, prx::movable_object_t>, bool> = true>
+std::vector<std::shared_ptr<rigid_body_t>>
+create_obstacles(const std::vector<std::shared_ptr<MovableObjectPlant>> obstacles)
 {
-  std::vector<std::pair<Eigen::Matrix3d, Eigen::Vector3d>> configurations;
-  std::vector<std::shared_ptr<PQP_Model>> pqp_models;
+  std::vector<std::shared_ptr<rigid_body_t>> obstacles_pqp_infos;
+  for (auto&& object : obstacles)
+  {
+    const std::vector<std::string> keys{ object->keys() };
+    for (auto k : keys)
+    {
+      auto rigid_body = std::make_shared<rigid_body_t>();
+      rigid_body->model = object->geometry(k)->collision_geometry();
+      rigid_body->rotation = object->configuration(k).linear();
+      rigid_body->position = object->configuration(k).translation();
+      obstacles_pqp_infos.push_back(rigid_body);
+    }
+  }
+  return obstacles_pqp_infos;
+}
 
-  // named constructor
-  static system_pqp_info_t from_geometries(const std::vector<std::shared_ptr<prx::geometry_t>>& geoms)
+inline std::vector<std::shared_ptr<rigid_body_t>> create_obstacles(const prx::param_loader obstacles)
+{
+  obstacle_loader_t loader(obstacles);
+  return create_obstacles(loader.get_obstacles());
+}
+
+// struct plant_bodies_t
+// {
+//   std::vector<rigid_body_t> geometries;
+//   // std::vector<std::pair<Eigen::Matrix3d, Eigen::Vector3d>> configurations;
+//   // std::vector<std::shared_ptr<PQP_Model>> pqp_models;
+// };
+
+static std::vector<std::shared_ptr<PQP_Model>>
+create_pqp_models(const std::vector<std::shared_ptr<prx::geometry_t>>& geoms)
+{
+  std::vector<std::shared_ptr<PQP_Model>> models;
+  for (int i = 0; i < geoms.size(); i++)
   {
-    system_pqp_info_t pqp_info;
-    for (int i = 0; i < geoms.size(); i++)
-    {
-      geoms[i]->generate_collision_geometry();
-      pqp_info.pqp_models.push_back(geoms[i]->collision_geometry());
-    }
-    return pqp_info;
+    geoms[i]->generate_collision_geometry();
+    models.push_back(geoms[i]->collision_geometry());
   }
-  // Named constructor for movable_object_t
-  // std::is_base_of_v<A, C>
-  template <typename MovableObjectPlant,
-            std::enable_if_t<std::is_base_of_v<MovableObjectPlant, prx::movable_object_t>, bool> = true>
-  static system_pqp_info_t from_geometries(const std::shared_ptr<MovableObjectPlant>& plant)
+  return models;
+}
+
+template <typename MovableObjectPlant,
+          std::enable_if_t<std::is_base_of_v<MovableObjectPlant, prx::movable_object_t>, bool> = true>
+static std::vector<std::shared_ptr<PQP_Model>> create_pqp_models(const std::shared_ptr<MovableObjectPlant>& plant)
+{
+  std::vector<std::shared_ptr<PQP_Model>> models;
+  prx::movable_object_t::Geometries geometries{ plant->get_geometries() };
+  for (auto pair : geometries)
   {
-    system_pqp_info_t pqp_info;
-    prx::movable_object_t::Geometries geometries{ plant->get_geometries() };
-    for (auto pair : geometries)
-    {
-      auto geom = pair.second.lock();
-      geom->generate_collision_geometry();
-      pqp_info.pqp_models.push_back(geom->collision_geometry());
-    }
-    return pqp_info;
+    auto geom = pair.second.lock();
+    geom->generate_collision_geometry();
+    models.push_back(geom->collision_geometry());
   }
+  return models;
+}
+
+struct query_t
+{
+  PQP_CollideResult collision_result;
+  std::vector<std::shared_ptr<PQP_Model>> pqp_models;
+  std::vector<std::pair<Eigen::Matrix3d, Eigen::Vector3d>> plant_configurations;
 };
 
 // Check pqp_info against all obstacles. Can be used in threads if inputs are thread-safe
-inline bool collision(PQP_CollideResult& result, system_pqp_info_t& pqp_info,
-                      const std::vector<std::shared_ptr<pqp_info_t>>& obstacles_pqp_infos)
+
+// Using const vector of shared_ptrs because this potentially allows multiple threads querying for the same obstacles
+inline bool collision(query_t& query, const std::vector<std::shared_ptr<rigid_body_t>> obstacles_bodies)
 {
-  for (int i = 0; i < pqp_info.configurations.size(); ++i)
+  prx_assert(query.pqp_models.size() == query.plant_configurations.size(),
+             "[pqp:collision] mismatch number of models and configurations");
+
+  for (int i = 0; i < query.pqp_models.size(); ++i)
   {
-    Eigen::Matrix3d& rotation{ pqp_info.configurations[i].first };
-    Eigen::Vector3d& translation{ pqp_info.configurations[i].second };
-
-    for (auto&& obstacle : obstacles_pqp_infos)
+    Eigen::Matrix3d& rotation{ query.plant_configurations[i].first };
+    Eigen::Vector3d& translation{ query.plant_configurations[i].second };
+    std::shared_ptr<PQP_Model> model{ query.pqp_models[i] };
+    for (auto&& obstacle : obstacles_bodies)
     {
-      result.FreePairsList();
+      // query.collision_result.FreePairsList();
 
-      PQP_Collide(&result,  // no-lint
+      PQP_Collide(&query.collision_result,  // no-lint
                   *reinterpret_cast<PQP_REAL(*)[3][3]>(rotation.data()),
                   *reinterpret_cast<PQP_REAL(*)[3]>(translation.data()),            // no-lint
-                  pqp_info.pqp_models[i].get(),                                     // no-lint
+                  model.get(),                                                      // no-lint
                   *reinterpret_cast<PQP_REAL(*)[3][3]>(obstacle->rotation.data()),  // no-lint
                   *reinterpret_cast<PQP_REAL(*)[3]>(obstacle->position.data()),     // no-lint
-                  obstacle->model.lock().get(),                                     // no-lint
+                  obstacle->model.get(),                                            // no-lint
                   PQP_FIRST_CONTACT);
 
-      if (result.Colliding())
+      if (query.collision_result.Colliding())
       {
         return true;
       }
@@ -141,37 +133,40 @@ inline bool collision(PQP_CollideResult& result, system_pqp_info_t& pqp_info,
 }
 
 template <typename DynamicalSystem>
-class pqp_checker_t
+class system_checker_t
 {
 public:
   using DynamicalSystemPtr = std::shared_ptr<DynamicalSystem>;
   using MovableObjectPtr = std::shared_ptr<prx::movable_object_t>;
 
-  pqp_checker_t(DynamicalSystemPtr system_in, const prx::obstacle_loader_t& obstacles)
-    : pqp_checker_t(system_in, obstacles.get_obstacles())
+  system_checker_t(DynamicalSystemPtr system_in, const prx::param_loader& param_loader)
+    : system_checker_t(system_in, obstacle_loader_t(param_loader))
   {
   }
 
-  pqp_checker_t(DynamicalSystemPtr system_in, const std::vector<MovableObjectPtr> in_obstacles) : _system(system_in)
+  system_checker_t(DynamicalSystemPtr system_in, const prx::obstacle_loader_t& obstacles)
+    : system_checker_t(system_in, obstacles.get_obstacles())
   {
-    _obstacles_pqp_infos = pqp_info_t::from_obstacles(in_obstacles);
+  }
 
+  system_checker_t(DynamicalSystemPtr system_in, const std::vector<MovableObjectPtr> in_obstacles)
+    : _system(system_in), _obstacles_bodies(create_obstacles(in_obstacles))
+  {
     const std::vector<std::shared_ptr<prx::geometry_t>> system_geoms{ system_in->geometries() };
-
-    _system_pqp_info = system_pqp_info_t::from_geometries(system_geoms);
+    _query.pqp_models = create_pqp_models(system_geoms);
   }
 
-  virtual ~pqp_checker_t() {};
+  virtual ~system_checker_t() {};
 
   // Assuming a single system (multiple robots *could* be model as a single-complex system)
   template <typename State>
   bool collision(const State& state)
   {
-    _system_pqp_info.configurations = _system->configuration(state);
-    prx_assert(_system_pqp_info.configurations.size() == _system_pqp_info.pqp_models.size(),
-               "PQP geometries and configurations don't match.");
+    _query.plant_configurations = _system->configuration(state);
+    // prx_assert(_system_pqp_info.configurations.size() == _system_pqp_info.pqp_models.size(),
+    //            "PQP geometries and configurations don't match.");
 
-    return prx::collision_checking::collision(_collision_result, _system_pqp_info, _obstacles_pqp_infos);
+    return prx::collision_checking::pqp::collision(_query, _obstacles_bodies);
   }
 
   // TODO:
@@ -180,15 +175,20 @@ public:
   // }
 
 protected:
-  PQP_CollideResult _collision_result;
+  DynamicalSystemPtr _system;
+
+  query_t _query;
+  const std::vector<std::shared_ptr<rigid_body_t>> _obstacles_bodies;
+  // PQP_CollideResult _collision_result;
 
   // std::vector<std::pair<std::weak_ptr<pqp_info_t>, std::weak_ptr<pqp_info_t>>> _collision_cache;
-  std::vector<std::shared_ptr<pqp_info_t>> _obstacles_pqp_infos;
+  // std::vector<std::shared_ptr<geometry_t>> _obstacles_bodies;
+  // std::vector<rigid_body_t> _obstacles_bodies;
 
-  DynamicalSystemPtr _system;
-  system_pqp_info_t _system_pqp_info;
+  // std::vector<rigid_body_t> _system_bodies;
 
   // std::unordered_map<std::string, std::shared_ptr<collision_group_t>> collision_groups;
 };
+}  // namespace pqp
 }  // namespace collision_checking
 }  // namespace prx
