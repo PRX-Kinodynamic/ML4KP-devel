@@ -77,6 +77,13 @@ public:
 
     return xj;
   }
+  X propagate(const X& x, const Xdot& xdot, const Dt& dt,  // no-lint
+              gtsam::OptionalJacobian<DimX, DimX> Hx = boost::none,
+              gtsam::OptionalJacobian<DimX, DimXdot> Hxdot = boost::none,
+              gtsam::OptionalJacobian<DimX, 1> Hdt = boost::none)
+  {
+    return integrate(x, xdot, dt, Hx, Hxdot, Hdt);
+  }
 };
 
 //: public noise_model_3factor_t<X, X, Xdot>
@@ -118,13 +125,7 @@ public:
     : Base(cost_model, key_xt1, key_xt0, key_xdot, key_dt), _h(0.0), _label(label)
   {
   }
-  // lie_integration_factor_t(const gtsam::Key key_xt1, const gtsam::Key
-  // key_xt0, const gtsam::Key key_xdot,
-  //                          const NoiseModel& cost_model, const double h)
-  //   : Base(cost_model, key_xt1, key_xt0, key_xdot), _h(h),
-  //   _negative_identity(-1 * DerivativeX::Identity())
-  // {
-  // }
+
   ~lie_integration_factor_t() override
   {
   }

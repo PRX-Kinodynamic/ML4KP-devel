@@ -40,6 +40,7 @@ class dynamical_system_t  // : dynamical_system_base_t
 public:
   using DerivedDynamicalSystem = dynamical_system_t<Derived>;
   using DerivedDynamicalSystemPtr = std::shared_ptr<DerivedDynamicalSystem>;
+  using DerivedPtr = std::shared_ptr<Derived>;
 
   using State = typename dynamical_system_traits<Derived>::State;
   using Control = typename dynamical_system_traits<Derived>::Control;
@@ -56,11 +57,32 @@ public:
   using ParametersSpacePtr = std::shared_ptr<ParametersSpace>;
   using ObservationSpacePtr = std::shared_ptr<ObservationSpace>;
 
+  static constexpr int StateDimension{ dynamical_system_traits<Derived>::StateDimension };
+  static constexpr int ControlDimension{ dynamical_system_traits<Derived>::ControlDimension };
+
+  // Same as GTSAM V4.3
+  // template <int Rows, int Cols, typename T = void>
+  // using OptionalMatrixType = Eigen::Matrix<double, Rows, Cols>*;
+
+  // Jacobian dx1/dx0
+  using JacX = Eigen::Matrix<double, StateDimension, StateDimension>;
+  using OptJacX = JacX*;
+  // Jacobian dx1/du0
+  using JacU = Eigen::Matrix<double, StateDimension, ControlDimension>;
+  using OptJacU = JacU*;
+  // Jacobian dx1/ddt
+  using JacDT = Eigen::Matrix<double, StateDimension, 1>;
+  using OptJacDT = JacDT*;
+
   dynamical_system_t(prx::param_loader params)
     : _state_space(std::make_shared<StateSpace>(params["state_space"]))
     , _control_space(std::make_shared<ControlSpace>(params["control_space"]))
     , _parameter_space(std::make_shared<ParametersSpace>(params["parameter_space"]))
     , _sensor_space(std::make_shared<ObservationSpace>(params["sensor_space"]))
+  {
+  }
+
+  dynamical_system_t(const std::string params) : Derived(prx::param_loader::create(params))
   {
   }
 
@@ -70,11 +92,13 @@ public:
     static_cast<Derived*>(this)->initialize();
   }
 
-  // template <typename... Args>
-  // static DerivedDynamicalSystemPtr create(Args... args)
-  // {
-  //   return std::make_shared<DerivedDynamicalSystem>(args...);
-  // }
+  template <typename... Args>
+  static DerivedPtr create(Args... args)
+  {
+    DerivedPtr plant_ptr{ std::make_shared<Derived>(args...) };
+    prx_assert(plant_ptr != nullptr, "[dynamical_system_t::create] Plant not created");
+    return plant_ptr;
+  }
 
   static double distance(const State& a, const State& b)
   {
@@ -109,9 +133,10 @@ public:
     return static_cast<Derived*>(this)->sense(x0);
   }
 
-  State propagate(const State& x0, const Control& u0, const double& dt)
+  State propagate(const State& x0, const Control& u0, const double& dt, OptJacX Hx = nullptr, OptJacU Hu = nullptr,
+                  OptJacDT Hdt = nullptr)
   {
-    return static_cast<Derived*>(this)->propagate(x0, u0, dt);
+    return static_cast<Derived*>(this)->propagate(x0, u0, dt, Hx, Hu, Hdt);
   }
 
   std::vector<std::pair<Eigen::Matrix3d, Eigen::Vector3d>> configuration(const State& state)

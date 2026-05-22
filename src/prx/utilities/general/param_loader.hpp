@@ -45,8 +45,15 @@ public:
   void add_opts(std::vector<std::string> argv);
 
   // Load parameters from a string (NOT from a file)
-  // As in str <- content of a file
+  // As in str <- read(file) -- The str contains the content of a file, NOT the name of the file
   void from_string(const std::string str);
+
+  static param_loader create(const std::string str)
+  {
+    param_loader params;
+    params.from_string(str);
+    return params;
+  }
 
   operator std::string() const
   {

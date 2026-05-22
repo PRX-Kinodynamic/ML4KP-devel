@@ -118,12 +118,26 @@ public:
     return x0.first;
   }
 
-  State propagate(const State& x0, const Control& u0, const double& dt)
+  State propagate(const State& x0, const Control& u0, const double& dt, OptJacX Hx = nullptr, OptJacU Hu = nullptr,
+                  OptJacDT Hdt = nullptr)
   {
     Eigen::Vector<double, 6> xdot;
     xdot << x0.second, u0 * dt;
     const State x01{ State::Expmap(xdot) };
     const State x1{ gtsam::traits<State>::Compose(x0, x01) };
+    if (Hx)
+    {
+      prx_warn("Jacobians are wrong, used only for testing compilation");
+      *Hx = std::remove_pointer_t<OptJacX>::Identity();
+    }
+    if (Hu)
+    {
+      *Hu = std::remove_pointer_t<OptJacU>::Identity();
+    }
+    if (Hdt)
+    {
+      *Hdt = std::remove_pointer_t<OptJacDT>::Identity();
+    }
     return x1;
   }
 

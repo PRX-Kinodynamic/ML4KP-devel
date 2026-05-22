@@ -99,7 +99,7 @@ struct query_t
 
 // Check pqp_info against all obstacles. Can be used in threads if inputs are thread-safe
 
-// Using const vector of shared_ptrs because this potentially allows multiple threads querying for the same obstacles
+// Using const vector of shared_ptrs... this [potentially] allows multiple threads querying using the same obstacles
 inline bool collision(query_t& query, const std::vector<std::shared_ptr<rigid_body_t>> obstacles_bodies)
 {
   prx_assert(query.pqp_models.size() == query.plant_configurations.size(),
