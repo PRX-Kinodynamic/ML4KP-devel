@@ -120,10 +120,19 @@ BOOST_AUTO_TEST_CASE(MxMpV_test)
   PQP_EIGEN_MATRIX M2e{ PQP_EIGEN_MATRIX::Identity() * 3 };
   PQP_EIGEN_VECTOR Te{ PQP_EIGEN_VECTOR::Ones() };
 
+  PRX_DBG_VARS(Mre)
+  PRX_DBG_VARS(M1e)
+  PRX_DBG_VARS(M2e)
+  PRX_DBG_VARS(Te)
+
   PQP_REAL Mr[3][3];
   PQP_REAL M1[3][3];
   PQP_REAL M2[3][3];
   PQP_REAL T[3];
+
+  Mzero(Mr);
+  Mzero(M1);
+  Mzero(M2);
 
   M1[0][0] = 2;
   M1[1][1] = 2;
@@ -135,8 +144,10 @@ BOOST_AUTO_TEST_CASE(MxMpV_test)
   T[1] = 1;
   T[2] = 1;
 
+   
   MxMpV(Mr, M1, M2, T);
   MxMpV(Mre, M1e, M2e, Te);
+
 
   compare_pqp_matrices(Mr, Mre);
 }
