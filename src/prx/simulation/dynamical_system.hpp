@@ -79,6 +79,7 @@ public:
     , _control_space(std::make_shared<ControlSpace>(params["control_space"]))
     , _parameter_space(std::make_shared<ParametersSpace>(params["parameter_space"]))
     , _sensor_space(std::make_shared<ObservationSpace>(params["sensor_space"]))
+    , _geometries_initialized(false)
   {
   }
 
@@ -87,7 +88,11 @@ public:
   }
 
   dynamical_system_t()
-    : _state_space(nullptr), _control_space(nullptr), _parameter_space(nullptr), _sensor_space(nullptr)
+    : _state_space(nullptr)
+    , _control_space(nullptr)
+    , _parameter_space(nullptr)
+    , _sensor_space(nullptr)
+    , _geometries_initialized(false)
   {
     static_cast<Derived*>(this)->initialize();
   }
