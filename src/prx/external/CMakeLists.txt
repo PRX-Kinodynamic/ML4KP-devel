@@ -28,45 +28,48 @@ if(BUILD_FOR_GTSAM)
 	get_target_property(GTSAM_INCLUDE_DIRECTORIES gtsam INTERFACE_INCLUDE_DIRECTORIES)
 	message(STATUS "GTSAM_INCLUDE_DIRECTORIES ${GTSAM_INCLUDE_DIRECTORIES}")
 	target_include_directories(External INTERFACE
-														"$<BUILD_INTERFACE:${GTSAM_INCLUDE_DIRECTORIES}>"
+							"$<BUILD_INTERFACE:${GTSAM_INCLUDE_DIRECTORIES}>"
                             "$<INSTALL_INTERFACE:${GTSAM_INCLUDE_DIRECTORIES}>"
 														)
 	target_link_libraries(External INTERFACE gtsam)
 endif(BUILD_FOR_GTSAM)
 
 
-if (APPLE)	
-	FetchContent_Declare(
-    foxglove
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    # TODO: Copy the URL and SHA for the appropriate .zip file from here:
-    # https://github.com/foxglove/foxglove-sdk/releases?q=sdk%2F&expanded=true
-    URL https://github.com/foxglove/foxglove-sdk/releases/download/sdk%2Fv0.21.0/foxglove-v0.21.0-cpp-x86_64-apple-darwin.zip
-    URL_HASH SHA256=08c3b1d495eb607c573203823fc61a6eb35c510903a1c6d25af8e623c754ab70
-	)
-elseif(LINUX)
-	FetchContent_Declare(
-    foxglove
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    # TODO: Copy the URL and SHA for the appropriate .zip file from here:
-    # https://github.com/foxglove/foxglove-sdk/releases?q=sdk%2F&expanded=true
-    URL https://github.com/foxglove/foxglove-sdk/releases/download/sdk%2Fv0.21.0/foxglove-v0.21.0-cpp-x86_64-unknown-linux-gnu.zip
-    URL_HASH SHA256=3073923a62de4b8c99f2abd49ebc8ac218017d09c2e6c9908f991434281c6994
-	)
-endif()
-FetchContent_MakeAvailable(foxglove)
-target_include_directories(External PRIVATE ${foxglove_SOURCE_DIR}/include)
-target_include_directories(External PRIVATE ${foxglove_SOURCE_DIR}/include/foxglove)
-file(GLOB FOXGLOVE_SOURCES CONFIGURE_DEPENDS
-    "${foxglove_SOURCE_DIR}/src/*.cpp"
-    "${foxglove_SOURCE_DIR}/src/server/*.cpp"
-)
-target_sources(External PRIVATE ${FOXGLOVE_SOURCES})
-target_link_libraries(External PRIVATE ${foxglove_SOURCE_DIR}/lib/libfoxglove.a)
+# message(STATUS "foxglove:")
+# if (APPLE)	
+# 	FetchContent_Declare(
+#     foxglove
+#     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+#     # TODO: Copy the URL and SHA for the appropriate .zip file from here:
+#     # https://github.com/foxglove/foxglove-sdk/releases?q=sdk%2F&expanded=true
+#     URL https://github.com/foxglove/foxglove-sdk/releases/download/sdk%2Fv0.21.0/foxglove-v0.21.0-cpp-x86_64-apple-darwin.zip
+#     URL_HASH SHA256=08c3b1d495eb607c573203823fc61a6eb35c510903a1c6d25af8e623c754ab70
+# 	)
+# 	message(STATUS "foxglove Apple")
+# elseif(LINUX)
+# 	FetchContent_Declare(
+#     foxglove
+#     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+#     # TODO: Copy the URL and SHA for the appropriate .zip file from here:
+#     # https://github.com/foxglove/foxglove-sdk/releases?q=sdk%2F&expanded=true
+#     URL https://github.com/foxglove/foxglove-sdk/releases/download/sdk%2Fv0.21.0/foxglove-v0.21.0-cpp-x86_64-unknown-linux-gnu.zip
+#     URL_HASH SHA256=3073923a62de4b8c99f2abd49ebc8ac218017d09c2e6c9908f991434281c6994
+# 	)
+# 	message(STATUS "foxglove linux")
+# endif()
+# FetchContent_MakeAvailable(foxglove)
+# target_include_directories(External PRIVATE ${foxglove_SOURCE_DIR}/include)
+# target_include_directories(External PRIVATE ${foxglove_SOURCE_DIR}/include/foxglove)
+# file(GLOB FOXGLOVE_SOURCES CONFIGURE_DEPENDS
+#     "${foxglove_SOURCE_DIR}/src/*.cpp"
+#     "${foxglove_SOURCE_DIR}/src/server/*.cpp"
+# )
+# target_sources(External PRIVATE ${FOXGLOVE_SOURCES})
+# target_link_libraries(External PRIVATE ${foxglove_SOURCE_DIR}/lib/libfoxglove.a)
 
 
 target_include_directories(External PUBLIC
-														"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+							"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
                             "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 														)
 

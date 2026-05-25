@@ -3,7 +3,7 @@ file(GLOB EXECUTABLES_FACTOR_GRAPHS_FILES
 
 set(EXECUTABLE_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH}/factor_graphs )
 	
-find_package(CGAL REQUIRED)
+# find_package(CGAL REQUIRED)
 find_package(nlohmann_json QUIET)
 if( nlohmann_json_FOUND )
 	message(STATUS "Json library nlohmann_json Found ")
@@ -19,7 +19,7 @@ if(BUILD_FOR_GTSAM)
 		GET_FILENAME_COMPONENT(F_EXEC ${f} NAME_WE )
 		add_executable(${F_EXEC} ${f})
 
-		target_link_libraries(${F_EXEC} ${PROJECT_NAME} gtsam CGAL::CGAL 	)
+		target_link_libraries(${F_EXEC} ${PROJECT_NAME} gtsam 	)
 
 		if( nlohmann_json_FOUND )
 			target_link_libraries(${F_EXEC}  nlohmann_json::nlohmann_json)

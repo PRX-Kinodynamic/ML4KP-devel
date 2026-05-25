@@ -11,7 +11,7 @@ if(BUILD_FOR_GTSAM)
 		GET_FILENAME_COMPONENT(F_EXEC ${f} NAME_WE )
 		add_executable(${F_EXEC} ${f})
 
-		target_link_libraries(${F_EXEC} ${PROJECT_NAME} gtsam CGAL::CGAL 	)
+		target_link_libraries(${F_EXEC} ${PROJECT_NAME} gtsam 	)
 
 
 	endforeach()
