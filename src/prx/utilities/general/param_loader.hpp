@@ -52,7 +52,7 @@ public:
   {
     param_loader params;
     params.from_string(str);
-    return params;
+    return std::move(params);
   }
 
   operator std::string() const
