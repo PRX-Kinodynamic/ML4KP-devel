@@ -168,4 +168,9 @@ struct streamer_t<Element,                                                     /
   }
 };
 
+template <typename Type>
+void to_stream(std::ostream& os, const Type& type)
+{
+  streamer_t<Type>::to_stream(os, type);
+}
 }  // namespace prx

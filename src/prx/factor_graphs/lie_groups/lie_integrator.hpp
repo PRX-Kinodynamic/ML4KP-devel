@@ -55,7 +55,7 @@ public:
     // clang-format on
 
     const Xdot xdot_dt{ xdot * dt };
-    const X exmap_xdot_dt{ X::Expmap(xdot_dt, (Hxdot or Hdt) ? &exp_H_tau : nullptr) };
+    const X exmap_xdot_dt{ gtsam::traits<X>::Expmap(xdot_dt, (Hxdot or Hdt) ? &exp_H_tau : nullptr) };
     const X xj{ gtsam::traits<X>::Compose(x, exmap_xdot_dt, Hx, (Hxdot or Hdt) ? &q1_H_exp : nullptr) };
 
     // if (Hx)
@@ -162,10 +162,10 @@ public:
                                 Hdt ? &qp_H_qdt : nullptr) };
     // X1_p (-) x1 => Eq. 26 from "A micro Lie theory [...]"
     // https://arxiv.org/pdf/1812.01537.pdf
-    const X between{ x1.between(prediction,                                 // no-lint
-                                (Hx0 or Hxdot or Hdt) ? &b_H_q1 : nullptr,  // no-lint
-                                (Hx0 or Hxdot or Hdt) ? &b_H_qp : nullptr) };
-    const Eigen::VectorXd error{ X::Logmap(between, (Hx0 or Hxdot or Hdt) ? &err_H_b : nullptr) };
+    const X between{ gtsam::traits<X>::Between(x1, prediction,                             // no-lint
+                                               (Hx0 or Hxdot or Hdt) ? &b_H_q1 : nullptr,  // no-lint
+                                               (Hx0 or Hxdot or Hdt) ? &b_H_qp : nullptr) };
+    const Eigen::VectorXd error{ gtsam::traits<X>::Logmap(between, (Hx0 or Hxdot or Hdt) ? &err_H_b : nullptr) };
 
     if (Hx1)
     {
