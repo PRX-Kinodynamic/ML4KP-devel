@@ -76,6 +76,12 @@ public:
     return hash(tg);
   }
 
+  bool exists(const LieType& x)
+  {
+    const TangentElement v{ vertex(x) };
+    return _cells.count(v) > 0;
+  }
+
   // Return the state associated to the Local tangent element.
   // As the tangent element us local with respect to x0, this function does:
   // res = x0 * Expmap(tg)
@@ -112,10 +118,21 @@ public:
     return vxs;
   }
 
-  CellType& cell(const LieType& xi)
+  void set_cell(const LieType& xi, CellType value)
   {
     const TangentElement v{ vertex(xi) };
-    return _cells[v];
+    // _cells[v] = value;
+    // PRX_DBG_VARS(v.transpose());
+
+    auto [iter, flag] = _cells.insert_or_assign(v, value);
+    // PRX_DBG_VARS(iter->first, iter->second, flag)
+  }
+
+  CellType& cell(const LieType& xi)
+  {
+    const TangentElement v_cell{ vertex(xi) };
+    // PRX_DBG_VARS(size(), v_cell.transpose());
+    return _cells[v_cell];
   }
 
   TangentElement cell_sizes() const
@@ -155,14 +172,16 @@ private:
   {
     bool operator()(const TangentElement& lhs, const TangentElement& rhs) const
     {
-      for (int i = 0; i < Dimension; ++i)
-      {
-        if (lhs[i] < rhs[i])
-        {
-          return true;
-        }
-      }
-      return false;
+      return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+      // for (int i = 0; i < Dimension; ++i)
+      // {
+      //   // PRX_DBG_VARS(i, lhs[i], rhs[i])
+      //   if (lhs[i] < rhs[i])
+      //   {
+      //     return true;
+      //   }
+      // }
+      // return false;
     }
   };
 

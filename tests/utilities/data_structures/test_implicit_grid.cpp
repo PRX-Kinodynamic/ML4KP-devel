@@ -180,3 +180,36 @@ BOOST_AUTO_TEST_CASE(lie_hash_v2)
   PRX_DBG_VARS(hx0, hx1)
   BOOST_CHECK(hx0 != hx1);
 }
+
+BOOST_AUTO_TEST_CASE(test_insertion)
+{
+  using LieType = gtsam::ProductLieGroupV43<gtsam::Rot2, double>;
+  using Grid = prx::implicit_grid_t<LieType, int>;
+  using Tangent = Grid::TangentElement;
+
+  Grid grid;
+
+  const LieType x0{ LieType(gtsam::Rot2(0.), 0.) };
+  const Tangent cell_size{ Tangent::Ones() * 0.1 };
+  grid.reset(x0, cell_size);
+
+  int idx{ 1 };
+  const LieType xtest{ LieType(gtsam::Rot2(-3.13659), -3.14159) };
+  // PRX_DBG_VARS(grid.size());
+  grid.cell(xtest) = idx;
+  // PRX_DBG_VARS(grid.size());
+  BOOST_REQUIRE_MESSAGE(grid.cell(xtest) == idx, EXPECTED_GOT(idx, grid.cell(xtest)));
+  idx++;
+
+  for (double i = -3.14159; i < 3.14159; i += 0.09)
+  {
+    for (double j = -3.14159; j < 3.14159; j += 0.09)
+    {
+      const LieType x1{ LieType(gtsam::Rot2(i), j) };
+      grid.cell(x1) = idx;
+      // PRX_DBG_VARS(i, j, grid.size());
+      BOOST_REQUIRE_MESSAGE(grid.cell(x1) == idx, EXPECTED_GOT(idx, grid.cell(x1)));
+      idx++;
+    }
+  }
+}
