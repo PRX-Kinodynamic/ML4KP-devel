@@ -169,7 +169,7 @@ public:
   }
 
   sampler_t(prx::param_loader param)
-  // : sampler_t(param.get_or_default("min", Element()), param.get_or_default("max", Element()))
+    : sampler_t(param.get_or_default("min", Element()), param.get_or_default("max", Element()))
   {
     // TODO
     // std::vector<Type> min, max;

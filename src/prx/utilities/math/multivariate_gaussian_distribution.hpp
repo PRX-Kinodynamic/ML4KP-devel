@@ -8,9 +8,9 @@
 namespace prx
 {
 
-// For the bounded gaussian, the input chi2 expects the value from the chi2 table for Dimension and 1-alpha. For a
-// 1dim gaussian with 95% confidence (0.05 column), the input value must be 3.841 For a 2dim gaussian with 95%
-// confidence (0.05 column), the input value must be 5.991
+// For the bounded gaussian, the input chi2 expects the value from the chi2 table for Dimension and 1-alpha.
+// For a 1dim gaussian with 95% confidence (0.05 column), the input value must be 3.841.
+// For a 2dim gaussian with 95% confidence (0.05 column), the input value must be 5.991.
 // The bounded implementation can be *slow* (rejects samples out of bounds). A faster implementation should be possible
 template <int Dimension>
 class multivariate_gaussian_t
