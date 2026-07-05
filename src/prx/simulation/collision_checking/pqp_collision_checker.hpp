@@ -93,8 +93,14 @@ static std::vector<std::shared_ptr<PQP_Model>> create_pqp_models(const std::shar
 struct query_t
 {
   PQP_CollideResult collision_result;
+  PQP_DistanceResult distance_result;
   std::vector<std::shared_ptr<PQP_Model>> pqp_models;
   std::vector<std::pair<Eigen::Matrix3d, Eigen::Vector3d>> plant_configurations;
+
+  // Additional results of the queries
+  // DistanceQuery: norm(P1-P2) = min_distance. P1 is a point in the system, P2 is a point in the obstacle
+  Eigen::Vector3d P1;
+  Eigen::Vector3d P2;
 };
 
 // Check pqp_info against all obstacles. Can be used in threads if inputs are thread-safe
@@ -130,6 +136,46 @@ inline bool collision(query_t& query, const std::vector<std::shared_ptr<rigid_bo
     }
   }
   return false;
+}
+
+inline double minimum_distance(query_t& query, const std::vector<std::shared_ptr<rigid_body_t>> obstacles_bodies)
+{
+  prx_assert(query.pqp_models.size() == query.plant_configurations.size(),
+             "[pqp:collision] mismatch number of models and configurations");
+  double min_dist{ std::numeric_limits<double>::max() };
+  for (int i = 0; i < query.pqp_models.size(); ++i)
+  {
+    Eigen::Matrix3d& rotation{ query.plant_configurations[i].first };
+    Eigen::Vector3d& translation{ query.plant_configurations[i].second };
+    std::shared_ptr<PQP_Model> model{ query.pqp_models[i] };
+    for (auto&& obstacle : obstacles_bodies)
+    {
+      // query.collision_result.FreePairsList();
+
+      PQP_Distance(&query.distance_result,                                           // no-lint
+                   *reinterpret_cast<PQP_REAL(*)[3][3]>(rotation.data()),            // no-lint
+                   *reinterpret_cast<PQP_REAL(*)[3]>(translation.data()),            // no-lint
+                   model.get(),                                                      // no-lint
+                   *reinterpret_cast<PQP_REAL(*)[3][3]>(obstacle->rotation.data()),  // no-lint
+                   *reinterpret_cast<PQP_REAL(*)[3]>(obstacle->position.data()),     // no-lint
+                   obstacle->model.get(),                                            // no-lint
+                   0.,                                                               // rel_err
+                   0.);                                                              // abs_err
+
+      if (min_dist > query.distance_result.distance)
+      {
+        min_dist = query.distance_result.distance;
+        query.P1 = Eigen::Map<const Eigen::Vector3d>(query.distance_result.P1());
+        query.P2 = Eigen::Map<const Eigen::Vector3d>(query.distance_result.P2());
+        // min_dist = std::min(min_dist, query.distance_result.distance);
+      }
+      // if (query.collision_result.Colliding())
+      // {
+      //   return true;
+      // }
+    }
+  }
+  return min_dist;
 }
 
 template <typename DynamicalSystem>
@@ -169,10 +215,22 @@ public:
     return prx::collision_checking::pqp::collision(_query, _obstacles_bodies);
   }
 
-  // TODO:
-  // pqp_distance_t get_distances()
-  // {
-  // }
+  template <typename State>
+  double minimum_distance(const State& state)
+  {
+    _query.plant_configurations = _system->configuration(state);
+    return prx::collision_checking::pqp::minimum_distance(_query, _obstacles_bodies);
+  }
+
+  query_t query() const
+  {
+    return _query;
+  }
+
+  std::vector<std::shared_ptr<rigid_body_t>> obstacles() const
+  {
+    return _obstacles_bodies;
+  }
 
 protected:
   DynamicalSystemPtr _system;

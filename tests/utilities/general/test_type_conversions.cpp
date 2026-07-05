@@ -116,3 +116,12 @@ BOOST_AUTO_TEST_CASE(auto_cast_test)
   prx::utilities::auto_cast(str_var, str_const);
   BOOST_REQUIRE(str_var == "3");
 }
+
+BOOST_AUTO_TEST_CASE(string_hex_to_double_convertion)
+{
+  const char hex{ 'F' };
+  const int hex_dbl{ convert_to<int>(hex) };
+
+  PRX_DBG_VARS(hex_dbl)
+  BOOST_REQUIRE(hex_dbl == 15);
+}

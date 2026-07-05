@@ -24,8 +24,8 @@ struct piecewise_step_t
   friend std::ostream& operator<<(std::ostream& os, const PiecewiseStep& obj)
   {
     prx::streamer_t<ControlType>::to_stream(os, obj.control);
-    prx::streamer_t<ControlType>::to_stream(os, obj.duration);
-    os << "\n";
+    prx::streamer_t<DurationType>::to_stream(os, obj.duration);
+    os << " ";
     return os;
   }
 

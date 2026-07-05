@@ -1,3 +1,4 @@
+#include "math/lie_utils.hpp"
 #define BOOST_AUTO_TEST_MAIN spaces_test
 #include <chrono>
 #include <string>
@@ -5,6 +6,7 @@
 #include "prx/utilities/spaces/streamer.hpp"
 #include "prx/utilities/data_structures/implicit_grid.hpp"
 #include "prx/utilities/defs.hpp"
+#include "prx/utilities/spaces/streamer.hpp"
 
 namespace mock
 {
@@ -211,5 +213,86 @@ BOOST_AUTO_TEST_CASE(test_insertion)
       BOOST_REQUIRE_MESSAGE(grid.cell(x1) == idx, EXPECTED_GOT(idx, grid.cell(x1)));
       idx++;
     }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(test_state_from_tangent_space)
+{
+  using LieType = gtsam::ProductLieGroupV43<gtsam::Rot2, double>;
+  using Grid = prx::implicit_grid_t<LieType, int>;
+  using Tangent = Grid::TangentElement;
+
+  Grid grid;
+
+  const LieType x0{ LieType(gtsam::Rot2(0.), 2.) };
+  const Tangent cell_size{ Tangent::Ones() * 0.1 };
+  grid.reset(x0, cell_size);
+
+  auto vertices = grid.vertices(x0);
+  for (auto v : vertices)
+  {
+    const LieType xv{ grid.state_from_vertex(v) };
+    const Tangent tg{ prx::TangentBetween(xv, x0) };
+    PRX_DEBUG_VARS(tg.transpose())
+  }
+
+  const LieType x1{ LieType(gtsam::Rot2(0.), 0.2) };
+  std::cout << "\nx1: ";
+  prx::to_stream(std::cout, x1);
+  vertices = grid.vertices(x1);
+  for (auto v : vertices)
+  {
+    const LieType xv{ grid.state_from_vertex(v) };
+    std::cout << "\nv: ";
+    prx::to_stream(std::cout, v);
+    std::cout << "\nxv: ";
+    prx::to_stream(std::cout, xv);
+    const Tangent tg{ prx::TangentBetween(xv, x1) };
+    std::cout << "\n";
+    PRX_DEBUG_VARS(tg.transpose())
+  }
+
+  // const LieType x1{ LieType(gtsam::Rot2(0.), 0.2) };
+  // const LieType xv0{ grid.state(vertices[0]) };
+  // const LieType xv1{ grid.state(vertices[1]) };
+  // const LieType xv2{ grid.state(vertices[2]) };
+  // const LieType xv3{ grid.state(vertices[3]) };
+
+  // prx::to_stream(std::cout, xv0);
+  // prx::to_stream(std::cout, xv1);
+  // prx::to_stream(std::cout, xv2);
+  // prx::to_stream(std::cout, xv3);
+  // gtsam::traits<LieType>::Logmap(xv0);
+}
+
+BOOST_AUTO_TEST_CASE(test_implicit_grid_reset_fg_cell_sizes)
+{
+  using LieType = gtsam::ProductLieGroupV43<gtsam::Rot2, double>;
+  using Grid = prx::implicit_grid_t<LieType, mock::cell_t>;
+  using Tangent = prx::implicit_grid_t<LieType, mock::cell_t>::TangentElement;
+
+  Grid grid;
+
+  LieType x0{ LieType() };
+  LieType x1{ LieType(1, 1) };
+  // LieType x1{ LieType(.15, .15) };
+  // Tangent cell_size(0.1, 0.2, 0.3);
+  grid.reset(x0, 0.1);
+
+  PRX_DBG_VARS(x0)
+  auto vertices = grid.vertices(x0);
+  for (auto& v : vertices)
+  {
+    const LieType xv{ grid.state_from_vertex(v) };
+    PRX_DBG_VARS(v, xv);
+  }
+
+  PRX_DBG_VARS(x1)
+  vertices = grid.vertices(x1);
+  PRX_DBG_VARS(vertices)
+  for (auto& v : vertices)
+  {
+    const LieType xv{ grid.state_from_vertex(v) };
+    PRX_DBG_VARS(v, xv);
   }
 }

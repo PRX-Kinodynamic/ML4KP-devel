@@ -58,7 +58,7 @@ obstacle_loader_t::load_obstacles_from_file(const param_loader& obstacles)
       double radius = geom_params["radius"].as<double>();
       double height = geom_params["height"].as<double>();
       auto color = geom_params["material"].as<std::string>();
-      obstacle_list.push_back(create_obstacle(new cylinder_t(name, radius, height, obstacle_pose)));
+      obstacle_list.push_back(create_obstacle(new cylinder_t(name, radius, height, obstacle_pose, color)));
       obstacle_names.push_back(name);
     }
     else if (geom_type == "sphere")

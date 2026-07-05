@@ -39,9 +39,16 @@ inline T convert_to(const StringType& str)
   }
   catch (std::invalid_argument e)
   {
-    PRX_MSG_VARS("[StrToFloatingType] Invalid conversion", str)
+    PRX_MSG_VARS("[StrToFloatingType] Invalid conversion", str);
   }
   return 0.0;
+}
+
+template <typename T, typename CharType,
+          std::enable_if_t<std::is_arithmetic<T>::value && std::is_same<CharType, char>::value, bool> = true>
+inline T convert_to(const CharType& c)
+{
+  return (c >= 'A') ? (c >= 'a') ? (c - 'a' + 10) : (c - 'A' + 10) : (c - '0');
 }
 
 template <typename To, typename From,
@@ -54,7 +61,9 @@ inline To convert_to(const From& value)
 }
 
 template <typename To, typename From,
-          std::enable_if_t<std::is_floating_point<To>::value && std::is_integral<From>::value, bool> = true>
+          std::enable_if_t<std::is_floating_point<To>::value &&  // no-lint
+                               std::is_integral<From>::value && not std::is_same_v<From, char>,
+                           bool> = true>
 inline To convert_to(const From& value)
 {
   return static_cast<To>(value);

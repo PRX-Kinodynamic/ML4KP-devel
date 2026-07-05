@@ -74,3 +74,21 @@ BOOST_AUTO_TEST_CASE(multivariate_gaussian_shape_test)
   std::cout << "FINISHED\n";
   ofs.close();
 }
+
+BOOST_AUTO_TEST_CASE(multivariate_zero_gaussian_test)
+{
+  using Sample = prx::multivariate_gaussian_t<2>::Sample;
+  prx::multivariate_gaussian_t<2> gaussian;
+
+  gaussian.set(Eigen::Matrix<double, 2, 2>::Zero());
+
+  int in_66{ 0 };
+  // for (int i = 0; i < 1000; ++i)
+  // {
+  const Sample mu{ gaussian() };
+  PRX_DBG_VARS(mu);
+  // TODO: This is too simple and only upper bounds... Need a more statistical test
+  // in_66 += std::fabs(mu[0]) < 0.67 ? 1 : 0;
+  // }
+  // BOOST_CHECK(in_66 < 667);
+}

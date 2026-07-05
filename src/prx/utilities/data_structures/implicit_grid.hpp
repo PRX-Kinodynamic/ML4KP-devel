@@ -3,11 +3,91 @@
 #include <bitset>
 #include <map>
 #include <gtsam/base/Lie.h>
+#include <gtsam/inference/Symbol.h>
+#include <gtsam/nonlinear/NonlinearFactor.h>
 #include <prx/utilities/math/primes.hpp>
 #include "prx/utilities/general/transforms.hpp"
-
+#include "prx/utilities/general/debug_utils.hpp"
+#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 namespace prx
 {
+template <typename State>
+class cell_size_factor_t : public gtsam::NoiseModelFactorN<Eigen::Vector<double, gtsam::traits<State>::dimension>>
+{
+  static constexpr Eigen::Index DimX{ gtsam::traits<State>::dimension };
+  using Tangent = Eigen::Vector<double, DimX>;
+
+  using Base = gtsam::NoiseModelFactorN<Tangent>;
+  using Derived = cell_size_factor_t<State>;
+
+  using NoiseModel = gtsam::noiseModel::Base::shared_ptr;
+
+  using OptDeriv = boost::optional<Eigen::MatrixXd&>;
+
+  cell_size_factor_t() = delete;
+
+public:
+  cell_size_factor_t(const cell_size_factor_t& other) = delete;
+
+  cell_size_factor_t(const gtsam::Key key_x0, const double cell_size)
+    : Base(nullptr, key_x0), _cell_size(cell_size * Tangent::Ones()), _xc(State())
+  {
+  }
+
+  ~cell_size_factor_t() override
+  {
+  }
+
+  // Error is: z (-) q_^{predicted}_1; where q_^{predicted}_1 = q0 (+) qdot dt, for a fix (known) dt
+  virtual Eigen::VectorXd evaluateError(const Tangent& tg,  // no-lint
+                                        OptDeriv Htg = boost::none) const override
+  {
+    using Jac = Eigen::Matrix<double, DimX, DimX>;
+    Jac xp_H_tg, xm_H_mtg, xh_H_xp, xl_H_xm, cs_H_xB, xB_H_xl, xB_H_xp;
+    // const Jac mtg_H_tg{ -Jac::Identity() };
+
+    // const State xm{ gtsam::traits<State>::Expmap(-tg, xm_H_mtg) };
+    // const State x_low{ gtsam::traits<State>::Compose(_xc, xm, boost::none, xl_H_xm) };
+
+    const State xp{ gtsam::traits<State>::Expmap(tg, xp_H_tg) };
+    // const State x_high{ gtsam::traits<State>::Compose(_xc, xp, boost::none, xh_H_xp) };
+    // const State x_high_inv{ gtsam::traits<State>::Inverse(x_high, xhI_H_xh) };
+
+    // const State xB{ gtsam::traits<State>::Between(x_low, x_high, xB_H_xl, xB_H_xh) };
+    const State xB{ gtsam::traits<State>::Between(_xc, xp, boost::none, xB_H_xp) };
+    const Tangent cs{ gtsam::traits<State>::Logmap(xB, cs_H_xB) };
+    const Tangent error{ cs - _cell_size };
+
+    // PRX_DBG_VARS(tg.transpose());
+    // PRX_DBG_VARS(_xc);
+    // PRX_DBG_VARS(xm, x_low);
+    // PRX_DBG_VARS(xp, x_high);
+    // PRX_DBG_VARS(xB);
+    // PRX_DBG_VARS(cs.transpose(), _cell_size.transpose());
+    // PRX_DBG_VARS(error.transpose());
+    if (Htg)
+    {
+      *Htg = cs_H_xB * xB_H_xp * xp_H_tg;  // +             // High
+                                           // cs_H_xB * xB_H_xl * xl_H_xm * xm_H_mtg * mtg_H_tg;  // Low
+      // PRX_DBG_VARS(cs_H_xLH);
+      // PRX_DBG_VARS(xLH_H_xh);
+      // PRX_DBG_VARS(xh_H_xp);
+      // PRX_DBG_VARS(xp_H_tg);
+      // PRX_DBG_VARS(cs_H_xLH);
+      // PRX_DBG_VARS(xLH_H_xl);
+      // PRX_DBG_VARS(xl_H_xm);
+      // PRX_DBG_VARS(xm_H_mtg);
+      // PRX_DBG_VARS(mtg_H_tg);
+      // PRX_DBG_VARS(*Htg);
+    }
+    return error;
+  }
+
+private:
+  const State _xc;
+  const Tangent _cell_size;
+};
+
 template <typename LieType, typename CellType>
 class implicit_grid_t
 {
@@ -31,6 +111,20 @@ public:
   {
     return _x0;
   }
+  void reset(const LieType x0, const double cell_size)
+  {
+    gtsam::Values values;
+    gtsam::NonlinearFactorGraph graph;
+    const gtsam::Key k{ gtsam::Symbol('x', 0) };
+
+    const TangentElement init_val{ cell_size * TangentElement::Ones() };
+    values.insert(k, init_val);
+    graph.emplace_shared<cell_size_factor_t<LieType>>(k, cell_size);
+    values = gtsam::GaussNewtonOptimizer(graph, values).optimize();
+    // values.print();
+    const TangentElement cell_sizes{ values.at<TangentElement>(k) };
+    reset(x0, cell_sizes);
+  }
 
   void reset(const LieType x0, const TangentElement cell_sizes)
   {
@@ -53,6 +147,11 @@ public:
     const TangentElement eps{ gtsam::traits<LieType>::Logmap(x0i) };
     const TangentElement eps_div{ eps.cwiseQuotient(_cell_sizes) };
     const TangentElement v_grid{ eps_div.unaryExpr(&implicit_grid_t::unary_modf) };
+
+    // PRX_DBG_VARS(x0i)
+    // PRX_DBG_VARS(eps, eps_div)
+    // PRX_DBG_VARS(v_grid)
+
     return v_grid;
   }
 
@@ -85,10 +184,28 @@ public:
   // Return the state associated to the Local tangent element.
   // As the tangent element us local with respect to x0, this function does:
   // res = x0 * Expmap(tg)
-  LieType state(const TangentElement& tg)
+  LieType state(const TangentElement& vx)
   {
-    const LieType x_local{ gtsam::traits<LieType>::Expmap(tg) };
+    const LieType x_local{ gtsam::traits<LieType>::Expmap(vx) };
     const LieType x_global{ gtsam::traits<LieType>::Compose(_x0, x_local) };
+    return x_global;
+  }
+
+  LieType state_from_vertex(const TangentElement& vx)
+  {
+    const TangentElement vx_am{ vx.unaryExpr(&implicit_grid_t::unary_antimodf) };
+    const TangentElement vx_prod{ vx_am.cwiseProduct(_cell_sizes) };
+    const LieType x_local{ gtsam::traits<LieType>::Expmap(vx_prod) };
+    const LieType x_global{ gtsam::traits<LieType>::Compose(_x0, x_local) };
+
+    // PRX_DBG_VARS(vx, vx_am)
+    // PRX_DBG_VARS(vx_prod, _cell_sizes)
+    // PRX_DBG_VARS(x_local, x_global)
+    // const LieType x0i{ gtsam::traits<LieType>::Compose(_x0_inv, xi) };
+    // const TangentElement eps{ gtsam::traits<LieType>::Logmap(x0i) };
+    // const TangentElement eps_div{ eps.cwiseQuotient(_cell_sizes) };
+    // const TangentElement v_grid{ eps_div.unaryExpr(&implicit_grid_t::unary_modf) };
+
     return x_global;
   }
 
@@ -160,9 +277,15 @@ private:
   static double unary_modf(const double& x)
   {
     double ptr;
-    std::modf(x, &ptr);
+    const double res{ std::modf(x + 0.0001, &ptr) };
+    // PRX_DBG_VARS(x, res, ptr)
     return x < 0. ? ptr - 1. : ptr;
   };
+
+  static double unary_antimodf(const double& x)
+  {
+    return x < 0. ? x + 1. : x;
+  }
 
   static double xor_reductor(const double& x, const double& y)
   {
@@ -202,7 +325,7 @@ private:
       result[i] = value;
       if (_bits[i])
       {
-        result[i] += cell_sizes[i];
+        result[i] += 1.;  // cell_sizes[i];
       }
     }
   };

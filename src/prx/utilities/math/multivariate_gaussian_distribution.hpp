@@ -62,6 +62,11 @@ public:
     return sample();
   }
 
+  Mean operator()(const Mean& x) const
+  {
+    return x + sample();
+  }
+
 protected:
   const bool _bounded;
   const double _chi2_confidence;
@@ -75,8 +80,18 @@ protected:
 
   void compute_transform(const Covariance& cov)
   {
-    Eigen::SelfAdjointEigenSolver<Covariance> eigenSolver(cov);
-    _transform = eigenSolver.eigenvectors() * eigenSolver.eigenvalues().cwiseSqrt().asDiagonal();
+    if (cov.isZero(1e-6))
+    {
+      _transform = Covariance::Zero();
+    }
+    else
+    {
+      Eigen::SelfAdjointEigenSolver<Covariance> eigenSolver(cov);
+      const Eigen::Matrix<double, Dimension, Dimension> eig_vecs{ eigenSolver.eigenvectors() };
+      const Eigen::Vector<double, Dimension> eig_vals{ eigenSolver.eigenvalues() };
+
+      _transform = eig_vecs * eig_vals.cwiseSqrt().asDiagonal();
+    }
   }
   // 2.447651936
   bool in_bounds() const

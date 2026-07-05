@@ -5,6 +5,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include "prx/utilities/spaces/streamer.hpp"
+#include "prx/utilities/general/debug_utils.hpp"
 
 template <typename Type>
 void mock_stream(std::ostream& os, const Type& t)
@@ -123,4 +124,14 @@ BOOST_AUTO_TEST_CASE(test_product_vector_lie_groupV43)
   mock_stream(strstr, vector);
   PRX_DBG_VARS(strstr.str())
   BOOST_CHECK(strstr.str() == "0 1 2 3 4 5 \n0 1 2 3 4 5 \n");
+}
+
+BOOST_AUTO_TEST_CASE(test_streamer_pair)
+{
+  std::stringstream strstr;
+
+  std::pair<Eigen::Vector2d, double> p{ std::make_pair(Eigen::Vector2d(0, 1), 2.) };
+
+  mock_stream(strstr, p);
+  BOOST_CHECK(strstr.str() == "0 1 2 ");
 }

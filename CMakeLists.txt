@@ -17,6 +17,7 @@ set(BUILD_TESTS		 ON CACHE BOOL "Set ON/TRUE for building tests")
 set(BUILD_FOR_GTSAM ON CACHE BOOL "Set ON/TRUE for building GTSAM factor graphs")
 set(BUILD_WITH_SIMD OFF CACHE BOOL "Set ON/TRUE for building with SIMD (vectorized) operations")
 set(BUILD_STATIC_LIBRARY OFF CACHE BOOL "Set ON/TRUE for building static library")
+set(BUILD_WITH_FOXGLOVE ON CACHE BOOL "Set ON/TRUE for building with FOXGLOVE")
 
 set(${PROJECT_NAME}_VERSION 1.0)
 set(${PROJECT_NAME}_HEADERS "" CACHE STRING "Headers to be exported")
@@ -146,6 +147,23 @@ foreach(HEADER IN ITEMS ${${PROJECT_NAME}_HEADERS})
 	get_filename_component(H_DIR ${HEADER} DIRECTORY )
 	install(FILES src/${HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${H_DIR})
 endforeach()
+
+# if(BUILD_WITH_FOXGLOVE)
+# 	message(STATUS "Installing foxglove_cpp")
+
+# 	# install(TARGETS foxglove_cpp
+#   #       EXPORT foxglove_cppTargets
+#   #       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#   #       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+#   #       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+#   #       INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+# 	# )
+
+#   install(EXPORT foxglove_cppTargets
+#     DESTINATION ${CMAKE_INSTALL_DESTINATION}
+#     FILE foxglove_cpp.cmake
+#     )
+# endif()
 
 # install(TARGETS ${${PROJECT_NAME}_LIBRARIES} EXPORT ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 foreach(LIBRARY IN ITEMS ${${PROJECT_NAME}_LIBRARIES})

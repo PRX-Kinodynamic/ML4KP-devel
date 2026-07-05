@@ -2,7 +2,8 @@
 #include <ostream>
 #include <regex>
 // #include "prx/utilities/general/constants.hpp"
-#include "prx/utilities/general/template_utils.hpp"
+#include "prx/utilities/spaces/streamer.hpp"
+// #include "prx/utilities/general/template_utils.hpp"
 
 namespace prx
 {
@@ -18,22 +19,28 @@ inline void print_variables(std::ostream& stream, const std::string& name)
   stream << std::endl;
 }
 
-template <typename Value, std::enable_if_t<prx::utilities::is_streamable<Value>::value, bool> = true>
-inline void print_value(std::ostream& stream, const Value& value)
+template <typename Value>  // no-lint
+inline void print_value(std::ostream& strm, const Value& value)
 {
-  stream << value << " ";
+  prx::streamer_t<Value>::to_stream(strm, value);
 }
 
-template <typename Value, std::enable_if_t<prx::utilities::is_iterable<Value>::value and
-                                               not prx::utilities::is_streamable<Value>::value,
-                                           bool> = true>
-inline void print_value(std::ostream& stream, const Value& value)
-{
-  for (auto e : value)
-  {
-    print_value(stream, e);
-  }
-}
+// template <typename Value, std::enable_if_t<prx::utilities::is_streamable<Value>::value, bool> = true>
+// inline void print_value(std::ostream& stream, const Value& value)
+// {
+//   stream << value << " ";
+// }
+
+// template <typename Value, std::enable_if_t<prx::utilities::is_iterable<Value>::value and
+//                                                not prx::utilities::is_streamable<Value>::value,
+//                                            bool> = true>
+// inline void print_value(std::ostream& stream, const Value& value)
+// {
+//   for (auto e : value)
+//   {
+//     print_value(stream, e);
+//   }
+// }
 
 inline void print_values(std::ostream& stream)
 {

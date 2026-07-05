@@ -1,10 +1,13 @@
 #pragma once
-#include "prx/utilities/defs.hpp"
-#include "prx/utilities/general/debug_utils.hpp"
-#include <gtsam/geometry/Pose2.h>
-#include <gtsam/base/ProductLieGroup.h>
+// #include "prx/utilities/defs.hpp"
+// #include "prx/utilities/general/debug_utils.hpp"
 #include <type_traits>
 #include "prx/utilities/spaces/product_lie_group.hpp"
+#include "prx/utilities/general/template_utils.hpp"
+
+#include <gtsam/geometry/Pose2.h>
+#include <gtsam/base/ProductLieGroup.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 namespace prx
 {
@@ -123,6 +126,24 @@ struct streamer_t<gtsam::ProductLieGroupV43<G, H>> : std::true_type
 {
 public:
   using Element = gtsam::ProductLieGroupV43<G, H>;
+
+  static void to_stream(std::ostream& os, const Element& v)
+  {
+    streamer_t<G>::to_stream(os, v.first);
+    streamer_t<H>::to_stream(os, v.second);
+  }
+};
+
+template <typename G, typename H>
+struct stream_specialization<std::pair<G, H>> : std::true_type
+{
+};
+
+template <typename G, typename H>
+struct streamer_t<std::pair<G, H>> : std::true_type
+{
+public:
+  using Element = std::pair<G, H>;
 
   static void to_stream(std::ostream& os, const Element& v)
   {

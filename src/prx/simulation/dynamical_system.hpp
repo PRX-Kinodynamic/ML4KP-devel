@@ -47,6 +47,8 @@ public:
   using Parameters = typename dynamical_system_traits<Derived>::Parameters;
   using Observation = typename dynamical_system_traits<Derived>::Observation;
 
+  using StateDot = typename dynamical_system_traits<Derived>::StateDot;
+
   using StateSpace = prx::experimental::space_t<State>;
   using ControlSpace = prx::experimental::space_t<Control>;
   using ParametersSpace = prx::experimental::space_t<Parameters>;
@@ -138,10 +140,22 @@ public:
     return static_cast<Derived*>(this)->sense(x0);
   }
 
+  // \dot{x} = f(x,u)
+  StateDot ode(const State& x0, const Control& u0, OptJacX Hx = nullptr, OptJacU Hu = nullptr)
+  {
+    return static_cast<Derived*>(this)->ode(x0, u0, Hx, Hu);
+  }
+
   State propagate(const State& x0, const Control& u0, const double& dt, OptJacX Hx = nullptr, OptJacU Hu = nullptr,
                   OptJacDT Hdt = nullptr)
   {
     return static_cast<Derived*>(this)->propagate(x0, u0, dt, Hx, Hu, Hdt);
+  }
+
+  State integrate(const State& x0, const StateDot& xd0, const double& dt, OptJacX Hx = nullptr, OptJacU Hxd = nullptr,
+                  OptJacDT Hdt = nullptr)
+  {
+    return static_cast<Derived*>(this)->integrate(x0, xd0, dt, Hx, Hxd, Hdt);
   }
 
   std::vector<std::pair<Eigen::Matrix3d, Eigen::Vector3d>> configuration(const State& state)

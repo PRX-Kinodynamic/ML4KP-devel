@@ -26,6 +26,8 @@ struct dynamical_system_traits<SE2_holonomic_system_t>
   using Control = Eigen::Vector<double, ControlDimension>;
   using Parameters = Eigen::Vector<double, ParametersDimension>;
   using Observation = gtsam::Pose2;
+
+  using StateDot = Eigen::Vector<double, StateDimension>;
 };
 
 class SE2_holonomic_system_t : public prx::dynamical_system_t<SE2_holonomic_system_t>

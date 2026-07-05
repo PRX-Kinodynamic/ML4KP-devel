@@ -92,3 +92,66 @@ BOOST_AUTO_TEST_CASE(test_multiple_obstacles)
   mock::State x2{ 10, 0., 0. };
   BOOST_REQUIRE(not checker.collision(x2));
 }
+
+BOOST_AUTO_TEST_CASE(test_min_distance)
+{
+  std::shared_ptr<mock::plant_t> plant{ std::make_shared<mock::plant_t>() };
+
+  std::vector<std::shared_ptr<prx::movable_object_t>> obstacles;
+  Eigen::Transform<double, 3, Eigen::Isometry> obstacle_pose;
+
+  obstacle_pose.linear() = Eigen::Matrix3d::Identity();
+  obstacle_pose.translation() = Eigen::Vector3d(0, 0, 0);
+  obstacles.push_back(std::make_shared<prx::sphere_t>("o1", 0.5, obstacle_pose));
+
+  obstacle_pose.linear() = Eigen::Matrix3d::Identity();
+  obstacle_pose.translation() = Eigen::Vector3d(1.0, 0, 0);
+  obstacles.push_back(std::make_shared<prx::box_t>("o2", 1.0, 0.5, 0.5, obstacle_pose));
+  // obstacles.back()->generate_collision_geometry();
+  prx::collision_checking::pqp::system_checker_t<mock::plant_t> checker(plant, obstacles);
+
+  // Plant is a 0.5 rad sphere at -1.1,
+  mock::State x0{ -1.1, 0., 0. };
+  const double dist_x0{ checker.minimum_distance(x0) };
+  // PRX_DBG_VARS(dist_x0)
+  BOOST_REQUIRE_SMALL(std::fabs(0.1 - dist_x0), 0.001);
+
+  // Plant is a 0.5 rad sphere at 2.5,
+  mock::State x1{ 2.5, 0., 0. };
+  const double dist_x1{ checker.minimum_distance(x1) };
+  BOOST_REQUIRE_SMALL(std::fabs(0.5 - dist_x1), 0.001);
+}
+
+BOOST_AUTO_TEST_CASE(test_min_distance_vectors)
+{
+  std::shared_ptr<mock::plant_t> plant{ std::make_shared<mock::plant_t>() };
+
+  std::vector<std::shared_ptr<prx::movable_object_t>> obstacles;
+  Eigen::Transform<double, 3, Eigen::Isometry> obstacle_pose;
+
+  obstacle_pose.linear() = Eigen::Matrix3d::Identity();
+  obstacle_pose.translation() = Eigen::Vector3d(2.5, 0.5, 0);
+  obstacles.push_back(std::make_shared<prx::sphere_t>("o1", 0.5, obstacle_pose));
+
+  prx::collision_checking::pqp::system_checker_t<mock::plant_t> checker(plant, obstacles);
+
+  // Plant is a 0.5 rad sphere at -1.1,
+  mock::State x0{ 1.5, 2.5, 0. };
+  const double dist_x0{ checker.minimum_distance(x0) };
+  auto query = checker.query();
+
+  // PRX_DBG_VARS(dist_x0)
+  // PRX_DBG_VARS(query.P1)
+  // PRX_DBG_VARS(query.P2)
+
+  auto config = plant->configuration(x0)[0];
+  config.second += query.P1.normalized() * dist_x0;
+
+  query.plant_configurations[0] = config;
+  const double new_dist{ prx::collision_checking::pqp::minimum_distance(query, checker.obstacles()) };
+
+  // const Eigen::Vector3d p_robot{ Eigen::Vector3d(1.5, 1.5, 0.) + query.P2 };  // From x0
+  // mock::State x1{ 1.5, 1.5, 0. };
+  // const Eigen::Vector3d o1_coll{ (p_robot + query.P1) - query.P2 };
+  BOOST_REQUIRE_SMALL(new_dist, 0.01);
+}
