@@ -57,7 +57,6 @@ public:
 
   static prx::param_loader default_params()
   {
-    PRX_DEBUG_PRINT
     prx::param_loader params;
     const std::string state_space_bounds_yaml =
         "bounds:\n"
@@ -83,26 +82,11 @@ public:
     // PRX_DEBUG_PRINT
     // params.print();
 
-    // params["test"].set("t");
-    // PRX_DBG_VARS(params)
-    // PRX_DBG_VARS(state_space_bounds_yaml)
-    // params["state_space"].set("state");
-    // PRX_DBG_VARS(params)
     params["state_space"].from_string(state_space_bounds_yaml);
-    PRX_DEBUG_PRINT
-    // PRX_DBG_VARS(params)
     params["control_space"].from_string(control_space_bounds_yaml);
-    PRX_DEBUG_PRINT
-    // params.print();
     params["observation_space"].from_string(observation_space_bounds_yaml);
-    // PRX_DEBUG_PRINT
-    // params.print();
     params["parameter_space"].from_string(parameter_space_bounds_yaml);
-    PRX_DEBUG_PRINT
-    // params.print();
-    PRX_DBG_VARS(params)
 
-    PRX_DEBUG_PRINT
     return params;
   }
 
@@ -116,24 +100,16 @@ public:
 
   void initialize()
   {
-    PRX_DEBUG_PRINT
     prx::param_loader params{ default_params() };
-    PRX_DEBUG_PRINT
-    PRX_DBG_VARS(params)
+
+    // PRX_DBG_VARS(params)
 
     // params.print();
-    PRX_DEBUG_PRINT
-    auto state = params["state_space"];
-    PRX_DBG_VARS(state)
-    PRX_DBG_VARS(state["bounds"])
-    _state_space = StateSpace::create(state);
-    PRX_DEBUG_PRINT
+
+    _state_space = StateSpace::create(params["state_space"]);
     _control_space = ControlSpace::create(params["control_space"]);
-    PRX_DEBUG_PRINT
     _sensor_space = ObservationSpace::create(params["observation_space"]);
-    PRX_DEBUG_PRINT
     _parameter_space = ParametersSpace::create(params["parameter_space"]);
-    PRX_DEBUG_PRINT
   }
 
   virtual ~SE2_holonomic_system_t() {};
@@ -193,10 +169,10 @@ public:
   // virtual void sense(const State& x0, const Control& u0, const double& dt, const Parameters& params) = 0;
 
 protected:
-  StateSpacePtr _state_space;
-  ControlSpacePtr _control_space;
-  ParametersSpacePtr _parameter_space;
-  ObservationSpacePtr _sensor_space;
+  // StateSpacePtr _state_space;
+  // ControlSpacePtr _control_space;
+  // ParametersSpacePtr _parameter_space;
+  // ObservationSpacePtr _sensor_space;
 };
 
 }  // namespace prx

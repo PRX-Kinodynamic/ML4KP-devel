@@ -507,7 +507,7 @@ public:
   {
   }
 
-  static prx::param_loader advance(prx::param_loader& param, int distance)
+  static prx::param_loader advance(prx::param_loader param, int distance)
   {
     auto iter = param.begin();
     // for (auto iter = params.begin(); iter != params.end(); iter++)
