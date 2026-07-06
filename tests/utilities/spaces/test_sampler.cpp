@@ -145,3 +145,16 @@ BOOST_AUTO_TEST_CASE(test_Rot2_sampler)
     BOOST_REQUIRE(0.1 <= sample3.theta() and sample3.theta() <= 0.2);
   }
 }
+
+BOOST_AUTO_TEST_CASE(test_Rot2Double_sampler)
+{
+  using Type = gtsam::ProductLieGroupV43<gtsam::Rot2, double>;
+  const double _pi{ prx::constants::pi };
+  prx::sampler_t<Type> s0{};
+  // for (int i = 0; i < 1000; ++i)
+  // {
+  Type sample0{ s0() };
+
+  BOOST_REQUIRE(-_pi <= sample0.first.theta() and sample0.first.theta() <= _pi);
+  // }
+}
