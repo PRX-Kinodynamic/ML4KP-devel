@@ -22,7 +22,7 @@ struct dynamical_system_traits<SE2_holonomic_system_t>
   enum {ObservationDimension = 3};
   // clang-format on
 
-  using State = gtsam::ProductLieGroup<gtsam::Pose2, Eigen::Vector3d>;
+  using State = gtsam::ProductLieGroupV43<gtsam::Pose2, Eigen::Vector3d>;
   using Control = Eigen::Vector<double, ControlDimension>;
   using Parameters = Eigen::Vector<double, ParametersDimension>;
   using Observation = gtsam::Pose2;
@@ -57,6 +57,7 @@ public:
 
   static prx::param_loader default_params()
   {
+    PRX_DEBUG_PRINT
     prx::param_loader params;
     const std::string state_space_bounds_yaml =
         "bounds:\n"
@@ -68,8 +69,8 @@ public:
         "    max: [+0.5, +0.5, +0.1]\n";
     const std::string control_space_bounds_yaml =
         "bounds:\n"
-        "    min: [-1, -1, -1]\n"
-        "    max: [+1, +1, +1]\n";
+        "    min: [-1.0, -1.0, -1.0]\n"
+        "    max: [+1.0, +1.0, +1.0]\n";
     const std::string observation_space_bounds_yaml =
         "bounds:\n"
         "    min: [-10, -10, -3.14159]\n"
@@ -79,11 +80,29 @@ public:
         "    min: [-1, -1, -1]\n"
         "    max: [+1, +1, +1]\n";
 
-    params["state_space"].from_string(state_space_bounds_yaml);
-    params["control_space"].from_string(control_space_bounds_yaml);
-    params["observation_space"].from_string(observation_space_bounds_yaml);
-    params["parameter_space"].from_string(parameter_space_bounds_yaml);
+    // PRX_DEBUG_PRINT
+    // params.print();
 
+    // params["test"].set("t");
+    // PRX_DBG_VARS(params)
+    // PRX_DBG_VARS(state_space_bounds_yaml)
+    // params["state_space"].set("state");
+    // PRX_DBG_VARS(params)
+    params["state_space"].from_string(state_space_bounds_yaml);
+    PRX_DEBUG_PRINT
+    // PRX_DBG_VARS(params)
+    params["control_space"].from_string(control_space_bounds_yaml);
+    PRX_DEBUG_PRINT
+    // params.print();
+    params["observation_space"].from_string(observation_space_bounds_yaml);
+    // PRX_DEBUG_PRINT
+    // params.print();
+    params["parameter_space"].from_string(parameter_space_bounds_yaml);
+    PRX_DEBUG_PRINT
+    // params.print();
+    PRX_DBG_VARS(params)
+
+    PRX_DEBUG_PRINT
     return params;
   }
 
@@ -97,12 +116,24 @@ public:
 
   void initialize()
   {
+    PRX_DEBUG_PRINT
     prx::param_loader params{ default_params() };
+    PRX_DEBUG_PRINT
+    PRX_DBG_VARS(params)
 
-    _state_space = StateSpace::create(params["state_space"]);
+    // params.print();
+    PRX_DEBUG_PRINT
+    auto state = params["state_space"];
+    PRX_DBG_VARS(state)
+    PRX_DBG_VARS(state["bounds"])
+    _state_space = StateSpace::create(state);
+    PRX_DEBUG_PRINT
     _control_space = ControlSpace::create(params["control_space"]);
+    PRX_DEBUG_PRINT
     _sensor_space = ObservationSpace::create(params["observation_space"]);
+    PRX_DEBUG_PRINT
     _parameter_space = ParametersSpace::create(params["parameter_space"]);
+    PRX_DEBUG_PRINT
   }
 
   virtual ~SE2_holonomic_system_t() {};

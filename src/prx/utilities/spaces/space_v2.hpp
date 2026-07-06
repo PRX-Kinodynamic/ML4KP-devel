@@ -25,6 +25,7 @@ public:
   using Sampler = prx::sampler_t<Element>;
 
   space_t(prx::param_loader params) : sampler(params.exists("bounds") ? params["bounds"] : prx::param_loader())
+  // space_t(prx::param_loader params) : sampler(params.get_or_default("bounds", prx::param_loader()))
   {
   }
   template <typename SamplerBounds>

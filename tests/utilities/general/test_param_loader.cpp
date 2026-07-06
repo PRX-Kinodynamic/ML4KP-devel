@@ -81,26 +81,6 @@ BOOST_AUTO_TEST_CASE(param_loader_save_load_test)
   BOOST_CHECK(c_original[1] == c_from_file[1]);
 }
 
-BOOST_AUTO_TEST_CASE(param_loader_from_string)
-{
-  prx::param_loader pl{};
-  const std::string input =  // no-lint
-      "p0: \"zero\"\n"       // no-lint
-      "p1: 1\n"              // no-lint
-      "p_multi:\n"           // no-lint
-      "    zero: 0\n"        // no-lint
-      "    vec: [1,2]\n"     // no-lint
-      ;                      // no-lint
-  // pl.from_string("p0: zero\np1: 1\np_multi:\n\tzero: 0\n\tone: 1\n");
-  pl.from_string(input);
-  // PRX_DBG_VARS(pl)
-  BOOST_CHECK(pl["p0"].as<std::string>() == "zero");
-  BOOST_CHECK(pl["p1"].as<int>() == 1);
-  BOOST_CHECK(pl["p_multi/zero"].as<int>() == 0);
-  BOOST_CHECK(pl["p_multi/vec"].as<std::vector<int>>()[0] == 1);
-  BOOST_CHECK(pl["p_multi/vec"].as<std::vector<int>>()[1] == 2);
-}
-
 BOOST_AUTO_TEST_CASE(param_loader_merge)
 {
   prx::param_loader pl0{};
@@ -203,4 +183,31 @@ BOOST_AUTO_TEST_CASE(param_loader_get_or_default)
   BOOST_REQUIRE(pl.get_or_default("test", 1) == 1);
   pl["test"].set(1);
   BOOST_REQUIRE(pl.get_or_default("test", 1) == 1);
+}
+
+BOOST_AUTO_TEST_CASE(param_loader_from_string)
+{
+  prx::param_loader pl{};
+  const std::string input =  // no-lint
+      "p0: \"zero\"\n"       // no-lint
+      "p1: 1\n"              // no-lint
+      "p_multi:\n"           // no-lint
+      "    zero: 0\n"        // no-lint
+      "    vec: [1,2]\n"     // no-lint
+      ;                      // no-lint
+  // pl.from_string("p0: zero\np1: 1\np_multi:\n\tzero: 0\n\tone: 1\n");
+  pl.from_string(input);
+  // PRX_DBG_VARS(pl)
+  BOOST_CHECK(pl["p0"].as<std::string>() == "zero");
+  BOOST_CHECK(pl["p1"].as<int>() == 1);
+  BOOST_CHECK(pl["p_multi/zero"].as<int>() == 0);
+  BOOST_CHECK(pl["p_multi/vec"].as<std::vector<int>>()[0] == 1);
+  BOOST_CHECK(pl["p_multi/vec"].as<std::vector<int>>()[1] == 2);
+
+  PRX_DEBUG_PRINT
+
+  // pl.set("test");
+  // pl["test"].add(prx::param_loader());
+  pl["test"].from_string(input);
+  BOOST_CHECK(pl["/test/p0"].as<std::string>() == "zero");
 }

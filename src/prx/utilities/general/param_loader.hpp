@@ -36,6 +36,7 @@ public:
   param_loader(std::string file_name, std::vector<std::string> argv);
   param_loader(const param_loader& other);
   param_loader(YAML::Node params, std::string _p_key = "");
+  param_loader(std::shared_ptr<YAML::Node> params, std::string _p_key = "");
   param_loader(iterator first, iterator last);
   param_loader(const_iterator first, const_iterator last);
 
@@ -85,7 +86,7 @@ public:
   template <typename T>
   void set(T val)
   {
-    *_params = val;
+    _params = val;
   }
 
   void print() const;
@@ -93,9 +94,9 @@ public:
   inline bool exists(const std::string& key) const
   {
     std::string::size_type subkey_pos{ key.find("/", 0) };
-    if (subkey_pos == std::string::npos and (*_params)[key])
+    if (subkey_pos == std::string::npos and _params[key])
       return true;
-    if ((*_params)[key.substr(0, subkey_pos)])
+    if (_params[key.substr(0, subkey_pos)])
     {
       return exists(key.substr(0, subkey_pos));
     }
@@ -136,11 +137,11 @@ public:
     T val;
     try
     {
-      val = _params->as<T>();
+      val = _params.as<T>();
     }
     catch (...)
     {
-      if (!_params->IsDefined())
+      if (!_params.IsDefined())
       {
         // params.EnsureNodeExists();
         prx_throw("Param loader - problem using " << p_key);
@@ -154,46 +155,46 @@ public:
   template <typename T>
   param_loader& operator=(const T& rhs)
   {
-    *(this->_params) = rhs;
+    _params = rhs;
     return *this;
   }
 
   inline iterator begin()
   {
-    return _params->begin();
+    return _params.begin();
   }
 
   inline iterator end()
   {
-    return _params->end();
+    return _params.end();
   }
 
   inline const_iterator begin() const
   {
-    return _params->begin();
+    return _params.begin();
   }
 
   inline const_iterator end() const
   {
-    return _params->end();
+    return _params.end();
   }
 
   friend std::ostream& operator<<(std::ostream& os, const param_loader& obj)
   {
-    os << *(obj._params);
+    os << obj._params;
     return os;
   }
 
   void save(const std::string filename) const
   {
     std::ofstream ofs(filename.c_str());
-    ofs << *_params;
+    ofs << _params;
     ofs.close();
   }
 
   void merge(const param_loader& other)
   {
-    merge(*(other._params));
+    merge(other._params);
     replace_environment_variables();
   }
 
@@ -229,7 +230,7 @@ protected:
 
   void print(const YAML::Node& pl, std::string prepath = "") const;
 
-  std::shared_ptr<YAML::Node> _params;
+  YAML::Node _params;
 
   // Needed to check if the key has been defined. YAML implementation
   // assumes that you check before calling as<>()...
