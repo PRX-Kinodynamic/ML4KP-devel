@@ -28,6 +28,7 @@ BOOST_AUTO_TEST_CASE(chi_squared_2dof_test)
   const double cv_2_0p1{ chi2.critical_value(2, 0.1) };
   const double cv_2_0p05{ chi2.critical_value(2, 0.05) };
 
+  PRX_DBG_VARS(cv_2_0p05)
   BOOST_CHECK_SMALL(std::fabs(cv_2_0p1 - 4.605), 0.01);
   BOOST_CHECK_SMALL(std::fabs(cv_2_0p05 - 5.991), 0.01);
 }

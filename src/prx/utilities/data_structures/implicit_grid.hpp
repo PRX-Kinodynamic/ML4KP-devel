@@ -191,16 +191,14 @@ public:
     return x_global;
   }
 
-  LieType state_from_vertex(const TangentElement& vx)
+  LieType state_from_vertex(const TangentElement& vx) const
   {
     const TangentElement vx_am{ vx.unaryExpr(&implicit_grid_t::unary_antimodf) };
     const TangentElement vx_prod{ vx_am.cwiseProduct(_cell_sizes) };
     const LieType x_local{ gtsam::traits<LieType>::Expmap(vx_prod) };
     const LieType x_global{ gtsam::traits<LieType>::Compose(_x0, x_local) };
 
-    // PRX_DBG_VARS(vx, vx_am)
-    // PRX_DBG_VARS(vx_prod, _cell_sizes)
-    // PRX_DBG_VARS(x_local, x_global)
+    // PRX_DBG_VARS(vx, vx_am, vx_prod, x_local, x_global)
     // const LieType x0i{ gtsam::traits<LieType>::Compose(_x0_inv, xi) };
     // const TangentElement eps{ gtsam::traits<LieType>::Logmap(x0i) };
     // const TangentElement eps_div{ eps.cwiseQuotient(_cell_sizes) };
@@ -219,7 +217,7 @@ public:
     return std::move(c);
   }
 
-  std::vector<TangentElement> vertices(const LieType& xi)
+  std::vector<TangentElement> vertices(const LieType& xi) const
   {
     const std::size_t total_vertices{ static_cast<std::size_t>(std::pow(2, Dimension)) };
 
@@ -284,7 +282,8 @@ private:
 
   static double unary_antimodf(const double& x)
   {
-    return x < 0. ? x + 1. : x;
+    // return x < 0. ? x + 1. : x;
+    return x;
   }
 
   static double xor_reductor(const double& x, const double& y)
@@ -330,7 +329,7 @@ private:
     }
   };
 
-  vertices_visitor_t _visitor;
+  mutable vertices_visitor_t _visitor;
   TangentElement _cell_sizes;
   TangentElement _hashing_vector;
   LieType _x0, _x0_inv;

@@ -179,6 +179,11 @@ public:
     return static_cast<Derived*>(this)->environment(loader);
   }
 
+  Control bound(const Control& u0)
+  {
+    return static_cast<Derived*>(this)->bound(u0);
+  }
+
   inline std::string name() const
   {
     return Derived::Name;

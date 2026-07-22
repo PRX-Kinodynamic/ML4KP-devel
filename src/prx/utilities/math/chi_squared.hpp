@@ -16,7 +16,7 @@ public:
   {
   }
 
-  chi_squared() : chi_squared(0.0001) {};
+  chi_squared() : chi_squared(0.0000001) {};
 
   double fy(const int v, const double u) const
   {
