@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include <bitset>
 #include <map>
 #include <gtsam/base/Lie.h>
@@ -105,6 +106,7 @@ public:
 
   implicit_grid_t() : _x0(LieType()), _cell_sizes(TangentElement::Ones()), _hashing_vector(init_with_primes<Vertex>())
   {
+    PRX_DBG_VARS(_hashing_vector);
   }
 
   LieType x0() const
@@ -152,6 +154,20 @@ public:
     return v_grid;
   }
 
+  // std::bit_cast is available in c++20. Currently, this library targets c++17...
+  // so here is an implementation (from cppreference.com)
+  template <class To, class From>
+  std::enable_if_t<sizeof(To) == sizeof(From) && std::is_trivially_copyable_v<From> && std::is_trivially_copyable_v<To>,
+                   To> static bit_cast(const From& src) noexcept
+  {
+    static_assert(std::is_trivially_constructible_v<To>,
+                  "This implementation additionally requires "
+                  "destination type to be trivially constructible");
+
+    To dst;
+    std::memcpy(&dst, &src, sizeof(To));
+    return dst;
+  }
   // Fast hash from: T. Matthias, et al. "Optimized spatial hashing for collision detection of deformable objects."
   // This hash seeks to differentiate between representative vertices, so there is an implicit assumption that the
   // hashing elements are "far-enough" between each other.
@@ -161,9 +177,16 @@ public:
   {
     const Vertex aux{ vx.cwiseProduct(_hashing_vector) };
 
+    // <<<<<<< HEAD
     const std::size_t h{ static_cast<std::size_t>(aux.redux(&implicit_grid_t::xor_reductor)) };
     return h;
     // return static_cast<std::size_t>(h_dbl);
+    // =======
+    //     const double h_dbl{ aux.redux(&implicit_grid_t::xor_reductor) };
+    //     const std::size_t h{ bit_cast<std::size_t>(h_dbl) };
+    //     // PRX_DBG_VARS(tg, aux, h_dbl, h);
+    //     return h;
+    // >>>>>>> 1ea071c5 (adding bitcast fn for c++17)
   }
 
   template <typename Lie, std::enable_if_t<not std::is_same_v<Lie, TangentElement>, bool> = true>
@@ -286,7 +309,8 @@ private:
 
   static double xor_reductor(const double& x, const double& y)
   {
-    return static_cast<double>(std::lrint(x) ^ std::lrint(y));
+    const double res{ static_cast<double>(std::lrint(x) ^ std::lrint(y)) };
+    return res;
   }
   struct state_compare_t
   {
