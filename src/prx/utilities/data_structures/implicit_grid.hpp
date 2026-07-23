@@ -97,13 +97,13 @@ class implicit_grid_t
   struct state_compare_t;
 
 public:
+  using Vertex = Eigen::Vector<int, Dimension>;
   using TangentElement = Eigen::Vector<double, Dimension>;
-  using CellsMap = std::map<TangentElement, CellType, state_compare_t>;
+  using CellsMap = std::map<Vertex, CellType, state_compare_t>;
   using Iterator = typename CellsMap::iterator;
   using ConstIterator = typename CellsMap::const_iterator;
 
-  implicit_grid_t()
-    : _x0(LieType()), _cell_sizes(TangentElement::Ones()), _hashing_vector(init_with_primes<TangentElement>())
+  implicit_grid_t() : _x0(LieType()), _cell_sizes(TangentElement::Ones()), _hashing_vector(init_with_primes<Vertex>())
   {
   }
 
@@ -141,16 +141,13 @@ public:
   }
 
   // Representative vertex of the cube where xi lies
-  TangentElement vertex(const LieType& xi) const
+  Vertex vertex(const LieType& xi) const
   {
     const LieType x0i{ gtsam::traits<LieType>::Compose(_x0_inv, xi) };
     const TangentElement eps{ gtsam::traits<LieType>::Logmap(x0i) };
     const TangentElement eps_div{ eps.cwiseQuotient(_cell_sizes) };
-    const TangentElement v_grid{ eps_div.unaryExpr(&implicit_grid_t::unary_modf) };
-
-    // PRX_DBG_VARS(x0i)
-    // PRX_DBG_VARS(eps, eps_div)
-    // PRX_DBG_VARS(v_grid)
+    const TangentElement v_grid_dbl{ eps_div.unaryExpr(&implicit_grid_t::unary_modf) };
+    const Vertex v_grid{ v_grid_dbl.template cast<int>() };
 
     return v_grid;
   }
@@ -160,24 +157,31 @@ public:
   // hashing elements are "far-enough" between each other.
   // From testing: TangentElement::Ones() * 0.1 gets the same hash as Tangent::Ones() * 0.10000001
   // Which is well enough... Possible improvements: compute two or more hashes and check or use bigger primes
-  std::size_t hash(const TangentElement& tg) const
+  std::size_t hash(const Vertex& vx) const
   {
-    const TangentElement aux{ tg.cwiseProduct(_hashing_vector) };
+    const Vertex aux{ vx.cwiseProduct(_hashing_vector) };
 
-    const double h_dbl{ aux.redux(&implicit_grid_t::xor_reductor) };
-    return static_cast<std::size_t>(h_dbl);
+    const std::size_t h{ static_cast<std::size_t>(aux.redux(&implicit_grid_t::xor_reductor)) };
+    return h;
+    // return static_cast<std::size_t>(h_dbl);
   }
 
   template <typename Lie, std::enable_if_t<not std::is_same_v<Lie, TangentElement>, bool> = true>
   std::size_t hash(const Lie& x) const
   {
-    const TangentElement tg{ vertex(x) };
+    const Vertex tg{ vertex(x) };
+    return hash(tg);
+  }
+  std::size_t hash(const TangentElement& x) const
+  {
+    const LieType x_local{ gtsam::traits<LieType>::Expmap(x) };
+    const Vertex tg{ vertex(x_local) };
     return hash(tg);
   }
 
   bool exists(const LieType& x)
   {
-    const TangentElement v{ vertex(x) };
+    const Vertex v{ vertex(x) };
     return _cells.count(v) > 0;
   }
 
@@ -191,37 +195,31 @@ public:
     return x_global;
   }
 
-  LieType state_from_vertex(const TangentElement& vx) const
+  LieType state_from_vertex(const Vertex& vx) const
   {
-    const TangentElement vx_am{ vx.unaryExpr(&implicit_grid_t::unary_antimodf) };
+    const TangentElement vx_am{ vx.template cast<double>() };
     const TangentElement vx_prod{ vx_am.cwiseProduct(_cell_sizes) };
     const LieType x_local{ gtsam::traits<LieType>::Expmap(vx_prod) };
     const LieType x_global{ gtsam::traits<LieType>::Compose(_x0, x_local) };
-
-    // PRX_DBG_VARS(vx, vx_am, vx_prod, x_local, x_global)
-    // const LieType x0i{ gtsam::traits<LieType>::Compose(_x0_inv, xi) };
-    // const TangentElement eps{ gtsam::traits<LieType>::Logmap(x0i) };
-    // const TangentElement eps_div{ eps.cwiseQuotient(_cell_sizes) };
-    // const TangentElement v_grid{ eps_div.unaryExpr(&implicit_grid_t::unary_modf) };
 
     return x_global;
   }
 
   TangentElement center(const LieType& xi) const
   {
-    const TangentElement v{ vertex(xi) };
-    const TangentElement vp{ v.cwiseProduct(_cell_sizes) };
+    const Vertex v{ vertex(xi) };
+    const TangentElement vp{ v.template cast<double>().cwiseProduct(_cell_sizes) };
     // const LieType x0i{ gtsam::traits<LieType>::Compose(_x0_inv, xi) };
     // const TangentElement v{ gtsam::traits<LieType>::Logmap(x0i) };
     const TangentElement c{ vp + _cell_sizes / 2.0 };
     return std::move(c);
   }
 
-  std::vector<TangentElement> vertices(const LieType& xi) const
+  std::vector<Vertex> vertices(const LieType& xi) const
   {
     const std::size_t total_vertices{ static_cast<std::size_t>(std::pow(2, Dimension)) };
 
-    std::vector<TangentElement> vxs;  // total_vertices, vertex(xi));
+    std::vector<Vertex> vxs;  // total_vertices, vertex(xi));
     vxs.push_back(vertex(xi));
 
     for (int i = 1; i < total_vertices; ++i)
@@ -235,7 +233,7 @@ public:
 
   void set_cell(const LieType& xi, CellType value)
   {
-    const TangentElement v{ vertex(xi) };
+    const Vertex v{ vertex(xi) };
     // _cells[v] = value;
     // PRX_DBG_VARS(v.transpose());
 
@@ -245,7 +243,7 @@ public:
 
   CellType& cell(const LieType& xi)
   {
-    const TangentElement v_cell{ vertex(xi) };
+    const Vertex v_cell{ vertex(xi) };
     // PRX_DBG_VARS(size(), v_cell.transpose());
     return _cells[v_cell];
   }
@@ -292,7 +290,7 @@ private:
   }
   struct state_compare_t
   {
-    bool operator()(const TangentElement& lhs, const TangentElement& rhs) const
+    bool operator()(const Vertex& lhs, const Vertex& rhs) const
     {
       return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
       // for (int i = 0; i < Dimension; ++i)
@@ -310,7 +308,7 @@ private:
   struct vertices_visitor_t
   {
     TangentElement cell_sizes;
-    TangentElement result;
+    Vertex result;
     std::bitset<Dimension> _bits;
     // _bits.reset();
     // called for the first coefficient
@@ -319,19 +317,19 @@ private:
       this->operator()(value, i, j);
     }
     // called for all other coefficients
-    void operator()(const double& value, Eigen::Index i, Eigen::Index j)
+    void operator()(const int& value, Eigen::Index i, Eigen::Index j)
     {
       result[i] = value;
       if (_bits[i])
       {
-        result[i] += 1.;  // cell_sizes[i];
+        result[i] += 1;  // cell_sizes[i];
       }
     }
   };
 
   mutable vertices_visitor_t _visitor;
   TangentElement _cell_sizes;
-  TangentElement _hashing_vector;
+  Vertex _hashing_vector;
   LieType _x0, _x0_inv;
   CellsMap _cells;
 };

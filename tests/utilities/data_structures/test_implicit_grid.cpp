@@ -64,6 +64,7 @@ BOOST_AUTO_TEST_CASE(test_implicit_grid_vertices)
   using LieType = gtsam::Pose2;
   using Grid = prx::implicit_grid_t<LieType, mock::cell_t>;
   using Tangent = prx::implicit_grid_t<LieType, mock::cell_t>::TangentElement;
+  using Vertex = prx::implicit_grid_t<LieType, mock::cell_t>::Vertex;
 
   Grid grid;
 
@@ -71,10 +72,10 @@ BOOST_AUTO_TEST_CASE(test_implicit_grid_vertices)
   Tangent cell_size(0.1, 0.2, 0.3);
   grid.reset(x0, cell_size);
 
-  std::vector<Tangent> vertices{ grid.vertices(x0) };
+  std::vector<Vertex> vertices{ grid.vertices(x0) };
   for (auto v : vertices)
   {
-    prx::streamer_t<Tangent>::to_stream(std::cout, v);
+    prx::to_stream(std::cout, v);
     std::cout << "\n";
   }
 }
@@ -86,15 +87,16 @@ BOOST_AUTO_TEST_CASE(test_hash)
   using Tangent = prx::implicit_grid_t<LieType, mock::cell_t>::TangentElement;
 
   Grid grid;
+  grid.reset(LieType(), 0.01);
 
   Tangent eps0{ Tangent::Ones() * 0.1 };
-  Tangent eps1{ Tangent::Ones() * 0.11 };
-  Tangent eps2{ Tangent::Ones() * 0.101 };
-  Tangent eps3{ Tangent::Ones() * 0.1001 };
-  Tangent eps4{ Tangent::Ones() * 0.10001 };
-  Tangent eps5{ Tangent::Ones() * 0.100001 };
-  Tangent eps6{ Tangent::Ones() * 0.1000001 };
-  Tangent eps7{ Tangent::Ones() * 0.10000001 };  // Small enough epsilon gets same hash as eps0: eps0 ~= eps7
+  Tangent eps1{ Tangent::Ones() * 0.12 };
+  Tangent eps2{ Tangent::Ones() * 0.08 };
+  Tangent eps3{ Tangent::Ones() * 0.01 };
+  Tangent eps4{ Tangent::Ones() * 0.21 };
+  Tangent eps5{ Tangent::Ones() * 0.31 };
+  Tangent eps6{ Tangent::Ones() * 0.05 };
+  Tangent eps7{ Tangent::Ones() * 0.100001 };  // Small enough epsilon gets same hash as eps0: eps0 ~= eps7
 
   const std::size_t h0{ grid.hash(eps0) };
   const std::size_t h1{ grid.hash(eps1) };
