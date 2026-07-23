@@ -386,8 +386,8 @@ BOOST_AUTO_TEST_CASE(lie_hash_vertex_equal_opositve_sign)
 
   Vertex v0(1, 1);
   Vertex v1(1, -1);
-  Vertex v2(-1, 1);
-  Vertex v3(-1, -1);
+  Vertex v2(-1, 2);
+  Vertex v3(-1, -2);
 
   const std::size_t hx0{ grid.hash(v0) };
   const std::size_t hx1{ grid.hash(v1) };

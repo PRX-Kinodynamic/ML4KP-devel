@@ -95,9 +95,9 @@ class implicit_grid_t
   static constexpr Eigen::Index Dimension{ gtsam::traits<LieType>::dimension };
 
   // Fwd declaration
-  struct state_compare_t;
 
 public:
+  struct state_compare_t;
   using Vertex = Eigen::Vector<int, Dimension>;
   using TangentElement = Eigen::Vector<double, Dimension>;
   using CellsMap = std::map<Vertex, CellType, state_compare_t>;
@@ -302,6 +302,14 @@ public:
     return _cells.size();
   }
 
+  struct state_compare_t
+  {
+    bool operator()(const Vertex& lhs, const Vertex& rhs) const
+    {
+      return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+    }
+  };
+
 private:
   // std::function<double(double)> uniform_sample = [&](const double x) { return dist(gen); };
   static double unary_modf(const double& x)
@@ -323,22 +331,6 @@ private:
     const int res{ (x << 2) ^ y };
     return res;
   }
-  struct state_compare_t
-  {
-    bool operator()(const Vertex& lhs, const Vertex& rhs) const
-    {
-      return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
-      // for (int i = 0; i < Dimension; ++i)
-      // {
-      //   // PRX_DBG_VARS(i, lhs[i], rhs[i])
-      //   if (lhs[i] < rhs[i])
-      //   {
-      //     return true;
-      //   }
-      // }
-      // return false;
-    }
-  };
 
   struct vertices_visitor_t
   {
