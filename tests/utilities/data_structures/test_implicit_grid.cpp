@@ -337,13 +337,41 @@ BOOST_AUTO_TEST_CASE(test_implicit_grid_points_vertices)
       BOOST_REQUIRE(err < cell_size);
     }
   }
+}
 
-  // PRX_DBG_VARS(x1)
-  // vertices = grid.vertices(x1);
-  // PRX_DBG_VARS(vertices)
-  // for (auto& v : vertices)
-  // {
-  //   const LieType xv{ grid.state_from_vertex(v) };
-  //   PRX_DBG_VARS(v, xv);
-  // }
+BOOST_AUTO_TEST_CASE(test_implicit_grid_center)
+{
+  using LieType = gtsam::ProductLieGroupV43<gtsam::Rot2, double>;
+  using Grid = prx::implicit_grid_t<LieType, mock::cell_t>;
+  using Tangent = prx::implicit_grid_t<LieType, mock::cell_t>::TangentElement;
+
+  std::cout << "\n\n";
+  PRX_MSG("test_implicit_grid_points_vertices");
+
+  Grid grid;
+  const double cell_size{ 0.05 / 2. };
+
+  LieType x0{ LieType(-1.5 - cell_size / 2, 2.0 - cell_size / 2) };
+  grid.reset(x0, cell_size);
+
+  LieType x1{ LieType(-1.51, 2.0) };
+  LieType x2{ LieType(-1.49, 2.0) };
+  LieType x3{ LieType(-1.53, 2.0) };
+  LieType x4{ LieType(-1.56, 2.0) };
+  LieType x5{ LieType(-1.45, 2.0) };
+
+  // LieType x1{ LieType(0.15, -0.15) };
+  // LieType x2{ LieType(-0.15, -0.75) };
+  for (auto xi : { x0, x1, x2, x3, x4, x5 })
+  {
+    auto vertices = grid.vertices(xi);
+    for (auto& v : vertices)
+    {
+      const LieType xv{ grid.state_from_vertex(v) };
+      PRX_DBG_VARS(xi, xv, v);
+      // const Tangent tg_v{ gtsam::traits<LieType>::Logmap(xv) };
+      // PRX_DBG_VARS(err, cell_size)
+      // BOOST_REQUIRE(err < cell_size);
+    }
+  }
 }
