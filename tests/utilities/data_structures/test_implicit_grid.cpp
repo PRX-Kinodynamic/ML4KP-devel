@@ -375,3 +375,31 @@ BOOST_AUTO_TEST_CASE(test_implicit_grid_center)
     }
   }
 }
+
+BOOST_AUTO_TEST_CASE(lie_hash_vertex_equal_opositve_sign)
+{
+  using LieType = gtsam::ProductLieGroupV43<gtsam::Rot2, double>;
+  using Grid = prx::implicit_grid_t<LieType, mock::cell_t>;
+  using Vertex = prx::implicit_grid_t<LieType, mock::cell_t>::Vertex;
+
+  Grid grid;
+
+  Vertex v0(1, 1);
+  Vertex v1(1, -1);
+  Vertex v2(-1, 1);
+  Vertex v3(-1, -1);
+
+  const std::size_t hx0{ grid.hash(v0) };
+  const std::size_t hx1{ grid.hash(v1) };
+  const std::size_t hx2{ grid.hash(v2) };
+  const std::size_t hx3{ grid.hash(v3) };
+  PRX_DBG_VARS(hx0, hx1, hx2, hx3)
+  BOOST_CHECK(hx0 != hx1);
+  BOOST_CHECK(hx0 != hx2);
+  BOOST_CHECK(hx0 != hx3);
+
+  BOOST_CHECK(hx1 != hx2);
+  BOOST_CHECK(hx1 != hx3);
+
+  BOOST_CHECK(hx2 != hx3);
+}

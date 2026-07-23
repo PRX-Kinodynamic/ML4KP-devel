@@ -106,7 +106,11 @@ public:
 
   implicit_grid_t() : _x0(LieType()), _cell_sizes(TangentElement::Ones()), _hashing_vector(init_with_primes<Vertex>())
   {
-    PRX_DBG_VARS(_hashing_vector);
+    for (int i = 0; i < Dimension; ++i)
+    {
+      _pos_vector[i] = 1 << i;
+    }
+    PRX_DBG_VARS(_hashing_vector, _pos_vector);
   }
 
   LieType x0() const
@@ -176,9 +180,10 @@ public:
   std::size_t hash(const Vertex& vx) const
   {
     const Vertex aux{ vx.cwiseProduct(_hashing_vector) };
+    const Vertex aux2{ aux.cwiseProduct(_pos_vector) };
 
     // <<<<<<< HEAD
-    const std::size_t h{ static_cast<std::size_t>(aux.redux(&implicit_grid_t::xor_reductor)) };
+    const std::size_t h{ static_cast<std::size_t>(aux2.redux(&implicit_grid_t::xor_reductor)) };
     return h;
     // return static_cast<std::size_t>(h_dbl);
     // =======
@@ -359,7 +364,7 @@ private:
 
   mutable vertices_visitor_t _visitor;
   TangentElement _cell_sizes;
-  Vertex _hashing_vector;
+  Vertex _hashing_vector, _pos_vector;
   LieType _x0, _x0_inv;
   CellsMap _cells;
 };
