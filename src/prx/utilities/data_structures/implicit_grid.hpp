@@ -318,9 +318,9 @@ private:
     return x;
   }
 
-  static double xor_reductor(const double& x, const double& y)
+  static int xor_reductor(const int& x, const int& y)
   {
-    const double res{ static_cast<double>(std::lrint(x) ^ std::lrint(y)) };
+    const int res{ (x << 2) ^ y };
     return res;
   }
   struct state_compare_t
