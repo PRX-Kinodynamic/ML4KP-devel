@@ -146,7 +146,7 @@ public:
   Vertex vertex(const LieType& xi) const
   {
     const LieType x0i{ gtsam::traits<LieType>::Compose(_x0_inv, xi) };
-    const TangentElement eps{ gtsam::traits<LieType>::Logmap(x0i) };
+    const TangentElement eps{ gtsam::traits<LieType>::Logmap(x0i) * 1.0001 };
     const TangentElement eps_div{ eps.cwiseQuotient(_cell_sizes) };
     const TangentElement v_grid_dbl{ eps_div.unaryExpr(&implicit_grid_t::unary_modf) };
     const Vertex v_grid{ v_grid_dbl.template cast<int>() };
@@ -264,11 +264,17 @@ public:
     // PRX_DBG_VARS(iter->first, iter->second, flag)
   }
 
-  CellType& cell(const LieType& xi)
+  template <typename Lie, std::enable_if_t<not std::is_same_v<Lie, TangentElement>, bool> = true>
+  CellType& cell(const Lie& xi)
   {
     const Vertex v_cell{ vertex(xi) };
     // PRX_DBG_VARS(size(), v_cell.transpose());
     return _cells[v_cell];
+  }
+
+  CellType& cell(const TangentElement& tgi)
+  {
+    return _cells[tgi];
   }
 
   TangentElement cell_sizes() const
