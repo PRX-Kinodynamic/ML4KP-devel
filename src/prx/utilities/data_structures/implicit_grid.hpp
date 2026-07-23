@@ -272,9 +272,9 @@ public:
     return _cells[v_cell];
   }
 
-  CellType& cell(const TangentElement& tgi)
+  CellType& cell(const Vertex& vx)
   {
-    return _cells[tgi];
+    return _cells[vx];
   }
 
   TangentElement cell_sizes() const
