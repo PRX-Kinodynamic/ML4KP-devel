@@ -66,6 +66,32 @@ public:
   }
 };
 
+template <int Row, int Col>  // primary template
+struct stream_specialization<Eigen::Matrix<int, Row, Col>> : std::true_type
+{
+};
+
+// template <int Dim>
+template <int Row, int Col>
+struct streamer_t<Eigen::Matrix<int, Row, Col>> : std::true_type
+{
+public:
+  // using Vector = Eigen::Vector<double, Row>;
+  // using Matrix = Eigen::Matrix<double, Row, Col>;
+
+  template <typename Vector, std::enable_if_t<Vector::ColsAtCompileTime == 1, bool> = true>
+  static void to_stream(std::ostream& os, const Vector& v)
+  {
+    os << v.transpose() << " ";
+  }
+
+  template <typename Matrix, std::enable_if_t<Matrix::ColsAtCompileTime != 1, bool> = true>
+  static void to_stream(std::ostream& os, const Matrix& m)
+  {
+    os << m << " ";
+  }
+};
+
 template <>  // primary template
 struct stream_specialization<gtsam::Rot2> : std::true_type
 {
