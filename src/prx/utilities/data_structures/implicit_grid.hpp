@@ -150,7 +150,7 @@ public:
   Vertex vertex(const LieType& xi) const
   {
     const LieType x0i{ gtsam::traits<LieType>::Compose(_x0_inv, xi) };
-    const TangentElement eps{ gtsam::traits<LieType>::Logmap(x0i) * 1.0001 };
+    const TangentElement eps{ gtsam::traits<LieType>::Logmap(x0i) };
     const TangentElement eps_div{ eps.cwiseQuotient(_cell_sizes) };
     const TangentElement v_grid_dbl{ eps_div.unaryExpr(&implicit_grid_t::unary_modf) };
     const Vertex v_grid{ v_grid_dbl.template cast<int>() };
@@ -233,6 +233,13 @@ public:
     return x_global;
   }
 
+  TangentElement center(const Vertex& vxi) const
+  {
+    const TangentElement vp{ vxi.template cast<double>().cwiseProduct(_cell_sizes) };
+    const TangentElement c{ vp + _cell_sizes / 2.0 };
+    return std::move(c);
+  }
+
   TangentElement center(const LieType& xi) const
   {
     const Vertex v{ vertex(xi) };
@@ -243,12 +250,20 @@ public:
     return std::move(c);
   }
 
-  std::vector<Vertex> vertices(const LieType& xi) const
+  LieType center_state(const Vertex& vxi) const
+  {
+    const TangentElement tg_c{ center(vxi) };
+    const LieType x_local{ gtsam::traits<LieType>::Expmap(tg_c) };
+    const LieType x_global{ gtsam::traits<LieType>::Compose(_x0, x_local) };
+    return x_global;
+  }
+
+  std::vector<Vertex> vertices(const Vertex& vxi) const
   {
     const std::size_t total_vertices{ static_cast<std::size_t>(std::pow(2, Dimension)) };
 
     std::vector<Vertex> vxs;  // total_vertices, vertex(xi));
-    vxs.push_back(vertex(xi));
+    vxs.push_back(vxi);
 
     for (int i = 1; i < total_vertices; ++i)
     {
@@ -257,6 +272,11 @@ public:
       vxs.push_back(_visitor.result);
     }
     return vxs;
+  }
+
+  std::vector<Vertex> vertices(const LieType& xi) const
+  {
+    return vertices(vertex(xi));
   }
 
   void set_cell(const LieType& xi, CellType value)
