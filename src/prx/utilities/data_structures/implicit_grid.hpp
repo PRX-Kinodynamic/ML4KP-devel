@@ -136,7 +136,7 @@ public:
   {
     _x0 = x0;
     _cell_sizes = cell_sizes;
-    _visitor.cell_sizes = _cell_sizes;
+    // _visitor.cell_sizes = _cell_sizes;
     _x0_inv = gtsam::traits<LieType>::Inverse(x0);
     _cells.clear();
   }
@@ -207,16 +207,22 @@ public:
     return hash(tg);
   }
 
-  bool exists(const LieType& x)
+  inline bool exists(const Vertex& v) const
+  {
+    // const Vertex v{ vertex(x) };
+    return _cells.count(v) > 0;
+  }
+
+  bool exists(const LieType& x) const
   {
     const Vertex v{ vertex(x) };
-    return _cells.count(v) > 0;
+    return exists(v);
   }
 
   // Return the state associated to the Local tangent element.
   // As the tangent element us local with respect to x0, this function does:
   // res = x0 * Expmap(tg)
-  LieType state(const TangentElement& vx)
+  LieType state(const TangentElement& vx) const
   {
     const LieType x_local{ gtsam::traits<LieType>::Expmap(vx) };
     const LieType x_global{ gtsam::traits<LieType>::Compose(_x0, x_local) };
@@ -317,7 +323,7 @@ public:
     return _cells.end();
   }
 
-  std::size_t size()
+  std::size_t size() const
   {
     return _cells.size();
   }
@@ -354,7 +360,7 @@ private:
 
   struct vertices_visitor_t
   {
-    TangentElement cell_sizes;
+    // TangentElement cell_sizes;
     Vertex result;
     std::bitset<Dimension> _bits;
     // _bits.reset();

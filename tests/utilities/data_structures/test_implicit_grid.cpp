@@ -403,3 +403,47 @@ BOOST_AUTO_TEST_CASE(lie_hash_vertex_equal_opositve_sign)
 
   BOOST_CHECK(hx2 != hx3);
 }
+
+BOOST_AUTO_TEST_CASE(test_3d_grid)
+{
+  using LieType = gtsam::Pose2;
+  using Grid = prx::implicit_grid_t<LieType, mock::cell_t>;
+  using Vertex = prx::implicit_grid_t<LieType, mock::cell_t>::Vertex;
+
+  Grid grid;
+
+  LieType x0(0, 0, 0);
+  grid.reset(x0, 0.1);
+
+  LieType x1(0, 0, 0.15);
+  LieType x2(0, 0, 0.25);
+  grid.cell(x1).idx = 1;
+  grid.cell(x2).idx = 2;
+
+  int idx{ 0 };
+  for (double i = -0.5; i < 0.5; i += 0.05)
+  {
+    for (double j = -0.5; j < 0.5; j += 0.05)
+    {
+      for (double k = -0.5; k < 0.5; k += 0.05)
+      {
+        LieType x1(i, j, k);
+        grid.cell(x1).idx = idx;
+        idx++;
+      }
+    }
+  }
+
+  for (auto cell : grid)
+  {
+    // const LieType xv{ grid.state_from_vertex(cell.first) };
+    auto tg = grid.center(cell.first);
+    PRX_DBG_VARS(tg)
+    // const Tangent center_tg{ _grid.center(xv) };
+    // const State center{ _grid.state(center_tg) };
+    // prx::to_stream(_ofs_grid, center);
+    // prx::to_stream(_ofs_grid, center_tg);
+    // prx::to_stream(_ofs_grid, cell.second->vertex);
+    // prx::to_stream(_ofs_grid, cell.second->safe);
+  }
+}
